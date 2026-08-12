@@ -1,42 +1,55 @@
-/* 设计令牌 —— 全站唯一来源 */
-:root{
-  
-    --focus-ring:#495dff;
-  
-    --bg:#ffffff;
-  
-    --sidebar-bg:#fbfbfb;
-  
-    --text:#2d2d2d;
-  
-    --text-muted:rgba(0,0,0,.64);
-  
-    --text-secondary:#767676;
-   /* 4.5:1 次级文字 */
-    --text-soft:#b8b8b8;
-  
-    --divider:#f0f0f0;
-  
-    --fill-1:#fafafa;
-  
-    --fill-2:#fcfcfc;
-  
-    --border:#efefef;
-  
-    --hover:#f0f0f0;
-  
-    --active:#ebebeb;
-  
-    --pill-shadow:0 1px 2px rgba(0,0,0,.06),0 1px 3px rgba(0,0,0,.04);
-  
-    --menu-shadow:0 8px 28px rgba(0,0,0,.12),0 2px 6px rgba(0,0,0,.06);
-  
-    --dot-blue:#4d89ff;
-  
-    --dot-orange:#ff8d42;
-  
-    --dot-green:#08cc50;
-  
-    --r-xl:16px;
-  
+/* ============================================================
+   设计令牌 —— 全站唯一来源
+   应用与产物预览 iframe 共用此文件，设计系统页运行时读取渲染
+   改配色 / 圆角 / 阴影只改这里，勿在组件里写死
+   ============================================================ */
+:root {
+  /* ---- 主色 ---- */
+  --brand: #495dff;
+  --brand-hover: #3a5eff;
+  --brand-active: #1a5cff;
+  --brand-fill: #eef3ff;
+  --focus-ring: var(--brand);
+
+  /* ---- 文字 ---- */
+  --text: #2d2d2d;
+  --text-secondary: #767676;
+  --text-muted: rgba(0, 0, 0, 0.64);
+  --text-soft: #b8b8b8;
+
+  /* ---- 背景与填充 ---- */
+  --bg: #ffffff;
+  --sidebar-bg: #fbfbfb;
+  --fill-1: #fafafa;
+  --fill-2: #fcfcfc;
+  --hover: #f0f0f0;
+  --active: #ebebeb;
+
+  /* ---- 描边 ---- */
+  --border: #efefef;
+  --border-hover: #e0e0e0;
+  --border-focus: #c7d2fe;
+  --divider: #f0f0f0;
+
+  /* ---- 状态 ---- */
+  --success: #08a040;
+  --success-bg: #e8faef;
+  --warning: #c06010;
+  --warning-bg: #fff1e8;
+  --danger: #e04a3a;
+  --danger-bg: #fff1f0;
+  --dot-blue: #4d89ff;
+  --dot-orange: #ff8d42;
+  --dot-green: #08cc50;
+
+  /* ---- 滚动条 ---- */
+  --scroll-thumb: #c8c8c8;
+  --scroll-thumb-hover: #a8a8a8;
+
+  /* ---- 阴影 ---- */
+  --pill-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+  --menu-shadow: 0 8px 28px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.06);
+
+  /* ---- 圆角 ---- */
+  --r-xl: 16px;
 }

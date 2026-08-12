@@ -1,4 +1,11 @@
 import billTemplate from '../artifacts/purchase-order.html?raw';
+import tokensCss from '../styles/tokens.css?raw';
+
+/* 产物预览与应用共用同一份设计令牌 */
+const billTemplateWithTokens = billTemplate.replace(
+  '/* 令牌由 tokens.css 注入 */',
+  tokensCss.replace(/\/\*[\s\S]*?\*\//g, '').trim()
+);
 
 
 (function(){
@@ -238,7 +245,9 @@ import billTemplate from '../artifacts/purchase-order.html?raw';
   $$('.dropdown').forEach(function(dd){
     var chip=$('[data-chip]',dd);
     if(!chip) return;
-    if(dd===appDd || dd===chatAppDd) return; // 关联应用由专用监听器控制
+    /* 用 id 判断而非变量引用：appDd / chatAppDd 在本行之后才赋值，
+       用变量会因 var 提升恒为 undefined，导致专用下拉被重复绑定 */
+    if(dd.id==='appDropdown' || dd.id==='chatAppDropdown') return;
     if(dd.classList.contains('field-dd')) return; // 表单内下拉改为点击展开
     var t=null;
     dd.addEventListener('mouseenter',function(){
@@ -792,12 +801,49 @@ import billTemplate from '../artifacts/purchase-order.html?raw';
   if(envRefresh) envRefresh.addEventListener('click',function(){ toast('已刷新环境列表'); });
   var envReset=$('#envReset');
   if(envReset) envReset.addEventListener('click',function(){ toast('已恢复默认配置'); });
-  function bindEnvMore(b){
-    b.addEventListener('click',function(){
-      toast(b.closest('.env-item').querySelector('.env-name').textContent);
+  /* 环境项操作菜单 */
+  function closeEnvMenus(except){
+    $$('.env-more-wrap.open').forEach(function(w){ if(w!==except) w.classList.remove('open'); });
+  }
+  function bindEnvMore(btn){
+    var wrap=btn.closest('.env-more-wrap');
+    var item=btn.closest('.env-item');
+    btn.addEventListener('click',function(e){
+      e.stopPropagation();
+      var open=!wrap.classList.contains('open');
+      closeEnvMenus(wrap);
+      wrap.classList.toggle('open',open);
+      btn.setAttribute('aria-expanded',open?'true':'false');
+    });
+    $$('.env-mi',wrap).forEach(function(mi){
+      mi.addEventListener('click',function(e){
+        e.stopPropagation();
+        wrap.classList.remove('open');
+        var name=item.querySelector('.env-name').textContent;
+        var act=mi.getAttribute('data-act');
+        if(act==='copy'){
+          var url=item.querySelector('.env-url').textContent;
+          if(navigator.clipboard) navigator.clipboard.writeText(url);
+          toast('已复制地址：'+url);
+        }else if(act==='default'){
+          $$('.env-tag.def').forEach(function(t){t.remove()});
+          var head=item.querySelector('.env-head');
+          var tag=document.createElement('span');
+          tag.className='env-tag def'; tag.textContent='默认';
+          head.insertBefore(tag, head.querySelector('.env-tag'));
+          toast('已设为默认：'+name);
+        }else if(act==='delete'){
+          item.remove();
+          toast('已删除：'+name);
+        }else{
+          toast('编辑：'+name);
+        }
+      });
     });
   }
   $$('.env-more').forEach(bindEnvMore);
+  document.addEventListener('click',function(){ closeEnvMenus(null); });
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeEnvMenus(null); });
 
   var envModal=$('#envModal');
   function openEnvModal(){
@@ -843,7 +889,9 @@ import billTemplate from '../artifacts/purchase-order.html?raw';
         +(isDef?'<span class="env-tag def">默认</span>':'')
         +'<span class="env-tag '+(type==='云端'?'cloud':'local')+'">'+type+'</span></div>'
         +'<div class="env-url"></div></div>'
-        +'<button class="env-more" data-tooltip="更多" aria-label="更多"><svg class="ic" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>';
+        +'<div class="env-more-wrap"><button class="env-more" data-tooltip="更多" aria-label="更多" aria-haspopup="true">'
+        +'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button>'
+        +'<div class="env-menu"><div class="env-mi" data-act="edit">编辑</div><div class="env-mi" data-act="copy">复制地址</div><div class="env-mi" data-act="default">设为默认</div><div class="env-mi-sep"></div><div class="env-mi danger" data-act="delete">删除</div></div></div>';
       item.querySelector('.env-name').textContent=name;
       item.querySelector('.env-url').textContent=url;
       bindEnvMore(item.querySelector('.env-more'));
@@ -1099,7 +1147,7 @@ import billTemplate from '../artifacts/purchase-order.html?raw';
       var view=document.getElementById('view-chat');
       var frame=document.getElementById('chatPreviewFrame');
       if(frame){
-        var html='<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>:root{--bg:#fff;--text:#2d2d2d;--text-secondary:#767676;--text-soft:#b8b8b8;--border:#efefef;--border-hover:#e0e0e0;--divider:#f0f0f0;--fill-1:#fafafa;--fill-2:#fcfcfc;--brand:#495dff;--brand-hover:#3a5eff;--brand-fill:#eef3ff;--success:#08a040;--success-bg:#e8faef;--danger:#e04a3a;--danger-bg:var(--bg)1f0;--scroll-thumb:#c8c8c8;--scroll-thumb-hover:#a8a8a8}*{box-sizing:border-box;margin:0;padding:0} html,body{height:100%} html{background:var(--bg)} body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Segoe UI","Microsoft YaHei",sans-serif;font-size:13px;color:var(--text);background:var(--bg);display:flex;flex-direction:column;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1} /* 顶部单据栏 */ .bill-top{background:var(--bg);padding:12px 16px;flex:none;border-bottom:1px solid var(--divider)} .bill-id{display:flex;align-items:center;gap:10px;flex-wrap:wrap} .bill-title{font-size:16px;font-weight:600;letter-spacing:.2px} .tag{display:inline-flex;align-items:center;height:20px;padding:0 8px;border-radius:3px;font-size:12px;font-weight:500} .tag.ok{background:var(--success-bg);color:var(--success)} /* 操作栏 */ .toolbar{display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap} .btn{height:28px;padding:0 14px;border:1px solid var(--border-hover);border-radius:6px;background:var(--bg);color:var(--text);font-size:13px;line-height:1;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center;gap:4px;vertical-align:middle;box-sizing:border-box} .btn:hover{background:var(--fill-1);border-color:var(--scroll-thumb)} .btn.primary{background:var(--brand);border-color:var(--brand);color:var(--bg)} .btn.primary:hover{background:var(--brand-hover);border-color:var(--brand-hover);color:var(--bg)} .btn.ghost{border-color:transparent;color:var(--text-secondary);padding:0 6px;display:inline-flex;align-items:center;justify-content:center}.btn.ghost:hover{background:var(--fill-1);color:var(--text)}.btn.ghost svg{width:16px;height:16px} .more{position:relative}.more .btn{padding:0 12px}.more .btn svg{width:12px;height:12px}.more-menu{display:none;position:absolute;top:calc(100% + 4px);left:0;z-index:20;min-width:132px;background:var(--bg);border:1px solid var(--border);border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.12);padding:4px 0}.more:hover .more-menu{display:block}.mi{padding:7px 14px;font-size:13px;color:var(--text);cursor:pointer;white-space:nowrap}.mi:hover{background:var(--fill-1)}.mi.danger{color:var(--danger)}.mi.danger:hover{background:var(--danger-bg);color:var(--danger)}.mi-sep{height:1px;background:var(--divider);margin:4px 0} /* 页签 */ .tabs{display:none;gap:20px;margin-top:14px;overflow-x:auto;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none} .tab{position:relative;padding:0 0 9px;font-size:13px;color:var(--text-secondary);cursor:pointer;white-space:nowrap;transition:color .15s} .tab:hover{color:var(--text)} .tab.on{color:var(--brand);font-weight:500} .tab.on:after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--brand)} /* 内容区 */ .scroll{flex:1;overflow:auto;padding:12px 0} .card{background:var(--bg);border:1px solid var(--border);border-radius:0;margin-bottom:12px}.card:last-child{margin-bottom:0} .card-hd{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--divider)} .card-hd h3{font-size:13px;font-weight:600} .card-bd{padding:14px 16px}[hidden]{display:none}.empty{padding:56px 0;text-align:center;color:var(--text-soft);font-size:13px} /* 字段网格 */ .fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,max(240px,(100% - 84px)/4)),1fr));gap:14px 28px} .f{display:flex;align-items:baseline;gap:2px;min-width:0} .f-l{flex:none;width:78px;text-align:right;color:var(--text-secondary);font-size:13px;line-height:18px}.f-l:after{content:"："} .f-v{flex:1;min-width:0;color:var(--text);line-height:18px;word-break:break-all} .f-v.strong{font-weight:600;color:var(--danger)} .f.wide{grid-column:1/-1} /* 明细表 */ .tbl-wrap{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-color:var(--scroll-thumb) var(--fill-1)}.tbl-wrap::-webkit-scrollbar{height:10px}.tbl-wrap::-webkit-scrollbar-track{background:var(--fill-1)}.tbl-wrap::-webkit-scrollbar-thumb{background:var(--scroll-thumb);border-radius:5px;border:2px solid var(--fill-1)}.tbl-wrap::-webkit-scrollbar-thumb:hover{background:var(--scroll-thumb-hover)} table{width:100%;min-width:900px;border-collapse:separate;border-spacing:0} th:first-child,td:first-child{padding-left:0} th:last-child,td:last-child{padding-right:0} th,td{white-space:nowrap;padding:8px 12px;text-align:left;border-bottom:1px solid var(--divider)}th:first-child,td:first-child{padding-left:16px}th:last-child,td:last-child{padding-right:16px} th{position:sticky;top:0;z-index:1;background:var(--fill-1);color:var(--text-secondary);font-weight:500;font-size:12px;border-bottom:1px solid var(--border)} td{color:var(--text)} tbody tr:nth-child(even) td{background:var(--fill-2)} tbody tr:hover td{background:var(--brand-fill)} .c-idx{width:44px;color:var(--text-secondary);font-size:12px} .c-code{color:var(--text)} .r{text-align:right} tbody tr:last-child td{border-bottom:none} tfoot td{background:var(--fill-1);font-weight:600;border-top:1px solid var(--border);border-bottom:none}td.total{font-weight:500}tfoot td.total{color:var(--danger);font-weight:600} /* 合计条 */ .sumbar{display:flex;justify-content:flex-end;gap:32px;padding:12px 16px;border-top:1px solid var(--divider);flex-wrap:wrap} .sum{text-align:right} .sum-l{font-size:12px;color:var(--text-soft)} .sum-v{font-size:15px;font-weight:600;margin-top:2px} .sum-v.total{color:var(--danger);font-size:17px} </style></head><body><div class="bill-top"> <div class="bill-id"> <span class="bill-title">采购订单</span> <span class="tag ok">已审核</span> </div> <div class="toolbar"> <button class="btn primary">反审核</button> <button class="btn">打印</button> <div class="more"><button class="btn">更多 <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 7.5 5 5 5-5"/></svg></button><div class="more-menu"><div class="mi">复制新增</div><div class="mi">导出 Excel</div><div class="mi-sep"></div><div class="mi">变更记录</div><div class="mi">单据日志</div><div class="mi-sep"></div><div class="mi danger">关闭订单</div></div></div> </div> <div class="tabs"> <div class="tab on" data-target="sec-base">基本信息</div> <div class="tab" data-target="sec-fin">财务信息</div> <div class="tab" data-target="sec-detail">明细信息</div> <div class="tab" data-target="sec-attach">附件</div> </div> <div class="scroll"> <div class="card" id="sec-base"> <div class="card-hd"><h3>基本信息</h3></div> <div class="card-bd"> <div class="fields"> <div class="f"><span class="f-l">单据编号</span><span class="f-v">PO-2026-0001</span></div> <div class="f"><span class="f-l">单据状态</span><span class="f-v">已审核</span></div> <div class="f"><span class="f-l">供应商</span><span class="f-v">深圳恒达科技有限公司</span></div> <div class="f"><span class="f-l">采购组织</span><span class="f-v">采购一部</span></div> <div class="f"><span class="f-l">采购部门</span><span class="f-v">采购管理部</span></div> <div class="f"><span class="f-l">采购员</span><span class="f-v">张伟</span></div> <div class="f"><span class="f-l">订单日期</span><span class="f-v">2026-07-28</span></div> <div class="f"><span class="f-l">交货日期</span><span class="f-v">2026-08-15</span></div> <div class="f"><span class="f-l">运输方式</span><span class="f-v">公路运输</span></div> <div class="f wide"><span class="f-l">交货地址</span><span class="f-v">广东省深圳市南山区科技园南区 A 栋 3 层收货口</span></div> <div class="f wide"><span class="f-l">备注</span><span class="f-v">加急订单，请优先安排生产。到货前一天电话联系收货人。</span></div> </div> </div> </div> <div class="card" id="sec-fin"> <div class="card-hd"><h3>财务信息</h3></div> <div class="card-bd"> <div class="fields"> <div class="f"><span class="f-l">币别</span><span class="f-v">人民币 CNY</span></div> <div class="f"><span class="f-l">汇率</span><span class="f-v">1.0000</span></div> <div class="f"><span class="f-l">税率</span><span class="f-v">13%</span></div> <div class="f"><span class="f-l">付款条件</span><span class="f-v">30 天账期</span></div> <div class="f"><span class="f-l">结算方式</span><span class="f-v">银行转账</span></div> <div class="f"><span class="f-l">总金额</span><span class="f-v strong">145,205.00</span></div> </div> </div> </div> <div class="card" id="sec-detail"> <div class="card-hd"><h3>明细信息</h3></div> <div class="tbl-wrap"> <table> <thead> <tr> <th class="c-idx">#</th> <th>物料编码</th> <th>物料名称</th> <th>规格型号</th> <th>单位</th> <th class="r">数量</th> <th class="r">单价</th> <th class="r">金额</th> <th class="r">税额</th> <th class="r">总金额</th> <th>交货日期</th> </tr> </thead> <tbody> <tr><td class="c-idx">1</td><td class="c-code">MAT-001</td><td>工业传感器 XC-200</td><td>XC-200/24V</td><td>个</td><td class="r">50</td><td class="r">860.00</td><td class="r">43,000.00</td><td class="r">5,590.00</td><td class="r total">48,590.00</td><td>2026-08-15</td></tr> <tr><td class="c-idx">2</td><td class="c-code">MAT-002</td><td>PLC 控制器</td><td>PLC-3000</td><td>台</td><td class="r">10</td><td class="r">3,200.00</td><td class="r">32,000.00</td><td class="r">4,160.00</td><td class="r total">36,160.00</td><td>2026-08-15</td></tr> <tr><td class="c-idx">3</td><td class="c-code">MAT-003</td><td>信号转换模块</td><td>SCM-100</td><td>个</td><td class="r">30</td><td class="r">450.00</td><td class="r">13,500.00</td><td class="r">1,755.00</td><td class="r total">15,255.00</td><td>2026-08-12</td></tr> <tr><td class="c-idx">4</td><td class="c-code">MAT-005</td><td>工业电缆 5m</td><td>CBL-5M</td><td>根</td><td class="r">100</td><td class="r">85.00</td><td class="r">8,500.00</td><td class="r">1,105.00</td><td class="r total">9,605.00</td><td>2026-08-12</td></tr> <tr><td class="c-idx">5</td><td class="c-code">MAT-007</td><td>温度传感器</td><td>TS-100</td><td>个</td><td class="r">40</td><td class="r">620.00</td><td class="r">24,800.00</td><td class="r">3,224.00</td><td class="r total">28,024.00</td><td>2026-08-15</td></tr> <tr><td class="c-idx">6</td><td class="c-code">MAT-008</td><td>安装支架</td><td>BRK-200</td><td>套</td><td class="r">20</td><td class="r">335.00</td><td class="r">6,700.00</td><td class="r">871.00</td><td class="r total">7,571.00</td><td>2026-08-20</td></tr> </tbody> <tfoot> <tr><td colspan="5">合计</td><td class="r">250</td><td class="r"></td><td class="r">128,500.00</td><td class="r">16,705.00</td><td class="r total">145,205.00</td><td></td></tr> </tfoot> </table> </div> </div> <div class="card" id="sec-attach"> <div class="card-hd"><h3>附件</h3></div> <div class="card-bd"><div class="empty">暂无附件</div></div> </div> </div><script>var tabs=[].slice.call(document.querySelectorAll(".tab"));var scroller=document.querySelector(".scroll");function activate(id){tabs.forEach(function(x){x.classList.toggle("on",x.getAttribute("data-target")===id)});}tabs.forEach(function(t){t.addEventListener("click",function(){var id=t.getAttribute("data-target");var el=document.getElementById(id);if(!el)return;activate(id);scroller.scrollTo({top:el.offsetTop-8,behavior:"smooth"});});});var ticking=false;scroller.addEventListener("scroll",function(){if(ticking)return;ticking=true;requestAnimationFrame(function(){ticking=false;var cards=[].slice.call(scroller.querySelectorAll(".card"));var cur=cards[0];cards.forEach(function(c){if(c.offsetTop-scroller.scrollTop<=60)cur=c;});if(cur)activate(cur.id);});});<\/script></body></html>';
+        var html=billTemplateWithTokens;
         var blob=new Blob([html],{type:'text/html'});
         frame.src=URL.createObjectURL(blob);
         view.classList.add('preview-open');
@@ -1974,43 +2022,52 @@ import billTemplate from '../artifacts/purchase-order.html?raw';
   function renderGlobalStyles(){
     var html='';
     /* === 1. 色彩 === */
+    /* 色值从 :root 实时读取，杜绝文档与代码漂移 */
+    var _rootStyle=getComputedStyle(document.documentElement);
+    function tok(name){ return _rootStyle.getPropertyValue(name).trim(); }
+    function T(name,label,desc){ return {name:label,val:tok(name),varName:name,desc:desc}; }
     var colorGroups=[
       {title:'主色',colors:[
-        {name:'Primary / Focus',val:'#495dff',varName:'--focus-ring',desc:'焦点环色，用于输入框聚焦、链接高亮'},
-        {name:'Primary Active',val:'#1a5cff',desc:'主色按下态，用于按钮 active 状态'},
-        {name:'Primary Hover',val:'#3a5eff',desc:'主色悬浮态，用于按钮 hover 状态'},
-        {name:'Primary Light',val:'#eef3ff',desc:'主色浅背景，用于标签、徽标底色'}
+        T('--brand','Primary','品牌主色，用于主按钮、选中态、强调'),
+        T('--brand-hover','Primary Hover','主色悬浮态'),
+        T('--brand-active','Primary Active','主色按下态'),
+        T('--brand-fill','Primary Light','主色浅背景，用于标签、行悬浮'),
+        T('--focus-ring','Focus Ring','焦点环色，输入框聚焦、链接高亮')
       ]},
       {title:'文字色',colors:[
-        {name:'Text Primary',val:'#2d2d2d',varName:'--text',desc:'正文主文字色，用于标题、内容文本'},
-        {name:'Text Secondary',val:'#767676',varName:'--text-secondary',desc:'次级文字色（对比度 4.5:1），用于表单标签、表头、未选中页签'},
-        {name:'Text Muted',val:'#878787',varName:'--text-muted',desc:'辅助文字色，用于描述、标签、占位符'},
-        {name:'Text Soft',val:'#b8b8b8',varName:'--text-soft',desc:'最弱文字色，用于禁用态、提示文字'}
+        T('--text','Text Primary','正文主文字色'),
+        T('--text-secondary','Text Secondary','次级文字（对比度 4.5:1），表单标签、表头、未选中页签'),
+        T('--text-muted','Text Muted','辅助文字，描述与说明'),
+        T('--text-soft','Text Soft','最弱文字，禁用态、占位符')
       ]},
-      {title:'背景色',colors:[
-        {name:'Background',val:'#ffffff',varName:'--bg',desc:'页面主背景色'},
-        {name:'Sidebar BG',val:'#fbfbfb',varName:'--sidebar-bg',desc:'侧边栏背景色'},
-        {name:'Fill 1',val:'#fafafa',varName:'--fill-1',desc:'浅填充，用于表头、合计行底色'},
-        {name:'Fill 2',val:'#fcfcfc',varName:'--fill-2',desc:'更浅填充，用于表格斑马纹'},
-        {name:'Hover BG',val:'#f0f0f0',varName:'--hover',desc:'列表项 hover 背景色'},
-        {name:'Active BG',val:'#ebebeb',varName:'--active',desc:'列表项选中/active 背景色'}
+      {title:'背景与填充',colors:[
+        T('--bg','Background','页面主背景'),
+        T('--sidebar-bg','Sidebar BG','侧边栏背景'),
+        T('--fill-1','Fill 1','浅填充，表头与合计行'),
+        T('--fill-2','Fill 2','更浅填充，表格斑马纹'),
+        T('--hover','Hover BG','列表项悬浮背景'),
+        T('--active','Active BG','列表项选中背景')
       ]},
-      {title:'边框',colors:[
-        {name:'Border',val:'#efefef',varName:'--border',desc:'默认边框色，用于卡片、分割线'},
-        {name:'Divider',val:'#f0f0f0',varName:'--divider',desc:'弱分隔线，用于卡片内分区、表格行线'},
-        {name:'Border Hover',val:'#e0e0e0',desc:'边框 hover 态，用于输入框 hover'},
-        {name:'Border Focus',val:'#c7d2fe',desc:'边框聚焦态，用于输入框 focus'}
+      {title:'描边',colors:[
+        T('--border','Border','默认边框，卡片与分割线'),
+        T('--border-hover','Border Hover','边框悬浮态'),
+        T('--border-focus','Border Focus','边框聚焦态'),
+        T('--divider','Divider','弱分隔线，卡片内分区、表格行线')
       ]},
       {title:'状态色',colors:[
-        {name:'Dot Blue',val:'#4d89ff',varName:'--dot-blue',desc:'蓝色圆点，表示进行中状态'},
-        {name:'Dot Orange',val:'#ff8d42',varName:'--dot-orange',desc:'橙色圆点，表示等待状态'},
-        {name:'Dot Green',val:'#08cc50',varName:'--dot-green',desc:'绿色圆点，表示完成状态'},
-        {name:'Success',val:'#08a040',desc:'成功色，用于成功提示图标和文字'},
-        {name:'Success BG',val:'#e8faef',desc:'成功色浅背景，用于成功提示底色'},
-        {name:'Warning',val:'#c06010',desc:'警示色，用于警示提示图标和文字'},
-        {name:'Warning BG',val:'#fff1e8',desc:'警示色浅背景，用于警示提示底色'},
-        {name:'Danger',val:'#e04a3a',desc:'危险色，用于错误提示图标和文字'},
-        {name:'Danger Badge',val:'#e33',desc:'危险徽标色，用于数字角标'}
+        T('--success','Success','成功色'),
+        T('--success-bg','Success BG','成功浅背景'),
+        T('--warning','Warning','警示色'),
+        T('--warning-bg','Warning BG','警示浅背景'),
+        T('--danger','Danger','危险色，同时用于金额强调'),
+        T('--danger-bg','Danger BG','危险浅背景'),
+        T('--dot-blue','Dot Blue','蓝点，进行中'),
+        T('--dot-orange','Dot Orange','橙点，等待中'),
+        T('--dot-green','Dot Green','绿点，已完成')
+      ]},
+      {title:'滚动条',colors:[
+        T('--scroll-thumb','Scroll Thumb','滚动条滑块'),
+        T('--scroll-thumb-hover','Scroll Thumb Hover','滑块悬浮态')
       ]}
     ];
     var tc=0;colorGroups.forEach(function(g){tc+=g.colors.length});

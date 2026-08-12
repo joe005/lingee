@@ -64,3 +64,31 @@
   }
 
   
+/* 环境项操作菜单 */
+.env-more-wrap { position: relative; flex: none; }
+.env-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 30;
+  min-width: 132px;
+  padding: 4px 0;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--menu-shadow);
+}
+.env-more-wrap.open .env-menu { display: block; }
+.env-more-wrap.open .env-more { background: var(--hover); color: var(--text); }
+.env-mi {
+  padding: 7px 14px;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.env-mi:hover { background: var(--fill-1); }
+.env-mi.danger { color: var(--danger); }
+.env-mi.danger:hover { background: var(--danger-bg); }
+.env-mi-sep { height: 1px; margin: 4px 0; background: var(--divider); }
