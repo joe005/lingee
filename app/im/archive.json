@@ -1,0 +1,16 @@
+{
+  "type": "cosmic",
+  "appCode": "im",
+  "appName": "库存管理",
+  "appId": "=9Q86DR2P+Q",
+  "bizCloudId": "/I7NEN/7XUFC",
+  "bizCloudName": "供应链云",
+  "isv": "kded",
+  "standard": false,
+  "appIsv": "kingdee",
+  "appOwnershipEvidence": "appInfo.isv",
+  "cosmicAppName": "",
+  "formNumbers": [],
+  "apiIds": [],
+  "artifacts": []
+}

@@ -1,0 +1,22 @@
+# 依赖与构建产物
+node_modules/
+dist/
+.vite/
+
+# 系统与编辑器
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# 工具运行时目录
+.temp/
+.claude/
+skills/
+**/_runtime/
+**/*token_cache*
+**/*.lock
+
+# 临时与备份（历史存档另行保留）
+*.bak
+*.tmp

@@ -1,0 +1,50 @@
+/* ============================================================
+   Lingee Design Tokens — 所有原型页面共用
+   ============================================================ */
+:root {
+  /* 背景 */
+  --bg: #ffffff;
+  --sidebar-bg: #fbfbfb;
+
+  /* 文字 */
+  --text: #2d2d2d;
+  --text-muted: rgba(0,0,0,.64);
+  --text-soft: #b8b8b8;
+
+  /* 边框 / 交互 */
+  --border: #efefef;
+  --hover: #f0f0f0;
+  --active: #ebebeb;
+
+  /* 状态彩点 */
+  --dot-blue: #4d89ff;
+  --dot-orange: #ff8d42;
+  --dot-green: #08cc50;
+
+  /* 品牌色 */
+  --brand: #495dff;
+  --brand-hover: #3a4ff0;
+  --brand-light: #eef3ff;
+  --brand-border: #cfe0ff;
+  --brand-text: #3a7bff;
+
+  /* 阴影 */
+  --shadow-pill: 0 1px 2px rgba(0,0,0,.06), 0 1px 3px rgba(0,0,0,.04);
+  --shadow-menu: 0 8px 28px rgba(0,0,0,.12), 0 2px 6px rgba(0,0,0,.06);
+  --shadow-card-hover: 0 6px 20px rgba(0,0,0,.06);
+  --shadow-composer: 0 4px 24px rgba(0,0,0,.05);
+
+  /* 圆角 */
+  --r-sm: 8px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-xl: 16px;
+  --r-2xl: 20px;
+  --r-full: 999px;
+
+  /* 布局 */
+  --sidebar-width: 280px;
+
+  /* 字体 */
+  --font: -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI", "Microsoft YaHei", sans-serif;
+}

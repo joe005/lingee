@@ -1,0 +1,17 @@
+{
+  "type": "cosmic",
+  "appCode": "kded_im_ext",
+  "appId": "10AYDAGN9H2T",
+  "appName": "库存管理",
+  "cosmicAppName": "库存管理",
+  "bizCloudId": "/I7NEN/7XUFC",
+  "bizCloudName": "供应链云",
+  "isv": "kded",
+  "standard": false,
+  "formNumbers": [],
+  "apiIds": [],
+  "artifacts": [],
+  "appDescription": "入库、出库、调拨、盘点、调整",
+  "appIsv": "kded",
+  "appOwnershipEvidence": "appInfo.isv"
+}

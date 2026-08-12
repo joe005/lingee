@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lingee — 开发</title>
+<style>
+  :root{
+    --bg:#ffffff;
+    --sidebar-bg:#fbfbfb;
+    --text:#2d2d2d;
+    --text-muted:#878787;
+    --text-soft:#b8b8b8;
+    --border:#efefef;
+    --hover:#f0f0f0;
+    --active:#ebebeb;
+    --pill-shadow:0 1px 2px rgba(0,0,0,.06),0 1px 3px rgba(0,0,0,.04);
+    --menu-shadow:0 8px 28px rgba(0,0,0,.12),0 2px 6px rgba(0,0,0,.06);
+    --dot-blue:#4d89ff;
+    --dot-orange:#ff8d42;
+    --dot-green:#08cc50;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Segoe UI","Microsoft YaHei",sans-serif;
+    color:var(--text);
+    background:var(--bg);
+    -webkit-font-smoothing:antialiased;
+    display:flex;
+    height:100vh;
+    overflow:hidden;
+    font-size:14px;
+  }
+  /* Icons */
+  .ic{width:18px;height:18px;stroke:currentColor;stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round;flex:none}
+  .ic-sm{width:16px;height:16px}
+
+  /* ============ SIDEBAR ============ */
+  .sidebar{
+    width:280px;
+    flex:none;
+    background:var(--sidebar-bg);
+    display:flex;
+    flex-direction:column;
+    border-right:1px solid var(--border);
+  }
+  .sb-head{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:18px 20px 10px;
+  }
+  .brand{font-size:19px;font-weight:600;letter-spacing:.2px}
+  .sb-head-icons{display:flex;gap:14px;color:var(--text-muted)}
+  .sb-head-icons .ic{cursor:pointer}
+
+  /* segmented nav */
+  .seg{
+    display:flex;gap:2px;
+    padding:2px 16px 14px;
+  }
+  .seg-item{
+    display:flex;align-items:center;gap:5px;
+    padding:7px 12px;border-radius:10px;
+    color:var(--text-muted);font-size:14px;cursor:pointer;
+    font-weight:500;
+  }
+  .seg-item.active{
+    background:#fff;color:var(--text);box-shadow:var(--pill-shadow);
+  }
+
+  .sb-scroll{flex:1;overflow-y:auto;padding:0 12px}
+
+  .nav-item{
+    display:flex;align-items:center;gap:11px;
+    padding:9px 12px;border-radius:10px;cursor:pointer;
+    color:var(--text);margin-bottom:2px;
+  }
+  .nav-item:hover{background:var(--hover)}
+  .nav-item.active{background:var(--active)}
+  .nav-item .ic{color:#3a3a3d}
+
+  .section-label{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:18px 12px 8px;color:var(--text-soft);font-size:13px;
+  }
+  .section-label .lbl-icons{display:flex;gap:12px;color:var(--text-soft)}
+  .section-label .lbl-icons .ic{cursor:pointer}
+
+  .project-group{margin-bottom:2px}
+  .group-head{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:7px 12px;border-radius:8px;cursor:pointer;color:var(--text);
+  }
+  .group-head:hover{background:var(--hover)}
+  .group-head:hover .more{opacity:1}
+  .group-title{display:flex;align-items:center;gap:5px;font-weight:500}
+  .caret{width:14px;height:14px;color:var(--text-muted)}
+  .more{color:var(--text-muted);opacity:0;font-size:16px;letter-spacing:1px;line-height:1}
+
+  .sub-item{
+    display:flex;align-items:center;gap:10px;
+    padding:7px 12px 7px 14px;border-radius:8px;cursor:pointer;
+    color:#3a3a3d;
+  }
+  .sub-item:hover{background:var(--hover)}
+  .dot{width:7px;height:7px;border-radius:50%;flex:none}
+  .dot.blue{background:var(--dot-blue)}
+  .dot.orange{background:var(--dot-orange)}
+  .dot.green{background:var(--dot-green)}
+  .sub-item .txt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  .flat-item{
+    padding:7px 12px;border-radius:8px;cursor:pointer;color:#3a3a3d;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .flat-item:hover{background:var(--hover)}
+  .flat-item.muted{color:var(--text-muted)}
+
+  /* sidebar footer */
+  .sb-foot{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 20px;border-top:1px solid var(--border);color:var(--text-muted);
+  }
+  .user{display:flex;align-items:center;gap:9px;color:var(--text);cursor:pointer}
+  .avatar{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#c9c9cf,#a8a8b0);flex:none}
+  .foot-right{display:flex;align-items:center;gap:16px}
+  .foot-btn{display:flex;align-items:center;gap:5px;cursor:pointer;color:var(--text-muted);font-size:13px}
+
+  /* ============ MAIN ============ */
+  .main{
+    flex:1;display:flex;flex-direction:column;position:relative;
+    background:
+      radial-gradient(60% 45% at 50% 42%, rgba(120,120,255,.035), transparent 70%),
+      var(--bg);
+  }
+  .main-center{
+    flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:0 24px;margin-top:-40px;
+  }
+  .greeting{
+    display:flex;align-items:center;gap:16px;
+    font-size:34px;font-weight:600;letter-spacing:.5px;margin-bottom:34px;
+    color:#2e2e2e;
+  }
+  .mascot{width:46px;height:46px;flex:none;object-fit:contain;display:block}
+
+  /* composer */
+  .composer{
+    width:100%;max-width:800px;
+    background:#fff;border:1px solid var(--border);
+    border-radius:20px;
+    box-shadow:0 4px 24px rgba(0,0,0,.05);
+    padding:18px 20px 14px;
+  }
+  .composer-input{
+    color:var(--text-soft);font-size:15px;padding:2px 4px 22px;
+    min-height:24px;
+  }
+  .composer-bar{display:flex;align-items:center;gap:8px}
+  .round-btn{
+    width:32px;height:32px;border-radius:50%;border:1px solid var(--border);
+    background:#fff;display:flex;align-items:center;justify-content:center;
+    color:#5a5a5f;cursor:pointer;flex:none;
+  }
+  .round-btn:hover{background:var(--hover)}
+  .chip{
+    display:flex;align-items:center;gap:5px;
+    padding:6px 12px;border-radius:999px;border:1px solid var(--border);
+    background:#fff;color:#3a3a3d;font-size:13px;cursor:pointer;white-space:nowrap;font-weight:500;
+    position:relative;
+  }
+  .chip:hover{background:var(--hover)}
+  .chip.muted{color:var(--text-muted)}
+  .chip .caret{width:13px;height:13px}
+  .spacer{flex:1}
+  .send-btn{
+    width:36px;height:36px;border-radius:50%;
+    background:#f0f0f2;border:1px solid var(--border);
+    display:flex;align-items:center;justify-content:center;
+    color:#9a9aa0;cursor:pointer;flex:none;
+  }
+
+  /* dropdown menu on 未绑定应用 */
+  .dropdown{position:relative}
+  .menu{
+    position:absolute;top:calc(100% + 10px);left:0;
+    min-width:150px;background:#fff;border:1px solid var(--border);
+    border-radius:14px;box-shadow:var(--menu-shadow);
+    padding:6px;z-index:20;
+  }
+  .menu-item{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:8px 10px;border-radius:9px;cursor:pointer;color:var(--text);font-size:14px;
+  }
+  .menu-item:hover{background:var(--hover)}
+  .menu-item .left{display:flex;align-items:center;gap:9px}
+  .menu-item .ic{color:#5a5a5f}
+  .menu-check{color:#1a1a1a}
+  .menu-sep{height:1px;background:var(--border);margin:6px 4px}
+
+  .main-foot{
+    text-align:center;padding:16px;color:var(--text-soft);font-size:12px;
+  }
+
+  /* ---- interactive states ---- */
+  .menu{display:none}
+  .dropdown.open > .menu{display:block}
+  .dropdown.open > .chip{background:var(--hover)}
+  .menu-item .menu-check{visibility:hidden}
+  .menu-item.checked .menu-check{visibility:visible}
+  /* selected app chip (已选态) */
+  .chip.selected{background:#f2f5ff;border-color:#cfe0ff;color:#2d2d2d}
+  .chip.selected .chip-label{color:#3a7bff;font-weight:600}
+  .chip .app-dot{width:6px;height:6px;border-radius:50%;background:#3a7bff;flex:none;display:none}
+  .chip.selected .app-dot{display:block}
+  /* editable input */
+  .composer-input{outline:none}
+  .composer-input:empty:before{content:attr(data-placeholder);color:var(--text-soft);pointer-events:none}
+  .send-btn.active{background:#2d2d2d;color:#fff;border-color:#2d2d2d}
+  /* project collapse */
+  .project-group.collapsed .sub-item{display:none}
+  .caret{transition:transform .15s ease}
+  .caret.rot{transform:rotate(-90deg)}
+  .hidden{display:none !important}
+  /* tiny toast */
+  .toast{
+    position:fixed;left:50%;bottom:40px;transform:translateX(-50%);
+    background:#2d2d2d;color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;
+    box-shadow:0 6px 20px rgba(0,0,0,.2);opacity:0;transition:opacity .2s,transform .2s;
+    pointer-events:none;z-index:100;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px)}
+
+  /* ============ views ============ */
+  .view{flex:1;display:flex;flex-direction:column;min-height:0}
+  .view.hidden{display:none}
+
+  /* ============ 应用开发 (我的应用) ============ */
+  #view-apps{background:#fafafa;overflow-y:auto;padding:34px 56px 56px;position:relative}
+  #view-apps:before{content:"";position:absolute;right:40px;bottom:40px;width:55%;height:60%;
+    background-image:radial-gradient(circle, #ececec 1.4px, transparent 1.6px);
+    background-size:22px 22px;-webkit-mask-image:linear-gradient(135deg,transparent 45%,#000);
+    mask-image:linear-gradient(135deg,transparent 45%,#000);opacity:.55;pointer-events:none;z-index:0}
+  .apps-head{display:flex;align-items:center;justify-content:space-between;position:relative;z-index:1}
+  .apps-title{font-size:23px;font-weight:600;color:#0f0f0f;letter-spacing:.5px}
+  .btn-new{display:flex;align-items:center;gap:7px;background:#495dff;color:#fff;border:none;
+    padding:10px 18px;border-radius:11px;font-size:14px;font-weight:500;cursor:pointer;
+    box-shadow:0 2px 8px rgba(73,93,255,.28)}
+  .btn-new:hover{background:#3a4ff0}
+  .btn-new .ic{width:16px;height:16px;stroke-width:2.2}
+
+  .apps-toolbar{display:flex;align-items:center;justify-content:space-between;margin:22px 0 20px;position:relative;z-index:1}
+  .tabs{display:flex;gap:2px}
+  .tab{padding:8px 16px;border-radius:10px;color:#595959;font-size:14px;cursor:pointer;font-weight:500}
+  .tab:hover{background:#f0f0f0}
+  .tab.active{background:#fff;color:#0f0f0f;box-shadow:var(--pill-shadow)}
+  .apps-search{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--border);
+    border-radius:11px;padding:8px 14px;width:280px;color:var(--text-soft)}
+  .apps-search input{border:none;outline:none;background:none;font-size:14px;color:var(--text);width:100%}
+  .apps-search input::placeholder{color:var(--text-soft)}
+  .apps-search .ic{width:16px;height:16px;color:var(--text-soft)}
+
+  .apps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;position:relative;z-index:1}
+  .app-card{background:#fff;border:1px solid #eee;border-radius:16px;padding:20px 22px;cursor:pointer;
+    transition:box-shadow .15s,border-color .15s;min-width:0}
+  .app-card:hover{box-shadow:0 6px 20px rgba(0,0,0,.06);border-color:#e3e3e3}
+  .card-top{display:flex;align-items:center;gap:13px}
+  .card-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex:none}
+  .card-icon .ic{width:23px;height:23px;stroke-width:1.7}
+  .card-titles{flex:1;min-width:0}
+  .card-title-row{display:flex;align-items:center;gap:9px}
+  .card-title{font-size:15px;font-weight:600;color:#111;white-space:nowrap}
+  .task-badge{font-size:12px;color:#666;background:#f4f4f4;padding:2px 8px;border-radius:6px;font-weight:400}
+  .card-more{margin-left:auto;color:#bcbcbc;font-size:16px;letter-spacing:1px;line-height:1;cursor:pointer;padding:0 4px}
+  .card-more:hover{color:#888}
+  .card-desc{color:#8a8a8a;font-size:13px;line-height:1.65;margin:13px 0 15px;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .card-tags{display:flex;gap:8px;flex-wrap:wrap}
+  .ptag{font-size:12px;color:#5a5a5a;background:#f5f5f5;padding:4px 11px;border-radius:7px;white-space:nowrap}
+  @media(max-width:1160px){.apps-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside class="sidebar">
+    <div class="sb-head">
+      <div class="brand">Lingee</div>
+      <div class="sb-head-icons">
+        <svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg>
+        <svg class="ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      </div>
+    </div>
+
+    <div class="seg">
+      <div class="seg-item">
+        <svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7A8.5 8.5 0 1 1 21 11.5z"/></svg>
+        对话
+      </div>
+      <div class="seg-item">
+        <svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        工作
+      </div>
+      <div class="seg-item active">
+        <svg class="ic ic-sm" viewBox="0 0 24 24"><path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/></svg>
+        开发
+      </div>
+    </div>
+
+    <div class="sb-scroll">
+      <div class="nav-item active">
+        <svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
+        新任务
+      </div>
+      <div class="nav-item">
+        <svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18M3 12h18"/></svg>
+        技能开发
+      </div>
+      <div class="nav-item">
+        <svg class="ic" viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M12 8V4M9 14h.01M15 14h.01"/></svg>
+        智能体开发
+      </div>
+      <div class="nav-item">
+        <svg class="ic" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg>
+        应用开发
+      </div>
+
+      <div class="section-label">
+        <span>项目</span>
+        <span class="lbl-icons">
+          <svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M4 20V6a2 2 0 0 1 2-2h5l2 2h5a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/></svg>
+          <svg class="ic ic-sm" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+        </span>
+      </div>
+
+      <div class="project-group">
+        <div class="group-head">
+          <span class="group-title">
+            供应商管理项目
+            <svg class="caret" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+          </span>
+          <span class="more">···</span>
+        </div>
+        <div class="sub-item"><span class="dot blue"></span><span class="txt">采购订单单元数据配置</span></div>
+        <div class="sub-item"><span class="dot orange"></span><span class="txt">采购订单单元数据配置</span></div>
+        <div class="sub-item"><span class="dot green"></span><span class="txt">采购订单单元数据配置</span></div>
+      </div>
+
+      <div class="flat-item">今年的财报发布日期发布日期发布日...</div>
+
+      <div class="group-head">
+        <span class="group-title">
+          供应商管理项目
+          <svg class="caret" viewBox="0 0 24 24" style="transform:rotate(-90deg)"><path d="m6 9 6 6 6-6"/></svg>
+        </span>
+      </div>
+
+      <div class="flat-item muted">New Project</div>
+    </div>
+
+    <div class="sb-foot">
+      <div class="user">
+        <span class="avatar"></span>
+        Joe
+      </div>
+      <div class="foot-right">
+        <span class="foot-btn">
+          <svg class="ic ic-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .8-1 1.7M12 17h.01"/></svg>
+          问题反馈
+        </span>
+        <svg class="ic ic-sm" viewBox="0 0 24 24" style="color:var(--text-muted)"><path d="M4 20V6a2 2 0 0 1 2-2h5l2 2h5a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/></svg>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ===================== MAIN ===================== -->
+  <main class="main">
+  <div class="view" id="view-newtask">
+    <div class="main-center">
+      <div class="greeting">
+        <img class="mascot" src="data:image/png;base64,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" alt="Lingee">
+        早上好，Joe
+      </div>
+
+      <div class="composer">
+        <div class="composer-input" id="composerInput" contenteditable="true" data-placeholder="布置应用开发任务"></div>
+        <div class="composer-bar">
+          <button class="round-btn" aria-label="add">
+            <svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
+
+          <!-- mode -->
+          <div class="dropdown" data-dd="mode">
+            <div class="chip" data-chip>
+              <span class="chip-label">应用开发</span>
+              <svg class="caret" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+            </div>
+            <div class="menu">
+              <div class="menu-item checked" data-val="应用开发"><span class="left">应用开发</span><svg class="ic ic-sm menu-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
+              <div class="menu-item" data-val="技能开发"><span class="left">技能开发</span><svg class="ic ic-sm menu-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
+              <div class="menu-item" data-val="智能体开发"><span class="left">智能体开发</span><svg class="ic ic-sm menu-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
+            </div>
+          </div>
+
+          <!-- model -->
+          <div class="dropdown" data-dd="model">
+            <div class="chip" data-chip>
+              <span class="chip-label">基础模型</span>
+              <svg class="caret" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+            </div>
+            <div class="menu">
+              <div class="menu-item checked" data-val="基础模型"><span class="left">基础模型</span><svg class="ic ic-sm menu-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
+              <div class="menu-item" data-val="深度思考"><span class="left">深度思考</span><svg class="ic ic-sm menu-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
+              <div class="menu-item" data-val="快速响应"><span class="left">快速响应</span><svg class="ic ic-sm menu-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
+            </div>
+          </div>
+
+          <!-- workspace -->
+          <div class="dropdown" data-dd="workspace">
+            <div class="chip" data-chip>
+              <span class="chip-label">Workspace</span>
+              <svg class="caret" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+            </div>
+            <div class="menu">
+              <div class="menu-item checked" data-val="Workspace"><span class="left">Workspace</span><svg class="ic ic-sm menu-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
+              <div class="menu-item" data-val="Personal"><span class="left">Personal</span><svg class="ic ic-sm menu-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
+            </div>
+          </div>
+
+          <!-- app binding (shown in 应用开发 mode) -->
+          <div class="dropdown" data-dd="app" id="appDropdown">
+            <div class="chip muted" data-chip>
+              <span class="app-dot"></span>
+              <span class="chip-label">未绑定应用</span>
+              <svg class="caret" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+            </div>
+            <div class="menu">
+              <div class="menu-item" data-app="Terminal"><span class="left">Terminal</span><svg class="ic ic-sm menu-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
+              <div class="menu-item" data-app="应用2"><span class="left">应用2</span><svg class="ic ic-sm menu-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
+              <div class="menu-item" data-app="应用3"><span class="left">应用3</span><svg class="ic ic-sm menu-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
+              <div class="menu-sep"></div>
+              <div class="menu-item" data-app="__none"><span class="left"><svg class="ic ic-sm" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 15l4-4 3 3 4-5 7 7"/></svg>不绑定应用</span></div>
+              <div class="menu-item" data-app="__new"><span class="left"><svg class="ic ic-sm" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M12 9v6M9 12h6"/></svg>新建应用</span></div>
+            </div>
+          </div>
+
+          <div class="spacer"></div>
+
+          <button class="send-btn" id="sendBtn" aria-label="send">
+            <svg class="ic" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="main-foot">内容由 AI 生成，请注意甄别</div>
+  </div>
+
+  <div class="view hidden" id="view-apps">
+    <div class="apps-head">
+      <div class="apps-title">我的应用</div>
+      <button class="btn-new"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>新建</button>
+    </div>
+    <div class="apps-toolbar">
+      <div class="tabs">
+        <div class="tab active">全部</div>
+        <div class="tab">开发中</div>
+        <div class="tab">已发布</div>
+      </div>
+      <div class="apps-search">
+        <input type="text" placeholder="搜索">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      </div>
+    </div>
+    <div class="apps-grid">
+        <div class="app-card">
+          <div class="card-top">
+            <span class="card-icon" style="color:#3a7bff;background:#eef3ff"><svg class="ic" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>
+            <div class="card-titles">
+              <div class="card-title-row"><span class="card-title">报价单管理</span><span class="task-badge">4个任务</span><span class="card-more">···</span></div>
+            </div>
+          </div>
+          <div class="card-desc">深度解析合同文本，捕捉金额、收付款节点、权利义务等核心台账数据，将复杂的法律条文…</div>
+          <div class="card-tags"><span class="ptag">ERP</span><span class="ptag">供应链云</span><span class="ptag">采购订单</span></div>
+        </div>
+        <div class="app-card">
+          <div class="card-top">
+            <span class="card-icon" style="color:#8b5cf6;background:#f3eefe"><svg class="ic" viewBox="0 0 24 24"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M5 3h9l5 5v6"/><path d="M5 3v18h7"/><circle cx="16.5" cy="17.5" r="2.5"/><path d="m21 22-2.2-2.2"/></svg></span>
+            <div class="card-titles">
+              <div class="card-title-row"><span class="card-title">采购订单</span><span class="task-badge">4个任务</span></div>
+            </div>
+          </div>
+          <div class="card-desc">深度解析合同文本，捕捉金额、收付款节点、权利义务等核心台账数据，将复杂的法律条文…</div>
+          <div class="card-tags"><span class="ptag">ERP</span><span class="ptag">供应链云</span><span class="ptag">采购订单</span></div>
+        </div>
+        <div class="app-card">
+          <div class="card-top">
+            <span class="card-icon" style="color:#ff8d42;background:#fff1e8"><svg class="ic" viewBox="0 0 24 24"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M8 5H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><path d="m9 14 2 2 4-4"/></svg></span>
+            <div class="card-titles">
+              <div class="card-title-row"><span class="card-title">个人资产管理</span><span class="task-badge">4个任务</span></div>
+            </div>
+          </div>
+          <div class="card-desc">深度解析合同文本，捕捉金额、收付款节点、权利义务等核心台账数据，将复杂的法律条文…</div>
+          <div class="card-tags"><span class="ptag">通用订单</span></div>
+        </div>
+        <div class="app-card">
+          <div class="card-top">
+            <span class="card-icon" style="color:#ff8d42;background:#fff1e8"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/><path d="M19 5v4M17 7h4"/></svg></span>
+            <div class="card-titles">
+              <div class="card-title-row"><span class="card-title">库存领用</span><span class="task-badge">1个任务</span></div>
+            </div>
+          </div>
+          <div class="card-desc">深度解析合同文本，捕捉金额、收付款节点、权利义务等核心台账数据，将复杂的法律条文…</div>
+          <div class="card-tags"><span class="ptag">ERP</span><span class="ptag">供应链云</span><span class="ptag">库存领用单</span></div>
+        </div>
+        <div class="app-card">
+          <div class="card-top">
+            <span class="card-icon" style="color:#08cc50;background:#e8faef"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M6 16a3 3 0 0 1 6 0"/><path d="M15 10h4M15 14h4"/></svg></span>
+            <div class="card-titles">
+              <div class="card-title-row"><span class="card-title">报价单管理</span><span class="task-badge">2个任务</span></div>
+            </div>
+          </div>
+          <div class="card-desc">深度解析合同文本，捕捉金额、收付款节点、权利义务等核心台账数据，将复杂的法律条文…</div>
+          <div class="card-tags"><span class="ptag">ERP</span><span class="ptag">供应链云</span><span class="ptag">报价单管理</span></div>
+        </div>
+        <div class="app-card">
+          <div class="card-top">
+            <span class="card-icon" style="color:#4d89ff;background:#eef3ff"><svg class="ic" viewBox="0 0 24 24"><path d="M12 3v18M7 21h10"/><path d="M12 6 5 8l-2.5 6a3.5 3.5 0 0 0 7 0L7 8m12 0-2.5 6a3.5 3.5 0 0 0 7 0L21 8l-7-2"/></svg></span>
+            <div class="card-titles">
+              <div class="card-title-row"><span class="card-title">资产领用</span></div>
+            </div>
+          </div>
+          <div class="card-desc">深度解析合同文本，捕捉金额、收付款节点、权利义务等核心台账数据，将复杂的法律条文…</div>
+          <div class="card-tags"><span class="ptag">ERP</span><span class="ptag">供应链云</span><span class="ptag">资产领用单</span></div>
+        </div>
+        <div class="app-card">
+          <div class="card-top">
+            <span class="card-icon" style="color:#ff8d42;background:#fff1e8"><svg class="ic" viewBox="0 0 24 24"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M8 13h8M8 17h5"/></svg></span>
+            <div class="card-titles">
+              <div class="card-title-row"><span class="card-title">请假管理</span></div>
+            </div>
+          </div>
+          <div class="card-desc">深度解析合同文本，捕捉金额、收付款节点、权利义务等核心台账数据，将复杂的法律条文…</div>
+          <div class="card-tags"><span class="ptag">通用领用单</span></div>
+        </div>
+    </div>
+  </div>
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  var $=function(s,el){return (el||document).querySelector(s)};
+  var $$=function(s,el){return Array.prototype.slice.call((el||document).querySelectorAll(s))};
+
+  /* ---------- toast ---------- */
+  var toastEl=$('#toast'),toastT;
+  function toast(msg){
+    toastEl.textContent=msg;toastEl.classList.add('show');
+    clearTimeout(toastT);toastT=setTimeout(function(){toastEl.classList.remove('show')},1600);
+  }
+
+  /* ---------- dropdowns ---------- */
+  function closeAll(except){
+    $$('.dropdown.open').forEach(function(d){ if(d!==except) d.classList.remove('open'); });
+  }
+  $$('.dropdown [data-chip]').forEach(function(chip){
+    chip.addEventListener('click',function(e){
+      var dd=chip.closest('.dropdown');
+      var willOpen=!dd.classList.contains('open');
+      closeAll(dd);
+      dd.classList.toggle('open',willOpen);
+    });
+  });
+  // close when clicking anywhere outside an open dropdown
+  document.addEventListener('click',function(e){
+    if(!e.target.closest('.dropdown')) closeAll(null);
+  });
+
+  /* generic single-select menus (mode / model / workspace) */
+  ['mode','model','workspace'].forEach(function(key){
+    var dd=$('.dropdown[data-dd="'+key+'"]');
+    if(!dd) return;
+    $$('.menu-item',dd).forEach(function(item){
+      item.addEventListener('click',function(e){
+        e.stopPropagation();
+        $$('.menu-item',dd).forEach(function(i){i.classList.remove('checked')});
+        item.classList.add('checked');
+        $('.chip-label',dd).textContent=item.getAttribute('data-val');
+        dd.classList.remove('open');
+        if(key==='mode') applyMode(item.getAttribute('data-val'),true);
+      });
+    });
+  });
+
+  /* ---------- app binding (未绑定应用 → 已选态) ---------- */
+  var appDd=$('#appDropdown');
+  var appChip=$('[data-chip]',appDd);
+  var appLabel=$('.chip-label',appDd);
+  function selectApp(name){
+    $$('.menu-item',appDd).forEach(function(i){i.classList.remove('checked')});
+    if(name){
+      var it=$('.menu-item[data-app="'+name+'"]',appDd); if(it) it.classList.add('checked');
+      appLabel.textContent=name; appChip.classList.remove('muted'); appChip.classList.add('selected');
+    }else{
+      appLabel.textContent='未绑定应用'; appChip.classList.add('muted'); appChip.classList.remove('selected');
+    }
+  }
+  $$('.menu-item',appDd).forEach(function(item){
+    item.addEventListener('click',function(e){
+      e.stopPropagation();
+      var v=item.getAttribute('data-app');
+      if(v==='__none'){ selectApp(null); toast('已取消绑定应用'); }
+      else if(v==='__new'){ toast('新建应用（示意）'); }
+      else { selectApp(v); toast('已绑定应用：'+v); }
+      appDd.classList.remove('open');
+    });
+  });
+
+  /* ---------- mode ↔ sidebar sync ---------- */
+  var modeDd=$('.dropdown[data-dd="mode"]');
+  var modeLabel=$('.chip-label',modeDd);
+  var input=$('#composerInput');
+  var navItems=$$('.sb-scroll .nav-item');
+  var navByName={};
+  navItems.forEach(function(n){ navByName[n.textContent.trim()]=n; });
+
+  function setNavActive(name){
+    navItems.forEach(function(n){ n.classList.toggle('active', n.textContent.trim()===name); });
+  }
+  function applyMode(mode,fromChip){
+    // mode is one of 应用开发/技能开发/智能体开发
+    modeLabel.textContent=mode;
+    $$('.menu-item',modeDd).forEach(function(i){ i.classList.toggle('checked', i.getAttribute('data-val')===mode); });
+    setNavActive(mode);
+    input.setAttribute('data-placeholder','布置'+mode+'任务');
+    // app-binding chip only relevant to 应用开发
+    appDd.classList.toggle('hidden', mode!=='应用开发');
+    if(mode!=='应用开发'){ appDd.classList.remove('open'); }
+  }
+
+  /* ---------- view switching ---------- */
+  var viewNew=$('#view-newtask'), viewApps=$('#view-apps');
+  function showView(which){
+    viewNew.classList.toggle('hidden', which!=='newtask');
+    viewApps.classList.toggle('hidden', which!=='apps');
+    closeAll(null);
+  }
+
+  /* ---------- sidebar nav ---------- */
+  navItems.forEach(function(n){
+    n.addEventListener('click',function(){
+      var name=n.textContent.trim();
+      setNavActive(name);
+      if(name==='应用开发'){
+        showView('apps');
+      }else if(name==='新任务'){
+        showView('newtask');
+        input.setAttribute('data-placeholder','布置应用开发任务');
+        appDd.classList.remove('hidden');
+        applyModeSilent('应用开发');
+      }else{ // 技能开发 / 智能体开发
+        showView('newtask');
+        applyMode(name,false);
+      }
+    });
+  });
+  function applyModeSilent(mode){
+    modeLabel.textContent=mode;
+    $$('.menu-item',modeDd).forEach(function(i){ i.classList.toggle('checked', i.getAttribute('data-val')===mode); });
+  }
+
+  /* ---------- 我的应用 (apps view) ---------- */
+  $$('#view-apps .tab').forEach(function(t){
+    t.addEventListener('click',function(){
+      $$('#view-apps .tab').forEach(function(i){i.classList.remove('active')});
+      t.classList.add('active');
+    });
+  });
+  $('.btn-new') && $('.btn-new').addEventListener('click',function(){ toast('新建应用（示意）'); });
+  $$('.app-card').forEach(function(c){
+    c.addEventListener('click',function(e){
+      if(e.target.closest('.card-more')){ e.stopPropagation(); toast('更多操作'); return; }
+      toast('打开应用：'+$('.card-title',c).textContent.trim());
+    });
+  });
+
+  /* ---------- segmented tabs (对话 / 工作 / 开发) ---------- */
+  $$('.seg-item').forEach(function(s){
+    s.addEventListener('click',function(){
+      $$('.seg-item').forEach(function(i){i.classList.remove('active')});
+      s.classList.add('active');
+      toast(s.textContent.trim());
+    });
+  });
+
+  /* ---------- project groups collapse ---------- */
+  $$('.project-group').forEach(function(g){
+    var head=$('.group-head',g);
+    if(!head) return;
+    head.addEventListener('click',function(){
+      g.classList.toggle('collapsed');
+      var c=$('.caret',head); if(c) c.classList.toggle('rot', g.classList.contains('collapsed'));
+    });
+  });
+  // standalone second group-head (rotate its caret only)
+  $$('.sb-scroll > .group-head').forEach(function(h){
+    h.addEventListener('click',function(){ var c=$('.caret',h); if(c) c.classList.toggle('rot'); });
+  });
+
+  /* ---------- composer input + send ---------- */
+  var sendBtn=$('#sendBtn');
+  function refreshSend(){ sendBtn.classList.toggle('active', input.textContent.trim().length>0); }
+  input.addEventListener('input',refreshSend);
+  input.addEventListener('keydown',function(e){
+    if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); doSend(); }
+  });
+  sendBtn.addEventListener('click',doSend);
+  function doSend(){
+    var t=input.textContent.trim();
+    if(!t){ input.focus(); return; }
+    toast('已提交：'+t.slice(0,20)+(t.length>20?'…':''));
+    input.innerHTML=''; refreshSend();
+  }
+
+  /* header + footer small affordances */
+  $$('.sb-head-icons .ic').forEach(function(i,idx){ i.addEventListener('click',function(){ toast(idx===0?'折叠侧栏':'搜索'); }); });
+  var fb=$('.foot-btn'); if(fb) fb.addEventListener('click',function(){ toast('问题反馈'); });
+
+})();
+</script>
+
+</body>
+</html>

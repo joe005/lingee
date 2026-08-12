@@ -1,0 +1,36 @@
+/* ============================================================
+   Base — 重置 + body 基础
+   ============================================================ */
+@import "./tokens.css";
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: var(--font);
+  font-size: 14px;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* 图标基础 */
+.ic { width:18px; height:18px; stroke:currentColor; stroke-width:1.7; fill:none; stroke-linecap:round; stroke-linejoin:round; flex:none }
+.ic-sm { width:16px; height:16px }
+
+/* 滚动条 */
+::-webkit-scrollbar { width:4px }
+::-webkit-scrollbar-track { background:transparent }
+::-webkit-scrollbar-thumb { background:var(--border); border-radius:var(--r-full) }
+
+/* Toast */
+.toast {
+  position:fixed; left:50%; bottom:40px; transform:translateX(-50%);
+  background:#2d2d2d; color:#fff; padding:10px 18px; border-radius:var(--r-md);
+  font-size:13px; box-shadow:0 6px 20px rgba(0,0,0,.2);
+  opacity:0; transition:opacity .2s, transform .2s;
+  pointer-events:none; z-index:100;
+}
+.toast.show { opacity:1; transform:translateX(-50%) translateY(-6px) }
