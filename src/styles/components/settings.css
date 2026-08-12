@@ -13,7 +13,9 @@
   .set-btn.primary{background:#495dff;border-color:#495dff;color:#fff}
   .set-btn.primary:hover{background:#3a5eff;border-color:#3a5eff}
   .set-btn .ic{width:15px;height:15px}
-  .env-list{border:1px solid var(--border);border-radius:14px;overflow:hidden}
+  .env-list{border:1px solid var(--border);border-radius:14px}
+  .env-item:first-child{border-radius:14px 14px 0 0}
+  .env-item:last-child{border-radius:0 0 14px 14px}
   .env-item{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid #f5f5f5;transition:background .15s}
   .env-item:last-child{border-bottom:none}
   .env-item:hover{background:#fafafa}
@@ -26,8 +28,8 @@
   .env-tag.cloud{background:#e8faef;color:#08a040}
   .env-tag.def{background:#eef3ff;color:#3a5eff}
   /* 区块标题与版本要求说明 */
-  .set-sec-titles{min-width:0}
-  .set-sec-desc{font-size:13px;color:var(--text-soft);margin-top:4px}
+  .set-sec-titles{min-width:0;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+  .set-sec-desc{font-size:13px;color:var(--text-soft)}
   .env-ver{display:inline-flex;align-items:center;height:19px;padding:0 7px;border-radius:5px;font-size:12px;line-height:1;background:#f0f0f0;color:var(--text-secondary)}
   .env-ver.bad{background:#fff1e8;color:#c06010;cursor:help}
   .env-item.disabled .env-name,.env-item.disabled .env-url{opacity:.55}
@@ -92,3 +94,27 @@
 .env-mi.danger { color: var(--danger); }
 .env-mi.danger:hover { background: var(--danger-bg); }
 .env-mi-sep { height: 1px; margin: 4px 0; background: var(--divider); }
+
+/* 连通状态徽标 */
+.env-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 19px;
+  padding: 0 7px;
+  border-radius: 5px;
+  font-size: 12px;
+  line-height: 1;
+}
+.env-status.testing { background: var(--fill-1); color: var(--text-secondary); }
+.env-status.ok { background: var(--success-bg); color: var(--success); }
+.env-status.fail { background: var(--warning-bg); color: var(--warning); }
+.env-spinner {
+  width: 9px;
+  height: 9px;
+  border: 1.5px solid var(--border-hover);
+  border-top-color: var(--text-secondary);
+  border-radius: 50%;
+  animation: env-spin 0.6s linear infinite;
+}
+@keyframes env-spin { to { transform: rotate(360deg); } }

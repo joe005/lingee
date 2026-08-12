@@ -475,16 +475,11 @@ const billTemplateWithTokens = billTemplate.replace(
       if(visible.length) visible[appFocusedIdx].click();
     }
   });
-  var appHoverT=null;
-  appDd.addEventListener('mouseenter',function(){
-    clearTimeout(appHoverT);
-    appHoverT=setTimeout(function(){ openAppDropdown(); },300);
-  });
-  appDd.addEventListener('mouseleave',function(){
-    clearTimeout(appHoverT);
-    appDd._closeT=setTimeout(function(){
-      if(!appDd.querySelector(':hover')) appDd.classList.remove('open');
-    },200);
+  /* 点击展开：hover 自动展开会误触发且难以关闭 */
+  appChip.addEventListener('click',function(e){
+    e.stopPropagation();
+    if(appDd.classList.contains('open')) appDd.classList.remove('open');
+    else openAppDropdown();
   });
   function selectApp(name){
     appDd.classList.remove('error');
@@ -797,10 +792,6 @@ const billTemplateWithTokens = billTemplate.replace(
   });
 
   /* ---------- 设置页：环境配置 ---------- */
-  var envRefresh=$('#envRefresh');
-  if(envRefresh) envRefresh.addEventListener('click',function(){ toast('已刷新环境列表'); });
-  var envReset=$('#envReset');
-  if(envReset) envReset.addEventListener('click',function(){ toast('已恢复默认配置'); });
   /* 环境项操作菜单 */
   function closeEnvMenus(except){
     $$('.env-more-wrap.open').forEach(function(w){ if(w!==except) w.classList.remove('open'); });
@@ -821,7 +812,9 @@ const billTemplateWithTokens = billTemplate.replace(
         wrap.classList.remove('open');
         var name=item.querySelector('.env-name').textContent;
         var act=mi.getAttribute('data-act');
-        if(act==='copy'){
+        if(act==='test'){
+          runEnvTest(item);
+        }else if(act==='copy'){
           var url=item.querySelector('.env-url').textContent;
           if(navigator.clipboard) navigator.clipboard.writeText(url);
           toast('已复制地址：'+url);
@@ -840,6 +833,30 @@ const billTemplateWithTokens = billTemplate.replace(
         }
       });
     });
+  }
+  /* 连通性测试：原型内以模拟延迟与结果呈现 */
+  function runEnvTest(item){
+    var name=item.querySelector('.env-name').textContent;
+    var head=item.querySelector('.env-head');
+    var old=head.querySelector('.env-status');
+    if(old) old.remove();
+    var badge=document.createElement('span');
+    badge.className='env-status testing';
+    badge.innerHTML='<span class="env-spinner"></span>连通中';
+    head.appendChild(badge);
+    var ver=item.querySelector('.env-ver');
+    var tooLow=ver&&ver.classList.contains('bad');
+    setTimeout(function(){
+      if(tooLow){
+        badge.className='env-status fail';
+        badge.textContent='版本过低';
+        toast(name+'：版本低于 V8.0.10，无法连通','error');
+      }else{
+        badge.className='env-status ok';
+        badge.textContent='连通正常 '+(60+Math.floor(Math.random()*180))+'ms';
+        toast(name+'：连通正常');
+      }
+    },700+Math.random()*600);
   }
   $$('.env-more').forEach(bindEnvMore);
   document.addEventListener('click',function(){ closeEnvMenus(null); });
@@ -891,7 +908,7 @@ const billTemplateWithTokens = billTemplate.replace(
         +'<div class="env-url"></div></div>'
         +'<div class="env-more-wrap"><button class="env-more" data-tooltip="更多" aria-label="更多" aria-haspopup="true">'
         +'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button>'
-        +'<div class="env-menu"><div class="env-mi" data-act="edit">编辑</div><div class="env-mi" data-act="copy">复制地址</div><div class="env-mi" data-act="default">设为默认</div><div class="env-mi-sep"></div><div class="env-mi danger" data-act="delete">删除</div></div></div>';
+        +'<div class="env-menu"><div class="env-mi" data-act="edit">编辑</div><div class="env-mi" data-act="test">测试连接</div><div class="env-mi" data-act="copy">复制地址</div><div class="env-mi" data-act="default">设为默认</div><div class="env-mi-sep"></div><div class="env-mi danger" data-act="delete">删除</div></div></div>';
       item.querySelector('.env-name').textContent=name;
       item.querySelector('.env-url').textContent=url;
       bindEnvMore(item.querySelector('.env-more'));
