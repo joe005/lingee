@@ -1,0 +1,37 @@
+/* ============ 附件弹窗 ============ */
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:200;
+    display:flex;align-items:center;justify-content:center;
+    opacity:0;visibility:hidden;transition:opacity .18s,visibility .18s;
+  }
+  .modal-overlay.show{opacity:1;visibility:visible}
+  .modal-box{
+    background:#fff;border-radius:16px;width:420px;max-width:90vw;
+    box-shadow:0 12px 40px rgba(0,0,0,.15),0 4px 12px rgba(0,0,0,.08);
+    overflow:hidden;transform:translateY(8px);transition:transform .18s;
+  }
+  .modal-overlay.show .modal-box{transform:translateY(0)}
+  .modal-head{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:18px 22px;border-bottom:1px solid var(--border);
+  }
+  .modal-title{font-size:16px;font-weight:600;color:var(--text)}
+  .modal-close{cursor:pointer;color:var(--text-muted);width:20px;height:20px}
+  .modal-close:hover{color:var(--text)}
+  .modal-body{padding:8px}
+  .attach-item{
+    display:flex;align-items:center;gap:14px;
+    padding:12px 14px;border-radius:12px;cursor:pointer;
+    transition:background .12s;
+  }
+  .attach-item:hover{background:var(--hover)}
+  .attach-icon{
+    width:40px;height:40px;border-radius:10px;flex:none;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .attach-icon .ic{width:20px;height:20px}
+  .attach-info{flex:1;min-width:0}
+  .attach-name{font-size:14px;font-weight:500;color:var(--text);margin-bottom:2px}
+  .attach-desc{font-size:12px;color:var(--text-muted)}
+
+  
