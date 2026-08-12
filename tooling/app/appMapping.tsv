@@ -1,8 +1,0 @@
-appCode	appName	appDescription	type	path
-lingee-design-system	Lingee Design System	Lingee 设计系统展示页面，展示42个组件的规范样式与交互	general	app/lingee-design-system/archive.json
-kdtest_pay_mgmt	付款管理		cosmic	app/kdtest_pay_mgmt/archive.json
-kded_pm_ext	采购管理	规范采购、精细管控	cosmic	app/kded_pm_ext/archive.json
-im	库存管理		cosmic	app/im/archive.json
-kded_im_ext	库存管理	入库、出库、调拨、盘点、调整	cosmic	app/kded_im_ext/archive.json
-kdtest_jqgl0002	家禽管理二	温氏家禽管理应用	cosmic	app/kdtest_jqgl0002/archive.json
-
