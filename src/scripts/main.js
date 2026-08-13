@@ -475,11 +475,16 @@ const billTemplateWithTokens = billTemplate.replace(
       if(visible.length) visible[appFocusedIdx].click();
     }
   });
-  /* 点击展开：hover 自动展开会误触发且难以关闭 */
-  appChip.addEventListener('click',function(e){
-    e.stopPropagation();
-    if(appDd.classList.contains('open')) appDd.classList.remove('open');
-    else openAppDropdown();
+  var appHoverT=null;
+  appDd.addEventListener('mouseenter',function(){
+    clearTimeout(appHoverT);
+    appHoverT=setTimeout(function(){ openAppDropdown(); },300);
+  });
+  appDd.addEventListener('mouseleave',function(){
+    clearTimeout(appHoverT);
+    appDd._closeT=setTimeout(function(){
+      if(!appDd.querySelector(':hover')) appDd.classList.remove('open');
+    },200);
   });
   function selectApp(name){
     appDd.classList.remove('error');
