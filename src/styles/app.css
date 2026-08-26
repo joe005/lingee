@@ -231,6 +231,7 @@
   .field-chip.muted .chip-label{color:var(--text-soft)}
   .field-chip:not(.muted) .chip-label{color:var(--text)}
   .field-dd .menu{top:calc(100% + 6px);left:0;right:0;min-width:0;max-height:240px;overflow:auto}
+  .select-wrap select{
     width:100%;appearance:none;-webkit-appearance:none;
     padding:9px 34px 9px 12px;border:1px solid var(--border);border-radius:8px;
     font-size:14px;font-family:inherit;color:var(--text);background:#fff;
