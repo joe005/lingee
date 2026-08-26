@@ -12,6 +12,7 @@ dist/
 # 工具运行时目录
 .temp/
 .claude/
+.lingeebuild/
 skills/
 **/_runtime/
 **/*token_cache*
