@@ -759,6 +759,66 @@
   .preview-body.vp-mobile .preview-frame{width:402px;max-width:100%;height:874px;max-height:100%;flex:none;background:#fff;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.14)}
   .preview-body.hidden{display:none}
   .preview-frame{flex:1;border:none;width:100%}
+  /* 列表面板 */
+  .list-view-panel{display:flex;flex-direction:column;flex:1;min-height:0}
+  .list-toolbar{display:flex;flex-direction:column;gap:8px;padding:10px 16px;border-bottom:1px solid var(--border);flex:none}
+  .list-toolbar-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .list-title{font-size:16px;font-weight:600;color:var(--text);white-space:nowrap}
+  .list-toolbar-left{display:flex;align-items:center;gap:8px}
+  .list-toolbar-right{display:flex;align-items:center;gap:8px;color:var(--text-soft);font-size:13px}
+  .list-actions{display:flex;align-items:center;gap:8px}
+  .list-act-btn{height:28px;padding:0 14px;border:1px solid var(--border-hover);border-radius:6px;background:var(--bg);color:var(--text);font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:4px;white-space:nowrap;transition:background .1s,border-color .1s}
+  .list-act-btn:hover{background:var(--hover);border-color:var(--scroll-thumb)}
+  .list-act-btn .ic{width:14px;height:14px}
+  .list-act-btn.primary{background:var(--brand);border-color:var(--brand);color:#fff;padding:0 10px}
+  .list-act-btn.primary:hover{background:var(--brand-hover);border-color:var(--brand-hover)}
+  .list-act-btn.danger{color:var(--danger)}
+  .list-act-btn.danger:hover{background:var(--danger-bg);border-color:var(--danger)}
+  .list-search{display:flex;align-items:center;gap:6px;padding:5px 10px;border:1px solid var(--border);border-radius:6px;background:#fff;min-width:220px}
+  .list-search input{border:none;outline:none;background:none;font-size:13px;color:var(--text);width:100%}
+  .list-search input::placeholder{color:var(--text-soft)}
+  .list-search .ic{width:15px;height:15px;color:var(--text-soft);flex:none}
+  .list-filter-btn{height:30px;padding:0 12px;border:1px solid var(--border);border-radius:6px;background:#fff;color:var(--text);font-size:12px;cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:background .1s}
+  .list-filter-btn:hover{background:var(--hover)}
+  .list-filter-btn .ic{width:14px;height:14px}
+  .list-count{font-size:12px;color:var(--text-soft)}
+  .list-icon-btn{width:30px;height:30px;border:1px solid var(--border);border-radius:6px;background:#fff;color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .1s,color .1s}
+  .list-icon-btn:hover{background:var(--hover);color:var(--text)}
+  .list-icon-btn .ic{width:15px;height:15px}
+  .list-table-wrap{flex:1;overflow:auto}
+  .list-table{width:100%;min-width:800px;border-collapse:collapse}
+  .list-table th{background:#fafafa;padding:0 12px;text-align:left;font-size:12px;color:#767676;font-weight:500;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:1;white-space:nowrap;height:40px}
+  .list-table th.sortable{cursor:pointer;user-select:none}
+  .list-table th.sortable:hover{color:var(--text)}
+  .list-table th.sortable:hover .sort-arrow{border-top-color:var(--text);border-bottom-color:var(--text)}
+  .sort-arrow{display:inline-block;width:0;height:0;margin-left:6px;vertical-align:middle;border-left:4px solid transparent;border-right:4px solid transparent}
+  .sort-arrow.asc{border-bottom:5px solid var(--brand);border-top:none}
+  .sort-arrow.desc{border-top:5px solid var(--brand);border-bottom:none}
+  .list-table th.sortable.sort-asc{color:var(--brand)}
+  .list-table th.sortable.sort-desc{color:var(--brand)}
+  .list-table td{padding:0 12px;font-size:13px;color:var(--text);border-bottom:1px solid #f0f0f0;white-space:nowrap;height:40px}
+  .list-table tbody tr{cursor:default;transition:background .1s}
+  .list-table tbody tr:hover td{background:var(--hover)}
+  .list-table tbody tr.on td{background:var(--brand-fill)}
+  .list-cb{width:36px;text-align:center}
+  .list-cb input{width:14px;height:14px;accent-color:#495dff;cursor:pointer;vertical-align:middle}
+  .c-act{width:80px;text-align:center}
+  .list-table .c-code{font-weight:500;color:#495dff}
+  .list-table .r{text-align:right}
+  .list-table .total{font-weight:600}
+  .btn-link{border:none;background:none;color:#495dff;font-size:13px;cursor:pointer;padding:4px 8px;border-radius:4px;transition:background .1s}
+  .btn-link:hover{background:var(--hover)}
+  .list-tag{display:inline-flex;align-items:center;height:20px;padding:0 8px;border-radius:3px;font-size:11px;font-weight:500;border:1px solid}
+  .list-tag.ok{border-color:#08a040;color:#08a040;background:transparent}
+  .list-tag.warn{border-color:#c06010;color:#c06010;background:transparent}
+  .list-tag.danger{border-color:#e04a3a;color:#e04a3a;background:transparent}
+  .list-pager{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-top:1px solid var(--border);flex:none}
+  .pager-info{font-size:12px;color:var(--text-soft)}
+  .pager-btns{display:flex;gap:4px}
+  .pager-btn{width:28px;height:28px;border:1px solid var(--border);border-radius:6px;background:#fff;color:var(--text);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .pager-btn:hover:not(:disabled){background:var(--hover);border-color:#d0d0d0}
+  .pager-btn.on{background:#495dff;border-color:#495dff;color:#fff}
+  .pager-btn:disabled{opacity:.4;cursor:default}
   /* 实体面板 - 左右分栏 */
   .entity-layout{display:flex;flex:1;min-height:0}
   .entity-left{width:200px;flex:none;border-right:1px solid var(--border);overflow-y:auto;padding:8px 0}

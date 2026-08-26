@@ -1197,17 +1197,87 @@ const billTemplateWithTokens = billTemplate.replace(
     });
   }
   /* 预览面板页签切换 */
+  function switchPreviewTab(target){
+    $$('.preview-tab').forEach(function(t){t.classList.toggle('active',t.getAttribute('data-tab')===target)});
+    var bodies={preview:$('#previewBodyPreview'),list:$('#previewBodyList'),entity:$('#previewBodyEntity'),plugin:$('#previewBodyPlugin'),api:$('#previewBodyApi')};
+    Object.keys(bodies).forEach(function(k){
+      if(bodies[k]){bodies[k].classList.toggle('hidden',k!==target)}
+    });
+    var nav=$('#previewNav');
+    if(nav){nav.classList.toggle('hidden',target!=='preview')}
+    try{localStorage.setItem('chatPreviewTab',target)}catch(e){}
+  }
   $$('.preview-tab').forEach(function(tab){
     tab.addEventListener('click',function(){
-      $$('.preview-tab').forEach(function(t){t.classList.remove('active')});
-      tab.classList.add('active');
-      var target=tab.getAttribute('data-tab');
-      var bodies={preview:$('#previewBodyPreview'),entity:$('#previewBodyEntity'),plugin:$('#previewBodyPlugin'),api:$('#previewBodyApi')};
-      Object.keys(bodies).forEach(function(k){
-        if(bodies[k]){bodies[k].classList.toggle('hidden',k!==target)}
+      switchPreviewTab(tab.getAttribute('data-tab'));
+    });
+  });
+  /* 列表勾选联动行高亮 */
+  var listBodyEl=$('#listBody');
+  if(listBodyEl){
+    listBodyEl.addEventListener('change',function(e){
+      if(e.target.tagName!=='INPUT'||e.target.type!=='checkbox')return;
+      var tr=e.target.closest('tr');
+      if(!tr)return;
+      tr.classList.toggle('on',e.target.checked);
+    });
+  }
+  var listCheckAll=$('#listCheckAll');
+  if(listCheckAll&&listBodyEl){
+    listCheckAll.addEventListener('change',function(){
+      var checked=listCheckAll.checked;
+      $$('input[type=checkbox]',listBodyEl).forEach(function(cb){
+        cb.checked=checked;
+        var tr=cb.closest('tr');
+        if(tr)tr.classList.toggle('on',checked);
       });
-      var nav=$('#previewNav');
-      if(nav){nav.classList.toggle('hidden',target!=='preview')}
+    });
+  }
+  /* 列表点击表头排序 */
+  var sortState={col:-1,dir:''};
+  var sortTypeMap={0:'text',1:'text',2:'text',3:'text',4:'date',5:'num',6:'text'};
+  $$('.list-table th.sortable').forEach(function(th){
+    th.addEventListener('click',function(){
+      var col=parseInt(th.getAttribute('data-col'),10);
+      if(sortState.col===col){
+        if(sortState.dir==='asc')sortState.dir='desc';
+        else if(sortState.dir==='desc'){sortState.dir='';sortState.col=-1;}
+        else sortState.dir='asc';
+      }else{
+        sortState.col=col;sortState.dir='asc';
+      }
+      $$('.list-table th.sortable').forEach(function(h){
+        h.classList.remove('sort-asc','sort-desc');
+        var arrow=h.querySelector('.sort-arrow');
+        if(arrow)arrow.className='sort-arrow';
+      });
+      if(sortState.dir){
+        th.classList.add('sort-'+sortState.dir);
+        var arrow=th.querySelector('.sort-arrow');
+        if(arrow)arrow.className='sort-arrow '+sortState.dir;
+      }
+      if(sortState.col>=0&&sortState.dir){
+        var rows=Array.prototype.slice.call(listBodyEl.querySelectorAll('tr'));
+        var type=sortTypeMap[sortState.col]||'text';
+        rows.sort(function(a,b){
+          var ca=a.children[sortState.col+1].textContent.trim();
+          var cb=b.children[sortState.col+1].textContent.trim();
+          var va,vb;
+          if(type==='num'){
+            va=parseFloat(ca.replace(/,/g,''))||0;
+            vb=parseFloat(cb.replace(/,/g,''))||0;
+          }else if(type==='date'){
+            va=new Date(ca).getTime();
+            vb=new Date(cb).getTime();
+          }else{
+            va=ca;vb=cb;
+          }
+          if(va<vb)return sortState.dir==='asc'?-1:1;
+          if(va>vb)return sortState.dir==='asc'?1:-1;
+          return 0;
+        });
+        rows.forEach(function(r){listBodyEl.appendChild(r)});
+      }
     });
   });
   /* 实体节点切换 */
@@ -1383,6 +1453,10 @@ const billTemplateWithTokens = billTemplate.replace(
       if(!v)return;
       if(localStorage.getItem('chatPreviewOpen')==='1'){
         if(!v.classList.contains('preview-open')&&artifact&&artifact._openPreview) artifact._openPreview();
+        /* 恢复预览页签选择 */
+        var savedTab='preview';
+        try{savedTab=localStorage.getItem('chatPreviewTab')||'preview'}catch(e){}
+        switchPreviewTab(savedTab);
       }else{
         v.classList.remove('preview-open');
         var ps=document.getElementById('chatPreviewSide');

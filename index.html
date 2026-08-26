@@ -377,6 +377,7 @@
       <div class="preview-header">
         <div class="preview-tabs">
           <div class="preview-tab active" data-tab="preview" tabindex="0">表单</div>
+          <div class="preview-tab" data-tab="list" tabindex="0">列表</div>
           <div class="preview-tab" data-tab="entity" tabindex="0">实体</div>
           <div class="preview-tab" data-tab="plugin" tabindex="0">插件</div>
           <div class="preview-tab" data-tab="api" tabindex="0">API</div>
@@ -410,6 +411,187 @@
       </div>
       <div class="preview-body" id="previewBodyPreview">
         <iframe class="preview-frame" id="chatPreviewFrame"></iframe>
+      </div>
+      <div class="preview-body hidden" id="previewBodyList">
+        <div class="list-view-panel">
+          <div class="list-toolbar">
+            <div class="list-toolbar-row">
+              <div class="list-title">采购订单</div>
+              <div class="list-toolbar-right">
+                <div class="list-search">
+                  <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                  <input type="text" placeholder="搜索单据编号、供应商…" id="listSearchInput">
+                </div>
+              </div>
+            </div>
+            <div class="list-actions">
+              <button class="list-act-btn primary" id="listNewBtn"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>新建</button>
+              <button class="list-act-btn" id="listDeleteBtn">删除</button>
+              <button class="list-act-btn" id="listSubmitBtn">提交</button>
+              <button class="list-act-btn" id="listAuditBtn">审核</button>
+              <button class="list-act-btn" id="listExportBtn">导出</button>
+              <button class="list-act-btn" id="listPrintBtn">打印</button>
+            </div>
+          </div>
+          <div class="list-table-wrap">
+            <table class="list-table">
+              <thead>
+                <tr>
+                  <th class="list-cb"><input type="checkbox" id="listCheckAll"></th>
+                  <th class="sortable" data-col="0">单据编号<span class="sort-arrow"></span></th>
+                  <th class="sortable" data-col="1">供应商<span class="sort-arrow"></span></th>
+                  <th class="sortable" data-col="2">采购组织<span class="sort-arrow"></span></th>
+                  <th class="sortable" data-col="3">采购员<span class="sort-arrow"></span></th>
+                  <th class="sortable" data-col="4">订单日期<span class="sort-arrow"></span></th>
+                  <th class="r sortable" data-col="5">总金额<span class="sort-arrow"></span></th>
+                  <th class="sortable" data-col="6">单据状态<span class="sort-arrow"></span></th>
+                </tr>
+              </thead>
+              <tbody id="listBody">
+                <tr data-id="PO-2026-0001">
+                  <td class="list-cb"><input type="checkbox"></td>
+                  <td class="c-code">PO-2026-0001</td>
+                  <td>深圳恒达科技有限公司</td>
+                  <td>采购一部</td>
+                  <td>张伟</td>
+                  <td>2026-07-28</td>
+                  <td class="r total">145,205.00</td>
+                  <td><span class="list-tag ok">已审核</span></td>
+                  
+                </tr>
+                <tr data-id="PO-2026-0002">
+                  <td class="list-cb"><input type="checkbox"></td>
+                  <td class="c-code">PO-2026-0002</td>
+                  <td>上海博远电子有限公司</td>
+                  <td>采购二部</td>
+                  <td>李敏</td>
+                  <td>2026-07-25</td>
+                  <td class="r total">89,350.00</td>
+                  <td><span class="list-tag ok">已审核</span></td>
+                  
+                </tr>
+                <tr data-id="PO-2026-0003">
+                  <td class="list-cb"><input type="checkbox"></td>
+                  <td class="c-code">PO-2026-0003</td>
+                  <td>广州华信科技有限公司</td>
+                  <td>采购一部</td>
+                  <td>张伟</td>
+                  <td>2026-07-22</td>
+                  <td class="r total">216,800.00</td>
+                  <td><span class="list-tag ok">已审核</span></td>
+                  
+                </tr>
+                <tr data-id="PO-2026-0004">
+                  <td class="list-cb"><input type="checkbox"></td>
+                  <td class="c-code">PO-2026-0004</td>
+                  <td>北京天元科技有限公司</td>
+                  <td>采购三部</td>
+                  <td>王强</td>
+                  <td>2026-07-20</td>
+                  <td class="r total">56,320.00</td>
+                  <td><span class="list-tag warn">待审核</span></td>
+                  
+                </tr>
+                <tr data-id="PO-2026-0005">
+                  <td class="list-cb"><input type="checkbox"></td>
+                  <td class="c-code">PO-2026-0005</td>
+                  <td>深圳恒达科技有限公司</td>
+                  <td>采购一部</td>
+                  <td>张伟</td>
+                  <td>2026-07-18</td>
+                  <td class="r total">34,260.00</td>
+                  <td><span class="list-tag ok">已审核</span></td>
+                  
+                </tr>
+                <tr data-id="PO-2026-0006">
+                  <td class="list-cb"><input type="checkbox"></td>
+                  <td class="c-code">PO-2026-0006</td>
+                  <td>成都鼎盛科技有限公司</td>
+                  <td>采购二部</td>
+                  <td>李敏</td>
+                  <td>2026-07-15</td>
+                  <td class="r total">178,430.00</td>
+                  <td><span class="list-tag warn">待审核</span></td>
+                  
+                </tr>
+                <tr data-id="PO-2026-0007">
+                  <td class="list-cb"><input type="checkbox"></td>
+                  <td class="c-code">PO-2026-0007</td>
+                  <td>杭州云天信息技术有限公司</td>
+                  <td>采购三部</td>
+                  <td>王强</td>
+                  <td>2026-07-12</td>
+                  <td class="r total">92,600.00</td>
+                  <td><span class="list-tag ok">已审核</span></td>
+                  
+                </tr>
+                <tr data-id="PO-2026-0008">
+                  <td class="list-cb"><input type="checkbox"></td>
+                  <td class="c-code">PO-2026-0008</td>
+                  <td>苏州工业园区新科电子</td>
+                  <td>采购一部</td>
+                  <td>张伟</td>
+                  <td>2026-07-10</td>
+                  <td class="r total">67,850.00</td>
+                  <td><span class="list-tag ok">已审核</span></td>
+                  
+                </tr>
+                <tr data-id="PO-2026-0009">
+                  <td class="list-cb"><input type="checkbox"></td>
+                  <td class="c-code">PO-2026-0009</td>
+                  <td>武汉长江通讯设备有限公司</td>
+                  <td>采购二部</td>
+                  <td>李敏</td>
+                  <td>2026-07-08</td>
+                  <td class="r total">123,400.00</td>
+                  <td><span class="list-tag ok">已审核</span></td>
+                  
+                </tr>
+                <tr data-id="PO-2026-0010">
+                  <td class="list-cb"><input type="checkbox"></td>
+                  <td class="c-code">PO-2026-0010</td>
+                  <td>南京瑞丰科技有限公司</td>
+                  <td>采购三部</td>
+                  <td>王强</td>
+                  <td>2026-07-05</td>
+                  <td class="r total">45,780.00</td>
+                  <td><span class="list-tag danger">已关闭</span></td>
+                  
+                </tr>
+                <tr data-id="PO-2026-0011">
+                  <td class="list-cb"><input type="checkbox"></td>
+                  <td class="c-code">PO-2026-0011</td>
+                  <td>深圳恒达科技有限公司</td>
+                  <td>采购一部</td>
+                  <td>张伟</td>
+                  <td>2026-07-03</td>
+                  <td class="r total">201,500.00</td>
+                  <td><span class="list-tag ok">已审核</span></td>
+                  
+                </tr>
+                <tr data-id="PO-2026-0012">
+                  <td class="list-cb"><input type="checkbox"></td>
+                  <td class="c-code">PO-2026-0012</td>
+                  <td>厦门海天科技有限公司</td>
+                  <td>采购二部</td>
+                  <td>李敏</td>
+                  <td>2026-07-01</td>
+                  <td class="r total">78,920.00</td>
+                  <td><span class="list-tag ok">已审核</span></td>
+                  
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="list-pager">
+            <span class="pager-info">第 1-12 条，共 12 条</span>
+            <div class="pager-btns">
+              <button class="pager-btn" disabled>‹</button>
+              <button class="pager-btn on">1</button>
+              <button class="pager-btn" disabled>›</button>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="preview-body hidden" id="previewBodyEntity">
         <div class="entity-layout">
