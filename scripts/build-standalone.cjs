@@ -26,17 +26,21 @@ const mainJsInlined = mainJs
 const billEscaped = billTemplate.replace(/<\/script>/g, '<\\/script>');
 const tokensEscaped = tokensCss; // CSS 不含 </script>，无需转义
 
-// 3) 生成 standalone HTML
+// 3) 模板数据块（放在 body 开头，确保在内联 script 之前被解析）
+const dataBlocks = '  <script type="text/plain" id="billTemplateRaw">' + billEscaped + '<\/script>\n' +
+                   '  <script type="text/plain" id="tokensCssRaw">' + tokensEscaped + '<\/script>\n';
+
+// 4) 生成 standalone HTML
 let out = indexHtml
   // CSS link → inline style
   .replace(/<link rel="stylesheet" href="[^"]*tokens\.css">/g, '<style>' + tokensEscaped + '</style>')
   .replace(/<link rel="stylesheet" href="[^"]*app\.css">/g, '<style>' + appCss + '</style>')
-  // module script → inline regular script (defer 保证 DOM 就绪)
-  .replace(/<script\s+type="module"\s+src="[^"]*main\.js"><\/script>/g, '<script defer>\n' + mainJsInlined + '\n<\/script>')
-  // 在 </body> 前注入模板数据
-  .replace('</body>', '  <script type="text/plain" id="billTemplateRaw">' + billEscaped + '<\/script>\n  <script type="text/plain" id="tokensCssRaw">' + tokensEscaped + '<\/script>\n</body>');
+  // 在 <body> 后立即注入模板数据（确保在内联 script 之前）
+  .replace('<body>', '<body>\n' + dataBlocks)
+  // module script → inline regular script（defer 对内联脚本无效，靠位置保证顺序）
+  .replace(/<script\s+type="module"\s+src="[^"]*main\.js"><\/script>/g, '<script>\n' + mainJsInlined + '\n<\/script>');
 
-// 4) 写入 dist/index.html
+// 5) 写入 dist/index.html
 const distDir = path.join(root, 'dist');
 if (!fs.existsSync(distDir)) fs.mkdirSync(distDir, { recursive: true });
 fs.writeFileSync(path.join(distDir, 'index.html'), out, 'utf8');
