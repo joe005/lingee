@@ -71,8 +71,8 @@ const billTemplateWithTokens = billTemplate.replace(
 
   /* ---------- Changelog / 更新通知（与 Build_demo 完全一致） ---------- */
   var changelogData=[
-    {id:'10',date:'2026-08-27',iconBg:'#eef3ff',iconColor:'#495dff',team:'预览区新增列表页签',body:'预览面板页签新增「列表」选项，展示采购订单列表页面，支持搜索、排序、勾选高亮、操作按钮等功能。'},
-    {id:'9',date:'2026-08-27',iconBg:'#e8faef',iconColor:'#08a040',team:'历史版本功能上线',body:'新增历史记录面板，支持查看版本时间线、版本描述，支持回退到历史版本。'},
+    {id:'10',date:'2026-08-27',iconBg:'#eef3ff',iconColor:'#495dff',team:'苍穹应用开发 · 预览区新增列表页签',body:'预览面板页签新增「列表」选项，支持列表视图展示，包含搜索、排序、勾选高亮等能力。'},
+    {id:'9',date:'2026-08-27',iconBg:'#e8faef',iconColor:'#08a040',team:'苍穹应用开发 · 历史版本',body:'新增历史记录面板，支持查看版本时间线与版本描述，可回退到历史版本。'},
     {id:'8',date:'2026-07-30',iconBg:'#fff1e8',iconColor:'#ff8d42',team:'新增 Design System 模块',body:'涵盖基础、布局、导航、数据录入、数据展示、反馈 6 大类共 67 个组件，提供组件预览、设计令牌展示、图标库等能力，作为 Lingee 统一的设计规范与组件文档平台。'},
     {id:'7',date:'2026-07-28',iconBg:'#eef3ff',iconColor:'#495dff',team:'应用开发关联应用交互优化',body:'1、会话框：项目选择与应用选择分开展示\n2、下拉面板去除创建应用流程，调整为关联选择全量应用\n3、苍穹应用：选择关联苍穹应用，发起会话时应用开发列表自动创建展示苍穹应用卡片\n4、通用应用：无需关联应用，自动生成产物应用卡片\n5、未选择开发模式，意图识别苍穹应用开发时，会话过程收集苍穹应用编码\n6、选择应用时，下次新会话按项目记忆用户选项\n\n[视觉稿](https://www.figma.com/design/F8s5P9Y8f1Bq2GkXKCkC7L/%E5%BC%80%E5%8F%91?node-id=0-1&t=DHlFenPtUNP6C7Z5-1)'},
   ];
