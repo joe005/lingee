@@ -3,6 +3,7 @@ import { viteSingleFile } from 'vite-plugin-singlefile';
 
 // 演示原型：构建产出单个可双击打开的 index.html
 export default defineConfig({
+  base: '/lingee/',
   plugins: [viteSingleFile()],
   server: { open: true },
   build: {
