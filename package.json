@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "format": "prettier --write \"src/**/*.{js,css,html}\"",
     "standalone": "node scripts/build-standalone.cjs",
-    "build": "vite build && node scripts/build-standalone.cjs"
+    "build": "vite build"
   },
   "devDependencies": {
     "vite": "^6.0.7",
