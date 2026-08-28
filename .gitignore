@@ -12,6 +12,7 @@ dist/
 # 工具运行时目录
 .temp/
 .claude/
+.opencode/
 .lingeebuild/
 skills/
 **/_runtime/
