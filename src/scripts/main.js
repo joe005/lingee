@@ -2091,8 +2091,8 @@ const billTemplateWithTokens = billTemplate.replace(
     {name:'布局',en:'Layout',count:7,color:'#ff8d42',bg:'#fff1e8',icon:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>'},
     {name:'导航',en:'Navigation',count:7,color:'#8b5cf6',bg:'#f3eefe',icon:'<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/>'},
     {name:'数据录入',en:'Data Entry',count:18,color:'#08cc50',bg:'#e8faef',icon:'<path d="M17 3a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>'},
-    {name:'数据展示',en:'Data Display',count:20,color:'#3a7bff',bg:'#eef3ff',icon:'<path d="M3 3v18h18"/><path d="M7 16l4-4 3 3 5-6"/>'},
-    {name:'反馈',en:'Feedback',count:11,color:'#e04a3a',bg:'#fee',icon:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>'},
+    {name:'数据展示',en:'Data Display',count:19,color:'#3a7bff',bg:'#eef3ff',icon:'<path d="M3 3v18h18"/><path d="M7 16l4-4 3 3 5-6"/>'},
+    {name:'反馈',en:'Feedback',count:12,color:'#e04a3a',bg:'#fee',icon:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>'},
     ];
 
   /* 渲染分类总览网格 */
