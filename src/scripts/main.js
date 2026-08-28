@@ -2000,7 +2000,7 @@ const billTemplateWithTokens = billTemplate.replace(
   });
 
   /* ---------- Design System 交互 ---------- */
-  var dsPaletteBtn=$('#dsPaletteBtn');
+  var dsPaletteBtn=$('#userMenuDesignSystem');
   var dsNavEl=$('#dsNav');
   var dsOverviewGrid=$('#dsOverviewGrid');
   var dsCompDetail=$('#dsCompDetail');
@@ -2731,6 +2731,7 @@ const billTemplateWithTokens = billTemplate.replace(
   /* 调色盘按钮 → 切换到设计系统视图 */
   if(dsPaletteBtn){
     dsPaletteBtn.addEventListener('click',function(){
+      closeUserMenu();
       showView('design');
       setUrlState('?view=design');
       if(navItems) navItems.forEach(function(n){n.classList.remove('active')});
