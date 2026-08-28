@@ -1152,59 +1152,91 @@
 
 <!-- 新增 ERP 测试环境 -->
 <div class="modal-overlay" id="envModal">
-  <div class="modal-card">
+  <form class="modal-card env-config-modal" id="envConfigForm" role="dialog" aria-modal="true" aria-labelledby="envModalTitle">
     <div class="modal-header">
-      <div class="modal-title">新增测试环境</div>
-      <button class="modal-close" id="envModalClose">×</button>
+      <div class="env-config-heading">
+        <div class="modal-title" id="envModalTitle">新增 ERP 环境</div>
+      </div>
+      <button class="modal-close" id="envModalClose" type="button" aria-label="关闭">×</button>
     </div>
-    <div class="modal-body">
-      <div class="form-group">
-        <label>环境类型</label>
-        <div class="type-options">
-          <label class="type-option"><input type="radio" name="envType" value="本地" checked>本地</label>
-          <label class="type-option"><input type="radio" name="envType" value="云端">云端</label>
+    <div class="modal-body env-config-body">
+      <section class="env-form-section" aria-labelledby="envBasicTitle">
+        <div class="env-form-section-title" id="envBasicTitle">基本信息</div>
+        <div class="env-form-grid">
+          <label class="env-field">
+            <span>环境名<span class="env-required">*</span></span>
+            <input type="text" id="envName" placeholder="为该环境取一个唯一名称" autocomplete="off" required>
+          </label>
+          <label class="env-field">
+            <span>环境类型<span class="env-required">*</span></span>
+            <select id="envProduct" required>
+              <option value="" selected>请选择环境类型</option>
+              <option value="suite">AI 套件</option>
+              <option value="xinghan">AI 星瀚</option>
+            </select>
+          </label>
+          <label class="env-field">
+            <span>环境地址<span class="env-required">*</span></span>
+            <input type="url" id="envUrl" placeholder="https://example.com/ierp" autocomplete="off" spellcheck="false" required>
+          </label>
+          <label class="env-field">
+            <span>数据中心<span class="env-required">*</span></span>
+            <select id="envDataCenter" required>
+              <option value="">请选择数据中心</option>
+              <option value="1561691182942805271" selected>多维联合集团有限公司（1561691182942805271）</option>
+              <option value="1288162917259">蓝海集团测试数据中心（1288162917259）</option>
+            </select>
+          </label>
         </div>
-      </div>
-      <div class="form-group">
-        <label>环境名称</label>
-        <input type="text" id="envName" placeholder="如 scm-dev" autocomplete="off">
-      </div>
-      <div class="form-group">
-        <label>环境地址</label>
-        <input type="text" id="envUrl" placeholder="https://feature.kingdee.com:1026/ierp" autocomplete="off" spellcheck="false">
-      </div>
-      <div class="form-group">
-        <label>账套</label>
-        <div class="dropdown field-dd" data-dd="tenant" id="envTenantDd">
-          <div class="chip muted field-chip" data-chip tabindex="0" role="button" aria-haspopup="true">
-            <span class="chip-label">请选择账套</span>
-            <svg class="caret" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 7.5 5 5 5-5"/></svg>
+      </section>
+
+      <section class="env-form-section hidden" id="envLegacyAuthSection" aria-label="代理用户控制">
+        <div class="env-legacy-auth-card">
+          <div class="env-legacy-auth-main">
+            <div class="env-legacy-auth-title">代理用户控制<span class="env-auth-state" id="envProxyState">已开启</span></div>
+            <div class="env-legacy-auth-desc" id="envProxyDesc">该环境仍使用历史代理用户认证。关闭并保存后将切换为普通 AccessToken，且不能恢复。</div>
           </div>
-          <div class="menu">
-            <div class="menu-item" data-val="ierp（标准账套）"><span class="left">ierp（标准账套）</span><svg class="ic ic-sm menu-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
-            <div class="menu-item" data-val="ierp_dev（开发账套）"><span class="left">ierp_dev（开发账套）</span><svg class="ic ic-sm menu-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
-            <div class="menu-item" data-val="ierp_test（测试账套）"><span class="left">ierp_test（测试账套）</span><svg class="ic ic-sm menu-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
-            <div class="menu-item" data-val="ierp_uat（UAT 账套）"><span class="left">ierp_uat（UAT 账套）</span><svg class="ic ic-sm menu-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
-          </div>
+          <button class="env-auth-switch on" id="envProxySwitch" type="button" role="switch" aria-checked="true" aria-label="代理用户控制"></button>
         </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>用户名</label>
-          <input type="text" id="envUser" placeholder="登录账号" autocomplete="off">
+        <label class="env-field full" id="envProxyUserField">
+          <span>代理用户<span class="env-required">*</span></span>
+          <input type="text" id="envProxyUser" placeholder="请输入代理用户" autocomplete="off">
+        </label>
+      </section>
+
+      <section class="env-form-section" aria-labelledby="envCredentialTitle">
+        <div class="env-form-section-title" id="envCredentialTitle">连接凭证</div>
+        <div class="env-create-notice" id="envCreateNotice">
+          请确保 ERP 第三方应用的“代理用户控制”已关闭，否则 AccessToken 认证可能失败。
         </div>
-        <div class="form-group">
-          <label>密码</label>
-          <input type="password" id="envPwd" placeholder="登录密码" autocomplete="off">
+        <div class="env-form-grid">
+          <label class="env-field">
+            <span class="env-label-with-action">
+              <span>第三方应用 ID（client_id）<span class="env-required">*</span></span>
+              <a href="https://vip.kingdee.com/knowledge/864624126294927872?specialId=862650037874847232&amp;productLineId=40&amp;isKnowledge=2&amp;lang=zh-CN" target="_blank" rel="noreferrer">配置指导 ↗</a>
+            </span>
+            <input type="text" id="envClientId" value="lingee-build" autocomplete="off" required>
+          </label>
+          <label class="env-field">
+            <span>第三方应用密钥（client_secret）<span class="env-required" id="envSecretRequired">*</span></span>
+            <input type="password" id="envClientSecret" placeholder="请输入第三方应用密钥" autocomplete="new-password" required>
+          </label>
+          <label class="env-field full hidden" id="envGatewayField">
+            <span>网关标识（x-acgw-identity）<span class="env-required" id="envGatewayRequired">*</span></span>
+            <input type="password" id="envGateway" placeholder="请输入 AI 套件的网关标识" autocomplete="new-password" required>
+          </label>
         </div>
-      </div>
-      <label class="form-check"><input type="checkbox" id="envDefault">设为默认</label>
+      </section>
     </div>
-    <div class="modal-footer">
-      <button class="modal-btn cancel" id="envModalCancel">取消</button>
-      <button class="modal-btn confirm" id="envModalConfirm">确认</button>
+    <div class="modal-footer env-config-footer">
+      <label class="env-default"><input type="checkbox" id="envDefault"><span>设为默认环境</span></label>
+      <div class="env-footer-actions">
+        <button class="modal-btn cancel" id="envModalCancel" type="button">取消</button>
+        <button class="modal-btn test" id="envTest" type="button">测试连接</button>
+        <button class="modal-btn confirm" id="envModalConfirm" type="submit">保存</button>
+      </div>
     </div>
-  </div>
+  </form>
 </div>
 
 <!-- 选择应用下拉面板（独立浮层） -->
@@ -1249,6 +1281,5 @@
 </div>
 
 <script type="module" src="./src/scripts/main.js"></script>
-</body></html></script>
 </body>
 </html>

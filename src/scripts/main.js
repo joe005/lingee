@@ -808,6 +808,22 @@ const billTemplateWithTokens = billTemplate.replace(
   function bindEnvMore(btn){
     var wrap=btn.closest('.env-more-wrap');
     var item=btn.closest('.env-item');
+    var isCloud=item.dataset.envSource==='cloud'||!!item.querySelector('.env-tag.cloud');
+    var primaryMode=isCloud?'view':'edit';
+    var primaryLabel=isCloud?'查看':'编辑';
+    var main=item.querySelector('.env-main');
+    if(main&&!main.hasAttribute('data-edit-bound')){
+      main.setAttribute('data-edit-bound','true');
+      main.setAttribute('role','button');
+      main.setAttribute('tabindex','0');
+      main.setAttribute('aria-label',primaryLabel+'环境 '+item.querySelector('.env-name').textContent);
+      main.addEventListener('click',function(){ openEnvModal(primaryMode,item); });
+      main.addEventListener('keydown',function(e){
+        if(e.key==='Enter'||e.key===' '){ e.preventDefault(); openEnvModal(primaryMode,item); }
+      });
+    }
+    var editMenu=$('.env-mi[data-act="edit"]',wrap);
+    if(editMenu&&isCloud){ editMenu.setAttribute('data-act','view'); editMenu.textContent='查看'; }
     btn.addEventListener('click',function(e){
       e.stopPropagation();
       var open=!wrap.classList.contains('open');
@@ -837,8 +853,10 @@ const billTemplateWithTokens = billTemplate.replace(
         }else if(act==='delete'){
           item.remove();
           toast('已删除：'+name);
-        }else{
-          toast('编辑：'+name);
+        }else if(act==='edit'){
+          openEnvModal('edit',item);
+        }else if(act==='view'){
+          openEnvModal('view',item);
         }
       });
     });
@@ -854,7 +872,7 @@ const billTemplateWithTokens = billTemplate.replace(
     badge.innerHTML='<span class="env-spinner"></span>连通中';
     head.appendChild(badge);
     var ver=item.querySelector('.env-ver');
-    var tooLow=ver&&ver.classList.contains('bad');
+    var tooLow=item.dataset.versionUnsupported==='true'||(ver&&ver.classList.contains('bad'));
     setTimeout(function(){
       if(tooLow){
         badge.className='env-status fail';
@@ -867,29 +885,178 @@ const billTemplateWithTokens = billTemplate.replace(
       }
     },700+Math.random()*600);
   }
+  function syncProxyTag(item,enabled){
+    var tag=item.querySelector('.env-tag.proxy');
+    if(enabled&&!tag){
+      tag=document.createElement('span');
+      tag.className='env-tag proxy';
+      tag.textContent='代理用户已开启';
+      item.querySelector('.env-head').appendChild(tag);
+    }else if(!enabled&&tag){
+      tag.remove();
+    }
+  }
+  function syncProductTag(item,product){
+    var tag=item.querySelector('.env-tag.product');
+    if(!tag){
+      tag=document.createElement('span');
+      tag.className='env-tag product';
+      var proxyTag=item.querySelector('.env-tag.proxy');
+      item.querySelector('.env-head').insertBefore(tag,proxyTag||null);
+    }
+    tag.classList.remove('suite','xinghan');
+    tag.classList.add(product);
+    tag.textContent=product==='suite'?'AI 套件':'AI 星瀚';
+  }
+  var demoGatewayByName={
+    'scm-dev':'acgw-scm-dev',
+    'hr-sit':'acgw-hr-sit',
+    'legacy-v79':'acgw-legacy-v79'
+  };
+  function hydrateEnvItem(item,index){
+    var sourceTag=item.querySelector('.env-tag.local,.env-tag.cloud');
+    var versionTag=item.querySelector('.env-ver');
+    if(versionTag){
+      item.dataset.versionUnsupported=versionTag.classList.contains('bad')?'true':'false';
+      versionTag.remove();
+    }
+    var name=item.querySelector('.env-name').textContent.trim().toLowerCase();
+    /* 演示数据模拟历史记录只有网关标识、没有产品类型的情况 */
+    if(!item.hasAttribute('data-env-gateway')&&demoGatewayByName[name]) item.dataset.envGateway=demoGatewayByName[name];
+    var existingProductTag=item.querySelector('.env-tag.product');
+    var product=item.dataset.envProduct
+      ||(existingProductTag&&existingProductTag.classList.contains('suite')?'suite':'')
+      ||((item.dataset.envGateway||'').trim()?'suite':'xinghan');
+    item.dataset.envProduct=product;
+    item.dataset.envSource=item.dataset.envSource||(sourceTag&&sourceTag.classList.contains('cloud')?'cloud':'local');
+    item.dataset.envDataCenter=item.dataset.envDataCenter||(index%2?'1288162917259':'1561691182942805271');
+    item.dataset.envClientId=item.dataset.envClientId||'lingee-build';
+    var proxyEnabled=item.dataset.proxyUserEnabled==='true'||(!item.hasAttribute('data-proxy-user-enabled')&&name.indexOf('legacy')>-1);
+    item.dataset.proxyUserEnabled=proxyEnabled?'true':'false';
+    if(proxyEnabled) item.dataset.proxyUser=item.dataset.proxyUser||'erp-openapi-agent';
+    syncProductTag(item,product);
+    syncProxyTag(item,proxyEnabled);
+  }
+  $$('#view-settings .env-item').forEach(hydrateEnvItem);
   $$('.env-more').forEach(bindEnvMore);
   document.addEventListener('click',function(){ closeEnvMenus(null); });
   document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeEnvMenus(null); });
 
   var envModal=$('#envModal');
-  function openEnvModal(){
+  var envConfigForm=$('#envConfigForm');
+  var envProductSelect=$('#envProduct');
+  var envMode='create';
+  var envEditItem=null;
+  var envProduct='';
+  var envOriginalProduct='';
+  var envMaskedValue='********';
+  var envProxyEnabled=false;
+  function setProxyEnabled(enabled){
+    envProxyEnabled=!!enabled;
+    var proxySwitch=$('#envProxySwitch');
+    var proxyState=$('#envProxyState');
+    var proxyDesc=$('#envProxyDesc');
+    var proxyUserField=$('#envProxyUserField');
+    var proxyUser=$('#envProxyUser');
+    if(proxySwitch){
+      proxySwitch.classList.toggle('on',envProxyEnabled);
+      proxySwitch.setAttribute('aria-checked',envProxyEnabled?'true':'false');
+    }
+    if(proxyState){
+      proxyState.textContent=envProxyEnabled?'已开启':'待关闭';
+      proxyState.classList.toggle('pending',!envProxyEnabled);
+    }
+    if(proxyDesc) proxyDesc.textContent=envProxyEnabled
+      ?'该环境仍使用历史代理用户认证。关闭并保存后将切换为普通 AccessToken，且不能恢复。'
+      :'保存后将切换为普通 AccessToken。该升级不可恢复，请确认 ERP 第三方应用已关闭代理用户控制。';
+    if(proxyUserField) proxyUserField.classList.toggle('hidden',!envProxyEnabled);
+    if(proxyUser) proxyUser.required=envProxyEnabled;
+  }
+  var envProxySwitch=$('#envProxySwitch');
+  if(envProxySwitch) envProxySwitch.addEventListener('click',function(){ setProxyEnabled(!envProxyEnabled); });
+  function setEnvProduct(product){
+    envProduct=product;
+    if(envProductSelect&&envProductSelect.value!==product) envProductSelect.value=product;
+    var gatewayField=$('#envGatewayField');
+    var gateway=$('#envGateway');
+    var needsGateway=product==='suite';
+    if(gatewayField) gatewayField.classList.toggle('hidden',!needsGateway);
+    if(gateway){
+      gateway.required=needsGateway;
+      gateway.placeholder='请输入 AI 套件的网关标识';
+      if(!needsGateway) gateway.value='';
+    }
+  }
+  if(envProductSelect) envProductSelect.addEventListener('change',function(){
+    setEnvProduct(this.value);
+    if(envMode==='edit'&&this.value==='suite'&&envOriginalProduct==='suite') $('#envGateway').value=envMaskedValue;
+  });
+  function openEnvModal(mode,item){
     if(!envModal)return;
-    ['envName','envUrl','envUser','envPwd'].forEach(function(id){ var el=$('#'+id); if(el) el.value=''; });
-    var d=$('#envDefault'); if(d) d.checked=false;
-    var r=$('input[name="envType"][value="本地"]'); if(r) r.checked=true;
-    var dd=$('#envTenantDd');
-    if(dd){
-      dd.classList.remove('open');
-      $$('.menu-item',dd).forEach(function(i){i.classList.remove('checked')});
-      $('.chip-label',dd).textContent='请选择账套';
-      $('[data-chip]',dd).classList.add('muted');
+    envMode=mode==='view'?'view':(mode==='edit'?'edit':'create');
+    envEditItem=envMode==='create'?null:item;
+    envOriginalProduct=envEditItem?(envEditItem.dataset.envProduct||''):'';
+    if(envConfigForm) envConfigForm.reset();
+    var editing=envMode==='edit'&&envEditItem;
+    var viewing=envMode==='view'&&envEditItem;
+    var existing=editing||viewing;
+    var nameInput=$('#envName');
+    var urlInput=$('#envUrl');
+    var dataCenterSelect=$('#envDataCenter');
+    var clientSecret=$('#envClientSecret');
+    var clientId=$('#envClientId');
+    var gateway=$('#envGateway');
+    var proxyUser=$('#envProxyUser');
+    var proxySwitch=$('#envProxySwitch');
+    var defaultCheckbox=$('#envDefault');
+    var confirmButton=$('#envModalConfirm');
+    var cancelButton=$('#envModalCancel');
+    $('#envModalTitle').textContent=viewing?'查看 ERP 环境':(editing?'编辑 ERP 环境':'新增 ERP 环境');
+    $('#envCreateNotice').classList.toggle('hidden',!!existing);
+    $('#envSecretRequired').classList.remove('hidden');
+    $('#envGatewayRequired').classList.remove('hidden');
+    nameInput.readOnly=!!existing;
+    urlInput.readOnly=!!existing;
+    envProductSelect.disabled=!!existing;
+    dataCenterSelect.disabled=!!existing;
+    clientId.readOnly=!!viewing;
+    clientSecret.readOnly=!!viewing;
+    gateway.readOnly=!!viewing;
+    proxyUser.readOnly=!!viewing;
+    proxySwitch.disabled=!!viewing;
+    defaultCheckbox.disabled=false;
+    confirmButton.classList.remove('hidden');
+    confirmButton.textContent=viewing?'保存默认设置':'保存';
+    cancelButton.textContent=viewing?'关闭':'取消';
+    clientSecret.required=true;
+    clientSecret.placeholder='请输入第三方应用密钥';
+    if(existing){
+      nameInput.value=envEditItem.querySelector('.env-name').textContent.trim();
+      urlInput.value=envEditItem.querySelector('.env-url').textContent.trim();
+      $('#envDataCenter').value=envEditItem.dataset.envDataCenter||'1561691182942805271';
+      $('#envClientId').value=envEditItem.dataset.envClientId||'lingee-build';
+      $('#envDefault').checked=!!envEditItem.querySelector('.env-tag.def');
+      setEnvProduct(envOriginalProduct||'xinghan');
+      clientSecret.value=envMaskedValue;
+      $('#envGateway').value=envOriginalProduct==='suite'?envMaskedValue:'';
+      var hasLegacyProxy=envEditItem.dataset.proxyUserEnabled==='true';
+      $('#envLegacyAuthSection').classList.toggle('hidden',!hasLegacyProxy);
+      $('#envProxyUser').value=hasLegacyProxy?(envEditItem.dataset.proxyUser||''):'';
+      setProxyEnabled(hasLegacyProxy);
+    }else{
+      $('#envClientId').value='lingee-build';
+      $('#envDataCenter').value='1561691182942805271';
+      $('#envLegacyAuthSection').classList.add('hidden');
+      $('#envProxyUser').value='';
+      setProxyEnabled(false);
+      setEnvProduct('');
     }
     envModal.classList.add('show');
-    setTimeout(function(){ var n=$('#envName'); if(n) n.focus(); },60);
+    setTimeout(function(){ if(nameInput) nameInput.focus(); },60);
   }
   function closeEnvModal(){ if(envModal) envModal.classList.remove('show'); }
   var envAdd=$('#envAdd');
-  if(envAdd) envAdd.addEventListener('click',openEnvModal);
+  if(envAdd) envAdd.addEventListener('click',function(){ openEnvModal('create'); });
   ['#envModalClose','#envModalCancel'].forEach(function(sel){
     var b=$(sel); if(b) b.addEventListener('click',closeEnvModal);
   });
@@ -897,23 +1064,95 @@ const billTemplateWithTokens = billTemplate.replace(
   document.addEventListener('keydown',function(e){
     if(e.key==='Escape'&&envModal&&envModal.classList.contains('show')) closeEnvModal();
   });
-  var envModalConfirm=$('#envModalConfirm');
-  if(envModalConfirm){
-    envModalConfirm.addEventListener('click',function(){
+  var envTest=$('#envTest');
+  if(envTest){
+    envTest.addEventListener('click',function(){
+      if(!envConfigForm||!envConfigForm.reportValidity()) return;
+      envTest.disabled=true;
+      envTest.textContent='测试中…';
+      setTimeout(function(){
+        envTest.disabled=false;
+        envTest.textContent='测试连接';
+        toast('连接测试通过');
+      },700);
+    });
+  }
+  if(envConfigForm){
+    envConfigForm.addEventListener('submit',function(e){
+      e.preventDefault();
+      if(envMode==='view'&&envEditItem){
+        var viewList=$('#view-settings .env-list');
+        var viewIsDefault=$('#envDefault').checked;
+        if(viewIsDefault){
+          $$('.env-tag.def',viewList).forEach(function(t){t.remove()});
+          var viewHead=envEditItem.querySelector('.env-head');
+          var viewTag=document.createElement('span');
+          viewTag.className='env-tag def'; viewTag.textContent='默认';
+          viewHead.insertBefore(viewTag,viewHead.querySelector('.env-tag'));
+        }else{
+          var viewOldDefault=envEditItem.querySelector('.env-tag.def');
+          if(viewOldDefault) viewOldDefault.remove();
+        }
+        closeEnvModal();
+        toast('已更新默认环境设置');
+        return;
+      }
+      if(!envConfigForm.reportValidity()) return;
       var name=($('#envName').value||'').trim();
       var url=($('#envUrl').value||'').trim();
-      if(!name){ toast('请填写环境名称','error'); $('#envName').focus(); return; }
-      if(!url){ toast('请填写环境地址','error'); $('#envUrl').focus(); return; }
-      var type=$('input[name="envType"]:checked').value;
+      var type=envProduct==='suite'?'AI 套件':'AI 星瀚';
       var isDef=$('#envDefault').checked;
-      var list=$('.env-list');
+      var list=$('#view-settings .env-list');
+      if(envMode==='edit'&&envEditItem){
+        envEditItem.querySelector('.env-name').textContent=name;
+        envEditItem.querySelector('.env-url').textContent=url;
+        envEditItem.dataset.envProduct=envProduct;
+        envEditItem.dataset.envDataCenter=$('#envDataCenter').value;
+        envEditItem.dataset.envClientId=($('#envClientId').value||'').trim();
+        var secret=($('#envClientSecret').value||'').trim();
+        var gateway=($('#envGateway').value||'').trim();
+        if(secret&&secret!==envMaskedValue) envEditItem.dataset.envClientSecret=secret;
+        if(gateway&&gateway!==envMaskedValue) envEditItem.dataset.envGateway=gateway;
+        else if(envProduct!=='suite') delete envEditItem.dataset.envGateway;
+        syncProductTag(envEditItem,envProduct);
+        var wasProxyEnabled=envEditItem.dataset.proxyUserEnabled==='true';
+        envEditItem.dataset.proxyUserEnabled=envProxyEnabled?'true':'false';
+        if(envProxyEnabled){
+          envEditItem.dataset.proxyUser=($('#envProxyUser').value||'').trim();
+        }else{
+          delete envEditItem.dataset.proxyUser;
+        }
+        syncProxyTag(envEditItem,envProxyEnabled);
+        if(isDef){
+          $$('.env-tag.def',list).forEach(function(t){t.remove()});
+          var editHead=envEditItem.querySelector('.env-head');
+          var editTag=document.createElement('span');
+          editTag.className='env-tag def'; editTag.textContent='默认';
+          editHead.insertBefore(editTag,editHead.querySelector('.env-tag'));
+        }else{
+          var oldDefault=envEditItem.querySelector('.env-tag.def');
+          if(oldDefault) oldDefault.remove();
+        }
+        closeEnvModal();
+        toast(wasProxyEnabled&&!envProxyEnabled
+          ?'已更新环境并切换为普通 AccessToken：'+name
+          :'已更新环境：'+name);
+        return;
+      }
       if(isDef) $$('.env-tag.def',list).forEach(function(t){t.remove()});
       var item=document.createElement('div');
       item.className='env-item';
+      item.dataset.envProduct=envProduct;
+      item.dataset.envSource='local';
+      item.dataset.envDataCenter=$('#envDataCenter').value;
+      item.dataset.envClientId=($('#envClientId').value||'').trim();
+      item.dataset.envClientSecret=($('#envClientSecret').value||'').trim();
+      item.dataset.proxyUserEnabled='false';
+      if(envProduct==='suite') item.dataset.envGateway=($('#envGateway').value||'').trim();
       item.innerHTML='<div class="env-main"><div class="env-head"><span class="env-name"></span>'
-        +'<span class="env-ver">v8.2.3</span>'
         +(isDef?'<span class="env-tag def">默认</span>':'')
-        +'<span class="env-tag '+(type==='云端'?'cloud':'local')+'">'+type+'</span></div>'
+        +'<span class="env-tag '+item.dataset.envSource+'">'+(item.dataset.envSource==='cloud'?'云端':'本地')+'</span>'
+        +'<span class="env-tag product '+envProduct+'">'+type+'</span></div>'
         +'<div class="env-url"></div></div>'
         +'<div class="env-more-wrap"><button class="env-more" data-tooltip="更多" aria-label="更多" aria-haspopup="true">'
         +'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button>'
