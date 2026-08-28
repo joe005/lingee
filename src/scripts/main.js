@@ -2584,11 +2584,12 @@ const billTemplateWithTokens = billTemplate.replace(
           +'</div></div>';
         break;
       case 'Tooltip':
-        h+='<div style="'+box+'"><span style="'+lbl+'">文字提示</span><div style="display:flex;gap:16px;align-items:center">'
-          +'<div style="position:relative;display:inline-block">'
-          +'<button style="background:#fff;border:1px solid var(--border);border-radius:6px;padding:6px 12px;font-size:14px;cursor:pointer">悬浮我</button>'
-          +'<div style="position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#2d2d2d;color:#fff;padding:4px 8px;border-radius:6px;font-size:14px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.15)">提示文字</div>'
-          +'</div></div></div>';
+        h+='<div style="'+box+'"><span style="'+lbl+'">文字提示 — 悬浮 300ms 后显示，深色圆角浮层</span><div style="display:flex;gap:16px;align-items:center">'
+          +'<button data-tooltip="提示文字" style="background:#fff;border:1px solid var(--border);border-radius:6px;padding:6px 12px;font-size:14px;cursor:pointer">悬浮我</button>'
+          +'<button data-tooltip="产品文档" style="background:none;border:none;border-radius:8px;padding:6px;color:var(--text-muted);display:flex;align-items:center;justify-content:center;cursor:pointer"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 0 1 5 0c0 1.5-2.5 2-2.5 3.5"/><line x1="12" y1="17" x2="12" y2="17"/></svg></button>'
+          +'<button data-tooltip="消息通知" style="background:none;border:none;border-radius:8px;padding:6px;color:var(--text-muted);display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span style="position:absolute;top:2px;right:2px;width:8px;height:8px;background:#e04a3a;border-radius:50%"></span></button>'
+          +'</div></div>'
+          +'<div style="'+box+'"><span style="'+lbl+'">规范参数</span><table style="width:100%;border-collapse:collapse;font-size:14px"><tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 0;color:var(--text-muted)">背景色</td><td style="padding:8px 0">#2d2d2d</td></tr><tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 0;color:var(--text-muted)">文字颜色</td><td style="padding:8px 0">#fff</td></tr><tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 0;color:var(--text-muted)">字号</td><td style="padding:8px 0">12px / line-height 1.4</td></tr><tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 0;color:var(--text-muted)">内边距</td><td style="padding:8px 0">4px 8px</td></tr><tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 0;color:var(--text-muted)">圆角</td><td style="padding:8px 0">6px</td></tr><tr style="border-bottom:1px solid var(--border)"><td style="padding:8px 0;color:var(--text-muted)">阴影</td><td style="padding:8px 0">0 2px 8px rgba(0,0,0,.15)</td></tr><tr><td style="padding:8px 0;color:var(--text-muted)">触发方式</td><td style="padding:8px 0">data-tooltip 属性，hover 延迟 300ms</td></tr></table></div>';
         break;
       case 'Alert':
         h+='<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">'
