@@ -207,7 +207,7 @@
   .env-tag.def{background:#eef3ff;color:#3a5eff}
   .env-tag.product.suite{background:#f1efff;color:#6657d9}
   .env-tag.product.xinghan{background:#eaf6ff;color:#1877b9}
-  .env-tag.proxy{background:var(--warning-bg);color:var(--warning)}
+  .env-tag.legacy-auth{background:var(--warning-bg);color:var(--warning)}
   /* 区块标题与版本要求说明 */
   .set-sec-titles{min-width:0;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
   .set-sec-desc{font-size:13px;color:var(--text-soft)}
@@ -1144,7 +1144,7 @@
     display:inline-flex;align-items:center;height:20px;padding:0 7px;border-radius:5px;
     background:var(--warning-bg);color:var(--warning);font-size:11px;font-weight:500;
   }
-  .env-auth-state.pending{background:var(--brand-fill);color:var(--brand)}
+  .env-auth-state.enabled{background:var(--brand-fill);color:var(--brand)}
   .env-legacy-auth-desc{margin-top:4px;color:var(--text-secondary);font-size:12px;line-height:1.5}
   .env-auth-switch{
     position:relative;width:42px;height:24px;flex:none;padding:0;border:0;border-radius:999px;
@@ -1154,7 +1154,7 @@
     content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;
     background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.22);transition:transform .15s;
   }
-  .env-auth-switch.on{background:var(--warning)}
+  .env-auth-switch.on{background:var(--brand)}
   .env-auth-switch.on::after{transform:translateX(18px)}
   .env-auth-switch:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
   .env-auth-switch:disabled{cursor:not-allowed;opacity:.58}
@@ -1203,3 +1203,30 @@
     .env-config-footer{align-items:flex-start;flex-direction:column;padding:12px 16px}
     .env-footer-actions{width:100%;justify-content:flex-end}
   }
+
+/* 启用普通 AccessToken 认证的不可逆二次确认 */
+.env-auth-confirm-card{width:440px;max-width:calc(100vw - 32px)}
+.env-auth-confirm-lead{margin:0 0 10px;color:var(--text);font-size:13px;line-height:1.6}
+.env-auth-confirm-lead b{color:var(--danger);font-weight:600}
+.env-auth-confirm-list{margin:0;padding-left:18px;color:var(--text-secondary);font-size:12px;line-height:1.7}
+.env-auth-confirm-list b{color:var(--text);font-weight:600}
+
+/* ── 与实现对齐：锁定态灰底无边框 ──
+ * 锁定字段要一眼看出是「已确定的值」，而不是一个能点、看着能改、实际改不动的输入框。
+ * 边框去掉后与可编辑字段的区分度明显高于只改背景色。 */
+.env-field input[readonly],
+.env-field input[readonly]:hover,
+.env-field input[readonly]:focus,
+.env-field input[readonly]:focus-visible,
+.env-field select:disabled,
+.env-field select:disabled:hover,
+.env-field select:disabled:focus{
+  border-color:transparent;
+  box-shadow:none;
+  cursor:default;
+}
+
+/* 「设为默认环境」勾选框：默认边框在白底上几乎看不见，16px 的小控件需要更重的边框 */
+.env-default input{
+  border:1px solid var(--border-hover);
+}
