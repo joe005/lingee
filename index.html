@@ -1152,7 +1152,7 @@
 
 <!-- 新增 ERP 测试环境 -->
 <div class="modal-overlay" id="envModal">
-  <form class="modal-card env-config-modal" id="envConfigForm" role="dialog" aria-modal="true" aria-labelledby="envModalTitle">
+  <form class="modal-card env-config-modal" id="envConfigForm" role="dialog" aria-modal="true" aria-labelledby="envModalTitle" novalidate>
     <div class="modal-header">
       <div class="env-config-heading">
         <div class="modal-title" id="envModalTitle">新增 ERP 环境</div>
@@ -1171,8 +1171,8 @@
             <span>环境类型<span class="env-required">*</span></span>
             <select id="envProduct" required>
               <option value="" selected>请选择环境类型</option>
-              <option value="suite">AI 套件</option>
-              <option value="xinghan">AI 星瀚</option>
+              <option value="XK">AI 套件</option>
+              <option value="XH">AI 星瀚</option>
             </select>
           </label>
           <label class="env-field">
@@ -1183,7 +1183,7 @@
             <span>数据中心<span class="env-required">*</span></span>
             <select id="envDataCenter" required>
               <option value="">请选择数据中心</option>
-              <option value="1561691182942805271" selected>多维联合集团有限公司（1561691182942805271）</option>
+              <option value="1561691182942805271">多维联合集团有限公司（1561691182942805271）</option>
               <option value="1288162917259">蓝海集团测试数据中心（1288162917259）</option>
             </select>
           </label>

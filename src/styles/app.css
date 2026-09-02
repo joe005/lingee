@@ -1230,3 +1230,11 @@
 .env-default input{
   border:1px solid var(--border-hover);
 }
+
+/* 校验错误：一次性标出全部未通过的必填项，不做「补完一个再报下一个」的挤牙膏式提示 */
+.env-field .env-err{display:none;margin-top:4px;color:var(--danger);font-size:12px;line-height:1.4}
+.env-field.invalid .env-err{display:block}
+.env-field.invalid input,
+.env-field.invalid select,
+.env-field.invalid input:hover,
+.env-field.invalid select:hover{border-color:var(--danger)}

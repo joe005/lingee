@@ -877,17 +877,11 @@ const billTemplateWithTokens = billTemplate.replace(
       toast(name+'：连通正常');
     },700+Math.random()*600);
   }
-  /* 尚未启用普通 AccessToken 认证的环境打标，提示需要迁移 */
-  function syncAuthTag(item,normalAuthEnabled){
+  /* 列表不展示认证状态标签：是否启用普通 AccessToken 在表单内已有明确表达，
+     列表再挂一枚红标只是噪音。这里只负责清掉演示数据里遗留的标签。 */
+  function syncAuthTag(item){
     var tag=item.querySelector('.env-tag.legacy-auth');
-    if(!normalAuthEnabled&&!tag){
-      tag=document.createElement('span');
-      tag.className='env-tag legacy-auth';
-      tag.textContent='AccessToken 未启用';
-      item.querySelector('.env-head').appendChild(tag);
-    }else if(normalAuthEnabled&&tag){
-      tag.remove();
-    }
+    if(tag) tag.remove();
   }
   /* 列表只保留 默认 / 本地-云端 两类标签：产品类型在表单里已有「环境类型」字段，
      列表再挂一枚彩色标签只是噪音 */
@@ -910,8 +904,8 @@ const billTemplateWithTokens = billTemplate.replace(
     if(!item.hasAttribute('data-env-gateway')&&demoGatewayByName[name]) item.dataset.envGateway=demoGatewayByName[name];
     var existingProductTag=item.querySelector('.env-tag.product');
     var product=item.dataset.envProduct
-      ||(existingProductTag&&existingProductTag.classList.contains('suite')?'suite':'')
-      ||((item.dataset.envGateway||'').trim()?'suite':'xinghan');
+      ||(existingProductTag&&existingProductTag.classList.contains('XK')?'XK':'')
+      ||((item.dataset.envGateway||'').trim()?'XK':'XH');
     item.dataset.envProduct=product;
     item.dataset.envSource=item.dataset.envSource||(sourceTag&&sourceTag.classList.contains('cloud')?'cloud':'local');
     item.dataset.envDataCenter=item.dataset.envDataCenter||(index%2?'1288162917259':'1561691182942805271');
@@ -923,7 +917,7 @@ const billTemplateWithTokens = billTemplate.replace(
     item.dataset.normalAccessToken=normalAuth?'true':'false';
     if(!normalAuth) item.dataset.proxyUser=item.dataset.proxyUser||'erp-openapi-agent';
     syncProductTag(item,product);
-    syncAuthTag(item,normalAuth);
+    syncAuthTag(item);
   }
   $$('#view-settings .env-item').forEach(hydrateEnvItem);
   $$('.env-more').forEach(bindEnvMore);
@@ -942,6 +936,10 @@ const billTemplateWithTokens = billTemplate.replace(
   /* 认证态以「是否普通 AccessToken 认证」表达：启用后隐藏代理用户，且不可回退 */
   function setNormalAuthEnabled(enabled){
     envNormalAuthEnabled=!!enabled;
+    /* 「代理用户控制」提示只在走普通 AccessToken 时才该出现：仍用代理用户认证的
+       环境反而需要它开着，这时候弹这句话是自相矛盾的。 */
+    var createNotice=$('#envCreateNotice');
+    if(createNotice) createNotice.classList.toggle('hidden',!envNormalAuthEnabled);
     var authSwitch=$('#envAuthSwitch');
     var authState=$('#envAuthState');
     var authDesc=$('#envAuthDesc');
@@ -987,7 +985,7 @@ const billTemplateWithTokens = billTemplate.replace(
     if(envProductSelect&&envProductSelect.value!==product) envProductSelect.value=product;
     var gatewayField=$('#envGatewayField');
     var gateway=$('#envGateway');
-    var needsGateway=product==='suite';
+    var needsGateway=product==='XK';
     if(gatewayField) gatewayField.classList.toggle('hidden',!needsGateway);
     if(gateway){
       gateway.required=needsGateway;
@@ -997,14 +995,87 @@ const billTemplateWithTokens = billTemplate.replace(
   }
   if(envProductSelect) envProductSelect.addEventListener('change',function(){
     setEnvProduct(this.value);
-    if(envMode==='edit'&&this.value==='suite'&&envOriginalProduct==='suite') $('#envGateway').value=envMaskedValue;
+    if(envMode==='edit'&&this.value==='XK'&&envOriginalProduct==='XK') $('#envGateway').value=envMaskedValue;
   });
+  /* ── 校验：一次性报出全部错误 ──
+     早期版本用 form.reportValidity()，浏览器每次只弹第一个不合规字段，
+     用户填一个再报一个，一个空表单要来回点好几轮。这里改成自己标。 */
+  function envFieldOf(el){ return el?el.closest('.env-field'):null; }
+  function setEnvFieldError(el,msg){
+    var f=envFieldOf(el); if(!f) return;
+    var err=f.querySelector('.env-err');
+    if(!err){ err=document.createElement('small'); err.className='env-err'; f.appendChild(err); }
+    err.textContent=msg||'';
+    f.classList.toggle('invalid',!!msg);
+  }
+  function clearEnvErrors(){
+    $$('#envConfigForm .env-field').forEach(function(f){
+      f.classList.remove('invalid');
+      var e=f.querySelector('.env-err'); if(e) e.textContent='';
+    });
+  }
+  /* 地址归一化：补协议头、去 query/hash、去尾斜杠 */
+  function normalizeEnvUrl(raw){
+    var t=String(raw||'').trim().replace(/\/+$/,'');
+    if(!t) return '';
+    var out;
+    if(/^https?:\/\//i.test(t)) out=t;
+    else{ var m=t.match(/^(https?):\/*(.*)$/i); out=m?(m[1].toLowerCase()+'://'+m[2]):('http://'+t); }
+    try{ var u=new URL(out); return (u.origin+u.pathname).replace(/\/+$/,''); }catch(e){ return out; }
+  }
+  function isVisibleField(el){
+    var f=envFieldOf(el);
+    if(!f||f.classList.contains('hidden')) return false;
+    var sec=f.closest('.env-form-section');
+    return !(sec&&sec.classList.contains('hidden'));
+  }
+  function validateEnvForm(){
+    clearEnvErrors();
+    var ok=true;
+    var nameInput=$('#envName'), urlInput=$('#envUrl');
+    var name=(nameInput.value||'').trim();
+    if(!name){ setEnvFieldError(nameInput,'请输入环境名'); ok=false; }
+    else if(envMode==='create'){
+      var dup=$$('#view-settings .env-item .env-name').some(function(n){
+        return n.textContent.trim()===name;
+      });
+      if(dup){ setEnvFieldError(nameInput,'环境名已存在'); ok=false; }
+    }
+    var url=(urlInput.value||'').trim();
+    if(!url){ setEnvFieldError(urlInput,'请输入环境地址'); ok=false; }
+    else{
+      var n=normalizeEnvUrl(url);
+      if(n!==urlInput.value) urlInput.value=n;
+      try{
+        if(/\/[^/]+\.(?:html?|jsp|php|aspx?|do)$/i.test(new URL(n).pathname)){
+          setEnvFieldError(urlInput,'地址不应包含页面文件名，请填写 ERP 服务根地址'); ok=false;
+        }
+      }catch(e){ /* 归一化后仍非法：交给接口调用时报错 */ }
+    }
+    if(!envProductSelect.value){ setEnvFieldError(envProductSelect,'请选择环境类型'); ok=false; }
+    var dc=$('#envDataCenter');
+    if(!dc.value){ setEnvFieldError(dc,'请选择数据中心'); ok=false; }
+    var clientId=$('#envClientId');
+    if(!(clientId.value||'').trim()){ setEnvFieldError(clientId,'请输入第三方应用 ID'); ok=false; }
+    var secret=$('#envClientSecret');
+    if(!(secret.value||'').trim()){ setEnvFieldError(secret,'请输入第三方应用密钥'); ok=false; }
+    var gateway=$('#envGateway');
+    if(isVisibleField(gateway)&&!(gateway.value||'').trim()){
+      setEnvFieldError(gateway,'请输入网关标识'); ok=false;
+    }
+    var proxy=$('#envProxyUser');
+    if(isVisibleField(proxy)&&!(proxy.value||'').trim()){
+      setEnvFieldError(proxy,'请输入代理用户'); ok=false;
+    }
+    return ok;
+  }
   function openEnvModal(mode,item){
     if(!envModal)return;
     envMode=mode==='view'?'view':(mode==='edit'?'edit':'create');
     envEditItem=envMode==='create'?null:item;
     envOriginalProduct=envEditItem?(envEditItem.dataset.envProduct||''):'';
     if(envConfigForm) envConfigForm.reset();
+    clearEnvErrors();
     var editing=envMode==='edit'&&envEditItem;
     var viewing=envMode==='view'&&envEditItem;
     var existing=editing||viewing;
@@ -1020,7 +1091,6 @@ const billTemplateWithTokens = billTemplate.replace(
     var confirmButton=$('#envModalConfirm');
     var cancelButton=$('#envModalCancel');
     $('#envModalTitle').textContent=viewing?'查看 ERP 环境':(editing?'编辑 ERP 环境':'新增 ERP 环境');
-    $('#envCreateNotice').classList.toggle('hidden',!!existing);
     $('#envSecretRequired').classList.remove('hidden');
     $('#envGatewayRequired').classList.remove('hidden');
     nameInput.readOnly=!!existing;
@@ -1044,9 +1114,9 @@ const billTemplateWithTokens = billTemplate.replace(
       $('#envDataCenter').value=envEditItem.dataset.envDataCenter||'1561691182942805271';
       $('#envClientId').value=envEditItem.dataset.envClientId||'';
       $('#envDefault').checked=!!envEditItem.querySelector('.env-tag.def');
-      setEnvProduct(envOriginalProduct||'xinghan');
+      setEnvProduct(envOriginalProduct||'XH');
       clientSecret.value=envMaskedValue;
-      $('#envGateway').value=envOriginalProduct==='suite'?envMaskedValue:'';
+      $('#envGateway').value=envOriginalProduct==='XK'?envMaskedValue:'';
       /* 已启用普通 AccessToken 的环境不再展示认证区块（迁移不可回退） */
       var normalAuth=envEditItem.dataset.normalAccessToken!=='false';
       $('#envLegacyAuthSection').classList.toggle('hidden',normalAuth);
@@ -1054,7 +1124,7 @@ const billTemplateWithTokens = billTemplate.replace(
       setNormalAuthEnabled(normalAuth);
     }else{
       $('#envClientId').value='';
-      $('#envDataCenter').value='1561691182942805271';
+      $('#envDataCenter').value='';
       $('#envLegacyAuthSection').classList.add('hidden');
       $('#envProxyUser').value='';
       setNormalAuthEnabled(true);
@@ -1065,6 +1135,18 @@ const billTemplateWithTokens = billTemplate.replace(
     setTimeout(function(){ if(nameInput && !existing) nameInput.focus(); },60);
   }
   function closeEnvModal(){ if(envModal) envModal.classList.remove('show'); }
+  /* 地址变了就丢弃已选数据中心：旧数据中心不属于新地址 */
+  var envUrlInput=$('#envUrl');
+  if(envUrlInput){
+    envUrlInput.addEventListener('input',function(){
+      var dc=$('#envDataCenter');
+      if(dc&&dc.value){ dc.value=''; setEnvFieldError(dc,''); }
+      setEnvFieldError(envUrlInput,'');
+    });
+    envUrlInput.addEventListener('blur',function(){
+      if((envUrlInput.value||'').trim()) envUrlInput.value=normalizeEnvUrl(envUrlInput.value);
+    });
+  }
   var envAdd=$('#envAdd');
   if(envAdd) envAdd.addEventListener('click',function(){ openEnvModal('create'); });
   ['#envModalClose','#envModalCancel'].forEach(function(sel){
@@ -1080,7 +1162,7 @@ const billTemplateWithTokens = billTemplate.replace(
   var envTest=$('#envTest');
   if(envTest){
     envTest.addEventListener('click',function(){
-      if(!envConfigForm||!envConfigForm.reportValidity()) return;
+      if(!envConfigForm||!validateEnvForm()) return;
       envTest.disabled=true;
       envTest.textContent='测试中…';
       setTimeout(function(){
@@ -1110,10 +1192,10 @@ const billTemplateWithTokens = billTemplate.replace(
         toast('已更新默认环境设置');
         return;
       }
-      if(!envConfigForm.reportValidity()) return;
+      if(!validateEnvForm()) return;
       var name=($('#envName').value||'').trim();
       var url=($('#envUrl').value||'').trim();
-      var type=envProduct==='suite'?'AI 套件':'AI 星瀚';
+      var type=envProduct==='XK'?'AI 套件':'AI 星瀚';
       var isDef=$('#envDefault').checked;
       var list=$('#view-settings .env-list');
       if(envMode==='edit'&&envEditItem){
@@ -1126,7 +1208,7 @@ const billTemplateWithTokens = billTemplate.replace(
         var gateway=($('#envGateway').value||'').trim();
         if(secret&&secret!==envMaskedValue) envEditItem.dataset.envClientSecret=secret;
         if(gateway&&gateway!==envMaskedValue) envEditItem.dataset.envGateway=gateway;
-        else if(envProduct!=='suite') delete envEditItem.dataset.envGateway;
+        else if(envProduct!=='XK') delete envEditItem.dataset.envGateway;
         syncProductTag(envEditItem,envProduct);
         var wasNormalAuth=envEditItem.dataset.normalAccessToken!=='false';
         envEditItem.dataset.normalAccessToken=envNormalAuthEnabled?'true':'false';
@@ -1135,7 +1217,7 @@ const billTemplateWithTokens = billTemplate.replace(
         }else{
           envEditItem.dataset.proxyUser=($('#envProxyUser').value||'').trim();
         }
-        syncAuthTag(envEditItem,envNormalAuthEnabled);
+        syncAuthTag(envEditItem);
         if(isDef){
           $$('.env-tag.def',list).forEach(function(t){t.remove()});
           var editHead=envEditItem.querySelector('.env-head');
@@ -1161,11 +1243,10 @@ const billTemplateWithTokens = billTemplate.replace(
       item.dataset.envClientId=($('#envClientId').value||'').trim();
       item.dataset.envClientSecret=($('#envClientSecret').value||'').trim();
       item.dataset.normalAccessToken='true';
-      if(envProduct==='suite') item.dataset.envGateway=($('#envGateway').value||'').trim();
+      if(envProduct==='XK') item.dataset.envGateway=($('#envGateway').value||'').trim();
       item.innerHTML='<div class="env-main"><div class="env-head"><span class="env-name"></span>'
         +(isDef?'<span class="env-tag def">默认</span>':'')
-        +'<span class="env-tag '+item.dataset.envSource+'">'+(item.dataset.envSource==='cloud'?'云端':'本地')+'</span>'
-        +'<span class="env-tag product '+envProduct+'">'+type+'</span></div>'
+        +'<span class="env-tag '+item.dataset.envSource+'">'+(item.dataset.envSource==='cloud'?'云端':'本地')+'</span></div>'
         +'<div class="env-url"></div></div>'
         +'<div class="env-more-wrap"><button class="env-more" data-tooltip="更多" aria-label="更多" aria-haspopup="true">'
         +'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button>'
