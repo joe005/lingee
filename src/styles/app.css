@@ -1129,7 +1129,7 @@
   .env-config-body{padding:16px 22px 6px;overflow-y:auto}
   .env-form-section{margin-bottom:16px}
   .env-create-notice{
-    margin:-2px 0 10px;color:var(--danger);font-size:12px;line-height:1.5;
+    margin:2px 0 10px;color:var(--danger);font-size:12px;line-height:1.5;
   }
   .env-form-section-title{
     margin-bottom:10px;color:var(--text);font-size:14px;font-weight:600;
@@ -1171,6 +1171,8 @@
     background:var(--bg);color:var(--text);font:inherit;
     transition:border-color .15s,box-shadow .15s;
   }
+  /* 数据中心带账套号，文字长，给右侧箭头留出位置免得压在一起 */
+  .env-field select{padding-right:30px;text-overflow:ellipsis}
   .env-field input::placeholder{color:var(--text-soft)}
   .env-field input:hover,.env-field select:hover{border-color:var(--border-focus)}
   .env-field input:focus,.env-field select:focus{
@@ -1183,9 +1185,21 @@
   .env-field input[readonly]:hover,.env-field select:disabled:hover{border-color:var(--border)}
   .env-field small{display:block;margin-top:5px;color:var(--text-secondary);font-size:12px;line-height:1.45}
   .env-label-with-action{justify-content:space-between;gap:10px}
-  .env-label-with-action>a{flex:none;color:var(--brand);font-size:12px;text-decoration:none}
-  .env-label-with-action>a:hover{text-decoration:underline}
+  .env-label-with-action>a,
+  .env-label-with-action>button{
+    flex:none;padding:0;border:none;background:none;color:var(--brand);
+    font-size:12px;line-height:18px;text-decoration:none;cursor:pointer;
+  }
+  .env-label-with-action>a:hover,
+  .env-label-with-action>button:hover{text-decoration:underline}
+  .env-label-with-action>button:disabled{opacity:.6;cursor:not-allowed;text-decoration:none}
   .env-config-footer{align-items:center;justify-content:space-between;gap:16px;padding:12px 22px}
+  .env-footer-lead{display:flex;align-items:center;gap:16px;min-width:0}
+  .env-link-danger{
+    flex:none;padding:0;border:0;background:none;color:var(--danger);
+    font:inherit;font-size:13px;cursor:pointer;
+  }
+  .env-link-danger:hover{text-decoration:underline}
   .env-default{display:flex;align-items:center;gap:8px;color:var(--text);font-size:13px;cursor:pointer}
   .env-default input{width:15px;height:15px;accent-color:var(--brand);cursor:pointer}
   .env-footer-actions{display:flex;align-items:center;gap:8px}
@@ -1238,3 +1252,292 @@
 .env-field.invalid select,
 .env-field.invalid input:hover,
 .env-field.invalid select:hover{border-color:var(--danger)}
+
+/* ============================================================
+   ERP 授权连接（PKCE）
+   与「应用凭证」模式并存，由能力探测决定默认走哪条
+   ============================================================ */
+
+/* 列表行：连接方式与授权归属 */
+.env-tag.conn{
+  gap:5px;padding:0 8px 0 6px;border:1px solid var(--border-hover);
+  background:transparent;color:var(--text-secondary);
+}
+.env-tag.conn::before{content:"";width:5px;height:5px;border-radius:50%;background:#b7bac2}
+.env-tag.conn.auth{border-color:#bcd0ff;color:var(--brand)}
+.env-tag.conn.auth::before{background:var(--brand)}
+.env-tag.conn.reauth{border-color:#e8c39a;color:var(--warning)}
+.env-tag.conn.reauth::before{background:var(--warning)}
+.env-item.needs-reauth{border-color:#f0d3bb;background:#fffcfa}
+.env-sub{margin-top:3px;color:var(--text-soft);font-size:12px;line-height:1.5}
+.env-sub.warn{color:var(--warning)}
+.env-inline-btn{
+  flex:none;height:26px;padding:0 11px;border:1px solid var(--brand);border-radius:7px;
+  background:var(--brand);color:#fff;font:inherit;font-size:12px;cursor:pointer;
+}
+.env-inline-btn:hover{background:var(--brand-hover);border-color:var(--brand-hover)}
+
+/* 授权类型：两张等宽选择卡，选中的那张收边框、上底色、右上角打勾。
+   之前那条灰轨道里嵌白卡片，未选中的一半看着像个坑，所以整条轨道去掉了。 */
+.env-conn-seg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.env-conn-opt{
+  position:relative;display:flex;flex-direction:column;gap:4px;min-width:0;
+  padding:11px 34px 11px 13px;border:1px solid var(--border-hover);border-radius:10px;
+  background:var(--bg);font:inherit;text-align:left;cursor:pointer;
+  transition:border-color .16s ease,background .16s ease;
+}
+.env-conn-opt-name{color:var(--text);font-size:13px;font-weight:600;line-height:19px}
+.env-conn-opt-hint{
+  overflow:hidden;color:var(--text-secondary);font-size:12px;line-height:17px;
+  text-overflow:ellipsis;white-space:nowrap;
+}
+.env-conn-opt:hover:not([aria-checked="true"]):not(:disabled){border-color:var(--border-focus)}
+.env-conn-opt:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.env-conn-opt[aria-checked="true"]{border-color:var(--brand);background:#f6f9ff}
+.env-conn-opt[aria-checked="true"] .env-conn-opt-name{color:var(--brand)}
+/* 勾号只画在选中的那张上，不占位、不闪 */
+.env-conn-opt[aria-checked="true"]::after{
+  content:"";position:absolute;top:13px;right:13px;width:11px;height:6px;
+  border-left:1.8px solid var(--brand);border-bottom:1.8px solid var(--brand);
+  transform:rotate(-45deg);
+}
+.env-conn-opt:disabled{
+  border-color:var(--border);background:var(--fill-1);cursor:not-allowed;
+}
+.env-conn-opt:disabled .env-conn-opt-name,
+.env-conn-opt:disabled .env-conn-opt-hint{color:var(--text-soft)}
+.env-conn-seg.probing .env-conn-opt{opacity:.6;pointer-events:none}
+
+.env-conn-note{
+  display:flex;align-items:flex-start;gap:8px;margin-top:9px;
+  color:var(--text-muted);font-size:12px;line-height:1.6;
+}
+.env-conn-note:empty{display:none}
+.env-conn-note.warn{color:var(--warning)}
+
+/* 探测中 */
+.env-probe-dot{
+  width:13px;height:13px;flex:none;margin-top:2px;
+  border:2px solid var(--border);border-top-color:var(--brand);
+  border-radius:50%;animation:envProbeSpin .8s linear infinite;
+}
+@keyframes envProbeSpin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){
+  .env-probe-dot{animation:none}
+  .env-conn-opt{transition:none}
+}
+
+/* 已建环境只读展示当前授权类型：没有可点的地方，就不要长得像能点 */
+.env-conn-current{
+  display:flex;align-items:baseline;gap:10px;padding:11px 14px;
+  border:1px solid var(--border);border-radius:10px;background:var(--fill-1);
+}
+.env-conn-current-name{color:var(--text);font-size:13px;font-weight:600}
+.env-conn-current-hint{
+  min-width:0;overflow:hidden;color:var(--text-secondary);font-size:12px;
+  text-overflow:ellipsis;white-space:nowrap;
+}
+
+.env-conn-note{
+  display:flex;align-items:flex-start;gap:8px;margin-top:8px;
+  color:var(--text-muted);font-size:12px;line-height:1.6;
+}
+.env-conn-note:empty{display:none}
+.env-conn-note.warn{color:var(--warning)}
+
+/* 探测中 */
+.env-probe-dot{
+  width:13px;height:13px;flex:none;margin-top:2px;
+  border:2px solid var(--border);border-top-color:var(--brand);
+  border-radius:50%;animation:envProbeSpin .8s linear infinite;
+}
+@keyframes envProbeSpin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){
+  .env-probe-dot{animation:none}
+  .env-conn-opt{transition:none}
+}
+
+/* 授权连接说明 / 已授权归属 */
+.env-auth-points{
+  margin:0;padding:12px 14px;list-style:none;
+  border:1px solid var(--border);border-radius:10px;background:var(--fill-1);
+  color:var(--text-secondary);font-size:12.5px;line-height:1.75;
+}
+.env-auth-points li{padding-left:14px;position:relative}
+.env-auth-points li::before{
+  content:"";position:absolute;left:2px;top:9px;width:4px;height:4px;
+  border-radius:50%;background:var(--border-hover);
+}
+.env-auth-grant{
+  display:grid;grid-template-columns:64px 1fr;gap:7px 14px;margin:10px 0 0;
+  padding:12px 14px;border:1px solid var(--border);border-radius:10px;
+  background:var(--fill-1);font-size:12.5px;
+}
+.env-auth-grant dt{color:var(--text-secondary)}
+.env-auth-grant dd{margin:0;color:var(--text)}
+.env-scope-toggle{
+  padding:0;border:0;background:none;color:var(--brand);font:inherit;font-size:12.5px;cursor:pointer;
+}
+.env-scope-toggle:hover{text-decoration:underline}
+
+/* API 清单：授权页面逐条列出的就是这些。跳转前后各摆一份，
+   让人能核对「拿到的」跟「同意的」是不是同一份 */
+.env-scope{margin-top:12px;text-align:left}
+.env-scope-head{margin-bottom:7px;color:var(--text-secondary);font-size:12.5px;line-height:1.6}
+.env-scope-head b{color:var(--text);font-weight:600}
+.env-scope-list{
+  max-height:136px;margin:0;padding:5px 0;overflow-y:auto;list-style:none;
+  border:1px solid var(--border);border-radius:10px;background:var(--fill-1);
+}
+.env-scope-list li{
+  display:flex;align-items:baseline;gap:12px;padding:5px 13px;
+  color:var(--text);font-size:12.5px;line-height:1.5;text-align:left;
+}
+.env-scope-list li+li{border-top:1px solid var(--divider)}
+.env-scope-name{flex:none}
+.env-scope-path{
+  flex:1;min-width:0;overflow:hidden;color:var(--text-secondary);font-size:12px;
+  text-align:right;text-overflow:ellipsis;white-space:nowrap;
+}
+#envAuthScopeList{margin-top:8px}
+
+/* ============================================================
+   浏览器里的 ERP 授权页
+   刻意画成一个浏览器窗口：这一屏不是客户端的界面，是用户离开客户端
+   之后看到的东西，长得像客户端反而会让人以为授权是本地弹窗完成的
+   ============================================================ */
+.consent-overlay{z-index:400;background:rgba(0,0,0,.42)}
+.browser-window{
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) scale(.97);
+  width:520px;max-width:calc(100vw - 24px);max-height:88vh;z-index:401;
+  display:flex;flex-direction:column;overflow:hidden;
+  border-radius:12px;background:var(--bg);box-shadow:0 24px 64px rgba(0,0,0,.28);
+  opacity:0;transition:all .2s ease;
+}
+.consent-overlay.show .browser-window{transform:translate(-50%,-50%) scale(1);opacity:1}
+.browser-chrome{
+  display:flex;align-items:center;gap:12px;flex:none;padding:9px 12px;
+  border-bottom:1px solid var(--border);background:#f2f2f4;
+}
+.browser-dots{display:flex;gap:6px;flex:none}
+.browser-dots i{width:10px;height:10px;border-radius:50%;background:#d6d6da}
+.browser-addr{
+  display:flex;align-items:center;gap:7px;flex:1;min-width:0;height:24px;padding:0 10px;
+  border-radius:12px;background:var(--bg);color:var(--text-secondary);font-size:11.5px;
+}
+.browser-lock{
+  flex:none;width:7px;height:9px;border:1.4px solid var(--success);border-top:none;
+  border-radius:0 0 2px 2px;position:relative;
+}
+.browser-lock::before{
+  content:"";position:absolute;left:0;bottom:100%;width:5px;height:4px;
+  border:1.4px solid var(--success);border-bottom:none;border-radius:3px 3px 0 0;
+}
+.browser-addr span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.browser-page{padding:22px 26px 20px;overflow-y:auto}
+.consent-brand{color:var(--text-secondary);font-size:12px;letter-spacing:.02em}
+.consent-title{margin:8px 0 0;color:var(--text);font-size:17px;font-weight:600;line-height:1.5}
+.consent-account{margin:6px 0 0;color:var(--text-secondary);font-size:12.5px}
+.consent-account b{color:var(--text);font-weight:600}
+.consent-switch{
+  margin-left:8px;padding:0;border:0;background:none;color:var(--brand);
+  font:inherit;font-size:12.5px;cursor:pointer;
+}
+.consent-switch:hover{text-decoration:underline}
+.consent-sso{
+  margin:8px 0 0;padding:8px 11px;border-radius:8px;
+  background:var(--success-bg);color:var(--success);font-size:12.5px;line-height:1.6;
+}
+.consent-field{display:block;margin-top:18px}
+.consent-field>span{display:block;margin-bottom:6px;color:var(--text-secondary);font-size:12.5px}
+.consent-field select{
+  width:100%;height:38px;box-sizing:border-box;padding:0 30px 0 12px;
+  border:1px solid var(--border-hover);border-radius:9px;outline:none;
+  background:var(--bg);color:var(--text);font:inherit;font-size:13px;
+  text-overflow:ellipsis;
+}
+.consent-field select:focus{border-color:var(--brand)}
+.consent-field input{
+  width:100%;height:38px;box-sizing:border-box;padding:0 12px;
+  border:1px solid var(--border-hover);border-radius:9px;outline:none;
+  background:var(--bg);color:var(--text);font:inherit;font-size:13px;
+}
+.consent-field input:focus{border-color:var(--brand)}
+.consent-tabs{display:flex;gap:22px;margin:20px 0 0;border-bottom:1px solid var(--border)}
+.consent-tab{
+  padding:0 0 9px;border:0;border-bottom:2px solid transparent;background:none;
+  color:var(--text-secondary);font:inherit;font-size:13px;cursor:pointer;
+}
+.consent-tab.active{border-bottom-color:var(--brand);color:var(--text);font-weight:600}
+.consent-pane{padding-top:18px}
+.consent-qr{
+  display:block;margin:0 auto;padding:12px;border:1px solid var(--border-hover);
+  border-radius:12px;background:var(--bg);cursor:pointer;
+}
+.consent-qr:hover{border-color:var(--brand)}
+.consent-qr svg{display:block;width:116px;height:116px;fill:var(--text)}
+.consent-qr svg .in{fill:var(--bg)}
+.consent-qr-hint{
+  margin-top:12px;color:var(--text-secondary);font-size:12.5px;line-height:1.7;text-align:center;
+}
+.consent-qr-hint span{color:var(--text-soft);font-size:12px}
+.consent-scope{margin-top:18px}
+.consent-scope-head{margin-bottom:7px;color:var(--text-secondary);font-size:12.5px}
+.consent-scope-head b{color:var(--text);font-weight:600}
+.consent-note{margin:12px 0 0;color:var(--text-secondary);font-size:12px;line-height:1.6}
+.consent-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}
+.consent-btn{
+  height:36px;padding:0 20px;border:1px solid var(--border-hover);border-radius:9px;
+  background:var(--bg);color:var(--text);font:inherit;font-size:13px;cursor:pointer;
+}
+.consent-btn:hover{border-color:var(--text-soft)}
+.consent-btn.primary{border-color:var(--brand);background:var(--brand);color:#fff}
+.consent-btn.primary:hover{background:var(--brand-hover);border-color:var(--brand-hover)}
+@media(max-width:720px){
+  .browser-window{width:calc(100vw - 20px)}
+  .browser-page{padding:18px 18px 16px}
+}
+
+/* 授权等待弹窗 */
+.env-authorize-card{width:420px;max-width:calc(100vw - 32px)}
+.env-authorize-body{padding:6px 22px 4px;text-align:center}
+.env-authorize-spin{
+  width:34px;height:34px;margin:14px auto 14px;border:3px solid var(--border);
+  border-top-color:var(--brand);border-radius:50%;animation:envProbeSpin .8s linear infinite;
+}
+@media(prefers-reduced-motion:reduce){.env-authorize-spin{animation:none}}
+.env-authorize-title{color:var(--text);font-size:14px;font-weight:600}
+.env-authorize-desc{margin-top:6px;color:var(--text-secondary);font-size:12.5px;line-height:1.65}
+.env-authorize-note{
+  margin:16px 0 6px;padding:10px 13px;border:1px solid var(--border);border-radius:9px;
+  background:var(--fill-2);color:var(--text-muted);font-size:12px;line-height:1.6;text-align:left;
+}
+.env-authorize-note.warn{border-color:#f3ddc9;background:var(--warning-bg);color:var(--warning)}
+.env-authorize-note ol{margin:6px 0 0;padding-left:17px}
+.env-authorize-note li{margin-bottom:3px}
+.env-authorize-foot{align-items:center;justify-content:space-between;gap:12px;padding:12px 22px}
+.env-authorize-foot .env-footer-actions{margin-left:auto}
+.env-authorize-retry{border:0;background:none;padding:0;color:var(--brand);font:inherit;font-size:12px;cursor:pointer}
+.env-authorize-retry:hover{text-decoration:underline}
+
+/* 授权结果摘要 */
+.env-grant{display:grid;grid-template-columns:76px 1fr;gap:7px 12px;font-size:13px;text-align:left}
+.env-grant dt{color:var(--text-secondary)}
+.env-grant dd{margin:0;color:var(--text)}
+
+/* 断开连接 */
+.env-disconnect-card{width:440px;max-width:calc(100vw - 32px)}
+.env-disconnect-lead{margin:0 0 10px;color:var(--text);font-size:13px;line-height:1.6}
+.env-disconnect-note{
+  padding:11px 13px;border:1px solid #f7d5d1;border-radius:9px;background:var(--danger-bg);
+  color:var(--text-muted);font-size:12px;line-height:1.65;
+}
+.env-disconnect-note p{margin:0}
+.env-disconnect-note p+p{margin-top:7px}
+.modal-btn.danger{border:1px solid var(--border-hover);background:var(--bg);color:var(--danger)}
+.modal-btn.danger:hover{border-color:var(--danger);background:var(--danger-bg)}
+
+@media(max-width:720px){
+  .env-conn-seg{grid-template-columns:1fr}
+  .env-authorize-card,.env-disconnect-card{width:calc(100vw - 20px)}
+}
