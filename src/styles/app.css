@@ -1779,3 +1779,14 @@
 /* 发送按钮：实心蓝（对齐实现） */
 #view-newtask .send-btn { background: var(--brand); color: #fff; }
 #view-newtask .send-btn:hover { background: var(--brand-hover); }
+
+/* 内置专家团：名称/说明只读 */
+.team-config-modal .x-ro,
+.team-config-modal .x-ro:focus {
+  background: #f7f7f7;
+  color: var(--text-secondary);
+  border-color: var(--border);
+  box-shadow: none;
+  cursor: default;
+  resize: none;
+}

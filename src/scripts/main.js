@@ -4019,17 +4019,12 @@ const billTemplateWithTokens = billTemplate.replace(
         leadId:EX[t.leadId]?t.leadId:(t.members[0]||null),members:t.members.slice()};
     });
     TEAMS=PRESET_TEAMS.slice().concat(valid);
-    if(d.activePick&&d.activePick.kind&&d.activePick.id){
-      var k=d.activePick.kind, id=d.activePick.id;
-      if((k==='team'&&teamById(id))||(k==='expert'&&EX[id])) activePick={kind:k,id:id};
-    }
   }
   function saveTeams(){
     try{
       localStorage.setItem(TEAM_STORE_KEY, JSON.stringify({
         v:1,
-        teams:TEAMS.filter(function(t){return !t.preset}),
-        activePick:activePick
+        teams:TEAMS.filter(function(t){return !t.preset})
       }));
     }catch(e){ /* 隐私模式 / 配额满：原型退化为内存态，不打扰用户 */ }
   }
@@ -4176,6 +4171,8 @@ const billTemplateWithTokens = billTemplate.replace(
     $('#teamReadonlyTip').classList.toggle('hidden', !teamDraft.preset);
     $('#teamName').value=teamDraft.name; $('#teamDesc').value=teamDraft.desc;
     $('#teamName').readOnly=teamDraft.preset; $('#teamDesc').readOnly=teamDraft.preset;
+    $('#teamName').classList.toggle('x-ro',teamDraft.preset);
+    $('#teamDesc').classList.toggle('x-ro',teamDraft.preset);
     $('#teamSaveBtn').textContent = teamDraft.preset?'另存为我的专家团':'保存';
     $('#teamDeleteBtn').classList.toggle('hidden', teamDraft.preset || !teamEditingId);
     renderTeamModal();
@@ -4238,8 +4235,8 @@ const billTemplateWithTokens = billTemplate.replace(
     });
     $('#teamModalClose').addEventListener('click',function(){ teamModal.classList.remove('show') });
     $('#teamCancelBtn').addEventListener('click',function(){ teamModal.classList.remove('show') });
-    $('#teamName').addEventListener('input',function(){ teamDraft.name=this.value });
-    $('#teamDesc').addEventListener('input',function(){ teamDraft.desc=this.value });
+    $('#teamName').addEventListener('input',function(){ if(teamDraft.preset){ this.value=teamDraft.name; return; } teamDraft.name=this.value });
+    $('#teamDesc').addEventListener('input',function(){ if(teamDraft.preset){ this.value=teamDraft.desc; return; } teamDraft.desc=this.value });
     $('#teamAddBtn').addEventListener('click',function(){ openMemberModal() });
     $('#teamDeleteBtn').addEventListener('click',function(){
       var t=teamById(teamEditingId); if(!t||t.preset) return;
@@ -4426,6 +4423,19 @@ const billTemplateWithTokens = billTemplate.replace(
       }
     });
 
+  });
+
+  /* 新会话不继承上一次的专家/专家团选择 */
+  function resetPickForNewSession(){ if(!activePick.kind) return; clearPick(); renderExpertChips(); }
+  navItems.forEach(function(n){
+    n.addEventListener('click',function(){ if(n.textContent.trim()==='新会话') resetPickForNewSession(); });
+  });
+  if(brandEl) brandEl.addEventListener('click',resetPickForNewSession);
+  $$('#view-home .home-card').forEach(function(c){
+    c.addEventListener('click',function(){ if(c.getAttribute('data-view')==='newtask') resetPickForNewSession(); });
+  });
+  document.addEventListener('keydown',function(e){
+    if((e.metaKey||e.ctrlKey) && !e.shiftKey && (e.key||'').toLowerCase()==='n') resetPickForNewSession();
   });
 
   loadTeams();
