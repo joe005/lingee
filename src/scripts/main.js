@@ -652,7 +652,7 @@ const billTemplateWithTokens = billTemplate.replace(
   });
 
   /* ---------- view switching ---------- */
-  var viewHome=$('#view-home'), viewNew=$('#view-newtask'), viewChat=$('#view-chat'), viewApps=$('#view-apps'), viewSkills=$('#view-skills'), viewAgents=$('#view-agents'), viewDesign=$('#view-design'), viewSettings=$('#view-settings');
+  var viewHome=$('#view-home'), viewNew=$('#view-newtask'), viewChat=$('#view-chat'), viewApps=$('#view-apps'), viewSkills=$('#view-skills'), viewAgents=$('#view-agents'), viewExperts=$('#view-experts'), viewDesign=$('#view-design'), viewSettings=$('#view-settings');
   function setUrlState(search){
     history.replaceState(null,'',search);
     try{localStorage.setItem('lingeeUrlState',search)}catch(e){}
@@ -664,6 +664,7 @@ const billTemplateWithTokens = billTemplate.replace(
     viewApps.classList.toggle('hidden', which!=='apps');
     viewSkills.classList.toggle('hidden', which!=='skills');
     viewAgents.classList.toggle('hidden', which!=='agents');
+    viewExperts.classList.toggle('hidden', which!=='experts');
     viewDesign.classList.toggle('hidden', which!=='design');
     viewSettings.classList.toggle('hidden', which!=='settings');
     $('.sidebar').classList.toggle('hidden', which==='design');
@@ -2020,6 +2021,9 @@ const billTemplateWithTokens = billTemplate.replace(
         showView('skills');
       }else if(name==='智能体开发'){
         showView('agents');
+      }else if(name==='专家'){
+        showView('experts');
+        renderExpertGrid();
       }else if(name==='新会话'){
         showView('newtask');
         input.setAttribute('data-placeholder','布置任务');
@@ -3808,10 +3812,626 @@ const billTemplateWithTokens = billTemplate.replace(
     if(dsViewParam==='skills') setNavActive('技能开发');
     else if(dsViewParam==='agents') setNavActive('智能体开发');
     else if(dsViewParam==='apps') setNavActive('应用开发');
+    else if(dsViewParam==='experts'){ setNavActive('专家'); renderExpertGrid(); }
   }else{
     /* 默认显示新会话 */
     showView('newtask');
     setNavActive('新会话');
   }
+
+
+  /* ============================================================
+     专家 / 专家团
+     数据取自 lingee-build/packages/opencode/builtin-experts/
+     技能名取自 packages/opencode/builtin-skills/
+     ============================================================ */
+  var EXPERT_AV = {
+    lead:'<rect width="128" height="128" rx="26" fill="#1e40af"/><circle cx="64" cy="44" r="19" fill="#dbeafe"/><path d="M27 104c4-23 18-34 37-34s33 11 37 34" fill="#93c5fd"/>',
+    pm:'<rect width="128" height="128" rx="26" fill="#c2410c"/><rect x="32" y="26" width="64" height="78" rx="9" fill="#ffedd5"/><path d="M45 48h38M45 65h38M45 82h24" stroke="#c2410c" stroke-width="7" stroke-linecap="round"/>',
+    arch:'<rect width="128" height="128" rx="26" fill="#6d28d9"/><path d="M26 94h76M36 94V56l28-21 28 21v38M52 94V72h24v22" fill="none" stroke="#ede9fe" stroke-width="8" stroke-linejoin="round"/>',
+    eng:'<rect width="128" height="128" rx="26" fill="#047857"/><path d="M50 40L26 64l24 24M78 40l24 24-24 24M70 30L58 98" fill="none" stroke="#d1fae5" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>',
+    qa:'<rect width="128" height="128" rx="26" fill="#be123c"/><path d="M64 22l36 14v26c0 24-14 37-36 45-22-8-36-21-36-45V36z" fill="#ffe4e6"/><path d="M46 63l13 13 26-28" fill="none" stroke="#be123c" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>',
+    cr:'<rect width="128" height="128" rx="26" fill="#0e7490"/><circle cx="57" cy="55" r="25" fill="none" stroke="#cffafe" stroke-width="9"/><path d="M76 75l24 24" stroke="#cffafe" stroke-width="10" stroke-linecap="round"/>',
+    sec:'<rect width="128" height="128" rx="26" fill="#3f3f46"/><path d="M64 22l35 13v29c0 23-13 36-35 44-22-8-35-21-35-44V35z" fill="none" stroke="#e4e4e7" stroke-width="9" stroke-linejoin="round"/><rect x="51" y="58" width="26" height="23" rx="4" fill="#e4e4e7"/><path d="M57 58v-7a7 7 0 0114 0v7" fill="none" stroke="#e4e4e7" stroke-width="7"/>',
+    ana:'<rect width="128" height="128" rx="26" fill="#475569"/><path d="M30 96V64M52 96V40M74 96V74M96 96V50" stroke="#e2e8f0" stroke-width="11" stroke-linecap="round"/>',
+    fe:'<rect width="128" height="128" rx="26" fill="#0369a1"/><rect x="24" y="30" width="80" height="62" rx="8" fill="#e0f2fe"/><path d="M24 48h80" stroke="#0369a1" stroke-width="7"/><circle cx="38" cy="39" r="4" fill="#0369a1"/><path d="M48 68h32" stroke="#0369a1" stroke-width="7" stroke-linecap="round"/>',
+    ux:'<rect width="128" height="128" rx="26" fill="#be185d"/><circle cx="48" cy="48" r="17" fill="#fce7f3"/><circle cx="80" cy="80" r="17" fill="#f9a8d4"/><path d="M48 65v15h15" stroke="#fce7f3" stroke-width="7" fill="none"/>',
+    form:'<rect width="128" height="128" rx="26" fill="#0f766e"/><rect x="28" y="24" width="72" height="80" rx="9" fill="#ccfbf1"/><path d="M42 46h30M42 64h44M42 82h20" stroke="#0f766e" stroke-width="7" stroke-linecap="round"/>',
+    flow:'<rect width="128" height="128" rx="26" fill="#7c3aed"/><circle cx="34" cy="34" r="13" fill="#ede9fe"/><circle cx="94" cy="64" r="13" fill="#ede9fe"/><circle cx="34" cy="94" r="13" fill="#ede9fe"/><path d="M47 40l35 18M47 88l35-18" stroke="#ede9fe" stroke-width="7"/>',
+    rpt:'<rect width="128" height="128" rx="26" fill="#a16207"/><path d="M34 94V54M60 94V32M86 94V68" stroke="#fef3c7" stroke-width="12" stroke-linecap="round"/><path d="M22 104h84" stroke="#fef3c7" stroke-width="7" stroke-linecap="round"/>',
+    plug:'<rect width="128" height="128" rx="26" fill="#4338ca"/><path d="M44 30v22M84 30v22" stroke="#e0e7ff" stroke-width="9" stroke-linecap="round"/><rect x="32" y="52" width="64" height="34" rx="10" fill="#e0e7ff"/><path d="M64 86v18" stroke="#e0e7ff" stroke-width="9" stroke-linecap="round"/>',
+    api:'<rect width="128" height="128" rx="26" fill="#0891b2"/><circle cx="38" cy="64" r="14" fill="#cffafe"/><circle cx="90" cy="38" r="14" fill="#cffafe"/><circle cx="90" cy="90" r="14" fill="#cffafe"/><path d="M50 58l28-14M50 70l28 14" stroke="#cffafe" stroke-width="7"/>'
+  };
+  function xav(k){ return 'data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">'+EXPERT_AV[k]+'</svg>'); }
+  function xesc(v){ return String(v==null?'':v).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]}); }
+
+  var EXPERTS=[
+    {id:'software-team-lead',k:'lead',name:'软件团队负责人',role:'交付负责人',by:'Lingee 内置',
+     desc:'协调范围、分工、集成、风险与交付闭环，是专家团里唯一能开 kickoff 与做最终集成确认的角色。',
+     tags:['交付管理','团队协调'],modes:['分析','设计','集成','评审','验证','恢复'],
+     comp:['delivery.orchestration · principal','delivery.integration · advanced'],
+     cmds:[['/理清范围','把一句话目标拆成范围、非目标、责任人与验收门禁'],['/交付复盘','汇总各角色证据与残余风险，给出关闭或升级建议']],
+     steps:['闭合范围与验收条件','分派有边界的角色任务','编排依赖顺序与集成门禁','汇总证据与残余风险','给出关闭或升级建议'],
+     cons:['不得用协调判断替代专业证据','不得授予资格或权限','未解决的重大范围冲突必须升级']},
+    {id:'software-product-manager',k:'pm',name:'软件产品经理',role:'产品经理',by:'Lingee 内置',
+     desc:'把用户目标翻译成有优先级、可观察的需求与验收条件。',
+     tags:['需求分析','验收设计'],modes:['分析','设计','评审'],
+     comp:['product.requirements · principal','product.acceptance-design · advanced'],
+     cmds:[['/需求拆解','把目标整理成有范围的验收条件清单'],['/验收标准','为已有需求补齐可观察的验收条件'],['/非目标','明确本次不做什么，防止范围蔓延']],
+     steps:['识别用户与期望结果','梳理现状与目标流程','排定需求优先级与非目标','编写可观察的验收条件','消解或升级重大歧义'],
+     cons:['不得虚构客户批准','不得把代码结构写成业务需求','不授予发布权限'],out:'docs/requirements.md'},
+    {id:'software-architect',k:'arch',name:'软件架构师',role:'软件架构师',by:'Lingee 内置',
+     desc:'设计可演进的系统边界、合同、数据流与失败处理，产出架构文档与可执行的实现计划。',
+     tags:['软件架构','可靠性'],modes:['分析','设计','集成','评审','恢复'],
+     comp:['architecture.system-design · principal','architecture.reliability · advanced'],
+     cmds:[['/架构设计','从需求产出边界、合同、失败处理与迁移方案'],['/技术选型','按质量属性评估备选方案并记录取舍'],['/实现计划','拆出带可执行验证命令的编码任务图']],
+     steps:['建模边界与数据归属','按质量属性评估备选方案','定义合同、失败行为与迁移','记录决策与被否决方案','指定架构验证场景'],
+     cons:['采用满足实测需求的最小架构','每条实现验证必须是可执行命令，拒绝人工目视检查','验证命令需在 macOS 与 Linux 上可移植'],
+     out:'docs/architecture.md · docs/implementation-plan.json'},
+    {id:'software-engineer',k:'eng',name:'软件工程师',role:'软件工程师',by:'Lingee 内置',
+     desc:'实现可维护的软件变更并完成针对性验证，只改授权范围内的代码。',
+     tags:['软件实现','系统集成'],modes:['分析','设计','实现','集成','验证','恢复'],
+     comp:['engineering.implementation · advanced','engineering.integration · advanced'],
+     skills:['app-build','standalone-build','site-builder'],
+     cmds:[['/实现','按验收条件完成最小完整变更并跑通验证'],['/修缺陷','复现、定位、修复并补回归测试'],['/一次性交付','小型单页应用一次写完全部代码 + build 验证']],
+     steps:['复现或确立当前行为','阅读受影响的合同与调用点','实现最小完整的源码变更','同步更新测试与生成物','运行聚焦与包级验证'],
+     cons:['只修改已授权范围','不得绕过失败的检查','不得声称拥有部署或 Runner 权限']},
+    {id:'software-qa-engineer',k:'qa',name:'软件测试工程师',role:'质量工程师',by:'Lingee 内置',
+     desc:'独立验证验收行为、回归影响与交付风险，给出基于证据的质量结论。',
+     tags:['质量保障','独立验证'],modes:['分析','设计','评审','验证'],
+     comp:['quality.verification · principal','quality.regression-analysis · advanced'],
+     cmds:[['/验证计划','按风险模型设计验收与回归场景'],['/端到端验证','实际跑 build、请求与用例并留存证据'],['/质量结论','给出 pass / pass-with-risk / fail 与理由']],
+     steps:['梳理变更影响与质量风险','设计验收与回归场景','执行授权范围内最强的检查','复现并分级缺陷','给出基于证据的质量结论'],
+     cons:['与实现方声明保持独立','不得执行破坏性或未批准的压测','不授予发布权限']},
+    {id:'code-reviewer',k:'cr',name:'代码评审专家',role:'实现代码评审',by:'Lingee 内置',ro:true,
+     desc:'独立评审实现代码的正确性、并发安全与合同落实情况，只读不改。',
+     tags:['只读评审','正确性'],modes:['评审','验证'],
+     comp:['implementation-correctness · principal','concurrent-commit-model · principal'],
+     cmds:[['/代码评审','把合同义务追溯到代码路径，报告可复现的缺陷']],
+     steps:['把合同义务追溯到具体代码路径与可观察结果','检查规范化、声明、失败清理与并发测试','以可复现的判定标准报告实现缺陷'],
+     cons:['不得修改实现或其测试','不得把注释或名义类型当作行为证明']},
+    {id:'security-reviewer',k:'sec',name:'安全评审专家',role:'应用安全评审',by:'Lingee 内置',ro:true,
+     desc:'基于信任边界建立威胁模型，演练滥用、竞态与绕过场景并给出风险判定。',
+     tags:['只读评审','威胁建模'],modes:['评审','验证'],
+     comp:['application-security · principal','filesystem-safety · advanced'],
+     cmds:[['/安全评审','建威胁模型、演练滥用场景、给出风险是否可接受']],
+     steps:['基于信任边界建立威胁模型','演练滥用、竞态、部分失败与绕过场景','对安全发现分级并判断风险模型是否可接受'],
+     cons:['不得修改被评审产物或直接修复','不得接受无证据的原子性与竞态安全保证']},
+    {id:'read-only-analyst',k:'ana',name:'只读分析专家',role:'软件分析',by:'Lingee 内置',ro:true,
+     desc:'在不改动工作区的前提下做有边界的源码分析与结论交叉验证。',
+     tags:['只读分析'],modes:['分析','评审','验证'],
+     comp:['software.analysis · advanced'],
+     cmds:[['/读代码','有边界地读源码并给出结论与证据']],
+     steps:['检视有边界的源码与合同','用直接证据交叉验证发现','在不改动工作区的前提下给出结论'],
+     cons:['不得修改文件','不得执行有副作用的命令']},
+    {id:'frontend-engineer',k:'fe',name:'前端工程专家',role:'前端工程师',by:'金蝶官方',
+     desc:'金蝶前端规范下的组件实现、响应式布局与交互调试。',
+     tags:['React','响应式','组件库'],modes:['设计','实现','验证'],
+     comp:['engineering.frontend · advanced'],skills:['kd-frontend-development','frontend-design'],
+     cmds:[['/建页面','按设计稿实现响应式页面'],['/组件','产出符合规范的可复用组件'],['/样式对齐','把实现调到与设计稿一致']],
+     steps:['确认设计稿与交互规范','实现组件与布局','处理多端与暗色适配','补组件测试'],
+     cons:['遵循金蝶前端规范','不得引入未评估的第三方依赖']},
+    {id:'ux-designer',k:'ux',name:'界面设计专家',role:'交互 / 视觉设计',by:'金蝶官方',
+     desc:'信息架构、交互流程与视觉规范，产出可直接交付前端的设计说明。',
+     tags:['交互设计','视觉规范'],modes:['分析','设计','评审'],
+     comp:['design.interaction · advanced'],skills:['kingdee-design','frontend-design'],
+     cmds:[['/设计简报','对齐业务目标、用户需求与设计策略'],['/信息架构','梳理导航、层级与页面骨架'],['/设计走查','对已实现页面做规范与可用性检查']],
+     steps:['澄清目标用户与场景','梳理信息架构与主流程','产出交互与视觉规范','走查实现一致性'],
+     cons:['设计说明必须可被前端直接实现','不得规定与设计系统冲突的样式']},
+    {id:'cosmic-form',k:'form',name:'苍穹表单专家',role:'苍穹表单',by:'金蝶官方',
+     desc:'KDDP 表单引擎的字段、校验、联动与权限配置。',
+     tags:['表单设计','字段校验'],modes:['分析','设计','实现'],
+     comp:['cosmic.form-design · advanced'],skills:['cosmic-requirements-spec'],
+     cmds:[['/建单据','根据业务需求设计苍穹表单结构'],['/字段联动','配置校验规则与字段联动逻辑'],['/权限配置','设置单据与字段级权限']],
+     steps:['梳理单据业务规则','设计表单结构与字段','配置校验与联动','映射数据模型'],
+     cons:['遵循苍穹元数据规范','不得绕过标准扩展点直接改内核']},
+    {id:'cosmic-workflow',k:'flow',name:'苍穹工作流专家',role:'苍穹工作流',by:'金蝶官方',
+     desc:'审批链配置与流程调试，处理加签、会签、条件流转等复杂场景。',
+     tags:['审批链','流程调试'],modes:['分析','设计','实现','验证'],
+     comp:['cosmic.workflow · advanced'],
+     cmds:[['/配流程','梳理审批流程并配置工作流'],['/调流转','排查节点为什么不流转']],
+     steps:['梳理审批场景与角色','配置流程节点与条件','调试流转与异常分支','验证端到端审批'],
+     cons:['流程变更需保留可回滚配置']},
+    {id:'cosmic-report',k:'rpt',name:'苍穹报表专家',role:'苍穹报表',by:'金蝶官方',
+     desc:'报表建模、取数逻辑与图表配置，兼顾查询性能与交互式分析。',
+     tags:['报表建模','取数逻辑'],modes:['分析','设计','实现'],
+     comp:['cosmic.report · advanced'],
+     cmds:[['/建报表','设计报表数据模型与取数逻辑'],['/调性能','优化报表取数与查询性能']],
+     steps:['明确分析口径','设计数据模型与取数','配置图表与交互','优化查询性能'],
+     cons:['取数口径需与业务确认后固化']},
+    {id:'cosmic-plugin',k:'plug',name:'苍穹二开插件专家',role:'苍穹二开',by:'金蝶官方',
+     desc:'基于扩展点开发二开插件，处理注册、生命周期调试与升级兼容。',
+     tags:['插件开发','扩展点'],modes:['设计','实现','验证','恢复'],
+     comp:['cosmic.plugin · advanced'],skills:['cosmic-reverse-engineering'],
+     cmds:[['/写插件','基于扩展点开发插件'],['/查不生效','排查插件注册后不生效的原因']],
+     steps:['定位合适的扩展点','实现插件逻辑','注册并调试生命周期','验证升级兼容'],
+     cons:['不得修改标准产品内核','插件必须可独立卸载']},
+    {id:'cosmic-api',k:'api',name:'苍穹集成接口专家',role:'苍穹集成',by:'金蝶官方',
+     desc:'开放接口对接、鉴权配置与数据同步，含异常重试与幂等设计。',
+     tags:['接口对接','鉴权'],modes:['设计','实现','集成','验证'],
+     comp:['cosmic.integration · advanced'],
+     cmds:[['/对接接口','对接苍穹开放接口与第三方系统'],['/配鉴权','配置接口鉴权与安全策略'],['/数据同步','设计同步任务与异常重试']],
+     steps:['确认接口契约与鉴权方式','实现对接与错误处理','设计幂等与重试','联调验证'],
+     cons:['凭据不得硬编码','同步必须幂等可重放']}
+  ];
+  var EX={}; EXPERTS.forEach(function(e){EX[e.id]=e});
+
+  var TEAM_LEVELS=[
+    {id:'lightweight',name:'快速',desc:'直接实现 + 自检，省掉评审与独立 QA。小页面、小工具用这个。'},
+    {id:'standard',name:'标准',desc:'需求 → 设计 → 编码准入评审 → 实现 → 测试 → 集成。默认。'},
+    {id:'product',name:'产品级',desc:'标准流程 + 强制安全评审，评审与 QA 不可省略。'}
+  ];
+  var VALID_LEVELS=TEAM_LEVELS.map(function(l){return l.id});
+  function levelName(id){ for(var i=0;i<TEAM_LEVELS.length;i++) if(TEAM_LEVELS[i].id===id) return TEAM_LEVELS[i].name; return id; }
+
+  var PRESET_TEAMS=[
+    {id:'software-company',preset:true,name:'软件开发团队',by:'Lingee 内置',
+     desc:'跨职能软件产品交付团队，覆盖需求、架构、实现、质量与集成的完整闭环。也是新建任务时的默认选择。',
+     level:'standard',leadId:'software-team-lead',
+     members:['software-team-lead','software-product-manager','software-architect','software-engineer','software-qa-engineer']},
+    {id:'fast-app',preset:true,name:'应用速成小队',by:'Lingee 内置',
+     desc:'工程师一次性写完全部代码，QA 端到端验证。适合单页应用、小游戏、原型页这类一次交付的活。',
+     level:'lightweight',leadId:'software-engineer',
+     members:['software-engineer','software-qa-engineer']},
+    {id:'cosmic-team',preset:true,name:'苍穹交付团队',by:'金蝶官方',
+     desc:'面向苍穹配置化交付：需求规格 → 表单与流程配置 → 报表 → 二开插件 → 接口集成。',
+     level:'standard',leadId:'software-team-lead',
+     members:['software-team-lead','software-product-manager','cosmic-form','cosmic-workflow','cosmic-report','cosmic-api']},
+    {id:'web-team',preset:true,name:'网页交付小队',by:'金蝶官方',
+     desc:'设计与前端配对交付：信息架构与视觉规范先行，前端按规范实现并做设计走查。',
+     level:'standard',leadId:'ux-designer',
+     members:['ux-designer','frontend-engineer','software-qa-engineer']}
+  ];
+
+  /* ---------- 持久化：只存自建专家团与当前选择 ----------
+     内置团不入库，这样以后改内置定义能直接生效，不会被旧缓存盖住 */
+  var TEAM_STORE_KEY='lingee.experts.v1';
+  var TEAMS=PRESET_TEAMS.slice();
+  /* 选中对象：团或单个专家，同一语义位、只能选其一
+     —— 对应 lingee-build 的 mode: team / personal */
+  var activePick={kind:null,id:''};   /* 默认不指定，由系统自动匹配 */
+  function pickName(){
+    if(activePick.kind==='team') return (teamById(activePick.id)||{}).name||'';
+    if(activePick.kind==='expert') return (EX[activePick.id]||{}).name||'';
+    return '';
+  }
+  function pickValid(){
+    if(activePick.kind==='team') return !!teamById(activePick.id);
+    if(activePick.kind==='expert') return !!EX[activePick.id];
+    return false;
+  }
+  function clearPick(){ activePick={kind:null,id:''}; }
+
+  function loadTeams(){
+    var raw=null;
+    try{ raw=localStorage.getItem(TEAM_STORE_KEY); }catch(e){ return; }
+    if(!raw) return;
+    var d;
+    try{ d=JSON.parse(raw); }catch(e){ return; }
+    if(!d||typeof d!=='object') return;
+    var custom=Array.isArray(d.teams)?d.teams:[];
+    var valid=custom.filter(function(t){
+      return t&&typeof t.id==='string'&&!t.preset&&typeof t.name==='string'
+        &&Array.isArray(t.members)&&t.members.every(function(m){return !!EX[m]});
+    }).map(function(t){
+      return {id:t.id,preset:false,name:t.name,by:t.by||'我创建的',desc:t.desc||'',
+        level:VALID_LEVELS.indexOf(t.level)>=0?t.level:'standard',
+        leadId:EX[t.leadId]?t.leadId:(t.members[0]||null),members:t.members.slice()};
+    });
+    TEAMS=PRESET_TEAMS.slice().concat(valid);
+    if(d.activePick&&d.activePick.kind&&d.activePick.id){
+      var k=d.activePick.kind, id=d.activePick.id;
+      if((k==='team'&&teamById(id))||(k==='expert'&&EX[id])) activePick={kind:k,id:id};
+    }
+  }
+  function saveTeams(){
+    try{
+      localStorage.setItem(TEAM_STORE_KEY, JSON.stringify({
+        v:1,
+        teams:TEAMS.filter(function(t){return !t.preset}),
+        activePick:activePick
+      }));
+    }catch(e){ /* 隐私模式 / 配额满：原型退化为内存态，不打扰用户 */ }
+  }
+  function teamById(id){ for(var i=0;i<TEAMS.length;i++) if(TEAMS[i].id===id) return TEAMS[i]; return null; }
+
+  /* ---------- 编排推导：成员 + 交付强度 → 任务 DAG ---------- */
+  function teamFlow(t){
+    function any(){ for(var i=0;i<arguments.length;i++) if(t.members.indexOf(arguments[i])>=0) return arguments[i]; return null; }
+    function byMode(m){ for(var i=0;i<t.members.length;i++){ var e=EX[t.members[i]]; if(e&&e.modes.indexOf(m)>=0) return t.members[i]; } return null; }
+    var f=[];
+    if(t.level==='lightweight'){
+      f.push({k:'implement',title:'一次性实现',who:any('software-engineer','frontend-engineer','cosmic-form','cosmic-plugin')||byMode('实现')});
+      if(byMode('验证')) f.push({k:'test',title:'自检验证',who:any('software-qa-engineer')||byMode('验证')});
+      return f;
+    }
+    if(t.members.length>1) f.push({k:'analyze',title:'协调范围与门禁',who:any('software-team-lead')});
+    f.push({k:'analyze',title:'分析需求与验收',who:any('software-product-manager','software-team-lead')});
+    f.push({k:'design',title:'设计方案与实现计划',who:any('software-architect','ux-designer')});
+    f.push({k:'review',title:'编码准入评审',who:any('software-team-lead','code-reviewer','read-only-analyst')});
+    f.push({k:'implement',title:'实现编码任务',who:any('software-engineer','frontend-engineer','cosmic-form','cosmic-plugin','cosmic-workflow','cosmic-api')||byMode('实现')});
+    if(t.level==='product') f.push({k:'review',title:'安全评审',who:any('security-reviewer','code-reviewer')});
+    f.push({k:'test',title:'独立质量验证',who:any('software-qa-engineer')});
+    f.push({k:'integrate',title:'集成与交付确认',who:any('software-team-lead','software-architect')});
+    return f;
+  }
+  function teamLint(t){
+    var w=[],has=function(id){return t.members.indexOf(id)>=0};
+    if(t.members.length>1 && !has('software-team-lead') && t.level!=='lightweight')
+      w.push('多人协作需要一位「软件团队负责人」开 kickoff 并做最终集成确认。');
+    if(t.level!=='lightweight' && !has('software-product-manager'))
+      w.push('标准 / 产品级要求恰好一个需求分析任务，建议加入「软件产品经理」。');
+    if(t.level!=='lightweight' && !has('software-architect') && !has('ux-designer'))
+      w.push('标准以上交付的 design 环节无人承担，需加入「软件架构师」或「界面设计专家」。');
+    var canImpl=false;
+    t.members.forEach(function(id){ if(EX[id]&&EX[id].modes.indexOf('实现')>=0) canImpl=true; });
+    if(!canImpl) w.push('没有成员具备「实现」工作模式，实现任务无人可领取。');
+    if(t.level!=='lightweight' && !has('software-qa-engineer'))
+      w.push('评审与 QA 是标准以上交付的强制门禁，缺少「软件测试工程师」会让验证环节落空。');
+    if(t.level==='product' && !has('security-reviewer'))
+      w.push('产品级建议加入「安全评审专家」，否则安全门禁由代码评审代管。');
+    return w;
+  }
+
+  /* ---------- 专家库视图 ---------- */
+  var expertTab='team', expertKw='';
+  var expertGrid=$('#expertGrid');
+  function facesHtml(ids,n){
+    return '<span class="x-faces">'+ids.slice(0,n||4).map(function(i){
+      return '<img src="'+xav(EX[i].k)+'" alt="">'; }).join('')+'</span>';
+  }
+  function renderExpertGrid(){
+    if(!expertGrid) return;
+    var kw=expertKw.trim(), html='';
+    if(expertTab==='team'){
+      var rows=TEAMS.filter(function(t){
+        if(!kw) return true;
+        return (t.name+t.desc+t.members.map(function(m){return EX[m].name}).join()).indexOf(kw)>=0;
+      });
+      html=rows.map(function(t){
+        return '<div class="app-card x-card" data-team="'+t.id+'">'
+          +'<div class="card-top">'+facesHtml(t.members,4)
+          +'<div class="card-titles"><div class="card-title-row"><span class="card-title">'+xesc(t.name)+'</span>'
+          +(t.preset?'<span class="x-badge">内置</span>':'')+'</div>'
+          +'<div class="x-sub">'+xesc(t.by)+' · '+t.members.length+' 位专家</div></div></div>'
+          +'<div class="card-desc">'+xesc(t.desc)+'</div>'
+          +'<div class="card-tags"><span class="ptag">'+levelName(t.level)+'交付</span>'
+          +t.members.slice(0,2).map(function(m){return '<span class="ptag">'+EX[m].role+'</span>'}).join('')+'</div></div>';
+      }).join('');
+    }else{
+      var rows2=EXPERTS.filter(function(e){
+        if(!kw) return true;
+        return (e.name+e.role+e.desc+e.tags.join()).indexOf(kw)>=0;
+      });
+      html=rows2.map(function(e){
+        return '<div class="app-card x-card" data-expert="'+e.id+'">'
+          +'<div class="card-top"><img class="x-av" src="'+xav(e.k)+'" alt="">'
+          +'<div class="card-titles"><div class="card-title-row"><span class="card-title">'+xesc(e.name)+'</span>'
+          +(e.ro?'<span class="x-badge x-badge-ro">只读</span>':'')+'</div>'
+          +'<div class="x-sub">'+xesc(e.role)+' · '+xesc(e.by)+'</div></div></div>'
+          +'<div class="card-desc">'+xesc(e.desc)+'</div>'
+          +'<div class="card-tags">'+e.tags.slice(0,3).map(function(t){return '<span class="ptag">'+xesc(t)+'</span>'}).join('')+'</div></div>';
+      }).join('');
+    }
+    expertGrid.innerHTML = html || '<div class="x-empty">没有匹配的结果</div>';
+  }
+  $$('#expertTabs .tab').forEach(function(t){
+    t.addEventListener('click',function(){
+      $$('#expertTabs .tab').forEach(function(i){i.classList.remove('active')});
+      t.classList.add('active');
+      expertTab=t.getAttribute('data-etab');
+      renderExpertGrid();
+    });
+  });
+  var expertSearchInput=$('#expertSearchInput');
+  if(expertSearchInput) expertSearchInput.addEventListener('input',function(){ expertKw=this.value; renderExpertGrid(); });
+  if(expertGrid) expertGrid.addEventListener('click',function(e){
+    var tc=e.target.closest('[data-team]'); if(tc){ openTeamModal(tc.getAttribute('data-team')); return; }
+    var ec=e.target.closest('[data-expert]'); if(ec){ openExpertModal(ec.getAttribute('data-expert')); return; }
+  });
+
+  /* ---------- 专家详情弹窗 ---------- */
+  var expertModal=$('#expertModal');
+  function openExpertModal(id){
+    var e=EX[id]; if(!e) return;
+    $('#expertModalHead').innerHTML='<div class="x-detail-head"><img class="x-av-lg" src="'+xav(e.k)+'" alt="">'
+      +'<div><div class="modal-title">'+xesc(e.name)+(e.ro?' <span class="x-badge x-badge-ro">只读</span>':'')+'</div>'
+      +'<div class="x-sub">'+xesc(e.role)+' · '+xesc(e.by)+'</div></div></div>'
+      +'<button class="modal-close" type="button" data-x-close aria-label="关闭">×</button>';
+    function list(title,arr){ return (arr&&arr.length)?'<div class="x-sec"><div class="x-sec-t">'+title+'</div><ul class="x-ul">'
+      +arr.map(function(v){return '<li>'+xesc(v)+'</li>'}).join('')+'</ul></div>':''; }
+    $('#expertModalBody').innerHTML='<div class="x-sec x-desc">'+xesc(e.desc)+'</div>'
+      +'<div class="x-sec"><div class="x-sec-t">快捷命令 '+e.cmds.length+'</div>'
+      +e.cmds.map(function(c){return '<button type="button" class="x-cmd" data-cmd="'+xesc(c[0])+'"><code>'+xesc(c[0])+'</code><span>'+xesc(c[1])+'</span></button>'}).join('')+'</div>'
+      +(e.skills?'<div class="x-sec"><div class="x-sec-t">挂载技能</div><div class="x-chips">'+e.skills.map(function(k){return '<span class="ptag">'+xesc(k)+'</span>'}).join('')+'</div></div>':'')
+      +'<div class="x-sec"><div class="x-sec-t">能力项</div><div class="x-chips">'+e.comp.map(function(c){return '<span class="ptag">'+xesc(c)+'</span>'}).join('')+'</div></div>'
+      +'<div class="x-sec"><div class="x-sec-t">可承担的工作</div><div class="x-chips">'+e.modes.map(function(m){return '<span class="ptag">'+xesc(m)+'</span>'}).join('')+'</div></div>'
+      +(e.out?'<div class="x-sec"><div class="x-sec-t">专属产物</div><div class="x-chips"><span class="ptag">'+xesc(e.out)+'</span></div></div>':'')
+      +list('工作方式',e.steps)+list('行为约束',e.cons);
+    $('#expertModalFoot').innerHTML='<button type="button" class="modal-btn confirm" data-x-close>关闭</button>';
+    expertModal.classList.add('show');
+  }
+  if(expertModal) expertModal.addEventListener('click',function(e){
+    if(e.target===expertModal||e.target.closest('[data-x-close]')){ expertModal.classList.remove('show'); return; }
+    var c=e.target.closest('[data-cmd]');
+    if(c){
+      expertModal.classList.remove('show');
+      showView('newtask'); setNavActive('新会话');
+      input.textContent=c.getAttribute('data-cmd')+' '; input.focus();
+      try{
+        var r=document.createRange(); r.selectNodeContents(input); r.collapse(false);
+        var sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+      }catch(err){}
+    }
+  });
+
+  /* ---------- 专家团配置弹窗 ---------- */
+  var teamModal=$('#teamModal'), teamDraft=null, teamEditingId=null;
+  function openTeamModal(id){
+    var t=id?teamById(id):null;
+    teamEditingId=id||null;
+    teamDraft=t?{name:t.name,desc:t.desc,level:t.level,leadId:t.leadId,members:t.members.slice(),preset:!!t.preset}
+              :{name:'',desc:'',level:'standard',leadId:'software-team-lead',members:['software-team-lead','software-engineer'],preset:false};
+    $('#teamModalTitle').textContent = t?t.name:'新建专家团';
+    $('#teamReadonlyTip').classList.toggle('hidden', !teamDraft.preset);
+    $('#teamName').value=teamDraft.name; $('#teamDesc').value=teamDraft.desc;
+    $('#teamName').readOnly=teamDraft.preset; $('#teamDesc').readOnly=teamDraft.preset;
+    $('#teamSaveBtn').textContent = teamDraft.preset?'另存为我的专家团':'保存';
+    $('#teamDeleteBtn').classList.toggle('hidden', teamDraft.preset || !teamEditingId);
+    renderTeamModal();
+    teamModal.classList.add('show');
+    if(!teamDraft.preset) setTimeout(function(){ $('#teamName').focus(); },40);
+  }
+  function renderTeamModal(){
+    var d=teamDraft; if(!d) return;
+    $('#teamCount').textContent=d.members.length;
+    $('#teamMembers').innerHTML = d.members.length ? d.members.map(function(id){
+      var e=EX[id];
+      return '<div class="x-member"><img src="'+xav(e.k)+'" alt="" data-view-expert="'+id+'">'
+        +'<div class="x-member-b" data-view-expert="'+id+'"><div class="x-member-n">'+xesc(e.name)
+        +(d.leadId===id?'<span class="x-badge x-badge-lead">组长</span>':'')
+        +(e.ro?'<span class="x-badge x-badge-ro">只读</span>':'')+'</div>'
+        +'<div class="x-member-r">'+xesc(e.role)+' · 可承担 '+e.modes.join(' / ')+'</div></div>'
+        +'<div class="x-member-a">'
+        +(d.leadId===id?'':'<button type="button" class="x-ic" data-set-lead="'+id+'" title="设为组长">☆</button>')
+        +'<button type="button" class="x-ic x-ic-dg" data-rm-member="'+id+'" title="移出">✕</button></div></div>';
+    }).join('') : '<div class="x-empty-sm">还没有成员</div>';
+
+    $('#teamLevels').innerHTML = TEAM_LEVELS.map(function(l){
+      return '<button type="button" class="x-level'+(d.level===l.id?' on':'')+'" data-level="'+l.id+'">'
+        +'<b>'+l.name+'</b><span>'+l.desc+'</span></button>';
+    }).join('');
+
+    var flow=teamFlow(d);
+    $('#teamFlow').innerHTML = flow.map(function(s,i){
+      return (i?'<span class="x-ar">→</span>':'')
+        +'<div class="x-node'+(s.who?'':' miss')+'">'
+        +(s.who?'<img src="'+xav(EX[s.who].k)+'" alt="">':'')
+        +'<div><b>'+s.title+'<span class="x-kind">'+s.k+'</span></b>'
+        +'<i>'+(s.who?EX[s.who].name:'⚠ 无人可领')+'</i></div></div>';
+    }).join('');
+
+    $('#teamModeNote').innerHTML='<span>ⓘ</span><span>'+(d.members.length>1
+      ? d.members.length+' 位成员 → 以 <code>mode: team</code> 运行，任务在成员间按依赖顺序流转。'
+      : '单一成员 → 以 <code>mode: personal</code> 运行，串行执行，保留 attempt 隔离与重试。')+'</span>';
+
+    $('#teamWarnings').innerHTML = teamLint(d).map(function(w){
+      return '<div class="x-warn"><span>⚠</span><span>'+xesc(w)+'</span></div>'; }).join('');
+
+    $$('#teamMembers .x-member-a').forEach(function(a){ a.classList.toggle('hidden', !!d.preset); });
+    $('#teamAddBtn').classList.toggle('hidden', !!d.preset);
+    $$('#teamLevels .x-level').forEach(function(b){ b.disabled=!!d.preset; });
+  }
+  if(teamModal){
+    teamModal.addEventListener('click',function(e){
+      if(e.target===teamModal){ teamModal.classList.remove('show'); return; }
+      var n;
+      if(n=e.target.closest('[data-view-expert]')){ openExpertModal(n.getAttribute('data-view-expert')); return; }
+      if(n=e.target.closest('[data-set-lead]')){ teamDraft.leadId=n.getAttribute('data-set-lead'); renderTeamModal(); return; }
+      if(n=e.target.closest('[data-rm-member]')){
+        var id=n.getAttribute('data-rm-member');
+        teamDraft.members=teamDraft.members.filter(function(m){return m!==id});
+        if(teamDraft.leadId===id) teamDraft.leadId=teamDraft.members[0]||null;
+        renderTeamModal(); return;
+      }
+      if(n=e.target.closest('[data-level]')){ teamDraft.level=n.getAttribute('data-level'); renderTeamModal(); return; }
+    });
+    $('#teamModalClose').addEventListener('click',function(){ teamModal.classList.remove('show') });
+    $('#teamCancelBtn').addEventListener('click',function(){ teamModal.classList.remove('show') });
+    $('#teamName').addEventListener('input',function(){ teamDraft.name=this.value });
+    $('#teamDesc').addEventListener('input',function(){ teamDraft.desc=this.value });
+    $('#teamAddBtn').addEventListener('click',function(){ openMemberModal() });
+    $('#teamDeleteBtn').addEventListener('click',function(){
+      var t=teamById(teamEditingId); if(!t||t.preset) return;
+      if(!window.confirm('删除专家团「'+t.name+'」？此操作不可撤销。')) return;
+      TEAMS=TEAMS.filter(function(x){ return x.id!==t.id; });
+      if(activePick.kind==='team'&&activePick.id===t.id) clearPick();
+      teamModal.classList.remove('show');
+      saveTeams(); renderExpertGrid(); renderExpertChips();
+      toast('已删除「'+t.name+'」','success');
+    });
+    $('#teamConfigForm').addEventListener('submit',function(ev){
+      ev.preventDefault();
+      var d=teamDraft;
+      var name=(d.name||'').trim();
+      if(!name){ toast('请填写专家团名称','warning'); $('#teamName').focus(); return; }
+      if(!d.members.length){ toast('至少需要一位成员','warning'); return; }
+      if(d.preset || !teamEditingId){
+        var nid='team-'+Date.now();
+        TEAMS.push({id:nid,preset:false,name:d.preset?name+' 副本':name,by:'我创建的',
+          desc:d.desc,level:d.level,leadId:d.leadId,members:d.members.slice()});
+        toast(d.preset?'已另存为你的专家团':'专家团已创建','success');
+      }else{
+        var t=teamById(teamEditingId);
+        t.name=name; t.desc=d.desc; t.level=d.level; t.leadId=d.leadId; t.members=d.members.slice();
+        toast('已保存','success');
+      }
+      teamModal.classList.remove('show');
+      saveTeams(); renderExpertGrid(); renderExpertChips();
+    });
+  }
+
+  /* ---------- 添加成员弹窗 ---------- */
+  var memberModal=$('#memberModal'), memberKw='';
+  function openMemberModal(){ memberKw=''; $('#memberSearchInput').value=''; renderMemberList(); memberModal.classList.add('show');
+    setTimeout(function(){ $('#memberSearchInput').focus() },40); }
+  function renderMemberList(){
+    var kw=memberKw.trim();
+    var rows=EXPERTS.filter(function(e){ return !kw || (e.name+e.role+e.desc+e.tags.join()).indexOf(kw)>=0; });
+    $('#memberList').innerHTML = rows.length ? rows.map(function(e){
+      var on=teamDraft.members.indexOf(e.id)>=0;
+      return '<button type="button" class="x-mrow'+(on?' on':'')+'" data-toggle-member="'+e.id+'">'
+        +'<img src="'+xav(e.k)+'" alt="">'
+        +'<span class="x-mrow-b"><span class="x-mrow-n">'+xesc(e.name)
+        +(on?'<span class="x-badge x-badge-lead">已加入</span>':'')
+        +(e.ro?'<span class="x-badge x-badge-ro">只读</span>':'')+'</span>'
+        +'<span class="x-mrow-d">'+xesc(e.desc)+'</span>'
+        +'<span class="x-mrow-m">'+e.modes.join(' / ')+'</span></span></button>';
+    }).join('') : '<div class="x-empty-sm">没有匹配的专家</div>';
+  }
+  if(memberModal){
+    $('#memberSearchInput').addEventListener('input',function(){ memberKw=this.value; renderMemberList(); });
+    $('#memberModalClose').addEventListener('click',function(){ memberModal.classList.remove('show') });
+    $('#memberDoneBtn').addEventListener('click',function(){ memberModal.classList.remove('show') });
+    memberModal.addEventListener('click',function(e){
+      if(e.target===memberModal){ memberModal.classList.remove('show'); return; }
+      var n=e.target.closest('[data-toggle-member]'); if(!n) return;
+      var id=n.getAttribute('data-toggle-member'), i=teamDraft.members.indexOf(id);
+      if(i<0){ teamDraft.members.push(id); if(!teamDraft.leadId) teamDraft.leadId=id; }
+      else { teamDraft.members.splice(i,1); if(teamDraft.leadId===id) teamDraft.leadId=teamDraft.members[0]||null; }
+      renderMemberList(); renderTeamModal();
+    });
+  }
+  var newTeamBtn=$('#newTeamBtn');
+  if(newTeamBtn) newTeamBtn.addEventListener('click',function(){ openTeamModal(null) });
+
+  /* ---------- composer：选中对象渲染为顶部标签 + 下拉选择 ---------- */
+  function pickIconSvg(){
+    return activePick.kind==='team'
+      ? '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 20v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 4 18.5V20"/><circle cx="10" cy="8" r="3.2"/><path d="M20 20v-1.5a3.5 3.5 0 0 0-2.6-3.4"/><path d="M15.4 5.2a3.2 3.2 0 0 1 0 5.6"/></svg>'
+      : '<img class="ctag-av" src="'+xav(EX[activePick.id].k)+'" alt="">';
+  }
+
+  /* 模式 → builder 名。来源见 lingee-build packages/kcode-web/src/components/prompt-input.tsx
+     starterRecommendationCards；技能/智能体两项用 1.x 线的新名（用户确认） */
+  var MODE_BUILDERS={
+    '技能开发':{id:'skill-builder',    ic:'<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>'},
+    '智能体开发':{id:'agent-builder',  ic:'<rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V3"/><circle cx="12" cy="3" r="1.5" fill="currentColor"/><rect x="8" y="13" width="3" height="2" rx="1"/><rect x="13" y="13" width="3" height="2" rx="1"/>'},
+    '原型探索':{id:'kingdee-design',   ic:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 9v11"/>'},
+    '通用应用':{id:'general-app-builder', ic:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>'},
+    '苍穹应用':{id:'app-builder-partner', ic:'<path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/>'},
+    '业务组件':{id:'mcp-apps-builder', ic:'<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/>'}
+  };
+  function renderModeTag(){
+    var el=$('.mode-item.checked'), mode=el?el.getAttribute('data-val'):null;
+    var b=mode?MODE_BUILDERS[mode]:null;
+    ['nt','chat'].forEach(function(pfx){
+      var tags=$('#'+pfx+'Tags'); if(!tags) return;
+      tags.innerHTML = b
+        ? '<span class="ctag"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+b.ic+'</svg>'
+          +'<span class="ctag-label">'+b.id+'</span>'
+          +'<button type="button" class="ctag-x" data-clear-mode aria-label="移除">'
+          +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>'
+          +'</button></span>'
+        : '';
+      tags.classList.toggle('hidden', !b);
+    });
+  }
+  document.addEventListener('click',function(ev){
+    if(ev.target.closest('[data-clear-mode]')){
+      ev.stopPropagation();
+      $$('.mode-item').forEach(function(m){ m.classList.remove('checked') });
+      renderModeTag(); return;
+    }
+    if(ev.target.closest('.mode-item')) setTimeout(renderModeTag,0);
+  });
+
+  function renderExpertChips(){
+    var has=pickValid();
+    ['nt','chat'].forEach(function(pfx){
+      var label=$('#'+pfx+'ExpertLabel'), faces=$('#'+pfx+'ExpertFaces');
+      if(label) label.textContent = has ? pickName() : '选择专家';
+      if(faces){
+        faces.innerHTML = has
+          ? (activePick.kind==='team'
+              ? teamById(activePick.id).members.slice(0,3).map(function(i){
+                  return '<img src="'+xav(EX[i].k)+'" alt="">'; }).join('')
+              : '<img src="'+xav(EX[activePick.id].k)+'" alt="">')
+          : '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 20v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 4 18.5V20"/><circle cx="10" cy="8" r="3.2"/><path d="M20 20v-1.5a3.5 3.5 0 0 0-2.6-3.4"/><path d="M15.4 5.2a3.2 3.2 0 0 1 0 5.6"/></svg>';
+      }
+      var dd=$('#'+pfx+'ExpertDropdown');
+      if(dd){ var c=dd.querySelector('[data-chip]'); if(c) c.classList.toggle('muted', !has); }
+    });
+  }
+  function renderExpertPicker(pfx,kw){
+    var list=$('#'+pfx+'ExpertList'); if(!list) return;
+    kw=(kw||'').trim();
+    var teams=TEAMS.filter(function(t){ return !kw || (t.name+t.desc).indexOf(kw)>=0; });
+    var experts=EXPERTS.filter(function(e){ return !kw || (e.name+e.role+e.desc+e.tags.join()).indexOf(kw)>=0; });
+    var html='';
+    if(teams.length){
+      html+='<div class="pick-group">专家团</div>'+teams.map(function(t){
+        var on=activePick.kind==='team'&&activePick.id===t.id;
+        return '<div class="app-item x-opt'+(on?' checked':'')+'" data-pick-team="'+t.id+'">'
+          +facesHtml(t.members,3)
+          +'<span class="x-opt-n">'+xesc(t.name)+'</span>'
+          +(on?'<svg class="ic ic-sm menu-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>':'')+'</div>';
+      }).join('');
+    }
+    if(experts.length){
+      html+='<div class="pick-group">专家</div>'+experts.map(function(e){
+        var on=activePick.kind==='expert'&&activePick.id===e.id;
+        return '<div class="app-item x-opt'+(on?' checked':'')+'" data-pick-expert="'+e.id+'">'
+          +'<img class="x-opt-av" src="'+xav(e.k)+'" alt="">'
+          +'<span class="x-opt-n">'+xesc(e.name)+'</span>'
+          +(on?'<svg class="ic ic-sm menu-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>':'')+'</div>';
+      }).join('');
+    }
+    list.innerHTML = html || '<div class="x-empty-sm">没有匹配的专家或专家团</div>';
+  }
+  function openExpertPicker(pfx){
+    var dd=$('#'+pfx+'ExpertDropdown'); if(!dd) return;
+    var si=$('#'+pfx+'ExpertSearchInput');
+    closeAll(null);
+    renderExpertPicker(pfx, si?si.value:'');
+    dd.classList.add('open');
+    if(si) setTimeout(function(){ si.focus() },40);
+  }
+  ['nt','chat'].forEach(function(pfx){
+    var dd=$('#'+pfx+'ExpertDropdown'); if(!dd) return;
+    var chipEl=dd.querySelector('[data-chip]'), si=$('#'+pfx+'ExpertSearchInput');
+    chipEl.addEventListener('click',function(ev){
+      ev.stopPropagation();
+      if(dd.classList.contains('open')) dd.classList.remove('open');
+      else openExpertPicker(pfx);
+    });
+    if(si) si.addEventListener('input',function(){ renderExpertPicker(pfx,this.value) });
+    dd.addEventListener('click',function(ev){
+      var n;
+      if(n=ev.target.closest('[data-pick-team]')){
+        var tid=n.getAttribute('data-pick-team');
+        if(activePick.kind==='team'&&activePick.id===tid) clearPick();   /* 再点一次取消 */
+        else activePick={kind:'team',id:tid};
+        saveTeams(); renderExpertChips(); dd.classList.remove('open'); return;
+      }
+      if(n=ev.target.closest('[data-pick-expert]')){
+        var eid=n.getAttribute('data-pick-expert');
+        if(activePick.kind==='expert'&&activePick.id===eid) clearPick();
+        else activePick={kind:'expert',id:eid};
+        saveTeams(); renderExpertChips(); dd.classList.remove('open'); return;
+      }
+      if(ev.target.closest('[data-goto-experts]')){
+        dd.classList.remove('open');
+        showView('experts'); setNavActive('专家'); renderExpertGrid();
+      }
+    });
+
+  });
+
+  loadTeams();
+  renderExpertChips();
+  renderModeTag();
+  renderExpertGrid();
+
 
 })();

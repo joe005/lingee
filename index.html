@@ -54,6 +54,10 @@
         <svg class="ic" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
         应用开发
       </div>
+      <div class="nav-item">
+        <svg class="ic" viewBox="0 0 24 24"><path d="M16 20v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 4 18.5V20"/><circle cx="10" cy="8" r="3.2"/><path d="M20 20v-1.5a3.5 3.5 0 0 0-2.6-3.4"/><path d="M15.4 5.2a3.2 3.2 0 0 1 0 5.6"/></svg>
+        专家
+      </div>
 
       <div class="section-label">
         <span>项目</span>
@@ -197,19 +201,11 @@
 
   <div class="view" id="view-newtask">
     <div class="main-center">
-      <div class="greeting">
-        <img class="mascot" src="data:image/png;base64,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" alt="Lingee">
-        Good morning, Joe
-      </div>
+      <div class="greeting">即刻开启开发新范式</div>
 
-      <div class="mode-bar">
-        <div class="mode-item" data-val="技能开发" tabindex="0" role="button" aria-keyshortcuts="Alt+1">技能开发</div>
-        <div class="mode-item" data-val="智能体开发" tabindex="0" role="button" aria-keyshortcuts="Alt+2">智能体开发</div>
-        <div class="mode-item" data-val="通用应用" tabindex="0" role="button" aria-keyshortcuts="Alt+3">通用应用</div>
-        <div class="mode-item" data-val="苍穹应用" tabindex="0" role="button" aria-keyshortcuts="Alt+4">苍穹应用</div>
-      </div>
 
       <div class="composer">
+        <div class="composer-tags hidden" id="ntTags"></div>
         <div class="composer-input" id="composerInput" contenteditable="true" data-placeholder="布置任务"></div>
         <div class="composer-bar">
           <button class="round-btn" data-tooltip="上传附件" aria-label="add">
@@ -217,17 +213,6 @@
           </button>
 
           <!-- model -->
-          <div class="dropdown" data-dd="model">
-            <div class="chip" data-chip>
-              <span class="chip-label">快速</span>
-              <svg class="caret" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 7.5 5 5 5-5"/></svg>
-            </div>
-            <div class="menu">
-              <div class="menu-item checked" data-val="快速"><span class="left">快速</span><svg class="ic ic-sm menu-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
-              <div class="menu-item" data-val="深度"><span class="left">深度</span><svg class="ic ic-sm menu-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
-              <div class="menu-item" data-val="专家"><span class="left">专家</span><svg class="ic ic-sm menu-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
-            </div>
-          </div>
 
           <!-- app binding (shown in 应用开发 mode) -->
           <div class="dropdown hidden" data-dd="app" id="appDropdown">
@@ -253,7 +238,47 @@
             </div>
           </div>
 
+          <div class="dropdown" data-dd="expert" id="ntExpertDropdown">
+            <div class="chip muted" data-chip>
+              <span class="chip-faces" id="ntExpertFaces"></span>
+              <span class="chip-label" id="ntExpertLabel">选择专家</span>
+              <svg class="caret" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 7.5 5 5 5-5"/></svg>
+            </div>
+            <div class="menu app-menu expert-menu">
+              <div class="app-search-wrap">
+                <div class="app-search">
+                  <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                  <input type="text" id="ntExpertSearchInput" placeholder="搜索专家" autocomplete="off">
+                </div>
+              </div>
+              <div class="app-list" id="ntExpertList"></div>
+              <div class="app-foot">
+                <div class="app-foot-item" data-goto-experts>
+                  <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M9 7h8v8"/></svg>
+                  管理专家团
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="spacer"></div>
+          <div class="dropdown" data-dd="model">
+            <div class="chip" data-chip>
+              <span class="chip-label">快速</span>
+              <svg class="caret" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 7.5 5 5 5-5"/></svg>
+            </div>
+            <div class="menu">
+              <div class="menu-item checked" data-val="快速"><span class="left">快速</span><svg class="ic ic-sm menu-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
+              <div class="menu-item" data-val="深度"><span class="left">深度</span><svg class="ic ic-sm menu-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
+              <div class="menu-item" data-val="专家"><span class="left">专家</span><svg class="ic ic-sm menu-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
+            </div>
+          </div>
+          <button class="round-btn" data-tooltip="提示词增强" aria-label="enhance">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6.3 6.3l2.8 2.8M14.9 14.9l2.8 2.8M17.7 6.3l-2.8 2.8M9.1 14.9l-2.8 2.8"/></svg>
+          </button>
+          <button class="round-btn" data-tooltip="语音输入" aria-label="mic">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+          </button>
 
           <button class="send-btn" id="sendBtn" data-tooltip="发送" aria-label="发送" tabindex="0" aria-keyshortcuts="Enter">
             <svg class="ic" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
@@ -278,6 +303,15 @@
             </div>
           </div>
         </div>
+      </div>
+
+      <div class="mode-bar">
+        <div class="mode-item mode-pill" data-val="技能开发" tabindex="0" role="button"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>技能开发</div>
+        <div class="mode-item mode-pill" data-val="智能体开发" tabindex="0" role="button"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V3"/><circle cx="12" cy="3" r="1.5" fill="currentColor"/><rect x="8" y="13" width="3" height="2" rx="1"/><rect x="13" y="13" width="3" height="2" rx="1"/></svg>智能体开发</div>
+        <div class="mode-item mode-pill" data-val="原型探索" tabindex="0" role="button"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 9v11"/></svg>原型探索</div>
+        <div class="mode-item mode-pill" data-val="通用应用" tabindex="0" role="button"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>通用应用</div>
+        <div class="mode-item mode-pill" data-val="苍穹应用" tabindex="0" role="button"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/></svg>苍穹应用</div>
+        <div class="mode-item mode-pill" data-val="业务组件" tabindex="0" role="button"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>业务组件</div>
       </div>
     </div>
 
@@ -308,6 +342,7 @@
       </div>
       <div class="chat-composer-wrap">
         <div class="composer">
+          <div class="composer-tags hidden" id="chatTags"></div>
           <div class="composer-input" id="chatInput" contenteditable="true" data-placeholder="输入消息…"></div>
           <div class="composer-bar">
             <button class="round-btn" data-tooltip="上传附件" aria-label="chat-add">
@@ -315,17 +350,6 @@
             </button>
 
             <!-- model -->
-            <div class="dropdown" data-dd="model">
-              <div class="chip" data-chip>
-                <span class="chip-label">快速</span>
-                <svg class="caret" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 7.5 5 5 5-5"/></svg>
-              </div>
-              <div class="menu">
-                <div class="menu-item checked" data-val="快速"><span class="left">快速</span><svg class="ic ic-sm menu-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
-                <div class="menu-item" data-val="深度"><span class="left">深度</span><svg class="ic ic-sm menu-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
-                <div class="menu-item" data-val="专家"><span class="left">专家</span><svg class="ic ic-sm menu-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
-              </div>
-            </div>
 
             <!-- app binding -->
             <div class="dropdown" data-dd="app" id="chatAppDropdown">
@@ -351,7 +375,47 @@
               </div>
             </div>
 
+            <div class="dropdown" data-dd="expert" id="chatExpertDropdown">
+              <div class="chip muted" data-chip>
+                <span class="chip-faces" id="chatExpertFaces"></span>
+                <span class="chip-label" id="chatExpertLabel">选择专家</span>
+                <svg class="caret" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 7.5 5 5 5-5"/></svg>
+              </div>
+              <div class="menu app-menu expert-menu">
+                <div class="app-search-wrap">
+                  <div class="app-search">
+                    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                    <input type="text" id="chatExpertSearchInput" placeholder="搜索专家" autocomplete="off">
+                  </div>
+                </div>
+                <div class="app-list" id="chatExpertList"></div>
+                <div class="app-foot">
+                  <div class="app-foot-item" data-goto-experts>
+                    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M9 7h8v8"/></svg>
+                    管理专家团
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div class="spacer"></div>
+            <div class="dropdown" data-dd="model">
+              <div class="chip" data-chip>
+                <span class="chip-label">快速</span>
+                <svg class="caret" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 7.5 5 5 5-5"/></svg>
+              </div>
+              <div class="menu">
+                <div class="menu-item checked" data-val="快速"><span class="left">快速</span><svg class="ic ic-sm menu-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
+                <div class="menu-item" data-val="深度"><span class="left">深度</span><svg class="ic ic-sm menu-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
+                <div class="menu-item" data-val="专家"><span class="left">专家</span><svg class="ic ic-sm menu-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
+              </div>
+            </div>
+            <button class="round-btn" data-tooltip="提示词增强" aria-label="enhance">
+              <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6.3 6.3l2.8 2.8M14.9 14.9l2.8 2.8M17.7 6.3l-2.8 2.8M9.1 14.9l-2.8 2.8"/></svg>
+            </button>
+            <button class="round-btn" data-tooltip="语音输入" aria-label="mic">
+              <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+            </button>
 
             <button class="send-btn" id="chatSendBtn" data-tooltip="发送" aria-label="send">
               <svg class="ic" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
@@ -778,6 +842,25 @@
     </div>
   </div>
 
+  <!-- ===================== EXPERTS VIEW ===================== -->
+  <div class="view hidden" id="view-experts">
+    <div class="apps-head">
+      <div class="apps-title">专家</div>
+      <button class="btn-new" id="newTeamBtn"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>新建</button>
+    </div>
+    <div class="apps-toolbar">
+      <div class="tabs" id="expertTabs">
+        <div class="tab active" data-etab="team">专家团</div>
+        <div class="tab" data-etab="expert">专家</div>
+      </div>
+      <div class="apps-search">
+        <input type="text" id="expertSearchInput" placeholder="搜索专家或专家团" autocomplete="off">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      </div>
+    </div>
+    <div class="apps-grid" id="expertGrid"></div>
+  </div>
+
   <div class="view hidden" id="view-skills">
     <div class="apps-head">
       <div class="apps-title">技能开发</div>
@@ -1147,6 +1230,76 @@
       <button class="modal-btn cancel" id="newAppCancel">取消</button>
       <button class="modal-btn confirm" id="newAppConfirm">确认</button>
     </div>
+  </div>
+</div>
+
+<!-- 专家团配置 -->
+<div class="modal-overlay" id="teamModal">
+  <form class="modal-card env-config-modal team-config-modal" id="teamConfigForm" role="dialog" aria-modal="true" aria-labelledby="teamModalTitle" novalidate>
+    <div class="modal-header">
+      <div class="env-config-heading"><div class="modal-title" id="teamModalTitle">新建专家团</div></div>
+      <button class="modal-close" id="teamModalClose" type="button" aria-label="关闭">×</button>
+    </div>
+    <div class="modal-body env-config-body">
+      <div class="team-readonly-tip hidden" id="teamReadonlyTip">内置专家团由官方维护，仅供查看。可另存为自己的专家团后再调整。</div>
+      <section class="env-form-section">
+        <div class="env-form-section-title">基本信息</div>
+        <div class="env-form-grid">
+          <label class="env-field env-field-wide"><span>名称<span class="env-required">*</span></span>
+            <input type="text" id="teamName" placeholder="给这个专家团起个名字" autocomplete="off" required></label>
+          <label class="env-field env-field-wide"><span>说明</span>
+            <textarea id="teamDesc" rows="2" placeholder="它擅长什么、适合什么场景"></textarea></label>
+        </div>
+      </section>
+      <section class="env-form-section">
+        <div class="env-form-section-title">成员 <span class="team-count" id="teamCount">0</span></div>
+        <div class="team-hint">点名字查看这位专家的定义；星标设为组长，负责开场协调与最终集成。</div>
+        <div class="team-members" id="teamMembers"></div>
+        <button type="button" class="team-add" id="teamAddBtn">＋ 添加成员</button>
+      </section>
+      <section class="env-form-section">
+        <div class="env-form-section-title">交付强度</div>
+        <div class="team-hint">唯一需要你决定的配置：这个团做事时走多少道门禁。下面的流程会跟着变。</div>
+        <div class="team-levels" id="teamLevels"></div>
+        <div class="team-flow-label">运行流程</div>
+        <div class="team-flow" id="teamFlow"></div>
+        <div class="team-mode-note" id="teamModeNote"></div>
+        <div id="teamWarnings"></div>
+      </section>
+    </div>
+    <div class="modal-footer team-modal-footer">
+      <button type="button" class="btn-link team-delete-btn hidden" id="teamDeleteBtn">删除该专家团</button>
+      <div class="team-footer-spacer"></div>
+      <button type="button" class="modal-btn cancel" id="teamCancelBtn">取消</button>
+      <button type="submit" class="modal-btn confirm" id="teamSaveBtn">保存</button>
+    </div>
+  </form>
+</div>
+
+<!-- 添加成员 -->
+<div class="modal-overlay" id="memberModal">
+  <div class="modal-card member-picker-modal" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <div class="env-config-heading"><div class="modal-title">添加成员</div></div>
+      <button class="modal-close" id="memberModalClose" type="button" aria-label="关闭">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="app-search member-search">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="text" id="memberSearchInput" placeholder="搜索专家、职业或能力" autocomplete="off">
+      </div>
+      <div class="member-list" id="memberList"></div>
+    </div>
+    <div class="modal-footer"><button type="button" class="modal-btn confirm" id="memberDoneBtn">完成</button></div>
+  </div>
+</div>
+
+<!-- 专家详情 -->
+<div class="modal-overlay" id="expertModal">
+  <div class="modal-card expert-detail-modal" role="dialog" aria-modal="true">
+    <div class="modal-header expert-detail-head" id="expertModalHead"></div>
+    <div class="modal-body" id="expertModalBody"></div>
+    <div class="modal-footer" id="expertModalFoot"></div>
   </div>
 </div>
 
