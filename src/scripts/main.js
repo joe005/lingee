@@ -3954,7 +3954,18 @@ const billTemplateWithTokens = billTemplate.replace(
      steps:['确认接口契约与鉴权方式','实现对接与错误处理','设计幂等与重试','联调验证'],
      cons:['凭据不得硬编码','同步必须幂等可重放']}
   ];
-  var EX={}; EXPERTS.forEach(function(e){EX[e.id]=e});
+  var BUILTIN_EXPERTS=EXPERTS;
+  var MY_EXPERTS=[];                 /* 我自己创建的专家，落 localStorage */
+  var EX={};
+  function rebuildExperts(){
+    EXPERTS=BUILTIN_EXPERTS.concat(MY_EXPERTS);
+    EX={}; EXPERTS.forEach(function(e){EX[e.id]=e});
+  }
+  rebuildExperts();
+
+  /* 可选头像：复用内置的一套图形，创建专家时挑一个 */
+  var AV_KEYS=['lead','pm','arch','eng','qa','cr','sec','ana','fe','ux','form','flow','rpt','plug','api'];
+  var WORK_MODES=['分析','设计','实现','集成','评审','验证','恢复'];
 
   var TEAM_LEVELS=[
     {id:'lightweight',name:'快速',desc:'直接实现 + 自检，省掉评审与独立 QA。小页面、小工具用这个。'},
@@ -4009,6 +4020,22 @@ const billTemplateWithTokens = billTemplate.replace(
     var d;
     try{ d=JSON.parse(raw); }catch(e){ return; }
     if(!d||typeof d!=='object') return;
+    var mine=Array.isArray(d.experts)?d.experts:[];
+    MY_EXPERTS=mine.filter(function(e){
+      return e&&typeof e.id==='string'&&e.id.indexOf('my-')===0&&typeof e.name==='string'&&e.name
+        &&Array.isArray(e.modes)&&e.modes.length;
+    }).map(function(e){
+      return {id:e.id,mine:true,k:AV_KEYS.indexOf(e.k)>=0?e.k:'eng',
+        name:e.name,role:e.role||'自定义专家',by:'我创建的',desc:e.desc||'',
+        tags:Array.isArray(e.tags)?e.tags:[],
+        modes:e.modes.filter(function(m){return WORK_MODES.indexOf(m)>=0}),
+        comp:Array.isArray(e.comp)?e.comp:[],
+        cmds:(Array.isArray(e.cmds)?e.cmds:[]).filter(function(c){return Array.isArray(c)&&c[0]}),
+        steps:Array.isArray(e.steps)?e.steps:[],
+        cons:Array.isArray(e.cons)?e.cons:[]};
+    }).filter(function(e){ return e.modes.length; });
+    rebuildExperts();
+
     var custom=Array.isArray(d.teams)?d.teams:[];
     var valid=custom.filter(function(t){
       return t&&typeof t.id==='string'&&!t.preset&&typeof t.name==='string'
@@ -4024,7 +4051,11 @@ const billTemplateWithTokens = billTemplate.replace(
     try{
       localStorage.setItem(TEAM_STORE_KEY, JSON.stringify({
         v:1,
-        teams:TEAMS.filter(function(t){return !t.preset})
+        teams:TEAMS.filter(function(t){return !t.preset}),
+        experts:MY_EXPERTS.map(function(e){
+          return {id:e.id,k:e.k,name:e.name,role:e.role,desc:e.desc,tags:e.tags,
+                  modes:e.modes,comp:e.comp,cmds:e.cmds,steps:e.steps,cons:e.cons};
+        })
       }));
     }catch(e){ /* 隐私模式 / 配额满：原型退化为内存态，不打扰用户 */ }
   }
@@ -4102,13 +4133,24 @@ const billTemplateWithTokens = billTemplate.replace(
         return '<div class="app-card x-card" data-expert="'+e.id+'">'
           +'<div class="card-top"><img class="x-av" src="'+xav(e.k)+'" alt="">'
           +'<div class="card-titles"><div class="card-title-row"><span class="card-title">'+xesc(e.name)+'</span>'
-          +(e.ro?'<span class="x-badge x-badge-ro">只读</span>':'')+'</div>'
+          +(e.ro?'<span class="x-badge x-badge-ro">只读</span>':'')
+          +(e.mine?'<span class="x-badge x-badge-mine">我创建的</span>':'')+'</div>'
           +'<div class="x-sub">'+xesc(e.role)+' · '+xesc(e.by)+'</div></div></div>'
           +'<div class="card-desc">'+xesc(e.desc)+'</div>'
           +'<div class="card-tags">'+e.tags.slice(0,3).map(function(t){return '<span class="ptag">'+xesc(t)+'</span>'}).join('')+'</div></div>';
       }).join('');
     }
+    if(!kw) html += expertTab==='team'
+      ? '<button type="button" class="app-card x-new-card" data-new-team><span class="x-new-ic">＋</span><span>新建专家团</span>'
+        +'<span class="x-new-sub">从专家库里挑几个人，定好交付强度</span></button>'
+      : '<button type="button" class="app-card x-new-card" data-new-expert><span class="x-new-ic">＋</span><span>创建专家</span>'
+        +'<span class="x-new-sub">手填表单，或一句话交给 expert-manager</span></button>';
     expertGrid.innerHTML = html || '<div class="x-empty">没有匹配的结果</div>';
+    var tc=$('#teamTabCount'), ec=$('#expertTabCount');
+    if(tc) tc.textContent=TEAMS.length;
+    if(ec) ec.textContent=EXPERTS.length;
+    var lb=$('#newExpertEntryLabel');
+    if(lb) lb.textContent = expertTab==='team' ? '新建专家团' : '创建专家';
   }
   $$('#expertTabs .tab').forEach(function(t){
     t.addEventListener('click',function(){
@@ -4121,6 +4163,8 @@ const billTemplateWithTokens = billTemplate.replace(
   var expertSearchInput=$('#expertSearchInput');
   if(expertSearchInput) expertSearchInput.addEventListener('input',function(){ expertKw=this.value; renderExpertGrid(); });
   if(expertGrid) expertGrid.addEventListener('click',function(e){
+    if(e.target.closest('[data-new-team]')){ openTeamModal(null); return; }
+    if(e.target.closest('[data-new-expert]')){ openExpertEditor(null); return; }
     var tc=e.target.closest('[data-team]'); if(tc){ openTeamModal(tc.getAttribute('data-team')); return; }
     var ec=e.target.closest('[data-expert]'); if(ec){ openExpertModal(ec.getAttribute('data-expert')); return; }
   });
@@ -4143,11 +4187,30 @@ const billTemplateWithTokens = billTemplate.replace(
       +'<div class="x-sec"><div class="x-sec-t">可承担的工作</div><div class="x-chips">'+e.modes.map(function(m){return '<span class="ptag">'+xesc(m)+'</span>'}).join('')+'</div></div>'
       +(e.out?'<div class="x-sec"><div class="x-sec-t">专属产物</div><div class="x-chips"><span class="ptag">'+xesc(e.out)+'</span></div></div>':'')
       +list('工作方式',e.steps)+list('行为约束',e.cons);
-    $('#expertModalFoot').innerHTML='<button type="button" class="modal-btn confirm" data-x-close>关闭</button>';
+    $('#expertModalFoot').innerHTML=
+      (e.mine?'<button type="button" class="btn-link team-delete-btn" data-x-del="'+e.id+'">删除该专家</button>':'')
+      +'<div class="team-footer-spacer"></div>'
+      +(e.mine?'<button type="button" class="modal-btn cancel" data-x-edit="'+e.id+'">编辑</button>':'')
+      +'<button type="button" class="modal-btn confirm" data-x-call="'+e.id+'">召唤专家</button>';
+    $('#expertModalFoot').className='modal-footer team-modal-footer';
     expertModal.classList.add('show');
   }
   if(expertModal) expertModal.addEventListener('click',function(e){
     if(e.target===expertModal||e.target.closest('[data-x-close]')){ expertModal.classList.remove('show'); return; }
+    var ed=e.target.closest('[data-x-edit]');
+    if(ed){ expertModal.classList.remove('show'); openExpertEditor(ed.getAttribute('data-x-edit')); return; }
+    var dl=e.target.closest('[data-x-del]');
+    if(dl){ deleteMyExpert(dl.getAttribute('data-x-del')); return; }
+    var cl=e.target.closest('[data-x-call]');
+    if(cl){
+      activePick={kind:'expert',id:cl.getAttribute('data-x-call')};
+      expertModal.classList.remove('show');
+      renderExpertChips();
+      showView('newtask'); setNavActive('新会话');
+      if(input) input.focus();
+      toast('已召唤「'+EX[cl.getAttribute('data-x-call')].name+'」','success');
+      return;
+    }
     var c=e.target.closest('[data-cmd]');
     if(c){
       expertModal.classList.remove('show');
@@ -4159,6 +4222,148 @@ const billTemplateWithTokens = billTemplate.replace(
       }catch(err){}
     }
   });
+
+  /* ---------- 创建 / 编辑我的专家 ---------- */
+  /* 两条路：手填这张表单，或者一句话交给 expert-manager 在对话里建（同 WorkBuddy） */
+  var EXPERT_MANAGER={id:'expert-manager',
+    ic:'<path d="M16 20v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 4 18.5V20"/><circle cx="10" cy="8" r="3.2"/><path d="M18 6v6M15 9h6"/>'};
+  var ONE_LINE_PROMPT='帮我创建一个 XXX 专家，擅长 XXXXX。我的经验是：[请补充你的行业背景、相关经验]';
+  var forcedBuilder=null;
+
+  function startExpertByChat(){
+    if(expertEditModal) expertEditModal.classList.remove('show');
+    if(expertModal) expertModal.classList.remove('show');
+    forcedBuilder=EXPERT_MANAGER;
+    $$('.mode-item').forEach(function(m){ m.classList.remove('checked') });
+    showView('newtask'); setNavActive('新会话');
+    renderModeTag();
+    if(input){
+      input.setAttribute('data-placeholder','布置任务');
+      input.textContent=ONE_LINE_PROMPT;
+      input.focus();
+      try{
+        var r=document.createRange(); r.selectNodeContents(input); r.collapse(false);
+        var sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+      }catch(err){}
+    }
+    toast('已切到 expert-manager，把这句话补完就行','info');
+  }
+
+  function deleteMyExpert(id){
+    var e=EX[id]; if(!e||!e.mine) return;
+    var used=TEAMS.filter(function(t){ return t.members.indexOf(id)>=0; });
+    var msg='删除专家「'+e.name+'」？此操作不可撤销。';
+    if(used.length) msg+='\n他还在 '+used.length+' 个专家团里，删除后会一并移出。';
+    if(!window.confirm(msg)) return;
+    MY_EXPERTS=MY_EXPERTS.filter(function(x){ return x.id!==id; });
+    rebuildExperts();
+    TEAMS.forEach(function(t){
+      if(t.preset) return;
+      t.members=t.members.filter(function(m){ return m!==id; });
+      if(t.leadId===id) t.leadId=t.members[0]||null;
+    });
+    if(activePick.kind==='expert'&&activePick.id===id) clearPick();
+    if(expertModal) expertModal.classList.remove('show');
+    saveTeams(); renderExpertGrid(); renderExpertChips();
+    toast('已删除「'+e.name+'」','success');
+  }
+
+  var expertEditModal=$('#expertEditModal'), xeDraft=null, xeEditingId=null;
+  function blankExpert(){
+    return {k:'eng',name:'',role:'',desc:'',tags:[],modes:['分析','设计','实现'],
+            comp:[],cmds:[['','']],steps:[],cons:[]};
+  }
+  function openExpertEditor(id){
+    if(!expertEditModal) return;
+    var e=id?EX[id]:null;
+    xeEditingId=(e&&e.mine)?id:null;
+    xeDraft = xeEditingId
+      ? {k:e.k,name:e.name,role:e.role,desc:e.desc,tags:e.tags.slice(),modes:e.modes.slice(),
+         comp:e.comp.slice(),cmds:e.cmds.length?e.cmds.map(function(c){return c.slice()}):[['','']],
+         steps:e.steps.slice(),cons:e.cons.slice()}
+      : blankExpert();
+    $('#expertEditTitle').textContent = xeEditingId ? '编辑专家' : '创建专家';
+    $('#xeName').value=xeDraft.name; $('#xeRole').value=xeDraft.role; $('#xeDesc').value=xeDraft.desc;
+    $('#xeTags').value=xeDraft.tags.join('、'); $('#xeComp').value=xeDraft.comp.join('、');
+    $('#xeSteps').value=xeDraft.steps.join('\n'); $('#xeCons').value=xeDraft.cons.join('\n');
+    $('#xeDeleteBtn').classList.toggle('hidden', !xeEditingId);
+    renderExpertEditor();
+    expertEditModal.classList.add('show');
+    setTimeout(function(){ $('#xeName').focus(); },40);
+  }
+  function renderExpertEditor(){
+    var d=xeDraft; if(!d) return;
+    $('#xeAvatars').innerHTML=AV_KEYS.map(function(k){
+      return '<button type="button" class="x-av-opt'+(d.k===k?' on':'')+'" data-xe-av="'+k+'">'
+        +'<img src="'+xav(k)+'" alt=""></button>';
+    }).join('');
+    $('#xeModes').innerHTML=WORK_MODES.map(function(m){
+      return '<button type="button" class="x-mode-opt'+(d.modes.indexOf(m)>=0?' on':'')+'" data-xe-mode="'+m+'">'+m+'</button>';
+    }).join('');
+    $('#xeCmds').innerHTML=d.cmds.map(function(c,i){
+      return '<div class="x-cmd-row"><input type="text" class="x-cmd-k" data-xe-cmd="'+i+'" data-f="0" value="'+xesc(c[0])+'" placeholder="/命令" autocomplete="off">'
+        +'<input type="text" class="x-cmd-v" data-xe-cmd="'+i+'" data-f="1" value="'+xesc(c[1])+'" placeholder="这条命令让他做什么" autocomplete="off">'
+        +'<button type="button" class="x-ic x-ic-dg" data-xe-rmcmd="'+i+'" title="删除">✕</button></div>';
+    }).join('');
+  }
+  function splitList(v){
+    return String(v||'').split(/[、,，\n]/).map(function(x){return x.trim()}).filter(Boolean);
+  }
+  function splitLines(v){
+    return String(v||'').split('\n').map(function(x){return x.trim()}).filter(Boolean);
+  }
+  if(expertEditModal){
+    $('#expertEditClose').addEventListener('click',function(){ expertEditModal.classList.remove('show') });
+    $('#xeCancelBtn').addEventListener('click',function(){ expertEditModal.classList.remove('show') });
+    $('#xeAddCmd').addEventListener('click',function(){ xeDraft.cmds.push(['','']); renderExpertEditor(); });
+    $('#xeDeleteBtn').addEventListener('click',function(){ if(xeEditingId){ expertEditModal.classList.remove('show'); deleteMyExpert(xeEditingId); } });
+    $('#xeChatBtn').addEventListener('click',startExpertByChat);
+    expertEditModal.addEventListener('click',function(ev){
+      if(ev.target===expertEditModal){ expertEditModal.classList.remove('show'); return; }
+      var a=ev.target.closest('[data-xe-av]');
+      if(a){ xeDraft.k=a.getAttribute('data-xe-av'); renderExpertEditor(); return; }
+      var m=ev.target.closest('[data-xe-mode]');
+      if(m){
+        var v=m.getAttribute('data-xe-mode'), i=xeDraft.modes.indexOf(v);
+        if(i<0) xeDraft.modes.push(v); else xeDraft.modes.splice(i,1);
+        renderExpertEditor(); return;
+      }
+      var r=ev.target.closest('[data-xe-rmcmd]');
+      if(r){
+        xeDraft.cmds.splice(+r.getAttribute('data-xe-rmcmd'),1);
+        if(!xeDraft.cmds.length) xeDraft.cmds.push(['','']);
+        renderExpertEditor(); return;
+      }
+    });
+    expertEditModal.addEventListener('input',function(ev){
+      var c=ev.target.closest('[data-xe-cmd]');
+      if(c){ xeDraft.cmds[+c.getAttribute('data-xe-cmd')][+c.getAttribute('data-f')]=c.value; }
+    });
+    $('#expertEditForm').addEventListener('submit',function(ev){
+      ev.preventDefault();
+      var d=xeDraft;
+      d.name=$('#xeName').value.trim(); d.role=$('#xeRole').value.trim(); d.desc=$('#xeDesc').value.trim();
+      d.tags=splitList($('#xeTags').value); d.comp=splitList($('#xeComp').value);
+      d.steps=splitLines($('#xeSteps').value); d.cons=splitLines($('#xeCons').value);
+      if(!d.name){ toast('请填写专家名称','warning'); $('#xeName').focus(); return; }
+      if(!d.role){ toast('请填写职称，它会显示在名字后面','warning'); $('#xeRole').focus(); return; }
+      if(!d.modes.length){ toast('至少勾选一项「可承担的工作」，否则他在专家团里领不到任务','warning'); return; }
+      var cmds=d.cmds.map(function(c){ return [String(c[0]||'').trim(),String(c[1]||'').trim()]; })
+                     .filter(function(c){ return c[0]; });
+      var rec={id:xeEditingId||('my-'+Date.now()),mine:true,k:d.k,name:d.name,role:d.role,by:'我创建的',
+               desc:d.desc,tags:d.tags,modes:d.modes.slice(),comp:d.comp,cmds:cmds,steps:d.steps,cons:d.cons};
+      if(xeEditingId){
+        for(var i=0;i<MY_EXPERTS.length;i++) if(MY_EXPERTS[i].id===xeEditingId){ MY_EXPERTS[i]=rec; break; }
+        toast('已保存','success');
+      }else{
+        MY_EXPERTS.push(rec);
+        toast('专家「'+rec.name+'」已创建','success');
+      }
+      rebuildExperts();
+      expertEditModal.classList.remove('show');
+      saveTeams(); renderExpertGrid(); renderExpertChips();
+    });
+  }
 
   /* ---------- 专家团配置弹窗 ---------- */
   var teamModal=$('#teamModal'), teamDraft=null, teamEditingId=null;
@@ -4299,8 +4504,10 @@ const billTemplateWithTokens = billTemplate.replace(
       renderMemberList(); renderTeamModal();
     });
   }
-  var newTeamBtn=$('#newTeamBtn');
-  if(newTeamBtn) newTeamBtn.addEventListener('click',function(){ openTeamModal(null) });
+  var newExpertEntryBtn=$('#newExpertEntryBtn');
+  if(newExpertEntryBtn) newExpertEntryBtn.addEventListener('click',function(){
+    if(expertTab==='team') openTeamModal(null); else openExpertEditor(null);
+  });
 
   /* ---------- composer：选中对象渲染为顶部标签 + 下拉选择 ---------- */
   function pickIconSvg(){
@@ -4321,7 +4528,7 @@ const billTemplateWithTokens = billTemplate.replace(
   };
   function renderModeTag(){
     var el=$('.mode-item.checked'), mode=el?el.getAttribute('data-val'):null;
-    var b=mode?MODE_BUILDERS[mode]:null;
+    var b=mode?MODE_BUILDERS[mode]:forcedBuilder;
     ['nt','chat'].forEach(function(pfx){
       var tags=$('#'+pfx+'Tags'); if(!tags) return;
       tags.innerHTML = b
@@ -4338,9 +4545,10 @@ const billTemplateWithTokens = billTemplate.replace(
     if(ev.target.closest('[data-clear-mode]')){
       ev.stopPropagation();
       $$('.mode-item').forEach(function(m){ m.classList.remove('checked') });
+      forcedBuilder=null;
       renderModeTag(); return;
     }
-    if(ev.target.closest('.mode-item')) setTimeout(renderModeTag,0);
+    if(ev.target.closest('.mode-item')){ forcedBuilder=null; setTimeout(renderModeTag,0); }
   });
 
   function renderExpertChips(){
@@ -4426,7 +4634,11 @@ const billTemplateWithTokens = billTemplate.replace(
   });
 
   /* 新会话不继承上一次的专家/专家团选择 */
-  function resetPickForNewSession(){ if(!activePick.kind) return; clearPick(); renderExpertChips(); }
+  function resetPickForNewSession(){
+    if(forcedBuilder){ forcedBuilder=null; renderModeTag(); }
+    if(!activePick.kind) return;
+    clearPick(); renderExpertChips();
+  }
   navItems.forEach(function(n){
     n.addEventListener('click',function(){ if(n.textContent.trim()==='新会话') resetPickForNewSession(); });
   });

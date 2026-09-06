@@ -846,12 +846,12 @@
   <div class="view hidden" id="view-experts">
     <div class="apps-head">
       <div class="apps-title">专家</div>
-      <button class="btn-new" id="newTeamBtn"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>新建</button>
+      <button class="btn-new" id="newExpertEntryBtn"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg><span id="newExpertEntryLabel">新建专家团</span></button>
     </div>
     <div class="apps-toolbar">
       <div class="tabs" id="expertTabs">
-        <div class="tab active" data-etab="team">专家团</div>
-        <div class="tab" data-etab="expert">专家</div>
+        <div class="tab active" data-etab="team">专家团<span class="tab-count" id="teamTabCount">0</span></div>
+        <div class="tab" data-etab="expert">专家<span class="tab-count" id="expertTabCount">0</span></div>
       </div>
       <div class="apps-search">
         <input type="text" id="expertSearchInput" placeholder="搜索专家或专家团" autocomplete="off">
@@ -1301,6 +1301,74 @@
     <div class="modal-body" id="expertModalBody"></div>
     <div class="modal-footer" id="expertModalFoot"></div>
   </div>
+</div>
+
+<!-- 创建 / 编辑我的专家 -->
+<div class="modal-overlay" id="expertEditModal">
+  <form class="modal-card env-config-modal team-config-modal" id="expertEditForm" role="dialog" aria-modal="true" aria-labelledby="expertEditTitle" novalidate>
+    <div class="modal-header">
+      <div class="env-config-heading"><div class="modal-title" id="expertEditTitle">创建专家</div></div>
+      <button class="modal-close" id="expertEditClose" type="button" aria-label="关闭">×</button>
+    </div>
+    <div class="modal-body env-config-body">
+      <button type="button" class="x-chat-entry" id="xeChatBtn">
+        <span class="x-chat-ic">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H7l-4 3v-6.5A8 8 0 0 1 11 4h2a8 8 0 0 1 8 8z"/></svg>
+        </span>
+        <span class="x-chat-b">
+          <span class="x-chat-t">不想填表单？一句话交给 expert-manager</span>
+          <span class="x-chat-d">在对话里描述你要什么样的专家，它会问清背景后帮你建好</span>
+        </span>
+        <span class="x-chat-go">›</span>
+      </button>
+      <section class="env-form-section">
+        <div class="env-form-section-title">身份</div>
+        <div class="env-form-grid">
+          <label class="env-field"><span>名称<span class="env-required">*</span></span>
+            <input type="text" id="xeName" placeholder="例如：苍穹工作流开发专家" autocomplete="off"></label>
+          <label class="env-field"><span>职称<span class="env-required">*</span></span>
+            <input type="text" id="xeRole" placeholder="例如：苍穹流程建模师" autocomplete="off"></label>
+          <label class="env-field env-field-wide"><span>简介</span>
+            <textarea id="xeDesc" rows="2" placeholder="他深耕什么领域、擅长什么、能帮你解决什么"></textarea></label>
+        </div>
+        <div class="env-form-section-title x-sec-sub">头像</div>
+        <div class="x-av-picker" id="xeAvatars"></div>
+      </section>
+      <section class="env-form-section">
+        <div class="env-form-section-title">能力</div>
+        <div class="env-form-grid">
+          <label class="env-field env-field-wide"><span>标签</span>
+            <input type="text" id="xeTags" placeholder="用逗号分隔，例如：流程建模, 苍穹工作流, 流程设计" autocomplete="off"></label>
+          <label class="env-field env-field-wide"><span>能力项</span>
+            <input type="text" id="xeComp" placeholder="用逗号分隔，例如：cosmic.workflow · advanced" autocomplete="off"></label>
+        </div>
+        <div class="env-form-section-title x-sec-sub">可承担的工作<span class="env-required">*</span></div>
+        <div class="team-hint">决定他能在专家团里领哪些任务，也决定单人使用时能做到哪一步。</div>
+        <div class="x-mode-picker" id="xeModes"></div>
+      </section>
+      <section class="env-form-section">
+        <div class="env-form-section-title">专家帮你做</div>
+        <div class="team-hint">快捷命令会出现在专家详情里，点一下就把提示词填进输入框。</div>
+        <div class="x-cmd-rows" id="xeCmds"></div>
+        <button type="button" class="team-add" id="xeAddCmd">＋ 添加一条</button>
+      </section>
+      <section class="env-form-section">
+        <div class="env-form-section-title">工作方式与约束</div>
+        <div class="env-form-grid">
+          <label class="env-field env-field-wide"><span>工作方式</span>
+            <textarea id="xeSteps" rows="4" placeholder="一行一步，例如：&#10;梳理审批场景与角色&#10;配置流程节点与条件"></textarea></label>
+          <label class="env-field env-field-wide"><span>行为约束</span>
+            <textarea id="xeCons" rows="3" placeholder="一行一条，例如：&#10;流程变更需保留可回滚配置"></textarea></label>
+        </div>
+      </section>
+    </div>
+    <div class="modal-footer team-modal-footer">
+      <button type="button" class="btn-link team-delete-btn hidden" id="xeDeleteBtn">删除该专家</button>
+      <div class="team-footer-spacer"></div>
+      <button type="button" class="modal-btn cancel" id="xeCancelBtn">取消</button>
+      <button type="submit" class="modal-btn confirm" id="xeSaveBtn">保存</button>
+    </div>
+  </form>
 </div>
 
 <!-- 新增 ERP 测试环境 -->
