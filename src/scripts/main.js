@@ -3850,21 +3850,26 @@ const billTemplateWithTokens = billTemplate.replace(
      desc:'协调范围、分工、集成、风险与交付闭环，是专家团里唯一能开 kickoff 与做最终集成确认的角色。',
      tags:['交付管理','团队协调'],modes:['分析','设计','集成','评审','验证','恢复'],
      comp:['delivery.orchestration · principal','delivery.integration · advanced'],
-     cmds:[['/理清范围','把一句话目标拆成范围、非目标、责任人与验收门禁'],['/交付复盘','汇总各角色证据与残余风险，给出关闭或升级建议']],
+     cmds:[['帮我把这个目标拆成范围、非目标和验收门禁','闭合范围，明确谁负责、做到什么算完'],
+           ['这次交付复盘一下，还有哪些残余风险','汇总各角色证据，给出关闭或升级建议']],
      steps:['闭合范围与验收条件','分派有边界的角色任务','编排依赖顺序与集成门禁','汇总证据与残余风险','给出关闭或升级建议'],
      cons:['不得用协调判断替代专业证据','不得授予资格或权限','未解决的重大范围冲突必须升级']},
     {id:'software-product-manager',k:'pm',name:'软件产品经理',role:'产品经理',by:'Lingee 内置',
      desc:'把用户目标翻译成有优先级、可观察的需求与验收条件。',
      tags:['需求分析','验收设计'],modes:['分析','设计','评审'],
      comp:['product.requirements · principal','product.acceptance-design · advanced'],
-     cmds:[['/需求拆解','把目标整理成有范围的验收条件清单'],['/验收标准','为已有需求补齐可观察的验收条件'],['/非目标','明确本次不做什么，防止范围蔓延']],
+     cmds:[['把这个需求拆成一份带验收条件的清单','把目标整理成有范围、可验收的需求'],
+           ['帮我给这些需求补齐验收标准','补上可观察、可验证的验收条件'],
+           ['这次哪些事不做？帮我列一下非目标','明确边界，防止范围蔓延']],
      steps:['识别用户与期望结果','梳理现状与目标流程','排定需求优先级与非目标','编写可观察的验收条件','消解或升级重大歧义'],
      cons:['不得虚构客户批准','不得把代码结构写成业务需求','不授予发布权限'],out:'docs/requirements.md'},
     {id:'software-architect',k:'arch',name:'软件架构师',role:'软件架构师',by:'Lingee 内置',
      desc:'设计可演进的系统边界、合同、数据流与失败处理，产出架构文档与可执行的实现计划。',
      tags:['软件架构','可靠性'],modes:['分析','设计','集成','评审','恢复'],
      comp:['architecture.system-design · principal','architecture.reliability · advanced'],
-     cmds:[['/架构设计','从需求产出边界、合同、失败处理与迁移方案'],['/技术选型','按质量属性评估备选方案并记录取舍'],['/实现计划','拆出带可执行验证命令的编码任务图']],
+     cmds:[['帮我设计这个系统的边界、合同和失败处理','从需求产出可演进的架构方案与迁移路径'],
+           ['这几个方案怎么选？帮我做技术选型','按质量属性评估备选方案并记录取舍'],
+           ['把架构拆成可以直接开工的实现计划','产出带可执行验证命令的编码任务图']],
      steps:['建模边界与数据归属','按质量属性评估备选方案','定义合同、失败行为与迁移','记录决策与被否决方案','指定架构验证场景'],
      cons:['采用满足实测需求的最小架构','每条实现验证必须是可执行命令，拒绝人工目视检查','验证命令需在 macOS 与 Linux 上可移植'],
      out:'docs/architecture.md · docs/implementation-plan.json'},
@@ -3873,84 +3878,99 @@ const billTemplateWithTokens = billTemplate.replace(
      tags:['软件实现','系统集成'],modes:['分析','设计','实现','集成','验证','恢复'],
      comp:['engineering.implementation · advanced','engineering.integration · advanced'],
      skills:['app-build','standalone-build','site-builder'],
-     cmds:[['/实现','按验收条件完成最小完整变更并跑通验证'],['/修缺陷','复现、定位、修复并补回归测试'],['/一次性交付','小型单页应用一次写完全部代码 + build 验证']],
+     cmds:[['按这份验收条件把功能实现出来','完成最小完整变更并跑通验证'],
+           ['这个 bug 帮我复现并修掉','定位根因、修复并补回归测试'],
+           ['做一个单页小工具，一次写完','小应用一次性写完全部代码 + build 验证']],
      steps:['复现或确立当前行为','阅读受影响的合同与调用点','实现最小完整的源码变更','同步更新测试与生成物','运行聚焦与包级验证'],
      cons:['只修改已授权范围','不得绕过失败的检查','不得声称拥有部署或 Runner 权限']},
     {id:'software-qa-engineer',k:'qa',name:'软件测试工程师',role:'质量工程师',by:'Lingee 内置',
      desc:'独立验证验收行为、回归影响与交付风险，给出基于证据的质量结论。',
      tags:['质量保障','独立验证'],modes:['分析','设计','评审','验证'],
      comp:['quality.verification · principal','quality.regression-analysis · advanced'],
-     cmds:[['/验证计划','按风险模型设计验收与回归场景'],['/端到端验证','实际跑 build、请求与用例并留存证据'],['/质量结论','给出 pass / pass-with-risk / fail 与理由']],
+     cmds:[['这次改动要测哪些场景？帮我出验证计划','按风险模型设计验收与回归场景'],
+           ['帮我端到端跑一遍，看看能不能过','实际跑 build、请求与用例并留存证据'],
+           ['这个版本能发吗？给个质量结论','给出 pass / pass-with-risk / fail 与理由']],
      steps:['梳理变更影响与质量风险','设计验收与回归场景','执行授权范围内最强的检查','复现并分级缺陷','给出基于证据的质量结论'],
      cons:['与实现方声明保持独立','不得执行破坏性或未批准的压测','不授予发布权限']},
     {id:'code-reviewer',k:'cr',name:'代码评审专家',role:'实现代码评审',by:'Lingee 内置',ro:true,
      desc:'独立评审实现代码的正确性、并发安全与合同落实情况，只读不改。',
      tags:['只读评审','正确性'],modes:['评审','验证'],
      comp:['implementation-correctness · principal','concurrent-commit-model · principal'],
-     cmds:[['/代码评审','把合同义务追溯到代码路径，报告可复现的缺陷']],
+     cmds:[['帮我评审这段代码有没有正确性问题','把合同义务追溯到代码路径，报告可复现的缺陷']],
      steps:['把合同义务追溯到具体代码路径与可观察结果','检查规范化、声明、失败清理与并发测试','以可复现的判定标准报告实现缺陷'],
      cons:['不得修改实现或其测试','不得把注释或名义类型当作行为证明']},
     {id:'security-reviewer',k:'sec',name:'安全评审专家',role:'应用安全评审',by:'Lingee 内置',ro:true,
      desc:'基于信任边界建立威胁模型，演练滥用、竞态与绕过场景并给出风险判定。',
      tags:['只读评审','威胁建模'],modes:['评审','验证'],
      comp:['application-security · principal','filesystem-safety · advanced'],
-     cmds:[['/安全评审','建威胁模型、演练滥用场景、给出风险是否可接受']],
+     cmds:[['这个功能有安全风险吗？帮我做威胁建模','演练滥用与绕过场景，判断风险是否可接受']],
      steps:['基于信任边界建立威胁模型','演练滥用、竞态、部分失败与绕过场景','对安全发现分级并判断风险模型是否可接受'],
      cons:['不得修改被评审产物或直接修复','不得接受无证据的原子性与竞态安全保证']},
     {id:'read-only-analyst',k:'ana',name:'只读分析专家',role:'软件分析',by:'Lingee 内置',ro:true,
      desc:'在不改动工作区的前提下做有边界的源码分析与结论交叉验证。',
      tags:['只读分析'],modes:['分析','评审','验证'],
      comp:['software.analysis · advanced'],
-     cmds:[['/读代码','有边界地读源码并给出结论与证据']],
+     cmds:[['帮我读一下这块代码是怎么跑的','有边界地读源码，给出结论与证据，不改文件']],
      steps:['检视有边界的源码与合同','用直接证据交叉验证发现','在不改动工作区的前提下给出结论'],
      cons:['不得修改文件','不得执行有副作用的命令']},
     {id:'frontend-engineer',k:'fe',name:'前端工程专家',role:'前端工程师',by:'金蝶官方',
      desc:'金蝶前端规范下的组件实现、响应式布局与交互调试。',
      tags:['React','响应式','组件库'],modes:['设计','实现','验证'],
      comp:['engineering.frontend · advanced'],skills:['kd-frontend-development','frontend-design'],
-     cmds:[['/建页面','按设计稿实现响应式页面'],['/组件','产出符合规范的可复用组件'],['/样式对齐','把实现调到与设计稿一致']],
+     cmds:[['按这张设计稿把页面实现出来','实现响应式页面与交互'],
+           ['帮我抽一个可复用的组件','产出符合金蝶前端规范的组件'],
+           ['页面和设计稿对不上，帮我调一下','把实现调到与设计稿一致']],
      steps:['确认设计稿与交互规范','实现组件与布局','处理多端与暗色适配','补组件测试'],
      cons:['遵循金蝶前端规范','不得引入未评估的第三方依赖']},
     {id:'ux-designer',k:'ux',name:'界面设计专家',role:'交互 / 视觉设计',by:'金蝶官方',
      desc:'信息架构、交互流程与视觉规范，产出可直接交付前端的设计说明。',
      tags:['交互设计','视觉规范'],modes:['分析','设计','评审'],
      comp:['design.interaction · advanced'],skills:['kingdee-design','frontend-design'],
-     cmds:[['/设计简报','对齐业务目标、用户需求与设计策略'],['/信息架构','梳理导航、层级与页面骨架'],['/设计走查','对已实现页面做规范与可用性检查']],
+     cmds:[['这个功能该怎么设计？先对齐一下目标','产出设计简报，对齐业务目标与设计策略'],
+           ['帮我梳理这个模块的信息架构','理清导航、层级与页面骨架'],
+           ['帮我走查一下这个页面','对已实现页面做规范与可用性检查']],
      steps:['澄清目标用户与场景','梳理信息架构与主流程','产出交互与视觉规范','走查实现一致性'],
      cons:['设计说明必须可被前端直接实现','不得规定与设计系统冲突的样式']},
     {id:'cosmic-form',k:'form',name:'苍穹表单专家',role:'苍穹表单',by:'金蝶官方',
      desc:'KDDP 表单引擎的字段、校验、联动与权限配置。',
      tags:['表单设计','字段校验'],modes:['分析','设计','实现'],
      comp:['cosmic.form-design · advanced'],skills:['cosmic-requirements-spec'],
-     cmds:[['/建单据','根据业务需求设计苍穹表单结构'],['/字段联动','配置校验规则与字段联动逻辑'],['/权限配置','设置单据与字段级权限']],
+     cmds:[['帮我建一张这个业务的苍穹单据','设计表单结构与字段'],
+           ['这几个字段要联动，帮我配一下','配置校验规则与字段联动逻辑'],
+           ['这张单据的权限怎么配？','设置单据与字段级权限']],
      steps:['梳理单据业务规则','设计表单结构与字段','配置校验与联动','映射数据模型'],
      cons:['遵循苍穹元数据规范','不得绕过标准扩展点直接改内核']},
     {id:'cosmic-workflow',k:'flow',name:'苍穹工作流专家',role:'苍穹工作流',by:'金蝶官方',
      desc:'审批链配置与流程调试，处理加签、会签、条件流转等复杂场景。',
      tags:['审批链','流程调试'],modes:['分析','设计','实现','验证'],
      comp:['cosmic.workflow · advanced'],
-     cmds:[['/配流程','梳理审批流程并配置工作流'],['/调流转','排查节点为什么不流转']],
+     cmds:[['帮我设计一个请假申请的苍穹审批流程','梳理审批场景并配置工作流'],
+           ['我的审批流节点卡住了，帮我排查','定位节点为什么不流转']],
      steps:['梳理审批场景与角色','配置流程节点与条件','调试流转与异常分支','验证端到端审批'],
      cons:['流程变更需保留可回滚配置']},
     {id:'cosmic-report',k:'rpt',name:'苍穹报表专家',role:'苍穹报表',by:'金蝶官方',
      desc:'报表建模、取数逻辑与图表配置，兼顾查询性能与交互式分析。',
      tags:['报表建模','取数逻辑'],modes:['分析','设计','实现'],
      comp:['cosmic.report · advanced'],
-     cmds:[['/建报表','设计报表数据模型与取数逻辑'],['/调性能','优化报表取数与查询性能']],
+     cmds:[['帮我做一张这个口径的报表','设计报表数据模型与取数逻辑'],
+           ['报表查得太慢了，帮我优化','优化取数与查询性能']],
      steps:['明确分析口径','设计数据模型与取数','配置图表与交互','优化查询性能'],
      cons:['取数口径需与业务确认后固化']},
     {id:'cosmic-plugin',k:'plug',name:'苍穹二开插件专家',role:'苍穹二开',by:'金蝶官方',
      desc:'基于扩展点开发二开插件，处理注册、生命周期调试与升级兼容。',
      tags:['插件开发','扩展点'],modes:['设计','实现','验证','恢复'],
      comp:['cosmic.plugin · advanced'],skills:['cosmic-reverse-engineering'],
-     cmds:[['/写插件','基于扩展点开发插件'],['/查不生效','排查插件注册后不生效的原因']],
+     cmds:[['帮我基于扩展点写一个二开插件','定位扩展点并实现插件逻辑'],
+           ['插件注册了但不生效，帮我看看','排查注册与生命周期问题']],
      steps:['定位合适的扩展点','实现插件逻辑','注册并调试生命周期','验证升级兼容'],
      cons:['不得修改标准产品内核','插件必须可独立卸载']},
     {id:'cosmic-api',k:'api',name:'苍穹集成接口专家',role:'苍穹集成',by:'金蝶官方',
      desc:'开放接口对接、鉴权配置与数据同步，含异常重试与幂等设计。',
      tags:['接口对接','鉴权'],modes:['设计','实现','集成','验证'],
      comp:['cosmic.integration · advanced'],
-     cmds:[['/对接接口','对接苍穹开放接口与第三方系统'],['/配鉴权','配置接口鉴权与安全策略'],['/数据同步','设计同步任务与异常重试']],
+     cmds:[['帮我对接这个苍穹开放接口','确认契约与鉴权方式并实现对接'],
+           ['接口鉴权怎么配？','配置鉴权与安全策略'],
+           ['两边数据要同步，帮我设计方案','设计幂等同步任务与异常重试']],
      steps:['确认接口契约与鉴权方式','实现对接与错误处理','设计幂等与重试','联调验证'],
      cons:['凭据不得硬编码','同步必须幂等可重放']}
   ];
@@ -4180,8 +4200,12 @@ const billTemplateWithTokens = billTemplate.replace(
     function list(title,arr){ return (arr&&arr.length)?'<div class="x-sec"><div class="x-sec-t">'+title+'</div><ul class="x-ul">'
       +arr.map(function(v){return '<li>'+xesc(v)+'</li>'}).join('')+'</ul></div>':''; }
     $('#expertModalBody').innerHTML='<div class="x-sec x-desc">'+xesc(e.desc)+'</div>'
-      +'<div class="x-sec"><div class="x-sec-t">快捷命令 '+e.cmds.length+'</div>'
-      +e.cmds.map(function(c){return '<button type="button" class="x-cmd" data-cmd="'+xesc(c[0])+'"><code>'+xesc(c[0])+'</code><span>'+xesc(c[1])+'</span></button>'}).join('')+'</div>'
+      +(e.cmds.length?'<div class="x-sec"><div class="x-sec-t">常见触发词</div>'
+      +e.cmds.map(function(c){return '<button type="button" class="x-cmd" data-cmd="'+xesc(c[0])+'">'
+        +'<span class="x-cmd-b"><span class="x-cmd-q">“'+xesc(c[0])+'”</span>'
+        +(c[1]?'<span class="x-cmd-d">'+xesc(c[1])+'</span>':'')+'</span>'
+        +'<svg class="x-cmd-go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H7l-4 3v-6.5A8 8 0 0 1 11 4h2a8 8 0 0 1 8 8z"/></svg>'
+        +'</button>'}).join('')+'</div>':'')
       +(e.skills?'<div class="x-sec"><div class="x-sec-t">挂载技能</div><div class="x-chips">'+e.skills.map(function(k){return '<span class="ptag">'+xesc(k)+'</span>'}).join('')+'</div></div>':'')
       +'<div class="x-sec"><div class="x-sec-t">能力项</div><div class="x-chips">'+e.comp.map(function(c){return '<span class="ptag">'+xesc(c)+'</span>'}).join('')+'</div></div>'
       +'<div class="x-sec"><div class="x-sec-t">可承担的工作</div><div class="x-chips">'+e.modes.map(function(m){return '<span class="ptag">'+xesc(m)+'</span>'}).join('')+'</div></div>'
@@ -4215,7 +4239,7 @@ const billTemplateWithTokens = billTemplate.replace(
     if(c){
       expertModal.classList.remove('show');
       showView('newtask'); setNavActive('新会话');
-      input.textContent=c.getAttribute('data-cmd')+' '; input.focus();
+      input.textContent=c.getAttribute('data-cmd'); input.focus();
       try{
         var r=document.createRange(); r.selectNodeContents(input); r.collapse(false);
         var sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
@@ -4301,8 +4325,8 @@ const billTemplateWithTokens = billTemplate.replace(
       return '<button type="button" class="x-mode-opt'+(d.modes.indexOf(m)>=0?' on':'')+'" data-xe-mode="'+m+'">'+m+'</button>';
     }).join('');
     $('#xeCmds').innerHTML=d.cmds.map(function(c,i){
-      return '<div class="x-cmd-row"><input type="text" class="x-cmd-k" data-xe-cmd="'+i+'" data-f="0" value="'+xesc(c[0])+'" placeholder="/命令" autocomplete="off">'
-        +'<input type="text" class="x-cmd-v" data-xe-cmd="'+i+'" data-f="1" value="'+xesc(c[1])+'" placeholder="这条命令让他做什么" autocomplete="off">'
+      return '<div class="x-cmd-row"><input type="text" class="x-cmd-k" data-xe-cmd="'+i+'" data-f="0" value="'+xesc(c[0])+'" placeholder="用户会怎么说，例如：帮我设计一个请假审批流程" autocomplete="off">'
+        +'<input type="text" class="x-cmd-v" data-xe-cmd="'+i+'" data-f="1" value="'+xesc(c[1])+'" placeholder="说明（可留空）" autocomplete="off">'
         +'<button type="button" class="x-ic x-ic-dg" data-xe-rmcmd="'+i+'" title="删除">✕</button></div>';
     }).join('');
   }
