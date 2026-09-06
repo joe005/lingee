@@ -2508,11 +2508,17 @@ const billTemplateWithTokens = billTemplate.replace(
       appDd.classList.add('error');
       return;
     }
+    var autoPicked=false;
+    if(!pickValid()){
+      var am=autoMatch(t);
+      if(am){ activePick=am; renderExpertChips(); autoPicked=true; }
+    }
     showView('chat');
     $('#chatTitle').textContent='采购订单管理应用开发';
     var empty=$('#chatEmpty');
     if(empty) empty.remove();
     appendUserMessage(t);
+    if(autoPicked) appendAutoNote();
     input.innerHTML=''; refreshSend();
     var responseEl=appendAssistantMessage();
     simulateAIResponse(responseEl);
@@ -4031,7 +4037,7 @@ const billTemplateWithTokens = billTemplate.replace(
     if(activePick.kind==='expert') return !!EX[activePick.id];
     return false;
   }
-  function clearPick(){ activePick={kind:null,id:''}; }
+  function clearPick(){ activePick={kind:null,id:'',auto:false}; }
 
   function loadTeams(){
     var raw=null;
@@ -4227,7 +4233,7 @@ const billTemplateWithTokens = billTemplate.replace(
     if(dl){ deleteMyExpert(dl.getAttribute('data-x-del')); return; }
     var cl=e.target.closest('[data-x-call]');
     if(cl){
-      activePick={kind:'expert',id:cl.getAttribute('data-x-call')};
+      activePick={kind:'expert',id:cl.getAttribute('data-x-call'),auto:false};
       expertModal.classList.remove('show');
       renderExpertChips();
       showView('newtask'); setNavActive('新会话');
@@ -4246,6 +4252,66 @@ const billTemplateWithTokens = billTemplate.replace(
       }catch(err){}
     }
   });
+
+  /* ---------- 没选专家时的自动匹配 ---------- */
+  /* 专家团不是必选的：不选就由系统按开发模式 + 任务描述挑一个，并在会话里说明挑了谁 */
+  var MODE_MATCH={
+    '苍穹应用':{kind:'team',id:'cosmic-team'},
+    '原型探索':{kind:'expert',id:'ux-designer'},
+    '通用应用':{kind:'team',id:'fast-app'},
+    '业务组件':{kind:'expert',id:'software-engineer'},
+    '技能开发':{kind:'expert',id:'software-engineer'},
+    '智能体开发':{kind:'expert',id:'software-engineer'}
+  };
+  /* 关键词 → 专家。命中多个领域时升级成专家团 */
+  var KW_MATCH=[
+    {id:'cosmic-workflow', kw:['工作流','审批','流转','加签','会签','流程节点']},
+    {id:'cosmic-form',     kw:['表单','单据','字段','校验','联动']},
+    {id:'cosmic-report',   kw:['报表','取数','图表','口径']},
+    {id:'cosmic-plugin',   kw:['插件','扩展点','二开']},
+    {id:'cosmic-api',      kw:['接口','对接','鉴权','同步','集成']},
+    {id:'frontend-engineer',kw:['页面','前端','样式','组件','响应式','布局']},
+    {id:'ux-designer',     kw:['设计','交互','原型','信息架构','视觉']},
+    {id:'software-qa-engineer',kw:['测试','验证','回归','用例']},
+    {id:'security-reviewer',kw:['安全','漏洞','越权','威胁']},
+    {id:'code-reviewer',   kw:['评审','review','代码质量']},
+    {id:'software-architect',kw:['架构','选型','边界','技术方案']},
+    {id:'software-product-manager',kw:['需求','验收','范围','非目标']}
+  ];
+  function autoMatch(text){
+    var t=String(text||'');
+    var hits=KW_MATCH.filter(function(r){
+      return r.kw.some(function(k){ return t.toLowerCase().indexOf(k.toLowerCase())>=0; });
+    }).filter(function(r){ return !!EX[r.id]; });
+
+    /* 跨了两个以上领域，一个人扛不住，上专家团 */
+    if(hits.length>=2){
+      var cosmic=hits.filter(function(r){ return r.id.indexOf('cosmic-')===0; }).length;
+      var pick=cosmic>=2?'cosmic-team':'software-company';
+      if(teamById(pick)) return {kind:'team',id:pick,auto:true};
+    }
+    if(hits.length===1) return {kind:'expert',id:hits[0].id,auto:true};
+
+    var modeEl=$('.mode-item.checked'), m=modeEl?MODE_MATCH[modeEl.getAttribute('data-val')]:null;
+    if(m && ((m.kind==='team'&&teamById(m.id))||(m.kind==='expert'&&EX[m.id])))
+      return {kind:m.kind,id:m.id,auto:true};
+
+    return teamById('software-company')?{kind:'team',id:'software-company',auto:true}:null;
+  }
+  function appendAutoNote(){
+    if(!messagesList||!activePick.auto||!pickValid()) return;
+    var isTeam=activePick.kind==='team';
+    var av=isTeam
+      ? teamById(activePick.id).members.slice(0,3).map(function(i){return '<img src="'+xav(EX[i].k)+'" alt="">'}).join('')
+      : '<img src="'+xav(EX[activePick.id].k)+'" alt="">';
+    var why=isTeam?'这次要跨多个环节，交给一个专家团':'按你描述的内容匹配到这位专家';
+    var note=document.createElement('div');
+    note.className='auto-note';
+    note.innerHTML='<span class="auto-note-av">'+av+'</span>'
+      +'<span class="auto-note-b">你没有指定专家，已自动匹配 <b>'+xesc(pickName())+'</b>'
+      +'<i>'+why+'。想换人，点下方输入框左侧的专家按钮。</i></span>';
+    messagesList.appendChild(note);
+  }
 
   /* ---------- 创建 / 编辑我的专家 ---------- */
   /* 两条路：手填这张表单，或者一句话交给 expert-manager 在对话里建（同 WorkBuddy） */
@@ -4640,13 +4706,13 @@ const billTemplateWithTokens = billTemplate.replace(
       if(n=ev.target.closest('[data-pick-team]')){
         var tid=n.getAttribute('data-pick-team');
         if(activePick.kind==='team'&&activePick.id===tid) clearPick();   /* 再点一次取消 */
-        else activePick={kind:'team',id:tid};
+        else activePick={kind:'team',id:tid,auto:false};
         saveTeams(); renderExpertChips(); dd.classList.remove('open'); return;
       }
       if(n=ev.target.closest('[data-pick-expert]')){
         var eid=n.getAttribute('data-pick-expert');
         if(activePick.kind==='expert'&&activePick.id===eid) clearPick();
-        else activePick={kind:'expert',id:eid};
+        else activePick={kind:'expert',id:eid,auto:false};
         saveTeams(); renderExpertChips(); dd.classList.remove('open'); return;
       }
       if(ev.target.closest('[data-goto-experts]')){
