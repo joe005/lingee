@@ -3993,31 +3993,35 @@ const billTemplateWithTokens = billTemplate.replace(
   var AV_KEYS=['lead','pm','arch','eng','qa','cr','sec','ana','fe','ux','form','flow','rpt','plug','api'];
   var WORK_MODES=['分析','设计','实现','集成','评审','验证','恢复'];
 
-  var TEAM_LEVELS=[
-    {id:'lightweight',name:'快速',desc:'直接实现 + 自检，省掉评审与独立 QA。小页面、小工具用这个。'},
-    {id:'standard',name:'标准',desc:'需求 → 设计 → 编码准入评审 → 实现 → 测试 → 集成。默认。'},
-    {id:'product',name:'产品级',desc:'标准流程 + 强制安全评审，评审与 QA 不可省略。'}
-  ];
-  var VALID_LEVELS=TEAM_LEVELS.map(function(l){return l.id});
-  function levelName(id){ for(var i=0;i<TEAM_LEVELS.length;i++) if(TEAM_LEVELS[i].id===id) return TEAM_LEVELS[i].name; return id; }
-
   var PRESET_TEAMS=[
     {id:'software-company',preset:true,name:'软件开发团队',by:'Lingee 内置',
      desc:'跨职能软件产品交付团队，覆盖需求、架构、实现、质量与集成的完整闭环。也是新建任务时的默认选择。',
-     level:'standard',leadId:'software-team-lead',
-     members:['software-team-lead','software-product-manager','software-architect','software-engineer','software-qa-engineer']},
+     leadId:'software-team-lead',
+     members:['software-team-lead','software-product-manager','software-architect','software-engineer','software-qa-engineer'],
+     cmds:[['帮我把这个想法做成一个能上线的功能','从需求到验收走完整闭环'],
+           ['这个模块要重做，帮我走一遍完整流程','需求、架构、实现、测试、集成逐环节推进'],
+           ['需求还没理清，先帮我拆一版方案再动手','先出需求与实现计划，评审通过再编码']]},
     {id:'fast-app',preset:true,name:'应用速成小队',by:'Lingee 内置',
      desc:'工程师一次性写完全部代码，QA 端到端验证。适合单页应用、小游戏、原型页这类一次交付的活。',
-     level:'lightweight',leadId:'software-engineer',
-     members:['software-engineer','software-qa-engineer']},
+     leadId:'software-engineer',
+     members:['software-engineer','software-qa-engineer'],
+     cmds:[['做一个单页小工具，今天就要用','一次性写完代码并跑通 build'],
+           ['帮我快速搭个原型页看看效果','省掉评审环节，直接实现 + 自检'],
+           ['写个小游戏练手','小体量一次交付']]},
     {id:'cosmic-team',preset:true,name:'苍穹交付团队',by:'金蝶官方',
      desc:'面向苍穹配置化交付：需求规格 → 表单与流程配置 → 报表 → 二开插件 → 接口集成。',
-     level:'standard',leadId:'software-team-lead',
-     members:['software-team-lead','software-product-manager','cosmic-form','cosmic-workflow','cosmic-report','cosmic-api']},
+     leadId:'software-team-lead',
+     members:['software-team-lead','software-product-manager','cosmic-form','cosmic-workflow','cosmic-report','cosmic-api'],
+     cmds:[['帮我在苍穹上做一套请假申请，从单据到审批','表单、流程、报表、接口一条龙配下来'],
+           ['这个业务要在苍穹落地，帮我出方案','先出需求规格，再分头配置'],
+           ['苍穹这块单据和流程都要改，帮我排一下','按依赖顺序编排配置任务']]},
     {id:'web-team',preset:true,name:'网页交付小队',by:'金蝶官方',
      desc:'设计与前端配对交付：信息架构与视觉规范先行，前端按规范实现并做设计走查。',
-     level:'standard',leadId:'ux-designer',
-     members:['ux-designer','frontend-engineer','software-qa-engineer']}
+     leadId:'ux-designer',
+     members:['ux-designer','frontend-engineer','software-qa-engineer'],
+     cmds:[['帮我做一个官网首页，设计和前端都要','先出设计规范，再按规范实现'],
+           ['这几个页面要重新设计并实现','信息架构先行，前端跟进，最后走查'],
+           ['按这份设计稿把页面实现出来并走查一遍','实现 + 设计一致性检查']]}
   ];
 
   /* ---------- 持久化：只存自建专家团与当前选择 ----------
@@ -4068,8 +4072,8 @@ const billTemplateWithTokens = billTemplate.replace(
         &&Array.isArray(t.members)&&t.members.every(function(m){return !!EX[m]});
     }).map(function(t){
       return {id:t.id,preset:false,name:t.name,by:t.by||'我创建的',desc:t.desc||'',
-        level:VALID_LEVELS.indexOf(t.level)>=0?t.level:'standard',
-        leadId:EX[t.leadId]?t.leadId:(t.members[0]||null),members:t.members.slice()};
+        leadId:EX[t.leadId]?t.leadId:(t.members[0]||null),members:t.members.slice(),
+        cmds:(Array.isArray(t.cmds)?t.cmds:[]).filter(function(c){return Array.isArray(c)&&c[0]})};
     });
     TEAMS=PRESET_TEAMS.slice().concat(valid);
   }
@@ -4087,41 +4091,39 @@ const billTemplateWithTokens = billTemplate.replace(
   }
   function teamById(id){ for(var i=0;i<TEAMS.length;i++) if(TEAMS[i].id===id) return TEAMS[i]; return null; }
 
-  /* ---------- 编排推导：成员 + 交付强度 → 任务 DAG ---------- */
+  /* ---------- 编排推导：成员 → 任务 DAG ----------
+     不再有交付强度这个旋钮：团里有谁，流程里就有哪一步。
+     实现环节始终保留——没人能领时显式标红，这是要暴露的问题，不是可以省掉的步骤。 */
   function teamFlow(t){
     function any(){ for(var i=0;i<arguments.length;i++) if(t.members.indexOf(arguments[i])>=0) return arguments[i]; return null; }
-    function byMode(m){ for(var i=0;i<t.members.length;i++){ var e=EX[t.members[i]]; if(e&&e.modes.indexOf(m)>=0) return t.members[i]; } return null; }
-    var f=[];
-    if(t.level==='lightweight'){
-      f.push({k:'implement',title:'一次性实现',who:any('software-engineer','frontend-engineer','cosmic-form','cosmic-plugin')||byMode('实现')});
-      if(byMode('验证')) f.push({k:'test',title:'自检验证',who:any('software-qa-engineer')||byMode('验证')});
-      return f;
-    }
-    if(t.members.length>1) f.push({k:'analyze',title:'协调范围与门禁',who:any('software-team-lead')});
-    f.push({k:'analyze',title:'分析需求与验收',who:any('software-product-manager','software-team-lead')});
-    f.push({k:'design',title:'设计方案与实现计划',who:any('software-architect','ux-designer')});
-    f.push({k:'review',title:'编码准入评审',who:any('software-team-lead','code-reviewer','read-only-analyst')});
-    f.push({k:'implement',title:'实现编码任务',who:any('software-engineer','frontend-engineer','cosmic-form','cosmic-plugin','cosmic-workflow','cosmic-api')||byMode('实现')});
-    if(t.level==='product') f.push({k:'review',title:'安全评审',who:any('security-reviewer','code-reviewer')});
-    f.push({k:'test',title:'独立质量验证',who:any('software-qa-engineer')});
-    f.push({k:'integrate',title:'集成与交付确认',who:any('software-team-lead','software-architect')});
+    function byMode(m,skip){ for(var i=0;i<t.members.length;i++){ if(t.members[i]===skip) continue; var e=EX[t.members[i]]; if(e&&e.modes.indexOf(m)>=0) return t.members[i]; } return null; }
+    var f=[], multi=t.members.length>1;
+    var lead=any('software-team-lead');
+    if(multi && lead) f.push({k:'analyze',title:'协调范围与门禁',who:lead});
+    var pm=any('software-product-manager');
+    if(pm) f.push({k:'analyze',title:'分析需求与验收',who:pm});
+    var des=any('software-architect','ux-designer');
+    if(des) f.push({k:'design',title:'设计方案与实现计划',who:des});
+    var rev=any('code-reviewer','read-only-analyst');
+    if(rev) f.push({k:'review',title:'编码准入评审',who:rev});
+    f.push({k:'implement',title:'实现编码任务',
+      who:any('software-engineer','frontend-engineer','cosmic-form','cosmic-workflow','cosmic-report','cosmic-plugin','cosmic-api')||byMode('实现')});
+    var sec=any('security-reviewer');
+    if(sec) f.push({k:'review',title:'安全评审',who:sec});
+    var qa=any('software-qa-engineer')||byMode('验证',lead);
+    if(qa) f.push({k:'test',title:'质量验证',who:qa});
+    var itg=lead||any('software-architect')||byMode('集成');
+    if(multi && itg) f.push({k:'integrate',title:'集成与交付确认',who:itg});
     return f;
   }
   function teamLint(t){
-    var w=[],has=function(id){return t.members.indexOf(id)>=0};
-    if(t.members.length>1 && !has('software-team-lead') && t.level!=='lightweight')
-      w.push('多人协作需要一位「软件团队负责人」开 kickoff 并做最终集成确认。');
-    if(t.level!=='lightweight' && !has('software-product-manager'))
-      w.push('标准 / 产品级要求恰好一个需求分析任务，建议加入「软件产品经理」。');
-    if(t.level!=='lightweight' && !has('software-architect') && !has('ux-designer'))
-      w.push('标准以上交付的 design 环节无人承担，需加入「软件架构师」或「界面设计专家」。');
+    var w=[];
     var canImpl=false;
     t.members.forEach(function(id){ if(EX[id]&&EX[id].modes.indexOf('实现')>=0) canImpl=true; });
     if(!canImpl) w.push('没有成员具备「实现」工作模式，实现任务无人可领取。');
-    if(t.level!=='lightweight' && !has('software-qa-engineer'))
-      w.push('评审与 QA 是标准以上交付的强制门禁，缺少「软件测试工程师」会让验证环节落空。');
-    if(t.level==='product' && !has('security-reviewer'))
-      w.push('产品级建议加入「安全评审专家」，否则安全门禁由代码评审代管。');
+    var canVerify=false;
+    t.members.forEach(function(id){ if(EX[id]&&EX[id].modes.indexOf('验证')>=0) canVerify=true; });
+    if(!canVerify) w.push('没有成员具备「验证」工作模式，产出不会被检查，建议加入「软件测试工程师」。');
     return w;
   }
 
@@ -4142,13 +4144,14 @@ const billTemplateWithTokens = billTemplate.replace(
       });
       html=rows.map(function(t){
         return '<div class="app-card x-card" data-team="'+t.id+'">'
+          +'<button type="button" class="x-call" data-call-team="'+t.id+'" title="召唤这个专家团">召唤</button>'
           +'<div class="card-top">'+facesHtml(t.members,4)
           +'<div class="card-titles"><div class="card-title-row"><span class="card-title">'+xesc(t.name)+'</span>'
           +(t.preset?'<span class="x-badge">内置</span>':'')+'</div>'
           +'<div class="x-sub">'+xesc(t.by)+' · '+t.members.length+' 位专家</div></div></div>'
           +'<div class="card-desc">'+xesc(t.desc)+'</div>'
-          +'<div class="card-tags"><span class="ptag">'+levelName(t.level)+'交付</span>'
-          +t.members.slice(0,2).map(function(m){return '<span class="ptag">'+EX[m].role+'</span>'}).join('')+'</div></div>';
+          +'<div class="card-tags">'
+          +t.members.slice(0,3).map(function(m){return '<span class="ptag">'+EX[m].role+'</span>'}).join('')+'</div></div>';
       }).join('');
     }else{
       var rows2=EXPERTS.filter(function(e){
@@ -4157,6 +4160,7 @@ const billTemplateWithTokens = billTemplate.replace(
       });
       html=rows2.map(function(e){
         return '<div class="app-card x-card" data-expert="'+e.id+'">'
+          +'<button type="button" class="x-call" data-call-expert="'+e.id+'" title="召唤这位专家">召唤</button>'
           +'<div class="card-top"><img class="x-av" src="'+xav(e.k)+'" alt="">'
           +'<div class="card-titles"><div class="card-title-row"><span class="card-title">'+xesc(e.name)+'</span>'
           +(e.ro?'<span class="x-badge x-badge-ro">只读</span>':'')
@@ -4189,6 +4193,10 @@ const billTemplateWithTokens = billTemplate.replace(
   var expertSearchInput=$('#expertSearchInput');
   if(expertSearchInput) expertSearchInput.addEventListener('input',function(){ expertKw=this.value; renderExpertGrid(); });
   if(expertGrid) expertGrid.addEventListener('click',function(e){
+    var ct=e.target.closest('[data-call-team]');
+    if(ct){ summon('team',ct.getAttribute('data-call-team')); return; }
+    var ce=e.target.closest('[data-call-expert]');
+    if(ce){ summon('expert',ce.getAttribute('data-call-expert')); return; }
     if(e.target.closest('[data-new-team]')){ openTeamModal(null); return; }
     if(e.target.closest('[data-new-expert]')){ openExpertEditor(null); return; }
     var tc=e.target.closest('[data-team]'); if(tc){ openTeamModal(tc.getAttribute('data-team')); return; }
@@ -4207,7 +4215,7 @@ const billTemplateWithTokens = billTemplate.replace(
       +arr.map(function(v){return '<li>'+xesc(v)+'</li>'}).join('')+'</ul></div>':''; }
     $('#expertModalBody').innerHTML='<div class="x-sec x-desc">'+xesc(e.desc)+'</div>'
       +(e.cmds.length?'<div class="x-sec"><div class="x-sec-t">常见触发词</div>'
-      +e.cmds.map(function(c){return '<button type="button" class="x-cmd" data-cmd="'+xesc(c[0])+'">'
+      +e.cmds.map(function(c){return '<button type="button" class="x-cmd" data-cmd="'+xesc(c[0])+'" data-cmd-of="'+e.id+'">'
         +'<span class="x-cmd-b"><span class="x-cmd-q">“'+xesc(c[0])+'”</span>'
         +(c[1]?'<span class="x-cmd-d">'+xesc(c[1])+'</span>':'')+'</span>'
         +'<svg class="x-cmd-go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H7l-4 3v-6.5A8 8 0 0 1 11 4h2a8 8 0 0 1 8 8z"/></svg>'
@@ -4233,23 +4241,15 @@ const billTemplateWithTokens = billTemplate.replace(
     if(dl){ deleteMyExpert(dl.getAttribute('data-x-del')); return; }
     var cl=e.target.closest('[data-x-call]');
     if(cl){
-      activePick={kind:'expert',id:cl.getAttribute('data-x-call'),auto:false};
       expertModal.classList.remove('show');
-      renderExpertChips();
-      showView('newtask'); setNavActive('新会话');
-      if(input) input.focus();
-      toast('已召唤「'+EX[cl.getAttribute('data-x-call')].name+'」','success');
+      summon('expert',cl.getAttribute('data-x-call'));
       return;
     }
     var c=e.target.closest('[data-cmd]');
     if(c){
+      var eid=c.getAttribute('data-cmd-of');
       expertModal.classList.remove('show');
-      showView('newtask'); setNavActive('新会话');
-      input.textContent=c.getAttribute('data-cmd'); input.focus();
-      try{
-        var r=document.createRange(); r.selectNodeContents(input); r.collapse(false);
-        var sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
-      }catch(err){}
+      summon('expert',eid,c.getAttribute('data-cmd'));
     }
   });
 
@@ -4298,6 +4298,27 @@ const billTemplateWithTokens = billTemplate.replace(
 
     return teamById('software-company')?{kind:'team',id:'software-company',auto:true}:null;
   }
+  /* 召唤 = 选中这个专家/专家团 + 把第一条触发词带进输入框 */
+  function summon(kind,id,phrase){
+    var o = kind==='team' ? teamById(id) : EX[id];
+    if(!o) return;
+    activePick={kind:kind,id:id,auto:false};
+    renderExpertChips();
+    showView('newtask'); setNavActive('新会话');
+    var text = phrase || ((o.cmds&&o.cmds.length)?o.cmds[0][0]:'');
+    if(input){
+      input.setAttribute('data-placeholder','布置任务');
+      input.textContent=text;
+      input.focus();
+      try{
+        var r=document.createRange(); r.selectNodeContents(input); r.collapse(false);
+        var sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+      }catch(err){}
+    }
+    if(typeof refreshSend==='function') refreshSend();
+    toast('已召唤「'+o.name+'」','success');
+  }
+
   function appendAutoNote(){
     if(!messagesList||!activePick.auto||!pickValid()) return;
     var isTeam=activePick.kind==='team';
@@ -4359,6 +4380,14 @@ const billTemplateWithTokens = billTemplate.replace(
   }
 
   var expertEditModal=$('#expertEditModal'), xeDraft=null, xeEditingId=null;
+  function setXeTab(which){
+    $$('#xeTabs .modal-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-xtab')===which); });
+    $$('#expertEditModal .team-pane').forEach(function(el){ el.classList.toggle('hidden', el.getAttribute('data-xpane')!==which); });
+    var body=$('#expertEditModal .modal-body'); if(body) body.scrollTop=0;
+  }
+  if($('#xeTabs')) $('#xeTabs').addEventListener('click',function(e){
+    var b=e.target.closest('.modal-tab'); if(b) setXeTab(b.getAttribute('data-xtab'));
+  });
   function blankExpert(){
     return {k:'eng',name:'',role:'',desc:'',tags:[],modes:['分析','设计','实现'],
             comp:[],cmds:[['','']],steps:[],cons:[]};
@@ -4377,6 +4406,7 @@ const billTemplateWithTokens = billTemplate.replace(
     $('#xeTags').value=xeDraft.tags.join('、'); $('#xeComp').value=xeDraft.comp.join('、');
     $('#xeSteps').value=xeDraft.steps.join('\n'); $('#xeCons').value=xeDraft.cons.join('\n');
     $('#xeDeleteBtn').classList.toggle('hidden', !xeEditingId);
+    setXeTab('base');
     renderExpertEditor();
     expertEditModal.classList.add('show');
     setTimeout(function(){ $('#xeName').focus(); },40);
@@ -4392,7 +4422,6 @@ const billTemplateWithTokens = billTemplate.replace(
     }).join('');
     $('#xeCmds').innerHTML=d.cmds.map(function(c,i){
       return '<div class="x-cmd-row"><input type="text" class="x-cmd-k" data-xe-cmd="'+i+'" data-f="0" value="'+xesc(c[0])+'" placeholder="用户会怎么说，例如：帮我设计一个请假审批流程" autocomplete="off">'
-        +'<input type="text" class="x-cmd-v" data-xe-cmd="'+i+'" data-f="1" value="'+xesc(c[1])+'" placeholder="说明（可留空）" autocomplete="off">'
         +'<button type="button" class="x-ic x-ic-dg" data-xe-rmcmd="'+i+'" title="删除">✕</button></div>';
     }).join('');
   }
@@ -4435,9 +4464,9 @@ const billTemplateWithTokens = billTemplate.replace(
       d.name=$('#xeName').value.trim(); d.role=$('#xeRole').value.trim(); d.desc=$('#xeDesc').value.trim();
       d.tags=splitList($('#xeTags').value); d.comp=splitList($('#xeComp').value);
       d.steps=splitLines($('#xeSteps').value); d.cons=splitLines($('#xeCons').value);
-      if(!d.name){ toast('请填写专家名称','warning'); $('#xeName').focus(); return; }
-      if(!d.role){ toast('请填写职称，它会显示在名字后面','warning'); $('#xeRole').focus(); return; }
-      if(!d.modes.length){ toast('至少勾选一项「可承担的工作」，否则他在专家团里领不到任务','warning'); return; }
+      if(!d.name){ setXeTab('base'); toast('请填写专家名称','warning'); $('#xeName').focus(); return; }
+      if(!d.role){ setXeTab('base'); toast('请填写职称，它会显示在名字后面','warning'); $('#xeRole').focus(); return; }
+      if(!d.modes.length){ setXeTab('base'); toast('至少勾选一项「可承担的工作」，否则他在专家团里领不到任务','warning'); return; }
       var cmds=d.cmds.map(function(c){ return [String(c[0]||'').trim(),String(c[1]||'').trim()]; })
                      .filter(function(c){ return c[0]; });
       var rec={id:xeEditingId||('my-'+Date.now()),mine:true,k:d.k,name:d.name,role:d.role,by:'我创建的',
@@ -4457,11 +4486,25 @@ const billTemplateWithTokens = billTemplate.replace(
 
   /* ---------- 专家团配置弹窗 ---------- */
   var teamModal=$('#teamModal'), teamDraft=null, teamEditingId=null;
+  function setTeamTab(which){
+    $$('#teamTabs .modal-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-ttab')===which); });
+    $$('#teamModal .team-pane').forEach(function(el){ el.classList.toggle('hidden', el.getAttribute('data-tpane')!==which); });
+    var body=$('#teamModal .modal-body'); if(body) body.scrollTop=0;
+  }
+  if($('#teamTabs')) $('#teamTabs').addEventListener('click',function(e){
+    var b=e.target.closest('.modal-tab'); if(b) setTeamTab(b.getAttribute('data-ttab'));
+  });
+  function teamCmdList(d){
+    return (d.cmds||[]).map(function(c){ return [String(c[0]||'').trim(),String(c[1]||'').trim()]; })
+                       .filter(function(c){ return c[0]; });
+  }
   function openTeamModal(id){
     var t=id?teamById(id):null;
     teamEditingId=id||null;
-    teamDraft=t?{name:t.name,desc:t.desc,level:t.level,leadId:t.leadId,members:t.members.slice(),preset:!!t.preset}
-              :{name:'',desc:'',level:'standard',leadId:'software-team-lead',members:['software-team-lead','software-engineer'],preset:false};
+    teamDraft=t?{name:t.name,desc:t.desc,leadId:t.leadId,members:t.members.slice(),preset:!!t.preset,
+                 cmds:(t.cmds&&t.cmds.length)?t.cmds.map(function(c){return c.slice()}):[['','']]}
+              :{name:'',desc:'',leadId:'software-team-lead',members:['software-team-lead','software-engineer'],preset:false,
+                 cmds:[['','']]};
     $('#teamModalTitle').textContent = t?t.name:'新建专家团';
     $('#teamReadonlyTip').classList.toggle('hidden', !teamDraft.preset);
     $('#teamName').value=teamDraft.name; $('#teamDesc').value=teamDraft.desc;
@@ -4469,7 +4512,12 @@ const billTemplateWithTokens = billTemplate.replace(
     $('#teamName').classList.toggle('x-ro',teamDraft.preset);
     $('#teamDesc').classList.toggle('x-ro',teamDraft.preset);
     $('#teamSaveBtn').textContent = teamDraft.preset?'另存为我的专家团':'保存';
+    /* 内置团最常用的动作是召唤，主按钮给它；自建团主按钮还是保存 */
+    $('#teamSaveBtn').className = 'modal-btn '+(teamDraft.preset?'cancel':'confirm');
+    $('#teamCallBtn').className = 'modal-btn '+(teamDraft.preset?'confirm':'cancel');
+    $('#teamCallBtn').classList.toggle('hidden', !teamEditingId);
     $('#teamDeleteBtn').classList.toggle('hidden', teamDraft.preset || !teamEditingId);
+    setTeamTab('base');
     renderTeamModal();
     teamModal.classList.add('show');
     if(!teamDraft.preset) setTimeout(function(){ $('#teamName').focus(); },40);
@@ -4489,10 +4537,21 @@ const billTemplateWithTokens = billTemplate.replace(
         +'<button type="button" class="x-ic x-ic-dg" data-rm-member="'+id+'" title="移出">✕</button></div></div>';
     }).join('') : '<div class="x-empty-sm">还没有成员</div>';
 
-    $('#teamLevels').innerHTML = TEAM_LEVELS.map(function(l){
-      return '<button type="button" class="x-level'+(d.level===l.id?' on':'')+'" data-level="'+l.id+'">'
-        +'<b>'+l.name+'</b><span>'+l.desc+'</span></button>';
-    }).join('');
+    $('#teamCmds').innerHTML = d.preset
+      ? (d.cmds.filter(function(c){return c[0]}).map(function(c){
+          return '<button type="button" class="x-cmd x-cmd-1" data-team-cmd="'+xesc(c[0])+'" title="'+xesc(c[1]||'')+'">'
+            +'<span class="x-cmd-b"><span class="x-cmd-q">“'+xesc(c[0])+'”</span></span>'
+            +'<svg class="x-cmd-go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H7l-4 3v-6.5A8 8 0 0 1 11 4h2a8 8 0 0 1 8 8z"/></svg>'
+            +'</button>';
+        }).join('') || '<div class="x-empty-sm">这个团还没有触发词</div>')
+      : d.cmds.map(function(c,i){
+          return '<div class="x-cmd-row"><input type="text" class="x-cmd-k" data-tm-cmd="'+i+'" data-f="0" value="'+xesc(c[0])+'" placeholder="用户会怎么说，例如：帮我把这个想法做成能上线的功能" autocomplete="off">'
+            +'<button type="button" class="x-ic x-ic-dg" data-tm-rmcmd="'+i+'" title="删除">✕</button></div>';
+        }).join('');
+    $('#teamAddCmd').classList.toggle('hidden', !!d.preset);
+    $('#teamCmdHint').textContent = d.preset
+      ? '点任意一条就会带着这个团开一个新会话。'
+      : '用户平时会怎么找这个团做事。点「召唤专家团」会带上第一条。';
 
     var flow=teamFlow(d);
     $('#teamFlow').innerHTML = flow.map(function(s,i){
@@ -4507,17 +4566,32 @@ const billTemplateWithTokens = billTemplate.replace(
       ? d.members.length+' 位成员 → 以 <code>mode: team</code> 运行，任务在成员间按依赖顺序流转。'
       : '单一成员 → 以 <code>mode: personal</code> 运行，串行执行，保留 attempt 隔离与重试。')+'</span>';
 
-    $('#teamWarnings').innerHTML = teamLint(d).map(function(w){
+    var warns=teamLint(d);
+    $('#teamWarnings').innerHTML = warns.map(function(w){
       return '<div class="x-warn"><span>⚠</span><span>'+xesc(w)+'</span></div>'; }).join('');
+    var missing=flow.filter(function(x){return !x.who}).length;
+    $('#teamFlowSummary').textContent = flow.length+' 步'+(missing?'，'+missing+' 步无人可领':'');
+    $('#teamFlowSummary').classList.toggle('is-warn', !!missing);
+    $('#teamTabDotBase').classList.toggle('hidden', !warns.length);
+    $('#teamTabDotMore').classList.toggle('hidden', !missing);
 
     $$('#teamMembers .x-member-a').forEach(function(a){ a.classList.toggle('hidden', !!d.preset); });
     $('#teamAddBtn').classList.toggle('hidden', !!d.preset);
-    $$('#teamLevels .x-level').forEach(function(b){ b.disabled=!!d.preset; });
   }
   if(teamModal){
     teamModal.addEventListener('click',function(e){
       if(e.target===teamModal){ teamModal.classList.remove('show'); return; }
       var n;
+      if(n=e.target.closest('[data-team-cmd]')){
+        if(!teamEditingId){ toast('先保存这个专家团，再召唤','warning'); return; }
+        teamModal.classList.remove('show');
+        summon('team',teamEditingId,n.getAttribute('data-team-cmd')); return;
+      }
+      if(n=e.target.closest('[data-tm-rmcmd]')){
+        teamDraft.cmds.splice(+n.getAttribute('data-tm-rmcmd'),1);
+        if(!teamDraft.cmds.length) teamDraft.cmds.push(['','']);
+        renderTeamModal(); return;
+      }
       if(n=e.target.closest('[data-view-expert]')){ openExpertModal(n.getAttribute('data-view-expert')); return; }
       if(n=e.target.closest('[data-set-lead]')){ teamDraft.leadId=n.getAttribute('data-set-lead'); renderTeamModal(); return; }
       if(n=e.target.closest('[data-rm-member]')){
@@ -4526,13 +4600,22 @@ const billTemplateWithTokens = billTemplate.replace(
         if(teamDraft.leadId===id) teamDraft.leadId=teamDraft.members[0]||null;
         renderTeamModal(); return;
       }
-      if(n=e.target.closest('[data-level]')){ teamDraft.level=n.getAttribute('data-level'); renderTeamModal(); return; }
     });
     $('#teamModalClose').addEventListener('click',function(){ teamModal.classList.remove('show') });
     $('#teamCancelBtn').addEventListener('click',function(){ teamModal.classList.remove('show') });
     $('#teamName').addEventListener('input',function(){ if(teamDraft.preset){ this.value=teamDraft.name; return; } teamDraft.name=this.value });
     $('#teamDesc').addEventListener('input',function(){ if(teamDraft.preset){ this.value=teamDraft.desc; return; } teamDraft.desc=this.value });
     $('#teamAddBtn').addEventListener('click',function(){ openMemberModal() });
+    $('#teamAddCmd').addEventListener('click',function(){ teamDraft.cmds.push(['','']); renderTeamModal(); });
+    $('#teamCallBtn').addEventListener('click',function(){
+      if(!teamEditingId){ toast('先保存这个专家团，再召唤','warning'); return; }
+      teamModal.classList.remove('show');
+      summon('team',teamEditingId);
+    });
+    teamModal.addEventListener('input',function(ev){
+      var c=ev.target.closest('[data-tm-cmd]');
+      if(c) teamDraft.cmds[+c.getAttribute('data-tm-cmd')][+c.getAttribute('data-f')]=c.value;
+    });
     $('#teamDeleteBtn').addEventListener('click',function(){
       var t=teamById(teamEditingId); if(!t||t.preset) return;
       if(!window.confirm('删除专家团「'+t.name+'」？此操作不可撤销。')) return;
@@ -4546,16 +4629,16 @@ const billTemplateWithTokens = billTemplate.replace(
       ev.preventDefault();
       var d=teamDraft;
       var name=(d.name||'').trim();
-      if(!name){ toast('请填写专家团名称','warning'); $('#teamName').focus(); return; }
-      if(!d.members.length){ toast('至少需要一位成员','warning'); return; }
+      if(!name){ setTeamTab('base'); toast('请填写专家团名称','warning'); $('#teamName').focus(); return; }
+      if(!d.members.length){ setTeamTab('base'); toast('至少需要一位成员','warning'); return; }
       if(d.preset || !teamEditingId){
         var nid='team-'+Date.now();
         TEAMS.push({id:nid,preset:false,name:d.preset?name+' 副本':name,by:'我创建的',
-          desc:d.desc,level:d.level,leadId:d.leadId,members:d.members.slice()});
+          desc:d.desc,leadId:d.leadId,members:d.members.slice(),cmds:teamCmdList(d)});
         toast(d.preset?'已另存为你的专家团':'专家团已创建','success');
       }else{
         var t=teamById(teamEditingId);
-        t.name=name; t.desc=d.desc; t.level=d.level; t.leadId=d.leadId; t.members=d.members.slice();
+        t.name=name; t.desc=d.desc; t.leadId=d.leadId; t.members=d.members.slice(); t.cmds=teamCmdList(d);
         toast('已保存','success');
       }
       teamModal.classList.remove('show');

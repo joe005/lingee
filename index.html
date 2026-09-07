@@ -1240,37 +1240,51 @@
       <div class="env-config-heading"><div class="modal-title" id="teamModalTitle">新建专家团</div></div>
       <button class="modal-close" id="teamModalClose" type="button" aria-label="关闭">×</button>
     </div>
+    <div class="modal-tabs" id="teamTabs">
+      <button type="button" class="modal-tab active" data-ttab="base">团队<span class="modal-tab-dot hidden" id="teamTabDotBase"></span></button>
+      <button type="button" class="modal-tab" data-ttab="more">触发词与流程<span class="modal-tab-dot hidden" id="teamTabDotMore"></span></button>
+    </div>
     <div class="modal-body env-config-body">
       <div class="team-readonly-tip hidden" id="teamReadonlyTip">内置专家团由官方维护，仅供查看。可另存为自己的专家团后再调整。</div>
-      <section class="env-form-section">
-        <div class="env-form-section-title">基本信息</div>
-        <div class="env-form-grid">
-          <label class="env-field env-field-wide"><span>名称<span class="env-required">*</span></span>
-            <input type="text" id="teamName" placeholder="给这个专家团起个名字" autocomplete="off" required></label>
-          <label class="env-field env-field-wide"><span>说明</span>
-            <textarea id="teamDesc" rows="2" placeholder="它擅长什么、适合什么场景"></textarea></label>
-        </div>
-      </section>
-      <section class="env-form-section">
-        <div class="env-form-section-title">成员 <span class="team-count" id="teamCount">0</span></div>
-        <div class="team-hint">点名字查看这位专家的定义；星标设为组长，负责开场协调与最终集成。</div>
-        <div class="team-members" id="teamMembers"></div>
-        <button type="button" class="team-add" id="teamAddBtn">＋ 添加成员</button>
-      </section>
-      <section class="env-form-section">
-        <div class="env-form-section-title">交付强度</div>
-        <div class="team-hint">唯一需要你决定的配置：这个团做事时走多少道门禁。下面的流程会跟着变。</div>
-        <div class="team-levels" id="teamLevels"></div>
-        <div class="team-flow-label">运行流程</div>
-        <div class="team-flow" id="teamFlow"></div>
-        <div class="team-mode-note" id="teamModeNote"></div>
+
+      <div class="team-pane" data-tpane="base">
+        <section class="env-form-section">
+          <div class="env-form-grid">
+            <label class="env-field env-field-wide"><span>名称<span class="env-required">*</span></span>
+              <input type="text" id="teamName" placeholder="给这个专家团起个名字" autocomplete="off" required></label>
+            <label class="env-field env-field-wide"><span>说明</span>
+              <textarea id="teamDesc" rows="2" placeholder="它擅长什么、适合什么场景"></textarea></label>
+          </div>
+        </section>
+        <section class="env-form-section">
+          <div class="env-form-section-title">成员 <span class="team-count" id="teamCount">0</span>
+            <span class="team-hint-inline">点名字看定义，星标设组长</span></div>
+          <div class="team-members" id="teamMembers"></div>
+          <button type="button" class="team-add" id="teamAddBtn">＋ 添加成员</button>
+        </section>
         <div id="teamWarnings"></div>
-      </section>
+      </div>
+
+      <div class="team-pane hidden" data-tpane="more">
+        <section class="env-form-section">
+          <div class="env-form-section-title">常见触发词
+            <span class="team-hint-inline" id="teamCmdHint">召唤时会带上第一条</span></div>
+          <div class="x-cmd-rows" id="teamCmds"></div>
+          <button type="button" class="team-add" id="teamAddCmd">＋ 添加一条</button>
+        </section>
+        <section class="env-form-section">
+          <div class="env-form-section-title">运行流程
+            <span class="team-hint-inline" id="teamFlowSummary"></span></div>
+          <div class="team-flow" id="teamFlow"></div>
+          <div class="team-mode-note" id="teamModeNote"></div>
+        </section>
+      </div>
     </div>
     <div class="modal-footer team-modal-footer">
       <button type="button" class="btn-link team-delete-btn hidden" id="teamDeleteBtn">删除该专家团</button>
       <div class="team-footer-spacer"></div>
       <button type="button" class="modal-btn cancel" id="teamCancelBtn">取消</button>
+      <button type="button" class="modal-btn cancel" id="teamCallBtn">召唤专家团</button>
       <button type="submit" class="modal-btn confirm" id="teamSaveBtn">保存</button>
     </div>
   </form>
@@ -1310,6 +1324,10 @@
       <div class="env-config-heading"><div class="modal-title" id="expertEditTitle">创建专家</div></div>
       <button class="modal-close" id="expertEditClose" type="button" aria-label="关闭">×</button>
     </div>
+    <div class="modal-tabs" id="xeTabs">
+      <button type="button" class="modal-tab active" data-xtab="base">专家</button>
+      <button type="button" class="modal-tab" data-xtab="more">触发词与工作方式</button>
+    </div>
     <div class="modal-body env-config-body">
       <button type="button" class="x-chat-entry" id="xeChatBtn">
         <span class="x-chat-ic">
@@ -1321,46 +1339,46 @@
         </span>
         <span class="x-chat-go">›</span>
       </button>
-      <section class="env-form-section">
-        <div class="env-form-section-title">身份</div>
-        <div class="env-form-grid">
-          <label class="env-field"><span>名称<span class="env-required">*</span></span>
-            <input type="text" id="xeName" placeholder="例如：苍穹工作流开发专家" autocomplete="off"></label>
-          <label class="env-field"><span>职称<span class="env-required">*</span></span>
-            <input type="text" id="xeRole" placeholder="例如：苍穹流程建模师" autocomplete="off"></label>
-          <label class="env-field env-field-wide"><span>简介</span>
-            <textarea id="xeDesc" rows="2" placeholder="他深耕什么领域、擅长什么、能帮你解决什么"></textarea></label>
-        </div>
-        <div class="env-form-section-title x-sec-sub">头像</div>
-        <div class="x-av-picker" id="xeAvatars"></div>
-      </section>
-      <section class="env-form-section">
-        <div class="env-form-section-title">能力</div>
-        <div class="env-form-grid">
-          <label class="env-field env-field-wide"><span>标签</span>
-            <input type="text" id="xeTags" placeholder="用逗号分隔，例如：流程建模, 苍穹工作流, 流程设计" autocomplete="off"></label>
-          <label class="env-field env-field-wide"><span>能力项</span>
-            <input type="text" id="xeComp" placeholder="用逗号分隔，例如：cosmic.workflow · advanced" autocomplete="off"></label>
-        </div>
-        <div class="env-form-section-title x-sec-sub">可承担的工作<span class="env-required">*</span></div>
-        <div class="team-hint">决定他能在专家团里领哪些任务，也决定单人使用时能做到哪一步。</div>
-        <div class="x-mode-picker" id="xeModes"></div>
-      </section>
-      <section class="env-form-section">
-        <div class="env-form-section-title">常见触发词</div>
-        <div class="team-hint">用户平时会怎么找他做事。会出现在专家详情里，点一下就把整句填进输入框。</div>
-        <div class="x-cmd-rows" id="xeCmds"></div>
-        <button type="button" class="team-add" id="xeAddCmd">＋ 添加一条</button>
-      </section>
-      <section class="env-form-section">
-        <div class="env-form-section-title">工作方式与约束</div>
-        <div class="env-form-grid">
-          <label class="env-field env-field-wide"><span>工作方式</span>
-            <textarea id="xeSteps" rows="4" placeholder="一行一步，例如：&#10;梳理审批场景与角色&#10;配置流程节点与条件"></textarea></label>
-          <label class="env-field env-field-wide"><span>行为约束</span>
-            <textarea id="xeCons" rows="3" placeholder="一行一条，例如：&#10;流程变更需保留可回滚配置"></textarea></label>
-        </div>
-      </section>
+      <div class="team-pane" data-xpane="base">
+        <section class="env-form-section">
+          <div class="env-form-grid">
+            <label class="env-field"><span>名称<span class="env-required">*</span></span>
+              <input type="text" id="xeName" placeholder="例如：苍穹工作流开发专家" autocomplete="off"></label>
+            <label class="env-field"><span>职称<span class="env-required">*</span></span>
+              <input type="text" id="xeRole" placeholder="例如：苍穹流程建模师" autocomplete="off"></label>
+            <label class="env-field env-field-wide"><span>简介</span>
+              <textarea id="xeDesc" rows="2" placeholder="他深耕什么领域、擅长什么、能帮你解决什么"></textarea></label>
+            <label class="env-field env-field-wide"><span>标签</span>
+              <input type="text" id="xeTags" placeholder="用逗号分隔，例如：流程建模, 苍穹工作流, 流程设计" autocomplete="off"></label>
+          </div>
+          <div class="env-form-section-title x-sec-sub">头像</div>
+          <div class="x-av-picker" id="xeAvatars"></div>
+        </section>
+        <section class="env-form-section">
+          <div class="env-form-section-title">可承担的工作<span class="env-required">*</span>
+            <span class="team-hint-inline">决定他在专家团里能领哪些任务</span></div>
+          <div class="x-mode-picker" id="xeModes"></div>
+        </section>
+      </div>
+
+      <div class="team-pane hidden" data-xpane="more">
+        <section class="env-form-section">
+          <div class="env-form-section-title">常见触发词
+            <span class="team-hint-inline">用户平时会怎么找他做事，点一下把整句填进输入框</span></div>
+          <div class="x-cmd-rows" id="xeCmds"></div>
+          <button type="button" class="team-add" id="xeAddCmd">＋ 添加一条</button>
+        </section>
+        <section class="env-form-section">
+          <div class="env-form-grid">
+            <label class="env-field env-field-wide"><span>能力项</span>
+              <input type="text" id="xeComp" placeholder="用逗号分隔，例如：cosmic.workflow · advanced" autocomplete="off"></label>
+            <label class="env-field env-field-wide"><span>工作方式</span>
+              <textarea id="xeSteps" rows="4" placeholder="一行一步，例如：&#10;梳理审批场景与角色&#10;配置流程节点与条件"></textarea></label>
+            <label class="env-field env-field-wide"><span>行为约束</span>
+              <textarea id="xeCons" rows="3" placeholder="一行一条，例如：&#10;流程变更需保留可回滚配置"></textarea></label>
+          </div>
+        </section>
+      </div>
     </div>
     <div class="modal-footer team-modal-footer">
       <button type="button" class="btn-link team-delete-btn hidden" id="xeDeleteBtn">删除该专家</button>
