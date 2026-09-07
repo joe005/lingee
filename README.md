@@ -19,6 +19,7 @@ npm run format   # 格式化 src
 | --- | --- |
 | `src/` | 源码。样式、脚本、产物模板 |
 | `dist/` | 构建产物，单文件 |
+| `docs/` | 需求说明书，交付给开发实现 |
 
 设计稿、早期页面原型、历史版本等资料存放在 iCloud 归档目录
 `Lingee Build/原型/lingee_app buid`，不纳入本仓库。
