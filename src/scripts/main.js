@@ -18,11 +18,19 @@ const billTemplateWithTokens = billTemplate.replace(
   var loginBtn=$('#loginBtn');
   var loginError=$('#loginError');
   var LOGIN_KEY='lingee_auth_session';
+  var REMEMBER_KEY='lingee_remember_user';
 
-  var USER_MAP={
+  var USER_NAMES={
     'wei_bu@kingdee.com':{name:'Wei',avatar:'W'},
     'wuhc2023@gmail.com':{name:'Chao',avatar:'C'},
-    '6686612@qq.com':{name:'Joe',avatar:'J'}
+    '6686612@qq.com':{name:'Joe',avatar:'J'},
+    '17299999999':{name:'Dev',avatar:'D'}
+  };
+  var USER_CREDENTIALS={
+    'wei_bu@kingdee.com':'lingee520',
+    'wuhc2023@gmail.com':'lingee520',
+    '6686612@qq.com':'lingee520',
+    '17299999999':'KDadm!@#2022'
   };
 
   function getAuthedUser(){
@@ -32,7 +40,7 @@ const billTemplateWithTokens = billTemplate.replace(
     try{ sessionStorage.setItem(LOGIN_KEY,user); }catch(e){}
   }
   function applyUserInfo(user){
-    var info=USER_MAP[user]||{name:'Joe',avatar:'J'};
+    var info=USER_NAMES[user]||{name:'Joe',avatar:'J'};
     var av=$('#userAvatar'),nm=$('#userName');
     if(av) av.textContent=info.avatar;
     if(nm) nm.textContent=info.name;
@@ -44,6 +52,17 @@ const billTemplateWithTokens = billTemplate.replace(
     if(loginOverlay) loginOverlay.classList.add('hidden');
   }
 
+  /* 恢复记住的账号 */
+  try{
+    var savedUser=localStorage.getItem(REMEMBER_KEY);
+    if(savedUser){
+      var inp=$('#loginUser');
+      if(inp) inp.value=savedUser;
+      var cb=$('#loginRemember');
+      if(cb) cb.checked=true;
+    }
+  }catch(e){}
+
   if(loginForm){
     loginForm.addEventListener('submit',function(e){
       e.preventDefault();
@@ -53,11 +72,16 @@ const billTemplateWithTokens = billTemplate.replace(
         loginError.textContent='请输入账号和密码';
         return;
       }
-      if((user==='wei_bu@kingdee.com'||user==='wuhc2023@gmail.com'||user==='6686612@qq.com') && pass==='lingee520'){
+      if(USER_CREDENTIALS[user] && USER_CREDENTIALS[user]===pass){
         loginError.textContent='';
         loginBtn.classList.add('loading');
         loginBtn.disabled=true;
         loginBtn.textContent='登录中';
+        var remember=$('#loginRemember');
+        try{
+          if(remember&&remember.checked) localStorage.setItem(REMEMBER_KEY,user);
+          else localStorage.removeItem(REMEMBER_KEY);
+        }catch(e){}
         setTimeout(function(){
           setAuthed(user);
           applyUserInfo(user);
@@ -862,6 +886,14 @@ const billTemplateWithTokens = billTemplate.replace(
     try{ sessionStorage.removeItem(LOGIN_KEY); }catch(e){}
     if(loginForm) loginForm.reset();
     if(loginError) loginError.textContent='';
+    /* 重新回填记住的账号 */
+    try{
+      var savedUser=localStorage.getItem(REMEMBER_KEY);
+      if(savedUser){
+        var inp=$('#loginUser'); if(inp) inp.value=savedUser;
+        var cb=$('#loginRemember'); if(cb) cb.checked=true;
+      }
+    }catch(e){}
     showLogin();
     $('#loginUser').focus();
   });
