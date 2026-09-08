@@ -15,6 +15,7 @@ dist/
 .opencode/
 .lingeebuild/
 skills/
+app/
 **/_runtime/
 **/*token_cache*
 **/*.lock
