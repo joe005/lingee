@@ -2,6 +2,29 @@
   
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%}
+
+  /* ============ Login ============ */
+  .login-overlay{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#f0f4ff 0%,#fafbff 50%,#f5f0ff 100%);overflow:hidden}
+  .login-overlay.hidden{display:none}
+  .login-bg-decor{position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(73,93,255,.08) 0%,transparent 70%);top:-200px;right:-100px;pointer-events:none}
+  .login-bg-decor::after{content:'';position:absolute;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(160,120,255,.06) 0%,transparent 70%);bottom:-100px;left:-100px}
+  .login-card{position:relative;width:380px;background:#fff;border-radius:16px;padding:40px 36px;box-shadow:0 8px 32px rgba(0,0,0,.08),0 2px 8px rgba(0,0,0,.04)}
+  .login-brand{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+  .login-logo{width:32px;height:32px;color:var(--brand)}
+  .login-title{font-size:22px;font-weight:700;color:var(--text)}
+  .login-subtitle{font-size:13px;color:var(--text-secondary);margin-bottom:28px}
+  .login-form{display:flex;flex-direction:column;gap:16px}
+  .login-field{position:relative;display:flex;align-items:center}
+  .login-field-icon{position:absolute;left:12px;width:18px;height:18px;color:var(--text-soft);flex:none;pointer-events:none;transition:color .15s}
+  .login-input{width:100%;height:42px;padding:0 12px 0 40px;border:1px solid var(--border);border-radius:8px;font-size:14px;color:var(--text);background:var(--fill-1);outline:none;transition:border-color .15s,background .15s}
+  .login-input:focus{border-color:var(--brand);background:#fff}
+  .login-input:focus + .login-field-icon,.login-field:focus-within .login-field-icon{color:var(--brand)}
+  .login-error{font-size:12px;color:var(--danger);min-height:16px;line-height:1.4}
+  .login-btn{height:42px;border:none;border-radius:8px;background:var(--brand);color:#fff;font-size:15px;font-weight:600;cursor:pointer;transition:background .15s,transform .08s}
+  .login-btn:hover{background:var(--brand-hover)}
+  .login-btn:active{background:var(--brand-active);transform:scale(.99)}
+  .login-hint{font-size:12px;color:var(--text-soft);text-align:center;margin-top:2px}
+
   /* 滚动条：滚动时才显示，不占位不抖动 */
   ::-webkit-scrollbar{width:4px;height:4px;background:transparent}
   ::-webkit-scrollbar-track{background:transparent}

@@ -12,6 +12,55 @@ const billTemplateWithTokens = billTemplate.replace(
   var $=function(s,el){return (el||document).querySelector(s)};
   var $$=function(s,el){return Array.prototype.slice.call((el||document).querySelectorAll(s))};
 
+  /* ---------- 登录鉴权 ---------- */
+  var loginOverlay=$('#loginOverlay');
+  var loginForm=$('#loginForm');
+  var loginBtn=$('#loginBtn');
+  var loginError=$('#loginError');
+  var LOGIN_KEY='lingee_auth_session';
+
+  function isAuthed(){
+    try{ return sessionStorage.getItem(LOGIN_KEY)==='1'; }catch(e){ return false; }
+  }
+  function setAuthed(){
+    try{ sessionStorage.setItem(LOGIN_KEY,'1'); }catch(e){}
+  }
+  function showLogin(){
+    if(loginOverlay) loginOverlay.classList.remove('hidden');
+  }
+  function hideLogin(){
+    if(loginOverlay) loginOverlay.classList.add('hidden');
+  }
+
+  if(loginForm){
+    loginForm.addEventListener('submit',function(e){
+      e.preventDefault();
+      var user=$('#loginUser').value.trim();
+      var pass=$('#loginPass').value.trim();
+      if(!user||!pass){
+        loginError.textContent='请输入账号和密码';
+        return;
+      }
+      if(user==='admin' && pass==='admin'){
+        loginError.textContent='';
+        setAuthed();
+        hideLogin();
+      }else{
+        loginError.textContent='账号或密码错误，请重试';
+        $('#loginPass').value='';
+        $('#loginPass').focus();
+      }
+    });
+    loginBtn.addEventListener('click',function(){});
+  }
+
+  /* 未登录则显示登录页，阻止后续初始化 */
+  if(!isAuthed()){
+    showLogin();
+  }else{
+    hideLogin();
+  }
+
   /* ---------- 滚动条：滚动时显示，停留后延迟隐藏 ---------- */
   var _scrollTimers=new WeakMap();
   var _sbHideDelay=1500;
