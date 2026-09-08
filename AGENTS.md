@@ -42,5 +42,7 @@ Consult the wiki when working on features, debugging, or onboarding to a new are
 每次实质性功能变更后，需在 `CHANGELOG.md` 中新增一行版本记录。规范：
 
 1. 按天汇总，不逐条罗列 commit，小修小补不单独记录
-2. 版本号遵循 SemVer，MINOR 对应新功能、PATCH 对应修复与优化
-3. 描述精炼，与消息通知保持一致的风格
+2. 同一更新人同一天的多次变更合并为一条记录，不拆分多条
+3. 版本号遵循 SemVer，MINOR 对应新功能、PATCH 对应修复与优化
+4. 描述精炼，与消息通知保持一致的风格
+5. 变更内容用 `1. 2. 3. 4.` 编号，`<br>` 换行罗列
