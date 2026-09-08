@@ -41,7 +41,7 @@ const billTemplateWithTokens = billTemplate.replace(
         loginError.textContent='请输入账号和密码';
         return;
       }
-      if(user==='admin' && pass==='admin'){
+      if((user==='wei_bu@kingdee.com'||user==='wuhc2023@gmail.com'||user==='6686612@qq.com') && pass==='lingee520'){
         loginError.textContent='';
         setAuthed();
         hideLogin();
