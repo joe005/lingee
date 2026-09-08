@@ -55,9 +55,17 @@ const billTemplateWithTokens = billTemplate.replace(
       }
       if((user==='wei_bu@kingdee.com'||user==='wuhc2023@gmail.com'||user==='6686612@qq.com') && pass==='lingee520'){
         loginError.textContent='';
-        setAuthed(user);
-        applyUserInfo(user);
-        hideLogin();
+        loginBtn.classList.add('loading');
+        loginBtn.disabled=true;
+        loginBtn.textContent='登录中';
+        setTimeout(function(){
+          setAuthed(user);
+          applyUserInfo(user);
+          hideLogin();
+          loginBtn.classList.remove('loading');
+          loginBtn.disabled=false;
+          loginBtn.textContent='登录';
+        },800);
       }else{
         loginError.textContent='账号或密码错误，请重试';
         $('#loginPass').value='';
