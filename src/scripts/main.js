@@ -3939,7 +3939,7 @@ const billTemplateWithTokens = billTemplate.replace(
      desc:'实现可维护的软件变更并完成针对性验证，只改授权范围内的代码。',
      tags:['软件实现','系统集成'],modes:['分析','设计','实现','集成','验证','恢复'],
      comp:['engineering.implementation · advanced','engineering.integration · advanced'],
-     skills:['app-build','standalone-build','site-builder'],
+     skills:['cosmic-app-builder','general-app-builder','site-builder'],
      cmds:[['按这份验收条件把功能实现出来','完成最小完整变更并跑通验证'],
            ['这个 bug 帮我复现并修掉','定位根因、修复并补回归测试'],
            ['做一个单页小工具，一次写完','小应用一次性写完全部代码 + build 验证']],
@@ -3978,7 +3978,7 @@ const billTemplateWithTokens = billTemplate.replace(
     {id:'frontend-engineer',k:'fe',name:'前端工程专家',role:'前端工程师',by:'金蝶官方',
      desc:'金蝶前端规范下的组件实现、响应式布局与交互调试。',
      tags:['React','响应式','组件库'],modes:['设计','实现','验证'],
-     comp:['engineering.frontend · advanced'],skills:['kd-frontend-development','frontend-design'],
+     comp:['engineering.frontend · advanced'],skills:['cosmic-kwc-builder','frontend-design'],
      cmds:[['按这张设计稿把页面实现出来','实现响应式页面与交互'],
            ['帮我抽一个可复用的组件','产出符合金蝶前端规范的组件'],
            ['页面和设计稿对不上，帮我调一下','把实现调到与设计稿一致']],
@@ -3987,7 +3987,7 @@ const billTemplateWithTokens = billTemplate.replace(
     {id:'ux-designer',k:'ux',name:'界面设计专家',role:'交互 / 视觉设计',by:'金蝶官方',
      desc:'信息架构、交互流程与视觉规范，产出可直接交付前端的设计说明。',
      tags:['交互设计','视觉规范'],modes:['分析','设计','评审'],
-     comp:['design.interaction · advanced'],skills:['kingdee-design','frontend-design'],
+     comp:['design.interaction · advanced'],skills:['prototype-builder','frontend-design'],
      cmds:[['这个功能该怎么设计？先对齐一下目标','产出设计简报，对齐业务目标与设计策略'],
            ['帮我梳理这个模块的信息架构','理清导航、层级与页面骨架'],
            ['帮我走查一下这个页面','对已实现页面做规范与可用性检查']],
@@ -4750,9 +4750,9 @@ const billTemplateWithTokens = billTemplate.replace(
   var MODE_BUILDERS={
     '技能开发':{id:'skill-builder',    ic:'<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>'},
     '智能体开发':{id:'agent-builder',  ic:'<rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V3"/><circle cx="12" cy="3" r="1.5" fill="currentColor"/><rect x="8" y="13" width="3" height="2" rx="1"/><rect x="13" y="13" width="3" height="2" rx="1"/>'},
-    '原型探索':{id:'kingdee-design',   ic:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 9v11"/>'},
+    '原型探索':{id:'prototype-builder',   ic:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 9v11"/>'},
     '通用应用':{id:'general-app-builder', ic:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>'},
-    '苍穹应用':{id:'app-builder-partner', ic:'<path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/>'},
+    '苍穹应用':{id:'cosmic-app-builder', ic:'<path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/>'},
     '业务组件':{id:'mcp-apps-builder', ic:'<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/>'}
   };
   function renderModeTag(){
