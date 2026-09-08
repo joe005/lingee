@@ -25,3 +25,14 @@ Consult the wiki when working on features, debugging, or onboarding to a new are
 2. **By source file**: Look up `fileToPages` in `index.json` to find the wiki page for a specific source file
 3. **By topic**: Scan `categories` and page `title`/`description` in `index.json` to find docs by business domain or concept
 4. Read the relevant wiki page for business context and architecture notes before making changes
+
+## Collaboration Rules
+
+### 消息通知同步更新
+
+每次实质性功能变更后，需在 `src/scripts/main.js` 的 `changelogData` 数组中新增一条消息通知。规范：
+
+1. 仅记录核心功能变更，小 BUG 修复及细节调整不记录
+2. 描述精炼，突出重点，不逐条罗列
+3. 分配递增 id，并在 `changelogIcons` 中添加对应图标
+4. 日期使用当天日期
