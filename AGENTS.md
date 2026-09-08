@@ -33,9 +33,10 @@ Consult the wiki when working on features, debugging, or onboarding to a new are
 每次实质性功能变更后，需在 `src/scripts/main.js` 的 `changelogData` 数组中新增一条消息通知。规范：
 
 1. 仅记录核心功能变更，小 BUG 修复及细节调整不记录
-2. 描述精炼，突出重点，不逐条罗列
-3. 分配递增 id，并在 `changelogIcons` 中添加对应图标
-4. 日期使用当天日期
+2. 描述精炼为一句，突出重点，不逐条罗列
+3. 同一更新人同一天的多次变更合并为一条通知
+4. 分配递增 id，并在 `changelogIcons` 中添加对应图标
+5. 日期使用当天日期
 
 ### CHANGELOG.md 同步更新
 
@@ -43,6 +44,6 @@ Consult the wiki when working on features, debugging, or onboarding to a new are
 
 1. 按天汇总，不逐条罗列 commit，小修小补不单独记录
 2. 同一更新人同一天的多次变更合并为一条记录，不拆分多条
-3. 版本号遵循 SemVer，MINOR 对应新功能、PATCH 对应修复与优化
-4. 描述精炼，与消息通知保持一致的风格
-5. 变更内容用 `1. 2. 3. 4.` 编号，`<br>` 换行罗列
+3. 版本号遵循 SemVer：MAJOR 对应不兼容变更、MINOR 对应新功能、PATCH 对应修复与优化
+4. 更新人从 git 提交记录获取，填写提交者姓名
+5. 描述内容与消息通知对应，但采用 `1. 2. 3. 4.` 编号、`<br>` 换行罗列的格式
