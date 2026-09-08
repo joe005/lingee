@@ -36,3 +36,11 @@ Consult the wiki when working on features, debugging, or onboarding to a new are
 2. 描述精炼，突出重点，不逐条罗列
 3. 分配递增 id，并在 `changelogIcons` 中添加对应图标
 4. 日期使用当天日期
+
+### CHANGELOG.md 同步更新
+
+每次实质性功能变更后，需在 `CHANGELOG.md` 中新增一行版本记录。规范：
+
+1. 按天汇总，不逐条罗列 commit，小修小补不单独记录
+2. 版本号遵循 SemVer，MINOR 对应新功能、PATCH 对应修复与优化
+3. 描述精炼，与消息通知保持一致的风格
