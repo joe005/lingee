@@ -10,9 +10,9 @@
 <body>
 
   <!-- ===================== LOGIN ===================== -->
-  <div class="login-overlay hidden" id="loginOverlay">
+  <div class="login-overlay" id="loginOverlay">
     <script>
-      try { if (!sessionStorage.getItem('lingee_auth_session')) document.write('<style>#loginOverlay{display:flex!important}</style>'); } catch(e) {}
+      try { if (sessionStorage.getItem('lingee_auth_session')) document.getElementById('loginOverlay').classList.add('hidden'); } catch(e) {}
     </script>
     <div class="login-card">
       <div class="login-brand">
