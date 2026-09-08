@@ -754,7 +754,7 @@
   #view-chat.preview-open .chat-container{min-width:360px}
   #view-chat .chat-preview-side{width:0;overflow:hidden;flex:none;display:flex;flex-direction:column;background:#fff;will-change:width}
   /* 分割线只由 .chat-resizer 提供 */
-  #view-chat.preview-open .chat-preview-side{width:50%}
+  #view-chat.preview-open .chat-preview-side{width:50%;min-width:0}
   #view-chat.preview-open .chat-resizer.dragging{background:rgba(73,93,255,.15)}
   #view-chat .chat-resizer{width:1px;flex:none;cursor:col-resize;background:var(--border);transition:background .15s;z-index:5;position:relative}
   #view-chat .chat-resizer::before{content:'';position:absolute;top:0;bottom:0;left:-4px;right:-4px}
@@ -762,15 +762,15 @@
   #view-chat.preview-open .chat-resizer.dragging{background:#999}
   /* 拖拽时屏蔽 iframe，避免 mousemove 被内部文档吞掉 */
   #view-chat.resizing .preview-frame{pointer-events:none}
-  .preview-header{display:flex;align-items:flex-end;justify-content:space-between;padding:0 12px 0 16px;border-bottom:1px solid var(--border);flex:none;gap:8px;height:40px}
-  .preview-tabs{display:flex;height:100%;align-items:flex-end;gap:20px}
+  .preview-header{display:flex;align-items:flex-end;justify-content:space-between;padding:0 12px 0 16px;border-bottom:1px solid var(--border);flex:none;gap:8px;height:40px;overflow:hidden;min-width:0}
+  .preview-tabs{display:flex;height:100%;align-items:flex-end;gap:20px;min-width:0;overflow:hidden}
   .preview-tab{padding:0;display:flex;align-items:center;height:100%;font-size:13px;color:#767676;cursor:pointer;font-weight:500;transition:color .15s;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
   .preview-tab:hover{color:var(--text)}
   .preview-tab.active{color:#495dff;border-bottom-color:#495dff} /* 选中用主题色 */
   .preview-close{border:none;background:none;cursor:pointer;color:var(--text-muted);border-radius:6px;flex:none;width:26px;height:26px;display:flex;align-items:center;justify-content:center;padding:0;align-self:center;transition:background .15s,color .15s}
   .preview-close svg{width:15px;height:15px}
   .preview-close:hover{background:var(--hover);color:var(--text)}
-  .preview-nav{display:flex;align-items:center;gap:2px;padding:4px 10px;border-bottom:1px solid var(--border);flex:none}
+  .preview-nav{display:flex;align-items:center;gap:2px;padding:4px 10px;border-bottom:1px solid var(--border);flex:none;min-width:0;overflow:hidden}
   .preview-nav.hidden{display:none}
   .preview-nav-inner{display:flex;align-items:center;gap:2px;flex:1;min-width:0}
   .preview-nav-btn{width:26px;height:26px;border-radius:6px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-muted);flex:none;transition:background .1s,color .1s}
