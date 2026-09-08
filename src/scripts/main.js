@@ -19,11 +19,23 @@ const billTemplateWithTokens = billTemplate.replace(
   var loginError=$('#loginError');
   var LOGIN_KEY='lingee_auth_session';
 
-  function isAuthed(){
-    try{ return sessionStorage.getItem(LOGIN_KEY)==='1'; }catch(e){ return false; }
+  var USER_MAP={
+    'wei_bu@kingdee.com':{name:'Wei',avatar:'W'},
+    'wuhc2023@gmail.com':{name:'Chao',avatar:'C'},
+    '6686612@qq.com':{name:'Joe',avatar:'J'}
+  };
+
+  function getAuthedUser(){
+    try{ return sessionStorage.getItem(LOGIN_KEY)||null; }catch(e){ return null; }
   }
-  function setAuthed(){
-    try{ sessionStorage.setItem(LOGIN_KEY,'1'); }catch(e){}
+  function setAuthed(user){
+    try{ sessionStorage.setItem(LOGIN_KEY,user); }catch(e){}
+  }
+  function applyUserInfo(user){
+    var info=USER_MAP[user]||{name:'Joe',avatar:'J'};
+    var av=$('#userAvatar'),nm=$('#userName');
+    if(av) av.textContent=info.avatar;
+    if(nm) nm.textContent=info.name;
   }
   function showLogin(){
     if(loginOverlay) loginOverlay.classList.remove('hidden');
@@ -43,7 +55,8 @@ const billTemplateWithTokens = billTemplate.replace(
       }
       if((user==='wei_bu@kingdee.com'||user==='wuhc2023@gmail.com'||user==='6686612@qq.com') && pass==='lingee520'){
         loginError.textContent='';
-        setAuthed();
+        setAuthed(user);
+        applyUserInfo(user);
         hideLogin();
       }else{
         loginError.textContent='账号或密码错误，请重试';
@@ -54,10 +67,12 @@ const billTemplateWithTokens = billTemplate.replace(
     loginBtn.addEventListener('click',function(){});
   }
 
-  /* 未登录则显示登录页，阻止后续初始化 */
-  if(!isAuthed()){
+  /* 未登录则显示登录页，已登录则恢复用户信息 */
+  var _authedUser=getAuthedUser();
+  if(!_authedUser){
     showLogin();
   }else{
+    applyUserInfo(_authedUser);
     hideLogin();
   }
 

@@ -12,7 +12,7 @@
   <!-- ===================== LOGIN ===================== -->
   <div class="login-overlay hidden" id="loginOverlay">
     <script>
-      try { if (sessionStorage.getItem('lingee_auth_session') !== '1') document.write('<style>#loginOverlay{display:flex!important}</style>'); } catch(e) {}
+      try { if (!sessionStorage.getItem('lingee_auth_session')) document.write('<style>#loginOverlay{display:flex!important}</style>'); } catch(e) {}
     </script>
     <div class="login-card">
       <div class="login-brand">
@@ -120,8 +120,8 @@
     <div class="sb-foot">
       <div class="user-wrap">
         <div class="user" id="userBtn" tabindex="0" role="button" aria-haspopup="true" aria-expanded="false">
-          <span class="avatar">J</span>
-          Joe
+          <span class="avatar" id="userAvatar">J</span>
+          <span id="userName">Joe</span>
           <svg class="caret" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 7.5 5 5 5-5"/></svg>
         </div>
         <div class="menu user-menu" id="userMenu">
