@@ -10,7 +10,10 @@
 <body>
 
   <!-- ===================== LOGIN ===================== -->
-  <div class="login-overlay" id="loginOverlay">
+  <div class="login-overlay hidden" id="loginOverlay">
+    <script>
+      try { if (sessionStorage.getItem('lingee_auth_session') !== '1') document.write('<style>#loginOverlay{display:flex!important}</style>'); } catch(e) {}
+    </script>
     <div class="login-card">
       <div class="login-brand">
         <span class="login-title">金蝶灵基</span>
