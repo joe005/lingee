@@ -832,7 +832,14 @@ const billTemplateWithTokens = billTemplate.replace(
     });
   }
   var userMenuLogout=$('#userMenuLogout');
-  if(userMenuLogout) userMenuLogout.addEventListener('click',function(){ closeUserMenu(); toast('已退出登录'); });
+  if(userMenuLogout) userMenuLogout.addEventListener('click',function(){
+    closeUserMenu();
+    try{ sessionStorage.removeItem(LOGIN_KEY); }catch(e){}
+    if(loginForm) loginForm.reset();
+    if(loginError) loginError.textContent='';
+    showLogin();
+    $('#loginUser').focus();
+  });
 
   /* ---------- 表单内下拉：点击展开 ---------- */
   $$('.dropdown.field-dd').forEach(function(dd){
