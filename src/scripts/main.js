@@ -167,6 +167,7 @@ const billTemplateWithTokens = billTemplate.replace(
 
   /* ---------- Changelog / 更新通知（与 Build_demo 完全一致） ---------- */
   var changelogData=[
+    {id:'12',date:'2026-09-09',iconBg:'#eef3ff',iconColor:'#495dff',team:'新增协作开发模块',body:'左侧「专家」菜单改为「协作开发」，下设任务管理、待评审、协作人员管理、专家管理、专家团管理与设置六个页签；新增项目维度，任务、评审、协作人员按项目划分，专家与专家团为全局资产、项目内只绑定默认专家团。'},
     {id:'11',date:'2026-09-08',iconBg:'#eef3ff',iconColor:'#495dff',team:'原型新增登录页',body:'新增登录页，需账号密码登录后才能查看原型。'},
     {id:'10',date:'2026-08-27',iconBg:'#eef3ff',iconColor:'#495dff',team:'苍穹应用开发 · 预览区新增列表页签',body:'预览面板页签新增「列表」选项，支持列表视图展示。'},
     {id:'9',date:'2026-08-27',iconBg:'#e8faef',iconColor:'#08a040',team:'苍穹应用开发 · 历史版本',body:'新增历史记录面板，支持查看版本时间线与版本描述，可回退到历史版本。'},
@@ -175,6 +176,7 @@ const billTemplateWithTokens = billTemplate.replace(
   ];
   // 每个数据条目对应的 avatar SVG 图标（与 Build_demo 的 lucide 图标一致）
   var changelogIcons={
+    '12':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M6 3v12"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>',
     '11':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg>',
     '9':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-6.36 2.64L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg>',
     '10':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>',
@@ -750,7 +752,7 @@ const billTemplateWithTokens = billTemplate.replace(
   });
 
   /* ---------- view switching ---------- */
-  var viewHome=$('#view-home'), viewNew=$('#view-newtask'), viewChat=$('#view-chat'), viewApps=$('#view-apps'), viewSkills=$('#view-skills'), viewAgents=$('#view-agents'), viewExperts=$('#view-experts'), viewDesign=$('#view-design'), viewSettings=$('#view-settings');
+  var viewHome=$('#view-home'), viewNew=$('#view-newtask'), viewChat=$('#view-chat'), viewApps=$('#view-apps'), viewSkills=$('#view-skills'), viewAgents=$('#view-agents'), viewCollab=$('#view-collab'), viewDesign=$('#view-design'), viewSettings=$('#view-settings');
   function setUrlState(search){
     history.replaceState(null,'',search);
     try{localStorage.setItem('lingeeUrlState',search)}catch(e){}
@@ -762,7 +764,7 @@ const billTemplateWithTokens = billTemplate.replace(
     viewApps.classList.toggle('hidden', which!=='apps');
     viewSkills.classList.toggle('hidden', which!=='skills');
     viewAgents.classList.toggle('hidden', which!=='agents');
-    viewExperts.classList.toggle('hidden', which!=='experts');
+    viewCollab.classList.toggle('hidden', which!=='collab');
     viewDesign.classList.toggle('hidden', which!=='design');
     viewSettings.classList.toggle('hidden', which!=='settings');
     $('.sidebar').classList.toggle('hidden', which==='design');
@@ -2134,9 +2136,10 @@ const billTemplateWithTokens = billTemplate.replace(
         showView('skills');
       }else if(name==='智能体开发'){
         showView('agents');
-      }else if(name==='专家'){
-        showView('experts');
-        renderExpertGrid();
+      }else if(name==='协作开发'){
+        showView('collab');
+        cvInit();
+        cvSwitchView(cvLastTab);
       }else if(name==='新会话'){
         showView('newtask');
         input.setAttribute('data-placeholder','布置任务');
@@ -3903,6 +3906,8 @@ const billTemplateWithTokens = billTemplate.replace(
     if(savedSearch){ dsSearch=savedSearch; history.replaceState(null,'',savedSearch); }
   }
   var dsViewParam=new URLSearchParams(dsSearch).get('view');
+  /* 专家视图已并入协作开发，兼容旧的 ?view=experts */
+  if(dsViewParam==='experts') dsViewParam='collab';
   var dsTokenParam=new URLSearchParams(dsSearch).get('token');
   if(dsViewParam==='design'){
     showView('design');
@@ -3931,7 +3936,12 @@ const billTemplateWithTokens = billTemplate.replace(
     if(dsViewParam==='skills') setNavActive('技能开发');
     else if(dsViewParam==='agents') setNavActive('智能体开发');
     else if(dsViewParam==='apps') setNavActive('应用开发');
-    else if(dsViewParam==='experts'){ setNavActive('专家'); renderExpertGrid(); }
+    else if(dsViewParam==='collab'){
+      setNavActive('协作开发');
+      /* 协作开发模块在文件末尾才初始化，这里只记下要打开的页签 */
+      cvPendingTab=new URLSearchParams(dsSearch).get('tab')||'tasks';
+      cvPendingProj=new URLSearchParams(dsSearch).get('proj')||'';
+    }
   }else{
     /* 默认显示新会话 */
     showView('newtask');
@@ -4913,7 +4923,7 @@ const billTemplateWithTokens = billTemplate.replace(
       }
       if(ev.target.closest('[data-goto-experts]')){
         dd.classList.remove('open');
-        showView('experts'); setNavActive('专家'); renderExpertGrid();
+        showView('collab'); setNavActive('协作开发'); cvInit(); cvSwitchView('teams');
       }
     });
 
@@ -4940,6 +4950,1096 @@ const billTemplateWithTokens = billTemplate.replace(
   renderExpertChips();
   renderModeTag();
   renderExpertGrid();
+
+
+
+  /* ============================================================
+     协作开发（任务管理 / 待评审 / 协作人员 / 专家 / 专家团 / 设置）
+     任务、评审、协作人员数据与交互移植自协作开发原型稿
+     ============================================================ */
+  /* 项目维度：任务 / 评审 / 协作人员按项目分；专家与专家团为全局资产，项目内只绑定默认专家团 */
+  var CV_PROJECTS=[
+    {id:'expense',name:'费用报销应用',dot:'blue',defaultTeam:'software-company'},
+    {id:'purchase',name:'采购管理系统',dot:'orange',defaultTeam:'cosmic-team'},
+    {id:'supply',name:'供应链协同平台',dot:'green',defaultTeam:null}
+  ];
+  var cvProject='';                    /* 空串 = 全部项目（个人视角的聚合视图） */
+  var cvConfigOverride={};             /* {项目id:{配置卡 key:是否项目覆盖}} */
+  function cvProjectById(id){
+    for(var i=0;i<CV_PROJECTS.length;i++){ if(CV_PROJECTS[i].id===id) return CV_PROJECTS[i]; }
+    return null;
+  }
+  function cvProjectName(id){ var p=cvProjectById(id); return p?p.name:'未归属项目'; }
+  function cvInProject(row){
+    if(!cvProject) return true;
+    if(row.projects) return row.projects==='*'||row.projects.indexOf(cvProject)>=0;
+    return row.project===cvProject;
+  }
+  function cvProjectTag(row){
+    if(cvProject) return '';           /* 项目态下不必重复显示项目名 */
+    return '<span class="cv-proj-tag">'+cvProjectName(row.project)+'</span>';
+  }
+
+  var CV_TASKS = [
+    {type:'需求',size:'大',source:'Jira',sourceId:'PROJ-42',exec:'专家团',status:'待评审',collab:'Agent间协作',title:'审批流插件代码审查',desc:'审查费用报销审批流的插件实现，包括多级审批流转逻辑和异常处理',assignee:'王工',progress:0,project:'expense'},
+    {type:'Bug',size:'小',source:'TAPD',sourceId:'BUG-7831',exec:'自动执行',status:'进行中',collab:'人Agent协作',title:'报销金额精度丢失修复',desc:'当报销金额含小数时，后端 BigDecimal 序列化后精度丢失',assignee:'AI开发Agent',progress:62,project:'expense'},
+    {type:'需求',size:'小',source:'对话自建',sourceId:'CNV-001',exec:'自动执行',status:'已完成',collab:'无需协作',title:'费用类型新增团建费选项',desc:'在费用类型下拉中增加团建费选项，归属部门活动费用类别',assignee:'AI开发Agent',progress:100,project:'expense'},
+    {type:'任务',size:'大',source:'Jira',sourceId:'PROJ-56',exec:'专家团',status:'未开始',collab:'人人协作',title:'权限体系重构',desc:'基于 RBAC 模型重构权限体系，支持角色分级、数据权限和功能权限分离',assignee:'待分配',progress:0,project:'expense'},
+    {type:'改进',size:'小',source:'API',sourceId:'API-12',exec:'自动执行',status:'已完成',collab:'无需协作',title:'批量导出 Excel 格式支持',desc:'当前仅支持 CSV 导出，需要增加 Excel 格式导出功能',assignee:'AI开发Agent',progress:100,project:'expense'},
+    {type:'Bug',size:'小',source:'Jira',sourceId:'BUG-7845',exec:'自动执行',status:'未开始',collab:'人Agent协作',title:'附件上传偶发 502 错误',desc:'附件上传在弱网环境下偶发 502 错误，需要增加重试机制',assignee:'待分配',progress:0,project:'expense'},
+    {type:'需求',size:'大',source:'Jira',sourceId:'PROJ-61',exec:'专家团',status:'未开始',collab:'人人协作',title:'多级审批流性能优化',desc:'当前审批流在多级审批场景下存在性能瓶颈，需要优化审批流转逻辑',assignee:'待分配',progress:0,project:'expense'},
+    {type:'任务',size:'大',source:'TAPD',sourceId:'TASK-203',exec:'专家团',status:'待评审',collab:'Agent间协作',title:'审批流多级流转设计',desc:'设计多级审批流转逻辑，支持串行、并行、会签等多种审批模式',assignee:'王工',progress:0,project:'expense'},
+    {type:'改进',size:'小',source:'对话自建',sourceId:'CNV-003',exec:'自动执行',status:'进行中',collab:'人Agent协作',title:'打印模板优化',desc:'优化报销单打印模板，支持自定义页眉页脚和水印',assignee:'AI开发Agent',progress:35,project:'expense'},
+    {type:'Bug',size:'小',source:'TAPD',sourceId:'BUG-7852',exec:'自动执行',status:'已完成',collab:'无需协作',title:'列表搜索响应慢修复',desc:'当报销单数据量超过 5000 条时，列表页搜索响应时间超过 10 秒',assignee:'AI开发Agent',progress:100,project:'expense'},
+    {type:'需求',size:'大',source:'Jira',sourceId:'PROJ-68',exec:'专家团',status:'未开始',collab:'人人协作',title:'多币种报销支持',desc:'支持多币种报销，包括汇率转换、币种选择和金额展示逻辑',assignee:'待分配',progress:0,project:'expense'},
+    {type:'任务',size:'小',source:'对话自建',sourceId:'CNV-005',exec:'自动执行',status:'已完成',collab:'人Agent协作',title:'数据字典维护',desc:'维护费用类型、审批层级、权限角色等数据字典',assignee:'AI开发Agent',progress:100,project:'expense'},
+    {type:'Bug',size:'大',source:'Jira',sourceId:'BUG-7901',exec:'专家团',status:'已失败',collab:'Agent间协作',title:'审批流死锁问题修复',desc:'并发审批场景下出现死锁，需要重构审批流的锁机制',assignee:'AI开发Agent',progress:0,project:'expense'},
+    {type:'改进',size:'小',source:'API',sourceId:'API-18',exec:'自动执行',status:'未开始',collab:'无需协作',title:'移动端审批页面适配',desc:'当前审批页面在移动端显示异常，需要做响应式适配',assignee:'待分配',progress:0,project:'expense'},
+    {type:'需求',size:'大',source:'Jira',sourceId:'PROJ-75',exec:'专家团',status:'进行中',collab:'人人协作',title:'预算控制模块开发',desc:'新增预算控制模块，支持按部门/项目/月份设置预算上限，超标自动拦截',assignee:'李工',progress:45,project:'expense'},
+    {type:'任务',size:'小',source:'TAPD',sourceId:'TASK-215',exec:'自动执行',status:'未开始',collab:'人Agent协作',title:'审批日志查询接口',desc:'开发审批日志查询接口，支持按时间、人员、状态筛选',assignee:'待分配',progress:0,project:'expense'},
+    {type:'Bug',size:'小',source:'对话自建',sourceId:'CNV-008',exec:'自动执行',status:'已完成',collab:'无需协作',title:'日期格式显示不一致',desc:'不同页面日期格式不一致，有的显示 yyyy-MM-dd 有的显示 yyyy/MM/dd',assignee:'AI开发Agent',progress:100,project:'expense'},
+    {type:'需求',size:'大',source:'飞书',sourceId:'FS-33',exec:'专家团',status:'未开始',collab:'Agent间协作',title:'移动端审批流开发',desc:'开发移动端审批流程，支持微信/钉钉/飞书消息通知和审批操作',assignee:'待分配',progress:0,project:'expense'},
+    {type:'需求',size:'大',source:'Jira',sourceId:'PUR-18',exec:'专家团',status:'进行中',collab:'人人协作',title:'采购订单批量导入',desc:'支持 Excel 批量导入采购订单，含供应商匹配、价格校验与错误行回执',assignee:'李工',progress:38,project:'purchase'},
+    {type:'Bug',size:'小',source:'TAPD',sourceId:'BUG-8102',exec:'自动执行',status:'待评审',collab:'人Agent协作',title:'采购入库单反审核报错',desc:'反审核已关联付款单的入库单时抛空指针，需补充关联校验与提示',assignee:'AI开发Agent',progress:0,project:'purchase'},
+    {type:'任务',size:'小',source:'对话自建',sourceId:'CNV-011',exec:'自动执行',status:'已完成',collab:'无需协作',title:'采购订单列表新增供应商筛选',desc:'列表页筛选区增加供应商下拉，支持按编码与名称模糊匹配',assignee:'AI开发Agent',progress:100,project:'purchase'},
+    {type:'改进',size:'大',source:'Jira',sourceId:'PUR-25',exec:'专家团',status:'未开始',collab:'人人协作',title:'采购价格审批链重构',desc:'按金额分级审批，超阈值自动加签采购总监，并保留完整审批留痕',assignee:'待分配',progress:0,project:'purchase'},
+    {type:'需求',size:'大',source:'飞书',sourceId:'FS-52',exec:'专家团',status:'进行中',collab:'Agent间协作',title:'供应商协同门户对接',desc:'打通供应商门户的订单确认与交期回复，含消息推送与状态回写',assignee:'冯远',progress:52,project:'supply'},
+    {type:'任务',size:'小',source:'API',sourceId:'API-31',exec:'自动执行',status:'未开始',collab:'人Agent协作',title:'交期变更消息推送',desc:'交期变更时向采购员推送企业微信消息，推送失败进入重试队列',assignee:'待分配',progress:0,project:'supply'},
+    {type:'Bug',size:'小',source:'Jira',sourceId:'BUG-8155',exec:'自动执行',status:'已失败',collab:'Agent间协作',title:'供应商评级定时任务超时',desc:'评级任务在供应商超 2 万条时超时中断，需要改为分片执行',assignee:'AI开发Agent',progress:0,project:'supply'},
+    {type:'需求',size:'小',source:'对话自建',sourceId:'CNV-014',exec:'自动执行',status:'已完成',collab:'无需协作',title:'供应商档案资质到期提醒',desc:'资质到期前 30 天在档案列表标红，并向对接采购员推送提醒',assignee:'AI开发Agent',progress:100,project:'supply'}
+  ];
+
+  var CV_REVIEW_ARTIFACTS={
+  0:{tabs:['源代码','技术方案'],content:{
+  '源代码':'<h1>审批流插件 - 源代码</h1><p>文件: ApprovalFlowPlugin.java</p><pre>public class ApprovalFlowPlugin extends AbstractPlugin {\n  @Override\n  public void execute(ExecutionContext ctx) {\n    ApprovalContext ac = ctx.getApprovalContext();\n    List&lt;ApprovalNode&gt; nodes = ac.getApprovalNodes();\n    for (ApprovalNode node : nodes) {\n      if (node.isTimeout(30, TimeUnit.MINUTES)) {\n        handleTimeout(node, ac);\n        continue;\n      }\n      if (node.getStatus() == NodeStatus.PENDING) {\n        notifyApprover(node);\n      }\n    }\n    // 多级审批流转\n    if (ac.allNodesProcessed()) {\n      ctx.complete();\n    }\n  }\n  private void handleTimeout(ApprovalNode node, ApprovalContext ac) {\n    // 超时自动升级\n    ac.escalateToSuperior(node);\n  }\n}</pre><p>文件: ApprovalFlowService.java</p><pre>public class ApprovalFlowService {\n  public ApprovalResult submit(ExpenseReport report) {\n    ApprovalFlow flow = buildFlow(report);\n    flow.start();\n    return flow.getResult();\n  }\n}</pre>',
+  '技术方案':'<h1>审批流插件技术方案</h1><h2>1. 概述</h2><p>基于苍穹插件机制实现费用报销多级审批流转，支持串行/并行审批、超时自动升级、异常回退。</p><h2>2. 核心设计</h2><h3>2.1 审批节点模型</h3><table><tr><th>字段</th><th>类型</th><th>说明</th></tr><tr><td>nodeId</td><td>String</td><td>节点唯一标识</td></tr><tr><td>approver</td><td>String</td><td>审批人ID</td></tr><tr><td>status</td><td>Enum</td><td>PENDING/APPROVED/REJECTED</td></tr><tr><td>timeout</td><td>int</td><td>超时时间(分钟)</td></tr></table><h3>2.2 流转规则</h3><ul><li>串行模式：按节点顺序依次审批</li><li>并行模式：同级节点同时审批，全部通过后进入下一级</li><li>超时处理：超过 timeout 分钟自动升级到上级</li></ul><h2>3. 异常处理</h2><ul><li>审批人离职：自动转交代理人</li><li>审批人拒绝：流程回退到发起人</li><li>系统异常：记录日志并发送告警</li></ul>'}},
+  1:{tabs:['技术方案','需求规格'],content:{
+  '技术方案':'<h1>多级审批流性能优化方案</h1><h2>1. 性能问题分析</h2><p>当前审批流在 5000+ 并发场景下平均响应时间 > 3s，瓶颈在数据库查询和节点状态同步。</p><h2>2. 优化方案</h2><h3>2.1 缓存优化</h3><ul><li>审批节点状态缓存到 Redis，TTL 5 分钟</li><li>批量查询替代循环单条查询</li></ul><h3>2.2 异步化</h3><ul><li>通知发送改为异步消息队列</li><li>超时检查改为定时任务批量扫描</li></ul><h3>2.3 数据库优化</h3><table><tr><th>优化项</th><th>预计提升</th></tr><tr><td>索引优化</td><td>40%</td></tr><tr><td>分页查询</td><td>30%</td></tr><tr><td>读写分离</td><td>20%</td></tr></table>',
+  '需求规格':'<h1>需求规格说明书 - PRD</h1><h2>1. 背景与目标</h2><p>随着报销业务量增长，现有审批流在高峰期出现严重性能瓶颈，需要优化以支持千人并发审批。</p><h2>2. 功能需求</h2><h3>2.1 性能指标</h3><ul><li>支持 1000+ 并发审批</li><li>平均响应时间 < 500ms</li><li>99.9% 请求在 1s 内完成</li></ul><h3>2.2 兼容性</h3><ul><li>向下兼容现有审批流配置</li><li>支持灰度发布</li></ul>'}},
+  2:{tabs:['技术方案','需求规格','源代码'],content:{
+  '技术方案':'<h1>权限体系重构技术方案 - Spec</h1><h2>1. 设计目标</h2><p>基于 RBAC 模型重构权限体系，实现数据权限与功能权限分离，支持角色继承和细粒度授权。</p><h2>2. 权限模型</h2><h3>2.1 角色层级</h3><table><tr><th>层级</th><th>角色</th><th>权限范围</th></tr><tr><td>L1</td><td>系统管理员</td><td>全部</td></tr><tr><td>L2</td><td>部门管理员</td><td>本部门</td></tr><tr><td>L3</td><td>普通用户</td><td>个人数据</td></tr></table><h3>2.2 权限类型</h3><ul><li>功能权限：菜单、按钮、API 接口</li><li>数据权限：行级、列级过滤</li><li>字段权限：字段可见/可编辑</li></ul>',
+  '需求规格':'<h1>权限体系重构需求规格</h1><h2>1. 业务背景</h2><p>当前权限体系不支持角色继承，数据权限与功能权限耦合，维护成本高。</p><h2>2. 功能需求</h2><ul><li>支持角色继承，子角色自动继承父角色权限</li><li>数据权限支持行级过滤（按部门/项目）</li><li>支持字段级权限控制</li><li>权限变更实时生效，无需重新登录</li></ul>',
+  '源代码':'<h1>权限服务 - 源代码</h1><pre>public class PermissionService {\n  public boolean hasPermission(String userId, String resource, String action) {\n    List&lt;Role&gt; roles = roleService.getUserRoles(userId);\n    return roles.stream().anyMatch(r ->\n      r.hasPermission(resource, action) ||\n      (r.getParent() != null && r.getParent().hasPermission(resource, action))\n    );\n  }\n  public DataFilter getDataFilter(String userId, String resource) {\n    List&lt;Role&gt; roles = roleService.getUserRoles(userId);\n    return DataFilterComposer.compose(roles, resource);\n  }\n}</pre>'}},
+  3:{tabs:['源代码','技术方案'],content:{
+  '源代码':'<h1>打印模板优化 - 源代码</h1><pre>public class PrintTemplateRenderer {\n  public byte[] render(ExpenseReport report, TemplateConfig config) {\n    Workbook wb = new XSSFWorkbook();\n    Sheet header = wb.createSheet("报销单");\n    // 页眉\n    if (config.hasHeader()) {\n      renderHeader(header, config.getHeader());\n    }\n    // 水印\n    if (config.hasWatermark()) {\n      addWatermark(wb, config.getWatermark());\n    }\n    // 数据行\n    renderRows(header, report.getItems());\n    return wb.getBytes();\n  }\n}</pre>',
+  '技术方案':'<h1>打印模板优化方案</h1><h2>1. 需求</h2><p>支持自定义页眉页脚、水印、多页打印、Excel 格式输出。</p><h2>2. 技术选型</h2><ul><li>基于 Apache POI 5.x 生成 Excel</li><li>水印通过 Sheet 背景图实现</li><li>页眉页脚通过 HeaderFooter API</li></ul>'}},
+  4:{tabs:['源代码','单元测试'],content:{
+  '源代码':'<h1>附件上传 502 修复 - 源代码</h1><pre>public class AttachmentUploadHandler {\n  @Override\n  public UploadResult handle(UploadRequest req) {\n    int maxRetry = 3;\n    for (int i = 0; i &lt; maxRetry; i++) {\n      try {\n        return uploadToStorage(req.getFile());\n      } catch (StorageException e) {\n        if (i == maxRetry - 1) throw e;\n        Thread.sleep(1000 * (i + 1)); // 指数退避\n      }\n    }\n    throw new StorageException("Upload failed after retries");\n  }\n}</pre>',
+  '单元测试':'<h1>附件上传 - 单元测试报告</h1><h2>测试用例</h2><table><tr><th>用例</th><th>输入</th><th>预期</th><th>结果</th></tr><tr><td>正常上传</td><td>1MB 文件</td><td>成功</td><td>✅ 通过</td></tr><tr><td>弱网重试</td><td>模拟 502</td><td>重试 3 次后成功</td><td>✅ 通过</td></tr><tr><td>超时</td><td>10s 超时</td><td>返回超时错误</td><td>✅ 通过</td></tr><tr><td>空文件</td><td>0 字节</td><td>拒绝上传</td><td>✅ 通过</td></tr></table><p>覆盖率: 95% | 通过: 4/4</p>'}},
+  5:{tabs:['需求规格','源代码'],content:{
+  '需求规格':'<h1>需求规格 - 团建费选项</h1><h2>1. 需求描述</h2><p>在费用类型下拉中增加"团建费"选项，归属"部门活动费用"类别。</p><h2>2. 验收标准</h2><ul><li>费用类型下拉列表中可见"团建费"</li><li>选择后归属类别显示为"部门活动费用"</li><li>报销统计报表中可按团建费维度统计</li></ul>'}},
+  6:{tabs:['需求规格'],content:{
+  '需求规格':'<h1>多币种报销需求规格 - PRD</h1><h2>1. 业务背景</h2><p>随着国际化业务扩展，员工出差涉及多币种报销，需支持原币金额与本位币金额双重记录。</p><h2>2. 功能需求</h2><h3>2.1 币种管理</h3><ul><li>支持人民币(CNY)、美元(USD)、欧元(EUR)、日元(JPY)、港币(HKD)</li><li>币种汇率每日自动更新，支持手动调整</li></ul><h3>2.2 报销录入</h3><ul><li>选择币种后自动带出当日汇率</li><li>原币金额 + 汇率 = 本位币金额（自动计算，可手动修正）</li><li>同一报销单支持多币种明细行</li></ul><h2>3. 验收标准</h2><table><tr><th>场景</th><th>预期</th></tr><tr><td>单币种报销</td><td>正常提交审批</td></tr><tr><td>多币种混合报销</td><td>按行汇总本位币金额</td></tr><tr><td>汇率手动修正</td><td>记录修正人和修正时间</td></tr></table>'}},
+  7:{tabs:['测试用例','测试报告','源代码'],content:{
+  '测试用例':'<h1>费用明细列表页 - 测试用例</h1><h2>测试场景</h2><table><tr><th>用例</th><th>输入</th><th>预期</th><th>优先级</th></tr><tr><td>正常分页查询</td><td>page=1,size=20</td><td>返回 20 条数据</td><td>P0</td></tr><tr><td>大数据量查询</td><td>10000 条数据</td><td>响应 &lt; 500ms</td><td>P0</td></tr><tr><td>模糊搜索</td><td>keyword="差旅"</td><td>返回含"差旅"的记录</td><td>P1</td></tr><tr><td>时间范围筛选</td><td>startDate ~ endDate</td><td>返回范围内数据</td><td>P1</td></tr><tr><td>空结果处理</td><td>查无数据</td><td>显示"暂无数据"</td><td>P2</td></tr><tr><td>权限过滤</td><td>普通用户</td><td>仅返回本人数据</td><td>P0</td></tr></table>',
+  '测试报告':'<h1>费用明细列表页 - 测试报告</h1><h2>执行结果</h2><table><tr><th>用例</th><th>结果</th><th>备注</th></tr><tr><td>正常分页查询</td><td>✅ 通过</td><td>-</td></tr><tr><td>大数据量查询</td><td>✅ 通过</td><td>平均 280ms</td></tr><tr><td>模糊搜索</td><td>✅ 通过</td><td>-</td></tr><tr><td>时间范围筛选</td><td>✅ 通过</td><td>-</td></tr><tr><td>空结果处理</td><td>✅ 通过</td><td>-</td></tr><tr><td>权限过滤</td><td>❌ 失败</td><td>部门管理员可见下级数据，实际返回空</td></tr></table><p>通过: 5/6 | 覆盖率: 87%</p>',
+  '源代码':'<h1>费用明细列表页 - 源代码</h1><pre>public class ExpenseDetailListService {\n  public PageResult&lt;ExpenseDetail&gt; query(ExpenseQuery query) {\n    // 权限过滤\n    if (!query.getUser().isAdmin()) {\n      query.setUserId(query.getUser().getId());\n    }\n    // 分页查询\n    return expenseDetailDao.selectByPage(query, query.getPage(), query.getSize());\n  }\n}</pre>'}},
+  8:{tabs:['部署方案','运维手册'],content:{
+  '部署方案':'<h1>审批流插件部署方案</h1><h2>1. 部署策略</h2><h3>1.1 灰度发布</h3><ul><li>第一阶段：10% 流量灰度，观察 2 小时</li><li>第二阶段：50% 流量，观察 4 小时</li><li>第三阶段：100% 全量发布</li></ul><h3>1.2 回滚方案</h3><ul><li>自动回滚：错误率 &gt; 5% 时自动触发</li><li>手动回滚：一键切换到旧版本</li><li>数据回滚：审批流状态数据不回滚，仅回滚插件代码</li></ul><h2>2. 监控告警</h2><table><tr><th>指标</th><th>阈值</th><th>告警方式</th></tr><tr><td>审批流错误率</td><td>&gt; 1%</td><td>钉钉 + 邮件</td></tr><tr><td>审批响应时间</td><td>&gt; 2s</td><td>钉钉</td></tr><tr><td>审批队列积压</td><td>&gt; 100 条</td><td>钉钉 + 短信</td></tr></table>',
+  '运维手册':'<h1>审批流插件 - 运维手册</h1><h2>1. 常用命令</h2><pre># 查看插件状态\nkubectl get pods -l app=approval-flow-plugin\n\n# 查看插件日志\nkubectl logs -f deployment/approval-flow-plugin\n\n# 回滚到上一版本\nkubectl rollout undo deployment/approval-flow-plugin</pre><h2>2. 常见问题</h2><h3>2.1 审批流卡住</h3><ul><li>检查 Redis 连接是否正常</li><li>检查审批节点状态是否为 PENDING</li><li>查看审批超时配置是否生效</li></ul><h3>2.2 性能下降</h3><ul><li>检查数据库索引是否生效</li><li>检查缓存命中率</li><li>查看是否有慢查询</li></ul>'}}
+  };
+  var CV_REVIEW_COMMENTS={
+  0:[{author:'李工',avatar:'李',type:'comment',text:'代码结构清晰，但建议将审批超时逻辑抽离为独立的 TimeoutHandler 类，提高可测试性。',time:'今日 14:20'},{author:'陈晨',avatar:'陈',type:'comment',text:'单元测试覆盖了多级审批场景，但缺少异常分支测试（审批人离职、系统异常等）。',time:'今日 15:30'}],
+  1:[{author:'王工',avatar:'王',type:'comment',text:'缓存方案合理，但需要考虑 Redis 宕机时的降级策略。建议增加本地缓存兜底。',time:'昨日 16:00'},{author:'张工',avatar:'张',type:'pass',text:'方案整体可行，性能指标满足要求。同意推进。',time:'今日 09:15'}],
+  2:[{author:'王工',avatar:'王',type:'comment',text:'RBAC 模型设计合理，角色继承逻辑需要补充循环依赖检测。',time:'2 天前 10:00'},{author:'陈晨',avatar:'陈',type:'comment',text:'数据权限行级过滤方案需要验证大数据量下的性能。',time:'昨日 14:30'},{author:'李工',avatar:'李',type:'reject',text:'PermissionService.hasPermission 方法在角色链较深时性能有问题，建议增加缓存。',time:'今日 11:00'}],
+  3:[{author:'陈晨',avatar:'陈',type:'comment',text:'水印实现方案可行，但多页打印时页眉需要每页重复渲染。',time:'3 小时前'}],
+  4:[{author:'刘洋',avatar:'刘',type:'comment',text:'指数退避策略合理，但建议增加熔断机制，避免连续重试拖垮系统。',time:'1 小时前'}],
+  5:[{author:'吴芳',avatar:'吴',type:'pass',text:'需求简单明确，实现完整，同意合入。',time:'昨日 14:30'}],
+  6:[{author:'王工',avatar:'王',type:'comment',text:'多币种需求描述清晰，但汇率自动更新的时间需要明确（每日凌晨还是实时？）',time:'今日 10:00'}],
+  7:[{author:'李工',avatar:'李',type:'reject',text:'权限过滤用例失败，部门管理员可见下级数据的逻辑有 Bug，需要修复后重新提交。',time:'今日 14:00'},{author:'陈晨',avatar:'陈',type:'comment',text:'测试用例覆盖了主要场景，建议增加并发查询的用例。',time:'今日 15:30'}],
+  8:[{author:'王工',avatar:'王',type:'comment',text:'灰度发布策略合理，建议第一阶段缩短到 1 小时。',time:'昨日 16:00'}]
+  };
+
+  var CV_REVIEWS = [
+    {type:'任务',size:'大',source:'Jira',exec:'专家团',priority:'紧急',reviewType:'代码评审',title:'审批流插件代码审查',desc:'审查费用报销审批流的插件实现，包括多级审批流转逻辑和异常处理',reviewer:'王工',reviewerRole:'架构人员',deadline:'今日 18:00',deadlineColor:'var(--danger)',borderColor:'var(--danger)',from:'张工',fromTime:'今日 10:30',artifacts:['源代码','单元测试','技术方案'],project:'expense'},
+    {type:'需求',size:'大',source:'Jira',exec:'专家团',priority:'高',reviewType:'方案评审',title:'多级审批流性能优化方案',desc:'当前审批流在多级审批场景下存在性能瓶颈，需要优化审批流转逻辑',reviewer:'王工',reviewerRole:'架构人员',deadline:'明日 12:00',deadlineColor:'var(--warning)',borderColor:'var(--warning)',from:'张工',fromTime:'昨日 16:20',artifacts:['技术方案','需求规格'],project:'expense'},
+    {type:'任务',size:'大',source:'Jira',exec:'专家团',priority:'中',reviewType:'方案评审',title:'权限体系重构方案评审',desc:'基于 RBAC 模型重构权限体系，支持角色分级、数据权限和功能权限分离',reviewer:'张工',reviewerRole:'开发人员',deadline:'3 天后',deadlineColor:'var(--dot-blue)',borderColor:'var(--dot-blue)',from:'赵琳',fromTime:'2 天前',artifacts:['技术方案','需求规格','源代码'],project:'expense'},
+    {type:'改进',size:'小',source:'对话自建',exec:'自动执行',priority:'中',reviewType:'代码评审',title:'打印模板优化方案评审',desc:'优化报销单打印模板，支持自定义页眉页脚和水印',reviewer:'陈晨',reviewerRole:'测试人员',deadline:'2 天后',deadlineColor:'var(--dot-blue)',borderColor:'var(--dot-blue)',from:'AI开发Agent',fromTime:'3 小时前',artifacts:['源代码','技术方案'],project:'expense'},
+    {type:'Bug',size:'小',source:'TAPD',exec:'自动执行',priority:'紧急',reviewType:'代码评审',title:'附件上传 502 修复方案评审',desc:'附件上传在弱网环境下偶发 502 错误的重试机制实现',reviewer:'张工',reviewerRole:'开发人员',deadline:'今日 20:00',deadlineColor:'var(--danger)',borderColor:'var(--danger)',from:'AI开发Agent',fromTime:'1 小时前',artifacts:['源代码','单元测试'],project:'expense'},
+    {type:'需求',size:'小',source:'对话自建',exec:'自动执行',priority:'低',reviewType:'需求评审',title:'费用类型新增选项评审',desc:'在费用类型下拉中增加团建费选项的实现',reviewer:'吴芳',reviewerRole:'需求人员',deadline:'5 天后',deadlineColor:'var(--success)',borderColor:'var(--dot-blue)',from:'AI开发Agent',fromTime:'昨日 14:00',artifacts:['需求规格','源代码'],project:'expense'},
+    {type:'需求',size:'大',source:'Jira',exec:'专家团',priority:'高',reviewType:'需求评审',title:'多币种报销需求规格评审',desc:'支持多币种报销，含汇率转换、原币金额与本位币金额双重记录',reviewer:'赵琳',reviewerRole:'需求人员',deadline:'明日 18:00',deadlineColor:'var(--warning)',borderColor:'var(--warning)',from:'王工',fromTime:'今日 09:00',artifacts:['需求规格'],project:'expense'},
+    {type:'任务',size:'大',source:'Jira',exec:'专家团',priority:'中',reviewType:'测试评审',title:'费用明细列表页测试用例评审',desc:'审查费用明细列表页的测试用例覆盖度，包括边界值、异常场景、性能场景',reviewer:'陈晨',reviewerRole:'测试人员',deadline:'3 天后',deadlineColor:'var(--dot-blue)',borderColor:'var(--dot-blue)',from:'李工',fromTime:'昨日 11:00',artifacts:['测试用例','测试报告','源代码'],project:'expense'},
+    {type:'任务',size:'中',source:'TAPD',exec:'专家团',priority:'中',reviewType:'部署评审',title:'审批流插件部署方案评审',desc:'审批流插件灰度发布方案，含回滚策略和监控告警配置',reviewer:'周杰',reviewerRole:'运维人员',deadline:'4 天后',deadlineColor:'var(--dot-blue)',borderColor:'var(--dot-blue)',from:'王工',fromTime:'2 天前 15:00',artifacts:['部署方案','运维手册'],project:'expense'},
+    {type:'需求',size:'大',source:'Jira',exec:'专家团',priority:'高',reviewType:'方案评审',title:'采购价格审批链重构方案',desc:'按金额分级审批与超阈值自动加签的流程设计，含审批留痕方案',reviewer:'冯远',reviewerRole:'架构人员',deadline:'明日 10:00',deadlineColor:'var(--warning)',borderColor:'var(--warning)',from:'李工',fromTime:'今日 09:20',artifacts:['技术方案','需求规格'],project:'purchase'},
+    {type:'Bug',size:'小',source:'TAPD',exec:'自动执行',priority:'中',reviewType:'代码评审',title:'采购入库单反审核校验补充',desc:'反审核关联付款单的校验实现与回归用例',reviewer:'张工',reviewerRole:'开发人员',deadline:'3 天后',deadlineColor:'var(--dot-blue)',borderColor:'var(--dot-blue)',from:'AI开发Agent',fromTime:'今日 11:40',artifacts:['源代码','单元测试'],project:'purchase'},
+    {type:'需求',size:'大',source:'飞书',exec:'专家团',priority:'紧急',reviewType:'需求评审',title:'供应商协同门户对接需求规格',desc:'订单确认与交期回复的字段口径、异常处理与状态回写规则',reviewer:'张工',reviewerRole:'开发人员',deadline:'今日 20:00',deadlineColor:'var(--danger)',borderColor:'var(--danger)',from:'冯远',fromTime:'今日 08:50',artifacts:['需求规格','技术方案'],project:'supply'}
+  ];
+
+  var CV_MEMBERS = [
+    {name:'张工',email:'zhang***@kingdee.com',roles:[{tag:'member-tag--dev',text:'开发'},{tag:'member-tag--arch',text:'架构'}],status:'available',source:'直接成员',isMe:true,projects:['expense','purchase','supply']},
+    {name:'李工',email:'li***@kingdee.com',roles:[{tag:'member-tag--dev',text:'开发'}],status:'available',source:'直接成员',projects:['expense','purchase']},
+    {name:'王工',email:'wang***@kingdee.com',roles:[{tag:'member-tag--dev',text:'开发'},{tag:'member-tag--arch',text:'架构'}],status:'busy',source:'直接成员',projects:['expense','supply']},
+    {name:'赵琳',email:'zha***@kingdee.com',roles:[{tag:'member-tag--pm',text:'需求'},{tag:'member-tag--pm',text:'产品'}],status:'available',source:'继承自 灵基AIOS',projects:'*'},
+    {name:'陈晨',email:'chen***@kingdee.com',roles:[{tag:'member-tag--qa',text:'测试'}],status:'available',source:'直接成员',projects:['expense']},
+    {name:'刘洋',email:'liu***@kingdee.com',roles:[{tag:'member-tag--qa',text:'测试'}],status:'busy',source:'直接成员',projects:['purchase']},
+    {name:'周杰',email:'zhou***@kingdee.com',roles:[{tag:'member-tag--ops',text:'运维'}],status:'available',source:'直接成员',projects:['expense','purchase']},
+    {name:'孙明',email:'sun***@kingdee.com',roles:[{tag:'member-tag--ops',text:'运维'}],status:'available',source:'继承自 灵基AIOS',projects:'*'},
+    {name:'吴芳',email:'wu***@kingdee.com',roles:[{tag:'member-tag--pm',text:'需求'}],status:'available',source:'直接成员',projects:['expense']},
+    {name:'郑凯',email:'zheng***@kingdee.com',roles:[{tag:'member-tag--dev',text:'开发'}],status:'busy',source:'直接成员',projects:['expense']},
+    {name:'钱涛',email:'qian***@kingdee.com',roles:[{tag:'member-tag--dev',text:'开发'}],status:'available',source:'直接成员',projects:['purchase']},
+    {name:'宋宇',email:'song***@kingdee.com',roles:[{tag:'member-tag--pm',text:'产品'}],status:'available',source:'继承自 灵基AIOS',projects:'*'},
+    {name:'冯远',email:'feng***@kingdee.com',roles:[{tag:'member-tag--arch',text:'架构'}],status:'available',source:'直接成员',projects:['supply']},
+    {name:'许诺',email:'xu***@kingdee.com',roles:[{tag:'member-tag--dev',text:'开发'},{tag:'member-tag--arch',text:'架构'}],status:'busy',source:'直接成员',projects:['purchase','supply']},
+    {name:'蒋雯',email:'jiang***@kingdee.com',roles:[{tag:'member-tag--pm',text:'需求'},{tag:'member-tag--pm',text:'产品'}],status:'available',source:'继承自 灵基AIOS',projects:'*'},
+    {name:'何欣',email:'he***@kingdee.com',roles:[{tag:'member-tag--pm',text:'需求'}],status:'available',source:'直接成员',projects:['supply']},
+    {name:'韩梅',email:'han***@kingdee.com',roles:[{tag:'member-tag--qa',text:'测试'}],status:'available',source:'直接成员',projects:['purchase']},
+    {name:'罗静',email:'luo***@kingdee.com',roles:[{tag:'member-tag--qa',text:'测试'}],status:'busy',source:'直接成员',projects:['supply']},
+    {name:'杨帆',email:'yang***@kingdee.com',roles:[{tag:'member-tag--ops',text:'运维'}],status:'available',source:'直接成员',projects:['purchase']},
+    {name:'唐辉',email:'tang***@kingdee.com',roles:[{tag:'member-tag--ops',text:'运维'}],status:'available',source:'继承自 灵基AIOS',projects:'*'},
+    {name:'梁平',email:'liang***@kingdee.com',roles:[{tag:'member-tag--pm',text:'产品'},{tag:'member-tag--owner',text:'所有者'}],status:'available',source:'直接成员',projects:['expense','purchase','supply']}
+  ];
+
+  var CV_WORKFLOW = ['需求分析','方案设计','开发实现','代码审查','测试验证','部署发布'];
+  var CV_WORKFLOW_ROLES = {'需求分析':'需求人员','方案设计':'架构人员','开发实现':'开发人员','代码审查':'开发人员','测试验证':'测试人员','部署发布':'运维人员'};
+  var CV_THIRD_PARTY_MEMBERS=[
+    {name:'钱涛',email:'qian***@kingdee.com',role:'开发',tag:'member-tag--dev',dept:'研发部'},
+    {name:'宋宇',email:'song***@kingdee.com',role:'开发',tag:'member-tag--dev',dept:'研发部'},
+    {name:'冯远',email:'feng***@kingdee.com',role:'架构',tag:'member-tag--arch',dept:'架构部'},
+    {name:'许诺',email:'xu***@kingdee.com',role:'开发',tag:'member-tag--dev',dept:'研发部'},
+    {name:'韩梅',email:'han***@kingdee.com',role:'测试',tag:'member-tag--qa',dept:'测试部'},
+    {name:'罗静',email:'luo***@kingdee.com',role:'测试',tag:'member-tag--qa',dept:'测试部'},
+    {name:'杨帆',email:'yang***@kingdee.com',role:'运维',tag:'member-tag--ops',dept:'运维部'},
+    {name:'唐辉',email:'tang***@kingdee.com',role:'运维',tag:'member-tag--ops',dept:'运维部'},
+    {name:'蒋雯',email:'jiang***@kingdee.com',role:'需求',tag:'member-tag--pm',dept:'产品部'},
+    {name:'何欣',email:'he***@kingdee.com',role:'需求',tag:'member-tag--pm',dept:'产品部'},
+    {name:'梁平',email:'liang***@kingdee.com',role:'产品',tag:'member-tag--pm',dept:'产品部'},
+    {name:'范晨',email:'fan***@kingdee.com',role:'开发',tag:'member-tag--dev',dept:'研发部'},
+    {name:'董睿',email:'dong***@kingdee.com',role:'架构',tag:'member-tag--arch',dept:'架构部'},
+    {name:'贾旭',email:'jia***@kingdee.com',role:'测试',tag:'member-tag--qa',dept:'测试部'},
+    {name:'武威',email:'wu***@kingdee.com',role:'运维',tag:'member-tag--ops',dept:'运维部'}
+  ];
+
+  function cvRenderTaskStats(){
+    var counts={未开始:0,待评审:0,进行中:0,已完成:0,已失败:0};
+    var rows=CV_TASKS.filter(cvInProject);
+    rows.forEach(function(t){counts[t.status]=(counts[t.status]||0)+1;});
+    var el=document.getElementById('cv-task-stats');if(!el)return;
+    var stats=[
+      {num:rows.length,label:'全部任务',color:'var(--text)',status:'全部状态'},
+      {num:counts['未开始']||0,label:'未开始',color:'var(--text-secondary)',status:'未开始'},
+      {num:counts['待评审']||0,label:'待评审',color:'var(--warning)',status:'待评审'},
+      {num:counts['进行中']||0,label:'进行中',color:'var(--dot-blue)',status:'进行中'},
+      {num:counts['已完成']||0,label:'已完成',color:'var(--success)',status:'已完成'},
+      {num:counts['已失败']||0,label:'已失败',color:'var(--danger)',status:'已失败'}
+    ];
+    el.innerHTML=stats.map(function(s){
+      return '<div class="stat" onclick="cvClickStat(this,\''+s.status+'\')"><div class="stat-num" style="color:'+s.color+'">'+s.num+'</div><div class="stat-label">'+s.label+'</div></div>';
+    }).join('');
+  }
+  function cvRenderTasks(){
+    var grid=document.getElementById('cv-task-grid');if(!grid)return;
+    grid.innerHTML=CV_TASKS.map(function(t,i){return cvInProject(t)?cvBuildTaskCard(t,i):'';}).join('');
+    if(!grid.innerHTML) grid.innerHTML='<div class="x-empty">该项目下还没有任务</div>';
+  }
+  function cvBuildTaskCard(t,i){
+    var typeCls={'需求':'badge-type','Bug':'badge-bug','任务':'badge-task','改进':'badge-improve'}[t.type]||'badge-type';
+    var sizeCls=t.size==='大'?'badge-size-l':'badge-size-s';
+    var srcCls={'Jira':'source-tag--jira','TAPD':'source-tag--tapd','对话自建':'source-tag--build','API':'source-tag--api','飞书':'source-tag--feishu'}[t.source]||'source-tag--build';
+    var execCls=t.exec==='专家团'?'badge-expert':'badge-auto';
+    var statusMap={'未开始':'pending','待评审':'review','进行中':'running','已完成':'done','已失败':'fail'};
+    var sc=statusMap[t.status]||'pending';
+    var nodeMap={'未开始':'需求分析','待评审':'代码审查','进行中':'开发实现','已完成':'部署发布','已失败':'开发实现'};
+    var node=nodeMap[t.status]||'需求分析';
+    return '<div class="card" data-type="'+t.type+'" data-status="'+t.status+'" data-collab="'+t.collab+'" data-size="'+t.size+'" data-idx="'+i+'">'
+      +'<div class="card-top"><div class="card-row">'
+      +'<span class="badge '+typeCls+'">'+t.type+'</span>'
+      +'<span class="badge '+sizeCls+'">'+t.size+'</span>'
+      +'<span class="source-tag '+srcCls+'">'+t.source+'</span>'
+      +'<span class="badge-status badge-status--'+sc+'"><span class="badge-status-dot"></span>'+t.status+'</span>'
+      +cvProjectTag(t)
+      +'</div><span class="badge '+execCls+'">'+t.exec+'</span></div>'
+      +'<div class="card-title">'+t.title+'</div>'
+      +'<div class="card-desc">'+t.desc+'</div>'
+      +'<div class="card-footer"><div class="assignee"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'+t.assignee+'</div><span style="font-size:11px;color:var(--text-soft)">'+t.source+' '+t.sourceId+'</span></div>'
+      +'</div>';
+  }
+  function cvRenderReviewStats(){
+    var el=document.getElementById('cv-review-stats');if(!el)return;
+    var rows=CV_REVIEWS.filter(cvInProject);
+    var urgent=rows.filter(function(r){return r.priority==='紧急';}).length;
+    var mine=rows.filter(function(r){return r.from==='张工';}).length;
+    var assigned=rows.filter(function(r){return r.reviewer==='张工';}).length;
+    var stats=[
+      {num:rows.length,label:'待评审',color:'var(--warning)',filter:'全部待评审'},
+      {num:urgent,label:'即将到期',color:'var(--danger)',filter:'紧急'},
+      {num:mine,label:'我发起的',color:'var(--dot-blue)',filter:'我发起的'},
+      {num:assigned,label:'分配给我',color:'var(--success)',filter:'分配给我的'}
+    ];
+    el.innerHTML=stats.map(function(s){
+      return '<div class="stat" onclick="cvClickReviewStat(this,\''+s.filter+'\')"><div class="stat-num" style="color:'+s.color+'">'+s.num+'</div><div class="stat-label">'+s.label+'</div></div>';
+    }).join('');
+  }
+  function cvRenderReviews(){
+    var grid=document.getElementById('cv-review-grid');if(!grid)return;
+    grid.innerHTML=CV_REVIEWS.map(function(r,i){return cvInProject(r)?cvBuildReviewCard(r,i):'';}).join('');
+    if(!grid.innerHTML) grid.innerHTML='<div class="x-empty">该项目下没有待评审的内容</div>';
+  }
+  function cvBuildReviewCard(r,i){
+    var typeCls={'需求':'badge-type','Bug':'badge-bug','任务':'badge-task','改进':'badge-improve'}[r.type]||'badge-type';
+    var sizeCls=r.size==='大'?'badge-size-l':'badge-size-s';
+    var srcCls={'Jira':'source-tag--jira','TAPD':'source-tag--tapd','对话自建':'source-tag--build','API':'source-tag--api','飞书':'source-tag--feishu'}[r.source]||'source-tag--build';
+    var artHtml=r.artifacts.map(function(a){return '<span class="review-artifact">'+a+'</span>';}).join(' · ');
+    return '<div class="card" data-idx="'+i+'" onclick="cvOpenReviewDetail('+i+')">'
+      +'<div class="card-top"><div class="card-row">'
+      +'<span class="badge '+typeCls+'">'+r.type+'</span>'
+      +'<span class="badge '+sizeCls+'">'+r.size+'</span>'
+      +'<span class="source-tag '+srcCls+'">'+r.source+'</span>'
+      +'<span class="badge-status badge-status--review"><span class="badge-status-dot"></span>待评审</span>'
+      +cvProjectTag(r)
+      +'</div><span class="badge badge-expert">'+r.exec+'</span></div>'
+      +'<div class="card-title">'+r.title+'</div>'
+      +'<div class="card-desc">'+r.desc+'</div>'
+      +'<div class="review-info">'
+      +'<div class="review-info-item"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg>评审人: <b>'+r.reviewer+'</b> <span>('+r.reviewerRole+')</span></div>'
+      +'<div class="review-info-item"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="'+r.deadlineColor+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>截止: <b style="color:'+r.deadlineColor+'">'+r.deadline+'</b></div>'
+      +'<div class="review-info-item"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>产物: '+artHtml+'</div>'
+      +'</div>'
+      +'<div class="card-actions"><span class="card-node"><span class="card-node-dot"></span>'+r.reviewType+'</span><div style="display:flex;gap:4px;margin-left:auto">'
+      +'<button class="act-btn act-btn--exec" onclick="event.stopPropagation();cvReviewPass('+i+')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>通过</button>'
+      +'<button class="act-btn act-btn--reject" onclick="event.stopPropagation();cvReviewReject('+i+')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>驳回</button>'
+      +'<button class="card-view-btn" onclick="event.stopPropagation();cvOpenReviewDetail('+i+')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>查看对话</button>'
+      +'</div></div></div>';
+  }
+  function cvRenderMembers(){
+    var el=document.getElementById('cv-member-list');if(!el)return;
+    el.innerHTML=CV_MEMBERS.map(function(m,i){
+      if(!cvInProject(m)) return '';
+      var tagHtml=m.roles.map(function(r){return '<span class="member-tag '+r.tag+'">'+r.text+'</span>';}).join('');
+      var statusCls=m.status==='available'?'member-status--available':'member-status--busy';
+      var statusText=m.status==='available'?'可用':'繁忙';
+      var avatarCls=m.isMe?'member-avatar member-avatar--me':'member-avatar';
+      var nameCls=m.isMe?'member-name member-name--me':'member-name';
+      return '<div class="member-row" data-role="'+m.roles.map(function(r){return r.text;}).join(' ')+'">'
+        +'<div class="'+avatarCls+'">'+m.name[0]+'</div>'
+        +'<div class="member-info"><div class="'+nameCls+'">'+m.name+(m.isMe?' （你）':'')+'</div><div class="member-email">'+m.email+'</div><div class="member-tags">'+tagHtml+'</div></div>'
+        +'<span class="member-status '+statusCls+'">'+statusText+'</span>'
+        +'<span class="member-source">'+m.source+'</span>'
+        +(m.isMe?'':'<button class="member-del" onclick="cvDeleteMember('+i+')" title="移除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>')
+        +'</div>';
+    }).join('');
+  }
+  function cvRenderMemberStats(){
+    var el=document.getElementById('cv-member-stats');if(!el)return;
+    var counts={需求:0,架构:0,开发:0,测试:0,运维:0,产品:0};
+    var rows=CV_MEMBERS.filter(cvInProject);
+    rows.forEach(function(m){m.roles.forEach(function(r){var k=r.text;if(counts[k]!==undefined)counts[k]++;});});
+    var stats=[
+      {num:rows.length,label:'全部成员',color:'var(--text)'},
+      {num:counts['需求'],label:'需求人员',color:'var(--dot-blue)'},
+      {num:counts['架构'],label:'架构人员',color:'var(--brand)'},
+      {num:counts['开发'],label:'开发人员',color:'var(--success)'},
+      {num:counts['测试'],label:'测试人员',color:'var(--warning)'},
+      {num:counts['运维'],label:'运维人员',color:'var(--danger)'},
+      {num:counts['产品'],label:'产品人员',color:'#7858f9'}
+    ];
+    el.innerHTML=stats.map(function(s){return '<div class="stat"><div class="stat-num" style="color:'+s.color+'">'+s.num+'</div><div class="stat-label">'+s.label+'</div></div>';}).join('');
+  }
+  function cvInjectCardActions(){
+    document.querySelectorAll('#cv-task-grid .card').forEach(function(card){
+      if(card.querySelector('.card-actions'))return;
+      var idx=parseInt(card.getAttribute('data-idx'));
+      var t=CV_TASKS[idx];if(!t)return;
+      var status=t.status;
+      var nodeMap={'未开始':'需求分析','待评审':'代码审查','进行中':'开发实现','已完成':'部署发布','已失败':'开发实现'};
+      var node=nodeMap[status]||'需求分析';
+      var execBtn='<button class="act-btn act-btn--exec" onclick="event.stopPropagation();window.cvCard=this.closest(\'.card\');cvOpenTaskModal(\'cv-exec-overlay\')" title="执行任务"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3l14 9-14 9V3z"/></svg>执行</button>';
+      var transferBtn='<button class="act-btn act-btn--transfer" onclick="event.stopPropagation();window.cvCard=this.closest(\'.card\');cvOpenTaskModal(\'cv-transfer-overlay\')" title="转交任务"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>转交</button>';
+      var twistBtn='<button class="act-btn act-btn--twist" onclick="event.stopPropagation();window.cvCard=this.closest(\'.card\');cvOpenTaskModal(\'cv-twist-overlay\')" title="扭转任务"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.5 0 4.8 1 6.5 2.7"/><polyline points="21 3 21 9 15 9"/></svg>扭转</button>';
+      var reviewBtn='<button class="act-btn act-btn--review" onclick="event.stopPropagation();window.cvCard=this.closest(\'.card\');cvOpenTaskModal(\'cv-review-overlay\')" title="发起评审"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>评审</button>';
+      var viewBtn='<button class="card-view-btn" onclick="event.stopPropagation();cvOpenConversation(this.closest(\'.card\'))" title="查看对话"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>查看对话</button>';
+      var btns='';
+      if(status==='未开始'){btns=execBtn+transferBtn+twistBtn+reviewBtn;}
+      else if(status==='待评审'){btns=reviewBtn+viewBtn;}
+      else{btns=viewBtn;card.classList.add('card--clickable');card.onclick=function(e){if(!e.target.closest('.act-btn')&&!e.target.closest('.card-view-btn'))cvOpenConversation(card);};}
+      var ad=document.createElement('div');ad.className='card-actions';
+      ad.innerHTML='<span class="card-node"><span class="card-node-dot"></span>'+node+'</span><div style="display:flex;gap:4px;margin-left:auto">'+btns+'</div>';
+      card.appendChild(ad);
+      if(status==='进行中'){}
+    });
+  }
+
+  /* ============ VIEW SWITCHING ============ */
+  function cvSwitchFilter(btn){
+    var group=btn.closest('.filter-group');if(group){group.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('filter-btn--active');});}
+    btn.classList.add('filter-btn--active');
+    if(btn.closest('#cv-review')){cvApplyReviewFilters();}else{cvApplyFilters();}
+  }
+  function cvApplyFilters(){
+    var taskView=document.getElementById('cv-tasks');
+    if(taskView&&taskView.classList.contains('active')){
+      var typeF=cvGetFilterVal(taskView,'type');
+      var statusF=cvGetFilterVal(taskView,'status');
+      var collabF=cvGetFilterVal(taskView,'collab');
+      var sizeF=cvGetFilterVal(taskView,'size');
+      var search=(taskView.querySelector('input')||{}).value||'';
+      search=search.toLowerCase();
+      taskView.querySelectorAll('.card').forEach(function(card){
+        var match=true;
+        if(typeF&&typeF!=='全部'&&card.getAttribute('data-type')!==typeF)match=false;
+        if(match&&statusF&&statusF!=='全部状态'&&card.getAttribute('data-status')!==statusF)match=false;
+        if(match&&collabF&&collabF!=='全部协作'&&card.getAttribute('data-collab')!==collabF)match=false;
+        if(match&&sizeF&&sizeF!=='全部大小'){
+          var cs=card.getAttribute('data-size');if((sizeF==='小任务'&&cs!=='小')||(sizeF==='大任务'&&cs!=='大'))match=false;
+        }
+        if(match&&search){
+          var title=(card.querySelector('.card-title')||{}).textContent||'';if(title.toLowerCase().indexOf(search)<0)match=false;
+        }
+        card.style.display=match?'':'none';
+      });
+    }
+    var memberView=document.getElementById('cv-members');
+    if(memberView&&memberView.classList.contains('active')){
+      var roleF=cvGetFilterVal(memberView,'role');
+      var msearch=(memberView.querySelector('input')||{}).value||'';
+      msearch=msearch.toLowerCase();
+      memberView.querySelectorAll('.member-row').forEach(function(row){
+        var match=true;
+        if(roleF&&roleF!=='全部'){
+          var roles=row.getAttribute('data-role')||'';if(roles.indexOf(roleF)<0)match=false;
+        }
+        if(match&&msearch){
+          var name=(row.querySelector('.member-name')||{}).textContent||'';
+          var email=(row.querySelector('.member-email')||{}).textContent||'';
+          if(name.toLowerCase().indexOf(msearch)<0&&email.toLowerCase().indexOf(msearch)<0)match=false;
+        }
+        row.style.display=match?'':'none';
+      });
+    }
+  }
+  function cvGetFilterVal(view,type){
+    var g=view.querySelector('[data-filter-type="'+type+'"]');if(!g)return null;
+    var a=g.querySelector('.filter-btn--active');return a?a.textContent.trim():null;
+  }
+
+  /* ============ STATS CLICK ============ */
+  function cvClickStat(stat,status){
+    var view=stat.closest('.cv-panel');if(!view)return;
+    view.querySelectorAll('.stat').forEach(function(s){s.classList.remove('stat--active');});
+    stat.classList.add('stat--active');
+    if(status==='全部状态'){
+      view.querySelectorAll('.filter-group').forEach(function(g){
+        g.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('filter-btn--active');});
+        var first=g.querySelector('.filter-btn');if(first)first.classList.add('filter-btn--active');
+      });
+    }else if(status){
+      var sg=view.querySelector('[data-filter-type="status"]');if(sg){
+        sg.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('filter-btn--active');});
+        var match=Array.prototype.find.call(sg.querySelectorAll('.filter-btn'),function(b){return b.textContent.trim()===status;});
+        if(match)match.classList.add('filter-btn--active');
+      }
+    }
+    cvApplyFilters();
+  }
+  function cvClickReviewStat(stat,filter){
+    var view=stat.closest('.cv-panel');if(!view)return;
+    view.querySelectorAll('.stat').forEach(function(s){s.classList.remove('stat--active');});
+    stat.classList.add('stat--active');
+    if(filter&&filter!=='全部待评审'){
+      var groups=view.querySelectorAll('.filter-group');
+      groups.forEach(function(g){
+        var match=Array.prototype.find.call(g.querySelectorAll('.filter-btn'),function(b){return b.textContent.trim()===filter;});
+        if(match){
+          g.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('filter-btn--active');});
+          match.classList.add('filter-btn--active');
+        }
+      });
+    }
+    cvApplyReviewFilters();
+  }
+  function cvApplyReviewFilters(){
+    var view=document.getElementById('cv-review');if(!view)return;
+    var typeF=cvGetFilterVal(view,'review-type');
+    var priorityF=cvGetFilterVal(view,'review-priority');
+    var search=(view.querySelector('input')||{}).value||'';search=search.toLowerCase();
+    view.querySelectorAll('.card').forEach(function(card){
+      var match=true;var idx=parseInt(card.getAttribute('data-idx'));
+      var r=CV_REVIEWS[idx];if(!r){card.style.display='none';return;}
+      if(typeF&&typeF!=='全部待评审'){
+        if(typeF==='我发起的'&&r.from!=='张工')match=false;
+        if(typeF==='分配给我的'&&r.reviewer!=='张工')match=false;
+      }
+      if(match&&priorityF&&priorityF!=='全部优先级'&&r.priority!==priorityF)match=false;
+      if(match&&search){if(r.title.toLowerCase().indexOf(search)<0)match=false;}
+      card.style.display=match?'':'none';
+    });
+  }
+
+  /* ============ SYNC MODAL ============ */
+  function cvOpenSyncModal(){document.getElementById('cv-sync-overlay').style.display='flex';}
+  function cvCloseSyncModal(){document.getElementById('cv-sync-overlay').style.display='none';}
+  function cvSelectCollabMode(el){
+    var parent=el.parentNode;parent.querySelectorAll('.sync-collab-option').forEach(function(o){o.classList.remove('sync-collab-option--selected');});
+    el.classList.add('sync-collab-option--selected');
+  }
+  function cvToggleSyncDropdown(el,ev){
+    if(ev)ev.stopPropagation();
+    var existing=el.parentNode.querySelector('.sync-dropdown');
+    if(existing){existing.remove();return;}
+    var valId=el.querySelector('.sync-modal__select-placeholder').id;
+    var opts={'cv-sync-type-val':['需求','Bug','任务','改进'],'cv-sync-priority-val':['高','中','低'],'cv-sync-source-val':['对话自建','Jira','TAPD','API','飞书'],'cv-sync-size-val':['小任务','大任务']}[valId]||[];
+    var current=el.querySelector('.sync-modal__select-placeholder').textContent;
+    var dd=document.createElement('div');dd.className='sync-dropdown sync-dropdown--open';
+    opts.forEach(function(o){var item=document.createElement('div');item.className='sync-dropdown-item'+(o===current?' sync-dropdown-item--active':'');item.textContent=o;item.onclick=function(){el.querySelector('.sync-modal__select-placeholder').textContent=o;dd.remove();};dd.appendChild(item);});
+    el.parentNode.appendChild(dd);
+  }
+  document.addEventListener('click',function(){document.querySelectorAll('.sync-dropdown').forEach(function(d){d.remove();});});
+  function cvCollectSyncTaskData(status){
+    var title=document.getElementById('cv-sync-title');if(!title||!title.value.trim()){cvToast('请输入任务标题','warning');return null;}
+    var desc=document.getElementById('cv-sync-desc');
+    var type=document.getElementById('cv-sync-type-val');
+    var priority=document.getElementById('cv-sync-priority-val');
+    var source=document.getElementById('cv-sync-source-val');
+    var size=document.getElementById('cv-sync-size-val');
+    var sel=document.querySelector('#cv-sync-collab-options .sync-collab-option--selected .sync-collab-name');
+    var mode=sel?sel.textContent:'Agent间协作';
+    return{title:title.value.trim(),desc:desc?desc.value.trim():'',type:type?type.textContent:'需求',priority:priority?priority.textContent:'中',source:source?source.textContent:'对话自建',size:size?size.textContent:'小任务',status:status||'未开始',collab:mode,assignee:status==='进行中'?'AI开发Agent':'待分配',progress:0};
+  }
+  function cvSaveTaskToStorage(task){
+    var tasks=[];try{tasks=JSON.parse(localStorage.getItem('build_tasks')||'[]');}catch(e){}
+    tasks.unshift(task);localStorage.setItem('build_tasks',JSON.stringify(tasks));
+  }
+  /* 弹窗里的任务落库：归一化字段并挂到当前项目（聚合视图下默认第一个项目） */
+  function cvNormalizeTask(task){
+    var big=task.size==='大任务';
+    return {type:task.type,size:big?'大':'小',source:task.source,sourceId:task.sourceId||'新建',
+      exec:big?'专家团':'自动执行',status:task.status,collab:task.collab,title:task.title,
+      desc:task.desc||'暂无描述',assignee:task.assignee,progress:task.progress||0,
+      project:task.project||cvProject||CV_PROJECTS[0].id};
+  }
+  function cvAddTask(task){
+    var row=cvNormalizeTask(task);
+    CV_TASKS.unshift(row);
+    cvRenderTaskStats(); cvRenderTasks(); cvInjectCardActions(); cvApplyFilters(); cvUpdateCounts();
+    return row;
+  }
+  function cvSaveSyncTask(){
+    var task=cvCollectSyncTaskData('未开始');if(!task)return;
+    var row=cvAddTask(task);cvSaveTaskToStorage(row);cvCloseSyncModal();
+    cvToast('任务已保存到「'+cvProjectName(row.project)+'」任务列表','success');
+  }
+  function cvStartSyncTask(){
+    var task=cvCollectSyncTaskData('未开始');if(!task)return;
+    var row=cvAddTask(task);cvSaveTaskToStorage(row);cvCloseSyncModal();
+    cvToast('任务已创建到「'+cvProjectName(row.project)+'」，可点击「执行」启动','success');
+  }
+
+  /* ============ TASK MODALS ============ */
+  function cvOpenTaskModal(id){
+    var el=document.getElementById(id);if(el)el.style.display='flex';
+    if(id==='cv-transfer-overlay'){cvRenderPersonList('cv-transfer-person-list');}
+    if(id==='cv-twist-overlay'){cvRenderWorkflow();cvRenderTwistArtifacts();}
+    if(id==='cv-review-overlay'){cvRenderReviewPersonList();cvRenderReviewArtifacts();}
+  }
+  function cvCloseTaskModal(id){var el=document.getElementById(id);if(el)el.style.display='none';}
+  function cvRenderPersonList(listId){
+    var el=document.getElementById(listId);if(!el)return;
+    el.innerHTML=CV_MEMBERS.map(function(m,i){
+      return '<button class="person-item" onclick="cvSelectPersonItem(this)"><div class="person-avatar-sm">'+m.name[0]+'</div><div><div class="person-name-sm">'+m.name+'</div><div class="person-role-sm">'+m.roles.map(function(r){return r.text;}).join(' · ')+'</div></div></button>';
+    }).join('');
+  }
+  function cvRenderReviewPersonList(){
+    var el=document.getElementById('cv-review-person-list');if(!el)return;
+    var card=window.cvCard;var node='开发实现';
+    if(card){var na=card.querySelector('.card-node');if(na)node=na.textContent.replace(/^[\s\u200b]+/,'').trim();}
+    var role=CV_WORKFLOW_ROLES[node]||'开发人员';
+    el.innerHTML=CV_MEMBERS.filter(function(m){return m.roles.some(function(r){return r.text.indexOf(role)>=0||role.indexOf(r.text)>=0;});}).map(function(m){
+      return '<button class="person-item" onclick="cvSelectPersonItem(this)"><div class="person-avatar-sm">'+m.name[0]+'</div><div><div class="person-name-sm">'+m.name+'</div><div class="person-role-sm">'+m.roles.map(function(r){return r.text;}).join(' · ')+'</div></div></button>';
+    }).join('');
+    if(!el.innerHTML){el.innerHTML='<div style="padding:20px;text-align:center;color:var(--text-soft);font-size:12.5px">当前节点无匹配人员</div>';}
+  }
+  function cvSelectPersonItem(el){
+    var parent=el.parentNode;parent.querySelectorAll('.person-item').forEach(function(p){p.classList.remove('person-item--selected');});
+    el.classList.add('person-item--selected');
+  }
+  function cvRenderWorkflow(){
+    var el=document.getElementById('cv-twist-workflow');if(!el)return;
+    var card=window.cvCard;var currentNode='开发实现';
+    if(card){var na=card.querySelector('.card-node');if(na)currentNode=na.textContent.replace(/^[\s\u200b]+/,'').trim();}
+    var currentIdx=CV_WORKFLOW.indexOf(currentNode);if(currentIdx<0)currentIdx=0;
+    el.innerHTML=CV_WORKFLOW.map(function(step,i){
+      var cls=i<currentIdx?'workflow-step--done':(i===currentIdx?'workflow-step--current':'');
+      var num=i<currentIdx?'✓':(i+1);
+      var status=i<currentIdx?'已完成':(i===currentIdx?'当前节点':CV_WORKFLOW_ROLES[step]);
+      return '<div class="workflow-step '+cls+'"><div class="workflow-step-num">'+num+'</div><div class="workflow-step-name">'+step+'</div><div class="workflow-step-status">'+status+'</div></div>';
+    }).join('');
+    var nextIdx=Math.min(currentIdx+1,CV_WORKFLOW.length-1);
+    el.innerHTML+='<div style="padding:8px 12px;font-size:12px;color:#7858f9;font-weight:600">下一步：'+CV_WORKFLOW[nextIdx]+' → '+CV_WORKFLOW_ROLES[CV_WORKFLOW[nextIdx]]+'</div>';
+  }
+  function cvRenderTwistArtifacts(){
+    var el=document.getElementById('cv-twist-artifacts');if(!el)return;
+    var arts=[['code','</>','源代码','ExpensePlugin.java'],['test','T','单元测试','ExpenseTest.java'],['spec','S','需求规格','PRD.md'],['doc','D','技术方案','TechSpec.md']];
+    el.innerHTML=arts.map(function(a){return '<div class="artifact-row"><div class="artifact-icon artifact-icon--'+a[0]+'">'+a[1]+'</div><span>'+a[2]+'</span><span style="margin-left:auto;font-size:11px;color:var(--text-soft)">'+a[3]+'</span></div>';}).join('');
+  }
+  function cvRenderReviewArtifacts(){
+    var el=document.getElementById('cv-review-artifacts');if(!el)return;
+    var arts=[['code','</>','源代码','ExpensePlugin.java'],['test','T','单元测试','ExpenseTest.java'],['spec','S','需求规格','PRD.md'],['doc','D','技术方案','TechSpec.md']];
+    el.innerHTML=arts.map(function(a){return '<div class="artifact-row"><div class="artifact-icon artifact-icon--'+a[0]+'">'+a[1]+'</div><span>'+a[2]+'</span><span style="margin-left:auto;font-size:11px;color:var(--text-soft)">'+a[3]+'</span></div>';}).join('');
+  }
+
+  /* ============ CONFIRM ACTIONS ============ */
+  function cvConfirmExec(){
+    var sel=document.querySelector('#cv-exec-collab-options .sync-collab-option--selected .sync-collab-name');
+    var mode=sel?sel.textContent:'Agent间协作';
+    cvCloseTaskModal('cv-exec-overlay');
+    var card=window.cvCard;var taskTitle='新任务';
+    if(card){
+      var titleEl=card.querySelector('.card-title');if(titleEl)taskTitle=titleEl.textContent;
+      card.setAttribute('data-status','进行中');
+      var sb=card.querySelector('.badge-status');if(sb){sb.className='badge-status badge-status--running';sb.innerHTML='<span class="badge-status-dot"></span>进行中';}
+      var node=card.querySelector('.card-node');if(node)node.innerHTML='<span class="card-node-dot" style="background:var(--dot-blue)"></span>开发实现';
+      card.querySelector('.card-actions')&&(card.querySelector('.card-actions').style.display='none');
+    }
+    cvAddSidebarConversation(taskTitle);cvSwitchToChat();cvToast('任务已启动执行！协作模式：'+mode,'success');
+    cvSimulateExecution(taskTitle,card);
+  }
+  function cvConfirmTransfer(){
+    var sel=document.querySelector('#cv-transfer-person-list .person-item--selected .person-name-sm');
+    cvCloseTaskModal('cv-transfer-overlay');
+    cvToast('任务已转交给：'+(sel?sel.textContent:'李工'),'success');
+  }
+  function cvConfirmTwist(){cvCloseTaskModal('cv-twist-overlay');cvToast('任务已扭转到下一节点：代码审查，产物已自动传递给审查人员','info');}
+  function cvConfirmReview(){
+    var sel=document.querySelector('#cv-review-person-list .person-item--selected .person-name-sm');
+    cvCloseTaskModal('cv-review-overlay');
+    if(window.cvCard){
+      window.cvCard.setAttribute('data-status','待评审');
+      var sb=window.cvCard.querySelector('.badge-status');if(sb){sb.className='badge-status badge-status--review';sb.innerHTML='<span class="badge-status-dot"></span>待评审';}
+      var node=window.cvCard.querySelector('.card-node');if(node){node.innerHTML='<span class="card-node-dot" style="background:var(--warning)"></span>代码审查';node.style.background='var(--warning-bg)';node.style.color='var(--warning)';}
+    }
+    cvToast('评审已发起！评审人：'+(sel?sel.textContent:'王工')+'，任务状态已变更为「待评审」','success');
+  }
+
+  /* ============ REVIEW ACTIONS ============ */
+  function cvReviewPass(i){
+    cvToast('评审通过！任务已流转到测试验证节点','success');
+    var grid=document.getElementById('cv-review-grid');if(grid){var card=grid.children[i];if(card){card.style.transition='opacity .3s';card.style.opacity='0.3';}}
+  }
+  function cvReviewReject(i){cvToast('评审驳回！任务已退回给开发人员','error');}
+  function cvOpenReviewDetail(i){
+    var r=CV_REVIEWS[i];if(!r)return;
+    window.cvReviewIdx=i;
+    var titleEl=document.getElementById('cv-rv-title');if(titleEl)titleEl.textContent=r.title;
+    var arts=CV_REVIEW_ARTIFACTS[i]||{tabs:['产物'],content:{'产物':'<p>暂无产物内容</p>'}};
+    var tabsEl=document.getElementById('cv-rv-art-tabs');
+    if(tabsEl){tabsEl.innerHTML=arts.tabs.map(function(t,idx){return '<button class="rv-art-tab'+(idx===0?' rv-art-tab--active':'')+'" onclick="cvSwitchArtifact('+i+',\''+t+'\')">'+t+'</button>';}).join('');}
+    cvSwitchArtifact(i,arts.tabs[0]);
+    var headerEl=document.getElementById('cv-rv-panel-header');
+    if(headerEl){headerEl.innerHTML='<div class="rv-panel-title">评审信息</div><div class="rv-panel-info"><div class="rv-panel-info-item">评审人: <b>'+r.reviewer+'</b> ('+r.reviewerRole+')</div><div class="rv-panel-info-item">截止: <b style="color:'+r.deadlineColor+'">'+r.deadline+'</b></div><div class="rv-panel-info-item">发起人: <b>'+r.from+'</b> ('+r.fromTime+')</div><div class="rv-panel-info-item">优先级: <b>'+r.priority+'</b></div></div>';}
+    cvRenderReviewComments(i);
+    document.querySelectorAll('#view-collab .cv-panel').forEach(function(v){v.classList.remove('active');});
+    var view=document.getElementById('cv-review-detail');if(view)view.classList.add('active');
+  }
+  function cvSwitchArtifact(idx,tab){
+    var arts=CV_REVIEW_ARTIFACTS[idx];if(!arts)return;
+    var tabsEl=document.getElementById('cv-rv-art-tabs');
+    if(tabsEl){tabsEl.querySelectorAll('.rv-art-tab').forEach(function(t){t.classList.toggle('rv-art-tab--active',t.textContent===tab);});}
+    var bodyEl=document.getElementById('cv-rv-art-body');
+    if(bodyEl){bodyEl.innerHTML='<div class="rv-doc">'+(arts.content[tab]||'<p>暂无内容</p>')+'</div>';}
+  }
+  function cvRenderReviewComments(idx){
+    var el=document.getElementById('cv-rv-comments');if(!el)return;
+    var comments=CV_REVIEW_COMMENTS[idx]||[];
+    var bm={'pass':['rv-comment-badge--pass','通过'],'reject':['rv-comment-badge--reject','驳回'],'comment':['rv-comment-badge--comment','评论']};
+    el.innerHTML=comments.map(function(c){var b=bm[c.type]||['rv-comment-badge--comment','评论'];return '<div class="rv-comment"><div class="rv-comment-avatar '+(c.isAgent?'rv-comment-avatar--agent':'')+'">'+(c.avatar||c.author[0])+'</div><div class="rv-comment-body"><div class="rv-comment-header"><span class="rv-comment-author">'+c.author+'</span><span class="rv-comment-badge '+b[0]+'">'+b[1]+'</span><span class="rv-comment-time">'+c.time+'</span></div><div class="rv-comment-text">'+c.text+'</div></div></div>';}).join('');
+  }
+  function cvSubmitReview(type){
+    var input=document.getElementById('cv-rv-input');var text=input?input.value.trim():'';
+    if(!text&&type==='comment'){cvToast('请输入评审意见','warning');return;}
+    var idx=window.cvReviewIdx;var r=CV_REVIEWS[idx];if(!r)return;
+    var el=document.getElementById('cv-rv-comments');
+    if(el&&text){var bm={'pass':['rv-comment-badge--pass','通过'],'reject':['rv-comment-badge--reject','驳回'],'comment':['rv-comment-badge--comment','评论']};var b=bm[type]||['rv-comment-badge--comment','评论'];var d=document.createElement('div');d.className='rv-comment';d.innerHTML='<div class="rv-comment-avatar">我</div><div class="rv-comment-body"><div class="rv-comment-header"><span class="rv-comment-author">张工（你）</span><span class="rv-comment-badge '+b[0]+'">'+b[1]+'</span><span class="rv-comment-time">刚刚</span></div><div class="rv-comment-text">'+text+'</div></div>';el.appendChild(d);el.scrollTop=el.scrollHeight;}
+    if(input)input.value='';
+    if(type==='pass'){cvToast('评审通过！任务已流转到测试验证节点','success');var g=document.getElementById('cv-review-grid');if(g&&g.children[idx]){g.children[idx].style.transition='opacity .3s';g.children[idx].style.opacity='0.4';}}
+    else if(type==='reject'){cvToast('评审驳回！任务已退回给开发人员','error');}
+    else{cvToast('评审意见已提交','info');}
+  }
+
+  /* ============ CHAT ============ */
+  function cvSwitchToChat(){
+    cvShowPanel('chat');
+  }
+  function cvAddChatMessage(type,text){
+    var body=document.getElementById('cv-chat-body');if(!body)return;
+    var msg=document.createElement('div');msg.className='chat-msg chat-msg--'+type;
+    var avatar=type==='agent'?'AI':'我';
+    var time=new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'});
+    msg.innerHTML='<div class="chat-msg-avatar">'+avatar+'</div><div><div class="chat-msg-bubble">'+text+'</div><div class="chat-msg-time">'+time+'</div></div>';
+    body.appendChild(msg);body.scrollTop=body.scrollHeight;
+  }
+  function cvAddChatTyping(){
+    var body=document.getElementById('cv-chat-body');if(!body)return;
+    if(document.getElementById('cv-chat-typing-indicator'))return;
+    var t=document.createElement('div');t.className='chat-msg chat-msg--agent';t.id='cv-chat-typing-indicator';
+    t.innerHTML='<div class="chat-msg-avatar">AI</div><div class="chat-typing"><span class="chat-typing-dot"></span><span class="chat-typing-dot"></span><span class="chat-typing-dot"></span></div>';
+    body.appendChild(t);body.scrollTop=body.scrollHeight;
+  }
+  function cvRemoveChatTyping(){var t=document.getElementById('cv-chat-typing-indicator');if(t&&t.parentNode)t.parentNode.removeChild(t);}
+  function cvSimulateExecution(taskTitle,card){
+    var titleEl=document.getElementById('cv-chat-task-title');if(titleEl)titleEl.textContent=taskTitle;
+    var badge=document.getElementById('cv-chat-status-badge');if(badge){badge.className='chat-status-badge chat-status-badge--running';badge.innerHTML='<span style="width:6px;height:6px;border-radius:50%;background:var(--dot-blue);animation:cvPulse 1.5s infinite"></span>执行中';}
+    var body=document.getElementById('cv-chat-body');if(body)body.innerHTML='';
+    var steps=[
+      {delay:500,msg:'正在分析任务需求...'},
+      {delay:2000,msg:'已生成需求规格说明书，包含 3 个功能点和 5 个验收标准。'},
+      {delay:3000,msg:'正在设计技术方案，确定使用苍穹元数据 + KWC 页面开发模式...'},
+      {delay:3000,msg:'技术方案已就绪。开始生成业务对象和字段定义...'},
+      {delay:3000,msg:'已生成 5 个业务对象、12 个字段、2 个表单页面。正在生成后端插件代码...'},
+      {delay:3000,msg:'插件代码已生成完成。正在执行单元测试...'},
+      {delay:2500,msg:'单元测试全部通过（8/8）。正在生成测试报告...'},
+      {delay:2000,msg:'执行完成！所有产物已生成。',done:true}
+    ];
+    var i=0;
+    function next(){
+      if(i>=steps.length)return;var step=steps[i];
+      setTimeout(function(){
+        cvRemoveChatTyping();cvAddChatMessage('agent',step.msg);
+        if(step.done){
+          var b=document.getElementById('cv-chat-status-badge');if(b){b.className='chat-status-badge chat-status-badge--done';b.innerHTML='<span style="width:6px;height:6px;border-radius:50%;background:var(--success)"></span>已完成';}
+          if(card){
+            card.setAttribute('data-status','已完成');
+            var sb=card.querySelector('.badge-status');if(sb){sb.className='badge-status badge-status--done';sb.innerHTML='<span class="badge-status-dot"></span>已完成';}
+            var node=card.querySelector('.card-node');if(node)node.innerHTML='<span class="card-node-dot" style="background:var(--brand)"></span>部署发布';
+            var ca=card.querySelector('.card-actions');if(ca)ca.style.display='';ca.innerHTML='<span class="card-node"><span class="card-node-dot" style="background:var(--brand)"></span>部署发布</span><div style="display:flex;gap:4px;margin-left:auto"><button class="card-view-btn" onclick="event.stopPropagation();cvOpenConversation(this.closest(\'.card\'))" title="查看对话"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>查看对话</button></div>';
+            card.classList.add('card--clickable');card.onclick=function(e){if(!e.target.closest('.card-view-btn'))cvOpenConversation(card);};
+          }
+          var conv=document.querySelector('.sub-item.cv-running');if(conv){conv.classList.remove('cv-running');var dot=conv.querySelector('.dot');if(dot)dot.className='dot green';}
+          if(body){
+            var artDiv=document.createElement('div');artDiv.className='chat-artifacts';
+            artDiv.innerHTML='<div class="chat-artifacts-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>产物列表</div>';
+            var arts=[['spec','S','需求规格说明书','PRD.md','已归档'],['doc','D','技术方案文档','TechSpec.md','已归档'],['code','</>','业务对象定义','ExpenseBO.java','已归档'],['code','</>','插件源代码','ExpensePlugin.java','已归档'],['test','T','单元测试','ExpenseTest.java','8/8通过'],['code','</>','表单页面','ExpenseForm.kwc','已归档']];
+            var iconMap={'spec':'artifact-icon--spec','doc':'artifact-icon--doc','code':'artifact-icon--code','test':'artifact-icon--test'};
+            arts.forEach(function(a){artDiv.innerHTML+='<div class="artifact-item"><div class="artifact-icon '+(iconMap[a[0]]||'artifact-icon--doc')+'">'+a[1]+'</div><span>'+a[2]+'</span><span class="artifact-meta">'+a[4]+'</span></div>';});
+            body.appendChild(artDiv);body.scrollTop=body.scrollHeight;
+          }
+          cvToast('任务执行完成！','success');
+        }else{cvAddChatTyping();i++;next();}
+      },step.delay);
+    }
+    cvAddChatTyping();i=1;next();
+  }
+  function cvSendChatMessage(){
+    var input=document.getElementById('cv-chat-input');if(!input||!input.value.trim())return;
+    cvAddChatMessage('user',input.value.trim());input.value='';cvAddChatTyping();
+    setTimeout(function(){cvRemoveChatTyping();cvAddChatMessage('agent','收到，正在处理您的请求...');},1500);
+  }
+
+  /* ============ OPEN CONVERSATION ============ */
+  function cvOpenConversation(card){
+    if(!card)return;
+    var titleEl=card.querySelector('.card-title');var taskTitle=titleEl?titleEl.textContent:'任务对话';
+    var status=card.getAttribute('data-status')||'未开始';
+    window.cvCard=card;
+    var titleInput=document.getElementById('cv-chat-task-title');if(titleInput)titleInput.textContent=taskTitle;
+    var badge=document.getElementById('cv-chat-status-badge');
+    if(badge){
+      var sm={'未开始':['pending','var(--text-secondary)','未开始'],'待评审':['review','var(--warning)','待评审'],'进行中':['running','var(--dot-blue)','执行中'],'已完成':['done','var(--success)','已完成'],'已失败':['fail','var(--danger)','已失败']};
+      var s=sm[status]||['pending','var(--text-secondary)','未开始'];
+      badge.className='chat-status-badge chat-status-badge--'+s[0];
+      badge.innerHTML='<span style="width:6px;height:6px;border-radius:50%;background:'+s[1]+(status==='进行中'?';animation:cvPulse 1.5s infinite':'')+'"></span>'+s[2];
+    }
+    var body=document.getElementById('cv-chat-body');if(body)body.innerHTML='';
+    var dialogues={
+      '进行中':[['agent','正在分析任务需求...'],['agent','已生成需求规格说明书，包含 3 个功能点和 5 个验收标准。'],['agent','正在设计技术方案，确定使用苍穹元数据 + KWC 页面开发模式...'],['agent','技术方案已就绪。开始生成业务对象和字段定义...'],['user','字段命名规范要符合公司标准，请参考 ERP 字段命名规范。'],['agent','已调整字段命名规范。已生成 5 个业务对象、12 个字段。正在生成后端插件代码...']],
+      '待评审':[['agent','已完成任务开发，以下是生成的产物，请评审。'],['user','代码质量如何？有没有安全问题？'],['agent','代码已通过 SAST 扫描，无安全漏洞。单元测试覆盖率 92%。'],['agent','等待评审人确认...']],
+      '已完成':[['agent','正在分析任务需求...'],['agent','已生成需求规格说明书。'],['agent','技术方案已就绪，开始生成代码...'],['agent','插件代码已生成完成。单元测试全部通过（8/8）。'],['user','测试报告发一下。'],['agent','已生成测试报告，所有验收标准均通过。'],['agent','执行完成！所有产物已生成并归档。']],
+      '已失败':[['agent','正在分析任务需求...'],['agent','已生成需求规格说明书。'],['agent','开始生成代码...'],['agent','执行过程中出现错误：插件编译失败，缺少依赖 com.kingdee.cosmic.*'],['user','检查一下依赖配置。'],['agent','已排查，苍穹 SDK 版本不兼容。需要升级到 7.0+ 版本。'],['agent','任务执行失败，请检查环境配置后重试。']]
+    };
+    var msgs=dialogues[status]||[];msgs.forEach(function(m){cvAddChatMessage(m[0],m[1]);});
+    var artifacts={
+      '进行中':[['spec','S','需求规格说明书','PRD.md','已生成'],['doc','D','技术方案文档','TechSpec.md','已生成'],['code','</>','业务对象定义','ExpenseBO.java','已生成'],['code','</>','表单页面','ExpenseForm.kwc','生成中...']],
+      '待评审':[['code','</>','插件源代码','ExpensePlugin.java','待评审'],['test','T','单元测试','ExpenseTest.java','8/8通过'],['spec','S','需求规格','PRD.md','已生成'],['doc','D','技术方案','TechSpec.md','已生成']],
+      '已完成':[['spec','S','需求规格说明书','PRD.md','已归档'],['doc','D','技术方案文档','TechSpec.md','已归档'],['code','</>','业务对象定义','ExpenseBO.java','已归档'],['code','</>','插件源代码','ExpensePlugin.java','已归档'],['test','T','单元测试','ExpenseTest.java','8/8通过'],['code','</>','表单页面','ExpenseForm.kwc','已归档']],
+      '已失败':[['spec','S','需求规格说明书','PRD.md','已生成'],['doc','D','技术方案文档','TechSpec.md','已生成'],['code','</>','插件源代码','ExpensePlugin.java','编译失败']]
+    };
+    var arts=artifacts[status]||[];
+    if(arts.length>0&&body){
+      var artDiv=document.createElement('div');artDiv.className='chat-artifacts';
+      artDiv.innerHTML='<div class="chat-artifacts-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>产物列表</div>';
+      var iconMap={'spec':'artifact-icon--spec','doc':'artifact-icon--doc','code':'artifact-icon--code','test':'artifact-icon--test'};
+      arts.forEach(function(a){artDiv.innerHTML+='<div class="artifact-item"><div class="artifact-icon '+(iconMap[a[0]]||'artifact-icon--doc')+'">'+a[1]+'</div><span>'+a[2]+'</span><span class="artifact-meta">'+a[4]+'</span></div>';});
+      body.appendChild(artDiv);body.scrollTop=body.scrollHeight;
+    }
+    cvSwitchToChat();
+  }
+
+  
+  function cvOpenAddMemberModal(){
+    var el=document.getElementById('cv-addmember-overlay');if(el)el.style.display='flex';
+    cvSearchThirdPartyMembers('');
+  }
+  function cvCloseAddMemberModal(){
+    var el=document.getElementById('cv-addmember-overlay');if(el)el.style.display='none';
+  }
+  function cvSearchThirdPartyMembers(q){
+    var list=document.getElementById('cv-tp-list');if(!list)return;
+    q=(q||'').toLowerCase();
+    var existing=CV_MEMBERS.map(function(m){return m.name;});
+    var filtered=CV_THIRD_PARTY_MEMBERS.filter(function(m){
+      return(m.name.toLowerCase().indexOf(q)>=0||m.email.toLowerCase().indexOf(q)>=0)&&existing.indexOf(m.name)<0;
+    });
+    if(filtered.length===0){list.innerHTML='<div style="padding:24px;text-align:center;color:var(--text-soft);font-size:13px">未找到可添加的人员</div>';return;}
+    list.innerHTML=filtered.map(function(m){
+      return '<div class="tp-item" onclick="this.classList.toggle(\'tp-item--selected\')">'
+        +'<div class="tp-avatar">'+m.name[0]+'</div>'
+        +'<div class="tp-info"><div class="tp-name">'+m.name+'</div><div class="tp-email">'+m.email+'</div></div>'
+        +'<div class="tp-meta"><span class="tp-role">'+m.role+'</span><span class="tp-dept">'+m.dept+'</span></div>'
+        +'<div class="tp-check"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>'
+        +'</div>';
+    }).join('');
+  }
+  function cvConfirmAddMembers(){
+    var selected=document.querySelectorAll('#cv-tp-list .tp-item--selected');
+    if(selected.length===0){cvToast('请选择要添加的人员','warning');return;}
+    var tagMap={'开发':'member-tag--dev','架构':'member-tag--arch','测试':'member-tag--qa','运维':'member-tag--ops','需求':'member-tag--pm','产品':'member-tag--pm'};
+    selected.forEach(function(el){
+      var name=el.querySelector('.tp-name').textContent;
+      var email=el.querySelector('.tp-email').textContent;
+      var role=el.querySelector('.tp-role').textContent;
+      CV_MEMBERS.push({name:name,email:email,roles:[{tag:tagMap[role]||'member-tag--dev',text:role}],status:'available',source:'直接添加',
+        projects:cvProject?[cvProject]:CV_PROJECTS.map(function(p){return p.id})});
+    });
+    cvRenderMembers();cvRenderMemberStats();cvCloseAddMemberModal();
+    cvToast('已添加 '+selected.length+' 名协作人员','success');
+  }
+  function cvDeleteMember(idx){
+    if(CV_MEMBERS[idx]&&CV_MEMBERS[idx].isMe){cvToast('不能移除自己','warning');return;}
+    if(!CV_MEMBERS[idx])return;
+    var name=CV_MEMBERS[idx].name;
+    CV_MEMBERS.splice(idx,1);cvRenderMembers();cvRenderMemberStats();
+    cvToast('已移除：'+name,'info');
+  }
+  function cvLoadSavedTasks(){
+    try{
+      var tasks=JSON.parse(localStorage.getItem('build_tasks')||'[]');
+      tasks.forEach(function(task){CV_TASKS.unshift(cvNormalizeTask(task));});
+    }catch(e){}
+  }
+
+  var CV_THIRD_PARTY_MEMBERS=[
+    {name:'钱涛',email:'qian***@kingdee.com',role:'开发',tag:'member-tag--dev',dept:'研发部'},
+    {name:'宋宇',email:'song***@kingdee.com',role:'开发',tag:'member-tag--dev',dept:'研发部'},
+    {name:'冯远',email:'feng***@kingdee.com',role:'架构',tag:'member-tag--arch',dept:'架构部'},
+    {name:'许诺',email:'xu***@kingdee.com',role:'开发',tag:'member-tag--dev',dept:'研发部'},
+    {name:'韩梅',email:'han***@kingdee.com',role:'测试',tag:'member-tag--qa',dept:'测试部'},
+    {name:'罗静',email:'luo***@kingdee.com',role:'测试',tag:'member-tag--qa',dept:'测试部'},
+    {name:'杨帆',email:'yang***@kingdee.com',role:'运维',tag:'member-tag--ops',dept:'运维部'},
+    {name:'唐辉',email:'tang***@kingdee.com',role:'运维',tag:'member-tag--ops',dept:'运维部'},
+    {name:'蒋雯',email:'jiang***@kingdee.com',role:'需求',tag:'member-tag--pm',dept:'产品部'},
+    {name:'何欣',email:'he***@kingdee.com',role:'需求',tag:'member-tag--pm',dept:'产品部'},
+    {name:'梁平',email:'liang***@kingdee.com',role:'产品',tag:'member-tag--pm',dept:'产品部'},
+    {name:'范晨',email:'fan***@kingdee.com',role:'开发',tag:'member-tag--dev',dept:'研发部'},
+    {name:'董睿',email:'dong***@kingdee.com',role:'架构',tag:'member-tag--arch',dept:'架构部'},
+    {name:'贾旭',email:'jia***@kingdee.com',role:'测试',tag:'member-tag--qa',dept:'测试部'},
+    {name:'武威',email:'wu***@kingdee.com',role:'运维',tag:'member-tag--ops',dept:'运维部'}
+  ];
+
+  /* ---------- 面板切换 ---------- */
+  var cvInited=false, cvLastTab='tasks';
+  window.cvCard=null; window.cvReviewIdx=0;
+  var cvPendingTab, cvPendingProj;   /* 由上面的 URL 恢复逻辑先行赋值，故此处不带初始值 */
+  function cvToast(msg,type){ toast(msg, type==='error'?'error':undefined); }
+  function cvShowPanel(name){
+    $$('#view-collab .cv-panel').forEach(function(p){ p.classList.toggle('active', p.id==='cv-'+name); });
+    $$('#cvTabNav .tab-nav-item').forEach(function(t){
+      t.classList.toggle('tab-nav-item--active', t.getAttribute('data-cvview')===name);
+    });
+  }
+  function cvSwitchView(name){
+    cvLastTab=(name==='chat'||name==='review-detail')?cvLastTab:name;
+    cvShowPanel(name);
+    if(name==='teams') renderExpertGrid();
+    if(name==='experts') cvRenderExperts();
+    cvSyncUrl();
+  }
+  /* 执行中的任务在侧边栏项目下挂一条会话 */
+  function cvAddSidebarConversation(title){
+    var group=$('.sb-scroll .project-group');
+    if(!group) return;
+    var item=document.createElement('div');
+    item.className='sub-item cv-running';
+    item.innerHTML='<span class="dot blue"></span><span class="txt">'+xesc(title)+'</span>';
+    item.addEventListener('click',function(){ showView('collab'); setNavActive('协作开发'); cvSwitchView('chat'); });
+    var head=group.querySelector('.group-head');
+    if(head&&head.nextSibling) group.insertBefore(item,head.nextSibling); else group.appendChild(item);
+  }
+
+  /* ---------- 专家管理：分组卡片 ---------- */
+  var cvExpertKw='';
+  function cvExpertGroups(){
+    var kw=cvExpertKw.trim();
+    var rows=EXPERTS.filter(function(e){
+      if(!kw) return true;
+      return (e.name+e.role+e.desc+(e.tags||[]).join()).indexOf(kw)>=0;
+    });
+    return [
+      {title:'Lingee 内置',desc:'交付全流程的通用角色，随产品一起维护',list:rows.filter(function(e){return e.by==='Lingee 内置'})},
+      {title:'金蝶官方',desc:'苍穹与前端领域专家，按金蝶规范工作',list:rows.filter(function(e){return e.by==='金蝶官方'})},
+      {title:'我创建的',desc:'你自己建的专家，可随时改配置或删除',list:rows.filter(function(e){return e.mine})}
+    ];
+  }
+  function cvTeamCountOf(id){
+    return TEAMS.filter(function(t){ return t.members.indexOf(id)>=0 }).length;
+  }
+  function cvBuildExpertCard(e){
+    var tags=(e.tags||[]).map(function(t){return '<span class="expert-skill">'+xesc(t)+'</span>'}).join('');
+    var cmds=(e.cmds||[]).length, modes=(e.modes||[]).length;
+    return '<div class="expert-card" data-cv-expert="'+e.id+'">'
+      +'<button type="button" class="expert-chat-btn" data-cv-call="'+e.id+'" title="召唤这位专家">'
+      +'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>'
+      +'<div class="expert-head"><img class="expert-av" src="'+xav(e.k)+'" alt="">'
+      +'<div><div class="expert-name">'+xesc(e.name)
+      +(e.ro?'<span class="expert-flag">只读</span>':'')+'</div>'
+      +'<div class="expert-role">'+xesc(e.role)+'</div></div></div>'
+      +'<div class="expert-intro">'+xesc(e.desc)+'</div>'
+      +'<div class="expert-skills">'+tags+'</div>'
+      +'<div class="expert-stats">'
+      +'<div><div class="expert-stat-val">'+cvTeamCountOf(e.id)+'</div><div class="expert-stat-label">所在专家团</div></div>'
+      +'<div><div class="expert-stat-val">'+modes+'</div><div class="expert-stat-label">工作模式</div></div>'
+      +'<div><div class="expert-stat-val">'+cmds+'</div><div class="expert-stat-label">触发词</div></div>'
+      +'</div></div>';
+  }
+  function cvRenderExperts(){
+    var box=$('#cvExpertSections'); if(!box) return;
+    var html=cvExpertGroups().map(function(g){
+      if(!g.list.length && g.title!=='我创建的') return '';
+      var cards=g.list.map(cvBuildExpertCard).join('');
+      if(g.title==='我创建的'){
+        cards+='<button type="button" class="expert-card expert-new" data-cv-new-expert>'
+          +'<span class="expert-new-ic">＋</span><span class="expert-new-t">创建专家</span>'
+          +'<span class="expert-new-s">手填表单，或一句话交给 expert-manager</span></button>';
+      }
+      return '<div class="expert-section-title">'+g.title
+        +'<span class="expert-section-desc">'+g.desc+'</span></div>'
+        +'<div class="expert-grid">'+cards+'</div>';
+    }).join('');
+    box.innerHTML=html||'<div class="x-empty">没有匹配的专家</div>';
+  }
+
+
+  /* ---------- 项目切换 ---------- */
+  function cvRenderProjMenu(){
+    var menu=$('#cvProjMenu'); if(!menu) return;
+    var rows=[{id:'',name:'全部项目',desc:'跨项目聚合，看分配给我的任务与评审'}].concat(
+      CV_PROJECTS.map(function(p){
+        var tasks=CV_TASKS.filter(function(t){return t.project===p.id}).length;
+        return {id:p.id,name:p.name,dot:p.dot,desc:tasks+' 个任务'};
+      }));
+    menu.innerHTML=rows.map(function(r){
+      return '<div class="cv-proj-item'+(r.id===cvProject?' checked':'')+'" data-cv-proj="'+r.id+'">'
+        +(r.dot?'<span class="dot '+r.dot+'"></span>':'<span class="cv-proj-all"></span>')
+        +'<span class="cv-proj-n">'+xesc(r.name)+'<em>'+xesc(r.desc)+'</em></span>'
+        +'<svg class="ic ic-sm cv-proj-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>';
+    }).join('');
+  }
+  function cvSetProject(id){
+    cvProject=id||'';
+    var label=$('#cvProjLabel');
+    if(label) label.textContent=cvProject?cvProjectName(cvProject):'全部项目';
+    var sw=$('#cvProjSwitch'); if(sw) sw.classList.toggle('cv-proj--on',!!cvProject);
+    cvRenderProjMenu();
+    cvRenderTaskStats(); cvRenderTasks(); cvInjectCardActions();
+    cvRenderReviewStats(); cvRenderReviews();
+    cvRenderMemberStats(); cvRenderMembers();
+    cvApplyFilters(); cvApplyReviewFilters();
+    cvRenderTeamBind(); cvApplyConfigScope(); cvUpdateCounts();
+    cvSyncUrl();
+  }
+  function cvUpdateCounts(){
+    var tc=$('#cvTaskCount'); if(tc) tc.textContent=CV_TASKS.filter(cvInProject).length;
+    var rc=$('#cvReviewCount'); if(rc) rc.textContent=CV_REVIEWS.filter(cvInProject).length;
+  }
+  function cvSyncUrl(){
+    setUrlState('?view=collab&tab='+cvLastTab+(cvProject?'&proj='+cvProject:''));
+  }
+  var cvProjBtn=$('#cvProjBtn');
+  if(cvProjBtn) cvProjBtn.addEventListener('click',function(e){
+    e.stopPropagation();
+    var sw=$('#cvProjSwitch'); if(sw) sw.classList.toggle('open');
+  });
+  var cvProjMenu=$('#cvProjMenu');
+  if(cvProjMenu) cvProjMenu.addEventListener('click',function(e){
+    var it=e.target.closest('[data-cv-proj]'); if(!it) return;
+    $('#cvProjSwitch').classList.remove('open');
+    cvSetProject(it.getAttribute('data-cv-proj'));
+  });
+
+  /* ---------- 专家团：项目默认路由绑定 ---------- */
+  function cvRenderTeamBind(){
+    var bar=$('#cvTeamBind'); if(!bar) return;
+    bar.classList.toggle('hidden',!cvProject);
+    if(!cvProject) return;
+    var proj=cvProjectById(cvProject); if(!proj) return;
+    var nameEl=$('#cvBindProjName'); if(nameEl) nameEl.textContent=proj.name;
+    var team=proj.defaultTeam?TEAMS.filter(function(t){return t.id===proj.defaultTeam})[0]:null;
+    var lb=$('#cvBindTeamLabel'); if(lb) lb.textContent=team?team.name:'未指定';
+    var menu=$('#cvBindMenu');
+    if(menu) menu.innerHTML=[{id:'',name:'不绑定',desc:'大任务改为人工确认后路由'}]
+      .concat(TEAMS.map(function(t){return {id:t.id,name:t.name,desc:t.members.length+' 位专家'}}))
+      .map(function(t){
+        return '<div class="cv-proj-item'+(t.id===(proj.defaultTeam||'')?' checked':'')+'" data-cv-bind="'+t.id+'">'
+          +'<span class="cv-proj-n">'+xesc(t.name)+'<em>'+xesc(t.desc)+'</em></span>'
+          +'<svg class="ic ic-sm cv-proj-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>';
+      }).join('');
+  }
+  var cvBindBtn=$('#cvBindBtn');
+  if(cvBindBtn) cvBindBtn.addEventListener('click',function(e){
+    e.stopPropagation();
+    $('#cvBindSwitch').classList.toggle('open');
+  });
+  var cvBindMenu=$('#cvBindMenu');
+  if(cvBindMenu) cvBindMenu.addEventListener('click',function(e){
+    var it=e.target.closest('[data-cv-bind]'); if(!it) return;
+    var proj=cvProjectById(cvProject); if(!proj) return;
+    proj.defaultTeam=it.getAttribute('data-cv-bind')||null;
+    $('#cvBindSwitch').classList.remove('open');
+    cvRenderTeamBind();
+    toast(proj.defaultTeam?('已将「'+proj.name+'」的大任务默认路由到 '+$('#cvBindTeamLabel').textContent):'已取消默认路由，大任务改为人工确认');
+  });
+  document.addEventListener('click',function(){
+    $$('#view-collab .cv-proj.open').forEach(function(el){el.classList.remove('open')});
+  });
+
+  /* ---------- 设置：全局默认 / 项目覆盖 ---------- */
+  var cvConfigValues={};               /* {'global'|项目id:{开关 key:是否开启}} */
+  function cvConfigScopeKey(card){
+    /* 全局设置项永远读写全局；项目可覆盖项在「项目覆盖」时读写本项目 */
+    if(card.getAttribute('data-cv-level')==='global') return 'global';
+    return (cvProject && cvConfigOverridden(card.getAttribute('data-cv-config'))) ? cvProject : 'global';
+  }
+  function cvCaptureConfigDefaults(){
+    if(cvConfigValues.global) return;
+    var g={};
+    $$('#cv-config [data-cv-toggle]').forEach(function(t){ g[t.getAttribute('data-cv-toggle')]=t.classList.contains('on'); });
+    cvConfigValues.global=g;
+  }
+  function cvApplyConfigValues(){
+    $$('#cv-config .config-card').forEach(function(card){
+      var scope=cvConfigScopeKey(card), store=cvConfigValues[scope]||{};
+      $$('[data-cv-toggle]',card).forEach(function(t){
+        var k=t.getAttribute('data-cv-toggle');
+        var v=(k in store)?store[k]:cvConfigValues.global[k];
+        t.classList.toggle('on',!!v);
+      });
+    });
+  }
+  function cvConfigOverridden(key){
+    return !!(cvProject && cvConfigOverride[cvProject] && cvConfigOverride[cvProject][key]);
+  }
+  function cvApplyConfigScope(){
+    $$('#cv-config .config-card').forEach(function(card){
+      var key=card.getAttribute('data-cv-config');
+      var level=card.getAttribute('data-cv-level');
+      var chip=card.querySelector('[data-cv-scope-chip]');
+      var locked;
+      if(!cvProject){
+        locked=false;
+        if(chip){ chip.textContent=level==='global'?'全局设置':'全局默认'; chip.className='cv-scope-chip'; }
+      }else if(level==='global'){
+        locked=true;
+        if(chip){ chip.textContent='全局设置 · 项目不可改'; chip.className='cv-scope-chip'; }
+      }else{
+        locked=!cvConfigOverridden(key);
+        if(chip){
+          chip.textContent=locked?'跟随全局':'项目覆盖';
+          chip.className='cv-scope-chip cv-scope-chip--btn'+(locked?'':' cv-scope-chip--on');
+          chip.setAttribute('role','button');
+        }
+      }
+      card.classList.toggle('cv-card-locked',locked);
+    });
+    cvApplyConfigValues();
+  }
+  var cvConfigPanel=$('#cv-config');
+  if(cvConfigPanel) cvConfigPanel.addEventListener('click',function(e){
+    var tg=e.target.closest('[data-cv-toggle]');
+    if(tg){
+      var tcard=tg.closest('.config-card');
+      if(tcard.classList.contains('cv-card-locked')) return;
+      var scope=cvConfigScopeKey(tcard);
+      if(!cvConfigValues[scope]) cvConfigValues[scope]={};
+      cvConfigValues[scope][tg.getAttribute('data-cv-toggle')]=!tg.classList.contains('on');
+      cvApplyConfigValues();
+      return;
+    }
+    var chip=e.target.closest('.cv-scope-chip--btn'); if(!chip||!cvProject) return;
+    var card=chip.closest('.config-card'), key=card.getAttribute('data-cv-config');
+    if(!cvConfigOverride[cvProject]) cvConfigOverride[cvProject]={};
+    var on=!cvConfigOverridden(key);
+    cvConfigOverride[cvProject][key]=on;
+    if(on && !cvConfigValues[cvProject]){
+      cvConfigValues[cvProject]={};      /* 首次覆盖时继承一份全局值再改 */
+      Object.keys(cvConfigValues.global).forEach(function(k){ cvConfigValues[cvProject][k]=cvConfigValues.global[k]; });
+    }
+    cvApplyConfigScope();
+    toast(on?('「'+cvProjectName(cvProject)+'」已改为项目覆盖，可单独调整'):'已恢复跟随全局设置');
+  });
+
+  /* ---------- 初始化 ---------- */
+  function cvInit(){
+    if(cvInited) return;
+    cvInited=true;
+    cvLoadSavedTasks();
+    cvRenderTaskStats(); cvRenderTasks();
+    cvRenderReviewStats(); cvRenderReviews();
+    cvRenderMemberStats(); cvRenderMembers();
+    cvInjectCardActions();
+    cvCaptureConfigDefaults();
+    cvRenderProjMenu(); cvRenderTeamBind(); cvApplyConfigScope(); cvUpdateCounts();
+  }
+  var cvExpertSearch=$('#cvExpertSearch');
+  if(cvExpertSearch) cvExpertSearch.addEventListener('input',function(){ cvExpertKw=this.value; cvRenderExperts(); });
+  var cvNewExpertBtn=$('#cvNewExpertBtn');
+  if(cvNewExpertBtn) cvNewExpertBtn.addEventListener('click',function(){ openExpertEditor(null) });
+  var cvExpertSections=$('#cvExpertSections');
+  if(cvExpertSections) cvExpertSections.addEventListener('click',function(e){
+    var call=e.target.closest('[data-cv-call]');
+    if(call){ summon('expert',call.getAttribute('data-cv-call')); return; }
+    if(e.target.closest('[data-cv-new-expert]')){ openExpertEditor(null); return; }
+    var card=e.target.closest('[data-cv-expert]');
+    if(card) openExpertModal(card.getAttribute('data-cv-expert'));
+  });
+
+
+  /* URL 直接进入协作开发时，等模块加载完再渲染 */
+  if(cvPendingTab){
+    cvInit();
+    if(cvPendingProj) cvSetProject(cvPendingProj);
+    cvSwitchView(cvPendingTab);
+    cvPendingTab=null; cvPendingProj=null;
+  }
+
+  /* 内联事件用到的函数挂到 window */
+  window.cvSwitchView=cvSwitchView;
+  window.cvSwitchFilter=cvSwitchFilter;
+  window.cvApplyFilters=cvApplyFilters;
+  window.cvApplyReviewFilters=cvApplyReviewFilters;
+  window.cvClickStat=cvClickStat;
+  window.cvClickReviewStat=cvClickReviewStat;
+  window.cvOpenSyncModal=cvOpenSyncModal;
+  window.cvCloseSyncModal=cvCloseSyncModal;
+  window.cvSelectCollabMode=cvSelectCollabMode;
+  window.cvToggleSyncDropdown=cvToggleSyncDropdown;
+  window.cvSaveSyncTask=cvSaveSyncTask;
+  window.cvStartSyncTask=cvStartSyncTask;
+  window.cvOpenTaskModal=cvOpenTaskModal;
+  window.cvCloseTaskModal=cvCloseTaskModal;
+  window.cvSelectPersonItem=cvSelectPersonItem;
+  window.cvConfirmExec=cvConfirmExec;
+  window.cvConfirmTransfer=cvConfirmTransfer;
+  window.cvConfirmTwist=cvConfirmTwist;
+  window.cvConfirmReview=cvConfirmReview;
+  window.cvReviewPass=cvReviewPass;
+  window.cvReviewReject=cvReviewReject;
+  window.cvOpenReviewDetail=cvOpenReviewDetail;
+  window.cvSwitchArtifact=cvSwitchArtifact;
+  window.cvSubmitReview=cvSubmitReview;
+  window.cvSendChatMessage=cvSendChatMessage;
+  window.cvOpenConversation=cvOpenConversation;
+  window.cvOpenAddMemberModal=cvOpenAddMemberModal;
+  window.cvCloseAddMemberModal=cvCloseAddMemberModal;
+  window.cvSearchThirdPartyMembers=cvSearchThirdPartyMembers;
+  window.cvConfirmAddMembers=cvConfirmAddMembers;
+  window.cvDeleteMember=cvDeleteMember;
 
 
 })();
