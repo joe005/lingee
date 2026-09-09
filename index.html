@@ -81,8 +81,8 @@
         应用开发
       </div>
       <div class="nav-item">
-        <svg class="ic" viewBox="0 0 24 24"><path d="M16 20v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 4 18.5V20"/><circle cx="10" cy="8" r="3.2"/><path d="M20 20v-1.5a3.5 3.5 0 0 0-2.6-3.4"/><path d="M15.4 5.2a3.2 3.2 0 0 1 0 5.6"/></svg>
-        专家
+        <svg class="ic" viewBox="0 0 24 24"><path d="M6 3v12"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>
+        协作开发
       </div>
 
       <div class="section-label">
@@ -868,23 +868,253 @@
     </div>
   </div>
 
-  <!-- ===================== EXPERTS VIEW ===================== -->
-  <div class="view hidden" id="view-experts">
-    <div class="apps-head">
-      <div class="apps-title">专家</div>
-      <button class="btn-new" id="newExpertEntryBtn"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg><span id="newExpertEntryLabel">新建专家团</span></button>
-    </div>
-    <div class="apps-toolbar">
-      <div class="tabs" id="expertTabs">
-        <div class="tab active" data-etab="team">专家团<span class="tab-count" id="teamTabCount">0</span></div>
-        <div class="tab" data-etab="expert">专家<span class="tab-count" id="expertTabCount">0</span></div>
+  <!-- ===================== 协作开发 ===================== -->
+  <div class="view hidden" id="view-collab">
+    <div class="tab-nav" id="cvTabNav">
+      <button class="tab-nav-item tab-nav-item--active" data-cvview="tasks" onclick="cvSwitchView('tasks')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>任务管理<span class="tab-nav-count" id="cvTaskCount">0</span></button>
+      <button class="tab-nav-item" data-cvview="review" onclick="cvSwitchView('review')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>待评审<span class="tab-nav-count tab-nav-count--warn" id="cvReviewCount">0</span></button>
+      <button class="tab-nav-item" data-cvview="members" onclick="cvSwitchView('members')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>协作人员管理</button>
+      <button class="tab-nav-item" data-cvview="experts" onclick="cvSwitchView('experts')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>专家管理</button>
+      <button class="tab-nav-item" data-cvview="teams" onclick="cvSwitchView('teams')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>专家团管理</button>
+      <button class="tab-nav-item" data-cvview="config" onclick="cvSwitchView('config')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>设置</button>
+      <div class="cv-proj" id="cvProjSwitch">
+        <button type="button" class="cv-proj-btn" id="cvProjBtn" aria-haspopup="true" aria-expanded="false">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          <span id="cvProjLabel">全部项目</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="cv-proj-menu" id="cvProjMenu"></div>
       </div>
-      <div class="apps-search">
-        <input type="text" id="expertSearchInput" placeholder="搜索专家或专家团" autocomplete="off">
-        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+    </div>
+
+    <!-- 任务管理 -->
+    <div class="cv-panel active" id="cv-tasks">
+      <div class="filter-bar">
+        <div class="filter-group" data-filter-type="type">
+          <button class="filter-btn filter-btn--active" onclick="cvSwitchFilter(this)">全部</button>
+          <button class="filter-btn" onclick="cvSwitchFilter(this)">需求</button>
+          <button class="filter-btn" onclick="cvSwitchFilter(this)">Bug</button>
+          <button class="filter-btn" onclick="cvSwitchFilter(this)">任务</button>
+          <button class="filter-btn" onclick="cvSwitchFilter(this)">改进</button>
+        </div>
+        <div class="filter-group" data-filter-type="status">
+          <button class="filter-btn filter-btn--active" onclick="cvSwitchFilter(this)">全部状态</button>
+          <button class="filter-btn" onclick="cvSwitchFilter(this)">未开始</button>
+          <button class="filter-btn" onclick="cvSwitchFilter(this)">待评审</button>
+          <button class="filter-btn" onclick="cvSwitchFilter(this)">进行中</button>
+          <button class="filter-btn" onclick="cvSwitchFilter(this)">已完成</button>
+          <button class="filter-btn" onclick="cvSwitchFilter(this)">已失败</button>
+        </div>
+        <div class="filter-group" data-filter-type="collab">
+          <button class="filter-btn filter-btn--active" onclick="cvSwitchFilter(this)">全部协作</button>
+          <button class="filter-btn" onclick="cvSwitchFilter(this)">人人协作</button>
+          <button class="filter-btn" onclick="cvSwitchFilter(this)">人Agent协作</button>
+          <button class="filter-btn" onclick="cvSwitchFilter(this)">Agent间协作</button>
+          <button class="filter-btn" onclick="cvSwitchFilter(this)">无需协作</button>
+        </div>
+        <div class="filter-group" data-filter-type="size">
+          <button class="filter-btn filter-btn--active" onclick="cvSwitchFilter(this)">全部大小</button>
+          <button class="filter-btn" onclick="cvSwitchFilter(this)">小任务</button>
+          <button class="filter-btn" onclick="cvSwitchFilter(this)">大任务</button>
+        </div>
+        <button class="sync-btn" onclick="cvOpenSyncModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>同步任务</button>
+      </div>
+      <div class="stats" id="cv-task-stats"></div>
+      <div class="scroll">
+        <div class="card-grid" id="cv-task-grid"></div>
       </div>
     </div>
-    <div class="apps-grid" id="expertGrid"></div>
+
+    <!-- 待评审 -->
+    <div class="cv-panel" id="cv-review">
+      <div class="filter-bar">
+        <div class="filter-group" data-filter-type="review-type">
+          <button class="filter-btn filter-btn--active" onclick="cvSwitchFilter(this)">全部待评审</button>
+          <button class="filter-btn" onclick="cvSwitchFilter(this)">我发起的</button>
+          <button class="filter-btn" onclick="cvSwitchFilter(this)">分配给我的</button>
+        </div>
+        <div class="filter-group" data-filter-type="review-priority">
+          <button class="filter-btn filter-btn--active" onclick="cvSwitchFilter(this)">全部优先级</button>
+          <button class="filter-btn" onclick="cvSwitchFilter(this)">紧急</button>
+          <button class="filter-btn" onclick="cvSwitchFilter(this)">高</button>
+          <button class="filter-btn" onclick="cvSwitchFilter(this)">中</button>
+          <button class="filter-btn" onclick="cvSwitchFilter(this)">低</button>
+        </div>
+        <div class="search-wrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input placeholder="搜索评审任务" onkeyup="cvApplyReviewFilters()"></div>
+      </div>
+      <div class="stats" id="cv-review-stats"></div>
+      <div class="scroll">
+        <div class="card-grid" id="cv-review-grid"></div>
+      </div>
+    </div>
+
+    <!-- 协作人员管理 -->
+    <div class="cv-panel" id="cv-members">
+      <div class="filter-bar">
+        <div class="filter-group" data-filter-type="role">
+          <button class="filter-btn filter-btn--active" onclick="cvSwitchFilter(this)">全部</button>
+          <button class="filter-btn" onclick="cvSwitchFilter(this)">需求</button>
+          <button class="filter-btn" onclick="cvSwitchFilter(this)">架构</button>
+          <button class="filter-btn" onclick="cvSwitchFilter(this)">开发</button>
+          <button class="filter-btn" onclick="cvSwitchFilter(this)">测试</button>
+          <button class="filter-btn" onclick="cvSwitchFilter(this)">运维</button>
+          <button class="filter-btn" onclick="cvSwitchFilter(this)">产品</button>
+        </div>
+        <div class="search-wrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input placeholder="搜索姓名、邮箱" onkeyup="cvApplyFilters()"></div>
+        <button class="sync-btn" onclick="cvOpenAddMemberModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>添加人员</button>
+      </div>
+      <div class="stats" id="cv-member-stats"></div>
+      <div class="scroll">
+        <div id="cv-member-list"></div>
+      </div>
+    </div>
+
+    <!-- 专家管理 -->
+    <div class="cv-panel" id="cv-experts">
+      <div class="scroll">
+        <div class="cv-head">
+          <div>
+            <div class="scroll-title">专家管理<span class="cv-global-chip">全局</span></div>
+            <div class="scroll-desc">专家库为全局资产，所有项目共用，可直接召唤，也可创建自己的专家</div>
+          </div>
+          <div class="cv-head-right">
+            <div class="search-wrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input id="cvExpertSearch" placeholder="搜索专家、职业或能力"></div>
+            <button class="sync-btn" id="cvNewExpertBtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>创建专家</button>
+          </div>
+        </div>
+        <div id="cvExpertSections"></div>
+      </div>
+    </div>
+
+    <!-- 专家团管理 -->
+    <div class="cv-panel" id="cv-teams">
+      <div class="scroll cv-scroll-soft">
+        <div class="cv-head">
+          <div>
+            <div class="scroll-title">专家团管理<span class="cv-global-chip">全局</span></div>
+            <div class="scroll-desc">专家团为全局定义，项目内只绑定默认专家团，大任务按此路由</div>
+          </div>
+          <div class="cv-head-right">
+            <div class="apps-search">
+              <input type="text" id="expertSearchInput" placeholder="搜索专家团" autocomplete="off">
+              <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+            </div>
+            <button class="btn-new" id="newExpertEntryBtn"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg><span id="newExpertEntryLabel">新建专家团</span></button>
+          </div>
+        </div>
+        <div class="cv-bind hidden" id="cvTeamBind">
+          <span class="cv-bind-label">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
+            <b id="cvBindProjName">当前项目</b>的大任务默认路由到
+          </span>
+          <div class="cv-proj" id="cvBindSwitch">
+            <button type="button" class="cv-proj-btn" id="cvBindBtn"><span id="cvBindTeamLabel">未指定</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="cv-proj-menu" id="cvBindMenu"></div>
+          </div>
+        </div>
+        <div class="apps-grid" id="expertGrid"></div>
+      </div>
+    </div>
+
+    <!-- 设置 -->
+    <div class="cv-panel" id="cv-config">
+      <div class="scroll">
+        <div class="scroll-title">设置</div>
+        <div class="scroll-desc">统一配置任务路由规则、执行策略和协作模式</div>
+        <div class="config-grid">
+          <div class="config-card" data-cv-config="size" data-cv-level="global">
+            <div class="config-card-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>任务大小规则<span class="cv-scope-chip" data-cv-scope-chip></span></div>
+            <div class="config-card-desc">根据任务描述长度和影响范围自动判定任务大小，决定执行路由</div>
+            <div class="config-row"><span class="config-label">小任务判定标准</span><span class="config-value">描述 &lt; 200 字 且 影响范围 &lt; 3 模块</span></div>
+            <div class="config-row"><span class="config-label">大任务判定标准</span><span class="config-value">描述 &gt; 500 字 或 影响范围 &gt; 5 模块</span></div>
+            <div class="config-row"><span class="config-label">中间地带</span><span class="config-value">人工确认后路由</span></div>
+          </div>
+          <div class="config-card" data-cv-config="route" data-cv-level="global">
+            <div class="config-card-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>执行路由<span class="cv-scope-chip" data-cv-scope-chip></span></div>
+            <div class="config-card-desc">小任务自动执行，大任务分配专家团，中间地带需人工确认</div>
+            <div class="config-row"><span class="config-label">小任务</span><span class="config-value">自动执行（Agent 独立完成）</span></div>
+            <div class="config-row"><span class="config-label">大任务</span><span class="config-value">分配给专家团</span></div>
+            <div class="config-row"><span class="config-label">中间地带</span><span class="config-value">人工确认后路由</span></div>
+          </div>
+          <div class="config-card" data-cv-config="collab" data-cv-level="project">
+            <div class="config-card-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>协作模式<span class="cv-scope-chip" data-cv-scope-chip></span></div>
+            <div class="config-card-desc">控制任务执行过程中的协作行为，可按任务大小和类型自动开启</div>
+            <div class="config-row"><span class="config-label">默认开启协作</span><div class="toggle on" data-cv-toggle="collab.0"></div></div>
+            <div class="config-row"><span class="config-label">大任务强制协作</span><div class="toggle" data-cv-toggle="collab.1"></div></div>
+            <div class="config-row"><span class="config-label">评审任务自动协作</span><div class="toggle on" data-cv-toggle="collab.2"></div></div>
+          </div>
+          <div class="config-card" data-cv-config="integration" data-cv-level="global">
+            <div class="config-card-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--dot-blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>第三方集成<span class="cv-scope-chip" data-cv-scope-chip></span></div>
+            <div class="config-card-desc">配置第三方系统连接，任务可自动从这些系统同步到灵基</div>
+            <div class="config-row"><span class="config-label">Jira</span><span class="config-value">已连接 · PROJ-001</span></div>
+            <div class="config-row"><span class="config-label">TAPD</span><span class="config-value">已连接 · tapd_kingdee</span></div>
+            <div class="config-row"><span class="config-label">飞书项目</span><span class="config-value">未配置</span></div>
+          </div>
+          <div class="config-card" data-cv-config="selfbuild" data-cv-level="project">
+            <div class="config-card-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7858f9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>对话自建<span class="cv-scope-chip" data-cv-scope-chip></span></div>
+            <div class="config-card-desc">用户可在对话中直接创建任务，自动入库到任务管理列表</div>
+            <div class="config-row"><span class="config-label">开启对话自建</span><div class="toggle on" data-cv-toggle="selfbuild.0"></div></div>
+            <div class="config-row"><span class="config-label">默认任务类型</span><span class="config-value">需求</span></div>
+            <div class="config-row"><span class="config-label">默认大小</span><span class="config-value">小任务</span></div>
+          </div>
+          <div class="config-card" data-cv-config="security" data-cv-level="project">
+            <div class="config-card-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>安全策略<span class="cv-scope-chip" data-cv-scope-chip></span></div>
+            <div class="config-card-desc">任务执行安全策略，控制自动执行的风险等级和审批要求</div>
+            <div class="config-row"><span class="config-label">自动执行前确认</span><div class="toggle" data-cv-toggle="security.0"></div></div>
+            <div class="config-row"><span class="config-label">高危操作二次确认</span><div class="toggle on" data-cv-toggle="security.1"></div></div>
+            <div class="config-row"><span class="config-label">自动执行风险阈值</span><span class="config-value">中等</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 评审详情 -->
+    <div class="cv-panel" id="cv-review-detail">
+      <div class="rv-detail">
+        <div class="rv-detail-left">
+          <div class="rv-header">
+            <div class="rv-header-left">
+              <button class="rv-back" onclick="cvSwitchView('review')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>返回</button>
+              <span class="rv-title" id="cv-rv-title">评审详情</span>
+            </div>
+          </div>
+          <div class="rv-art-tabs" id="cv-rv-art-tabs"></div>
+          <div class="rv-art-body" id="cv-rv-art-body"></div>
+        </div>
+        <div class="rv-detail-right">
+          <div class="rv-panel-header" id="cv-rv-panel-header"></div>
+          <div class="rv-comments" id="cv-rv-comments"></div>
+          <div class="rv-input-area">
+            <textarea class="rv-input" id="cv-rv-input" placeholder="输入评审意见"></textarea>
+            <div class="rv-actions">
+              <button class="rv-btn rv-btn--pass" onclick="cvSubmitReview('pass')">通过</button>
+              <button class="rv-btn rv-btn--reject" onclick="cvSubmitReview('reject')">驳回</button>
+              <button class="rv-btn rv-btn--comment" onclick="cvSubmitReview('comment')">评论</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 任务对话 -->
+    <div class="cv-panel" id="cv-chat">
+      <div class="chat-view">
+        <div class="chat-header">
+          <div class="chat-header-left">
+            <button class="rv-back" onclick="cvSwitchView('tasks')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>返回</button>
+            <span class="chat-title" id="cv-chat-task-title">任务执行中</span>
+            <span class="chat-status-badge chat-status-badge--running" id="cv-chat-status-badge"></span>
+          </div>
+        </div>
+        <div class="chat-body" id="cv-chat-body"></div>
+        <div class="chat-input-bar">
+          <input class="chat-input" id="cv-chat-input" placeholder="输入消息" onkeydown="if(event.key==='Enter')cvSendChatMessage()">
+          <button class="chat-send" onclick="cvSendChatMessage()">发送</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="view hidden" id="view-skills">
@@ -1734,6 +1964,147 @@
       <div class="shortcut-row"><span>停止生成</span><kbd>任意键</kbd></div>
     </div>
   </div>
+</div>
+
+<!-- ===================== 协作开发 · 弹窗 ===================== -->
+<div class="cv-scope" id="cvModals">
+<!-- ============ MODAL: SYNC TASK ============ -->
+<div class="sync-overlay" id="cv-sync-overlay" style="display:none" onclick="if(event.target===this)cvCloseSyncModal()">
+  <div class="sync-modal">
+    <div class="sync-modal__header">
+      <h3 class="sync-modal__title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>同步任务</h3>
+      <button class="sync-modal__close" onclick="cvCloseSyncModal()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="sync-modal__form">
+      <div class="sync-modal__field"><label class="sync-modal__label">任务标题</label><input class="sync-modal__input" id="cv-sync-title" placeholder="请输入任务标题"></div>
+      <div class="sync-modal__field"><label class="sync-modal__label">任务描述</label><textarea class="sync-modal__textarea" id="cv-sync-desc" rows="3" placeholder="请输入任务描述"></textarea></div>
+      <div class="sync-modal__row">
+        <div class="sync-modal__field"><label class="sync-modal__label">任务类型</label><div class="sync-modal__select" onclick="cvToggleSyncDropdown(this,event)"><span class="sync-modal__select-placeholder" id="cv-sync-type-val">需求</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></div></div>
+        <div class="sync-modal__field"><label class="sync-modal__label">优先级</label><div class="sync-modal__select" onclick="cvToggleSyncDropdown(this,event)"><span class="sync-modal__select-placeholder" id="cv-sync-priority-val">中</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></div></div>
+      </div>
+      <div class="sync-modal__row">
+        <div class="sync-modal__field"><label class="sync-modal__label">来源</label><div class="sync-modal__select" onclick="cvToggleSyncDropdown(this,event)"><span class="sync-modal__select-placeholder" id="cv-sync-source-val">对话自建</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></div></div>
+        <div class="sync-modal__field"><label class="sync-modal__label">任务大小</label><div class="sync-modal__select" onclick="cvToggleSyncDropdown(this,event)"><span class="sync-modal__select-placeholder" id="cv-sync-size-val">小任务</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></div></div>
+      </div>
+      <div class="sync-modal__field"><label class="sync-modal__label">协作模式</label>
+        <div class="sync-collab-options" id="cv-sync-collab-options">
+          <div class="sync-collab-option" onclick="cvSelectCollabMode(this)"><div class="sync-collab-icon" style="background:linear-gradient(135deg,#7c5cfc,#5b8def)">H</div><span class="sync-collab-name">人人协作</span></div>
+          <div class="sync-collab-option" onclick="cvSelectCollabMode(this)"><div class="sync-collab-icon" style="background:linear-gradient(135deg,#34c07a,var(--success))">AI</div><span class="sync-collab-name">人Agent协作</span></div>
+          <div class="sync-collab-option sync-collab-option--selected" onclick="cvSelectCollabMode(this)"><div class="sync-collab-icon" style="background:linear-gradient(135deg,var(--dot-blue),#5b8def)">A</div><span class="sync-collab-name">Agent间协作</span></div>
+          <div class="sync-collab-option" onclick="cvSelectCollabMode(this)"><div class="sync-collab-icon" style="background:var(--border-hover);color:var(--text-secondary)">—</div><span class="sync-collab-name">无需协作</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="sync-modal__footer">
+      <button class="sync-modal__btn sync-modal__btn--ghost" onclick="cvCloseSyncModal()">取消</button>
+      <button class="sync-modal__btn sync-modal__btn--primary" onclick="cvSaveSyncTask()">仅保存</button>
+      <button class="sync-modal__btn sync-modal__btn--start" onclick="cvStartSyncTask()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>启动任务</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: EXEC ============ -->
+<div class="sync-overlay" id="cv-exec-overlay" style="display:none" onclick="if(event.target===this)cvCloseTaskModal('cv-exec-overlay')">
+  <div class="task-modal">
+    <div class="task-modal__header">
+      <h3 class="task-modal__title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>执行任务</h3>
+      <button class="task-modal__close" onclick="cvCloseTaskModal('cv-exec-overlay')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="task-modal__body">
+      <div class="task-modal__label">选择协作模式</div>
+      <div class="sync-collab-options" id="cv-exec-collab-options">
+        <div class="sync-collab-option" onclick="cvSelectCollabMode(this)"><div class="sync-collab-icon" style="background:linear-gradient(135deg,#7c5cfc,#5b8def)">H</div><span class="sync-collab-name">人人协作</span></div>
+        <div class="sync-collab-option" onclick="cvSelectCollabMode(this)"><div class="sync-collab-icon" style="background:linear-gradient(135deg,#34c07a,var(--success))">AI</div><span class="sync-collab-name">人Agent协作</span></div>
+        <div class="sync-collab-option sync-collab-option--selected" onclick="cvSelectCollabMode(this)"><div class="sync-collab-icon" style="background:linear-gradient(135deg,var(--dot-blue),#5b8def)">A</div><span class="sync-collab-name">Agent间协作</span></div>
+        <div class="sync-collab-option" onclick="cvSelectCollabMode(this)"><div class="sync-collab-icon" style="background:var(--border-hover);color:var(--text-secondary)">—</div><span class="sync-collab-name">无需协作</span></div>
+      </div>
+    </div>
+    <div class="task-modal__footer">
+      <button class="sync-modal__btn sync-modal__btn--ghost" onclick="cvCloseTaskModal('cv-exec-overlay')">取消</button>
+      <button class="sync-modal__btn sync-modal__btn--start" onclick="cvConfirmExec()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>启动执行</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: TRANSFER ============ -->
+<div class="sync-overlay" id="cv-transfer-overlay" style="display:none" onclick="if(event.target===this)cvCloseTaskModal('cv-transfer-overlay')">
+  <div class="task-modal">
+    <div class="task-modal__header">
+      <h3 class="task-modal__title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--dot-blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>转交任务</h3>
+      <button class="task-modal__close" onclick="cvCloseTaskModal('cv-transfer-overlay')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="task-modal__body">
+      <div class="task-modal__label">选择转交人员</div>
+      <div class="person-list" id="cv-transfer-person-list"></div>
+    </div>
+    <div class="task-modal__footer">
+      <button class="sync-modal__btn sync-modal__btn--ghost" onclick="cvCloseTaskModal('cv-transfer-overlay')">取消</button>
+      <button class="sync-modal__btn sync-modal__btn--primary" onclick="cvConfirmTransfer()">确认转交</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: TWIST ============ -->
+<div class="sync-overlay" id="cv-twist-overlay" style="display:none" onclick="if(event.target===this)cvCloseTaskModal('cv-twist-overlay')">
+  <div class="task-modal">
+    <div class="task-modal__header">
+      <h3 class="task-modal__title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7858f9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.5 0 4.8 1 6.5 2.7"/><polyline points="21 3 21 9 15 9"/></svg>扭转任务</h3>
+      <button class="task-modal__close" onclick="cvCloseTaskModal('cv-twist-overlay')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="task-modal__body">
+      <div class="task-modal__label">研发流程 · 当前执行节点高亮</div>
+      <div id="cv-twist-workflow"></div>
+      <div class="task-modal__label" style="margin-top:16px">传递产物</div>
+      <div class="artifact-list" id="cv-twist-artifacts"></div>
+    </div>
+    <div class="task-modal__footer">
+      <button class="sync-modal__btn sync-modal__btn--ghost" onclick="cvCloseTaskModal('cv-twist-overlay')">取消</button>
+      <button class="sync-modal__btn sync-modal__btn--purple" onclick="cvConfirmTwist()">扭转到下一步</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: REVIEW ============ -->
+<div class="sync-overlay" id="cv-review-overlay" style="display:none" onclick="if(event.target===this)cvCloseTaskModal('cv-review-overlay')">
+  <div class="task-modal">
+    <div class="task-modal__header">
+      <h3 class="task-modal__title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>发起评审</h3>
+      <button class="task-modal__close" onclick="cvCloseTaskModal('cv-review-overlay')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="task-modal__body">
+      <div class="task-modal__label">按当前执行节点匹配评审岗位</div>
+      <div class="person-list" id="cv-review-person-list"></div>
+      <div class="task-modal__label" style="margin-top:16px">传递产物</div>
+      <div class="artifact-list" id="cv-review-artifacts"></div>
+    </div>
+    <div class="task-modal__footer">
+      <button class="sync-modal__btn sync-modal__btn--ghost" onclick="cvCloseTaskModal('cv-review-overlay')">取消</button>
+      <button class="sync-modal__btn sync-modal__btn--amber" onclick="cvConfirmReview()">发起评审</button>
+    </div>
+  </div>
+</div>
+
+<div class="sync-overlay" id="cv-addmember-overlay" style="display:none" onclick="if(event.target===this)cvCloseAddMemberModal()">
+  <div class="sync-modal" style="width:520px">
+    <div class="sync-modal__header">
+      <h3 class="sync-modal__title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>添加协作人员</h3>
+      <button class="sync-modal__close" onclick="cvCloseAddMemberModal()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="sync-modal__body">
+      <div class="sync-modal__field">
+        <label class="sync-modal__label">从 Lingee 获取人员</label>
+        <div class="search-wrap" style="margin-bottom:12px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#b5b5ae" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input id="cv-tp-search" placeholder="搜索姓名、邮箱..." onkeyup="cvSearchThirdPartyMembers(this.value)" /></div>
+      </div>
+      <div class="sync-modal__field">
+        <div id="cv-tp-list" style="max-height:360px;overflow-y:auto"></div>
+      </div>
+    </div>
+    <div class="sync-modal__footer">
+      <button class="sync-modal__btn sync-modal__btn--ghost" onclick="cvCloseAddMemberModal()">取消</button>
+      <button class="sync-modal__btn sync-modal__btn--primary" onclick="cvConfirmAddMembers()">添加选中</button>
+    </div>
+  </div>
+</div>
 </div>
 
 <script type="module" src="./src/scripts/main.js"></script>
