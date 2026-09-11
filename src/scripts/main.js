@@ -24,13 +24,15 @@ const billTemplateWithTokens = billTemplate.replace(
     'wei_bu@kingdee.com':{name:'Wei',avatar:'W'},
     'wuhc2023@gmail.com':{name:'Chao',avatar:'C'},
     '6686612@qq.com':{name:'Joe',avatar:'J'},
-    '17299999999':{name:'Dev',avatar:'D'}
+    '17299999999':{name:'Dev',avatar:'D'},
+    'liangpingxian@gmail.com':{name:'Xian',avatar:'L'}
   };
   var USER_CREDENTIALS={
     'wei_bu@kingdee.com':'lingee520',
     'wuhc2023@gmail.com':'lingee520',
     '6686612@qq.com':'lingee520',
-    '17299999999':'KDadm!@#2022'
+    '17299999999':'KDadm!@#2022',
+    'liangpingxian@gmail.com':'lingee520'
   };
 
   function getAuthedUser(){
@@ -468,27 +470,32 @@ const billTemplateWithTokens = billTemplate.replace(
   var appList=$('#appList');
   var appItems=$$('.app-item',appList);
   var fullAppData=[
-    {app:'采购订单管理',cloud:'供应链云'},
-    {app:'报价单管理',cloud:'供应链云'},
-    {app:'资产领用',cloud:'财务云'},
-    {app:'请假管理',cloud:'人力云'},
-    {app:'库存领用',cloud:'供应链云'},
-    {app:'费用报销单',cloud:'财务云'},
-    {app:'销售合同',cloud:'合同云'},
-    {app:'员工入职',cloud:'人力云'},
-    {app:'出差申请',cloud:'费用云'},
-    {app:'付款申请单',cloud:'财务云'},
-    {app:'采购入库单',cloud:'供应链云'},
-    {app:'销售订单',cloud:'供应链云'},
-    {app:'项目立项',cloud:'项目云'},
-    {app:'固定资产',cloud:'财务云'},
-    {app:'库存盘点',cloud:'供应链云'},
-    {app:'应收单',cloud:'财务云'},
-    {app:'应付单',cloud:'财务云'},
-    {app:'考勤汇总',cloud:'人力云'},
-    {app:'预算编制',cloud:'预算云'},
-    {app:'银行对账单',cloud:'财务云'}
+    {app:'采购订单管理',code:'po_mgmt',cloud:'供应链云'},
+    {app:'报价单管理',code:'quote_mgmt',cloud:'供应链云'},
+    {app:'资产领用',code:'asset_use',cloud:'财务云'},
+    {app:'请假管理',code:'leave_mgmt',cloud:'人力云'},
+    {app:'库存领用',code:'stock_use',cloud:'供应链云'},
+    {app:'费用报销单',code:'expense_reim',cloud:'财务云'},
+    {app:'销售合同',code:'sales_contract',cloud:'合同云'},
+    {app:'员工入职',code:'emp_onboard',cloud:'人力云'},
+    {app:'出差申请',code:'travel_req',cloud:'费用云'},
+    {app:'付款申请单',code:'pay_req',cloud:'财务云'},
+    {app:'采购入库单',code:'po_inbound',cloud:'供应链云'},
+    {app:'销售订单',code:'sales_order',cloud:'供应链云'},
+    {app:'项目立项',code:'project_init',cloud:'项目云'},
+    {app:'项目立项',code:'project_init_v2',cloud:'项目云'},
+    {app:'固定资产',code:'fixed_asset',cloud:'财务云'},
+    {app:'库存盘点',code:'stock_count',cloud:'供应链云'},
+    {app:'应收单',code:'ar_bill',cloud:'财务云'},
+    {app:'应付单',code:'ap_bill',cloud:'财务云'},
+    {app:'考勤汇总',code:'attend_sum',cloud:'人力云'},
+    {app:'预算编制',code:'budget_plan',cloud:'预算云'},
+    {app:'银行对账单',code:'bank_recon',cloud:'财务云'}
   ];
+  function appDisplayName(d,list){
+    var dup=list.filter(function(x){return x.app===d.app;}).length>1;
+    return dup&&d.code?(d.app+' ('+d.code+')'):d.app;
+  }
   var recentApps=[]; // 最多5个
   function buildAppList(){
     appList.innerHTML='';
@@ -516,7 +523,7 @@ const billTemplateWithTokens = billTemplate.replace(
       var el=document.createElement('div'); el.className='app-item'; el.setAttribute('data-app',d.app);
       el.setAttribute('tabindex','-1');
       if(d.app===currentApp) el.classList.add('checked');
-      el.innerHTML='<div class="app-item-info"><div class="app-item-name">'+d.app+'</div><div class="app-item-cloud">'+d.cloud+'</div></div>';
+      el.innerHTML='<div class="app-item-info"><div class="app-item-name">'+appDisplayName(d,list)+'</div><div class="app-item-cloud">'+d.cloud+'</div></div>';
       el.addEventListener('click',function(e){
         e.stopPropagation();
         selectApp(d.app); toast('已关联应用：'+d.app);
@@ -635,7 +642,7 @@ const billTemplateWithTokens = billTemplate.replace(
       var el=document.createElement('div'); el.className='app-item'; el.setAttribute('data-app',d.app);
       el.setAttribute('tabindex','-1');
       if(d.app===currentApp) el.classList.add('checked');
-      el.innerHTML='<div class="app-item-info"><div class="app-item-name">'+d.app+'</div><div class="app-item-cloud">'+d.cloud+'</div></div>';
+      el.innerHTML='<div class="app-item-info"><div class="app-item-name">'+appDisplayName(d,list)+'</div><div class="app-item-cloud">'+d.cloud+'</div></div>';
       el.addEventListener('click',function(e){
         e.stopPropagation();
         selectChatApp(d.app); toast('已关联应用：'+d.app);
@@ -2428,11 +2435,13 @@ const billTemplateWithTokens = billTemplate.replace(
       document.body.style.userSelect='none';
       var view=document.getElementById('view-chat');
       var ps=document.getElementById('chatPreviewSide');
+      var cc=view.querySelector('.chat-container');
       view.classList.add('resizing');
       _startX=e.clientX;
       _startW=ps.offsetWidth;
       _maxW=view.offsetWidth-360-chatResizer.offsetWidth;
       if(_maxW<200)_maxW=200;
+      if(cc)cc.style.minWidth='0';
       ps.style.maxWidth='none';
       e.preventDefault();
     });
@@ -2448,7 +2457,10 @@ const billTemplateWithTokens = billTemplate.replace(
       if(_dragging){
         _dragging=false;
         chatResizer.classList.remove('dragging');
-        document.getElementById('view-chat').classList.remove('resizing');
+        var view=document.getElementById('view-chat');
+        view.classList.remove('resizing');
+        var cc=view.querySelector('.chat-container');
+        if(cc)cc.style.minWidth='';
         document.body.style.cursor='';
         document.body.style.userSelect='';
         var ps=document.getElementById('chatPreviewSide');
@@ -2754,7 +2766,7 @@ const billTemplateWithTokens = billTemplate.replace(
       var el=document.createElement('div');
       el.className='app-item';
       el.setAttribute('data-app',d.app);
-      el.innerHTML='<div class="app-item-info"><div class="app-item-name">'+d.app+'</div><div class="app-item-cloud">'+d.cloud+'</div></div>';
+      el.innerHTML='<div class="app-item-info"><div class="app-item-name">'+appDisplayName(d,list)+'</div><div class="app-item-cloud">'+d.cloud+'</div></div>';
       el.addEventListener('click',function(){
         $$('.app-item',sourceAppList).forEach(function(i){i.classList.remove('checked')});
         el.classList.add('checked');

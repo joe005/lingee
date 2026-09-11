@@ -671,7 +671,7 @@
   .tip-bubble b{font-weight:600}
 
   /* ============ 会话详情（参考 Build_demo） ============ */
-  #view-chat{background:#fff;overflow:hidden}
+  #view-chat{background:#fff;overflow:hidden;min-width:0}
   .chat-container{display:flex;flex-direction:column;height:100vh}
   .chat-header{display:flex;align-items:center;padding:0 12px 0 20px;height:40px;/* 收起时左右图标距边一致 */box-sizing:border-box;flex:none;border-bottom:1px solid var(--border)}
   .chat-header-info{flex:1;min-width:0}
