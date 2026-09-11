@@ -234,9 +234,91 @@
         <div class="composer-tags hidden" id="ntTags"></div>
         <div class="composer-input" id="composerInput" contenteditable="true" data-placeholder="布置任务"></div>
         <div class="composer-bar">
-          <button class="round-btn" data-tooltip="上传附件" aria-label="add">
-            <svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-          </button>
+          <div class="dropdown add-dropdown" id="addDropdown">
+            <button class="round-btn" data-tooltip="添加" aria-label="add">
+              <svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+            </button>
+            <div class="menu add-menu">
+              <div class="menu-item add-item add-item--submenu" data-action="addfile">
+                <span class="left">
+                  <svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                  <span>添加文件</span>
+                </span>
+                <svg class="ic ic-sm submenu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                <div class="submenu">
+                  <div class="menu-item add-item" data-action="attach">
+                    <span class="left">
+                      <svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6M9 15h6"/></svg>
+                      <span>本地文件</span>
+                    </span>
+                  </div>
+                  <div class="menu-item add-item" data-action="folder">
+                    <span class="left">
+                      <svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+                      <span>引用文件夹</span>
+                    </span>
+                  </div>
+                  <div class="menu-item add-item" data-action="knowledge">
+                    <span class="left">
+                      <svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><rect x="2" y="7" width="20" height="10" rx="1"/></svg>
+                      <span>知识库</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div class="menu-item add-item add-item--submenu" data-action="mode">
+                <span class="left">
+                  <svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+                  <span>模式</span>
+                </span>
+                <svg class="ic ic-sm submenu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                <div class="submenu">
+                  <div class="menu-item add-item" data-action="spec">
+                    <span class="left">
+                      <svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h12M9 12h12M9 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>
+                      <span>Spec</span>
+                    </span>
+                  </div>
+                  <div class="menu-item add-item" data-action="goal">
+                    <span class="left">
+                      <svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                      <span>目标</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div class="menu-item add-item add-item--submenu" data-action="connector">
+                <span class="left">
+                  <svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v6M15 2v6M5 8h14v4a5 5 0 0 1-5 5h-4a5 5 0 0 1-5-5V8zM12 17v5"/></svg>
+                  <span>连接器</span>
+                </span>
+                <svg class="ic ic-sm submenu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                <div class="submenu connector-submenu">
+                  <div class="connector-search">
+                    <svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                    <input type="text" placeholder="搜索" />
+                  </div>
+                  <div class="connector-list">
+                    <div class="connector-item">
+                      <svg class="connector-logo-svg" viewBox="0 0 24 24" fill="none" style="width:20px;height:20px;flex:none"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" fill="#00a4ff" stroke="#00a4ff" stroke-width=".5"/></svg>
+                      <span class="connector-name">腾讯云</span>
+                      <button class="connector-btn">连接</button>
+                    </div>
+                    <div class="connector-item">
+                      <svg class="connector-logo-svg" viewBox="0 0 24 24" fill="none" style="width:20px;height:20px;flex:none"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" fill="#ff6a00" stroke="#ff6a00" stroke-width=".5"/></svg>
+                      <span class="connector-name">阿里云</span>
+                      <div class="connector-toggle"></div>
+                    </div>
+                    <div class="connector-item">
+                      <svg class="connector-logo-svg" viewBox="0 0 24 24" fill="none" style="width:20px;height:20px;flex:none"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" fill="#c7000b" stroke="#c7000b" stroke-width=".5"/></svg>
+                      <span class="connector-name">华为云</span>
+                      <button class="connector-btn">连接</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
 
           <!-- model -->
 
@@ -286,6 +368,7 @@
               </div>
             </div>
           </div>
+          <div class="connector-badges" id="ntConnectorBadges"></div>
 
           <div class="spacer"></div>
           <div class="dropdown" data-dd="model">
@@ -371,9 +454,91 @@
           <div class="composer-tags hidden" id="chatTags"></div>
           <div class="composer-input" id="chatInput" contenteditable="true" data-placeholder="输入消息…"></div>
           <div class="composer-bar">
-            <button class="round-btn" data-tooltip="上传附件" aria-label="chat-add">
-              <svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-            </button>
+            <div class="dropdown add-dropdown" id="chatAddDropdown">
+              <button class="round-btn" data-tooltip="添加" aria-label="chat-add">
+                <svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+              </button>
+              <div class="menu add-menu">
+                <div class="menu-item add-item add-item--submenu" data-action="addfile">
+                  <span class="left">
+                    <svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                    <span>添加文件</span>
+                  </span>
+                  <svg class="ic ic-sm submenu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                  <div class="submenu">
+                    <div class="menu-item add-item" data-action="attach">
+                      <span class="left">
+                        <svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6M9 15h6"/></svg>
+                        <span>本地文件</span>
+                      </span>
+                    </div>
+                    <div class="menu-item add-item" data-action="folder">
+                      <span class="left">
+                        <svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+                        <span>引用文件夹</span>
+                      </span>
+                    </div>
+                    <div class="menu-item add-item" data-action="knowledge">
+                      <span class="left">
+                        <svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><rect x="2" y="7" width="20" height="10" rx="1"/></svg>
+                        <span>知识库</span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div class="menu-item add-item add-item--submenu" data-action="mode">
+                  <span class="left">
+                    <svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    <span>模式</span>
+                  </span>
+                  <svg class="ic ic-sm submenu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                  <div class="submenu">
+                    <div class="menu-item add-item" data-action="spec">
+                      <span class="left">
+                        <svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h12M9 12h12M9 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>
+                        <span>Spec</span>
+                      </span>
+                    </div>
+                    <div class="menu-item add-item" data-action="goal">
+                      <span class="left">
+                        <svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                        <span>目标</span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div class="menu-item add-item add-item--submenu" data-action="connector">
+                  <span class="left">
+                    <svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v6M15 2v6M5 8h14v4a5 5 0 0 1-5 5h-4a5 5 0 0 1-5-5V8zM12 17v5"/></svg>
+                    <span>连接器</span>
+                  </span>
+                  <svg class="ic ic-sm submenu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                  <div class="submenu connector-submenu">
+                    <div class="connector-search">
+                      <svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                      <input type="text" placeholder="搜索" />
+                    </div>
+                    <div class="connector-list">
+                      <div class="connector-item">
+                        <svg class="connector-logo-svg" viewBox="0 0 24 24" fill="none" style="width:20px;height:20px;flex:none"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" fill="#00a4ff" stroke="#00a4ff" stroke-width=".5"/></svg>
+                        <span class="connector-name">腾讯云</span>
+                        <button class="connector-btn">连接</button>
+                      </div>
+                      <div class="connector-item">
+                        <svg class="connector-logo-svg" viewBox="0 0 24 24" fill="none" style="width:20px;height:20px;flex:none"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" fill="#ff6a00" stroke="#ff6a00" stroke-width=".5"/></svg>
+                        <span class="connector-name">阿里云</span>
+                        <div class="connector-toggle"></div>
+                      </div>
+                      <div class="connector-item">
+<svg class="connector-logo-svg" viewBox="0 0 24 24" fill="none" style="width:20px;height:20px;flex:none"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" fill="#c7000b" stroke="#c7000b" stroke-width=".5"/></svg>
+                        <span class="connector-name">华为云</span>
+                        <button class="connector-btn">连接</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
 
             <!-- model -->
 
@@ -423,6 +588,7 @@
                 </div>
               </div>
             </div>
+            <div class="connector-badges" id="chatConnectorBadges"></div>
 
             <div class="spacer"></div>
             <div class="dropdown" data-dd="model">

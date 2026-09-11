@@ -148,27 +148,24 @@ const billTemplateWithTokens = billTemplate.replace(
   /* ---------- toast ---------- */
   var toastEl=$('#toast'),toastT;
   function toast(msg,type){
+    var icon='';
     if(type==='error'){
-      toastEl.innerHTML='<svg class="toast-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#ef4444"/><path d="M12 8v5M12 16v.5" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>'
-        +'<span class="toast-text">'+msg+'</span>'
-        +'<svg class="toast-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>';
-      toastEl.className='toast error';
-      toastEl.classList.add('show');
-      clearTimeout(toastT);
-      toastT=setTimeout(function(){toastEl.classList.remove('show')},3000);
-      var closeBtn=$('.toast-close',toastEl);
-      if(closeBtn) closeBtn.onclick=function(){toastEl.classList.remove('show')};
+      icon='<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v5M12 16v.5"/></svg>';
+    }else if(type==='success'){
+      icon='<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>';
     }else{
-      toastEl.textContent=msg;
-      toastEl.className='toast';
-      toastEl.classList.add('show');
-      clearTimeout(toastT);
-      toastT=setTimeout(function(){toastEl.classList.remove('show')},2000);
+      icon='<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>';
     }
+    toastEl.innerHTML=icon+'<span class="toast-text">'+msg+'</span>';
+    toastEl.className='toast'+(type?' '+type:'');
+    toastEl.classList.add('show');
+    clearTimeout(toastT);
+    toastT=setTimeout(function(){toastEl.classList.remove('show')},type==='error'?3000:2000);
   }
 
   /* ---------- Changelog / 更新通知（与 Build_demo 完全一致） ---------- */
   var changelogData=[
+    {id:'13',date:'2026-09-11',iconBg:'#eef3ff',iconColor:'#495dff',team:'会话加号下拉菜单',body:'会话输入框加号按钮改为下拉菜单，提供添加文件（含本地文件、引用文件夹、知识库）、模式（含 Spec、目标）、连接器（含腾讯云等八项服务）三级菜单结构。'},
     {id:'12',date:'2026-09-09',iconBg:'#eef3ff',iconColor:'#495dff',team:'新增协作开发模块',body:'左侧「专家」菜单改为「协作开发」，下设任务管理、待评审、协作人员管理、专家管理、专家团管理与设置六个页签；新增项目维度，任务、评审、协作人员按项目划分，专家与专家团为全局资产、项目内只绑定默认专家团。'},
     {id:'11',date:'2026-09-08',iconBg:'#eef3ff',iconColor:'#495dff',team:'原型新增登录页',body:'新增登录页，需账号密码登录后才能查看原型。'},
     {id:'10',date:'2026-08-27',iconBg:'#eef3ff',iconColor:'#495dff',team:'苍穹应用开发 · 预览区新增列表页签',body:'预览面板页签新增「列表」选项，支持列表视图展示。'},
@@ -178,6 +175,7 @@ const billTemplateWithTokens = billTemplate.replace(
   ];
   // 每个数据条目对应的 avatar SVG 图标（与 Build_demo 的 lucide 图标一致）
   var changelogIcons={
+    '13':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M12 5v14M5 12h14"/></svg>',
     '12':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M6 3v12"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>',
     '11':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg>',
     '9':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-6.36 2.64L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg>',
@@ -2853,14 +2851,114 @@ const billTemplateWithTokens = billTemplate.replace(
     });
     fi.click();
   }
-  if(addBtn) addBtn.addEventListener('click',function(e){
-    e.stopPropagation();
-    openFilePicker();
-  });
-  if(chatAddBtn) chatAddBtn.addEventListener('click',function(e){
-    e.stopPropagation();
-    openFilePicker();
-  });
+  /* ---------- ＋按钮下拉菜单 ---------- */
+  function bindAddDropdown(btn){
+    if(!btn) return;
+    var dd=btn.closest('.dropdown');
+    if(!dd) return;
+    btn.addEventListener('click',function(e){
+      e.stopPropagation();
+      e.preventDefault();
+      var isOpen=dd.classList.contains('open');
+      closeAll(null);
+      if(!isOpen) dd.classList.add('open');
+    });
+    $$('.menu-item',dd).forEach(function(item){
+      item.addEventListener('click',function(){
+        if(item.classList.contains('add-item--submenu')) return;
+        var action=item.getAttribute('data-action');
+        dd.classList.remove('open');
+        if(action==='attach'){ openFilePicker(); }
+        else if(action==='folder'){ toast('引用文件夹'); }
+        else if(action==='knowledge'){ toast('知识库'); }
+        else if(action==='connector'){ toast('连接器'); }
+        else if(action==='spec'){ toast('Spec'); }
+        else if(action==='goal'){ toast('目标'); }
+      });
+    });
+    /* 连接器子菜单交互 */
+    var connColors={腾讯云:'#00a4ff',阿里云:'#ff6a00',华为云:'#ff0000'};
+    var connLetters={腾讯云:'☁',阿里云:'☁',华为云:'☁'};
+    function addConnBadge(dd,name){
+      var badges=dd.closest('.composer-bar').querySelector('.connector-badges');
+      if(!badges||badges.querySelector('[data-conn="'+name+'"]')) return;
+      var b=document.createElement('span');b.className='conn-badge';
+      b.setAttribute('data-conn',name);b.title=name;
+      b.style.background=connColors[name]||'#888';
+      b.innerHTML='<svg viewBox="0 0 24 24" fill="none" style="width:12px;height:12px;display:block"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" fill="#fff" stroke="#fff" stroke-width=".5"/></svg>';
+      badges.appendChild(b);
+    }
+    function removeConnBadge(dd,name){
+      var badges=dd.closest('.composer-bar').querySelector('.connector-badges');
+      if(!badges) return;
+      var b=badges.querySelector('[data-conn="'+name+'"]');if(b)b.remove();
+    }
+    $$('.connector-btn',dd).forEach(function(btn){
+      btn.addEventListener('click',function(e){
+        e.stopPropagation();
+        var name=btn.closest('.connector-item').querySelector('.connector-name').textContent;
+        btn.textContent='正在连接';
+        btn.style.background='var(--hover)';
+        btn.style.color='var(--text-muted)';
+        btn.style.borderColor='var(--border)';
+        btn.style.pointerEvents='none';
+        setTimeout(function(){
+          window.open('https://tcb.cloud.tencent.com/login?cliAuth=1&_redirect_uri=https%3A%2F%2Ftcb.cloud.tencent.com%2Fdev%23%2Fcli-auth%3Fport%3D9012%26hash%3Dcbcbb3ce8c291a411c00cf7099fdc5ea%26mac%3D80%253Ad1%253Ace%253A0d%253Ae6%253A37%26os%3DM2607-0081.local%252FmacOS%252016.6%26from%3Dcli&authCallbackUrl=http%3A%2F%2F127.0.0.1%3A9012&port=9012&hash=cbcbb3ce8c291a411c00cf7099fdc5ea&mac=80%3Ad1%3Ace%3A0d%3Ae6%3A37&os=M2607-0081.local%2FmacOS%2016.6&from=cli','_blank');
+          toast('请完成网站授权','info');
+          setTimeout(function(){
+            var tg=document.createElement('div');
+            tg.className='connector-toggle on';
+            btn.replaceWith(tg);
+            bindToggle(tg);
+            addConnBadge(dd,name);
+            toast('连接器 '+name+' 已连接','success');
+          },3000);
+        },1000);
+      });
+    });
+    function bindToggle(t){
+      t.addEventListener('click',function(e){
+        e.stopPropagation();
+        var name=t.closest('.connector-item').querySelector('.connector-name').textContent;
+        if(t.classList.contains('on')){
+          t.classList.remove('on');
+          removeConnBadge(dd,name);
+        }else{
+          t.classList.add('connecting');
+          toast('连接器 '+name+' 连接中','info');
+          setTimeout(function(){
+            t.classList.remove('connecting');
+            t.classList.add('on');
+            addConnBadge(dd,name);
+            toast('连接器 '+name+' 已连接','success');
+          },1500);
+        }
+      });
+    }
+    $$('.connector-toggle',dd).forEach(bindToggle);
+    var cm=dd.querySelector('.connector-manage');
+    if(cm) cm.addEventListener('click',function(){dd.classList.remove('open');toast('管理连接器');});
+    var connectorItem=dd.querySelector('[data-action="connector"]');
+    if(connectorItem) connectorItem.addEventListener('mouseenter',function(){
+      var input=connectorItem.querySelector('.connector-search input');
+      if(input) setTimeout(function(){input.focus();},50);
+    });
+    /* 连接器搜索过滤 */
+    var searchInput=dd.querySelector('.connector-search input');
+    if(searchInput && !searchInput._filterBound){
+      searchInput._filterBound=true;
+      searchInput.addEventListener('input',function(){
+        var q=this.value.trim().toLowerCase();
+        var items=dd.querySelectorAll('.connector-item');
+        items.forEach(function(item){
+          var name=item.querySelector('.connector-name').textContent.toLowerCase();
+          item.style.display=(!q||name.indexOf(q)>-1)?'':'none';
+        });
+      });
+    }
+  }
+  bindAddDropdown(addBtn);
+  bindAddDropdown(chatAddBtn);
   $('.modal-close',attachModal) && $('.modal-close',attachModal).addEventListener('click',closeAttach);
   attachModal.addEventListener('click',function(e){
     if(e.target===attachModal) closeAttach();

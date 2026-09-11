@@ -419,6 +419,40 @@
   .menu-check{color:#1a1a1a}
   .menu-sep{height:1px;background:var(--border);margin:6px 4px}
 
+  /* ＋按钮下拉菜单 */
+  .add-menu{min-width:240px}
+  .add-item{padding:9px 10px}
+  .add-item .left{gap:10px}
+  .add-item-text{display:flex;flex-direction:column;gap:1px}
+  .add-item-title{font-size:14px;font-weight:600;color:var(--text)}
+  .add-item-desc{font-size:12px;color:var(--text-muted);font-weight:400}
+  .submenu-arrow{color:var(--text-soft)}
+  .add-item--submenu{position:relative}
+  .submenu{display:none;position:absolute;left:100%;top:-6px;min-width:160px;background:#fff;border:1px solid var(--border);border-radius:14px;box-shadow:var(--menu-shadow);padding:6px}
+  .add-item--submenu:hover>.submenu{display:block}
+  /* 连接器子菜单 */
+  .connector-submenu{min-width:280px;padding:0;overflow:hidden}
+  .connector-search{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--border)}
+  .connector-search input{flex:1;border:none;outline:none;font-size:13px;background:transparent;color:var(--text)}
+  .connector-list{max-height:280px;overflow-y:auto}
+  .connector-item{display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;transition:background .1s}
+  .connector-item:hover{background:var(--hover)}
+  .connector-logo{width:20px;height:20px;border-radius:4px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:600;flex:none}
+  .connector-name{flex:1;font-size:13px;color:var(--text)}
+.connector-btn{padding:2px 0;border:none;background:transparent;color:var(--brand);font-size:12px;cursor:pointer;flex:none;transition:color .15s}
+.connector-btn:hover{color:var(--brand-hover)}
+  .connector-toggle{width:32px;height:18px;border-radius:9px;background:#d0d0d0;position:relative;cursor:pointer;flex:none;transition:background .2s}
+  .connector-toggle.on{background:var(--brand)}
+  .connector-toggle::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:transform .2s}
+  .connector-toggle.on::after{transform:translateX(14px)}
+  .connector-toggle.connecting{background:var(--text-soft);pointer-events:none}
+  .connector-toggle.connecting::after{transform:translateX(7px);animation:conn-pulse 1s ease-in-out infinite}
+  @keyframes conn-pulse{0%,100%{opacity:1}50%{opacity:.3}}
+  .connector-badges{display:flex;align-items:center;margin-left:-4px;padding:0}
+  .conn-badge{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;cursor:default;flex:none;border:2px solid var(--bg);margin-left:-6px;position:relative}
+  .connector-manage{display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 12px;border-top:1px solid var(--border);font-size:13px;color:var(--text-secondary);cursor:pointer;transition:background .1s}
+  .connector-manage:hover{background:var(--hover)}
+
   /* app picker 搜索 */
   .app-menu{min-width:280px;padding:0;flex-direction:column;overflow:hidden}
   .app-search-wrap{padding:12px 12px 4px;flex:none}
@@ -499,20 +533,24 @@
   /* custom tooltip */
 .native-tip{position:fixed;background:#2d2d2d;color:#fff;padding:4px 8px;border-radius:6px;font-size:12px;line-height:1.4;white-space:nowrap;pointer-events:none;z-index:9999;opacity:0;transition:opacity .08s ease;box-shadow:0 2px 8px rgba(0,0,0,.15)}
 .native-tip.show{opacity:1}
-  /* tiny toast */
+  /* toast 组件 */
 .toast{
-      position:fixed;left:50%;bottom:40px;transform:translateX(-50%);
-      background:#2d2d2d;color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;
-      box-shadow:0 6px 20px rgba(0,0,0,.2);opacity:0;transition:opacity .2s,transform .2s;
-      pointer-events:none;z-index:100;
-    }
-    .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px)}
-    .toast.error{top:16px;bottom:auto;left:50%;right:auto;transform:translateX(-50%) translateY(-120%);border-radius:8px;background:#fff;border:1px solid #fca5a5;color:#dc2626;padding:8px 16px;font-size:13px;box-shadow:0 4px 12px rgba(0,0,0,.08);opacity:0;transition:transform .25s,opacity .25s;display:flex;align-items:center;gap:8px;max-width:90vw;pointer-events:auto}
-    .toast.error.show{transform:translateX(-50%) translateY(0);opacity:1}
-    .toast-icon{width:16px;height:16px;flex:none}
-    .toast-text{flex:1;white-space:nowrap}
-    .toast-close{width:16px;height:16px;color:#9ca3af;cursor:pointer;flex:none}
-    .toast-close:hover{color:#6b7280}
+    position:fixed;left:50%;top:16px;bottom:auto;transform:translateX(-50%) translateY(-120%);
+    background:#fff;color:var(--text);padding:10px 16px;border-radius:10px;font-size:13px;
+    border:1px solid var(--border);
+    box-shadow:0 8px 28px rgba(0,0,0,.12),0 2px 6px rgba(0,0,0,.06);
+    opacity:0;transition:opacity .25s,transform .25s;
+    display:flex;align-items:center;gap:8px;max-width:90vw;
+    pointer-events:none;z-index:100;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast-icon{width:16px;height:16px;flex:none}
+  .toast-text{flex:1;white-space:nowrap}
+  .toast-close{width:16px;height:16px;color:var(--text-soft);cursor:pointer;flex:none}
+  .toast-close:hover{color:var(--text-muted)}
+  .toast.success .toast-icon{color:var(--success)}
+  .toast.error .toast-icon{color:var(--danger)}
+  .toast.error .toast-text{color:var(--danger)}
     .dropdown.error .chip{color:#dc2626;animation:shake .35s ease}
     .dropdown.error .chip .chip-label{color:#dc2626}
     .dropdown.error .chip .caret{color:#dc2626}
