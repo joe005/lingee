@@ -76,14 +76,14 @@ const billTemplateWithTokens = billTemplate.replace(
     setLoginFieldsEnabled(false);
   }
 
-  /* 恢复记住的账号 */
+  /* 恢复记住的账号和密码 */
   try{
-    var savedUser=localStorage.getItem(REMEMBER_KEY);
-    if(savedUser){
-      var inp=$('#loginUser');
-      if(inp) inp.value=savedUser;
-      var cb=$('#loginRemember');
-      if(cb) cb.checked=true;
+    var saved=localStorage.getItem(REMEMBER_KEY);
+    if(saved){
+      saved=JSON.parse(saved);
+      var inp=$('#loginUser'); if(inp) inp.value=saved.u||'';
+      var pp=$('#loginPass'); if(pp) pp.value=saved.p||'';
+      var cb=$('#loginRemember'); if(cb) cb.checked=true;
     }
   }catch(e){}
 
@@ -103,7 +103,7 @@ const billTemplateWithTokens = billTemplate.replace(
         loginBtn.textContent='登录中';
         var remember=$('#loginRemember');
         try{
-          if(remember&&remember.checked) localStorage.setItem(REMEMBER_KEY,user);
+          if(remember&&remember.checked) localStorage.setItem(REMEMBER_KEY,JSON.stringify({u:user,p:pass}));
           else localStorage.removeItem(REMEMBER_KEY);
         }catch(e){}
         setTimeout(function(){
@@ -121,12 +121,19 @@ const billTemplateWithTokens = billTemplate.replace(
       }
     });
     loginBtn.addEventListener('click',function(){});
+
+  /* 登录页全局回车快捷键 */
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Enter'&&loginOverlay&&!loginOverlay.classList.contains('hidden')&&loginBtn&&!loginBtn.disabled)
+      loginForm.dispatchEvent(new Event('submit',{cancelable:true,bubbles:true}));
+  });
   }
 
   /* 未登录则显示登录页，已登录则恢复用户信息 */
   var _authedUser=getAuthedUser();
   if(!_authedUser){
     showLogin();
+    try{localStorage.removeItem('lingeeUrlState')}catch(e){}
   }else{
     applyUserInfo(_authedUser);
     hideLogin();
@@ -795,9 +802,8 @@ const billTemplateWithTokens = billTemplate.replace(
 
   /* ---------- view switching ---------- */
   var viewHome=$('#view-home'), viewNew=$('#view-newtask'), viewChat=$('#view-chat'), viewApps=$('#view-apps'), viewSkills=$('#view-skills'), viewAgents=$('#view-agents'), viewCollab=$('#view-collab'), viewDesign=$('#view-design'), viewSettings=$('#view-settings');
-  function setUrlState(search){
-    history.replaceState(null,'',search);
-    try{localStorage.setItem('lingeeUrlState',search)}catch(e){}
+  function setUrlState(path){
+    try{history.replaceState(null,'',path);localStorage.setItem('lingeeUrlState',path)}catch(e){}
   }
   function showView(which){
     viewHome.classList.toggle('hidden', which!=='home');
@@ -811,7 +817,7 @@ const billTemplateWithTokens = billTemplate.replace(
     viewSettings.classList.toggle('hidden', which!=='settings');
     $('.sidebar').classList.toggle('hidden', which==='design');
     closeAll(null);
-    if(which!=='design') setUrlState('?view='+which);
+    if(which!=='design') setUrlState('/'+which);
   }
 
 
@@ -930,11 +936,13 @@ const billTemplateWithTokens = billTemplate.replace(
     try{ sessionStorage.removeItem(LOGIN_KEY); }catch(e){}
     if(loginForm) loginForm.reset();
     if(loginError) loginError.textContent='';
-    /* 重新回填记住的账号 */
+    /* 重新回填记住的账号和密码 */
     try{
-      var savedUser=localStorage.getItem(REMEMBER_KEY);
-      if(savedUser){
-        var inp=$('#loginUser'); if(inp) inp.value=savedUser;
+      var saved=localStorage.getItem(REMEMBER_KEY);
+      if(saved){
+        saved=JSON.parse(saved);
+        var inp=$('#loginUser'); if(inp) inp.value=saved.u||'';
+        var pp=$('#loginPass'); if(pp) pp.value=saved.p||'';
         var cb=$('#loginRemember'); if(cb) cb.checked=true;
       }
     }catch(e){}
@@ -2202,13 +2210,79 @@ const billTemplateWithTokens = billTemplate.replace(
       t.classList.add('active');
     });
   });
-  $('.btn-new') && $('.btn-new').addEventListener('click',function(){ toast('新建应用（示意）'); });
+  $('.btn-new:not(.apps-new-btn)') && $('.btn-new:not(.apps-new-btn)').addEventListener('click',function(){});
   $$('.app-card').forEach(function(c){
     c.addEventListener('click',function(e){
       if(e.target.closest('.card-more')){ e.stopPropagation(); toast('更多操作'); return; }
-      toast('打开应用：'+$('.card-title',c).textContent.trim());
+      var name=$('.card-title',c).textContent.trim();
+      showView('chat');
+      setNavActive('新会话');
+      var titleEl=$('#chatTitle');
+      if(titleEl) titleEl.textContent=name;
+      var emptyEl=$('#chatEmpty');
+      if(emptyEl) emptyEl.remove();
+      /* 打开预览面板加载表单 */
+      var view=document.getElementById('view-chat');
+      var frame=document.getElementById('chatPreviewFrame');
+      var urlInput=document.getElementById('previewUrlText');
+      var url='https://feature.kingdee.com:1026/feature_vb';
+      if(frame) frame.src=url;
+      if(urlInput) urlInput.value=url;
+      if(view) view.classList.add('preview-open');
+      if(typeof syncTogglePreviewBtn==='function') syncTogglePreviewBtn();
+      try{localStorage.setItem('chatPreviewOpen','1')}catch(err){}
+      var savedW=localStorage.getItem('chatPreviewWidth');
+      var ps=document.getElementById('chatPreviewSide');
+      if(savedW&&ps){ps.style.width=savedW;ps.style.maxWidth='none';}
     });
   });
+
+  /* ---------- 应用开发搜索 ---------- */
+  (function(){
+    var appsSearchInput=$('#view-apps .apps-search input');
+    var appsGrid=$('#view-apps .apps-grid');
+    if(!appsSearchInput||!appsGrid) return;
+    var emptyMsg=document.createElement('div');
+    emptyMsg.className='apps-empty';
+    emptyMsg.innerHTML='<div class="apps-empty-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></div><div class="apps-empty-title">未找到匹配的应用</div>';
+    emptyMsg.style.display='none';
+    appsGrid.appendChild(emptyMsg);
+    var searchWrap=appsSearchInput.parentElement;
+    var clearBtn=document.createElement('button');
+    clearBtn.className='apps-search-clear';
+    clearBtn.setAttribute('aria-label','清除');
+    clearBtn.innerHTML='<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+    searchWrap.appendChild(clearBtn);
+    clearBtn.addEventListener('click',function(){
+      appsSearchInput.value='';
+      appsSearchInput.focus();
+      searchWrap.classList.remove('has-text');
+      doSearch();
+    });
+    var composing=false;
+    function doSearch(){
+      var q=appsSearchInput.value.trim().toLowerCase();
+      searchWrap.classList.toggle('has-text',!!q);
+      var cards=$$('.app-card',appsGrid);
+      var visible=0;
+      cards.forEach(function(c){
+        var title=($('.card-title',c)||{}).textContent||'';
+        var desc=($('.card-desc',c)||{}).textContent||'';
+        var tags=$$('.ptag',c).map(function(t){return t.textContent.trim();}).join(' ');
+        var text=(title+' '+desc+' '+tags).toLowerCase();
+        var match=!q||text.indexOf(q)>-1;
+        c.style.display=match?'':'none';
+        if(match) visible++;
+      });
+      emptyMsg.style.display=visible?'none':'block';
+    }
+    appsSearchInput.addEventListener('compositionstart',function(){composing=true});
+    appsSearchInput.addEventListener('compositionend',function(){composing=false;doSearch()});
+    appsSearchInput.addEventListener('input',function(){
+      if(composing) return;
+      doSearch();
+    });
+  })();
 
   /* ---------- segmented tabs (工作 / 开发) ---------- */
   $$('.seg-item').forEach(function(s){
@@ -2328,7 +2402,7 @@ const billTemplateWithTokens = billTemplate.replace(
   /* 预览面板页签切换 */
   function switchPreviewTab(target){
     $$('.preview-tab').forEach(function(t){t.classList.toggle('active',t.getAttribute('data-tab')===target)});
-    var bodies={preview:$('#previewBodyPreview'),list:$('#previewBodyList'),entity:$('#previewBodyEntity'),plugin:$('#previewBodyPlugin'),api:$('#previewBodyApi')};
+    var bodies={preview:$('#previewBodyPreview'),list:$('#previewBodyList'),entity:$('#previewBodyEntity'),plugin:$('#previewBodyPlugin'),api:$('#previewBodyApi'),mcp:$('#previewBodyMcp')};
     Object.keys(bodies).forEach(function(k){
       if(bodies[k]){bodies[k].classList.toggle('hidden',k!==target)}
     });
@@ -2341,7 +2415,50 @@ const billTemplateWithTokens = billTemplate.replace(
       switchPreviewTab(tab.getAttribute('data-tab'));
     });
   });
-  /* 列表勾选联动行高亮 */
+  /* MCP 工具列表渲染 */
+  var mcpData=[
+    {id:1,act:'新增',tool:'create_purchase_order',toolUniqueID:'post_v2_scm_po_save',desc:'新增采购订单，校验必填字段与金额上限',status:'published',actionType:'保存操作',domain:'采购管理',module:'purchase_order',sensitive:false,serviceSource:'系统内置',customParams:false,errorLog:'—',precond:'[{"condition":"用户具有采购订单新增权限"},{"condition":"供应商基础资料有效"},{"condition":"物料编码有效"}]',postcond:'[{"effect":"保存后数据状态为暂存","field":"billstatus","to_value":"A"}]',recovery:'{"open.100001":{"hint":"必填字段缺失","cause":"请求参数校验失败","suggestion":"请检查必填字段后重试","auto_recoverable":true}}',targetAPI:'POST /kapi/v2/scm/pm/purchaseorder'},
+    {id:2,act:'提交',tool:'submit_purchase_order',toolUniqueID:'post_v2_scm_po_submit',desc:'提交采购订单审批，触发三级审批流程',status:'published',actionType:'提交操作',domain:'采购管理',module:'purchase_order',sensitive:false,serviceSource:'系统内置',customParams:false,errorLog:'—',precond:'[{"condition":"订单状态为暂存"},{"condition":"金额>10万需总经理审批"}]',postcond:'[{"effect":"订单状态变为审批中","field":"billstatus","to_value":"B"},{"effect":"通知相关审批人"}]',recovery:'{"flow.1001":{"hint":"审批流程异常","cause":"审批节点配置异常","suggestion":"联系管理员检查审批流配置","auto_recoverable":false}}',targetAPI:'POST /kapi/v2/scm/pm/purchaseorder/{id}/submit'},
+    {id:3,act:'审核',tool:'audit_purchase_order',toolUniqueID:'post_v2_scm_po_audit',desc:'审核采购订单，写入审核人与审核时间',status:'published',actionType:'审核操作',domain:'采购管理',module:'purchase_order',sensitive:true,serviceSource:'系统内置',customParams:false,errorLog:'—',precond:'[{"condition":"订单状态为审批中"},{"condition":"当前用户具有审核权限"}]',postcond:'[{"effect":"订单状态变为已审核","field":"billstatus","to_value":"C"},{"effect":"记录审核人与审核时间"}]',recovery:'{"audit.1001":{"hint":"审核失败","cause":"订单金额超出您的审批额度","suggestion":"请联系上级审批人处理","auto_recoverable":false}}',targetAPI:'POST /kapi/v2/scm/pm/purchaseorder/{id}/audit'},
+    {id:4,act:'反审核',tool:'unaudit_purchase_order',toolUniqueID:'post_v2_scm_po_unaudit',desc:'反审核已审核的采购订单',status:'published',actionType:'反审核操作',domain:'采购管理',module:'purchase_order',sensitive:true,serviceSource:'系统内置',customParams:false,errorLog:'—',precond:'[{"condition":"订单状态为已审核"},{"condition":"下游未生成入库单"}]',postcond:'[{"effect":"订单状态变为暂存","field":"billstatus","to_value":"A"}]',recovery:'{"audit.1002":{"hint":"反审核拒绝","cause":"下游已生成入库单","suggestion":"请先删除入库单后重试","auto_recoverable":false}}',targetAPI:'POST /kapi/v2/scm/pm/purchaseorder/{id}/unaudit'},
+    {id:5,act:'下推',tool:'push_purchase_order',toolUniqueID:'post_v2_scm_po_push',desc:'按未入库数量下推生成入库单',status:'draft',actionType:'下推操作',domain:'采购管理',module:'purchase_order',sensitive:false,serviceSource:'自定义',customParams:true,errorLog:'2026-09-11 下推超时',precond:'[{"condition":"订单状态为已审核"},{"condition":"存在未入库数量"}]',postcond:'[{"effect":"生成入库单草稿"},{"effect":"更新已下推数量"}]',recovery:'{"push.1001":{"hint":"下推失败","cause":"无可下推的未入库数量","suggestion":"请检查采购数量","auto_recoverable":true}}',targetAPI:'POST /kapi/v2/scm/pm/purchaseorder/{id}/push'},
+    {id:6,act:'删除',tool:'delete_purchase_order',toolUniqueID:'delete_v2_scm_po',desc:'删除草稿态的采购订单',status:'published',actionType:'删除操作',domain:'采购管理',module:'purchase_order',sensitive:true,serviceSource:'系统内置',customParams:false,errorLog:'—',precond:'[{"condition":"订单状态为暂存"}]',postcond:'[{"effect":"订单被物理删除不可恢复"}]',recovery:'{"delete.1001":{"hint":"删除失败","cause":"订单不是草稿态","suggestion":"请先反审核后删除","auto_recoverable":false}}',targetAPI:'DELETE /kapi/v2/scm/pm/purchaseorder/{id}'},
+    {id:7,act:'修改',tool:'update_purchase_order',toolUniqueID:'put_v2_scm_po_update',desc:'修改草稿态的采购订单',status:'published',actionType:'保存操作',domain:'采购管理',module:'purchase_order',sensitive:false,serviceSource:'系统内置',customParams:false,errorLog:'—',precond:'[{"condition":"订单状态为暂存"}]',postcond:'[{"effect":"更新订单数据"},{"effect":"记录修改日志"}]',recovery:'{"update.1001":{"hint":"修改失败","cause":"订单不是草稿态","suggestion":"请先反审核后修改","auto_recoverable":false}}',targetAPI:'PUT /kapi/v2/scm/pm/purchaseorder/{id}'},
+    {id:8,act:'查询列表',tool:'query_purchase_order_list',toolUniqueID:'get_v2_scm_po_list',desc:'分页查询采购订单列表，支持按状态/供应商/日期过滤',status:'published',actionType:'查询操作',domain:'采购管理',module:'purchase_order',sensitive:false,serviceSource:'系统内置',customParams:false,errorLog:'—',precond:'[{"condition":"用户具有查询权限"}]',postcond:'[{"effect":"返回采购订单分页列表"}]',recovery:'',targetAPI:'GET /kapi/v2/scm/pm/purchaseorder'},
+    {id:9,act:'查询详情',tool:'query_purchase_order_detail',toolUniqueID:'get_v2_scm_po_detail',desc:'查询采购订单详情，返回单头+明细行完整数据',status:'published',actionType:'查询操作',domain:'采购管理',module:'purchase_order',sensitive:false,serviceSource:'系统内置',customParams:false,errorLog:'—',precond:'[{"condition":"用户具有查询权限"}]',postcond:'[{"effect":"返回订单完整数据"}]',recovery:'',targetAPI:'GET /kapi/v2/scm/pm/purchaseorder/{id}'}
+  ];
+  function renderMcpList(){
+    var el=$('#mcpList'); if(!el)return;
+    el.innerHTML='<table class="plugin-table mcp-table"><thead><tr><th>工具名称</th><th>说明</th><th>操作类型</th><th>注册状态</th><th></th></tr></thead><tbody>'
+      +mcpData.map(function(d){
+        var statusText='<span style="color:var(--text)">'+(d.status==='published'?'已发布':'失败')+'</span>';
+        var detail='<div style="padding:4px 0;font-size:12px;line-height:1.8;display:grid;grid-template-columns:auto 1fr;gap:4px 16px">'
+          +'<span style="color:var(--text-muted)">工具唯一标识</span><span class="code">'+d.toolUniqueID+'</span>'
+          +'<span style="color:var(--text-muted)">目标API</span><span class="code">'+d.targetAPI+'</span>'
+          +'<span style="color:var(--text-muted)">所属领域</span><span>'+d.domain+'</span>'
+          +'<span style="color:var(--text-muted)">所属模块</span><span>'+d.module+'</span>'
+          +'<span style="color:var(--text-muted)">是否敏感操作</span><span>'+(d.sensitive?'<span style="color:#e04a3a">敏感</span>':'否')+'</span>'
+          +'<span style="color:var(--text-muted)">服务来源</span><span>'+d.serviceSource+'</span>'
+          +'<span style="color:var(--text-muted)">自定义参数扩展</span><span>'+(d.customParams?'已配置':'—')+'</span>'
+          +'<span style="color:var(--text-muted)">异常日志</span><span>'+d.errorLog+'</span>'
+          +(d.precond?'<span style="color:var(--text-muted);align-self:start">前置条件</span><pre style="margin:0;white-space:pre-wrap;font-size:11px;background:var(--fill-1);padding:6px 8px;border-radius:4px">'+d.precond+'</pre>':'')
+          +(d.postcond?'<span style="color:var(--text-muted);align-self:start">后置效果</span><pre style="margin:0;white-space:pre-wrap;font-size:11px;background:var(--fill-1);padding:6px 8px;border-radius:4px">'+d.postcond+'</pre>':'')
+          +(d.recovery?'<span style="color:var(--text-muted);align-self:start">错误恢复</span><pre style="margin:0;white-space:pre-wrap;font-size:11px;background:var(--fill-1);padding:6px 8px;border-radius:4px">'+d.recovery+'</pre>':'')
+          +'</div>';
+        return '<tr style="cursor:pointer" onclick="var r=this.nextElementSibling;if(r&&r.classList.contains(\'mcp-detail-row\')){r.classList.toggle(\'hidden\');this.querySelector(\'.mcp-arrow\').classList.toggle(\'open\')}">'
+          +'<td class="mcp-tool">'+d.tool+'</td>'
+          +'<td class="mcp-desc">'+d.desc+'</td>'
+          +'<td style="color:var(--text)">'+d.actionType+'</td>'
+          +'<td>'+statusText+'</td>'
+          +'<td style="text-align:center;padding:0 12px">'
+          +'<svg class="ic mcp-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;color:var(--text-muted);transition:transform .15s"><polyline points="9 18 15 12 9 6"/></svg>'
+          +'</td>'
+          +'</tr>'
+          +'<tr class="mcp-detail-row hidden"><td colspan="5">'+detail+'</td></tr>';
+      }).join('')
+      +'</tbody></table>';
+  }
+  renderMcpList();
   var listBodyEl=$('#listBody');
   if(listBodyEl){
     listBodyEl.addEventListener('change',function(e){
@@ -3055,6 +3172,33 @@ const billTemplateWithTokens = billTemplate.replace(
     });
   }
 
+  /* ---------- 应用开发 新建下拉 ---------- */
+  var appsNewBtn=$('.apps-new-btn');
+  var appsNewDd=$('#appsNewDropdown');
+  if(appsNewBtn&&appsNewDd){
+    appsNewBtn.addEventListener('click',function(e){
+      e.stopPropagation();
+      var isOpen=appsNewDd.classList.toggle('open');
+      if(isOpen){
+        appsNewDd.style.top='';
+        appsNewDd.style.right='';
+        appsNewDd.style.left='';
+        appsNewDd.style.minWidth='';
+      }
+    });
+    $$('.apps-new-item',appsNewDd).forEach(function(item){
+      item.addEventListener('click',function(){
+        var mode=item.getAttribute('data-mode');
+        appsNewDd.classList.remove('open');
+        showView('newtask');
+        setNavActive(mode);
+        applyMode(mode,true);
+        renderModeTag();
+      });
+    });
+    document.addEventListener('click',function(){appsNewDd.classList.remove('open')});
+  }
+
   /* ---------- 右键菜单 ---------- */
   var ctxMenu=$('#ctxMenu');
   var ctxTarget=null;
@@ -3661,7 +3805,14 @@ const billTemplateWithTokens = billTemplate.replace(
           +'<button style="background:none;border:none;color:#495dff;font-size:14px;cursor:pointer;padding:8px 4px;font-weight:500">文字按钮</button>'
           +'<button style="background:#fff;border:1px solid var(--border);border-radius:8px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M12 5v14M5 12h14"/></svg></button>'
           +'<button style="background:#495dff;color:#fff;border:none;border-radius:8px;padding:8px 20px;font-size:14px;font-weight:500;opacity:.5;cursor:not-allowed">禁用</button>'
-          +'</div>';
+          +'</div>'
+          +'<div style="margin-top:16px"><span style="'+lbl+'">下拉按钮</span>'
+          +'<div class="dd-wrap" style="display:inline-block">'
+          +'<button class="dd-btn">新建<svg class="ic dd-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>'
+          +'<div class="dd-panel" style="position:relative;margin-top:4px">'
+          +'<div class="dd-item">通用应用</div>'
+          +'<div class="dd-item">苍穹应用</div>'
+          +'</div></div></div>';
         break;
       case 'Typography':
         h+='<div style="'+box+'">'
@@ -3975,57 +4126,31 @@ const billTemplateWithTokens = billTemplate.replace(
     dsPaletteBtn.addEventListener('click',function(){
       closeUserMenu();
       showView('design');
-      setUrlState('?view=design');
+      setUrlState('/design');
       if(navItems) navItems.forEach(function(n){n.classList.remove('active')});
       renderOverview();
     });
   }
 
-  /* 品牌标题点击 → 返回会话首页 */
-  var dsBrand=$('.ds-nav-brand');
-  if(dsBrand){
-    dsBrand.addEventListener('click',function(){
+  /* Design System 后退按钮 → 回到首页 */
+  var dsBackBtn=$('#dsBackBtn');
+  if(dsBackBtn){
+    dsBackBtn.addEventListener('click',function(){
       showView('newtask');
       setNavActive('新会话');
-      if(input){ input.setAttribute('data-placeholder','布置任务'); input.innerHTML=''; input.focus(); }
-      if(appDd) appDd.classList.add('hidden');
-      if(modeItems) modeItems.forEach(function(m){m.classList.remove('checked')});
     });
   }
 
-  /* 分类标题折叠/展开 + localStorage 缓存 */
-  $$('.ds-nav-label',dsNavEl).forEach(function(label,idx){
-    var section=label.parentElement;
-    var key='ds-nav-col-'+idx;
-    if(localStorage.getItem(key)==='1') section.classList.add('collapsed');
-    label.addEventListener('click',function(){
-      section.classList.toggle('collapsed');
-      localStorage.setItem(key,section.classList.contains('collapsed')?'1':'0');
-    });
-  });
-
-  /* 暂不涉及折叠交互 */
-  $$('.ds-nav-disabled-toggle',dsNavEl).forEach(function(t){
-    t.addEventListener('click',function(){
-      var items=t.nextElementSibling;
-      t.classList.toggle('collapsed');
-      if(items) items.classList.toggle('collapsed');
-    });
-  });
-
-  /* 左侧导航项交互 */
+  /* Design System 组件导航点击 */
   if(dsNavEl){
     $$('.ds-nav-link',dsNavEl).forEach(function(link){
       link.addEventListener('click',function(){
-        $$('.ds-nav-link',dsNavEl).forEach(function(l){l.classList.remove('active')});
-        link.classList.add('active');
-        var target=link.getAttribute('data-target');
         var comp=link.getAttribute('data-comp');
-        if(target==='overview'){
+        if(!comp){
+          setUrlState('/design');
           renderOverview();
-          setUrlState('?view=design');
-        }else if(comp){
-          setUrlState('?view=design&token='+encodeURIComponent(comp));
+        }else{
+          setUrlState('/design?token='+encodeURIComponent(comp));
           var cn=link.querySelector('em')?link.querySelector('em').textContent:'';
           var en=link.firstChild&&link.firstChild.nodeType===3?link.firstChild.textContent.trim():comp;
           if(dsHeroTitle) dsHeroTitle.textContent=en+' '+cn;
@@ -4051,16 +4176,19 @@ const billTemplateWithTokens = billTemplate.replace(
     }
   });
 
-  /* URL 参数 ?view=xxx 自动恢复视图；预览器刷新会丢掉 query，用 localStorage 兜底 */
-  var dsSearch=location.search;
-  if(!dsSearch){
-    var savedSearch=localStorage.getItem('lingeeUrlState');
-    if(savedSearch){ dsSearch=savedSearch; history.replaceState(null,'',savedSearch); }
+  /* 路径优先解析视图，兼容旧 ?view= 链接，无则从 localStorage 恢复 */
+  var _savedPath=localStorage.getItem('lingeeUrlState')||'';
+  var _pathParts=location.pathname.replace(/^\/+|\/+$/g,'').split('/');
+  var dsViewParam=_pathParts[0]||'';
+  if(!dsViewParam){
+    var _oldView=new URLSearchParams(location.search).get('view');
+    if(_oldView) dsViewParam=_oldView;
+    else if(_savedPath){ var _m=_savedPath.match(/\/([^\/?]+)/); if(_m) dsViewParam=_m[1]; }
   }
-  var dsViewParam=new URLSearchParams(dsSearch).get('view');
-  /* 专家视图已并入协作开发，兼容旧的 ?view=experts */
+  /* 专家视图已并入协作开发，兼容旧链接 */
   if(dsViewParam==='experts') dsViewParam='collab';
-  var dsTokenParam=new URLSearchParams(dsSearch).get('token');
+  var dsSearch='?'+(dsViewParam?'view='+dsViewParam:'');
+  var dsTokenParam=new URLSearchParams(location.search).get('token')||new URLSearchParams(dsSearch).get('token');
   if(dsViewParam==='design'){
     showView('design');
     if(navItems) navItems.forEach(function(n){n.classList.remove('active')});
@@ -6187,7 +6315,7 @@ const billTemplateWithTokens = billTemplate.replace(
     var rc=$('#cvReviewCount'); if(rc) rc.textContent=CV_REVIEWS.filter(cvInProject).length;
   }
   function cvSyncUrl(){
-    setUrlState('?view=collab&tab='+cvLastTab+(cvProject?'&proj='+cvProject:''));
+    setUrlState('/collab?tab='+cvLastTab+(cvProject?'&proj='+cvProject:''));
   }
   var cvProjBtn=$('#cvProjBtn');
   if(cvProjBtn) cvProjBtn.addEventListener('click',function(e){
@@ -6379,5 +6507,7 @@ const billTemplateWithTokens = billTemplate.replace(
   window.cvConfirmAddMembers=cvConfirmAddMembers;
   window.cvDeleteMember=cvDeleteMember;
 
+  /* 未登录时清理 URL，确保页面仅显示登录页 */
+  if(!_authedUser) history.replaceState(null,'','/');
 
 })();

@@ -7,14 +7,16 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview",
+    "preview": "npm run build && wrangler dev",
     "format": "prettier --write \"src/**/*.{js,css,html}\"",
     "standalone": "node scripts/build-standalone.cjs",
-    "build": "vite build"
+    "deploy": "npm run build && wrangler deploy"
   },
   "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.54.8",
+    "prettier": "^3.4.2",
     "vite": "^6.0.7",
     "vite-plugin-singlefile": "^2.1.0",
-    "prettier": "^3.4.2"
+    "wrangler": "^4.131.1"
   }
 }
