@@ -26,7 +26,7 @@
         </div>
         <div class="login-field">
           <svg class="login-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          <input type="password" id="loginPass" class="login-input" placeholder="密码" autocomplete="current-password" required>
+          <input type="text" id="loginPass" class="login-input" placeholder="密码" autocomplete="current-password" data-pw required>
         </div>
         <div class="login-error" id="loginError"></div>
         <label class="login-remember"><input type="checkbox" id="loginRemember"> 记住账号</label>
@@ -356,7 +356,7 @@
               <div class="app-search-wrap">
                 <div class="app-search">
                   <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-                  <input type="text" id="ntExpertSearchInput" placeholder="搜索专家" autocomplete="off">
+                  <input type="search" id="ntExpertSearchInput" placeholder="搜索专家" autocomplete="off" readonly>
                 </div>
               </div>
               <div class="app-list" id="ntExpertList"></div>
@@ -576,7 +576,7 @@
                 <div class="app-search-wrap">
                   <div class="app-search">
                     <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-                    <input type="text" id="chatExpertSearchInput" placeholder="搜索专家" autocomplete="off">
+                    <input type="search" id="chatExpertSearchInput" placeholder="搜索专家" autocomplete="off" readonly>
                   </div>
                 </div>
                 <div class="app-list" id="chatExpertList"></div>
@@ -1144,7 +1144,7 @@
             <div class="scroll-desc">专家库为全局资产，所有项目共用，可直接召唤，也可创建自己的专家</div>
           </div>
           <div class="cv-head-right">
-            <div class="search-wrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input id="cvExpertSearch" placeholder="搜索专家、职业或能力"></div>
+            <div class="search-wrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input type="search" id="cvExpertSearch" placeholder="搜索专家、职业或能力" autocomplete="off" readonly></div>
             <button class="sync-btn" id="cvNewExpertBtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>创建专家</button>
           </div>
         </div>
@@ -1162,7 +1162,7 @@
           </div>
           <div class="cv-head-right">
             <div class="apps-search">
-              <input type="text" id="expertSearchInput" placeholder="搜索专家团" autocomplete="off">
+              <input type="search" id="expertSearchInput" placeholder="搜索专家团" autocomplete="off" readonly>
               <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
             </div>
             <button class="btn-new" id="newExpertEntryBtn"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg><span id="newExpertEntryLabel">新建专家团</span></button>
@@ -1684,6 +1684,11 @@
           <div class="team-members" id="teamMembers"></div>
           <button type="button" class="team-add" id="teamAddBtn">＋ 添加成员</button>
         </section>
+        <section class="env-form-section">
+          <div class="env-form-section-title">能力覆盖
+            <span class="team-hint-inline">成员合起来能承担的能力项，同一项取最高等级</span></div>
+          <div class="x-chips" id="teamCoverageChips"></div>
+        </section>
         <div id="teamWarnings"></div>
       </div>
 
@@ -1698,6 +1703,7 @@
           <div class="env-form-section-title">运行流程
             <span class="team-hint-inline" id="teamFlowSummary"></span></div>
           <div class="team-flow" id="teamFlow"></div>
+          <div class="team-gate-hint" id="teamGateHint"></div>
           <div class="team-mode-note" id="teamModeNote"></div>
         </section>
       </div>
@@ -1722,7 +1728,7 @@
     <div class="modal-body">
       <div class="app-search member-search">
         <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-        <input type="text" id="memberSearchInput" placeholder="搜索专家、职业或能力" autocomplete="off">
+        <input type="search" id="memberSearchInput" placeholder="搜索专家、职业或能力" autocomplete="off" readonly>
       </div>
       <div class="member-list" id="memberList"></div>
     </div>
@@ -1786,7 +1792,7 @@
       <div class="team-pane hidden" data-xpane="more">
         <section class="env-form-section">
           <div class="env-form-section-title">常见触发词
-            <span class="team-hint-inline">用户平时会怎么找他做事，点一下把整句填进输入框</span></div>
+            <span class="team-hint-inline">用户平时会怎么找他做事。需要用户提供的内容写成 [方括号]，发送时没填会在会话里追问</span></div>
           <div class="x-cmd-rows" id="xeCmds"></div>
           <button type="button" class="team-add" id="xeAddCmd">＋ 添加一条</button>
         </section>
@@ -1794,10 +1800,6 @@
           <div class="env-form-grid">
             <label class="env-field env-field-wide"><span>能力项</span>
               <input type="text" id="xeComp" placeholder="用逗号分隔，例如：cosmic.workflow · advanced" autocomplete="off"></label>
-            <label class="env-field env-field-wide"><span>工作方式</span>
-              <textarea id="xeSteps" rows="4" placeholder="一行一步，例如：&#10;梳理审批场景与角色&#10;配置流程节点与条件"></textarea></label>
-            <label class="env-field env-field-wide"><span>行为约束</span>
-              <textarea id="xeCons" rows="3" placeholder="一行一条，例如：&#10;流程变更需保留可回滚配置"></textarea></label>
           </div>
         </section>
       </div>

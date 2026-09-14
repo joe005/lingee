@@ -47,11 +47,33 @@ const billTemplateWithTokens = billTemplate.replace(
     if(av) av.textContent=info.avatar;
     if(nm) nm.textContent=info.name;
   }
+  /* 登录框登录后仍留在 DOM 里，Chrome 会把整页当登录页，
+     往搜索框之类的文本框推荐保存的账号。禁用掉就不再是自动填充来源。 */
+  var _loginFormHome=null, _loginFormNode=null;
+  function setLoginFieldsEnabled(on){
+    var form=$('#loginForm');
+    if(on){
+      /* 密码框在初始 HTML 里是 type="text"，到这里才变回 password。
+         Chrome 在解析阶段就靠 type="password" 判定「这是登录页」，
+         一旦判定，本页任何文本框聚焦时都会被推荐保存的账号。 */
+      var pw=$('#loginPass');
+      if(pw && pw.hasAttribute('data-pw')) pw.setAttribute('type','password');
+    }
+    if(!on){
+      /* 登录成功后把整个表单摘出 DOM。只 disabled 不够：Chrome 仍会把本页当登录页，
+         往任意文本框推荐保存的账号（会被当成搜索关键词，把列表筛空）。 */
+      if(form){ _loginFormHome=form.parentNode; _loginFormNode=form; form.remove(); }
+    }else if(_loginFormNode && _loginFormHome && !_loginFormNode.isConnected){
+      _loginFormHome.appendChild(_loginFormNode);
+    }
+  }
   function showLogin(){
     if(loginOverlay) loginOverlay.classList.remove('hidden');
+    setLoginFieldsEnabled(true);
   }
   function hideLogin(){
     if(loginOverlay) loginOverlay.classList.add('hidden');
+    setLoginFieldsEnabled(false);
   }
 
   /* 恢复记住的账号 */
@@ -163,8 +185,22 @@ const billTemplateWithTokens = billTemplate.replace(
     toastT=setTimeout(function(){toastEl.classList.remove('show')},type==='error'?3000:2000);
   }
 
+  /* 搜索框默认 readonly，用户点进去才可写。Chrome 不对只读输入框做自动填充，
+     这是唯一能真正拦住的办法——type="search" 和 autocomplete="off" 它都不认。 */
+  (function unlockSearchOnFocus(){
+    function unlock(el){
+      if(el && el.tagName==='INPUT' && el.readOnly && el.getAttribute('type')==='search'){
+        el.removeAttribute('readonly');
+      }
+    }
+    ['focusin','pointerdown'].forEach(function(ev){
+      document.addEventListener(ev,function(e){ unlock(e.target); },true);
+    });
+  })();
+
   /* ---------- Changelog / 更新通知（与 Build_demo 完全一致） ---------- */
   var changelogData=[
+    {id:'14',date:'2026-09-14',iconBg:'#eef3ff',iconColor:'#495dff',team:'专家团支持人工审核确认节点',body:'专家团运行流程可在任意步骤后插入人工审核确认节点，到该节点编排暂停、确认后才继续；专家能力项由机器标识改为中文名加等级展示，专家卡片增加「可承担的工作」，专家团补充领域标签与能力覆盖；专家定义去掉「工作方式」「完成标准」，改为把需要用户提供的内容写进触发词占位符，发送时没填就在会话里追问；专家来源合并为「Lingee 内置」与「我创建的」两档，取消无数据支撑的「金蝶官方」；专家详情收敛为简介、触发词、挂载技能、能力项、可承担的工作五项；修复搜索框被浏览器自动填充账号导致列表被筛空。'},
     {id:'13',date:'2026-09-11',iconBg:'#eef3ff',iconColor:'#495dff',team:'会话加号下拉菜单',body:'会话输入框加号按钮改为下拉菜单，提供添加文件（含本地文件、引用文件夹、知识库）、模式（含 Spec、目标）、连接器（含腾讯云等八项服务）三级菜单结构。'},
     {id:'12',date:'2026-09-09',iconBg:'#eef3ff',iconColor:'#495dff',team:'新增协作开发模块',body:'左侧「专家」菜单改为「协作开发」，下设任务管理、待评审、协作人员管理、专家管理、专家团管理与设置六个页签；新增项目维度，任务、评审、协作人员按项目划分，专家与专家团为全局资产、项目内只绑定默认专家团。'},
     {id:'11',date:'2026-09-08',iconBg:'#eef3ff',iconColor:'#495dff',team:'原型新增登录页',body:'新增登录页，需账号密码登录后才能查看原型。'},
@@ -175,6 +211,7 @@ const billTemplateWithTokens = billTemplate.replace(
   ];
   // 每个数据条目对应的 avatar SVG 图标（与 Build_demo 的 lucide 图标一致）
   var changelogIcons={
+    '14':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m16 11 2 2 4-4"/></svg>',
     '13':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M12 5v14M5 12h14"/></svg>',
     '12':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M6 3v12"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>',
     '11':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg>',
@@ -2646,8 +2683,13 @@ const billTemplateWithTokens = billTemplate.replace(
     appendUserMessage(t);
     if(autoPicked) appendAutoNote();
     input.innerHTML=''; refreshSend();
-    var responseEl=appendAssistantMessage();
-    simulateAIResponse(responseEl);
+    var pend=pendingInputs(t);
+    if(pend.length && appendAskCard(pend)){
+      /* 缺输入就停在追问上，确认完再执行 */
+    }else{
+      var responseEl=appendAssistantMessage();
+      simulateAIResponse(responseEl);
+    }
     chatInput.innerHTML='';
     var chatSend=$('#chatSendBtn');
     chatSend.classList.remove('active');
@@ -4082,6 +4124,7 @@ const billTemplateWithTokens = billTemplate.replace(
     api:'<rect width="128" height="128" rx="26" fill="#0891b2"/><circle cx="38" cy="64" r="14" fill="#cffafe"/><circle cx="90" cy="38" r="14" fill="#cffafe"/><circle cx="90" cy="90" r="14" fill="#cffafe"/><path d="M50 58l28-14M50 70l28 14" stroke="#cffafe" stroke-width="7"/>'
   };
   function xav(k){ return 'data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">'+EXPERT_AV[k]+'</svg>'); }
+  var GATE_ICON='<svg class="x-gate-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m16 11 2 2 4-4"/></svg>';
   function xesc(v){ return String(v==null?'':v).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]}); }
 
   var EXPERTS=[
@@ -4089,129 +4132,98 @@ const billTemplateWithTokens = billTemplate.replace(
      desc:'协调范围、分工、集成、风险与交付闭环，是专家团里唯一能开 kickoff 与做最终集成确认的角色。',
      tags:['交付管理','团队协调'],modes:['分析','设计','集成','评审','验证','恢复'],
      comp:['delivery.orchestration · principal','delivery.integration · advanced'],
-     cmds:[['帮我把这个目标拆成范围、非目标和验收门禁','闭合范围，明确谁负责、做到什么算完'],
-           ['这次交付复盘一下，还有哪些残余风险','汇总各角色证据，给出关闭或升级建议']],
-     steps:['闭合范围与验收条件','分派有边界的角色任务','编排依赖顺序与集成门禁','汇总证据与残余风险','给出关闭或升级建议'],
-     cons:['不得用协调判断替代专业证据','不得授予资格或权限','未解决的重大范围冲突必须升级']},
+     cmds:[['帮我把[交付目标]拆成范围、非目标和验收门禁','闭合范围，明确谁负责、做到什么算完'],
+           ['这次交付复盘一下，还有哪些残余风险','汇总各角色证据，给出关闭或升级建议']]},
     {id:'software-product-manager',k:'pm',name:'软件产品经理',role:'产品经理',by:'Lingee 内置',
      desc:'把用户目标翻译成有优先级、可观察的需求与验收条件。',
      tags:['需求分析','验收设计'],modes:['分析','设计','评审'],
      comp:['product.requirements · principal','product.acceptance-design · advanced'],
-     cmds:[['把这个需求拆成一份带验收条件的清单','把目标整理成有范围、可验收的需求'],
+     cmds:[['把[用户目标]拆成一份带验收条件的清单','把目标整理成有范围、可验收的需求'],
            ['帮我给这些需求补齐验收标准','补上可观察、可验证的验收条件'],
-           ['这次哪些事不做？帮我列一下非目标','明确边界，防止范围蔓延']],
-     steps:['识别用户与期望结果','梳理现状与目标流程','排定需求优先级与非目标','编写可观察的验收条件','消解或升级重大歧义'],
-     cons:['不得虚构客户批准','不得把代码结构写成业务需求','不授予发布权限'],out:'docs/requirements.md'},
+           ['这次哪些事不做？帮我列一下非目标','明确边界，防止范围蔓延']]},
     {id:'software-architect',k:'arch',name:'软件架构师',role:'软件架构师',by:'Lingee 内置',
      desc:'设计可演进的系统边界、合同、数据流与失败处理，产出架构文档与可执行的实现计划。',
      tags:['软件架构','可靠性'],modes:['分析','设计','集成','评审','恢复'],
      comp:['architecture.system-design · principal','architecture.reliability · advanced'],
-     cmds:[['帮我设计这个系统的边界、合同和失败处理','从需求产出可演进的架构方案与迁移路径'],
+     cmds:[['按[需求]设计系统的边界、合同和失败处理','从需求产出可演进的架构方案与迁移路径'],
            ['这几个方案怎么选？帮我做技术选型','按质量属性评估备选方案并记录取舍'],
-           ['把架构拆成可以直接开工的实现计划','产出带可执行验证命令的编码任务图']],
-     steps:['建模边界与数据归属','按质量属性评估备选方案','定义合同、失败行为与迁移','记录决策与被否决方案','指定架构验证场景'],
-     cons:['采用满足实测需求的最小架构','每条实现验证必须是可执行命令，拒绝人工目视检查','验证命令需在 macOS 与 Linux 上可移植'],
-     out:'docs/architecture.md · docs/implementation-plan.json'},
+           ['把架构拆成可以直接开工的实现计划','产出带可执行验证命令的编码任务图']]},
     {id:'software-engineer',k:'eng',name:'软件工程师',role:'软件工程师',by:'Lingee 内置',
      desc:'实现可维护的软件变更并完成针对性验证，只改授权范围内的代码。',
      tags:['软件实现','系统集成'],modes:['分析','设计','实现','集成','验证','恢复'],
      comp:['engineering.implementation · advanced','engineering.integration · advanced'],
      skills:['cosmic-app-builder','general-app-builder','site-builder'],
-     cmds:[['按这份验收条件把功能实现出来','完成最小完整变更并跑通验证'],
+     cmds:[['按[验收条件]把功能实现出来','完成最小完整变更并跑通验证'],
            ['这个 bug 帮我复现并修掉','定位根因、修复并补回归测试'],
-           ['做一个单页小工具，一次写完','小应用一次性写完全部代码 + build 验证']],
-     steps:['复现或确立当前行为','阅读受影响的合同与调用点','实现最小完整的源码变更','同步更新测试与生成物','运行聚焦与包级验证'],
-     cons:['只修改已授权范围','不得绕过失败的检查','不得声称拥有部署或 Runner 权限']},
+           ['做一个单页小工具，一次写完','小应用一次性写完全部代码 + build 验证']]},
     {id:'software-qa-engineer',k:'qa',name:'软件测试工程师',role:'质量工程师',by:'Lingee 内置',
      desc:'独立验证验收行为、回归影响与交付风险，给出基于证据的质量结论。',
      tags:['质量保障','独立验证'],modes:['分析','设计','评审','验证'],
      comp:['quality.verification · principal','quality.regression-analysis · advanced'],
-     cmds:[['这次改动要测哪些场景？帮我出验证计划','按风险模型设计验收与回归场景'],
+     cmds:[['针对[变更说明]出一份验证计划','按风险模型设计验收与回归场景'],
            ['帮我端到端跑一遍，看看能不能过','实际跑 build、请求与用例并留存证据'],
-           ['这个版本能发吗？给个质量结论','给出 pass / pass-with-risk / fail 与理由']],
-     steps:['梳理变更影响与质量风险','设计验收与回归场景','执行授权范围内最强的检查','复现并分级缺陷','给出基于证据的质量结论'],
-     cons:['与实现方声明保持独立','不得执行破坏性或未批准的压测','不授予发布权限']},
+           ['这个版本能发吗？给个质量结论','给出 pass / pass-with-risk / fail 与理由']]},
     {id:'code-reviewer',k:'cr',name:'代码评审专家',role:'实现代码评审',by:'Lingee 内置',ro:true,
      desc:'独立评审实现代码的正确性、并发安全与合同落实情况，只读不改。',
      tags:['只读评审','正确性'],modes:['评审','验证'],
      comp:['implementation-correctness · principal','concurrent-commit-model · principal'],
-     cmds:[['帮我评审这段代码有没有正确性问题','把合同义务追溯到代码路径，报告可复现的缺陷']],
-     steps:['把合同义务追溯到具体代码路径与可观察结果','检查规范化、声明、失败清理与并发测试','以可复现的判定标准报告实现缺陷'],
-     cons:['不得修改实现或其测试','不得把注释或名义类型当作行为证明']},
+     cmds:[['帮我评审这段代码有没有正确性问题','把合同义务追溯到代码路径，报告可复现的缺陷']]},
     {id:'security-reviewer',k:'sec',name:'安全评审专家',role:'应用安全评审',by:'Lingee 内置',ro:true,
      desc:'基于信任边界建立威胁模型，演练滥用、竞态与绕过场景并给出风险判定。',
      tags:['只读评审','威胁建模'],modes:['评审','验证'],
      comp:['application-security · principal','filesystem-safety · advanced'],
-     cmds:[['这个功能有安全风险吗？帮我做威胁建模','演练滥用与绕过场景，判断风险是否可接受']],
-     steps:['基于信任边界建立威胁模型','演练滥用、竞态、部分失败与绕过场景','对安全发现分级并判断风险模型是否可接受'],
-     cons:['不得修改被评审产物或直接修复','不得接受无证据的原子性与竞态安全保证']},
+     cmds:[['这个功能有安全风险吗？帮我做威胁建模','演练滥用与绕过场景，判断风险是否可接受']]},
     {id:'read-only-analyst',k:'ana',name:'只读分析专家',role:'软件分析',by:'Lingee 内置',ro:true,
      desc:'在不改动工作区的前提下做有边界的源码分析与结论交叉验证。',
      tags:['只读分析'],modes:['分析','评审','验证'],
      comp:['software.analysis · advanced'],
-     cmds:[['帮我读一下这块代码是怎么跑的','有边界地读源码，给出结论与证据，不改文件']],
-     steps:['检视有边界的源码与合同','用直接证据交叉验证发现','在不改动工作区的前提下给出结论'],
-     cons:['不得修改文件','不得执行有副作用的命令']},
-    {id:'frontend-engineer',k:'fe',name:'前端工程专家',role:'前端工程师',by:'金蝶官方',
+     cmds:[['帮我读一下这块代码是怎么跑的','有边界地读源码，给出结论与证据，不改文件']]},
+    {id:'frontend-engineer',k:'fe',name:'前端工程专家',role:'前端工程师',by:'Lingee 内置',
      desc:'金蝶前端规范下的组件实现、响应式布局与交互调试。',
      tags:['React','响应式','组件库'],modes:['设计','实现','验证'],
      comp:['engineering.frontend · advanced'],skills:['cosmic-kwc-builder','frontend-design'],
-     cmds:[['按这张设计稿把页面实现出来','实现响应式页面与交互'],
+     cmds:[['按[设计稿与规范]把页面实现出来','实现响应式页面与交互'],
            ['帮我抽一个可复用的组件','产出符合金蝶前端规范的组件'],
-           ['页面和设计稿对不上，帮我调一下','把实现调到与设计稿一致']],
-     steps:['确认设计稿与交互规范','实现组件与布局','处理多端与暗色适配','补组件测试'],
-     cons:['遵循金蝶前端规范','不得引入未评估的第三方依赖']},
-    {id:'ux-designer',k:'ux',name:'界面设计专家',role:'交互 / 视觉设计',by:'金蝶官方',
+           ['页面和设计稿对不上，帮我调一下','把实现调到与设计稿一致']]},
+    {id:'ux-designer',k:'ux',name:'界面设计专家',role:'交互 / 视觉设计',by:'Lingee 内置',
      desc:'信息架构、交互流程与视觉规范，产出可直接交付前端的设计说明。',
      tags:['交互设计','视觉规范'],modes:['分析','设计','评审'],
      comp:['design.interaction · advanced'],skills:['prototype-builder','frontend-design'],
-     cmds:[['这个功能该怎么设计？先对齐一下目标','产出设计简报，对齐业务目标与设计策略'],
+     cmds:[['围绕[用户目标]先对齐设计目标','产出设计简报，对齐业务目标与设计策略'],
            ['帮我梳理这个模块的信息架构','理清导航、层级与页面骨架'],
-           ['帮我走查一下这个页面','对已实现页面做规范与可用性检查']],
-     steps:['澄清目标用户与场景','梳理信息架构与主流程','产出交互与视觉规范','走查实现一致性'],
-     cons:['设计说明必须可被前端直接实现','不得规定与设计系统冲突的样式']},
-    {id:'cosmic-form',k:'form',name:'苍穹表单专家',role:'苍穹表单',by:'金蝶官方',
+           ['帮我走查一下这个页面','对已实现页面做规范与可用性检查']]},
+    {id:'cosmic-form',k:'form',name:'苍穹表单专家',role:'苍穹表单',by:'Lingee 内置',
      desc:'KDDP 表单引擎的字段、校验、联动与权限配置。',
      tags:['表单设计','字段校验'],modes:['分析','设计','实现'],
      comp:['cosmic.form-design · advanced'],skills:['cosmic-requirements-spec'],
-     cmds:[['帮我建一张这个业务的苍穹单据','设计表单结构与字段'],
+     cmds:[['按[已确认需求]建一张苍穹单据','设计表单结构与字段'],
            ['这几个字段要联动，帮我配一下','配置校验规则与字段联动逻辑'],
-           ['这张单据的权限怎么配？','设置单据与字段级权限']],
-     steps:['梳理单据业务规则','设计表单结构与字段','配置校验与联动','映射数据模型'],
-     cons:['遵循苍穹元数据规范','不得绕过标准扩展点直接改内核']},
-    {id:'cosmic-workflow',k:'flow',name:'苍穹工作流专家',role:'苍穹工作流',by:'金蝶官方',
+           ['这张单据的权限怎么配？','设置单据与字段级权限']]},
+    {id:'cosmic-workflow',k:'flow',name:'苍穹工作流专家',role:'苍穹工作流',by:'Lingee 内置',
      desc:'审批链配置与流程调试，处理加签、会签、条件流转等复杂场景。',
      tags:['审批链','流程调试'],modes:['分析','设计','实现','验证'],
      comp:['cosmic.workflow · advanced'],
-     cmds:[['帮我设计一个请假申请的苍穹审批流程','梳理审批场景并配置工作流'],
-           ['我的审批流节点卡住了，帮我排查','定位节点为什么不流转']],
-     steps:['梳理审批场景与角色','配置流程节点与条件','调试流转与异常分支','验证端到端审批'],
-     cons:['流程变更需保留可回滚配置']},
-    {id:'cosmic-report',k:'rpt',name:'苍穹报表专家',role:'苍穹报表',by:'金蝶官方',
+     cmds:[['按[已确认需求]设计一条苍穹审批流程','梳理审批场景并配置工作流'],
+           ['我的审批流节点卡住了，帮我排查','定位节点为什么不流转']]},
+    {id:'cosmic-report',k:'rpt',name:'苍穹报表专家',role:'苍穹报表',by:'Lingee 内置',
      desc:'报表建模、取数逻辑与图表配置，兼顾查询性能与交互式分析。',
      tags:['报表建模','取数逻辑'],modes:['分析','设计','实现'],
      comp:['cosmic.report · advanced'],
-     cmds:[['帮我做一张这个口径的报表','设计报表数据模型与取数逻辑'],
-           ['报表查得太慢了，帮我优化','优化取数与查询性能']],
-     steps:['明确分析口径','设计数据模型与取数','配置图表与交互','优化查询性能'],
-     cons:['取数口径需与业务确认后固化']},
-    {id:'cosmic-plugin',k:'plug',name:'苍穹二开插件专家',role:'苍穹二开',by:'金蝶官方',
+     cmds:[['按[已确认需求]做一张报表','设计报表数据模型与取数逻辑'],
+           ['报表查得太慢了，帮我优化','优化取数与查询性能']]},
+    {id:'cosmic-plugin',k:'plug',name:'苍穹二开插件专家',role:'苍穹二开',by:'Lingee 内置',
      desc:'基于扩展点开发二开插件，处理注册、生命周期调试与升级兼容。',
      tags:['插件开发','扩展点'],modes:['设计','实现','验证','恢复'],
      comp:['cosmic.plugin · advanced'],skills:['cosmic-reverse-engineering'],
-     cmds:[['帮我基于扩展点写一个二开插件','定位扩展点并实现插件逻辑'],
-           ['插件注册了但不生效，帮我看看','排查注册与生命周期问题']],
-     steps:['定位合适的扩展点','实现插件逻辑','注册并调试生命周期','验证升级兼容'],
-     cons:['不得修改标准产品内核','插件必须可独立卸载']},
-    {id:'cosmic-api',k:'api',name:'苍穹集成接口专家',role:'苍穹集成',by:'金蝶官方',
+     cmds:[['在[应用编码]里基于扩展点写一个二开插件','定位扩展点并实现插件逻辑'],
+           ['插件注册了但不生效，帮我看看','排查注册与生命周期问题']]},
+    {id:'cosmic-api',k:'api',name:'苍穹集成接口专家',role:'苍穹集成',by:'Lingee 内置',
      desc:'开放接口对接、鉴权配置与数据同步，含异常重试与幂等设计。',
      tags:['接口对接','鉴权'],modes:['设计','实现','集成','验证'],
      comp:['cosmic.integration · advanced'],
-     cmds:[['帮我对接这个苍穹开放接口','确认契约与鉴权方式并实现对接'],
+     cmds:[['按[接口契约]对接苍穹开放接口','确认契约与鉴权方式并实现对接'],
            ['接口鉴权怎么配？','配置鉴权与安全策略'],
-           ['两边数据要同步，帮我设计方案','设计幂等同步任务与异常重试']],
-     steps:['确认接口契约与鉴权方式','实现对接与错误处理','设计幂等与重试','联调验证'],
-     cons:['凭据不得硬编码','同步必须幂等可重放']}
+           ['两边数据要同步，帮我设计方案','设计幂等同步任务与异常重试']]}
   ];
   var BUILTIN_EXPERTS=EXPERTS;
   var MY_EXPERTS=[];                 /* 我自己创建的专家，落 localStorage */
@@ -4226,9 +4238,92 @@ const billTemplateWithTokens = billTemplate.replace(
   var AV_KEYS=['lead','pm','arch','eng','qa','cr','sec','ana','fe','ux','form','flow','rpt','plug','api'];
   var WORK_MODES=['分析','设计','实现','集成','评审','验证','恢复'];
 
+  /* ---------- 能力项字典 ----------
+     定义文件里能力项是机器标识（architecture.system-design · principal），
+     直接摆到界面上没人看得懂。这里翻成中文名 + 等级，字典没覆盖的回退显示原串。 */
+  var COMP_NAMES={
+    'delivery.orchestration':'交付编排','delivery.integration':'集成收口',
+    'product.requirements':'需求定义','product.acceptance-design':'验收设计',
+    'architecture.system-design':'系统设计','architecture.reliability':'可靠性设计',
+    'engineering.implementation':'编码实现','engineering.integration':'工程集成',
+    'engineering.frontend':'前端工程',
+    'quality.verification':'质量验证','quality.regression-analysis':'回归分析',
+    'implementation-correctness':'实现正确性','concurrent-commit-model':'并发与提交模型',
+    'application-security':'应用安全','filesystem-safety':'文件系统安全',
+    'software.analysis':'源码分析','design.interaction':'交互设计',
+    'cosmic.form-design':'苍穹表单设计','cosmic.workflow':'苍穹工作流',
+    'cosmic.report':'苍穹报表','cosmic.plugin':'苍穹二开插件','cosmic.integration':'苍穹集成'
+  };
+  var COMP_LEVELS={principal:'资深',advanced:'精通',practitioner:'熟练',awareness:'了解'};
+
+  /* ---------- 开工前需要的输入 ----------
+     不再单独维护字段：需要什么输入，直接写进触发词的 [占位符] 里。
+     发出去时占位符没被替换，就在会话里追问，而不是让专家拿着空输入硬跑。 */
+  var ASK={
+    '验收条件':{q:'这次做到什么程度算完成？',
+      o:['用软件产品经理刚出的验收条件','我直接说，你记下来','先不定，按最小可用实现']},
+    '架构决策':{q:'按哪份架构方案做？',
+      o:['用软件架构师刚出的方案','我把方案贴给你','还没有方案，你先出一版']},
+    '用户目标':{q:'这次要解决谁的什么问题？',
+      o:['我描述一下','用项目里已有的需求文档']},
+    '交付目标':{q:'这次交付要达成什么？',
+      o:['我说一下目标和时间','沿用上一轮没做完的范围']},
+    '需求':{q:'需求从哪来？',
+      o:['用软件产品经理的需求清单','我直接说','先读代码反推现状']},
+    '已确认需求':{q:'这次按哪份已确认的需求做？',
+      o:['用苍穹产品经理确认过的需求规格','我直接说','还没确认，先帮我理一版']},
+    '变更说明':{q:'这次改了什么？',
+      o:['用软件工程师提交的变更说明','读本次提交自己判断','我列一下改动点']},
+    '设计稿与规范':{q:'按哪份设计稿实现？',
+      o:['用界面设计专家出的设计说明','我贴 Figma 链接','没有设计稿，你按设计系统发挥']},
+    '接口契约':{q:'对接哪个接口？',
+      o:['我贴接口文档','用苍穹开放平台上已注册的接口','先帮我查一下有哪些可用']},
+    '应用编码':{q:'在哪个苍穹应用里开发？',
+      o:['用当前会话关联的应用','我填应用编码']}
+  };
+  var ASK_FALLBACK={q:'这一项从哪来？', o:['我直接说','用上一步的产出','先跳过，你按默认处理']};
+  function askFor(name){ return ASK[name]||ASK_FALLBACK; }
+  /* 文本里没被替换掉的 [占位符] */
+  function pendingInputs(text){
+    var out=[], re=/\[([^\[\]\n]{1,20})\]/g, m;
+    while((m=re.exec(String(text||'')))){ if(out.indexOf(m[1])<0) out.push(m[1]); }
+    return out;
+  }
+  /* 触发词里的占位符高亮显示 */
+  function phraseHtml(t){
+    return xesc(t).replace(/\[([^\[\]]{1,20})\]/g,'<em class="x-ph">[$1]</em>');
+  }
+  var COMP_RANK={principal:4,advanced:3,practitioner:2,awareness:1};
+  /* 'architecture.system-design · principal' → 结构化 */
+  function parseComp(v){
+    var p=String(v==null?'':v).split('\u00b7');
+    var id=(p[0]||'').trim(), lv=(p[1]||'').trim();
+    return {id:id,name:COMP_NAMES[id]||id,lv:lv,level:COMP_LEVELS[lv]||lv,rank:COMP_RANK[lv]||0};
+  }
+  function compChip(v){
+    var c=(v&&typeof v==='object')?v:parseComp(v);
+    return '<span class="ptag ptag-comp" title="'+xesc(c.id)+'">'+xesc(c.name)
+      +(c.level?'<i class="ptag-lv lv-'+xesc(c.lv)+'">'+xesc(c.level)+'</i>':'')+'</span>';
+  }
+  /* 一个团覆盖到的能力项：同一能力取成员里的最高等级 */
+  function teamCoverage(t){
+    var best={};
+    (t.members||[]).forEach(function(id){
+      var e=EX[id]; if(!e) return;
+      (e.comp||[]).forEach(function(v){
+        var c=parseComp(v);
+        if(!best[c.id]||c.rank>best[c.id].rank) best[c.id]=c;
+      });
+    });
+    return Object.keys(best).map(function(k){return best[k]})
+      .sort(function(a,b){return b.rank-a.rank||a.name.localeCompare(b.name)});
+  }
+
   var PRESET_TEAMS=[
     {id:'software-company',preset:true,name:'软件开发团队',by:'Lingee 内置',
      desc:'跨职能软件产品交付团队，覆盖需求、架构、实现、质量与集成的完整闭环。也是新建任务时的默认选择。',
+     domains:['通用软件','后端','前端','数据库'],
+     gates:['design','verify'],
      leadId:'software-team-lead',
      members:['software-team-lead','software-product-manager','software-architect','software-engineer','software-qa-engineer'],
      cmds:[['帮我把这个想法做成一个能上线的功能','从需求到验收走完整闭环'],
@@ -4236,20 +4331,26 @@ const billTemplateWithTokens = billTemplate.replace(
            ['需求还没理清，先帮我拆一版方案再动手','先出需求与实现计划，评审通过再编码']]},
     {id:'fast-app',preset:true,name:'应用速成小队',by:'Lingee 内置',
      desc:'工程师一次性写完全部代码，QA 端到端验证。适合单页应用、小游戏、原型页这类一次交付的活。',
+     domains:['单页应用','原型','小工具'],
+     gates:[],
      leadId:'software-engineer',
      members:['software-engineer','software-qa-engineer'],
      cmds:[['做一个单页小工具，今天就要用','一次性写完代码并跑通 build'],
            ['帮我快速搭个原型页看看效果','省掉评审环节，直接实现 + 自检'],
            ['写个小游戏练手','小体量一次交付']]},
-    {id:'cosmic-team',preset:true,name:'苍穹交付团队',by:'金蝶官方',
+    {id:'cosmic-team',preset:true,name:'苍穹交付团队',by:'Lingee 内置',
      desc:'面向苍穹配置化交付：需求规格 → 表单与流程配置 → 报表 → 二开插件 → 接口集成。',
+     domains:['苍穹','表单','工作流','报表','集成'],
+     gates:['requirement'],
      leadId:'software-team-lead',
      members:['software-team-lead','software-product-manager','cosmic-form','cosmic-workflow','cosmic-report','cosmic-api'],
      cmds:[['帮我在苍穹上做一套请假申请，从单据到审批','表单、流程、报表、接口一条龙配下来'],
            ['这个业务要在苍穹落地，帮我出方案','先出需求规格，再分头配置'],
            ['苍穹这块单据和流程都要改，帮我排一下','按依赖顺序编排配置任务']]},
-    {id:'web-team',preset:true,name:'网页交付小队',by:'金蝶官方',
+    {id:'web-team',preset:true,name:'网页交付小队',by:'Lingee 内置',
      desc:'设计与前端配对交付：信息架构与视觉规范先行，前端按规范实现并做设计走查。',
+     domains:['Web','前端','视觉设计'],
+     gates:['design'],
      leadId:'ux-designer',
      members:['ux-designer','frontend-engineer','software-qa-engineer'],
      cmds:[['帮我做一个官网首页，设计和前端都要','先出设计规范，再按规范实现'],
@@ -4294,8 +4395,8 @@ const billTemplateWithTokens = billTemplate.replace(
         modes:e.modes.filter(function(m){return WORK_MODES.indexOf(m)>=0}),
         comp:Array.isArray(e.comp)?e.comp:[],
         cmds:(Array.isArray(e.cmds)?e.cmds:[]).filter(function(c){return Array.isArray(c)&&c[0]}),
-        steps:Array.isArray(e.steps)?e.steps:[],
-        cons:Array.isArray(e.cons)?e.cons:[]};
+
+      };
     }).filter(function(e){ return e.modes.length; });
     rebuildExperts();
 
@@ -4305,6 +4406,8 @@ const billTemplateWithTokens = billTemplate.replace(
         &&Array.isArray(t.members)&&t.members.every(function(m){return !!EX[m]});
     }).map(function(t){
       return {id:t.id,preset:false,name:t.name,by:t.by||'我创建的',desc:t.desc||'',
+        domains:Array.isArray(t.domains)?t.domains:[],
+        gates:Array.isArray(t.gates)?t.gates.filter(function(g){return typeof g==='string'}):[],
         leadId:EX[t.leadId]?t.leadId:(t.members[0]||null),members:t.members.slice(),
         cmds:(Array.isArray(t.cmds)?t.cmds:[]).filter(function(c){return Array.isArray(c)&&c[0]})};
     });
@@ -4314,10 +4417,13 @@ const billTemplateWithTokens = billTemplate.replace(
     try{
       localStorage.setItem(TEAM_STORE_KEY, JSON.stringify({
         v:1,
-        teams:TEAMS.filter(function(t){return !t.preset}),
+        teams:TEAMS.filter(function(t){return !t.preset}).map(function(t){
+          return {id:t.id,name:t.name,by:t.by,desc:t.desc,domains:t.domains||[],
+                  gates:teamGates(t),leadId:t.leadId,members:t.members,cmds:t.cmds};
+        }),
         experts:MY_EXPERTS.map(function(e){
           return {id:e.id,k:e.k,name:e.name,role:e.role,desc:e.desc,tags:e.tags,
-                  modes:e.modes,comp:e.comp,cmds:e.cmds,steps:e.steps,cons:e.cons};
+                  modes:e.modes,comp:e.comp,cmds:e.cmds};
         })
       }));
     }catch(e){ /* 隐私模式 / 配额满：原型退化为内存态，不打扰用户 */ }
@@ -4332,23 +4438,40 @@ const billTemplateWithTokens = billTemplate.replace(
     function byMode(m,skip){ for(var i=0;i<t.members.length;i++){ if(t.members[i]===skip) continue; var e=EX[t.members[i]]; if(e&&e.modes.indexOf(m)>=0) return t.members[i]; } return null; }
     var f=[], multi=t.members.length>1;
     var lead=any('software-team-lead');
-    if(multi && lead) f.push({k:'analyze',title:'协调范围与门禁',who:lead});
+    if(multi && lead) f.push({id:'kickoff',k:'analyze',title:'协调范围与门禁',who:lead});
     var pm=any('software-product-manager');
-    if(pm) f.push({k:'analyze',title:'分析需求与验收',who:pm});
+    if(pm) f.push({id:'requirement',k:'analyze',title:'分析需求与验收',who:pm});
     var des=any('software-architect','ux-designer');
-    if(des) f.push({k:'design',title:'设计方案与实现计划',who:des});
+    if(des) f.push({id:'design',k:'design',title:'设计方案与实现计划',who:des});
     var rev=any('code-reviewer','read-only-analyst');
-    if(rev) f.push({k:'review',title:'编码准入评审',who:rev});
-    f.push({k:'implement',title:'实现编码任务',
+    if(rev) f.push({id:'precode-review',k:'review',title:'编码准入评审',who:rev});
+    f.push({id:'implement',k:'implement',title:'实现编码任务',
       who:any('software-engineer','frontend-engineer','cosmic-form','cosmic-workflow','cosmic-report','cosmic-plugin','cosmic-api')||byMode('实现')});
     var sec=any('security-reviewer');
-    if(sec) f.push({k:'review',title:'安全评审',who:sec});
+    if(sec) f.push({id:'security-review',k:'review',title:'安全评审',who:sec});
     var qa=any('software-qa-engineer')||byMode('验证',lead);
-    if(qa) f.push({k:'test',title:'质量验证',who:qa});
+    if(qa) f.push({id:'verify',k:'test',title:'质量验证',who:qa});
     var itg=lead||any('software-architect')||byMode('集成');
-    if(multi && itg) f.push({k:'integrate',title:'集成与交付确认',who:itg});
+    if(multi && itg) f.push({id:'integrate',k:'integrate',title:'集成与交付确认',who:itg});
     return f;
   }
+  /* ---------- 人工审核确认节点 ----------
+     挂在某个流程步骤之后：这一步产出后编排暂停，等人点过才继续。
+     只存步骤 id，成员变动导致步骤消失时自动失效，不需要迁移数据。 */
+  function teamGates(t){ return Array.isArray(t&&t.gates)?t.gates:[]; }
+  function hasGate(t,stepId){ return teamGates(t).indexOf(stepId)>=0; }
+  /* 只统计当前流程里真实存在的步骤上挂的确认点 */
+  function activeGates(t,flow){
+    var f=flow||teamFlow(t);
+    return f.filter(function(s){ return hasGate(t,s.id); });
+  }
+  function toggleGate(t,stepId){
+    if(!t) return;
+    if(!Array.isArray(t.gates)) t.gates=[];
+    var i=t.gates.indexOf(stepId);
+    if(i>=0) t.gates.splice(i,1); else t.gates.push(stepId);
+  }
+
   function teamLint(t){
     var w=[];
     var canImpl=false;
@@ -4360,6 +4483,17 @@ const billTemplateWithTokens = billTemplate.replace(
     return w;
   }
 
+  /* 专家团的领域标签：优先用团自己声明的，没有就从成员标签聚合 */
+  function teamDomains(t){
+    if(t&&t.domains&&t.domains.length) return t.domains;
+    var seen={},out=[];
+    (t&&t.members||[]).forEach(function(id){
+      var e=EX[id]; if(!e) return;
+      (e.tags||[]).forEach(function(g){ if(!seen[g]){seen[g]=1;out.push(g);} });
+    });
+    return out;
+  }
+
   /* ---------- 专家库视图 ---------- */
   var expertTab='team', expertKw='';
   var expertGrid=$('#expertGrid');
@@ -4369,22 +4503,26 @@ const billTemplateWithTokens = billTemplate.replace(
   }
   function renderExpertGrid(){
     if(!expertGrid) return;
+    var si=$('#expertSearchInput');
+    if(si && si.value!==expertKw) si.value=expertKw;
     var kw=expertKw.trim(), html='';
     if(expertTab==='team'){
       var rows=TEAMS.filter(function(t){
         if(!kw) return true;
-        return (t.name+t.desc+t.members.map(function(m){return EX[m].name}).join()).indexOf(kw)>=0;
+        return (t.name+t.desc+teamDomains(t).join()+t.members.map(function(m){return EX[m].name}).join()).indexOf(kw)>=0;
       });
       html=rows.map(function(t){
+        var gn=activeGates(t).length;
         return '<div class="app-card x-card" data-team="'+t.id+'">'
           +'<button type="button" class="x-call" data-call-team="'+t.id+'" title="召唤这个专家团">召唤</button>'
           +'<div class="card-top">'+facesHtml(t.members,4)
           +'<div class="card-titles"><div class="card-title-row"><span class="card-title">'+xesc(t.name)+'</span>'
           +(t.preset?'<span class="x-badge">内置</span>':'')+'</div>'
-          +'<div class="x-sub">'+xesc(t.by)+' · '+t.members.length+' 位专家</div></div></div>'
+          +'<div class="x-sub">'+xesc(t.by)+' · '+t.members.length+' 位专家'
+          +(gn?' · <span class="x-sub-gate">'+gn+' 个人工确认</span>':'')+'</div></div></div>'
           +'<div class="card-desc">'+xesc(t.desc)+'</div>'
           +'<div class="card-tags">'
-          +t.members.slice(0,3).map(function(m){return '<span class="ptag">'+EX[m].role+'</span>'}).join('')+'</div></div>';
+          +teamDomains(t).slice(0,4).map(function(g){return '<span class="ptag">'+xesc(g)+'</span>'}).join('')+'</div></div>';
       }).join('');
     }else{
       var rows2=EXPERTS.filter(function(e){
@@ -4400,7 +4538,10 @@ const billTemplateWithTokens = billTemplate.replace(
           +(e.mine?'<span class="x-badge x-badge-mine">我创建的</span>':'')+'</div>'
           +'<div class="x-sub">'+xesc(e.role)+' · '+xesc(e.by)+'</div></div></div>'
           +'<div class="card-desc">'+xesc(e.desc)+'</div>'
-          +'<div class="card-tags">'+e.tags.slice(0,3).map(function(t){return '<span class="ptag">'+xesc(t)+'</span>'}).join('')+'</div></div>';
+          +'<div class="card-tags">'+e.tags.slice(0,3).map(function(t){return '<span class="ptag">'+xesc(t)+'</span>'}).join('')+'</div>'
+          +'<div class="x-modes" title="可承担 '+xesc(e.modes.join(' / '))+'"><span class="x-modes-k">可承担</span>'
+          +e.modes.slice(0,3).map(function(m){return '<span class="x-mode">'+xesc(m)+'</span>'}).join('')
+          +(e.modes.length>3?'<span class="x-mode x-mode-more">+'+(e.modes.length-3)+'</span>':'')+'</div></div>';
       }).join('');
     }
     if(!kw) html += expertTab==='team'
@@ -4449,15 +4590,14 @@ const billTemplateWithTokens = billTemplate.replace(
     $('#expertModalBody').innerHTML='<div class="x-sec x-desc">'+xesc(e.desc)+'</div>'
       +(e.cmds.length?'<div class="x-sec"><div class="x-sec-t">常见触发词</div>'
       +e.cmds.map(function(c){return '<button type="button" class="x-cmd" data-cmd="'+xesc(c[0])+'" data-cmd-of="'+e.id+'">'
-        +'<span class="x-cmd-b"><span class="x-cmd-q">“'+xesc(c[0])+'”</span>'
+        +'<span class="x-cmd-b"><span class="x-cmd-q">“'+phraseHtml(c[0])+'”</span>'
         +(c[1]?'<span class="x-cmd-d">'+xesc(c[1])+'</span>':'')+'</span>'
         +'<svg class="x-cmd-go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H7l-4 3v-6.5A8 8 0 0 1 11 4h2a8 8 0 0 1 8 8z"/></svg>'
         +'</button>'}).join('')+'</div>':'')
       +(e.skills?'<div class="x-sec"><div class="x-sec-t">挂载技能</div><div class="x-chips">'+e.skills.map(function(k){return '<span class="ptag">'+xesc(k)+'</span>'}).join('')+'</div></div>':'')
-      +'<div class="x-sec"><div class="x-sec-t">能力项</div><div class="x-chips">'+e.comp.map(function(c){return '<span class="ptag">'+xesc(c)+'</span>'}).join('')+'</div></div>'
+      +'<div class="x-sec"><div class="x-sec-t">能力项</div><div class="x-chips">'+e.comp.map(compChip).join('')+'</div></div>'
       +'<div class="x-sec"><div class="x-sec-t">可承担的工作</div><div class="x-chips">'+e.modes.map(function(m){return '<span class="ptag">'+xesc(m)+'</span>'}).join('')+'</div></div>'
-      +(e.out?'<div class="x-sec"><div class="x-sec-t">专属产物</div><div class="x-chips"><span class="ptag">'+xesc(e.out)+'</span></div></div>':'')
-      +list('工作方式',e.steps)+list('行为约束',e.cons);
+;
     $('#expertModalFoot').innerHTML=
       (e.mine?'<button type="button" class="btn-link team-delete-btn" data-x-del="'+e.id+'">删除该专家</button>':'')
       +'<div class="team-footer-spacer"></div>'
@@ -4552,6 +4692,51 @@ const billTemplateWithTokens = billTemplate.replace(
     toast('已召唤「'+o.name+'」','success');
   }
 
+  /* 发出去的话里还留着没填的 [占位符] —— 专家先问清楚再开工。
+     一次把缺的都问完，别挤牙膏式来回问。 */
+  function appendAskCard(names){
+    if(!messagesList||!names.length) return false;
+    var who = activePick.kind==='expert' ? EX[activePick.id] : null;
+    var av = who ? '<img src="'+xav(who.k)+'" alt="">' : '';
+    var box=document.createElement('div');
+    box.className='ask-card';
+    box.innerHTML='<div class="ask-head">'+av
+      +'<span>开始之前，我需要先确认'+(names.length>1?' '+names.length+' 件事':'一件事')+'</span></div>'
+      +names.map(function(n,qi){
+        var a=askFor(n);
+        return '<div class="ask-q" data-ask-q="'+qi+'">'
+          +'<div class="ask-q-t"><span class="x-ph">['+xesc(n)+']</span>'+xesc(a.q)+'</div>'
+          +'<div class="ask-opts">'
+          +a.o.map(function(t,oi){
+            return '<button type="button" class="ask-opt" data-ask-pick="'+qi+'" data-ask-oi="'+oi+'">'+xesc(t)+'</button>';
+          }).join('')
+          +'<button type="button" class="ask-opt ask-opt-other" data-ask-pick="'+qi+'" data-ask-oi="-1">其它…</button>'
+          +'</div></div>';
+      }).join('')
+      +'<div class="ask-foot" id="askFoot">选一个，或直接在下面输入框补充</div>';
+    messagesList.appendChild(box);
+    scrollChatBottom();
+    return true;
+  }
+  if(messagesList) messagesList.addEventListener('click',function(ev){
+    var b=ev.target.closest('[data-ask-pick]');
+    if(!b) return;
+    var q=b.closest('.ask-q');
+    q.querySelectorAll('.ask-opt').forEach(function(x){ x.classList.remove('on') });
+    b.classList.add('on');
+    q.classList.add('answered');
+    var card=b.closest('.ask-card');
+    var all=card.querySelectorAll('.ask-q').length;
+    var done=card.querySelectorAll('.ask-q.answered').length;
+    var foot=card.querySelector('.ask-foot');
+    if(done>=all){
+      foot.textContent='已确认，继续执行';
+      foot.classList.add('ask-foot-done');
+    }else{
+      foot.textContent='还剩 '+(all-done)+' 项待确认';
+    }
+  });
+
   function appendAutoNote(){
     if(!messagesList||!activePick.auto||!pickValid()) return;
     var isTeam=activePick.kind==='team';
@@ -4623,7 +4808,7 @@ const billTemplateWithTokens = billTemplate.replace(
   });
   function blankExpert(){
     return {k:'eng',name:'',role:'',desc:'',tags:[],modes:['分析','设计','实现'],
-            comp:[],cmds:[['','']],steps:[],cons:[]};
+            comp:[],cmds:[['','']]};
   }
   function openExpertEditor(id){
     if(!expertEditModal) return;
@@ -4631,13 +4816,11 @@ const billTemplateWithTokens = billTemplate.replace(
     xeEditingId=(e&&e.mine)?id:null;
     xeDraft = xeEditingId
       ? {k:e.k,name:e.name,role:e.role,desc:e.desc,tags:e.tags.slice(),modes:e.modes.slice(),
-         comp:e.comp.slice(),cmds:e.cmds.length?e.cmds.map(function(c){return c.slice()}):[['','']],
-         steps:e.steps.slice(),cons:e.cons.slice()}
+         comp:e.comp.slice(),cmds:e.cmds.length?e.cmds.map(function(c){return c.slice()}):[['','']]}
       : blankExpert();
     $('#expertEditTitle').textContent = xeEditingId ? '编辑专家' : '创建专家';
     $('#xeName').value=xeDraft.name; $('#xeRole').value=xeDraft.role; $('#xeDesc').value=xeDraft.desc;
     $('#xeTags').value=xeDraft.tags.join('、'); $('#xeComp').value=xeDraft.comp.join('、');
-    $('#xeSteps').value=xeDraft.steps.join('\n'); $('#xeCons').value=xeDraft.cons.join('\n');
     $('#xeDeleteBtn').classList.toggle('hidden', !xeEditingId);
     setXeTab('base');
     renderExpertEditor();
@@ -4653,8 +4836,9 @@ const billTemplateWithTokens = billTemplate.replace(
     $('#xeModes').innerHTML=WORK_MODES.map(function(m){
       return '<button type="button" class="x-mode-opt'+(d.modes.indexOf(m)>=0?' on':'')+'" data-xe-mode="'+m+'">'+m+'</button>';
     }).join('');
+
     $('#xeCmds').innerHTML=d.cmds.map(function(c,i){
-      return '<div class="x-cmd-row"><input type="text" class="x-cmd-k" data-xe-cmd="'+i+'" data-f="0" value="'+xesc(c[0])+'" placeholder="用户会怎么说，例如：帮我设计一个请假审批流程" autocomplete="off">'
+      return '<div class="x-cmd-row"><input type="text" class="x-cmd-k" data-xe-cmd="'+i+'" data-f="0" value="'+xesc(c[0])+'" placeholder="用户会怎么说，需要用户提供的内容写成 [方括号]，例如：按[验收条件]把功能实现出来" autocomplete="off">'
         +'<button type="button" class="x-ic x-ic-dg" data-xe-rmcmd="'+i+'" title="删除">✕</button></div>';
     }).join('');
   }
@@ -4696,14 +4880,14 @@ const billTemplateWithTokens = billTemplate.replace(
       var d=xeDraft;
       d.name=$('#xeName').value.trim(); d.role=$('#xeRole').value.trim(); d.desc=$('#xeDesc').value.trim();
       d.tags=splitList($('#xeTags').value); d.comp=splitList($('#xeComp').value);
-      d.steps=splitLines($('#xeSteps').value); d.cons=splitLines($('#xeCons').value);
       if(!d.name){ setXeTab('base'); toast('请填写专家名称','warning'); $('#xeName').focus(); return; }
       if(!d.role){ setXeTab('base'); toast('请填写职称，它会显示在名字后面','warning'); $('#xeRole').focus(); return; }
       if(!d.modes.length){ setXeTab('base'); toast('至少勾选一项「可承担的工作」，否则他在专家团里领不到任务','warning'); return; }
       var cmds=d.cmds.map(function(c){ return [String(c[0]||'').trim(),String(c[1]||'').trim()]; })
                      .filter(function(c){ return c[0]; });
       var rec={id:xeEditingId||('my-'+Date.now()),mine:true,k:d.k,name:d.name,role:d.role,by:'我创建的',
-               desc:d.desc,tags:d.tags,modes:d.modes.slice(),comp:d.comp,cmds:cmds,steps:d.steps,cons:d.cons};
+               desc:d.desc,tags:d.tags,modes:d.modes.slice(),comp:d.comp,cmds:cmds,
+              };
       if(xeEditingId){
         for(var i=0;i<MY_EXPERTS.length;i++) if(MY_EXPERTS[i].id===xeEditingId){ MY_EXPERTS[i]=rec; break; }
         toast('已保存','success');
@@ -4735,8 +4919,10 @@ const billTemplateWithTokens = billTemplate.replace(
     var t=id?teamById(id):null;
     teamEditingId=id||null;
     teamDraft=t?{name:t.name,desc:t.desc,leadId:t.leadId,members:t.members.slice(),preset:!!t.preset,
+                 domains:(t.domains||[]).slice(),gates:teamGates(t).slice(),
                  cmds:(t.cmds&&t.cmds.length)?t.cmds.map(function(c){return c.slice()}):[['','']]}
               :{name:'',desc:'',leadId:'software-team-lead',members:['software-team-lead','software-engineer'],preset:false,
+                 domains:[],gates:['implement'],
                  cmds:[['','']]};
     $('#teamModalTitle').textContent = t?t.name:'新建专家团';
     $('#teamReadonlyTip').classList.toggle('hidden', !teamDraft.preset);
@@ -4787,23 +4973,46 @@ const billTemplateWithTokens = billTemplate.replace(
       : '用户平时会怎么找这个团做事。点「召唤专家团」会带上第一条。';
 
     var flow=teamFlow(d);
+    var gates=activeGates(d,flow);
     $('#teamFlow').innerHTML = flow.map(function(s,i){
-      return (i?'<span class="x-ar">→</span>':'')
+      var h=(i?'<span class="x-ar">→</span>':'')
         +'<div class="x-node'+(s.who?'':' miss')+'">'
         +(s.who?'<img src="'+xav(EX[s.who].k)+'" alt="">':'')
         +'<div><b>'+s.title+'<span class="x-kind">'+s.k+'</span></b>'
         +'<i>'+(s.who?EX[s.who].name:'⚠ 无人可领')+'</i></div></div>';
+      if(hasGate(d,s.id)){
+        h+='<span class="x-ar">→</span>'
+          +'<div class="x-gate" title="'+xesc(s.title)+'完成后暂停，等人确认才继续">'
+          +GATE_ICON+'<div><b>人工确认<span class="x-kind">gate</span></b>'
+          +'<i>'+xesc(s.title)+'后</i></div>'
+          +(d.preset?'':'<button type="button" class="x-ic x-ic-dg" data-gate-off="'+s.id+'" title="移除这个确认节点">✕</button>')
+          +'</div>';
+      }else if(!d.preset){
+        h+='<button type="button" class="x-gate-add" data-gate-on="'+s.id+'" title="在「'+xesc(s.title)+'」之后插入人工确认">＋</button>';
+      }
+      return h;
     }).join('');
+    $('#teamGateHint').textContent = d.preset
+      ? (gates.length?'这个团在 '+gates.length+' 个步骤后需要人工确认，内置团不可改。':'这个团全程自动流转，没有人工确认节点。')
+      : '点步骤之间的 ＋ 可插入人工审核确认节点，到这里编排会暂停等人点过才继续。';
+
+    var cov=teamCoverage(d);
+    $('#teamCoverageChips').innerHTML = cov.length
+      ? cov.map(function(c){ return compChip(c); }).join('')
+      : '<div class="x-empty-sm">还没有成员，能力覆盖为空</div>';
 
     $('#teamModeNote').innerHTML='<span>ⓘ</span><span>'+(d.members.length>1
       ? d.members.length+' 位成员 → 以 <code>mode: team</code> 运行，任务在成员间按依赖顺序流转。'
-      : '单一成员 → 以 <code>mode: personal</code> 运行，串行执行，保留 attempt 隔离与重试。')+'</span>';
+      : '单一成员 → 以 <code>mode: personal</code> 运行，串行执行，保留 attempt 隔离与重试。')
+      +(gates.length?' 其中 '+gates.length+' 个步骤后会停下来等人确认，确认前不进入下一步。':'')+'</span>';
 
     var warns=teamLint(d);
     $('#teamWarnings').innerHTML = warns.map(function(w){
       return '<div class="x-warn"><span>⚠</span><span>'+xesc(w)+'</span></div>'; }).join('');
     var missing=flow.filter(function(x){return !x.who}).length;
-    $('#teamFlowSummary').textContent = flow.length+' 步'+(missing?'，'+missing+' 步无人可领':'');
+    $('#teamFlowSummary').textContent = flow.length+' 步'
+      +(gates.length?'，'+gates.length+' 个人工确认':'')
+      +(missing?'，'+missing+' 步无人可领':'');
     $('#teamFlowSummary').classList.toggle('is-warn', !!missing);
     $('#teamTabDotBase').classList.toggle('hidden', !warns.length);
     $('#teamTabDotMore').classList.toggle('hidden', !missing);
@@ -4826,6 +5035,8 @@ const billTemplateWithTokens = billTemplate.replace(
         renderTeamModal(); return;
       }
       if(n=e.target.closest('[data-view-expert]')){ openExpertModal(n.getAttribute('data-view-expert')); return; }
+      if(n=e.target.closest('[data-gate-on]')){ toggleGate(teamDraft,n.getAttribute('data-gate-on')); renderTeamModal(); return; }
+      if(n=e.target.closest('[data-gate-off]')){ toggleGate(teamDraft,n.getAttribute('data-gate-off')); renderTeamModal(); return; }
       if(n=e.target.closest('[data-set-lead]')){ teamDraft.leadId=n.getAttribute('data-set-lead'); renderTeamModal(); return; }
       if(n=e.target.closest('[data-rm-member]')){
         var id=n.getAttribute('data-rm-member');
@@ -4867,11 +5078,13 @@ const billTemplateWithTokens = billTemplate.replace(
       if(d.preset || !teamEditingId){
         var nid='team-'+Date.now();
         TEAMS.push({id:nid,preset:false,name:d.preset?name+' 副本':name,by:'我创建的',
-          desc:d.desc,leadId:d.leadId,members:d.members.slice(),cmds:teamCmdList(d)});
+          desc:d.desc,domains:(d.domains||[]).slice(),gates:teamGates(d).slice(),
+          leadId:d.leadId,members:d.members.slice(),cmds:teamCmdList(d)});
         toast(d.preset?'已另存为你的专家团':'专家团已创建','success');
       }else{
         var t=teamById(teamEditingId);
         t.name=name; t.desc=d.desc; t.leadId=d.leadId; t.members=d.members.slice(); t.cmds=teamCmdList(d);
+        t.domains=(d.domains||[]).slice(); t.gates=teamGates(d).slice();
         toast('已保存','success');
       }
       teamModal.classList.remove('show');
@@ -5882,8 +6095,7 @@ const billTemplateWithTokens = billTemplate.replace(
       return (e.name+e.role+e.desc+(e.tags||[]).join()).indexOf(kw)>=0;
     });
     return [
-      {title:'Lingee 内置',desc:'交付全流程的通用角色，随产品一起维护',list:rows.filter(function(e){return e.by==='Lingee 内置'})},
-      {title:'金蝶官方',desc:'苍穹与前端领域专家，按金蝶规范工作',list:rows.filter(function(e){return e.by==='金蝶官方'})},
+      {title:'Lingee 内置',desc:'随产品一起维护，覆盖交付全流程与苍穹、前端等领域',list:rows.filter(function(e){return e.by==='Lingee 内置'})},
       {title:'我创建的',desc:'你自己建的专家，可随时改配置或删除',list:rows.filter(function(e){return e.mine})}
     ];
   }
@@ -5892,25 +6104,41 @@ const billTemplateWithTokens = billTemplate.replace(
   }
   function cvBuildExpertCard(e){
     var tags=(e.tags||[]).map(function(t){return '<span class="expert-skill">'+xesc(t)+'</span>'}).join('');
-    var cmds=(e.cmds||[]).length, modes=(e.modes||[]).length;
+    var cmds=(e.cmds||[]).length, comps=(e.comp||[]).length;
+    /* 「能承担哪些工作」比「有几种工作模式」更能决定选不选他，直接摆出来 */
+    var mAll=e.modes||[], mShow=mAll.slice(0,3), mRest=mAll.length-mShow.length;
+    var modeRow=mAll.length
+      ? '<div class="expert-modes" title="可承担 '+xesc(mAll.join(' / '))+'"><span class="expert-modes-k">可承担</span>'
+        +mShow.map(function(m){return '<span class="expert-mode">'+xesc(m)+'</span>'}).join('')
+        +(mRest>0?'<span class="expert-mode expert-mode-more">+'+mRest+'</span>':'')+'</div>'
+      : '';
     return '<div class="expert-card" data-cv-expert="'+e.id+'">'
-      +'<button type="button" class="expert-chat-btn" data-cv-call="'+e.id+'" title="召唤这位专家">'
-      +'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>'
+      +'<button type="button" class="expert-chat-btn" data-cv-call="'+e.id+'" title="召唤这位专家">召唤</button>'
       +'<div class="expert-head"><img class="expert-av" src="'+xav(e.k)+'" alt="">'
       +'<div><div class="expert-name">'+xesc(e.name)
       +(e.ro?'<span class="expert-flag">只读</span>':'')+'</div>'
       +'<div class="expert-role">'+xesc(e.role)+'</div></div></div>'
       +'<div class="expert-intro">'+xesc(e.desc)+'</div>'
       +'<div class="expert-skills">'+tags+'</div>'
+      +modeRow
       +'<div class="expert-stats">'
       +'<div><div class="expert-stat-val">'+cvTeamCountOf(e.id)+'</div><div class="expert-stat-label">所在专家团</div></div>'
-      +'<div><div class="expert-stat-val">'+modes+'</div><div class="expert-stat-label">工作模式</div></div>'
+      +'<div><div class="expert-stat-val">'+comps+'</div><div class="expert-stat-label">能力项</div></div>'
       +'<div><div class="expert-stat-val">'+cmds+'</div><div class="expert-stat-label">触发词</div></div>'
       +'</div></div>';
   }
   function cvRenderExperts(){
     var box=$('#cvExpertSections'); if(!box) return;
-    var html=cvExpertGroups().map(function(g){
+    /* 浏览器自动填充会往搜索框里塞账号，渲染时以 JS 里的关键词为准回写，别让框里显示的和实际筛选的不一致 */
+    var si=$('#cvExpertSearch');
+    if(si && si.value!==cvExpertKw) si.value=cvExpertKw;
+    var groups=cvExpertGroups();
+    /* 搜索把结果筛空时要说清楚，否则只剩一张「创建专家」卡，看着像数据没了 */
+    if(cvExpertKw.trim() && !groups.some(function(g){return g.list.length})){
+      box.innerHTML='<div class="x-empty">没有匹配「'+xesc(cvExpertKw.trim())+'」的专家</div>';
+      return;
+    }
+    var html=groups.map(function(g){
       if(!g.list.length && g.title!=='我创建的') return '';
       var cards=g.list.map(cvBuildExpertCard).join('');
       if(g.title==='我创建的'){
