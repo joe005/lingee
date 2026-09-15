@@ -19,14 +19,17 @@
         <span class="login-title">金蝶灵基</span>
       </div>
       <div class="login-subtitle">灵基一动 工作轻松</div>
-      <form class="login-form" id="loginForm" autocomplete="on">
+      <form class="login-form" id="loginForm" autocomplete="off">
         <div class="login-field">
           <svg class="login-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          <input type="text" id="loginUser" class="login-input" placeholder="账号" autocomplete="username" required>
+          <input type="text" id="loginUser" class="login-input" placeholder="账号" autocomplete="off" autocorrect="off" spellcheck="false" required readonly onfocus="this.removeAttribute('readonly')">
         </div>
         <div class="login-field">
           <svg class="login-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          <input type="password" id="loginPass" class="login-input" placeholder="密码" autocomplete="current-password" required>
+          <!-- 不用 type=password：真用 password 类型会让浏览器判定"这是登录表单"，
+               记住账号密码后，会在站内其它任意文本框弹出自动填充建议。
+               这里改用文本框 + -webkit-text-security 视觉打点，效果一样但不触发浏览器凭据管理 -->
+          <input type="text" id="loginPass" class="login-input login-input-mask" placeholder="密码" autocomplete="off" autocorrect="off" spellcheck="false" required readonly onfocus="this.removeAttribute('readonly')">
         </div>
         <div class="login-error" id="loginError"></div>
         <label class="login-remember"><input type="checkbox" id="loginRemember"> 记住账号</label>
@@ -516,7 +519,7 @@
               <div class="list-toolbar-right">
                 <div class="list-search">
                   <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-                  <input type="text" placeholder="搜索单据编号、供应商…" id="listSearchInput">
+                  <input type="text" placeholder="搜索单据编号、供应商…" id="listSearchInput" autocomplete="off" autocorrect="off" spellcheck="false" readonly onfocus="this.removeAttribute('readonly')">
                 </div>
               </div>
             </div>
@@ -789,83 +792,12 @@
       <div class="apps-head-right">
         <div class="apps-search">
           <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-          <input type="text" placeholder="搜索">
+          <input type="text" placeholder="搜索" autocomplete="off" autocorrect="off" spellcheck="false" readonly onfocus="this.removeAttribute('readonly')">
         </div>
         <button class="btn-new"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>新建</button>
       </div>
     </div>
-    <div class="apps-grid">
-        <div class="app-card">
-          <div class="card-top">
-            <span class="card-icon" style="color:#3a7bff;background:#eef3ff"><svg class="ic" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>
-            <div class="card-titles">
-              <div class="card-title-row"><span class="card-title">报价单管理</span><span class="card-more">···</span></div>
-            </div>
-          </div>
-          <div class="card-desc">深度解析合同文本，捕捉金额、收付款节点、权利义务等核心台账数据，将复杂的法律条文…</div>
-          <div class="card-tags"><span class="ptag">ERP</span><span class="ptag">供应链云</span><span class="ptag">采购订单</span></div>
-        </div>
-        <div class="app-card">
-          <div class="card-top">
-            <span class="card-icon" style="color:#8b5cf6;background:#f3eefe"><svg class="ic" viewBox="0 0 24 24"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M5 3h9l5 5v6"/><path d="M5 3v18h7"/><circle cx="16.5" cy="17.5" r="2.5"/><path d="m21 22-2.2-2.2"/></svg></span>
-            <div class="card-titles">
-              <div class="card-title-row"><span class="card-title">采购订单</span></div>
-            </div>
-          </div>
-          <div class="card-desc">深度解析合同文本，捕捉金额、收付款节点、权利义务等核心台账数据，将复杂的法律条文…</div>
-          <div class="card-tags"><span class="ptag">ERP</span><span class="ptag">供应链云</span><span class="ptag">采购订单</span></div>
-        </div>
-        <div class="app-card">
-          <div class="card-top">
-            <span class="card-icon" style="color:#ff8d42;background:#fff1e8"><svg class="ic" viewBox="0 0 24 24"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M8 5H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><path d="m9 14 2 2 4-4"/></svg></span>
-            <div class="card-titles">
-              <div class="card-title-row"><span class="card-title">个人资产管理</span></div>
-            </div>
-          </div>
-          <div class="card-desc">深度解析合同文本，捕捉金额、收付款节点、权利义务等核心台账数据，将复杂的法律条文…</div>
-          <div class="card-tags"><span class="ptag">通用订单</span></div>
-        </div>
-        <div class="app-card">
-          <div class="card-top">
-            <span class="card-icon" style="color:#ff8d42;background:#fff1e8"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/><path d="M19 5v4M17 7h4"/></svg></span>
-            <div class="card-titles">
-              <div class="card-title-row"><span class="card-title">库存领用</span></div>
-            </div>
-          </div>
-          <div class="card-desc">深度解析合同文本，捕捉金额、收付款节点、权利义务等核心台账数据，将复杂的法律条文…</div>
-          <div class="card-tags"><span class="ptag">ERP</span><span class="ptag">供应链云</span><span class="ptag">库存领用单</span></div>
-        </div>
-        <div class="app-card">
-          <div class="card-top">
-            <span class="card-icon" style="color:#08cc50;background:#e8faef"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M6 16a3 3 0 0 1 6 0"/><path d="M15 10h4M15 14h4"/></svg></span>
-            <div class="card-titles">
-              <div class="card-title-row"><span class="card-title">报价单管理</span></div>
-            </div>
-          </div>
-          <div class="card-desc">深度解析合同文本，捕捉金额、收付款节点、权利义务等核心台账数据，将复杂的法律条文…</div>
-          <div class="card-tags"><span class="ptag">ERP</span><span class="ptag">供应链云</span><span class="ptag">报价单管理</span></div>
-        </div>
-        <div class="app-card">
-          <div class="card-top">
-            <span class="card-icon" style="color:#4d89ff;background:#eef3ff"><svg class="ic" viewBox="0 0 24 24"><path d="M12 3v18M7 21h10"/><path d="M12 6 5 8l-2.5 6a3.5 3.5 0 0 0 7 0L7 8m12 0-2.5 6a3.5 3.5 0 0 0 7 0L21 8l-7-2"/></svg></span>
-            <div class="card-titles">
-              <div class="card-title-row"><span class="card-title">资产领用</span></div>
-            </div>
-          </div>
-          <div class="card-desc">深度解析合同文本，捕捉金额、收付款节点、权利义务等核心台账数据，将复杂的法律条文…</div>
-          <div class="card-tags"><span class="ptag">ERP</span><span class="ptag">供应链云</span><span class="ptag">资产领用单</span></div>
-        </div>
-        <div class="app-card">
-          <div class="card-top">
-            <span class="card-icon" style="color:#ff8d42;background:#fff1e8"><svg class="ic" viewBox="0 0 24 24"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M8 13h8M8 17h5"/></svg></span>
-            <div class="card-titles">
-              <div class="card-title-row"><span class="card-title">请假管理</span></div>
-            </div>
-          </div>
-          <div class="card-desc">深度解析合同文本，捕捉金额、收付款节点、权利义务等核心台账数据，将复杂的法律条文…</div>
-          <div class="card-tags"><span class="ptag">通用领用单</span></div>
-        </div>
-    </div>
+    <div class="apps-grid" id="appsGrid"></div>
   </div>
 
   <!-- ===================== 协作开发 ===================== -->
@@ -873,17 +805,50 @@
     <div class="tab-nav" id="cvTabNav">
       <button class="tab-nav-item tab-nav-item--active" data-cvview="tasks" onclick="cvSwitchView('tasks')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>任务管理<span class="tab-nav-count" id="cvTaskCount">0</span></button>
       <button class="tab-nav-item" data-cvview="review" onclick="cvSwitchView('review')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>待评审<span class="tab-nav-count tab-nav-count--warn" id="cvReviewCount">0</span></button>
-      <button class="tab-nav-item" data-cvview="members" onclick="cvSwitchView('members')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>协作人员管理</button>
-      <button class="tab-nav-item" data-cvview="experts" onclick="cvSwitchView('experts')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>专家管理</button>
-      <button class="tab-nav-item" data-cvview="teams" onclick="cvSwitchView('teams')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>专家团管理</button>
-      <button class="tab-nav-item" data-cvview="config" onclick="cvSwitchView('config')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>设置</button>
-      <div class="cv-proj" id="cvProjSwitch">
-        <button type="button" class="cv-proj-btn" id="cvProjBtn" aria-haspopup="true" aria-expanded="false">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-          <span id="cvProjLabel">全部项目</span>
+      <button class="tab-nav-item" data-cvview="projects" onclick="cvSwitchView('projects')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>项目</button>
+
+      <div class="cv-proj cv-proj--plain" id="cvMoreSwitch">
+        <button type="button" class="tab-nav-item" id="cvMoreBtn" aria-haspopup="true" aria-expanded="false">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
+          <span id="cvMoreLabel">管理</span>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
-        <div class="cv-proj-menu" id="cvProjMenu"></div>
+        <div class="cv-proj-menu" id="cvMoreMenu">
+          <div class="cv-proj-item" data-cvview="members"><svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span class="cv-proj-n">协作人员管理</span><svg class="ic ic-sm cv-proj-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+          <div class="cv-proj-item" data-cvview="experts"><svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg><span class="cv-proj-n">专家管理</span><svg class="ic ic-sm cv-proj-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+          <div class="cv-proj-item" data-cvview="teams"><svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span class="cv-proj-n">专家团管理</span><svg class="ic ic-sm cv-proj-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+          <div class="cv-proj-item" data-cvview="config"><svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span class="cv-proj-n">设置</span><svg class="ic ic-sm cv-proj-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+        </div>
+      </div>
+
+      <div class="cv-nav-right">
+        <div class="cv-proj" id="cvWsSwitch">
+          <button type="button" class="cv-proj-btn" id="cvWsBtn" aria-haspopup="true" aria-expanded="false">
+            <span class="cv-ws-dot" id="cvWsDot"></span>
+            <span id="cvWsLabel">工作区</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="cv-proj-menu" id="cvWsMenu"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 项目 -->
+    <div class="cv-panel" id="cv-projects">
+      <div class="filter-bar">
+        <div class="search-wrap cv-proj-search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input id="cvProjectSearch" placeholder="输入即筛选：项目名、描述、代码仓库…" autocomplete="off" autocorrect="off" spellcheck="false" readonly onfocus="this.removeAttribute('readonly')"></div>
+        <label class="cv-tp-select">状态<select id="cvProjectStatusFilter"><option value="">全部状态</option></select></label>
+        <label class="cv-tp-select">负责人<select id="cvProjectOwnerFilter"><option value="">全部负责人</option></select></label>
+        <button class="sync-btn" id="cvNewProjectBtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>新建项目</button>
+      </div>
+      <div class="scroll">
+        <div class="cv-head">
+          <div>
+            <div class="scroll-title">项目</div>
+            <div class="scroll-desc" id="cvProjectDesc">工作区内的全部项目 · 共 0 个 · 0 个进行中</div>
+          </div>
+        </div>
+        <div class="cv-project-grid" id="cvProjectGrid"></div>
       </div>
     </div>
 
@@ -940,7 +905,7 @@
           <button class="filter-btn" onclick="cvSwitchFilter(this)">中</button>
           <button class="filter-btn" onclick="cvSwitchFilter(this)">低</button>
         </div>
-        <div class="search-wrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input placeholder="搜索评审任务" onkeyup="cvApplyReviewFilters()"></div>
+        <div class="search-wrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input placeholder="搜索评审任务" autocomplete="off" autocorrect="off" spellcheck="false" readonly onfocus="this.removeAttribute('readonly')" onkeyup="cvApplyReviewFilters()"></div>
       </div>
       <div class="stats" id="cv-review-stats"></div>
       <div class="scroll">
@@ -953,15 +918,11 @@
       <div class="filter-bar">
         <div class="filter-group" data-filter-type="role">
           <button class="filter-btn filter-btn--active" onclick="cvSwitchFilter(this)">全部</button>
-          <button class="filter-btn" onclick="cvSwitchFilter(this)">需求</button>
-          <button class="filter-btn" onclick="cvSwitchFilter(this)">架构</button>
-          <button class="filter-btn" onclick="cvSwitchFilter(this)">开发</button>
-          <button class="filter-btn" onclick="cvSwitchFilter(this)">测试</button>
-          <button class="filter-btn" onclick="cvSwitchFilter(this)">运维</button>
-          <button class="filter-btn" onclick="cvSwitchFilter(this)">产品</button>
+          <button class="filter-btn" onclick="cvSwitchFilter(this)">成员</button>
+          <button class="filter-btn" onclick="cvSwitchFilter(this)">管理员</button>
         </div>
-        <div class="search-wrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input placeholder="搜索姓名、邮箱" onkeyup="cvApplyFilters()"></div>
-        <button class="sync-btn" onclick="cvOpenAddMemberModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>添加人员</button>
+        <div class="search-wrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input id="cv-member-search-input" placeholder="搜索姓名、邮箱" autocomplete="off" autocorrect="off" spellcheck="false" readonly onfocus="this.removeAttribute('readonly')" onkeyup="cvApplyFilters()"></div>
+        <button id="cv-add-member-btn" class="sync-btn" onclick="cvOpenAddMemberModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>添加人员</button>
       </div>
       <div class="stats" id="cv-member-stats"></div>
       <div class="scroll">
@@ -978,9 +939,14 @@
             <div class="scroll-desc">专家库为全局资产，所有项目共用，可直接召唤，也可创建自己的专家</div>
           </div>
           <div class="cv-head-right">
-            <div class="search-wrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input id="cvExpertSearch" placeholder="搜索专家、职业或能力"></div>
+            <div class="search-wrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input id="cvExpertSearch" placeholder="搜索专家、职业或能力" autocomplete="off" autocorrect="off" spellcheck="false" readonly onfocus="this.removeAttribute('readonly')"></div>
             <button class="sync-btn" id="cvNewExpertBtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>创建专家</button>
           </div>
+        </div>
+        <div class="filter-group cv-expert-tabs" id="cvExpertTabs">
+          <button type="button" class="filter-btn filter-btn--active" data-cv-expert-filter="all">全部<span class="filter-btn-count" id="cvExpertCountAll">0</span></button>
+          <button type="button" class="filter-btn" data-cv-expert-filter="preset">预置<span class="filter-btn-count" id="cvExpertCountPreset">0</span></button>
+          <button type="button" class="filter-btn" data-cv-expert-filter="mine">我的<span class="filter-btn-count" id="cvExpertCountMine">0</span></button>
         </div>
         <div id="cvExpertSections"></div>
       </div>
@@ -1110,7 +1076,7 @@
         </div>
         <div class="chat-body" id="cv-chat-body"></div>
         <div class="chat-input-bar">
-          <input class="chat-input" id="cv-chat-input" placeholder="输入消息" onkeydown="if(event.key==='Enter')cvSendChatMessage()">
+          <input class="chat-input" id="cv-chat-input" placeholder="输入消息" autocomplete="off" autocorrect="off" spellcheck="false" onkeydown="if(event.key==='Enter')cvSendChatMessage()">
           <button class="chat-send" onclick="cvSendChatMessage()">发送</button>
         </div>
       </div>
@@ -1131,48 +1097,17 @@
         <div class="tab">已驳回</div>
       </div>
       <div class="apps-search">
-        <input type="text" placeholder="搜索技能">
+        <input type="text" placeholder="搜索技能" autocomplete="off" autocorrect="off" spellcheck="false" readonly onfocus="this.removeAttribute('readonly')">
         <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
       </div>
     </div>
-    <div class="apps-grid">
-        <div class="app-card">
-          <div class="card-top">
-            <span class="card-icon" style="color:#3a7bff;background:#eef3ff"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18M3 12h18"/></svg></span>
-            <div class="card-titles">
-              <div class="card-title-row"><span class="card-title">代码审查助手</span><span class="card-more">···</span></div>
-            </div>
-          </div>
-          <div class="card-desc">自动审查代码规范性、安全漏洞和性能问题，提供修改建议</div>
-          <div class="card-tags"><span class="ptag">开发</span><span class="ptag">质量</span></div>
-        </div>
-        <div class="app-card">
-          <div class="card-top">
-            <span class="card-icon" style="color:#8b5cf6;background:#f3eefe"><svg class="ic" viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 0 0 18M3 12h18"/></svg></span>
-            <div class="card-titles">
-              <div class="card-title-row"><span class="card-title">数据转换器</span></div>
-            </div>
-          </div>
-          <div class="card-desc">支持 JSON ↔ CSV 互转、字段映射、数据清洗</div>
-          <div class="card-tags"><span class="ptag">数据</span><span class="ptag">工具</span></div>
-        </div>
-        <div class="app-card">
-          <div class="card-top">
-            <span class="card-icon" style="color:#ff8d42;background:#fff1e8"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18M3 12h18"/></svg></span>
-            <div class="card-titles">
-              <div class="card-title-row"><span class="card-title">文档生成器</span></div>
-            </div>
-          </div>
-          <div class="card-desc">基于代码注释自动生成 API 文档和用户手册</div>
-          <div class="card-tags"><span class="ptag">文档</span><span class="ptag">效率</span></div>
-        </div>
-    </div>
+    <div class="apps-grid" id="skillsGrid"></div>
   </div>
 
   <div class="view hidden" id="view-agents">
     <div class="apps-head">
       <div class="apps-title">智能体开发</div>
-      <button class="btn-new"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>新建</button>
+      <button class="btn-new" id="newAgentBtn"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>新建</button>
     </div>
     <div class="apps-toolbar">
       <div class="tabs">
@@ -1183,42 +1118,11 @@
         <div class="tab">已驳回</div>
       </div>
       <div class="apps-search">
-        <input type="text" placeholder="搜索智能体">
+        <input type="text" placeholder="搜索智能体" autocomplete="off" autocorrect="off" spellcheck="false" readonly onfocus="this.removeAttribute('readonly')">
         <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
       </div>
     </div>
-    <div class="apps-grid">
-        <div class="app-card">
-          <div class="card-top">
-            <span class="card-icon" style="color:#3a7bff;background:#eef3ff"><svg class="ic" viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M12 8V4M9 14h.01M15 14h.01"/></svg></span>
-            <div class="card-titles">
-              <div class="card-title-row"><span class="card-title">客服助手</span><span class="card-more">···</span></div>
-            </div>
-          </div>
-          <div class="card-desc">自动响应用户咨询，识别意图并转接人工，支持多轮对话</div>
-          <div class="card-tags"><span class="ptag">客服</span><span class="ptag">对话</span></div>
-        </div>
-        <div class="app-card">
-          <div class="card-top">
-            <span class="card-icon" style="color:#8b5cf6;background:#f3eefe"><svg class="ic" viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M12 8V4M9 14h.01M15 14h.01"/></svg></span>
-            <div class="card-titles">
-              <div class="card-title-row"><span class="card-title">数据分析师</span></div>
-            </div>
-          </div>
-          <div class="card-desc">连接数据源，自然语言查询生成报表和可视化图表</div>
-          <div class="card-tags"><span class="ptag">数据</span><span class="ptag">分析</span></div>
-        </div>
-        <div class="app-card">
-          <div class="card-top">
-            <span class="card-icon" style="color:#08cc50;background:#e8faef"><svg class="ic" viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M12 8V4M9 14h.01M15 14h.01"/></svg></span>
-            <div class="card-titles">
-              <div class="card-title-row"><span class="card-title">任务调度员</span></div>
-            </div>
-          </div>
-          <div class="card-desc">根据预设规则自动分配任务、跟踪进度、发送提醒</div>
-          <div class="card-tags"><span class="ptag">管理</span><span class="ptag">自动化</span></div>
-        </div>
-    </div>
+    <div class="apps-grid" id="agentsGrid"></div>
   </div>
 
   <!-- ===================== Design System ===================== -->
@@ -1479,7 +1383,7 @@
       </div>
       <div class="form-group">
         <label>应用名称</label>
-        <input type="text" id="newAppName" placeholder="">
+        <input type="text" id="newAppName" placeholder="" autocomplete="off" autocorrect="off" spellcheck="false">
       </div>
     </div>
     <div class="modal-footer">
@@ -1489,16 +1393,77 @@
   </div>
 </div>
 
+<!-- 创建智能体弹窗 -->
+<div class="modal-overlay" id="newAgentModal">
+  <form class="modal-card agent-create-modal" id="newAgentForm" role="dialog" aria-modal="true" aria-labelledby="newAgentTitle" novalidate>
+    <div class="modal-header">
+      <div class="modal-title" id="newAgentTitle">创建智能体</div>
+      <button class="modal-close" id="newAgentClose" type="button" aria-label="关闭">×</button>
+    </div>
+    <div class="modal-body agent-create-body">
+      <div class="agent-create-lead">为工作区创建一个新的 AI 智能体。</div>
+      <div class="ag-avatar-row">
+        <button type="button" class="ag-avatar-pick" id="agAvatarBtn" title="换一个图标颜色">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V3"/><circle cx="12" cy="3" r="1.5" fill="currentColor" stroke="none"/><rect x="8" y="13" width="3" height="2" rx="1" fill="currentColor" stroke="none"/><rect x="13" y="13" width="3" height="2" rx="1" fill="currentColor" stroke="none"/></svg>
+        </button>
+        <label class="env-field" style="flex:1"><span>名称</span>
+          <input type="text" id="agName" placeholder="例如：深度研究智能体" autocomplete="off" autocorrect="off" spellcheck="false"></label>
+      </div>
+
+      <label class="env-field" style="margin-top:16px"><span>描述</span>
+        <textarea id="agDesc" rows="3" maxlength="255" placeholder="这个智能体做什么？"></textarea>
+        <span class="xe-char-count" id="agDescCount">0 / 255</span></label>
+
+      <div class="env-form-section" style="margin-top:2px">
+        <div class="env-form-section-title" style="margin-bottom:8px">可见性</div>
+        <div class="visibility-options">
+          <label class="visibility-option">
+            <input type="radio" name="agentVisibility" value="workspace" checked>
+            <span class="avo-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18M3 12h18"/></svg></span>
+            <span class="avo-text"><span class="avo-title">工作区</span><span class="avo-sub">全体成员可分配</span></span>
+          </label>
+          <label class="visibility-option">
+            <input type="radio" name="agentVisibility" value="private">
+            <span class="avo-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>
+            <span class="avo-text"><span class="avo-title">个人</span><span class="avo-sub">仅你和工作区管理员可见</span></span>
+          </label>
+        </div>
+      </div>
+
+      <label class="env-field" style="margin-top:16px"><span>模型</span>
+        <select id="agModel">
+          <option>专家模型</option>
+          <option>深度模型</option>
+          <option>基础模型</option>
+        </select></label>
+
+      <label class="env-field" style="margin-top:16px"><span>指令</span>
+        <textarea id="agInstruction" rows="3" placeholder="点击撰写指令..."></textarea></label>
+
+      <div class="env-form-section" style="margin-top:16px">
+        <div class="env-form-section-title" style="margin-bottom:8px">技能</div>
+        <div class="skill-box">
+          <div class="xe-skills" id="agSkills"></div>
+          <div class="xe-skill-add-wrap">
+            <button type="button" class="xe-skill-add" id="agSkillAddBtn">＋ 从工作区添加技能<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+            <div class="xe-skill-menu hidden" id="agSkillMenu"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="modal-btn cancel" id="agCancelBtn">取消</button>
+      <button type="submit" class="modal-btn confirm" id="agSaveBtn">创建</button>
+    </div>
+  </form>
+</div>
+
 <!-- 专家团配置 -->
 <div class="modal-overlay" id="teamModal">
   <form class="modal-card env-config-modal team-config-modal" id="teamConfigForm" role="dialog" aria-modal="true" aria-labelledby="teamModalTitle" novalidate>
     <div class="modal-header">
       <div class="env-config-heading"><div class="modal-title" id="teamModalTitle">新建专家团</div></div>
       <button class="modal-close" id="teamModalClose" type="button" aria-label="关闭">×</button>
-    </div>
-    <div class="modal-tabs" id="teamTabs">
-      <button type="button" class="modal-tab active" data-ttab="base">团队<span class="modal-tab-dot hidden" id="teamTabDotBase"></span></button>
-      <button type="button" class="modal-tab" data-ttab="more">触发词与流程<span class="modal-tab-dot hidden" id="teamTabDotMore"></span></button>
     </div>
     <div class="modal-body env-config-body">
       <div class="team-readonly-tip hidden" id="teamReadonlyTip">内置专家团由官方维护，仅供查看。可另存为自己的专家团后再调整。</div>
@@ -1512,6 +1477,21 @@
               <textarea id="teamDesc" rows="2" placeholder="它擅长什么、适合什么场景"></textarea></label>
           </div>
         </section>
+        <section class="env-form-section" id="teamVisSection">
+          <div class="env-form-section-title">可见性</div>
+          <div class="visibility-options">
+            <label class="visibility-option">
+              <input type="radio" name="teamVisibility" id="teamVisWorkspace" value="workspace" checked>
+              <span class="avo-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18M3 12h18"/></svg></span>
+              <span class="avo-text"><span class="avo-title">工作区</span><span class="avo-sub">全体成员可召唤，只能添加工作区专家</span></span>
+            </label>
+            <label class="visibility-option">
+              <input type="radio" name="teamVisibility" id="teamVisPrivate" value="private">
+              <span class="avo-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>
+              <span class="avo-text"><span class="avo-title">个人</span><span class="avo-sub">仅你和工作区管理员可见，可添加任意专家</span></span>
+            </label>
+          </div>
+        </section>
         <section class="env-form-section">
           <div class="env-form-section-title">成员 <span class="team-count" id="teamCount">0</span>
             <span class="team-hint-inline">点名字看定义，星标设组长</span></div>
@@ -1519,21 +1499,6 @@
           <button type="button" class="team-add" id="teamAddBtn">＋ 添加成员</button>
         </section>
         <div id="teamWarnings"></div>
-      </div>
-
-      <div class="team-pane hidden" data-tpane="more">
-        <section class="env-form-section">
-          <div class="env-form-section-title">常见触发词
-            <span class="team-hint-inline" id="teamCmdHint">召唤时会带上第一条</span></div>
-          <div class="x-cmd-rows" id="teamCmds"></div>
-          <button type="button" class="team-add" id="teamAddCmd">＋ 添加一条</button>
-        </section>
-        <section class="env-form-section">
-          <div class="env-form-section-title">运行流程
-            <span class="team-hint-inline" id="teamFlowSummary"></span></div>
-          <div class="team-flow" id="teamFlow"></div>
-          <div class="team-mode-note" id="teamModeNote"></div>
-        </section>
       </div>
     </div>
     <div class="modal-footer team-modal-footer">
@@ -1580,58 +1545,73 @@
       <div class="env-config-heading"><div class="modal-title" id="expertEditTitle">创建专家</div></div>
       <button class="modal-close" id="expertEditClose" type="button" aria-label="关闭">×</button>
     </div>
-    <div class="modal-tabs" id="xeTabs">
-      <button type="button" class="modal-tab active" data-xtab="base">专家</button>
-      <button type="button" class="modal-tab" data-xtab="more">触发词与工作方式</button>
-    </div>
     <div class="modal-body env-config-body">
-      <button type="button" class="x-chat-entry" id="xeChatBtn">
-        <span class="x-chat-ic">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H7l-4 3v-6.5A8 8 0 0 1 11 4h2a8 8 0 0 1 8 8z"/></svg>
-        </span>
-        <span class="x-chat-b">
-          <span class="x-chat-t">不想填表单？一句话交给 expert-manager</span>
-          <span class="x-chat-d">在对话里描述你要什么样的专家，它会问清背景后帮你建好</span>
-        </span>
-        <span class="x-chat-go">›</span>
-      </button>
-      <div class="team-pane" data-xpane="base">
+      <div class="team-pane">
         <section class="env-form-section">
-          <div class="env-form-grid">
-            <label class="env-field"><span>名称<span class="env-required">*</span></span>
+          <div class="xe-avatar-row">
+            <button type="button" class="xe-avatar-preview" id="xeAvatarPreviewBtn" title="点击更换头像"><img id="xeAvatarPreviewImg" src="" alt=""></button>
+            <label class="env-field" style="flex:1"><span>名称<span class="env-required">*</span></span>
               <input type="text" id="xeName" placeholder="例如：苍穹工作流开发专家" autocomplete="off"></label>
-            <label class="env-field"><span>职称<span class="env-required">*</span></span>
-              <input type="text" id="xeRole" placeholder="例如：苍穹流程建模师" autocomplete="off"></label>
-            <label class="env-field env-field-wide"><span>简介</span>
-              <textarea id="xeDesc" rows="2" placeholder="他深耕什么领域、擅长什么、能帮你解决什么"></textarea></label>
-            <label class="env-field env-field-wide"><span>标签</span>
-              <input type="text" id="xeTags" placeholder="用逗号分隔，例如：流程建模, 苍穹工作流, 流程设计" autocomplete="off"></label>
           </div>
-          <div class="env-form-section-title x-sec-sub">头像</div>
-          <div class="x-av-picker" id="xeAvatars"></div>
+          <label class="env-field"><span>职位</span>
+            <input type="text" id="xeRole" placeholder="例如：交付专家" autocomplete="off"></label>
+          <div class="x-av-picker hidden" id="xeAvatars"></div>
         </section>
-        <section class="env-form-section">
-          <div class="env-form-section-title">可承担的工作<span class="env-required">*</span>
-            <span class="team-hint-inline">决定他在专家团里能领哪些任务</span></div>
-          <div class="x-mode-picker" id="xeModes"></div>
-        </section>
-      </div>
 
-      <div class="team-pane hidden" data-xpane="more">
         <section class="env-form-section">
-          <div class="env-form-section-title">常见触发词
-            <span class="team-hint-inline">用户平时会怎么找他做事，点一下把整句填进输入框</span></div>
-          <div class="x-cmd-rows" id="xeCmds"></div>
-          <button type="button" class="team-add" id="xeAddCmd">＋ 添加一条</button>
+          <label class="env-field"><span>描述</span>
+            <textarea id="xeDesc" rows="3" maxlength="255" placeholder="他深耕什么领域、擅长什么、能帮你解决什么"></textarea>
+            <span class="xe-char-count" id="xeDescCount">0 / 255</span></label>
         </section>
+
         <section class="env-form-section">
-          <div class="env-form-grid">
-            <label class="env-field env-field-wide"><span>能力项</span>
-              <input type="text" id="xeComp" placeholder="用逗号分隔，例如：cosmic.workflow · advanced" autocomplete="off"></label>
-            <label class="env-field env-field-wide"><span>工作方式</span>
-              <textarea id="xeSteps" rows="4" placeholder="一行一步，例如：&#10;梳理审批场景与角色&#10;配置流程节点与条件"></textarea></label>
-            <label class="env-field env-field-wide"><span>行为约束</span>
-              <textarea id="xeCons" rows="3" placeholder="一行一条，例如：&#10;流程变更需保留可回滚配置"></textarea></label>
+          <div class="env-form-section-title">标签
+            <span class="team-hint-inline">用于在专家列表里筛选和展示，例如：交付管理、团队协调</span></div>
+          <div class="skill-box">
+            <div class="xe-skills" id="xeTags"></div>
+            <input type="text" id="xeTagInput" class="xe-tag-input" placeholder="输入标签后回车添加" autocomplete="off">
+          </div>
+        </section>
+
+        <section class="env-form-section">
+          <div class="env-form-section-title">可见性</div>
+          <div class="visibility-options">
+            <label class="visibility-option">
+              <input type="radio" name="expertVisibility" id="xeVisWorkspace" value="workspace" checked>
+              <span class="avo-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18M3 12h18"/></svg></span>
+              <span class="avo-text"><span class="avo-title">工作区</span><span class="avo-sub">全体成员可召唤</span></span>
+            </label>
+            <label class="visibility-option">
+              <input type="radio" name="expertVisibility" id="xeVisPrivate" value="private">
+              <span class="avo-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>
+              <span class="avo-text"><span class="avo-title">个人</span><span class="avo-sub">仅你和工作区管理员可见</span></span>
+            </label>
+          </div>
+        </section>
+
+        <section class="env-form-section">
+          <label class="env-field"><span>模型</span>
+            <select id="xeModel">
+              <option>专家模型</option>
+              <option>深度模型</option>
+              <option>基础模型</option>
+            </select></label>
+        </section>
+
+        <section class="env-form-section">
+          <label class="env-field"><span>指令</span>
+            <textarea id="xeSteps" rows="4" placeholder="他具体怎么干活，一行一步，例如：&#10;梳理审批场景与角色&#10;配置流程节点与条件"></textarea></label>
+        </section>
+
+        <section class="env-form-section">
+          <div class="env-form-section-title">技能
+            <span class="team-hint-inline">从工作区技能库里挂载，专家干活时可以调用</span></div>
+          <div class="skill-box">
+            <div class="xe-skills" id="xeSkills"></div>
+            <div class="xe-skill-add-wrap">
+              <button type="button" class="xe-skill-add" id="xeSkillAddBtn">＋ 从工作区添加技能<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+              <div class="xe-skill-menu hidden" id="xeSkillMenu"></div>
+            </div>
           </div>
         </section>
       </div>
@@ -1976,7 +1956,7 @@
       <button class="sync-modal__close" onclick="cvCloseSyncModal()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="sync-modal__form">
-      <div class="sync-modal__field"><label class="sync-modal__label">任务标题</label><input class="sync-modal__input" id="cv-sync-title" placeholder="请输入任务标题"></div>
+      <div class="sync-modal__field"><label class="sync-modal__label">任务标题</label><input class="sync-modal__input" id="cv-sync-title" placeholder="请输入任务标题" autocomplete="off" autocorrect="off" spellcheck="false"></div>
       <div class="sync-modal__field"><label class="sync-modal__label">任务描述</label><textarea class="sync-modal__textarea" id="cv-sync-desc" rows="3" placeholder="请输入任务描述"></textarea></div>
       <div class="sync-modal__row">
         <div class="sync-modal__field"><label class="sync-modal__label">任务类型</label><div class="sync-modal__select" onclick="cvToggleSyncDropdown(this,event)"><span class="sync-modal__select-placeholder" id="cv-sync-type-val">需求</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></div></div>
@@ -1999,6 +1979,29 @@
       <button class="sync-modal__btn sync-modal__btn--ghost" onclick="cvCloseSyncModal()">取消</button>
       <button class="sync-modal__btn sync-modal__btn--primary" onclick="cvSaveSyncTask()">仅保存</button>
       <button class="sync-modal__btn sync-modal__btn--start" onclick="cvStartSyncTask()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>启动任务</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: NEW PROJECT ============ -->
+<div class="sync-overlay" id="cv-newproject-overlay" style="display:none" onclick="if(event.target===this)cvCloseNewProjectModal()">
+  <div class="sync-modal">
+    <div class="sync-modal__header">
+      <h3 class="sync-modal__title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>新建项目</h3>
+      <button class="sync-modal__close" onclick="cvCloseNewProjectModal()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="sync-modal__form">
+      <div class="sync-modal__field"><label class="sync-modal__label">项目名称</label><input class="sync-modal__input" id="cv-np-name" placeholder="请输入项目名称" autocomplete="off" autocorrect="off" spellcheck="false" readonly onfocus="this.removeAttribute('readonly')"></div>
+      <div class="sync-modal__field"><label class="sync-modal__label">项目描述</label><textarea class="sync-modal__textarea" id="cv-np-desc" rows="3" placeholder="简单描述这个项目要做什么（可选）"></textarea></div>
+      <div class="sync-modal__row">
+        <div class="sync-modal__field"><label class="sync-modal__label">状态</label><div class="sync-modal__select" onclick="cvToggleSyncDropdown(this,event)"><span class="sync-modal__select-placeholder" id="cv-np-status-val">计划中</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></div></div>
+        <div class="sync-modal__field"><label class="sync-modal__label">负责人</label><div class="sync-modal__select" onclick="cvToggleSyncDropdown(this,event)"><span class="sync-modal__select-placeholder" id="cv-np-owner-val">暂不指定</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></div></div>
+      </div>
+      <div class="sync-modal__field"><label class="sync-modal__label">代码仓库</label><input class="sync-modal__input" id="cv-np-repo" placeholder="如 group/repo，可选" autocomplete="off" autocorrect="off" spellcheck="false" readonly onfocus="this.removeAttribute('readonly')"></div>
+    </div>
+    <div class="sync-modal__footer">
+      <button class="sync-modal__btn sync-modal__btn--ghost" onclick="cvCloseNewProjectModal()">取消</button>
+      <button class="sync-modal__btn sync-modal__btn--primary" onclick="cvConfirmNewProject()">创建项目</button>
     </div>
   </div>
 </div>
@@ -2085,21 +2088,36 @@
 </div>
 
 <div class="sync-overlay" id="cv-addmember-overlay" style="display:none" onclick="if(event.target===this)cvCloseAddMemberModal()">
-  <div class="sync-modal" style="width:520px">
+  <div class="sync-modal addmember-modal" style="width:520px">
     <div class="sync-modal__header">
       <h3 class="sync-modal__title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>添加协作人员</h3>
       <button class="sync-modal__close" onclick="cvCloseAddMemberModal()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
+    <div class="sync-modal__subtitle">从 Lingee 组织架构中选择人员，并设置其协作身份</div>
     <div class="sync-modal__body">
       <div class="sync-modal__field">
-        <label class="sync-modal__label">从 Lingee 获取人员</label>
-        <div class="search-wrap" style="margin-bottom:12px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#b5b5ae" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input id="cv-tp-search" placeholder="搜索姓名、邮箱..." onkeyup="cvSearchThirdPartyMembers(this.value)" /></div>
+        <label class="sync-modal__label">添加为</label>
+        <div class="seg-toggle" id="cv-add-level-toggle">
+          <button type="button" class="seg-toggle__btn seg-toggle__btn--active" data-level="member" onclick="cvSetAddLevel(this,'member')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            成员<span class="seg-toggle__hint">可参与任务与评审</span>
+          </button>
+          <button type="button" class="seg-toggle__btn" data-level="admin" onclick="cvSetAddLevel(this,'admin')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg>
+            管理员<span class="seg-toggle__hint">可管理人员与项目设置</span>
+          </button>
+        </div>
       </div>
       <div class="sync-modal__field">
-        <div id="cv-tp-list" style="max-height:360px;overflow-y:auto"></div>
+        <label class="sync-modal__label">从 Lingee 获取人员</label>
+        <div class="search-wrap" style="margin-bottom:12px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#b5b5ae" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input id="cv-tp-search" placeholder="搜索姓名、邮箱..." autocomplete="off" autocorrect="off" spellcheck="false" readonly onfocus="this.removeAttribute('readonly')" onkeyup="cvSearchThirdPartyMembers(this.value)" /></div>
+      </div>
+      <div class="sync-modal__field">
+        <div id="cv-tp-list" class="tp-list"></div>
       </div>
     </div>
     <div class="sync-modal__footer">
+      <span class="addmember-selected-count" id="cv-add-selected-count"></span>
       <button class="sync-modal__btn sync-modal__btn--ghost" onclick="cvCloseAddMemberModal()">取消</button>
       <button class="sync-modal__btn sync-modal__btn--primary" onclick="cvConfirmAddMembers()">添加选中</button>
     </div>
