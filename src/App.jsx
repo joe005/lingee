@@ -6,6 +6,8 @@ import AppsView from './views/AppsView';
 import SkillsView from './views/SkillsView';
 import AgentsView from './views/AgentsView';
 import CollabModals from './components/collab/CollabModals';
+import ShortcutModal from './components/shortcut/ShortcutModal';
+import NewAppModal from './components/chatapp/NewAppModal';
 
 /* React 侧的路由骨架。用 BrowserRouter，不是 HashRouter——方案 §3.1/§8.1
    最初选 hash 是因为假设产物必须双击打开，这个假设后来推翻了（改走
@@ -49,6 +51,10 @@ export default function App() {
             Modal 默认通过 portal 挂到 document.body，跟当前是哪个 .view 在
             显示无关，所以放在路由树外面而不是某个 <Route> 里。 */}
         <CollabModals />
+        {/* 快捷键帮助面板（Phase 2b，见 docs/react-migration-plan.md）：跟
+            CollabModals 同理，作为路由外的常驻兄弟节点挂载。 */}
+        <ShortcutModal />
+        <NewAppModal />
       </BrowserRouter>
     </ConfigProvider>
   );

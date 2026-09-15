@@ -1477,70 +1477,7 @@
     <div class="ctx-item danger" data-ctx="delete"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>删除</div>
   </div>
 
-  <!-- 附件弹窗 -->
-  <div class="modal-overlay" id="attachModal">
-    <div class="modal-box">
-      <div class="modal-head">
-        <span class="modal-title">选择附件</span>
-        <svg class="ic modal-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-      </div>
-      <div class="modal-body">
-        <div class="attach-item" data-attach="upload">
-          <span class="attach-icon" style="color:#3a7bff;background:#eef3ff"><svg class="ic" viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M5 20h14"/></svg></span>
-          <div class="attach-info"><div class="attach-name">上传文件</div><div class="attach-desc">从本地选择文件上传</div></div>
-        </div>
-        <div class="attach-item" data-attach="folder">
-          <span class="attach-icon" style="color:#ff8d42;background:#fff1e8"><svg class="ic" viewBox="0 0 24 24"><path d="M4 20V6a2 2 0 0 1 2-2h5l2 2h5a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/></svg></span>
-          <div class="attach-info"><div class="attach-name">选择文件夹</div><div class="attach-desc">批量上传整个目录</div></div>
-        </div>
-        <div class="attach-item" data-attach="link">
-          <span class="attach-icon" style="color:#08cc50;background:#e8faef"><svg class="ic" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.5-1.5"/></svg></span>
-          <div class="attach-info"><div class="attach-name">添加链接</div><div class="attach-desc">通过 URL 引用外部资源</div></div>
-        </div>
-        <div class="attach-item" data-attach="screenshot">
-          <span class="attach-icon" style="color:#8b5cf6;background:#f3eefe"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M6 16a3 3 0 0 1 6 0"/></svg></span>
-          <div class="attach-info"><div class="attach-name">截图</div><div class="attach-desc">截取屏幕区域作为附件</div></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-<!-- 新建应用弹窗 -->
-<div class="modal-overlay" id="newAppModal">
-  <div class="modal-card">
-    <div class="modal-header">
-      <div class="modal-title">新建应用</div>
-      <button class="modal-close" id="newAppClose">×</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-group">
-        <label>创建类型<span class="help-icon" tabindex="0"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg><span class="tip-bubble"><div><b>新建</b>：从零创建，无任何关联</div><div><b>扩展</b>：改造原应用，一处改处处生效，不可新建表</div><div><b>继承</b>：派生独立新应用，各继承单互不干扰，可新建表</div></span></span></label>
-        <div class="type-options">
-          <label class="type-option"><input type="radio" name="createType" value="new" checked>新建</label>
-          <label class="type-option"><input type="radio" name="createType" value="extend">扩展新建</label>
-          <label class="type-option"><input type="radio" name="createType" value="inherit">继承新建</label>
-        </div>
-      </div>
-      <div class="form-group" id="sourceAppGroup" style="display:none">
-        <label>选择应用</label>
-        <div class="dropdown" id="sourceAppDropdown" style="position:relative">
-          <div class="chip muted" id="sourceAppChip" data-chip style="width:100%;justify-content:flex-start;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;box-sizing:border-box;min-height:38px">
-            <span class="chip-label" id="sourceAppLabel">&nbsp;</span>
-            <svg class="caret" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-left:auto;width:14px;height:14px"><path d="m5 7.5 5 5 5-5"/></svg>
-          </div>
-        </div>
-      </div>
-      <div class="form-group">
-        <label>应用名称</label>
-        <input type="text" id="newAppName" placeholder="">
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="modal-btn cancel" id="newAppCancel">取消</button>
-      <button class="modal-btn confirm" id="newAppConfirm">确认</button>
-    </div>
-  </div>
-</div>
+  <!-- 新建应用弹窗已迁到 antd Modal，见 src/components/chatapp/NewAppModal.jsx -->
 
 <!-- 专家团配置 -->
 <div class="modal-overlay" id="teamModal">
@@ -2010,46 +1947,9 @@
   </div>
 </div>
 
-<!-- 选择应用下拉面板（独立浮层） -->
-<div class="menu app-menu" id="sourceAppMenu" style="display:none">
-  <div class="app-search-wrap">
-    <div class="app-search">
-      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-      <input type="text" id="sourceAppSearch" placeholder="搜索" autocomplete="off">
-    </div>
-  </div>
-  <div class="app-list" id="sourceAppList" style="min-height:0"></div>
-</div>
 
 
-
-<!-- 快捷键帮助面板 -->
-<div class="shortcut-overlay" id="shortcutOverlay" role="dialog" aria-modal="true" aria-label="键盘快捷键">
-  <div class="shortcut-panel">
-    <div class="shortcut-panel-head">
-      <div class="shortcut-panel-title">键盘快捷键</div>
-      <button class="shortcut-close" id="shortcutClose" aria-label="关闭">×</button>
-    </div>
-    <div class="shortcut-list">
-      <div class="shortcut-section">全局</div>
-      <div class="shortcut-row"><span>搜索会话和项目</span><kbd>⌘</kbd><kbd>K</kbd></div>
-      <div class="shortcut-row"><span>折叠/展开侧边栏</span><kbd>⌘</kbd><kbd>B</kbd></div>
-      <div class="shortcut-row"><span>新会话</span><kbd>⌘</kbd><kbd>N</kbd></div>
-      <div class="shortcut-row"><span>历史记录</span><kbd>⌘</kbd><kbd>⇧</kbd><kbd>H</kbd></div>
-      <div class="shortcut-row"><span>显示快捷键</span><kbd>⌘</kbd><kbd>/</kbd></div>
-      <div class="shortcut-row"><span>关闭面板/下拉</span><kbd>Esc</kbd></div>
-      <div class="shortcut-section">模式切换</div>
-      <div class="shortcut-row"><span>技能开发</span><kbd>Alt</kbd><kbd>1</kbd></div>
-      <div class="shortcut-row"><span>智能体开发</span><kbd>Alt</kbd><kbd>2</kbd></div>
-      <div class="shortcut-row"><span>通用应用</span><kbd>Alt</kbd><kbd>3</kbd></div>
-      <div class="shortcut-row"><span>苍穹应用</span><kbd>Alt</kbd><kbd>4</kbd></div>
-      <div class="shortcut-section">输入</div>
-      <div class="shortcut-row"><span>发送消息</span><kbd>Enter</kbd></div>
-      <div class="shortcut-row"><span>换行</span><kbd>⇧</kbd><kbd>Enter</kbd></div>
-      <div class="shortcut-row"><span>停止生成</span><kbd>任意键</kbd></div>
-    </div>
-  </div>
-</div>
+<!-- 快捷键帮助面板已迁到 antd Modal，见 src/components/shortcut/ShortcutModal.jsx -->
 
 
 <script type="module" src="./src/scripts/main.js"></script>

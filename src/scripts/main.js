@@ -12,6 +12,23 @@ const billTemplateWithTokens = billTemplate.replace(
   var $=function(s,el){return (el||document).querySelector(s)};
   var $$=function(s,el){return Array.prototype.slice.call((el||document).querySelectorAll(s))};
 
+  /* ---------- 弹窗状态桥工厂（Phase 2b antd 化，见 docs/react-migration-plan.md） ----------
+     和 _cvModalState（协作开发 7 个弹窗，Phase 2）用的是同一套模式：这里只广播
+     "当前该开哪个弹窗"，具体判断/落库/联动 UI 仍然 100% 留在本文件对应的业务
+     函数里，React 侧（*Modals.jsx）只负责收集表单值后调用 window.__lingeeBridge
+     里对应命名空间的函数。每个"弹窗场景"（会话页关联应用、专家/专家团、ERP
+     环境、快捷键面板）各自一份实例，互不干扰。 */
+  function _makeModalBridge(){
+    var state={name:null};
+    var listeners=[];
+    function notify(){ listeners.slice().forEach(function(fn){ try{fn(state);}catch(e){} }); }
+    function open(name){ state={name:name}; notify(); }
+    function close(name){ if(!name||state.name===name){ state={name:null}; notify(); } }
+    function isOpen(name){ return state.name===name; }
+    function subscribe(fn){ listeners.push(fn); return function(){ var i=listeners.indexOf(fn); if(i>=0)listeners.splice(i,1); }; }
+    return {open:open, close:close, isOpen:isOpen, subscribe:subscribe, getOpenModal:function(){ return state.name; }};
+  }
+
   /* ---------- 登录鉴权 ---------- */
   var loginOverlay=$('#loginOverlay');
   var loginForm=$('#loginForm');
@@ -2921,105 +2938,33 @@ const billTemplateWithTokens = billTemplate.replace(
     });
   }
 
-  /* ---------- 新建应用弹窗 ---------- */
-  var newAppModal=$('#newAppModal');
-  var newAppClose=$('#newAppClose');
-  var newAppCancel=$('#newAppCancel');
-  var newAppConfirm=$('#newAppConfirm');
-  var newAppName=$('#newAppName');
-  var sourceAppGroup=$('#sourceAppGroup');
-  var sourceAppSearch=$('#sourceAppSearch');
-  var sourceAppList=$('#sourceAppList');
-  var sourceAppChip=$('#sourceAppChip');
-  var sourceAppLabel=$('#sourceAppLabel');
-  var sourceAppMenu=$('#sourceAppMenu');
+  /* ---------- 新建应用弹窗（Phase 2b antd 化，见 docs/react-migration-plan.md） ----------
+     会话页/首页"关联应用"下拉里的"新建应用"子弹窗，已迁到 antd Modal +
+     Select（见 src/components/chatapp/NewAppModal.jsx）。原来手写的"选择应用"
+     浮层（sourceAppMenu 一套 DOM+定位逻辑）整个删掉，改用 antd Select 自带的
+     搜索下拉——这正是方案 §3.2 说的"不要为了长得像又拼一遍 antd 已经提供的
+     交互"。这里只广播开关状态和来源（home=首页 / chat=会话页），表单校验、
+     确认后的落库（selectApp/selectChatApp）仍在这个文件里。 */
+  var _newAppBridge=_makeModalBridge();
   var newAppSource='home';
-  function openSourceAppMenu(){
-    var rect=sourceAppChip.getBoundingClientRect();
-    var spaceBelow=window.innerHeight-rect.bottom-20;
-    var maxH=Math.min(Math.max(spaceBelow,120),300);
-    sourceAppMenu.style.cssText='position:fixed;display:flex;flex-direction:column;'
-      +'top:'+(rect.bottom+4)+'px;left:'+rect.left+'px;width:'+rect.width+'px;'
-      +'max-height:'+maxH+'px;overflow:hidden;z-index:400;'
-      +'background:#fff;border:1px solid var(--border);border-radius:10px;'
-      +'box-shadow:0 8px 24px rgba(0,0,0,.12);padding:0;min-width:'+rect.width+'px';
-    sourceAppSearch.value='';
-    renderSourceAppList(fullAppData);
-    requestAnimationFrame(function(){sourceAppSearch.focus()});
-  }
-  function closeSourceAppMenu(){ sourceAppMenu.style.display='none'; }
-  if(sourceAppChip) sourceAppChip.addEventListener('click',function(){
-    if(sourceAppMenu.style.display==='flex'){ closeSourceAppMenu(); }
-    else{ openSourceAppMenu(); }
-  });
-  if(sourceAppMenu) sourceAppMenu.addEventListener('click',function(e){ e.stopPropagation(); });
-  document.addEventListener('click',function(e){
-    if(sourceAppMenu && sourceAppMenu.style.display==='flex' && !e.target.closest('#sourceAppDropdown')){
-      closeSourceAppMenu();
-    }
-  });
-  function renderSourceAppList(list){
-    sourceAppList.innerHTML='';
-    list.forEach(function(d){
-      var el=document.createElement('div');
-      el.className='app-item';
-      el.setAttribute('data-app',d.app);
-      el.innerHTML='<div class="app-item-info"><div class="app-item-name">'+appDisplayName(d,list)+'</div><div class="app-item-cloud">'+d.cloud+'</div></div>';
-      el.addEventListener('click',function(){
-        $$('.app-item',sourceAppList).forEach(function(i){i.classList.remove('checked')});
-        el.classList.add('checked');
-        sourceAppLabel.textContent=d.app;
-        sourceAppChip.classList.remove('muted');
-        newAppName.value=d.app;
-        closeSourceAppMenu();
-        newAppName.focus();
-      });
-      sourceAppList.appendChild(el);
-    });
-  }
-  if(sourceAppSearch) sourceAppSearch.addEventListener('input',function(){
-    var q=this.value.trim().toLowerCase();
-    if(!q){ renderSourceAppList(fullAppData); return; }
-    renderSourceAppList(fullAppData.filter(function(d){return d.app.toLowerCase().indexOf(q)>-1}));
-  });
   function openNewAppModal(source){
     newAppSource=source||'home';
-    newAppModal.classList.add('show');
-    newAppName.value='';
-    var sel=$('input[name="createType"]:checked');
-    if(sel) sel.checked=false;
-    var firstType=$('input[name="createType"][value="new"]');
-    if(firstType) firstType.checked=true;
-    sourceAppGroup.style.display='none';
-    closeSourceAppMenu();
-    sourceAppLabel.innerHTML='&nbsp;';
-    sourceAppChip.classList.add('muted');
-    sourceAppSearch.value='';
-    renderSourceAppList(fullAppData);
-    requestAnimationFrame(function(){newAppName.focus()});
+    _newAppBridge.open('newapp');
   }
-  function closeNewAppModal(){ newAppModal.classList.remove('show'); }
-  if(newAppClose) newAppClose.addEventListener('click',closeNewAppModal);
-  if(newAppCancel) newAppCancel.addEventListener('click',closeNewAppModal);
-  if(newAppModal) newAppModal.addEventListener('click',function(e){
-    if(e.target===newAppModal) closeNewAppModal();
-  });
-  // 创建类型切换
-  $$('input[name="createType"]').forEach(function(r){
-    r.addEventListener('change',function(){
-      var val=r.value;
-      sourceAppGroup.style.display=(val==='extend'||val==='inherit')?'':'none';
+  function closeNewAppModal(){ _newAppBridge.close('newapp'); }
+  function getFullAppOptions(){
+    return fullAppData.map(function(d){
+      return {value:d.app,label:appDisplayName(d,fullAppData),cloud:d.cloud};
     });
-  });
-  // 确认提交
-  if(newAppConfirm) newAppConfirm.addEventListener('click',function(){
-    var name=newAppName.value.trim();
-    var type=$('input[name="createType"]:checked');
-    var typeVal=type?type.value:'new';
-    if(!name){ toast('请输入应用名称'); newAppName.focus(); return; }
-    if(typeVal==='extend'||typeVal==='inherit'){
-      var selected=sourceAppList.querySelector('.app-item.checked');
-      if(!selected){ toast('请选择已有应用'); return; }
+  }
+  /* 校验 + 落库 + toast，供 React 侧表单提交时调用；校验不通过只 toast，不关弹窗。 */
+  function confirmNewApp(payload){
+    payload=payload||{};
+    var name=(payload.name||'').trim();
+    var typeVal=payload.type||'new';
+    if(!name){ toast('请输入应用名称'); return; }
+    if((typeVal==='extend'||typeVal==='inherit') && !payload.sourceApp){
+      toast('请选择已有应用'); return;
     }
     if(newAppSource==='home'){
       selectApp(name);
@@ -3030,19 +2975,11 @@ const billTemplateWithTokens = billTemplate.replace(
     }
     toast('已新建并关联应用：'+name);
     closeNewAppModal();
-  });
+  }
 
-  /* ---------- 附件弹窗 ---------- */
-  var attachModal=$('#attachModal');
+  /* ---------- ＋号菜单：上传文件 ---------- */
   var addBtn=$('.round-btn[aria-label="add"]');
   var chatAddBtn=$('.round-btn[aria-label="chat-add"]');
-  function openAttach(){
-    closeAll(null);
-    attachModal.classList.add('show');
-  }
-  function closeAttach(){
-    attachModal.classList.remove('show');
-  }
   function openFilePicker(){
     var fi=document.createElement('input');
     fi.type='file';
@@ -3159,17 +3096,6 @@ const billTemplateWithTokens = billTemplate.replace(
   }
   bindAddDropdown(addBtn);
   bindAddDropdown(chatAddBtn);
-  $('.modal-close',attachModal) && $('.modal-close',attachModal).addEventListener('click',closeAttach);
-  attachModal.addEventListener('click',function(e){
-    if(e.target===attachModal) closeAttach();
-  });
-  $$('.attach-item',attachModal).forEach(function(item){
-    item.addEventListener('click',function(){
-      var name=$('.attach-name',item).textContent.trim();
-      closeAttach();
-      toast('已选择：'+name);
-    });
-  });
 
   /* header + footer small affordances */
   $$('.sb-head-icons .ic').forEach(function(i,idx){ i.addEventListener('click',function(){ toast(idx===0?'搜索':'折叠侧栏'); }); });
@@ -3349,14 +3275,12 @@ const billTemplateWithTokens = billTemplate.replace(
     tipEl.classList.remove('show');
   });
 
-  /* ---------- 全局键盘快捷键 (W3C keydown) ---------- */
-  var shortcutOverlay=$('#shortcutOverlay');
-  var shortcutClose=$('#shortcutClose');
-  function closeShortcut(){ shortcutOverlay.classList.remove('show'); }
-  if(shortcutClose) shortcutClose.addEventListener('click',closeShortcut);
-  if(shortcutOverlay) shortcutOverlay.addEventListener('click',function(e){
-    if(e.target===shortcutOverlay) closeShortcut();
-  });
+  /* ---------- 全局键盘快捷键 (W3C keydown) ----------
+     快捷键面板本身已迁到 antd Modal（src/components/shortcut/ShortcutModal.jsx），
+     这里只广播开关状态，面板内容是纯静态展示，不需要经业务函数。 */
+  var _shortcutBridge=_makeModalBridge();
+  function openShortcut(){ _shortcutBridge.open('shortcut'); }
+  function closeShortcut(){ _shortcutBridge.close('shortcut'); }
 
   document.addEventListener('keydown',function(e){
     var mod=e.metaKey||e.ctrlKey;
@@ -3366,7 +3290,7 @@ const billTemplateWithTokens = billTemplate.replace(
     /* ⌘/Ctrl+/ — 显示快捷键帮助 */
     if(mod && key==='/'){
       e.preventDefault();
-      shortcutOverlay.classList.add('show');
+      openShortcut();
       return;
     }
     /* ⌘/Ctrl+K — 搜索 */
@@ -3409,11 +3333,9 @@ const billTemplateWithTokens = billTemplate.replace(
     }
     /* Esc — 关闭面板/下拉/搜索/右键/帮助 */
     if(key==='escape' && !mod && !e.shiftKey && !e.altKey){
-      if(shortcutOverlay && shortcutOverlay.classList.contains('show')){ closeShortcut(); return; }
-      if(newAppModal && newAppModal.classList.contains('show')){ closeNewAppModal(); closeSourceAppMenu(); return; }
-      if(sourceAppMenu && sourceAppMenu.style.display==='flex'){ closeSourceAppMenu(); return; }
+      if(_shortcutBridge.isOpen('shortcut')){ closeShortcut(); return; }
+      if(_newAppBridge.isOpen('newapp')){ closeNewAppModal(); return; }
       if(historyPanel && historyPanel.classList.contains('show')){ closeHistory(); return; }
-      if(attachModal && attachModal.classList.contains('show')){ closeAttach(); return; }
       if(ctxMenu && ctxMenu.classList.contains('show')){ hideCtxMenu(); return; }
       if(sbSearch && sbSearch.classList.contains('show')){
         sbSearchInput.value=''; filterSidebar(''); sbSearch.classList.remove('show');
@@ -6865,6 +6787,20 @@ const billTemplateWithTokens = billTemplate.replace(
       getProjectStatusOptions:function(){ return CV_PROJECT_STATUS.map(function(s){return{id:s.id,label:s.label};}); },
       getProjectOwnerOptions:cvProjectOwners,
       confirmNewProject:cvConfirmNewProject
+    },
+    /* ---------- 快捷键面板（Phase 2b antd 化） ---------- */
+    shortcut:{
+      subscribe:_shortcutBridge.subscribe,
+      getOpenModal:_shortcutBridge.getOpenModal,
+      close:closeShortcut
+    },
+    /* ---------- 新建应用弹窗（Phase 2b antd 化） ---------- */
+    newApp:{
+      subscribe:_newAppBridge.subscribe,
+      getOpenModal:_newAppBridge.getOpenModal,
+      close:closeNewAppModal,
+      getAppOptions:getFullAppOptions,
+      confirm:confirmNewApp
     }
   };
 

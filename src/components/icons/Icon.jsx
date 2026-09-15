@@ -11,6 +11,9 @@ import {
   ClipboardCheck,
   UserPlus,
   Folder,
+  Keyboard,
+  AppWindow,
+  Info,
 } from 'lucide-react';
 
 /* 图标注册表 —— 见 docs/react-migration-plan.md §8.7。
@@ -34,6 +37,9 @@ const REGISTRY = {
   'clipboard-check': ClipboardCheck,
   'user-plus': UserPlus,
   folder: Folder,
+  keyboard: Keyboard,
+  'app-window': AppWindow,
+  info: Info,
 };
 
 export default function Icon({ name, size = 16, strokeWidth = 1.7, className, ...rest }) {
