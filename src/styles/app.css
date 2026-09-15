@@ -2659,3 +2659,28 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
 .ask-foot{margin-top:12px;padding-top:10px;border-top:1px solid var(--divider);
   font-size:12px;color:var(--text-soft)}
 .ask-foot-done{color:var(--success)}
+
+/* 协作开发 · 协作人员管理 · 身份分级徽标 */
+#view-collab .member-level-wrap{position:relative;flex-shrink:0}
+#view-collab .member-level{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:6px 9px;border-radius:8px;border:1px solid transparent;transition:all .15s;white-space:nowrap;box-sizing:border-box}
+#view-collab .member-level svg{width:11px;height:11px;flex-shrink:0}
+#view-collab .member-level-caret{margin-left:auto;opacity:.55;transition:opacity .15s}
+#view-collab .member-level--member{background:var(--fill-1);color:var(--text-secondary)}
+#view-collab .member-level--admin{background:#f0f7ff;color:var(--dot-blue)}
+#view-collab .member-level--owner{background:#fef3c7;color:#b45309}
+#view-collab .member-level--static{cursor:default;border-color:transparent}
+#view-collab button.member-level{cursor:pointer;border-color:var(--border-hover)}
+#view-collab button.member-level--member:hover{background:var(--brand-fill);color:var(--brand);border-color:var(--brand)}
+#view-collab button.member-level--admin:hover{background:#dcedff;border-color:var(--dot-blue)}
+#view-collab button.member-level:hover{box-shadow:0 0 0 3px rgba(73,93,255,.1)}
+#view-collab button.member-level:hover .member-level-caret{opacity:1}
+#view-collab .member-level-menu{position:absolute;top:calc(100% + 6px);right:0;min-width:190px;z-index:60;background:#fff;border:1px solid #e8e8e5;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.14);padding:4px}
+#view-collab .member-level-menu__item{display:flex;align-items:center;gap:8px;padding:8px 9px;border-radius:7px;cursor:pointer;transition:background .1s}
+#view-collab .member-level-menu__item:hover{background:var(--hover)}
+#view-collab .member-level-menu__item--active{background:var(--brand-fill)}
+#view-collab .member-level-menu__item svg:first-child{width:14px;height:14px;flex-shrink:0;color:var(--text-secondary)}
+#view-collab .member-level-menu__item--active svg:first-child{color:var(--brand)}
+#view-collab .member-level-menu__text{display:flex;flex-direction:column;flex:1;min-width:0}
+#view-collab .member-level-menu__text b{font-size:12.5px;font-weight:600;color:var(--text)}
+#view-collab .member-level-menu__text small{font-size:10.5px;color:var(--text-soft);font-weight:400}
+#view-collab .member-level-menu__check{color:var(--brand);flex-shrink:0}

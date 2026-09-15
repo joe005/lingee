@@ -207,6 +207,7 @@ const billTemplateWithTokens = billTemplate.replace(
 
   /* ---------- Changelog / 更新通知（与 Build_demo 完全一致） ---------- */
   var changelogData=[
+    {id:'17',date:'2026-09-15',iconBg:'#eef3ff',iconColor:'#495dff',team:'协作人员管理支持身份分级',body:'新增所有者/管理员/成员三级身份：管理员可调整普通成员身份、移除成员，所有者身份不可修改；「添加人员」按钮按权限显示。'},
     {id:'16',date:'2026-09-15',iconBg:'#f3eefe',iconColor:'#8b5cf6',team:'启动 React 化迁移（Phase 0 + 1 进行中）',body:'产出 React 化迁移方案（docs/react-migration-plan.md）；接入 React 18 + antd 5 + react-router-dom，应用开发/技能开发/智能体开发三个卡片网格迁移为 React 组件；构建产物改为部署到 Cloudflare Pages，不再要求双击本地文件打开。'},
     {id:'15',date:'2026-09-14',iconBg:'#eef3ff',iconColor:'#495dff',team:'应用开发列表 新建体验优化',body:'去除新建应用弹窗，新建应用流程调整为下拉选择应用开发类型，跳转到新会话。'},
     {id:'14',date:'2026-09-14',iconBg:'#eef3ff',iconColor:'#495dff',team:'专家团支持人工审核确认节点',body:'专家团运行流程可在任意步骤后插入人工审核确认节点，到该节点编排暂停、确认后才继续；专家能力项由机器标识改为中文名加等级展示，专家卡片增加「可承担的工作」，专家团补充领域标签与能力覆盖；专家定义去掉「工作方式」「完成标准」，改为把需要用户提供的内容写进触发词占位符，发送时没填就在会话里追问；专家来源合并为「Lingee 内置」与「我创建的」两档，取消无数据支撑的「金蝶官方」；专家详情收敛为简介、触发词、挂载技能、能力项、可承担的工作五项；修复搜索框被浏览器自动填充账号导致列表被筛空。'},
@@ -220,6 +221,7 @@ const billTemplateWithTokens = billTemplate.replace(
   ];
   // 每个数据条目对应的 avatar SVG 图标（与 Build_demo 的 lucide 图标一致）
   var changelogIcons={
+    '17':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
     '16':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>',
     '15':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>',
     '14':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m16 11 2 2 4-4"/></svg>',
@@ -5551,29 +5553,96 @@ const billTemplateWithTokens = billTemplate.replace(
     {type:'需求',size:'大',source:'飞书',exec:'专家团',priority:'紧急',reviewType:'需求评审',title:'供应商协同门户对接需求规格',desc:'订单确认与交期回复的字段口径、异常处理与状态回写规则',reviewer:'张工',reviewerRole:'开发人员',deadline:'今日 20:00',deadlineColor:'var(--danger)',borderColor:'var(--danger)',from:'冯远',fromTime:'今日 08:50',artifacts:['需求规格','技术方案'],project:'supply'}
   ];
 
+  /* level/owner：协作身份分级（所有者/管理员/成员），见 cvCurrentLevel 等函数。
+     梁平已经带着「所有者」角色标签，所有者身份归他；isMe 的张工给管理员，方便登录后
+     直接体验"调整他人身份/移除成员"这套权限交互，不用切账号。 */
   var CV_MEMBERS = [
-    {name:'张工',email:'zhang***@kingdee.com',roles:[{tag:'member-tag--dev',text:'开发'},{tag:'member-tag--arch',text:'架构'}],status:'available',source:'直接成员',isMe:true,projects:['expense','purchase','supply']},
-    {name:'李工',email:'li***@kingdee.com',roles:[{tag:'member-tag--dev',text:'开发'}],status:'available',source:'直接成员',projects:['expense','purchase']},
-    {name:'王工',email:'wang***@kingdee.com',roles:[{tag:'member-tag--dev',text:'开发'},{tag:'member-tag--arch',text:'架构'}],status:'busy',source:'直接成员',projects:['expense','supply']},
-    {name:'赵琳',email:'zha***@kingdee.com',roles:[{tag:'member-tag--pm',text:'需求'},{tag:'member-tag--pm',text:'产品'}],status:'available',source:'继承自 灵基AIOS',projects:'*'},
-    {name:'陈晨',email:'chen***@kingdee.com',roles:[{tag:'member-tag--qa',text:'测试'}],status:'available',source:'直接成员',projects:['expense']},
-    {name:'刘洋',email:'liu***@kingdee.com',roles:[{tag:'member-tag--qa',text:'测试'}],status:'busy',source:'直接成员',projects:['purchase']},
-    {name:'周杰',email:'zhou***@kingdee.com',roles:[{tag:'member-tag--ops',text:'运维'}],status:'available',source:'直接成员',projects:['expense','purchase']},
-    {name:'孙明',email:'sun***@kingdee.com',roles:[{tag:'member-tag--ops',text:'运维'}],status:'available',source:'继承自 灵基AIOS',projects:'*'},
-    {name:'吴芳',email:'wu***@kingdee.com',roles:[{tag:'member-tag--pm',text:'需求'}],status:'available',source:'直接成员',projects:['expense']},
-    {name:'郑凯',email:'zheng***@kingdee.com',roles:[{tag:'member-tag--dev',text:'开发'}],status:'busy',source:'直接成员',projects:['expense']},
-    {name:'钱涛',email:'qian***@kingdee.com',roles:[{tag:'member-tag--dev',text:'开发'}],status:'available',source:'直接成员',projects:['purchase']},
-    {name:'宋宇',email:'song***@kingdee.com',roles:[{tag:'member-tag--pm',text:'产品'}],status:'available',source:'继承自 灵基AIOS',projects:'*'},
-    {name:'冯远',email:'feng***@kingdee.com',roles:[{tag:'member-tag--arch',text:'架构'}],status:'available',source:'直接成员',projects:['supply']},
-    {name:'许诺',email:'xu***@kingdee.com',roles:[{tag:'member-tag--dev',text:'开发'},{tag:'member-tag--arch',text:'架构'}],status:'busy',source:'直接成员',projects:['purchase','supply']},
-    {name:'蒋雯',email:'jiang***@kingdee.com',roles:[{tag:'member-tag--pm',text:'需求'},{tag:'member-tag--pm',text:'产品'}],status:'available',source:'继承自 灵基AIOS',projects:'*'},
-    {name:'何欣',email:'he***@kingdee.com',roles:[{tag:'member-tag--pm',text:'需求'}],status:'available',source:'直接成员',projects:['supply']},
-    {name:'韩梅',email:'han***@kingdee.com',roles:[{tag:'member-tag--qa',text:'测试'}],status:'available',source:'直接成员',projects:['purchase']},
-    {name:'罗静',email:'luo***@kingdee.com',roles:[{tag:'member-tag--qa',text:'测试'}],status:'busy',source:'直接成员',projects:['supply']},
-    {name:'杨帆',email:'yang***@kingdee.com',roles:[{tag:'member-tag--ops',text:'运维'}],status:'available',source:'直接成员',projects:['purchase']},
-    {name:'唐辉',email:'tang***@kingdee.com',roles:[{tag:'member-tag--ops',text:'运维'}],status:'available',source:'继承自 灵基AIOS',projects:'*'},
-    {name:'梁平',email:'liang***@kingdee.com',roles:[{tag:'member-tag--pm',text:'产品'},{tag:'member-tag--owner',text:'所有者'}],status:'available',source:'直接成员',projects:['expense','purchase','supply']}
+    {name:'张工',email:'zhang***@kingdee.com',roles:[{tag:'member-tag--dev',text:'开发'},{tag:'member-tag--arch',text:'架构'}],status:'available',source:'直接成员',isMe:true,level:'admin',projects:['expense','purchase','supply']},
+    {name:'李工',email:'li***@kingdee.com',roles:[{tag:'member-tag--dev',text:'开发'}],status:'available',source:'直接成员',level:'member',projects:['expense','purchase']},
+    {name:'王工',email:'wang***@kingdee.com',roles:[{tag:'member-tag--dev',text:'开发'},{tag:'member-tag--arch',text:'架构'}],status:'busy',source:'直接成员',level:'member',projects:['expense','supply']},
+    {name:'赵琳',email:'zha***@kingdee.com',roles:[{tag:'member-tag--pm',text:'需求'},{tag:'member-tag--pm',text:'产品'}],status:'available',source:'继承自 灵基AIOS',level:'member',projects:'*'},
+    {name:'陈晨',email:'chen***@kingdee.com',roles:[{tag:'member-tag--qa',text:'测试'}],status:'available',source:'直接成员',level:'member',projects:['expense']},
+    {name:'刘洋',email:'liu***@kingdee.com',roles:[{tag:'member-tag--qa',text:'测试'}],status:'busy',source:'直接成员',level:'member',projects:['purchase']},
+    {name:'周杰',email:'zhou***@kingdee.com',roles:[{tag:'member-tag--ops',text:'运维'}],status:'available',source:'直接成员',level:'member',projects:['expense','purchase']},
+    {name:'孙明',email:'sun***@kingdee.com',roles:[{tag:'member-tag--ops',text:'运维'}],status:'available',source:'继承自 灵基AIOS',level:'admin',projects:'*'},
+    {name:'吴芳',email:'wu***@kingdee.com',roles:[{tag:'member-tag--pm',text:'需求'}],status:'available',source:'直接成员',level:'member',projects:['expense']},
+    {name:'郑凯',email:'zheng***@kingdee.com',roles:[{tag:'member-tag--dev',text:'开发'}],status:'busy',source:'直接成员',level:'member',projects:['expense']},
+    {name:'钱涛',email:'qian***@kingdee.com',roles:[{tag:'member-tag--dev',text:'开发'}],status:'available',source:'直接成员',level:'member',projects:['purchase']},
+    {name:'宋宇',email:'song***@kingdee.com',roles:[{tag:'member-tag--pm',text:'产品'}],status:'available',source:'继承自 灵基AIOS',level:'member',projects:'*'},
+    {name:'冯远',email:'feng***@kingdee.com',roles:[{tag:'member-tag--arch',text:'架构'}],status:'available',source:'直接成员',level:'member',projects:['supply']},
+    {name:'许诺',email:'xu***@kingdee.com',roles:[{tag:'member-tag--dev',text:'开发'},{tag:'member-tag--arch',text:'架构'}],status:'busy',source:'直接成员',level:'member',projects:['purchase','supply']},
+    {name:'蒋雯',email:'jiang***@kingdee.com',roles:[{tag:'member-tag--pm',text:'需求'},{tag:'member-tag--pm',text:'产品'}],status:'available',source:'继承自 灵基AIOS',level:'member',projects:'*'},
+    {name:'何欣',email:'he***@kingdee.com',roles:[{tag:'member-tag--pm',text:'需求'}],status:'available',source:'直接成员',level:'member',projects:['supply']},
+    {name:'韩梅',email:'han***@kingdee.com',roles:[{tag:'member-tag--qa',text:'测试'}],status:'available',source:'直接成员',level:'member',projects:['purchase']},
+    {name:'罗静',email:'luo***@kingdee.com',roles:[{tag:'member-tag--qa',text:'测试'}],status:'busy',source:'直接成员',level:'member',projects:['supply']},
+    {name:'杨帆',email:'yang***@kingdee.com',roles:[{tag:'member-tag--ops',text:'运维'}],status:'available',source:'直接成员',level:'member',projects:['purchase']},
+    {name:'唐辉',email:'tang***@kingdee.com',roles:[{tag:'member-tag--ops',text:'运维'}],status:'available',source:'继承自 灵基AIOS',level:'member',projects:'*'},
+    {name:'梁平',email:'liang***@kingdee.com',roles:[{tag:'member-tag--pm',text:'产品'},{tag:'member-tag--owner',text:'所有者'}],status:'available',source:'直接成员',level:'admin',owner:true,projects:['expense','purchase','supply']}
   ];
+  var CV_ICON_OWNER='<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M5 16l-2-9 5.5 4L12 4l3.5 7L21 7l-2 9H5zm0 2h14v2H5v-2z"/></svg>';
+  var CV_ICON_ADMIN='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg>';
+  var CV_ICON_MEMBER='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>';
+  /* 协作身份分级：所有者 > 管理员 > 成员。只有所有者能调整管理员身份，
+     管理员能管普通成员但动不了另一个管理员，谁都改不了自己。 */
+  function cvCurrentMember(){ return CV_MEMBERS.filter(function(m){return m.isMe;})[0]||null; }
+  function cvCurrentLevel(){
+    var me=cvCurrentMember();if(!me)return'member';
+    return me.owner?'owner':(me.level==='admin'?'admin':'member');
+  }
+  function cvCanManageMembers(){ var lv=cvCurrentLevel();return lv==='owner'||lv==='admin'; }
+  function cvCanRemoveMember(target){
+    if(!target||target.isMe||target.owner)return false;
+    var lv=cvCurrentLevel();
+    if(lv==='owner')return true;
+    if(lv==='admin')return target.level!=='admin';
+    return false;
+  }
+  function cvCanToggleLevel(target){
+    if(!target||target.isMe||target.owner)return false;
+    var lv=cvCurrentLevel();
+    if(lv==='owner')return true;
+    if(lv==='admin')return target.level!=='admin';
+    return false;
+  }
+  function cvCloseMemberLevelMenus(exceptWrap){
+    document.querySelectorAll('.member-level-menu').forEach(function(d){
+      if(!exceptWrap||d.parentNode!==exceptWrap) d.remove();
+    });
+  }
+  function cvToggleMemberLevelMenu(btn,idx,ev){
+    if(ev){ev.stopPropagation();ev.preventDefault();}
+    var wrap=btn.parentNode;
+    var existing=wrap.querySelector('.member-level-menu');
+    cvCloseMemberLevelMenus(wrap);
+    if(existing){existing.remove();return;}
+    var m=CV_MEMBERS[idx];if(!m)return;
+    var menu=document.createElement('div');menu.className='member-level-menu';
+    [{level:'member',text:'成员',desc:'可参与任务与评审',icon:CV_ICON_MEMBER},
+     {level:'admin',text:'管理员',desc:'可管理人员与项目设置',icon:CV_ICON_ADMIN}].forEach(function(o){
+      var active=m.level===o.level;
+      var item=document.createElement('div');
+      item.className='member-level-menu__item'+(active?' member-level-menu__item--active':'');
+      item.innerHTML=o.icon+'<span class="member-level-menu__text"><b>'+o.text+'</b><small>'+o.desc+'</small></span>'
+        +(active?'<svg class="member-level-menu__check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>':'');
+      item.onclick=function(e){e.stopPropagation();menu.remove();cvSetMemberLevel(idx,o.level);};
+      menu.appendChild(item);
+    });
+    wrap.appendChild(menu);
+  }
+  document.addEventListener('click',function(){cvCloseMemberLevelMenus(null);});
+  function cvSetMemberLevel(idx,level){
+    var m=CV_MEMBERS[idx];if(!m)return;
+    if(!cvCanToggleLevel(m)){
+      if(m.isMe)cvToast('不能修改自己的身份','warning');
+      else if(m.owner)cvToast('所有者身份不可修改','warning');
+      else cvToast('只有所有者可以调整管理员身份','warning');
+      return;
+    }
+    if(m.level===level)return;
+    m.level=level;
+    cvRenderMembers();cvRenderMemberStats();cvApplyFilters();
+    cvToast(m.name+' 已设为'+(level==='admin'?'管理员':'成员'),'success');
+  }
 
   var CV_WORKFLOW = ['需求分析','方案设计','开发实现','代码审查','测试验证','部署发布'];
   var CV_WORKFLOW_ROLES = {'需求分析':'需求人员','方案设计':'架构人员','开发实现':'开发人员','代码审查':'开发人员','测试验证':'测试人员','部署发布':'运维人员'};
@@ -5688,6 +5757,8 @@ const billTemplateWithTokens = billTemplate.replace(
   }
   function cvRenderMembers(){
     var el=document.getElementById('cv-member-list');if(!el)return;
+    var addBtn=document.getElementById('cv-add-member-btn');
+    if(addBtn)addBtn.style.display=cvCanManageMembers()?'':'none';
     el.innerHTML=CV_MEMBERS.map(function(m,i){
       if(!cvInProject(m)) return '';
       var tagHtml=m.roles.map(function(r){return '<span class="member-tag '+r.tag+'">'+r.text+'</span>';}).join('');
@@ -5695,12 +5766,26 @@ const billTemplateWithTokens = billTemplate.replace(
       var statusText=m.status==='available'?'可用':'繁忙';
       var avatarCls=m.isMe?'member-avatar member-avatar--me':'member-avatar';
       var nameCls=m.isMe?'member-name member-name--me':'member-name';
+      var isAdmin=m.level==='admin';
+      var levelText=m.owner?'所有者':(isAdmin?'管理员':'成员');
+      var levelIcon=m.owner?CV_ICON_OWNER:(isAdmin?CV_ICON_ADMIN:CV_ICON_MEMBER);
+      var levelCls='member-level '+(m.owner?'member-level--owner':(isAdmin?'member-level--admin':'member-level--member'));
+      var levelHtml;
+      if(cvCanToggleLevel(m)){
+        var caret='<svg class="member-level-caret" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
+        levelHtml='<div class="member-level-wrap"><button type="button" class="'+levelCls+'" onclick="cvToggleMemberLevelMenu(this,'+i+',event)" title="设置协作身份，点击选择">'+levelIcon+levelText+caret+'</button></div>';
+      }else{
+        var lockTitle=m.isMe?'不能修改自己的身份':(m.owner?'所有者身份不可修改':'只有所有者可以调整管理员身份');
+        levelHtml='<span class="'+levelCls+' member-level--static" title="'+lockTitle+'">'+levelIcon+levelText+'</span>';
+      }
+      var delHtml=cvCanRemoveMember(m)?'<button class="member-del" onclick="cvDeleteMember('+i+')" title="移除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>':'';
       return '<div class="member-row" data-role="'+m.roles.map(function(r){return r.text;}).join(' ')+'">'
         +'<div class="'+avatarCls+'">'+m.name[0]+'</div>'
         +'<div class="member-info"><div class="'+nameCls+'">'+m.name+(m.isMe?' （你）':'')+'</div><div class="member-email">'+m.email+'</div><div class="member-tags">'+tagHtml+'</div></div>'
         +'<span class="member-status '+statusCls+'">'+statusText+'</span>'
         +'<span class="member-source">'+m.source+'</span>'
-        +(m.isMe?'':'<button class="member-del" onclick="cvDeleteMember('+i+')" title="移除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>')
+        +levelHtml
+        +delHtml
         +'</div>';
     }).join('');
   }
@@ -6188,8 +6273,9 @@ const billTemplateWithTokens = billTemplate.replace(
     cvToast('已添加 '+selected.length+' 名协作人员','success');
   }
   function cvDeleteMember(idx){
-    if(CV_MEMBERS[idx]&&CV_MEMBERS[idx].isMe){cvToast('不能移除自己','warning');return;}
     if(!CV_MEMBERS[idx])return;
+    if(CV_MEMBERS[idx].isMe){cvToast('不能移除自己','warning');return;}
+    if(!cvCanRemoveMember(CV_MEMBERS[idx])){cvToast('没有权限移除该成员','warning');return;}
     var name=CV_MEMBERS[idx].name;
     CV_MEMBERS.splice(idx,1);cvRenderMembers();cvRenderMemberStats();
     cvToast('已移除：'+name,'info');
@@ -6541,6 +6627,7 @@ const billTemplateWithTokens = billTemplate.replace(
   window.cvSearchThirdPartyMembers=cvSearchThirdPartyMembers;
   window.cvConfirmAddMembers=cvConfirmAddMembers;
   window.cvDeleteMember=cvDeleteMember;
+  window.cvToggleMemberLevelMenu=cvToggleMemberLevelMenu;
 
   /* 未登录时清理 URL，确保页面仅显示登录页 */
   if(!_authedUser) history.replaceState(null,'','/');
