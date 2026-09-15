@@ -1,24 +1,30 @@
 # Lingee 高保真原型
 
-演示用原型。开发时模块化，构建产出**单个可双击打开的 HTML**，无需依赖。
+演示用原型，开发时模块化。**构建产物部署到 Cloudflare Pages**，分享链接演示
+——不再是"双击打开单个 HTML 文件"（旧约定见 `docs/react-migration-plan.md`
+§8.1，那条路走不通，已经改掉）。
+
+正在做 React 化迁移（见 `docs/react-migration-plan.md`）：`src/scripts/main.js`
+仍是原有 vanilla 实现，`src/App.jsx`/`src/views/`/`src/components/` 是已经
+迁移完的部分，两边通过 `window.__lingeeBridge` 共存，迁移完成前两套代码都在。
 
 ## 命令
 
 ```bash
 npm install
 npm run dev      # 开发服务器，热更新
-npm run build    # 产出 dist/index.html（零外链单文件）
+npm run build    # 产出 dist/，多文件静态站点
+npm run lint     # ESLint（只管 src/ 下的 React 代码，main.js 不纳入）
+npm run deploy   # 构建并部署到 Cloudflare Pages（wrangler）
 npm run format   # 格式化 src
 ```
-
-演示时直接分发 `dist/index.html` 即可。
 
 ## 目录
 
 | 目录 | 用途 |
 | --- | --- |
-| `src/` | 源码。样式、脚本、产物模板 |
-| `dist/` | 构建产物，单文件 |
+| `src/` | 源码。样式、脚本（vanilla + 迁移中的 React）、产物模板 |
+| `dist/` | 构建产物，多文件静态站点 |
 | `docs/` | 需求说明书，交付给开发实现 |
 
 设计稿、早期页面原型、历史版本等资料存放在 iCloud 归档目录

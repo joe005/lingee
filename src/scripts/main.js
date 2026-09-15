@@ -207,7 +207,7 @@ const billTemplateWithTokens = billTemplate.replace(
 
   /* ---------- Changelog / 更新通知（与 Build_demo 完全一致） ---------- */
   var changelogData=[
-    {id:'16',date:'2026-09-15',iconBg:'#f3eefe',iconColor:'#8b5cf6',team:'启动 React 化迁移评估',body:'产出 React 化迁移方案（docs/react-migration-plan.md）：技术选型、路由与组件分层设计、构建产物形态评估，以及迁移前需要确认的缺漏清单；Phase 0/1（脚手架 + 应用/技能/智能体开发等卡片页面迁移）进行中。'},
+    {id:'16',date:'2026-09-15',iconBg:'#f3eefe',iconColor:'#8b5cf6',team:'启动 React 化迁移（Phase 0 + 1 进行中）',body:'产出 React 化迁移方案（docs/react-migration-plan.md）；接入 React 18 + antd 5 + react-router-dom，应用开发/技能开发/智能体开发三个卡片网格迁移为 React 组件；构建产物改为部署到 Cloudflare Pages，不再要求双击本地文件打开。'},
     {id:'15',date:'2026-09-14',iconBg:'#eef3ff',iconColor:'#495dff',team:'应用开发列表 新建体验优化',body:'去除新建应用弹窗，新建应用流程调整为下拉选择应用开发类型，跳转到新会话。'},
     {id:'14',date:'2026-09-14',iconBg:'#eef3ff',iconColor:'#495dff',team:'专家团支持人工审核确认节点',body:'专家团运行流程可在任意步骤后插入人工审核确认节点，到该节点编排暂停、确认后才继续；专家能力项由机器标识改为中文名加等级展示，专家卡片增加「可承担的工作」，专家团补充领域标签与能力覆盖；专家定义去掉「工作方式」「完成标准」，改为把需要用户提供的内容写进触发词占位符，发送时没填就在会话里追问；专家来源合并为「Lingee 内置」与「我创建的」两档，取消无数据支撑的「金蝶官方」；专家详情收敛为简介、触发词、挂载技能、能力项、可承担的工作五项；修复搜索框被浏览器自动填充账号导致列表被筛空。'},
     {id:'13',date:'2026-09-11',iconBg:'#eef3ff',iconColor:'#495dff',team:'会话加号下拉菜单',body:'会话输入框加号按钮改为下拉菜单，提供添加文件（含本地文件、引用文件夹、知识库）、模式（含 Spec、目标）、连接器（含腾讯云等八项服务）三级菜单结构。'},
@@ -806,10 +806,30 @@ const billTemplateWithTokens = billTemplate.replace(
 
   /* ---------- view switching ---------- */
   var viewHome=$('#view-home'), viewNew=$('#view-newtask'), viewChat=$('#view-chat'), viewApps=$('#view-apps'), viewSkills=$('#view-skills'), viewAgents=$('#view-agents'), viewCollab=$('#view-collab'), viewDesign=$('#view-design'), viewSettings=$('#view-settings');
+  var viewReact=$('#react-view-root');
+  /* 已迁移到 React 的顶层视图：内容改由 src/views/*View.jsx 渲染进 #react-view-root，
+     #view-apps/#view-skills/#view-agents 这三个原容器留空、永久隐藏（见 index.html）。
+     showView() 本身的调用方（侧边栏点击、首页卡片、URL 恢复……）完全不用改，
+     这里只是多一条「这三个名字改成显隐 #react-view-root，并把 hash 交给
+     react-router-dom 的 HashRouter 去挑该渲染哪个视图」的分支。 */
+  var REACT_VIEWS=['apps','skills','agents'];
   function setUrlState(path){
     try{history.replaceState(null,'',path);localStorage.setItem('lingeeUrlState',path)}catch(e){}
   }
   function showView(which){
+    if(REACT_VIEWS.indexOf(which)>=0){
+      viewHome.classList.add('hidden'); viewNew.classList.add('hidden'); viewChat.classList.add('hidden');
+      viewApps.classList.add('hidden'); viewSkills.classList.add('hidden'); viewAgents.classList.add('hidden');
+      viewCollab.classList.add('hidden'); viewDesign.classList.add('hidden'); viewSettings.classList.add('hidden');
+      if(viewReact) viewReact.classList.remove('hidden');
+      $('.sidebar').classList.remove('hidden');
+      closeAll(null);
+      setUrlState('/'+which);
+      if(location.hash!=='#/'+which){ location.hash='#/'+which; }
+      return;
+    }
+    if(viewReact) viewReact.classList.add('hidden');
+    if(location.hash){ try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){} }
     viewHome.classList.toggle('hidden', which!=='home');
     viewNew.classList.toggle('hidden', which!=='newtask');
     viewChat.classList.toggle('hidden', which!=='chat');
@@ -2215,29 +2235,35 @@ const billTemplateWithTokens = billTemplate.replace(
     });
   });
   $('.btn-new:not(.apps-new-btn)') && $('.btn-new:not(.apps-new-btn)').addEventListener('click',function(){});
+  /* 卡片点击打开会话预览。抽成具名函数：应用开发/技能开发/智能体开发三个卡片网格
+     的 React 版本（src/views/*View.jsx）也调用这同一份逻辑（window.__lingeeBridge），
+     避免两边各写一份、行为跑偏。 */
+  function openAppCardChat(name){
+    showView('chat');
+    setNavActive('新会话');
+    var titleEl=$('#chatTitle');
+    if(titleEl) titleEl.textContent=name;
+    var emptyEl=$('#chatEmpty');
+    if(emptyEl) emptyEl.remove();
+    /* 打开预览面板加载表单 */
+    var view=document.getElementById('view-chat');
+    var frame=document.getElementById('chatPreviewFrame');
+    var urlInput=document.getElementById('previewUrlText');
+    var url='https://feature.kingdee.com:1026/feature_vb';
+    if(frame) frame.src=url;
+    if(urlInput) urlInput.value=url;
+    if(view) view.classList.add('preview-open');
+    if(typeof syncTogglePreviewBtn==='function') syncTogglePreviewBtn();
+    try{localStorage.setItem('chatPreviewOpen','1')}catch(err){}
+    var savedW=localStorage.getItem('chatPreviewWidth');
+    var ps=document.getElementById('chatPreviewSide');
+    if(savedW&&ps){ps.style.width=savedW;ps.style.maxWidth='none';}
+  }
   $$('.app-card').forEach(function(c){
     c.addEventListener('click',function(e){
       if(e.target.closest('.card-more')){ e.stopPropagation(); toast('更多操作'); return; }
       var name=$('.card-title',c).textContent.trim();
-      showView('chat');
-      setNavActive('新会话');
-      var titleEl=$('#chatTitle');
-      if(titleEl) titleEl.textContent=name;
-      var emptyEl=$('#chatEmpty');
-      if(emptyEl) emptyEl.remove();
-      /* 打开预览面板加载表单 */
-      var view=document.getElementById('view-chat');
-      var frame=document.getElementById('chatPreviewFrame');
-      var urlInput=document.getElementById('previewUrlText');
-      var url='https://feature.kingdee.com:1026/feature_vb';
-      if(frame) frame.src=url;
-      if(urlInput) urlInput.value=url;
-      if(view) view.classList.add('preview-open');
-      if(typeof syncTogglePreviewBtn==='function') syncTogglePreviewBtn();
-      try{localStorage.setItem('chatPreviewOpen','1')}catch(err){}
-      var savedW=localStorage.getItem('chatPreviewWidth');
-      var ps=document.getElementById('chatPreviewSide');
-      if(savedW&&ps){ps.style.width=savedW;ps.style.maxWidth='none';}
+      openAppCardChat(name);
     });
   });
 
@@ -3177,6 +3203,14 @@ const billTemplateWithTokens = billTemplate.replace(
   }
 
   /* ---------- 应用开发 新建下拉 ---------- */
+  /* 从卡片网格页发起「新建」：跳到新会话并预选模式。抽成具名函数，
+     应用开发页的 React 版本通过 window.__lingeeBridge 调这同一份逻辑。 */
+  function startNewTaskWithMode(mode){
+    showView('newtask');
+    setNavActive(mode);
+    applyMode(mode,true);
+    renderModeTag();
+  }
   var appsNewBtn=$('.apps-new-btn');
   var appsNewDd=$('#appsNewDropdown');
   if(appsNewBtn&&appsNewDd){
@@ -3194,10 +3228,7 @@ const billTemplateWithTokens = billTemplate.replace(
       item.addEventListener('click',function(){
         var mode=item.getAttribute('data-mode');
         appsNewDd.classList.remove('open');
-        showView('newtask');
-        setNavActive(mode);
-        applyMode(mode,true);
-        renderModeTag();
+        startNewTaskWithMode(mode);
       });
     });
     document.addEventListener('click',function(){appsNewDd.classList.remove('open')});
@@ -6513,5 +6544,18 @@ const billTemplateWithTokens = billTemplate.replace(
 
   /* 未登录时清理 URL，确保页面仅显示登录页 */
   if(!_authedUser) history.replaceState(null,'','/');
+
+  /* ---------- React 集成桥 ----------
+     应用开发/技能开发/智能体开发三个卡片网格页已迁到 src/views/*View.jsx（见
+     docs/react-migration-plan.md Phase 1）。它们复用这里现成的「打开会话预览」
+     「从卡片网格发起新建」「toast」逻辑，而不是各写一份，避免两边行为跑偏。
+     showView 仍是唯一的视图切换入口，React 侧不直接操作 .view 的 hidden class。 */
+  window.__lingeeBridge={
+    toast:toast,
+    showView:showView,
+    setNavActive:setNavActive,
+    openAppCardChat:openAppCardChat,
+    startNewTaskWithMode:startNewTaskWithMode
+  };
 
 })();
