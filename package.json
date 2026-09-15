@@ -9,14 +9,29 @@
     "build": "vite build",
     "preview": "npm run build && wrangler dev",
     "format": "prettier --write \"src/**/*.{js,css,html}\"",
-    "standalone": "node scripts/build-standalone.cjs",
+    "lint": "eslint .",
     "deploy": "npm run build && wrangler deploy"
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "^1.54.8",
+    "@eslint/js": "^9.39.5",
+    "@vitejs/plugin-legacy": "^6.1.1",
+    "@vitejs/plugin-react": "^4.7.0",
+    "eslint": "^9.39.5",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "globals": "^17.12.0",
     "prettier": "^3.4.2",
+    "terser": "^5.51.2",
     "vite": "^6.0.7",
     "vite-plugin-singlefile": "^2.1.0",
     "wrangler": "^4.131.1"
+  },
+  "dependencies": {
+    "antd": "^5.29.3",
+    "lucide-react": "^1.46.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.30.6"
   }
 }
