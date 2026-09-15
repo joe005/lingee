@@ -5,6 +5,7 @@ import { antdThemeToken, antdComponentTokens } from './theme/antd-theme';
 import AppsView from './views/AppsView';
 import SkillsView from './views/SkillsView';
 import AgentsView from './views/AgentsView';
+import DesignView from './views/DesignView';
 import CollabModals from './components/collab/CollabModals';
 import ShortcutModal from './components/shortcut/ShortcutModal';
 import NewAppModal from './components/chatapp/NewAppModal';
@@ -41,6 +42,7 @@ export default function App() {
           <Route path="/apps" element={<AppsView />} />
           <Route path="/skills" element={<SkillsView />} />
           <Route path="/agents" element={<AgentsView />} />
+          <Route path="/design" element={<DesignView />} />
           {/* 其余路径（含未迁移视图对应的路径）什么都不渲染——#react-view-root
               是否显示完全交给 main.js 的 showView() 用 .hidden class 控制，
               这里不做重定向，避免每次加载都把路径悄悄改写成 /apps。 */}
