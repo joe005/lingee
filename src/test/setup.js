@@ -109,4 +109,40 @@ window.__lingeeBridge = {
     toggleMember: () => {},
     getAvatar: () => 'data:image/svg+xml,test',
   }),
+  env: makeMockBridge({
+    getMode: () => 'create',
+    getInitialData: () => ({
+      mode: 'create',
+      fields: { name: '', url: '', product: '', dataCenter: '', clientId: '', clientSecret: '', gateway: '', proxyUser: '', isDefault: false },
+      connMode: 'auth',
+      normalAuthEnabled: true,
+      preset: false,
+      connState: 'none',
+    }),
+    getDataCenters: () => [{ id: 'dc1', name: '测试数据中心' }],
+    save: () => {},
+    testConnection: () => {},
+    toggleNormalAuth: () => {},
+    disconnect: () => {},
+    reauth: () => {},
+  }),
+  envAuthorize: makeMockBridge({
+    retry: () => {},
+  }),
+  consent: makeMockBridge({
+    getStep: () => 'login',
+    getDataCenters: () => [{ id: 'dc1', name: '测试数据中心' }],
+    getScopeList: () => [{ name: '查询采购订单', path: '/kapi/v2/scm/pm/PurOrder' }],
+    login: () => {},
+    allow: () => {},
+    deny: () => {},
+    switchAccount: () => {},
+  }),
+  envDisconnect: makeMockBridge({
+    getEnvName: () => '测试环境',
+    confirm: () => {},
+  }),
+  envAuthConfirm: makeMockBridge({
+    confirm: () => {},
+  }),
 };

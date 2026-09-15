@@ -9,6 +9,7 @@ import CollabModals from './components/collab/CollabModals';
 import ShortcutModal from './components/shortcut/ShortcutModal';
 import NewAppModal from './components/chatapp/NewAppModal';
 import ExpertModals from './components/expert/ExpertModals';
+import EnvModals from './components/env/EnvModals';
 
 /* React 侧的路由骨架。用 BrowserRouter，不是 HashRouter——方案 §3.1/§8.1
    最初选 hash 是因为假设产物必须双击打开，这个假设后来推翻了（改走
@@ -59,6 +60,9 @@ export default function App() {
         {/* 专家/专家团弹窗（Phase 2c）：专家详情、创建/编辑专家、
             专家团配置、添加成员，跟 CollabModals 同理作常驻节点挂载。 */}
         <ExpertModals />
+        {/* ERP 环境弹窗（Phase 2d）：新增/编辑环境、授权等待、
+            浏览器授权页、断开确认、AccessToken 确认。 */}
+        <EnvModals />
       </BrowserRouter>
     </ConfigProvider>
   );
