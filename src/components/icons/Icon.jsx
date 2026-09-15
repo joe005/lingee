@@ -14,6 +14,15 @@ import {
   Keyboard,
   AppWindow,
   Info,
+  Trash2,
+  Star,
+  MessageCircle,
+  UserCheck,
+  ChevronRight,
+  AlertTriangle,
+  Shield,
+  Pencil,
+  Phone,
 } from 'lucide-react';
 
 /* 图标注册表 —— 见 docs/react-migration-plan.md §8.7。
@@ -40,6 +49,15 @@ const REGISTRY = {
   keyboard: Keyboard,
   'app-window': AppWindow,
   info: Info,
+  'trash-2': Trash2,
+  star: Star,
+  'message-circle': MessageCircle,
+  'user-check': UserCheck,
+  'chevron-right': ChevronRight,
+  'alert-triangle': AlertTriangle,
+  shield: Shield,
+  pencil: Pencil,
+  phone: Phone,
 };
 
 export default function Icon({ name, size = 16, strokeWidth = 1.7, className, ...rest }) {

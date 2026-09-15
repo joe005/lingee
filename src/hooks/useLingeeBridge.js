@@ -24,3 +24,18 @@ export function useOpenBridgeModal(namespace) {
 export function useBridgeNamespace(namespace) {
   return getNamespace(namespace);
 }
+
+/* 订阅 bridge 的 version 变化——当 main.js 调 bridge.touch() 时
+   （例如 memberModal 修改了 teamDraft 后），React 侧 useSyncExternalStore
+   检测到 version 递增，触发依赖该 version 的 useMemo 重新读取 draft。 */
+export function useBridgeVersion(namespace) {
+  return useSyncExternalStore(
+    (onStoreChange) => {
+      const ns = getNamespace(namespace);
+      if (!ns) return () => {};
+      return ns.subscribe(onStoreChange);
+    },
+    () => getNamespace(namespace)?.getVersion() ?? 0,
+    () => 0,
+  );
+}
