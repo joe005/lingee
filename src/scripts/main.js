@@ -5445,12 +5445,33 @@ const billTemplateWithTokens = billTemplate.replace(
      协作开发（任务管理 / 待评审 / 协作人员 / 专家 / 专家团 / 设置）
      任务、评审、协作人员数据与交互移植自协作开发原型稿
      ============================================================ */
-  /* 项目维度：任务 / 评审 / 协作人员按项目分；专家与专家团为全局资产，项目内只绑定默认专家团 */
-  var CV_PROJECTS=[
-    {id:'expense',name:'费用报销应用',dot:'blue',defaultTeam:'software-company'},
-    {id:'purchase',name:'采购管理系统',dot:'orange',defaultTeam:'cosmic-team'},
-    {id:'supply',name:'供应链协同平台',dot:'green',defaultTeam:null}
+  /* 项目维度：任务 / 评审 / 协作人员按项目分；专家与专家团为全局资产，项目内只绑定默认专家团。
+     工作区是项目归属的顶层容器，一次只能激活一个。 */
+  var CV_WORKSPACES=[
+    {id:'finance-domain',name:'财务域工作区',short:'财'},
+    {id:'purchase-domain',name:'采购域工作区',short:'采'}
   ];
+  var cvWorkspace=CV_WORKSPACES[0].id;
+  var CV_PROJECTS=[
+    {id:'expense',name:'费用报销应用',dot:'blue',defaultTeam:'software-company',workspace:'finance-domain',
+      desc:'面向企业的费用报销全流程，覆盖提交、多级审批与统计分析',status:'active',owner:'王工',repo:'finance/expense-app',updated:'2 小时前'},
+    {id:'purchase',name:'采购管理系统',dot:'orange',defaultTeam:'cosmic-team',workspace:'purchase-domain',
+      desc:'采购订单、供应商管理与价格审批的一体化系统',status:'active',owner:'李工',repo:'erp/purchase-service',updated:'昨天'},
+    {id:'supply',name:'供应链协同平台',dot:'green',defaultTeam:null,workspace:'purchase-domain',
+      desc:'打通供应商协同门户，支持订单确认与交期回复',status:'planning',owner:'',repo:null,updated:'5 天前'}
+  ];
+  /* 项目状态：人定的「还做不做」，跟任务状态（干出来的进度）是两套词表，配色沿用任务同义色 */
+  var CV_PROJECT_STATUS=[
+    {id:'planning',label:'计划中',tone:'#b8b8b8'},
+    {id:'active',label:'进行中',tone:'#4d89ff'},
+    {id:'paused',label:'已暂停',tone:'#c06010'},
+    {id:'done',label:'已完成',tone:'#08a040'},
+    {id:'cancelled',label:'已取消',tone:'#e04a3a'}
+  ];
+  function cvProjectStatusMeta(id){
+    for(var i=0;i<CV_PROJECT_STATUS.length;i++){ if(CV_PROJECT_STATUS[i].id===id) return CV_PROJECT_STATUS[i]; }
+    return CV_PROJECT_STATUS[0];
+  }
   var cvProject='';                    /* 空串 = 全部项目（个人视角的聚合视图） */
   var cvConfigOverride={};             /* {项目id:{配置卡 key:是否项目覆盖}} */
   function cvProjectById(id){
@@ -5458,6 +5479,9 @@ const billTemplateWithTokens = billTemplate.replace(
     return null;
   }
   function cvProjectName(id){ var p=cvProjectById(id); return p?p.name:'未归属项目'; }
+  function cvWorkspaceProjects(){
+    return CV_PROJECTS.filter(function(p){ return p.workspace===cvWorkspace; });
+  }
   function cvInProject(row){
     if(!cvProject) return true;
     if(row.projects) return row.projects==='*'||row.projects.indexOf(cvProject)>=0;
@@ -5947,7 +5971,9 @@ const billTemplateWithTokens = billTemplate.replace(
     var existing=el.parentNode.querySelector('.sync-dropdown');
     if(existing){existing.remove();return;}
     var valId=el.querySelector('.sync-modal__select-placeholder').id;
-    var opts={'cv-sync-type-val':['需求','Bug','任务','改进'],'cv-sync-priority-val':['高','中','低'],'cv-sync-source-val':['对话自建','Jira','TAPD','API','飞书'],'cv-sync-size-val':['小任务','大任务']}[valId]||[];
+    var opts={'cv-sync-type-val':['需求','Bug','任务','改进'],'cv-sync-priority-val':['高','中','低'],'cv-sync-source-val':['对话自建','Jira','TAPD','API','飞书'],'cv-sync-size-val':['小任务','大任务'],
+      'cv-np-status-val':CV_PROJECT_STATUS.map(function(s){return s.label;}),
+      'cv-np-owner-val':['暂不指定'].concat(cvProjectOwners())}[valId]||[];
     var current=el.querySelector('.sync-modal__select-placeholder').textContent;
     var dd=document.createElement('div');dd.className='sync-dropdown sync-dropdown--open';
     opts.forEach(function(o){var item=document.createElement('div');item.className='sync-dropdown-item'+(o===current?' sync-dropdown-item--active':'');item.textContent=o;item.onclick=function(){el.querySelector('.sync-modal__select-placeholder').textContent=o;dd.remove();};dd.appendChild(item);});
@@ -6315,12 +6341,14 @@ const billTemplateWithTokens = billTemplate.replace(
     $$('#cvTabNav .tab-nav-item').forEach(function(t){
       t.classList.toggle('tab-nav-item--active', t.getAttribute('data-cvview')===name);
     });
+    cvUpdateMoreTrigger(name);
   }
   function cvSwitchView(name){
     cvLastTab=(name==='chat'||name==='review-detail')?cvLastTab:name;
     cvShowPanel(name);
     if(name==='teams') renderExpertGrid();
     if(name==='experts') cvRenderExperts();
+    if(name==='projects') cvRenderProjectsPanel();
     cvSyncUrl();
   }
   /* 执行中的任务在侧边栏项目下挂一条会话 */
@@ -6403,27 +6431,117 @@ const billTemplateWithTokens = billTemplate.replace(
   }
 
 
-  /* ---------- 项目切换 ---------- */
-  function cvRenderProjMenu(){
-    var menu=$('#cvProjMenu'); if(!menu) return;
-    var rows=[{id:'',name:'全部项目',desc:'跨项目聚合，看分配给我的任务与评审'}].concat(
-      CV_PROJECTS.map(function(p){
-        var tasks=CV_TASKS.filter(function(t){return t.project===p.id}).length;
-        return {id:p.id,name:p.name,dot:p.dot,desc:tasks+' 个任务'};
-      }));
-    menu.innerHTML=rows.map(function(r){
-      return '<div class="cv-proj-item'+(r.id===cvProject?' checked':'')+'" data-cv-proj="'+r.id+'">'
-        +(r.dot?'<span class="dot '+r.dot+'"></span>':'<span class="cv-proj-all"></span>')
-        +'<span class="cv-proj-n">'+xesc(r.name)+'<em>'+xesc(r.desc)+'</em></span>'
-        +'<svg class="ic ic-sm cv-proj-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>';
+  /* ---------- 项目（与任务管理平级的独立页签，归属当前工作区） ---------- */
+  var cvProjectQuery='', cvProjectStatusF='', cvProjectOwnerF='';
+  function cvProjectTaskStats(pid){
+    var tasks=CV_TASKS.filter(function(t){return t.project===pid;});
+    var n=function(s){return tasks.filter(function(t){return t.status===s;}).length;};
+    return {total:tasks.length,done:n('已完成'),doing:n('进行中'),review:n('待评审'),blocked:n('已失败')};
+  }
+  function cvProjectProgressHtml(done,total){
+    if(!total) return '<span class="cv-proj-progress__none">暂无任务</span>';
+    var pct=Math.round(done/total*100), r=7, circ=2*Math.PI*r;
+    var tone=pct>=100?'#08a040':pct>50?'#4d89ff':'#b8b8b8';
+    return '<span class="cv-proj-progress"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">'
+      +'<circle cx="9" cy="9" r="'+r+'" fill="none" stroke="#ececec" stroke-width="2.5"/>'
+      +'<circle cx="9" cy="9" r="'+r+'" fill="none" stroke="'+tone+'" stroke-width="2.5" stroke-dasharray="'+circ+'" stroke-dashoffset="'+(circ*(1-done/total))+'" stroke-linecap="round" transform="rotate(-90 9 9)"/>'
+      +'</svg><span class="cv-proj-progress__text">'+done+'/'+total+'</span></span>';
+  }
+  function cvProjectOwners(){
+    var set=[]; cvWorkspaceProjects().forEach(function(p){ if(p.owner && set.indexOf(p.owner)<0) set.push(p.owner); });
+    return set;
+  }
+  /* 卡片上「状态」「负责人」就地改：点开小弹层直接选，不用进详情 */
+  function cvToggleProjectField(field,id,el,ev){
+    if(ev) ev.stopPropagation();
+    var wrap=el.parentNode;
+    var already=wrap.querySelector('.cv-proj-pop');
+    $$('.cv-proj-pop').forEach(function(d){ d.remove(); });
+    if(already) return; /* 再点一下同一个触发器，只收起 */
+    var p=cvProjectById(id); if(!p) return;
+    var opts = field==='status'
+      ? CV_PROJECT_STATUS.map(function(s){ return {value:s.id,label:s.label,tone:s.tone}; })
+      : cvProjectOwners().map(function(o){ return {value:o,label:o}; }).concat([{value:'',label:'无负责人'}]);
+    var current = field==='status' ? p.status : p.owner;
+    var dd=document.createElement('div'); dd.className='cv-proj-pop';
+    opts.forEach(function(o){
+      var item=document.createElement('div');
+      item.className='cv-proj-pop-item'+(o.value===current?' cv-proj-pop-item--active':'');
+      item.innerHTML=(o.tone?'<span class="cv-proj-pop-dot" style="background:'+o.tone+'"></span>':'')+xesc(o.label);
+      item.addEventListener('click',function(e){
+        e.stopPropagation();
+        if(field==='status') p.status=o.value; else p.owner=o.value;
+        dd.remove();
+        cvRenderProjectsPanel();
+      });
+      dd.appendChild(item);
+    });
+    wrap.appendChild(dd);
+  }
+  document.addEventListener('click',function(){ $$('.cv-proj-pop').forEach(function(d){ d.remove(); }); });
+  function cvPopulateProjectFilters(){
+    var sf=$('#cvProjectStatusFilter');
+    if(sf) sf.innerHTML='<option value="">全部状态</option>'+CV_PROJECT_STATUS.map(function(s){
+      return '<option value="'+s.id+'"'+(cvProjectStatusF===s.id?' selected':'')+'>'+s.label+'</option>';
     }).join('');
+    var of=$('#cvProjectOwnerFilter');
+    if(of) of.innerHTML='<option value="">全部负责人</option>'+cvProjectOwners().map(function(o){
+      return '<option value="'+xesc(o)+'"'+(cvProjectOwnerF===o?' selected':'')+'>'+xesc(o)+'</option>';
+    }).join('')+'<option value="__none__"'+(cvProjectOwnerF==='__none__'?' selected':'')+'>无负责人</option>';
+  }
+  function cvFilteredProjects(){
+    var q=cvProjectQuery.trim().toLowerCase();
+    return cvWorkspaceProjects().filter(function(p){
+      if(cvProjectStatusF && p.status!==cvProjectStatusF) return false;
+      if(cvProjectOwnerF==='__none__' ? p.owner : (cvProjectOwnerF && p.owner!==cvProjectOwnerF)) return false;
+      if(!q) return true;
+      return (p.name+' '+(p.desc||'')+' '+(p.repo||'')).toLowerCase().indexOf(q)>=0;
+    });
+  }
+  function cvRenderProjectsPanel(){
+    var grid=$('#cvProjectGrid'); if(!grid) return;
+    cvPopulateProjectFilters();
+    var all=cvWorkspaceProjects();
+    var desc=$('#cvProjectDesc');
+    if(desc) desc.textContent='工作区内的全部项目 · 共 '+all.length+' 个 · '
+      +all.filter(function(p){return p.status==='active';}).length+' 个进行中';
+    var rows=cvFilteredProjects();
+    var projectCards=rows.map(function(p){
+      var meta=cvProjectStatusMeta(p.status), s=cvProjectTaskStats(p.id);
+      var flow=[];
+      if(s.doing) flow.push(s.doing+' 进行中');
+      if(s.review) flow.push(s.review+' 待审');
+      var flowHtml=flow.join(' · ')+(s.blocked?' <span class="cv-proj-blocked">· '+s.blocked+' 阻塞</span>':'');
+      var repoDim=p.repo
+        ? '<span class="assignee"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>'+xesc(p.repo)+'</span>'
+        : '<span class="assignee assignee--muted"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>未关联代码</span>';
+      var statusField='<span class="cv-proj-field">'
+        +'<button type="button" class="cv-proj-status-chip cv-proj-editable" style="background:'+meta.tone+'22;color:'+meta.tone+'" onclick="cvToggleProjectField(\'status\',\''+p.id+'\',this,event)">'
+        +meta.label+'<svg class="cv-proj-caret" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button></span>';
+      var ownerField='<span class="cv-proj-field"><button type="button" class="assignee cv-proj-editable'+(p.owner?'':' assignee--muted')+'" onclick="cvToggleProjectField(\'owner\',\''+p.id+'\',this,event)">'
+        +'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'+xesc(p.owner||'无负责人')
+        +'<svg class="cv-proj-caret" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button></span>';
+      return '<div class="app-card x-card cv-project-card" data-cv-proj="'+p.id+'">'
+        +'<div class="card-top"><svg class="cv-proj-ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>'
+        +'<div class="card-titles"><div class="card-title-row"><span class="card-title">'+xesc(p.name)+'</span>'
+        +statusField+'</div></div></div>'
+        +'<div class="card-desc">'+xesc(p.desc||'暂无描述')+'</div>'
+        +'<div class="cv-proj-progress-row">'+cvProjectProgressHtml(s.done,s.total)
+        +(s.total?'<span class="cv-proj-flow">'+flowHtml+'</span>':'')+'</div>'
+        +'<div class="card-footer"><span class="cv-proj-dims">'+ownerField+repoDim+'</span>'
+        +'<span class="cv-proj-time">'+xesc(p.updated||'')+'</span></div></div>';
+    }).join('');
+    var newCard=cvProjectQuery?'':('<button type="button" class="app-card x-new-card" data-cv-proj-add><span class="x-new-ic">＋</span><span>新建项目</span>'
+      +'<span class="x-new-sub">归属「'+xesc(cvWorkspaceName(cvWorkspace))+'」，可选择关联 Git 仓库</span></button>');
+    if(!rows.length && cvProjectQuery){
+      grid.innerHTML='<div class="x-empty">没有匹配的项目</div>';
+    }else{
+      grid.innerHTML=projectCards+newCard;
+    }
   }
   function cvSetProject(id){
     cvProject=id||'';
-    var label=$('#cvProjLabel');
-    if(label) label.textContent=cvProject?cvProjectName(cvProject):'全部项目';
-    var sw=$('#cvProjSwitch'); if(sw) sw.classList.toggle('cv-proj--on',!!cvProject);
-    cvRenderProjMenu();
+    cvRenderProjectsPanel();
     cvRenderTaskStats(); cvRenderTasks(); cvInjectCardActions();
     cvRenderReviewStats(); cvRenderReviews();
     cvRenderMemberStats(); cvRenderMembers();
@@ -6438,16 +6556,123 @@ const billTemplateWithTokens = billTemplate.replace(
   function cvSyncUrl(){
     setUrlState('/collab?tab='+cvLastTab+(cvProject?'&proj='+cvProject:''));
   }
-  var cvProjBtn=$('#cvProjBtn');
-  if(cvProjBtn) cvProjBtn.addEventListener('click',function(e){
-    e.stopPropagation();
-    var sw=$('#cvProjSwitch'); if(sw) sw.classList.toggle('open');
-  });
-  var cvProjMenu=$('#cvProjMenu');
-  if(cvProjMenu) cvProjMenu.addEventListener('click',function(e){
+  /* ---------- 新建项目弹窗 ---------- */
+  var CV_PROJECT_DOTS=['blue','orange','green'];
+  function cvOpenNewProjectModal(){
+    $('#cv-np-name').value='';
+    $('#cv-np-desc').value='';
+    $('#cv-np-repo').value='';
+    $('#cv-np-status-val').textContent=CV_PROJECT_STATUS[0].label;
+    $('#cv-np-owner-val').textContent='暂不指定';
+    $('#cv-newproject-overlay').style.display='flex';
+    setTimeout(function(){ $('#cv-np-name').focus(); },40);
+  }
+  function cvCloseNewProjectModal(){ $('#cv-newproject-overlay').style.display='none'; }
+  function cvConfirmNewProject(){
+    var name=$('#cv-np-name').value.trim();
+    if(!name){ toast('请输入项目名称','warning'); return; }
+    var statusLabel=$('#cv-np-status-val').textContent;
+    var statusMeta=CV_PROJECT_STATUS.filter(function(s){return s.label===statusLabel;})[0]||CV_PROJECT_STATUS[0];
+    var ownerLabel=$('#cv-np-owner-val').textContent;
+    var repo=$('#cv-np-repo').value.trim();
+    var id='p'+Date.now();
+    CV_PROJECTS.push({
+      id:id,name:name,dot:CV_PROJECT_DOTS[CV_PROJECTS.length%CV_PROJECT_DOTS.length],
+      defaultTeam:null,workspace:cvWorkspace,
+      desc:$('#cv-np-desc').value.trim(),status:statusMeta.id,
+      owner:ownerLabel==='暂不指定'?'':ownerLabel,repo:repo||null,updated:'刚刚'
+    });
+    cvCloseNewProjectModal();
+    cvSetProject(id);
+    toast('已创建项目「'+name+'」','success');
+  }
+  var cvProjectGrid=$('#cvProjectGrid');
+  if(cvProjectGrid) cvProjectGrid.addEventListener('click',function(e){
+    if(e.target.closest('[data-cv-proj-add]')){ cvOpenNewProjectModal(); return; }
     var it=e.target.closest('[data-cv-proj]'); if(!it) return;
-    $('#cvProjSwitch').classList.remove('open');
     cvSetProject(it.getAttribute('data-cv-proj'));
+  });
+  var cvProjectSearchInput=$('#cvProjectSearch');
+  if(cvProjectSearchInput) cvProjectSearchInput.addEventListener('input',function(){
+    cvProjectQuery=this.value; cvRenderProjectsPanel();
+  });
+  var cvProjectStatusSel=$('#cvProjectStatusFilter');
+  if(cvProjectStatusSel) cvProjectStatusSel.addEventListener('change',function(){
+    cvProjectStatusF=this.value; cvRenderProjectsPanel();
+  });
+  var cvProjectOwnerSel=$('#cvProjectOwnerFilter');
+  if(cvProjectOwnerSel) cvProjectOwnerSel.addEventListener('change',function(){
+    cvProjectOwnerF=this.value; cvRenderProjectsPanel();
+  });
+  var cvNewProjectBtn=$('#cvNewProjectBtn');
+  if(cvNewProjectBtn) cvNewProjectBtn.addEventListener('click',function(){ cvOpenNewProjectModal(); });
+
+  /* ---------- 工作区：项目归属的顶层容器，一次只能激活一个 ---------- */
+  function cvWorkspaceName(id){
+    var w=CV_WORKSPACES.filter(function(w){return w.id===id})[0];
+    return w?w.name:'工作区';
+  }
+  function cvRenderWsMenu(){
+    var trigger=$('#cvWsLabel'); if(trigger) trigger.textContent=cvWorkspaceName(cvWorkspace);
+    var dot=$('#cvWsDot'); if(dot) dot.textContent=(CV_WORKSPACES.filter(function(w){return w.id===cvWorkspace})[0]||{}).short||'';
+    var menu=$('#cvWsMenu'); if(!menu) return;
+    menu.innerHTML=CV_WORKSPACES.map(function(w){
+      return '<div class="cv-proj-item'+(w.id===cvWorkspace?' checked':'')+'" data-cv-ws="'+w.id+'">'
+        +'<span class="cv-proj-n">'+xesc(w.name)+'</span>'
+        +'<svg class="ic ic-sm cv-proj-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>';
+    }).join('')
+      +'<div class="menu-divider"></div>'
+      +'<div class="cv-proj-item cv-proj-add" data-cv-ws-add>'
+      +'<svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>'
+      +'<span class="cv-proj-n">新建工作区</span></div>';
+  }
+  function cvSetWorkspace(id){
+    if(id===cvWorkspace) return;
+    cvWorkspace=id;
+    cvRenderWsMenu();
+    /* 切换工作区后，若当前选中的项目不属于新工作区，回到「全部项目」聚合视角 */
+    if(cvProject && !cvWorkspaceProjects().some(function(p){return p.id===cvProject})){
+      cvSetProject('');
+    }else{
+      cvRenderProjectsPanel();
+    }
+  }
+  var cvWsBtn=$('#cvWsBtn');
+  if(cvWsBtn) cvWsBtn.addEventListener('click',function(e){
+    e.stopPropagation();
+    $('#cvWsSwitch').classList.toggle('open');
+  });
+  var cvWsMenu=$('#cvWsMenu');
+  if(cvWsMenu) cvWsMenu.addEventListener('click',function(e){
+    if(e.target.closest('[data-cv-ws-add]')){ $('#cvWsSwitch').classList.remove('open'); toast('新建工作区（示意）'); return; }
+    var it=e.target.closest('[data-cv-ws]'); if(!it) return;
+    $('#cvWsSwitch').classList.remove('open');
+    cvSetWorkspace(it.getAttribute('data-cv-ws'));
+  });
+
+  /* ---------- 「管理」收纳菜单：协作人员/专家/专家团/设置，选中态跟随当前页签，不做持久化 ---------- */
+  var CV_MORE_VIEWS={members:'协作人员管理',experts:'专家管理',teams:'专家团管理',config:'设置'};
+  function cvUpdateMoreTrigger(name){
+    var isMore=!!CV_MORE_VIEWS[name];
+    var label=$('#cvMoreLabel'); if(label) label.textContent=isMore?CV_MORE_VIEWS[name]:'管理';
+    var btn=$('#cvMoreBtn'); if(btn) btn.classList.toggle('tab-nav-item--active',isMore);
+    $$('#cvMoreMenu .cv-proj-item').forEach(function(it){
+      it.classList.toggle('checked',isMore&&it.getAttribute('data-cvview')===name);
+    });
+  }
+  var cvMoreBtn=$('#cvMoreBtn');
+  if(cvMoreBtn) cvMoreBtn.addEventListener('click',function(e){
+    e.stopPropagation();
+    $('#cvMoreSwitch').classList.toggle('open');
+  });
+  var cvMoreMenu=$('#cvMoreMenu');
+  if(cvMoreMenu) cvMoreMenu.addEventListener('click',function(e){
+    var it=e.target.closest('[data-cvview]'); if(!it) return;
+    $('#cvMoreSwitch').classList.remove('open');
+    cvSwitchView(it.getAttribute('data-cvview'));
+  });
+  document.addEventListener('click',function(){
+    $$('#view-collab .cv-proj.open').forEach(function(el){el.classList.remove('open')});
   });
 
   /* ---------- 专家团：项目默认路由绑定 ---------- */
@@ -6571,7 +6796,8 @@ const billTemplateWithTokens = billTemplate.replace(
     cvRenderMemberStats(); cvRenderMembers();
     cvInjectCardActions();
     cvCaptureConfigDefaults();
-    cvRenderProjMenu(); cvRenderTeamBind(); cvApplyConfigScope(); cvUpdateCounts();
+    cvRenderWsMenu(); cvRenderProjectsPanel(); cvRenderTeamBind(); cvApplyConfigScope(); cvUpdateCounts();
+    cvUpdateMoreTrigger(cvLastTab);
   }
   var cvExpertSearch=$('#cvExpertSearch');
   if(cvExpertSearch) cvExpertSearch.addEventListener('input',function(){ cvExpertKw=this.value; cvRenderExperts(); });
@@ -6628,6 +6854,10 @@ const billTemplateWithTokens = billTemplate.replace(
   window.cvConfirmAddMembers=cvConfirmAddMembers;
   window.cvDeleteMember=cvDeleteMember;
   window.cvToggleMemberLevelMenu=cvToggleMemberLevelMenu;
+  window.cvOpenNewProjectModal=cvOpenNewProjectModal;
+  window.cvCloseNewProjectModal=cvCloseNewProjectModal;
+  window.cvConfirmNewProject=cvConfirmNewProject;
+  window.cvToggleProjectField=cvToggleProjectField;
 
   /* 未登录时清理 URL，确保页面仅显示登录页 */
   if(!_authedUser) history.replaceState(null,'','/');
