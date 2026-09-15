@@ -1979,6 +1979,27 @@
 .x-av-opt:hover { border-color: var(--border-hover); }
 .x-av-opt.on { border-color: #495dff; }
 
+/* 可见性单选卡片：创建专家 / 专家团 共用 */
+.visibility-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.visibility-option {
+  display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px;
+  border: 1px solid var(--border-hover); border-radius: 10px; cursor: pointer; transition: all .15s;
+}
+.visibility-option input { display: none; }
+.visibility-option:hover { border-color: var(--border-focus); }
+.visibility-option:has(input:checked) { border-color: var(--brand); background: var(--brand-fill); }
+.avo-ic { flex: none; width: 20px; height: 20px; margin-top: 1px; color: var(--text-secondary); }
+.avo-ic svg { width: 100%; height: 100%; }
+.visibility-option:has(input:checked) .avo-ic { color: var(--brand); }
+.avo-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.avo-title { font-size: 14px; font-weight: 500; color: var(--text); }
+.avo-sub { font-size: 12px; color: var(--text-secondary); }
+@media(max-width:640px){ .visibility-options { grid-template-columns: 1fr; } }
+/* 卡片上的可见性徽标：专家 / 专家团卡片共用 */
+.card-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.ptag-ic { display: inline-flex; align-items: center; gap: 4px; }
+.ptag-ic svg { width: 12px; height: 12px; flex: none; }
+
 .x-mode-picker { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
 .x-mode-opt {
   padding: 5px 13px;
@@ -2333,6 +2354,16 @@
 .cv-scope .tp-item--selected .tp-check{background:var(--brand);border-color:var(--brand)}
 .cv-scope .tp-check svg{opacity:0;transition:opacity .15s}
 .cv-scope .tp-item--selected .tp-check svg{opacity:1}
+.cv-scope .sync-modal__subtitle{padding:6px 24px 0;font-size:12.5px;color:var(--text-secondary)}
+.cv-scope .seg-toggle{display:flex;gap:8px}
+.cv-scope .seg-toggle__btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 10px;border:1.5px solid var(--border-hover);border-radius:12px;background:#fff;color:var(--text-secondary);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
+.cv-scope .seg-toggle__btn svg{width:16px;height:16px}
+.cv-scope .seg-toggle__btn:hover{border-color:var(--border-focus);background:var(--hover)}
+.cv-scope .seg-toggle__btn--active{border-color:var(--brand);background:var(--brand-fill);color:var(--brand);box-shadow:0 0 0 1px var(--brand)}
+.cv-scope .seg-toggle__hint{font-size:10.5px;font-weight:400;color:var(--text-soft)}
+.cv-scope .seg-toggle__btn--active .seg-toggle__hint{color:var(--brand)}
+.cv-scope .tp-empty{padding:28px;text-align:center;color:var(--text-soft);font-size:13px}
+.cv-scope .addmember-selected-count{margin-right:auto;font-size:12px;color:var(--brand);font-weight:500}
 
 /* ============ EXPERT CARDS ============ */
 #view-collab .expert-section-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:12px;padding-left:4px;display:flex;align-items:center;gap:8px}

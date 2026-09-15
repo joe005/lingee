@@ -1566,6 +1566,21 @@
           </div>
         </section>
         <section class="env-form-section">
+          <div class="env-form-section-title">可见性</div>
+          <div class="visibility-options">
+            <label class="visibility-option">
+              <input type="radio" name="teamVisibility" id="teamVisWorkspace" value="workspace" checked>
+              <span class="avo-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18M3 12h18"/></svg></span>
+              <span class="avo-text"><span class="avo-title">工作区</span><span class="avo-sub">全体成员可召唤，只能添加工作区专家</span></span>
+            </label>
+            <label class="visibility-option">
+              <input type="radio" name="teamVisibility" id="teamVisPrivate" value="private">
+              <span class="avo-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>
+              <span class="avo-text"><span class="avo-title">个人</span><span class="avo-sub">仅你和工作区管理员可见，可添加任意专家</span></span>
+            </label>
+          </div>
+        </section>
+        <section class="env-form-section">
           <div class="env-form-section-title">成员 <span class="team-count" id="teamCount">0</span>
             <span class="team-hint-inline">点名字看定义，星标设组长</span></div>
           <div class="team-members" id="teamMembers"></div>
@@ -1668,6 +1683,21 @@
           </div>
           <div class="env-form-section-title x-sec-sub">头像</div>
           <div class="x-av-picker" id="xeAvatars"></div>
+        </section>
+        <section class="env-form-section">
+          <div class="env-form-section-title">可见性</div>
+          <div class="visibility-options">
+            <label class="visibility-option">
+              <input type="radio" name="expertVisibility" id="xeVisWorkspace" value="workspace" checked>
+              <span class="avo-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18M3 12h18"/></svg></span>
+              <span class="avo-text"><span class="avo-title">工作区</span><span class="avo-sub">全体成员可召唤</span></span>
+            </label>
+            <label class="visibility-option">
+              <input type="radio" name="expertVisibility" id="xeVisPrivate" value="private">
+              <span class="avo-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>
+              <span class="avo-text"><span class="avo-title">个人</span><span class="avo-sub">仅你和工作区管理员可见</span></span>
+            </label>
+          </div>
         </section>
         <section class="env-form-section">
           <div class="env-form-section-title">可承担的工作<span class="env-required">*</span>
@@ -2145,16 +2175,31 @@
       <h3 class="sync-modal__title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>添加协作人员</h3>
       <button class="sync-modal__close" onclick="cvCloseAddMemberModal()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
+    <div class="sync-modal__subtitle">从 Lingee 组织架构中选择人员，并设置其协作身份</div>
     <div class="sync-modal__body">
       <div class="sync-modal__field">
+        <label class="sync-modal__label">添加为</label>
+        <div class="seg-toggle" id="cv-add-level-toggle">
+          <button type="button" class="seg-toggle__btn seg-toggle__btn--active" data-level="member" onclick="cvSetAddLevel(this,'member')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            成员<span class="seg-toggle__hint">可参与任务与评审</span>
+          </button>
+          <button type="button" class="seg-toggle__btn" data-level="admin" onclick="cvSetAddLevel(this,'admin')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg>
+            管理员<span class="seg-toggle__hint">可管理人员与项目设置</span>
+          </button>
+        </div>
+      </div>
+      <div class="sync-modal__field">
         <label class="sync-modal__label">从 Lingee 获取人员</label>
-        <div class="search-wrap" style="margin-bottom:12px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#b5b5ae" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input id="cv-tp-search" placeholder="搜索姓名、邮箱..." onkeyup="cvSearchThirdPartyMembers(this.value)" /></div>
+        <div class="search-wrap" style="margin-bottom:12px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#b5b5ae" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input id="cv-tp-search" placeholder="搜索姓名、邮箱..." autocomplete="off" autocorrect="off" spellcheck="false" readonly onfocus="this.removeAttribute('readonly')" onkeyup="cvSearchThirdPartyMembers(this.value)" /></div>
       </div>
       <div class="sync-modal__field">
         <div id="cv-tp-list" style="max-height:360px;overflow-y:auto"></div>
       </div>
     </div>
     <div class="sync-modal__footer">
+      <span class="addmember-selected-count" id="cv-add-selected-count"></span>
       <button class="sync-modal__btn sync-modal__btn--ghost" onclick="cvCloseAddMemberModal()">取消</button>
       <button class="sync-modal__btn sync-modal__btn--primary" onclick="cvConfirmAddMembers()">添加选中</button>
     </div>

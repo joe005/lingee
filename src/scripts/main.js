@@ -4682,7 +4682,8 @@ const billTemplateWithTokens = billTemplate.replace(
           +'<button type="button" class="x-call" data-call-team="'+t.id+'" title="召唤这个专家团">召唤</button>'
           +'<div class="card-top">'+facesHtml(t.members,4)
           +'<div class="card-titles"><div class="card-title-row"><span class="card-title">'+xesc(t.name)+'</span>'
-          +(t.preset?'<span class="x-badge">内置</span>':'')+'</div>'
+          +(t.preset?'<span class="x-badge">内置</span>':'')
+          +(t.visibility==='private'?'<span class="x-badge">个人</span>':'')+'</div>'
           +'<div class="x-sub">'+xesc(t.by)+' · '+t.members.length+' 位专家'
           +(gn?' · <span class="x-sub-gate">'+gn+' 个人工确认</span>':'')+'</div></div></div>'
           +'<div class="card-desc">'+xesc(t.desc)+'</div>'
@@ -4958,7 +4959,7 @@ const billTemplateWithTokens = billTemplate.replace(
     });
     if(activePick.kind==='expert'&&activePick.id===id) clearPick();
     if(expertModal) expertModal.classList.remove('show');
-    saveTeams(); renderExpertGrid(); renderExpertChips();
+    saveTeams(); renderExpertGrid(); renderExpertChips(); cvRenderExperts();
     toast('已删除「'+e.name+'」','success');
   }
 
@@ -4972,7 +4973,7 @@ const billTemplateWithTokens = billTemplate.replace(
     var b=e.target.closest('.modal-tab'); if(b) setXeTab(b.getAttribute('data-xtab'));
   });
   function blankExpert(){
-    return {k:'eng',name:'',role:'',desc:'',tags:[],modes:['分析','设计','实现'],
+    return {k:'eng',name:'',role:'',desc:'',visibility:'workspace',tags:[],modes:['分析','设计','实现'],
             comp:[],cmds:[['','']]};
   }
   function openExpertEditor(id){
@@ -4980,12 +4981,13 @@ const billTemplateWithTokens = billTemplate.replace(
     var e=id?EX[id]:null;
     xeEditingId=(e&&e.mine)?id:null;
     xeDraft = xeEditingId
-      ? {k:e.k,name:e.name,role:e.role,desc:e.desc,tags:e.tags.slice(),modes:e.modes.slice(),
+      ? {k:e.k,name:e.name,role:e.role,desc:e.desc,visibility:e.visibility==='private'?'private':'workspace',tags:e.tags.slice(),modes:e.modes.slice(),
          comp:e.comp.slice(),cmds:e.cmds.length?e.cmds.map(function(c){return c.slice()}):[['','']]}
       : blankExpert();
     $('#expertEditTitle').textContent = xeEditingId ? '编辑专家' : '创建专家';
     $('#xeName').value=xeDraft.name; $('#xeRole').value=xeDraft.role; $('#xeDesc').value=xeDraft.desc;
     $('#xeTags').value=xeDraft.tags.join('、'); $('#xeComp').value=xeDraft.comp.join('、');
+    $('#xeVisWorkspace').checked=xeDraft.visibility!=='private'; $('#xeVisPrivate').checked=xeDraft.visibility==='private';
     $('#xeDeleteBtn').classList.toggle('hidden', !xeEditingId);
     setXeTab('base');
     renderExpertEditor();
@@ -5045,13 +5047,14 @@ const billTemplateWithTokens = billTemplate.replace(
       var d=xeDraft;
       d.name=$('#xeName').value.trim(); d.role=$('#xeRole').value.trim(); d.desc=$('#xeDesc').value.trim();
       d.tags=splitList($('#xeTags').value); d.comp=splitList($('#xeComp').value);
+      var xeVisEl=$('input[name="expertVisibility"]:checked'); d.visibility=xeVisEl&&xeVisEl.value==='private'?'private':'workspace';
       if(!d.name){ setXeTab('base'); toast('请填写专家名称','warning'); $('#xeName').focus(); return; }
       if(!d.role){ setXeTab('base'); toast('请填写职称，它会显示在名字后面','warning'); $('#xeRole').focus(); return; }
       if(!d.modes.length){ setXeTab('base'); toast('至少勾选一项「可承担的工作」，否则他在专家团里领不到任务','warning'); return; }
       var cmds=d.cmds.map(function(c){ return [String(c[0]||'').trim(),String(c[1]||'').trim()]; })
                      .filter(function(c){ return c[0]; });
       var rec={id:xeEditingId||('my-'+Date.now()),mine:true,k:d.k,name:d.name,role:d.role,by:'我创建的',
-               desc:d.desc,tags:d.tags,modes:d.modes.slice(),comp:d.comp,cmds:cmds,
+               desc:d.desc,visibility:d.visibility,tags:d.tags,modes:d.modes.slice(),comp:d.comp,cmds:cmds,
               };
       if(xeEditingId){
         for(var i=0;i<MY_EXPERTS.length;i++) if(MY_EXPERTS[i].id===xeEditingId){ MY_EXPERTS[i]=rec; break; }
@@ -5062,7 +5065,7 @@ const billTemplateWithTokens = billTemplate.replace(
       }
       rebuildExperts();
       expertEditModal.classList.remove('show');
-      saveTeams(); renderExpertGrid(); renderExpertChips();
+      saveTeams(); renderExpertGrid(); renderExpertChips(); cvRenderExperts();
     });
   }
 
@@ -5083,15 +5086,16 @@ const billTemplateWithTokens = billTemplate.replace(
   function openTeamModal(id){
     var t=id?teamById(id):null;
     teamEditingId=id||null;
-    teamDraft=t?{name:t.name,desc:t.desc,leadId:t.leadId,members:t.members.slice(),preset:!!t.preset,
+    teamDraft=t?{name:t.name,desc:t.desc,visibility:t.visibility==='private'?'private':'workspace',leadId:t.leadId,members:t.members.slice(),preset:!!t.preset,
                  domains:(t.domains||[]).slice(),gates:teamGates(t).slice(),
                  cmds:(t.cmds&&t.cmds.length)?t.cmds.map(function(c){return c.slice()}):[['','']]}
-              :{name:'',desc:'',leadId:'software-team-lead',members:['software-team-lead','software-engineer'],preset:false,
+              :{name:'',desc:'',visibility:'workspace',leadId:'software-team-lead',members:['software-team-lead','software-engineer'],preset:false,
                  domains:[],gates:['implement'],
                  cmds:[['','']]};
     $('#teamModalTitle').textContent = t?t.name:'新建专家团';
     $('#teamReadonlyTip').classList.toggle('hidden', !teamDraft.preset);
     $('#teamName').value=teamDraft.name; $('#teamDesc').value=teamDraft.desc;
+    $('#teamVisWorkspace').checked=teamDraft.visibility!=='private'; $('#teamVisPrivate').checked=teamDraft.visibility==='private';
     $('#teamName').readOnly=teamDraft.preset; $('#teamDesc').readOnly=teamDraft.preset;
     $('#teamName').classList.toggle('x-ro',teamDraft.preset);
     $('#teamDesc').classList.toggle('x-ro',teamDraft.preset);
@@ -5214,6 +5218,9 @@ const billTemplateWithTokens = billTemplate.replace(
     $('#teamCancelBtn').addEventListener('click',function(){ teamModal.classList.remove('show') });
     $('#teamName').addEventListener('input',function(){ if(teamDraft.preset){ this.value=teamDraft.name; return; } teamDraft.name=this.value });
     $('#teamDesc').addEventListener('input',function(){ if(teamDraft.preset){ this.value=teamDraft.desc; return; } teamDraft.desc=this.value });
+    $$('input[name="teamVisibility"]').forEach(function(r){ r.addEventListener('change',function(){
+      if(this.checked) teamDraft.visibility=this.value==='private'?'private':'workspace';
+    }); });
     $('#teamAddBtn').addEventListener('click',function(){ openMemberModal() });
     $('#teamAddCmd').addEventListener('click',function(){ teamDraft.cmds.push(['','']); renderTeamModal(); });
     $('#teamCallBtn').addEventListener('click',function(){
@@ -5231,7 +5238,7 @@ const billTemplateWithTokens = billTemplate.replace(
       TEAMS=TEAMS.filter(function(x){ return x.id!==t.id; });
       if(activePick.kind==='team'&&activePick.id===t.id) clearPick();
       teamModal.classList.remove('show');
-      saveTeams(); renderExpertGrid(); renderExpertChips();
+      saveTeams(); renderExpertGrid(); renderExpertChips(); cvRenderExperts();
       toast('已删除「'+t.name+'」','success');
     });
     $('#teamConfigForm').addEventListener('submit',function(ev){
@@ -5243,17 +5250,17 @@ const billTemplateWithTokens = billTemplate.replace(
       if(d.preset || !teamEditingId){
         var nid='team-'+Date.now();
         TEAMS.push({id:nid,preset:false,name:d.preset?name+' 副本':name,by:'我创建的',
-          desc:d.desc,domains:(d.domains||[]).slice(),gates:teamGates(d).slice(),
+          desc:d.desc,visibility:d.visibility,domains:(d.domains||[]).slice(),gates:teamGates(d).slice(),
           leadId:d.leadId,members:d.members.slice(),cmds:teamCmdList(d)});
         toast(d.preset?'已另存为你的专家团':'专家团已创建','success');
       }else{
         var t=teamById(teamEditingId);
-        t.name=name; t.desc=d.desc; t.leadId=d.leadId; t.members=d.members.slice(); t.cmds=teamCmdList(d);
+        t.name=name; t.desc=d.desc; t.visibility=d.visibility; t.leadId=d.leadId; t.members=d.members.slice(); t.cmds=teamCmdList(d);
         t.domains=(d.domains||[]).slice(); t.gates=teamGates(d).slice();
         toast('已保存','success');
       }
       teamModal.classList.remove('show');
-      saveTeams(); renderExpertGrid(); renderExpertChips();
+      saveTeams(); renderExpertGrid(); renderExpertChips(); cvRenderExperts();
     });
   }
 
@@ -5263,7 +5270,12 @@ const billTemplateWithTokens = billTemplate.replace(
     setTimeout(function(){ $('#memberSearchInput').focus() },40); }
   function renderMemberList(){
     var kw=memberKw.trim();
-    var rows=EXPERTS.filter(function(e){ return !kw || (e.name+e.role+e.desc+e.tags.join()).indexOf(kw)>=0; });
+    /* 工作区专家团只能包含工作区专家，避免团切到工作区可见后混入个人专家 */
+    var wsOnly=teamDraft&&teamDraft.visibility!=='private';
+    var rows=EXPERTS.filter(function(e){
+      if(wsOnly&&e.visibility==='private'&&teamDraft.members.indexOf(e.id)<0) return false;
+      return !kw || (e.name+e.role+e.desc+e.tags.join()).indexOf(kw)>=0;
+    });
     $('#memberList').innerHTML = rows.length ? rows.map(function(e){
       var on=teamDraft.members.indexOf(e.id)>=0;
       return '<button type="button" class="x-mrow'+(on?' on':'')+'" data-toggle-member="'+e.id+'">'
@@ -6260,12 +6272,28 @@ const billTemplateWithTokens = billTemplate.replace(
   }
 
   
+  var cvAddLevel='member';
   function cvOpenAddMemberModal(){
+    if(!cvCanManageMembers()){cvToast('没有添加协作人员的权限','warning');return;}
     var el=document.getElementById('cv-addmember-overlay');if(el)el.style.display='flex';
+    cvAddLevel='member';
+    var toggle=document.getElementById('cv-add-level-toggle');
+    if(toggle)toggle.querySelectorAll('.seg-toggle__btn').forEach(function(b){b.classList.toggle('seg-toggle__btn--active',b.getAttribute('data-level')==='member');});
+    var tpSearch=document.getElementById('cv-tp-search');if(tpSearch)tpSearch.value='';
     cvSearchThirdPartyMembers('');
   }
   function cvCloseAddMemberModal(){
     var el=document.getElementById('cv-addmember-overlay');if(el)el.style.display='none';
+  }
+  function cvSetAddLevel(btn,level){
+    cvAddLevel=level;
+    var toggle=document.getElementById('cv-add-level-toggle');if(!toggle)return;
+    toggle.querySelectorAll('.seg-toggle__btn').forEach(function(b){b.classList.toggle('seg-toggle__btn--active',b===btn);});
+  }
+  function cvUpdateAddSelectedCount(){
+    var el=document.getElementById('cv-add-selected-count');if(!el)return;
+    var n=document.querySelectorAll('#cv-tp-list .tp-item--selected').length;
+    el.textContent=n>0?'已选择 '+n+' 人':'';
   }
   function cvSearchThirdPartyMembers(q){
     var list=document.getElementById('cv-tp-list');if(!list)return;
@@ -6274,29 +6302,31 @@ const billTemplateWithTokens = billTemplate.replace(
     var filtered=CV_THIRD_PARTY_MEMBERS.filter(function(m){
       return(m.name.toLowerCase().indexOf(q)>=0||m.email.toLowerCase().indexOf(q)>=0)&&existing.indexOf(m.name)<0;
     });
-    if(filtered.length===0){list.innerHTML='<div style="padding:24px;text-align:center;color:var(--text-soft);font-size:13px">未找到可添加的人员</div>';return;}
+    if(filtered.length===0){list.innerHTML='<div class="tp-empty">未找到可添加的人员</div>';cvUpdateAddSelectedCount();return;}
     list.innerHTML=filtered.map(function(m){
-      return '<div class="tp-item" onclick="this.classList.toggle(\'tp-item--selected\')">'
+      return '<div class="tp-item" data-role="'+m.role+'" onclick="this.classList.toggle(\'tp-item--selected\');cvUpdateAddSelectedCount()">'
         +'<div class="tp-avatar">'+m.name[0]+'</div>'
         +'<div class="tp-info"><div class="tp-name">'+m.name+'</div><div class="tp-email">'+m.email+'</div></div>'
         +'<div class="tp-meta"><span class="tp-role">'+m.role+'</span><span class="tp-dept">'+m.dept+'</span></div>'
         +'<div class="tp-check"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>'
         +'</div>';
     }).join('');
+    cvUpdateAddSelectedCount();
   }
   function cvConfirmAddMembers(){
     var selected=document.querySelectorAll('#cv-tp-list .tp-item--selected');
     if(selected.length===0){cvToast('请选择要添加的人员','warning');return;}
     var tagMap={'开发':'member-tag--dev','架构':'member-tag--arch','测试':'member-tag--qa','运维':'member-tag--ops','需求':'member-tag--pm','产品':'member-tag--pm'};
+    var level=cvAddLevel==='admin'?'admin':'member';
     selected.forEach(function(el){
       var name=el.querySelector('.tp-name').textContent;
       var email=el.querySelector('.tp-email').textContent;
       var role=el.querySelector('.tp-role').textContent;
-      CV_MEMBERS.push({name:name,email:email,roles:[{tag:tagMap[role]||'member-tag--dev',text:role}],status:'available',source:'直接添加',
+      CV_MEMBERS.push({name:name,email:email,roles:[{tag:tagMap[role]||'member-tag--dev',text:role}],status:'available',source:'直接添加',level:level,
         projects:cvProject?[cvProject]:CV_PROJECTS.map(function(p){return p.id})});
     });
     cvRenderMembers();cvRenderMemberStats();cvCloseAddMemberModal();
-    cvToast('已添加 '+selected.length+' 名协作人员','success');
+    cvToast('已添加 '+selected.length+' 名协作人员为'+(level==='admin'?'管理员':'成员'),'success');
   }
   function cvDeleteMember(idx){
     if(!CV_MEMBERS[idx])return;
@@ -6393,7 +6423,8 @@ const billTemplateWithTokens = billTemplate.replace(
       +'<button type="button" class="expert-chat-btn" data-cv-call="'+e.id+'" title="召唤这位专家">召唤</button>'
       +'<div class="expert-head"><img class="expert-av" src="'+xav(e.k)+'" alt="">'
       +'<div><div class="expert-name">'+xesc(e.name)
-      +(e.ro?'<span class="expert-flag">只读</span>':'')+'</div>'
+      +(e.ro?'<span class="expert-flag">只读</span>':'')
+      +(e.visibility==='private'?'<span class="expert-flag">个人</span>':'')+'</div>'
       +'<div class="expert-role">'+xesc(e.role)+'</div></div></div>'
       +'<div class="expert-intro">'+xesc(e.desc)+'</div>'
       +'<div class="expert-skills">'+tags+'</div>'
@@ -6850,6 +6881,8 @@ const billTemplateWithTokens = billTemplate.replace(
   window.cvOpenConversation=cvOpenConversation;
   window.cvOpenAddMemberModal=cvOpenAddMemberModal;
   window.cvCloseAddMemberModal=cvCloseAddMemberModal;
+  window.cvSetAddLevel=cvSetAddLevel;
+  window.cvUpdateAddSelectedCount=cvUpdateAddSelectedCount;
   window.cvSearchThirdPartyMembers=cvSearchThirdPartyMembers;
   window.cvConfirmAddMembers=cvConfirmAddMembers;
   window.cvDeleteMember=cvDeleteMember;
