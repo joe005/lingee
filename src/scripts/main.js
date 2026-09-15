@@ -812,11 +812,20 @@ const billTemplateWithTokens = billTemplate.replace(
   /* 已迁移到 React 的顶层视图：内容改由 src/views/*View.jsx 渲染进 #react-view-root，
      #view-apps/#view-skills/#view-agents 这三个原容器留空、永久隐藏（见 index.html）。
      showView() 本身的调用方（侧边栏点击、首页卡片、URL 恢复……）完全不用改，
-     这里只是多一条「这三个名字改成显隐 #react-view-root，并把 hash 交给
-     react-router-dom 的 HashRouter 去挑该渲染哪个视图」的分支。 */
+     这里只是多一条「这三个名字改成显隐 #react-view-root」的分支——React 那边用
+     BrowserRouter（不是 HashRouter，见 src/App.jsx 顶部注释），和这里一样认
+     location.pathname，不需要再单独维护一份 hash。 */
   var REACT_VIEWS=['apps','skills','agents'];
-  function setUrlState(path){
+  function setUrlState(path,notifyReactRouter){
     try{history.replaceState(null,'',path);localStorage.setItem('lingeeUrlState',path)}catch(e){}
+    /* react-router 的 BrowserRouter 只在 popstate 事件上重新读 location 决定渲染哪个
+       路由——history.replaceState() 本身不会触发这个事件（浏览器规范如此，只有前进/
+       后退才会），所以从 vanilla 侧切到应用/技能/智能体开发这三个 React 视图时，光改
+       URL 不够，路由不会跟着变，界面会停在上一个 React 视图不动。手动派发一个
+       popstate 补上这个通知，让 react-router 用改过的新 URL 重新算一遍。 */
+    if(notifyReactRouter){
+      try{ window.dispatchEvent(new PopStateEvent('popstate')); }catch(e){}
+    }
   }
   function showView(which){
     if(REACT_VIEWS.indexOf(which)>=0){
@@ -826,12 +835,10 @@ const billTemplateWithTokens = billTemplate.replace(
       if(viewReact) viewReact.classList.remove('hidden');
       $('.sidebar').classList.remove('hidden');
       closeAll(null);
-      setUrlState('/'+which);
-      if(location.hash!=='#/'+which){ location.hash='#/'+which; }
+      setUrlState('/'+which,true);
       return;
     }
     if(viewReact) viewReact.classList.add('hidden');
-    if(location.hash){ try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){} }
     viewHome.classList.toggle('hidden', which!=='home');
     viewNew.classList.toggle('hidden', which!=='newtask');
     viewChat.classList.toggle('hidden', which!=='chat');

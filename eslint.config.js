@@ -14,6 +14,7 @@ export default [
       '**/dist/**',
       '**/node_modules/**',
       '.claude/**',
+      '.wrangler/**',
       'src/scripts/main.js',
       'src/artifacts/**',
     ],
