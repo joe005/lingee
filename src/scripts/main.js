@@ -207,6 +207,7 @@ const billTemplateWithTokens = billTemplate.replace(
 
   /* ---------- Changelog / 更新通知（与 Build_demo 完全一致） ---------- */
   var changelogData=[
+    {id:'18',date:'2026-09-15',iconBg:'#f3eefe',iconColor:'#8b5cf6',team:'协作开发弹窗系统迁移到 antd（Phase 2 进行中）',body:'协作开发的同步任务/执行/转交/扭转/评审/添加人员/新建项目共 7 个弹窗改用 antd Modal/Form/Select 重写，原有手写显隐 DOM 与 CSS 已删除；弹窗对应的业务逻辑（落库、状态联动、toast）仍复用 main.js 既有实现，未重写。'},
     {id:'17',date:'2026-09-15',iconBg:'#eef3ff',iconColor:'#495dff',team:'协作人员管理支持身份分级',body:'新增所有者/管理员/成员三级身份：管理员可调整普通成员身份、移除成员，所有者身份不可修改；「添加人员」按钮按权限显示。'},
     {id:'16',date:'2026-09-15',iconBg:'#f3eefe',iconColor:'#8b5cf6',team:'启动 React 化迁移（Phase 0 + 1 进行中）',body:'产出 React 化迁移方案（docs/react-migration-plan.md）；接入 React 18 + antd 5 + react-router-dom，应用开发/技能开发/智能体开发三个卡片网格迁移为 React 组件；构建产物改为部署到 Cloudflare Pages，不再要求双击本地文件打开。'},
     {id:'15',date:'2026-09-14',iconBg:'#eef3ff',iconColor:'#495dff',team:'应用开发列表 新建体验优化',body:'去除新建应用弹窗，新建应用流程调整为下拉选择应用开发类型，跳转到新会话。'},
@@ -221,6 +222,7 @@ const billTemplateWithTokens = billTemplate.replace(
   ];
   // 每个数据条目对应的 avatar SVG 图标（与 Build_demo 的 lucide 图标一致）
   var changelogIcons={
+    '18':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M9 16h6"/></svg>',
     '17':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
     '16':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>',
     '15':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>',
@@ -5978,37 +5980,31 @@ const billTemplateWithTokens = billTemplate.replace(
     });
   }
 
+  /* ============ 弹窗状态桥（Phase 2 antd 化，见 docs/react-migration-plan.md） ============
+     同步任务/执行/转交/扭转/评审/添加人员/新建项目这 7 个弹窗的 DOM 已经从
+     index.html 删除，改由 src/components/collab/CollabModals.jsx 用 antd
+     Modal/Form 渲染。这里只广播"哪个弹窗要开"，弹窗打开后要做的判断、落库、
+     联动其它 UI（卡片状态、toast、任务列表）仍然 100% 留在这个文件里，React
+     侧只负责收集表单值后调用 window.__lingeeBridge.collab 里对应的函数，不
+     重新发明这些判断。 */
+  var _cvModalState={name:null};
+  var _cvModalListeners=[];
+  function _cvModalNotify(){ _cvModalListeners.slice().forEach(function(fn){ try{fn(_cvModalState);}catch(e){} }); }
+  function _cvModalOpen(name){ _cvModalState={name:name}; _cvModalNotify(); }
+  function _cvModalClose(name){ if(!name||_cvModalState.name===name){ _cvModalState={name:null}; _cvModalNotify(); } }
+  function _cvModalSubscribe(fn){ _cvModalListeners.push(fn); return function(){ var i=_cvModalListeners.indexOf(fn); if(i>=0)_cvModalListeners.splice(i,1); }; }
+  var CV_TASK_MODAL_IDS={'cv-exec-overlay':'exec','cv-transfer-overlay':'transfer','cv-twist-overlay':'twist','cv-review-overlay':'review'};
+
   /* ============ SYNC MODAL ============ */
-  function cvOpenSyncModal(){document.getElementById('cv-sync-overlay').style.display='flex';}
-  function cvCloseSyncModal(){document.getElementById('cv-sync-overlay').style.display='none';}
-  function cvSelectCollabMode(el){
-    var parent=el.parentNode;parent.querySelectorAll('.sync-collab-option').forEach(function(o){o.classList.remove('sync-collab-option--selected');});
-    el.classList.add('sync-collab-option--selected');
-  }
-  function cvToggleSyncDropdown(el,ev){
-    if(ev)ev.stopPropagation();
-    var existing=el.parentNode.querySelector('.sync-dropdown');
-    if(existing){existing.remove();return;}
-    var valId=el.querySelector('.sync-modal__select-placeholder').id;
-    var opts={'cv-sync-type-val':['需求','Bug','任务','改进'],'cv-sync-priority-val':['高','中','低'],'cv-sync-source-val':['对话自建','Jira','TAPD','API','飞书'],'cv-sync-size-val':['小任务','大任务'],
-      'cv-np-status-val':CV_PROJECT_STATUS.map(function(s){return s.label;}),
-      'cv-np-owner-val':['暂不指定'].concat(cvProjectOwners())}[valId]||[];
-    var current=el.querySelector('.sync-modal__select-placeholder').textContent;
-    var dd=document.createElement('div');dd.className='sync-dropdown sync-dropdown--open';
-    opts.forEach(function(o){var item=document.createElement('div');item.className='sync-dropdown-item'+(o===current?' sync-dropdown-item--active':'');item.textContent=o;item.onclick=function(){el.querySelector('.sync-modal__select-placeholder').textContent=o;dd.remove();};dd.appendChild(item);});
-    el.parentNode.appendChild(dd);
-  }
-  document.addEventListener('click',function(){document.querySelectorAll('.sync-dropdown').forEach(function(d){d.remove();});});
-  function cvCollectSyncTaskData(status){
-    var title=document.getElementById('cv-sync-title');if(!title||!title.value.trim()){cvToast('请输入任务标题','warning');return null;}
-    var desc=document.getElementById('cv-sync-desc');
-    var type=document.getElementById('cv-sync-type-val');
-    var priority=document.getElementById('cv-sync-priority-val');
-    var source=document.getElementById('cv-sync-source-val');
-    var size=document.getElementById('cv-sync-size-val');
-    var sel=document.querySelector('#cv-sync-collab-options .sync-collab-option--selected .sync-collab-name');
-    var mode=sel?sel.textContent:'Agent间协作';
-    return{title:title.value.trim(),desc:desc?desc.value.trim():'',type:type?type.textContent:'需求',priority:priority?priority.textContent:'中',source:source?source.textContent:'对话自建',size:size?size.textContent:'小任务',status:status||'未开始',collab:mode,assignee:status==='进行中'?'AI开发Agent':'待分配',progress:0};
+  function cvOpenSyncModal(){ _cvModalOpen('sync'); }
+  function cvCloseSyncModal(){ _cvModalClose('sync'); }
+  function cvBuildSyncTaskData(form,status){
+    form=form||{};
+    var title=(form.title||'').trim();
+    if(!title){cvToast('请输入任务标题','warning');return null;}
+    return{title:title,desc:(form.desc||'').trim(),type:form.type||'需求',priority:form.priority||'中',
+      source:form.source||'对话自建',size:form.size||'小任务',status:status||'未开始',
+      collab:form.collab||'Agent间协作',assignee:status==='进行中'?'AI开发Agent':'待分配',progress:0};
   }
   function cvSaveTaskToStorage(task){
     var tasks=[];try{tasks=JSON.parse(localStorage.getItem('build_tasks')||'[]');}catch(e){}
@@ -6028,74 +6024,52 @@ const billTemplateWithTokens = billTemplate.replace(
     cvRenderTaskStats(); cvRenderTasks(); cvInjectCardActions(); cvApplyFilters(); cvUpdateCounts();
     return row;
   }
-  function cvSaveSyncTask(){
-    var task=cvCollectSyncTaskData('未开始');if(!task)return;
+  function cvSaveSyncTask(form){
+    var task=cvBuildSyncTaskData(form,'未开始');if(!task)return;
     var row=cvAddTask(task);cvSaveTaskToStorage(row);cvCloseSyncModal();
     cvToast('任务已保存到「'+cvProjectName(row.project)+'」任务列表','success');
   }
-  function cvStartSyncTask(){
-    var task=cvCollectSyncTaskData('未开始');if(!task)return;
+  function cvStartSyncTask(form){
+    var task=cvBuildSyncTaskData(form,'未开始');if(!task)return;
     var row=cvAddTask(task);cvSaveTaskToStorage(row);cvCloseSyncModal();
     cvToast('任务已创建到「'+cvProjectName(row.project)+'」，可点击「执行」启动','success');
   }
 
   /* ============ TASK MODALS ============ */
-  function cvOpenTaskModal(id){
-    var el=document.getElementById(id);if(el)el.style.display='flex';
-    if(id==='cv-transfer-overlay'){cvRenderPersonList('cv-transfer-person-list');}
-    if(id==='cv-twist-overlay'){cvRenderWorkflow();cvRenderTwistArtifacts();}
-    if(id==='cv-review-overlay'){cvRenderReviewPersonList();cvRenderReviewArtifacts();}
+  function cvOpenTaskModal(id){ _cvModalOpen(CV_TASK_MODAL_IDS[id]||id); }
+  function cvCloseTaskModal(id){ _cvModalClose(CV_TASK_MODAL_IDS[id]||id); }
+  /* 数据 getter：只返回数据，具体怎么排布是 CollabModals.jsx 的事 */
+  function cvGetMembersForModal(){
+    return CV_MEMBERS.map(function(m){return{name:m.name,roles:m.roles.map(function(r){return r.text;})};});
   }
-  function cvCloseTaskModal(id){var el=document.getElementById(id);if(el)el.style.display='none';}
-  function cvRenderPersonList(listId){
-    var el=document.getElementById(listId);if(!el)return;
-    el.innerHTML=CV_MEMBERS.map(function(m,i){
-      return '<button class="person-item" onclick="cvSelectPersonItem(this)"><div class="person-avatar-sm">'+m.name[0]+'</div><div><div class="person-name-sm">'+m.name+'</div><div class="person-role-sm">'+m.roles.map(function(r){return r.text;}).join(' · ')+'</div></div></button>';
-    }).join('');
-  }
-  function cvRenderReviewPersonList(){
-    var el=document.getElementById('cv-review-person-list');if(!el)return;
+  function cvCurrentWorkflowNode(){
     var card=window.cvCard;var node='开发实现';
-    if(card){var na=card.querySelector('.card-node');if(na)node=na.textContent.replace(/^[\s\u200b]+/,'').trim();}
-    var role=CV_WORKFLOW_ROLES[node]||'开发人员';
-    el.innerHTML=CV_MEMBERS.filter(function(m){return m.roles.some(function(r){return r.text.indexOf(role)>=0||role.indexOf(r.text)>=0;});}).map(function(m){
-      return '<button class="person-item" onclick="cvSelectPersonItem(this)"><div class="person-avatar-sm">'+m.name[0]+'</div><div><div class="person-name-sm">'+m.name+'</div><div class="person-role-sm">'+m.roles.map(function(r){return r.text;}).join(' · ')+'</div></div></button>';
-    }).join('');
-    if(!el.innerHTML){el.innerHTML='<div style="padding:20px;text-align:center;color:var(--text-soft);font-size:12.5px">当前节点无匹配人员</div>';}
+    if(card){var na=card.querySelector('.card-node');if(na)node=na.textContent.replace(/^[\s​]+/,'').trim();}
+    return node;
   }
-  function cvSelectPersonItem(el){
-    var parent=el.parentNode;parent.querySelectorAll('.person-item').forEach(function(p){p.classList.remove('person-item--selected');});
-    el.classList.add('person-item--selected');
+  function cvGetReviewCandidates(){
+    var role=CV_WORKFLOW_ROLES[cvCurrentWorkflowNode()]||'开发人员';
+    return CV_MEMBERS.filter(function(m){return m.roles.some(function(r){return r.text.indexOf(role)>=0||role.indexOf(r.text)>=0;});})
+      .map(function(m){return{name:m.name,roles:m.roles.map(function(r){return r.text;})};});
   }
-  function cvRenderWorkflow(){
-    var el=document.getElementById('cv-twist-workflow');if(!el)return;
-    var card=window.cvCard;var currentNode='开发实现';
-    if(card){var na=card.querySelector('.card-node');if(na)currentNode=na.textContent.replace(/^[\s\u200b]+/,'').trim();}
+  function cvGetWorkflowState(){
+    var currentNode=cvCurrentWorkflowNode();
     var currentIdx=CV_WORKFLOW.indexOf(currentNode);if(currentIdx<0)currentIdx=0;
-    el.innerHTML=CV_WORKFLOW.map(function(step,i){
-      var cls=i<currentIdx?'workflow-step--done':(i===currentIdx?'workflow-step--current':'');
-      var num=i<currentIdx?'✓':(i+1);
-      var status=i<currentIdx?'已完成':(i===currentIdx?'当前节点':CV_WORKFLOW_ROLES[step]);
-      return '<div class="workflow-step '+cls+'"><div class="workflow-step-num">'+num+'</div><div class="workflow-step-name">'+step+'</div><div class="workflow-step-status">'+status+'</div></div>';
-    }).join('');
+    var steps=CV_WORKFLOW.map(function(step,i){
+      return{name:step,phase:i<currentIdx?'done':(i===currentIdx?'current':'pending'),
+        status:i<currentIdx?'已完成':(i===currentIdx?'当前节点':CV_WORKFLOW_ROLES[step])};
+    });
     var nextIdx=Math.min(currentIdx+1,CV_WORKFLOW.length-1);
-    el.innerHTML+='<div style="padding:8px 12px;font-size:12px;color:#7858f9;font-weight:600">下一步：'+CV_WORKFLOW[nextIdx]+' → '+CV_WORKFLOW_ROLES[CV_WORKFLOW[nextIdx]]+'</div>';
+    return{steps:steps,nextLabel:CV_WORKFLOW[nextIdx]+' → '+CV_WORKFLOW_ROLES[CV_WORKFLOW[nextIdx]]};
   }
-  function cvRenderTwistArtifacts(){
-    var el=document.getElementById('cv-twist-artifacts');if(!el)return;
-    var arts=[['code','</>','源代码','ExpensePlugin.java'],['test','T','单元测试','ExpenseTest.java'],['spec','S','需求规格','PRD.md'],['doc','D','技术方案','TechSpec.md']];
-    el.innerHTML=arts.map(function(a){return '<div class="artifact-row"><div class="artifact-icon artifact-icon--'+a[0]+'">'+a[1]+'</div><span>'+a[2]+'</span><span style="margin-left:auto;font-size:11px;color:var(--text-soft)">'+a[3]+'</span></div>';}).join('');
-  }
-  function cvRenderReviewArtifacts(){
-    var el=document.getElementById('cv-review-artifacts');if(!el)return;
-    var arts=[['code','</>','源代码','ExpensePlugin.java'],['test','T','单元测试','ExpenseTest.java'],['spec','S','需求规格','PRD.md'],['doc','D','技术方案','TechSpec.md']];
-    el.innerHTML=arts.map(function(a){return '<div class="artifact-row"><div class="artifact-icon artifact-icon--'+a[0]+'">'+a[1]+'</div><span>'+a[2]+'</span><span style="margin-left:auto;font-size:11px;color:var(--text-soft)">'+a[3]+'</span></div>';}).join('');
+  function cvGetDefaultArtifacts(){
+    return[['code','</>','源代码','ExpensePlugin.java'],['test','T','单元测试','ExpenseTest.java'],['spec','S','需求规格','PRD.md'],['doc','D','技术方案','TechSpec.md']]
+      .map(function(a){return{kind:a[0],badge:a[1],name:a[2],file:a[3]};});
   }
 
   /* ============ CONFIRM ACTIONS ============ */
-  function cvConfirmExec(){
-    var sel=document.querySelector('#cv-exec-collab-options .sync-collab-option--selected .sync-collab-name');
-    var mode=sel?sel.textContent:'Agent间协作';
+  function cvConfirmExec(collabMode){
+    var mode=collabMode||'Agent间协作';
     cvCloseTaskModal('cv-exec-overlay');
     var card=window.cvCard;var taskTitle='新任务';
     if(card){
@@ -6108,21 +6082,19 @@ const billTemplateWithTokens = billTemplate.replace(
     cvAddSidebarConversation(taskTitle);cvSwitchToChat();cvToast('任务已启动执行！协作模式：'+mode,'success');
     cvSimulateExecution(taskTitle,card);
   }
-  function cvConfirmTransfer(){
-    var sel=document.querySelector('#cv-transfer-person-list .person-item--selected .person-name-sm');
+  function cvConfirmTransfer(personName){
     cvCloseTaskModal('cv-transfer-overlay');
-    cvToast('任务已转交给：'+(sel?sel.textContent:'李工'),'success');
+    cvToast('任务已转交给：'+(personName||'李工'),'success');
   }
   function cvConfirmTwist(){cvCloseTaskModal('cv-twist-overlay');cvToast('任务已扭转到下一节点：代码审查，产物已自动传递给审查人员','info');}
-  function cvConfirmReview(){
-    var sel=document.querySelector('#cv-review-person-list .person-item--selected .person-name-sm');
+  function cvConfirmReview(personName){
     cvCloseTaskModal('cv-review-overlay');
     if(window.cvCard){
       window.cvCard.setAttribute('data-status','待评审');
       var sb=window.cvCard.querySelector('.badge-status');if(sb){sb.className='badge-status badge-status--review';sb.innerHTML='<span class="badge-status-dot"></span>待评审';}
       var node=window.cvCard.querySelector('.card-node');if(node){node.innerHTML='<span class="card-node-dot" style="background:var(--warning)"></span>代码审查';node.style.background='var(--warning-bg)';node.style.color='var(--warning)';}
     }
-    cvToast('评审已发起！评审人：'+(sel?sel.textContent:'王工')+'，任务状态已变更为「待评审」','success');
+    cvToast('评审已发起！评审人：'+(personName||'王工')+'，任务状态已变更为「待评审」','success');
   }
 
   /* ============ REVIEW ACTIONS ============ */
@@ -6279,61 +6251,29 @@ const billTemplateWithTokens = billTemplate.replace(
   }
 
   
-  var cvAddLevel='member';
   function cvOpenAddMemberModal(){
     if(!cvCanManageMembers()){cvToast('没有添加协作人员的权限','warning');return;}
-    var el=document.getElementById('cv-addmember-overlay');if(el)el.style.display='flex';
-    cvAddLevel='member';
-    var toggle=document.getElementById('cv-add-level-toggle');
-    if(toggle)toggle.querySelectorAll('.seg-toggle__btn').forEach(function(b){b.classList.toggle('seg-toggle__btn--active',b.getAttribute('data-level')==='member');});
-    var tpSearch=document.getElementById('cv-tp-search');if(tpSearch)tpSearch.value='';
-    cvSearchThirdPartyMembers('');
+    _cvModalOpen('addmember');
   }
-  function cvCloseAddMemberModal(){
-    var el=document.getElementById('cv-addmember-overlay');if(el)el.style.display='none';
-  }
-  function cvSetAddLevel(btn,level){
-    cvAddLevel=level;
-    var toggle=document.getElementById('cv-add-level-toggle');if(!toggle)return;
-    toggle.querySelectorAll('.seg-toggle__btn').forEach(function(b){b.classList.toggle('seg-toggle__btn--active',b===btn);});
-  }
-  function cvUpdateAddSelectedCount(){
-    var el=document.getElementById('cv-add-selected-count');if(!el)return;
-    var n=document.querySelectorAll('#cv-tp-list .tp-item--selected').length;
-    el.textContent=n>0?'已选择 '+n+' 人':'';
-  }
-  function cvSearchThirdPartyMembers(q){
-    var list=document.getElementById('cv-tp-list');if(!list)return;
+  function cvCloseAddMemberModal(){ _cvModalClose('addmember'); }
+  function cvFindThirdPartyMembers(q){
     q=(q||'').toLowerCase();
     var existing=CV_MEMBERS.map(function(m){return m.name;});
-    var filtered=CV_THIRD_PARTY_MEMBERS.filter(function(m){
+    return CV_THIRD_PARTY_MEMBERS.filter(function(m){
       return(m.name.toLowerCase().indexOf(q)>=0||m.email.toLowerCase().indexOf(q)>=0)&&existing.indexOf(m.name)<0;
     });
-    if(filtered.length===0){list.innerHTML='<div class="tp-empty">未找到可添加的人员</div>';cvUpdateAddSelectedCount();return;}
-    list.innerHTML=filtered.map(function(m){
-      return '<div class="tp-item" data-role="'+m.role+'" onclick="this.classList.toggle(\'tp-item--selected\');cvUpdateAddSelectedCount()">'
-        +'<div class="tp-avatar">'+m.name[0]+'</div>'
-        +'<div class="tp-info"><div class="tp-name">'+m.name+'</div><div class="tp-email">'+m.email+'</div></div>'
-        +'<div class="tp-meta"><span class="tp-role">'+m.role+'</span><span class="tp-dept">'+m.dept+'</span></div>'
-        +'<div class="tp-check"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>'
-        +'</div>';
-    }).join('');
-    cvUpdateAddSelectedCount();
   }
-  function cvConfirmAddMembers(){
-    var selected=document.querySelectorAll('#cv-tp-list .tp-item--selected');
+  function cvConfirmAddMembers(selected,level){
+    selected=selected||[];
     if(selected.length===0){cvToast('请选择要添加的人员','warning');return;}
     var tagMap={'开发':'member-tag--dev','架构':'member-tag--arch','测试':'member-tag--qa','运维':'member-tag--ops','需求':'member-tag--pm','产品':'member-tag--pm'};
-    var level=cvAddLevel==='admin'?'admin':'member';
-    selected.forEach(function(el){
-      var name=el.querySelector('.tp-name').textContent;
-      var email=el.querySelector('.tp-email').textContent;
-      var role=el.querySelector('.tp-role').textContent;
-      CV_MEMBERS.push({name:name,email:email,roles:[{tag:tagMap[role]||'member-tag--dev',text:role}],status:'available',source:'直接添加',level:level,
-        projects:cvProject?[cvProject]:CV_PROJECTS.map(function(p){return p.id})});
+    var lvl=level==='admin'?'admin':'member';
+    selected.forEach(function(p){
+      CV_MEMBERS.push({name:p.name,email:p.email,roles:[{tag:tagMap[p.role]||'member-tag--dev',text:p.role}],status:'available',source:'直接添加',level:lvl,
+        projects:cvProject?[cvProject]:CV_PROJECTS.map(function(pp){return pp.id;})});
     });
     cvRenderMembers();cvRenderMemberStats();cvCloseAddMemberModal();
-    cvToast('已添加 '+selected.length+' 名协作人员为'+(level==='admin'?'管理员':'成员'),'success');
+    cvToast('已添加 '+selected.length+' 名协作人员为'+(lvl==='admin'?'管理员':'成员'),'success');
   }
   function cvDeleteMember(idx){
     if(!CV_MEMBERS[idx])return;
@@ -6596,29 +6536,20 @@ const billTemplateWithTokens = billTemplate.replace(
   }
   /* ---------- 新建项目弹窗 ---------- */
   var CV_PROJECT_DOTS=['blue','orange','green'];
-  function cvOpenNewProjectModal(){
-    $('#cv-np-name').value='';
-    $('#cv-np-desc').value='';
-    $('#cv-np-repo').value='';
-    $('#cv-np-status-val').textContent=CV_PROJECT_STATUS[0].label;
-    $('#cv-np-owner-val').textContent='暂不指定';
-    $('#cv-newproject-overlay').style.display='flex';
-    setTimeout(function(){ $('#cv-np-name').focus(); },40);
-  }
-  function cvCloseNewProjectModal(){ $('#cv-newproject-overlay').style.display='none'; }
-  function cvConfirmNewProject(){
-    var name=$('#cv-np-name').value.trim();
+  function cvOpenNewProjectModal(){ _cvModalOpen('newproject'); }
+  function cvCloseNewProjectModal(){ _cvModalClose('newproject'); }
+  function cvConfirmNewProject(form){
+    form=form||{};
+    var name=(form.name||'').trim();
     if(!name){ toast('请输入项目名称','warning'); return; }
-    var statusLabel=$('#cv-np-status-val').textContent;
-    var statusMeta=CV_PROJECT_STATUS.filter(function(s){return s.label===statusLabel;})[0]||CV_PROJECT_STATUS[0];
-    var ownerLabel=$('#cv-np-owner-val').textContent;
-    var repo=$('#cv-np-repo').value.trim();
+    var statusMeta=CV_PROJECT_STATUS.filter(function(s){return s.id===form.statusId;})[0]||CV_PROJECT_STATUS[0];
+    var repo=(form.repo||'').trim();
     var id='p'+Date.now();
     CV_PROJECTS.push({
       id:id,name:name,dot:CV_PROJECT_DOTS[CV_PROJECTS.length%CV_PROJECT_DOTS.length],
       defaultTeam:null,workspace:cvWorkspace,
-      desc:$('#cv-np-desc').value.trim(),status:statusMeta.id,
-      owner:ownerLabel==='暂不指定'?'':ownerLabel,repo:repo||null,updated:'刚刚'
+      desc:(form.desc||'').trim(),status:statusMeta.id,
+      owner:form.owner||'',repo:repo||null,updated:'刚刚'
     });
     cvCloseNewProjectModal();
     cvSetProject(id);
@@ -6868,13 +6799,10 @@ const billTemplateWithTokens = billTemplate.replace(
   window.cvClickReviewStat=cvClickReviewStat;
   window.cvOpenSyncModal=cvOpenSyncModal;
   window.cvCloseSyncModal=cvCloseSyncModal;
-  window.cvSelectCollabMode=cvSelectCollabMode;
-  window.cvToggleSyncDropdown=cvToggleSyncDropdown;
   window.cvSaveSyncTask=cvSaveSyncTask;
   window.cvStartSyncTask=cvStartSyncTask;
   window.cvOpenTaskModal=cvOpenTaskModal;
   window.cvCloseTaskModal=cvCloseTaskModal;
-  window.cvSelectPersonItem=cvSelectPersonItem;
   window.cvConfirmExec=cvConfirmExec;
   window.cvConfirmTransfer=cvConfirmTransfer;
   window.cvConfirmTwist=cvConfirmTwist;
@@ -6888,9 +6816,6 @@ const billTemplateWithTokens = billTemplate.replace(
   window.cvOpenConversation=cvOpenConversation;
   window.cvOpenAddMemberModal=cvOpenAddMemberModal;
   window.cvCloseAddMemberModal=cvCloseAddMemberModal;
-  window.cvSetAddLevel=cvSetAddLevel;
-  window.cvUpdateAddSelectedCount=cvUpdateAddSelectedCount;
-  window.cvSearchThirdPartyMembers=cvSearchThirdPartyMembers;
   window.cvConfirmAddMembers=cvConfirmAddMembers;
   window.cvDeleteMember=cvDeleteMember;
   window.cvToggleMemberLevelMenu=cvToggleMemberLevelMenu;
@@ -6912,7 +6837,35 @@ const billTemplateWithTokens = billTemplate.replace(
     showView:showView,
     setNavActive:setNavActive,
     openAppCardChat:openAppCardChat,
-    startNewTaskWithMode:startNewTaskWithMode
+    startNewTaskWithMode:startNewTaskWithMode,
+    /* ---------- 协作开发弹窗（Phase 2 antd 化） ----------
+       src/components/collab/CollabModals.jsx 通过这里读取"当前该开哪个弹窗"
+       和弹窗要展示的数据，并把表单结果交回这些业务函数处理——保存到哪个数组、
+       触发什么 toast、联动卡片状态，判断逻辑都还在本文件里，不在 React 侧
+       重新发明一遍。 */
+    collab:{
+      subscribe:_cvModalSubscribe,
+      getOpenModal:function(){ return _cvModalState.name; },
+      closeSync:cvCloseSyncModal,
+      saveSyncTask:cvSaveSyncTask,
+      startSyncTask:cvStartSyncTask,
+      closeTaskModal:function(name){ _cvModalClose(name); },
+      getMembers:cvGetMembersForModal,
+      getReviewCandidates:cvGetReviewCandidates,
+      getWorkflowState:cvGetWorkflowState,
+      getDefaultArtifacts:cvGetDefaultArtifacts,
+      confirmExec:cvConfirmExec,
+      confirmTransfer:cvConfirmTransfer,
+      confirmTwist:cvConfirmTwist,
+      confirmReview:cvConfirmReview,
+      closeAddMember:cvCloseAddMemberModal,
+      findThirdPartyMembers:cvFindThirdPartyMembers,
+      confirmAddMembers:cvConfirmAddMembers,
+      closeNewProject:cvCloseNewProjectModal,
+      getProjectStatusOptions:function(){ return CV_PROJECT_STATUS.map(function(s){return{id:s.id,label:s.label};}); },
+      getProjectOwnerOptions:cvProjectOwners,
+      confirmNewProject:cvConfirmNewProject
+    }
   };
 
 })();

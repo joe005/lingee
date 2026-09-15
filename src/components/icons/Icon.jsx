@@ -1,4 +1,17 @@
-import { Search, Plus, ChevronDown, MoreHorizontal, X } from 'lucide-react';
+import {
+  Search,
+  Plus,
+  ChevronDown,
+  MoreHorizontal,
+  X,
+  RefreshCw,
+  Play,
+  ArrowLeftRight,
+  RotateCcw,
+  ClipboardCheck,
+  UserPlus,
+  Folder,
+} from 'lucide-react';
 
 /* 图标注册表 —— 见 docs/react-migration-plan.md §8.7。
    用 lucide-react 而不是 antd 自带的 @ant-design/icons：现有图标是仿 Lucide
@@ -14,6 +27,13 @@ const REGISTRY = {
   'chevron-down': ChevronDown,
   more: MoreHorizontal,
   close: X,
+  'refresh-cw': RefreshCw,
+  play: Play,
+  'arrow-left-right': ArrowLeftRight,
+  'rotate-ccw': RotateCcw,
+  'clipboard-check': ClipboardCheck,
+  'user-plus': UserPlus,
+  folder: Folder,
 };
 
 export default function Icon({ name, size = 16, strokeWidth = 1.7, className, ...rest }) {

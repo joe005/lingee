@@ -5,6 +5,7 @@ import { antdThemeToken, antdComponentTokens } from './theme/antd-theme';
 import AppsView from './views/AppsView';
 import SkillsView from './views/SkillsView';
 import AgentsView from './views/AgentsView';
+import CollabModals from './components/collab/CollabModals';
 
 /* React 侧的路由骨架。用 BrowserRouter，不是 HashRouter——方案 §3.1/§8.1
    最初选 hash 是因为假设产物必须双击打开，这个假设后来推翻了（改走
@@ -41,6 +42,13 @@ export default function App() {
               这里不做重定向，避免每次加载都把路径悄悄改写成 /apps。 */}
           <Route path="*" element={null} />
         </Routes>
+        {/* 协作开发的弹窗（Phase 2，见 docs/react-migration-plan.md）：
+            协作开发页本身还是 100% vanilla、不在上面的路由树里，但它的 7 个
+            弹窗已经改用 antd Modal。CollabModals 作为跟 <Routes> 平级、始终
+            挂载的兄弟节点渲染——不是路由匹配出来的一个"页面"，而是 antd
+            Modal 默认通过 portal 挂到 document.body，跟当前是哪个 .view 在
+            显示无关，所以放在路由树外面而不是某个 <Route> 里。 */}
+        <CollabModals />
       </BrowserRouter>
     </ConfigProvider>
   );
