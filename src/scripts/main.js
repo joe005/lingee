@@ -207,6 +207,7 @@ const billTemplateWithTokens = billTemplate.replace(
 
   /* ---------- Changelog / 更新通知（与 Build_demo 完全一致） ---------- */
   var changelogData=[
+    {id:'16',date:'2026-09-15',iconBg:'#f3eefe',iconColor:'#8b5cf6',team:'启动 React 化迁移评估',body:'产出 React 化迁移方案（docs/react-migration-plan.md）：技术选型、路由与组件分层设计、构建产物形态评估，以及迁移前需要确认的缺漏清单；Phase 0/1（脚手架 + 应用/技能/智能体开发等卡片页面迁移）进行中。'},
     {id:'15',date:'2026-09-14',iconBg:'#eef3ff',iconColor:'#495dff',team:'应用开发列表 新建体验优化',body:'去除新建应用弹窗，新建应用流程调整为下拉选择应用开发类型，跳转到新会话。'},
     {id:'14',date:'2026-09-14',iconBg:'#eef3ff',iconColor:'#495dff',team:'专家团支持人工审核确认节点',body:'专家团运行流程可在任意步骤后插入人工审核确认节点，到该节点编排暂停、确认后才继续；专家能力项由机器标识改为中文名加等级展示，专家卡片增加「可承担的工作」，专家团补充领域标签与能力覆盖；专家定义去掉「工作方式」「完成标准」，改为把需要用户提供的内容写进触发词占位符，发送时没填就在会话里追问；专家来源合并为「Lingee 内置」与「我创建的」两档，取消无数据支撑的「金蝶官方」；专家详情收敛为简介、触发词、挂载技能、能力项、可承担的工作五项；修复搜索框被浏览器自动填充账号导致列表被筛空。'},
     {id:'13',date:'2026-09-11',iconBg:'#eef3ff',iconColor:'#495dff',team:'会话加号下拉菜单',body:'会话输入框加号按钮改为下拉菜单，提供添加文件（含本地文件、引用文件夹、知识库）、模式（含 Spec、目标）、连接器（含腾讯云等八项服务）三级菜单结构。'},
@@ -219,6 +220,7 @@ const billTemplateWithTokens = billTemplate.replace(
   ];
   // 每个数据条目对应的 avatar SVG 图标（与 Build_demo 的 lucide 图标一致）
   var changelogIcons={
+    '16':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>',
     '15':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>',
     '14':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m16 11 2 2 4-4"/></svg>',
     '13':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M12 5v14M5 12h14"/></svg>',
