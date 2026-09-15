@@ -5,9 +5,30 @@
 | 版本 | v0.1（草案） |
 | 日期 | 2026-09-15 |
 | 背景 | 应用开发 / 技能开发 / 智能体开发三个卡片网格的重复标记问题，见本文 §1 试点 |
-| 现状代码量 | `index.html` ~2200 行，`src/scripts/main.js` ~6500 行（单个 IIFE，`var`/`$`/`$$`） |
+| 现状代码量 | `index.html` ~2200 行，`src/scripts/main.js` ~6500 行（单个 IIFE，`var`/`$`/`$$`），写这份文档时的快照，见 §0 了解最新 |
 
 ---
+
+## 0. 现状速览（交接用，2026-09-15）
+
+**这一节是给接手的人看的，其余章节是决策记录，写的时候是什么决定就保留什么，不因为后续进展去改——想知道"现在到底做到哪了"看这一节，想知道"为什么这么设计"看后面。**
+
+**分支**：所有迁移工作在 `feat/react-migration-v2`，`main` 完全没动过（还是纯 vanilla）。旧的 `feat/react-migration` 分支已经通过 `git merge` 并入 `feat/react-migration-v2`，内容都在了，可以当废弃分支处理，不用再看。
+
+**已经合并、能跑、经浏览器实测过的**（照下面顺序，一路都是 `npm run lint` + `npm run build` + `npx wrangler dev` 实测通过才合并的）：
+
+- **Phase 0 脚手架**：React 18 + `@vitejs/plugin-react` + `antd` 5（`ConfigProvider` 主题，[src/theme/antd-theme.js](../src/theme/antd-theme.js)）+ `react-router-dom`（**`BrowserRouter`，不是本文档 §3.1 写决策时说的 `HashRouter`**——中途因为部署形态定下来又调整过一次，见 §10 踩过的坑）+ `lucide-react`（[src/components/icons/Icon.jsx](../src/components/icons/Icon.jsx)）+ `usePersistedState` hook（[src/hooks/usePersistedState.js](../src/hooks/usePersistedState.js)）+ ESLint（[eslint.config.js](../eslint.config.js)，刻意不管 `src/scripts/main.js`）。
+- **Phase 1 卡片页**：应用开发 / 技能开发 / 智能体开发三个页面，[src/views/AppsView.jsx](../src/views/AppsView.jsx)、[SkillsView.jsx](../src/views/SkillsView.jsx)、[AgentsView.jsx](../src/views/AgentsView.jsx) + [src/components/feature/AppCard.jsx](../src/components/feature/AppCard.jsx)。挂载在 `index.html` 的 `#react-view-root`，和另外几个 vanilla `.view` 共用 `main.js` 的 `showView()` 显隐机制——**没有**迁"专家管理"（挂在协作开发内部页签下、跟其它 5 个页签共享状态，拆不开）和"协作项目"（下面 Phase 2 顺手做的项目管理，和这几个卡片页不是一回事）。
+- **Phase 2（部分）弹窗系统**：只迁完了协作开发的 7 个任务类弹窗——同步任务、执行、转交、扭转、发起评审、添加人员、新建项目，见 [src/components/collab/CollabModals.jsx](../src/components/collab/CollabModals.jsx) + [src/hooks/useCollabBridge.js](../src/hooks/useCollabBridge.js)。**还有大约 10 个弹窗没迁**（见下面"没做完的"）。
+
+**没做完、有残留、需要接手人先看一眼再决定的**：
+
+- 有一个**未合并、未提交**的半成品在 `.claude/worktrees/agent-a3f58e59997b79abb`（分支名 `worktree-agent-a3f58e59997b79abb`），是继续迁剩余弹窗时被手动中断的，工作目录里能看到 `src/components/chatapp/`、`src/components/shortcut/`、`src/hooks/useLingeeBridge.js` 这几个新文件（还没 commit，只是工作区改动），看起来是在迁"关联应用"弹窗和快捷键面板，中断前最后一条记录是"关联应用弹窗测试通过"。这份东西**没有经过完整验证**，接手人自己判断是继续、重做、还是直接丢弃（`git worktree remove --force` 那个目录即可丢弃）。
+- 还没迁的弹窗（在 `index.html` 里搜这些 id 能找到）：`newAppModal`/`attachModal`（会话页关联应用）、`teamModal`（专家团配置）、`expertModal`/`expertEditModal`（专家详情/编辑）、`memberModal`（专家团场景加人，注意跟已迁移的协作人员管理加人弹窗是两个不同数据模型，别混）、`envModal` 及一串 `env*Modal`（5 个 ERP 环境弹窗）、`shortcutOverlay`（快捷键面板）。
+- Phase 3（会话页 Chat View、协作开发页面本体、Design System、设置）**完全没开始**，还是 100% vanilla。
+- 你自己在这期间也直接改过 vanilla 代码（协作开发导航改造、项目管理页签、成员身份/可见性），这些已经在 `feat/react-migration-v2` 分支里了（`a3196ab`、`19e2a34`、`ef794ef` 那几个提交），迁移的时候要连这部分一起处理，不是只对着 Phase 0/1/2 涉及的旧代码迁。
+
+**怎么继续**：`npm install && npm run dev` 起本地开发；验证路由/部署相关的行为务必用 `npx wrangler dev`，不要只信 `npm run dev`（见 §10）。接着做的顺序建议：先决定上面那个半成品分支的去留，再按 §4 的 Phase 顺序把 Phase 2 剩下的弹窗做完，然后 Phase 3。
 
 ## 1. 试点结论（已落地）
 
@@ -34,7 +55,7 @@
 | 样式 | 保留 `tokens.css`（设计令牌不变），组件样式改用 CSS Modules 或 BEM 类名 + 按组件拆文件 | 消除层叠顺序耦合，同时不用推翻现有的设计令牌体系 |
 | 产物模板 | `purchase-order.html`（`?raw` 导入）保持独立 HTML，继续用 iframe/字符串注入 | 它本来就是独立于应用 shell 的"单据预览"产物，没有 React 化的必要 |
 | 构建 | 标准 `vite build` 多文件产出，部署到 Cloudflare Pages（`wrangler`） | 见 §8.1，`vite-plugin-singlefile` 已不需要 |
-| 路由 | `react-router-dom`，`HashRouter` + 嵌套路由 | 见 §3.1 |
+| 路由 | `react-router-dom`，`BrowserRouter` + 嵌套路由（**决策时写的是 HashRouter，实际落地时改成了 BrowserRouter，见 §0、§10**） | 见 §3.1 |
 | 组件库 | **Ant Design 5（`antd`）**，不手写基础组件层 | 见 §3.2 |
 
 ### 3.1 路由与代码拆分
@@ -81,11 +102,11 @@
 
 ## 4. 迁移阶段（按风险从低到高排序）
 
-1. **Phase 0 · 脚手架**：接入 `@vitejs/plugin-react` + `antd`，去掉 `vite-plugin-singlefile`/`@vitejs/plugin-legacy`（§8.1 已确认不需要），配好 Cloudflare Pages 的 SPA rewrite 并实测刷新子路径不 404；搭 `<App/>` 壳 + `react-router-dom`（`BrowserRouter` 优先，配置有阻力就退回 `HashRouter`，§3.1 有路由树）+ `<ConfigProvider theme={...}>` 主题配置（对照 [tokens.css](../src/styles/tokens.css) 搬一版 antd token）；侧边栏、登录页先原样搬（结构简单、不依赖复杂状态）；同时把 §8.6 的本地持久化清单收敛成一个 `usePersistedState` hook，把 §8.7 的高频图标接入 `lucide-react` + `<Icon/>`；接入 ESLint + `eslint-plugin-react-hooks`（§8.8）。
-2. **Phase 1 · 业务卡片组件 + 静态列表页**：用 antd 的 `Card`/`Tag`/`Avatar` 拼出 §3.2 的业务组件层（`<AppCard/>` 等），迁应用开发 / 技能开发 / 智能体开发 / 专家管理 / 协作项目——这几个已经在试点里验证过数据结构，风险最低、收益最直观，也是验证"主题还原得像不像"的第一个检查点。
-3. **Phase 2 · 弹窗系统**：直接用 antd 的 `Modal`/`Drawer`/`Form`，把现有 92 处手写弹窗的表单内容逐个套进去（新建项目、任务同步、评审、专家团配置……）——显隐动画、焦点管理、关闭交互都是 antd 自带的，这个阶段的工作量比自建 Modal 时代估的小很多，重点是表单字段和校验逻辑的迁移，不是重新搭弹窗基础设施。
-4. **Phase 3 · 复杂交互区**：会话页（Chat View，含模型选择、应用关联下拉、历史记录面板、§8.3 的 contenteditable 输入框、§8.4 的 iframe 单据预览）、协作开发的任务/评审详情、设置页——这几块状态最多、边缘交互最多（滚动条延迟隐藏、预览面板拖拽），需要单独测试计划。
-5. **Phase 4 · 收尾**：登录鉴权、消息通知/`changelogData`、清理旧 `main.js` 中已迁移完的代码。
+1. **✅ Phase 0 · 脚手架**——已完成，见 §0。
+2. **✅ Phase 1 · 业务卡片组件 + 静态列表页**——应用/技能/智能体开发三个卡片页已完成，见 §0；"专家管理""协作项目"当时决定不算在 Phase 1 里（原因见 §0），"协作项目"后来在 Phase 2 里顺手做了。
+3. **🚧 Phase 2 · 弹窗系统（部分完成）**——协作开发那 7 个任务类弹窗已完成，见 §0；还有约 10 个弹窗没迁（新建应用/关联应用、专家团配置、专家详情/编辑、专家团场景加人、5 个 ERP 环境弹窗、快捷键面板），清单和一份未验证的半成品分支位置见 §0。原计划"92 处弹窗"这个数字没有细拆过，实迁下来发现按功能分组大概是 17-20 组，不是 92 个独立表单。
+4. **⬜ Phase 3 · 复杂交互区**——还没开始。会话页（Chat View，含模型选择、应用关联下拉、历史记录面板、§8.3 的 contenteditable 输入框、§8.4 的 iframe 单据预览）、协作开发页面本体（任务/评审详情、导航、项目/工作区，注意这块中途已经被大改过一次，见 §0 最后一条）、Design System、设置页——这几块状态最多、边缘交互最多（滚动条延迟隐藏、预览面板拖拽），需要单独测试计划。
+5. **⬜ Phase 4 · 收尾**——还没开始。登录鉴权、消息通知/`changelogData`、清理旧 `main.js` 中已迁移完的代码。
 
 每个 Phase 完成后都应该单独跑一遍 `npm run build` + 关键路径的手工回归（登录、切视图、开一个弹窗、发一条消息），避免像 Chat View 这种重交互区域在迁移中途长期不可用。
 
@@ -182,6 +203,15 @@ antd 主题定制不是"配完 token 就完事"，建议每个 Phase 都有一�
 
 试点里新增的 `APPS_LIBRARY`（应用开发页的卡片）和原有的 `fullAppData`（会话页"关联应用"下拉的全量应用台账）字段形状不同、用途也不同——前者是"我在开发的应用"展示卡片，后者是"公司全部已上线应用"的关联选择列表，只是恰好都叫"应用"。真正建 React 数据层时容易想当然合并成一个 `apps` 数据源，要注意这是两个业务概念，不能合并。
 
-## 9. 下一步
+## 10. 踩过的坑（继续开发前建议读一遍，都是实测出来的，不是理论推测）
 
-从 **Phase 0 + Phase 1** 开始一次可验证的迁移，产出后再评估继续推进的节奏——而不是一次性把 6500 行 `main.js` 全部推倒重来。两个原本待确认的决策已经拍板：§8.1 不再要求双击打开、改走 Cloudflare Pages 部署；§3.2 引入 `antd` 做基础组件层。Phase 0/1 正在 `feat/react-migration-v2` 分支上推进，进度见分支提交记录，不再单独维护一份状态说明——这份文档保持"决策记录"的定位，不追踪实时进度。
+1. **本地 `main` 落后 `origin/main` 是真实发生过的事故源头**：Phase 0 开工前没先 `git fetch` 确认本地分支是不是最新，导致迁移分支和另一批同事已经推上去的功能（专家团审核节点、连接器能力等）分叉，事后靠重新在最新 `origin/main` 上建分支、挑拣式补回关键改动才解决。**教训：任何一次新的大改动开工前，先 `git fetch origin && git log main..origin/main` 确认本地是不是最新。**
+2. **后台/子会话跑迁移任务时，先确认它的 worktree 基线**：这个仓库用到的自动建 worktree 机制，出现过"选到 origin/main 而不是本地最新分支"的情况，导致整整一段工作建立在错误的、更旧的基线上，事后要额外做分支合并/挑拣才能救回来。**教训：交给任何后台任务做迁移之前，明确要求它第一步先核实 `git log --oneline -1` 是不是预期的基线提交，不对就先合并到正确基线再动手，不要在错误基线上做完了才发现。**
+3. **`@cloudflare/vite-plugin` 的开发服务器行为和纯 `vite dev` 不一样**：它按 Workers 静态资源路由处理请求，默认对"不认识的路径"直接 404，不会退回 `index.html`。这曾经导致两次白屏：一次是 `vite.config.js` 里遗留的 `base: '/lingee/'` 子路径配置让首页都进不去（改成 `base: '/'` 解决），一次是所有非根路径刷新/直接访问都白屏（加 [wrangler.json](../wrangler.json) 的 `assets.not_found_handling: "single-page-application"` 解决）。**教训：验证路由/部署相关的改动必须用 `npx wrangler dev`，不能只用 `npm run dev`——后者不会暴露这类问题。**
+4. **`history.replaceState()` 不会触发 `popstate`，`BrowserRouter` 靠这个事件才知道要重新渲染**：vanilla 的 `showView()` 一直用 `history.replaceState()` 改 URL（因为要兼容"不刷新页面切视图"），改用 `BrowserRouter` 之后如果不做处理，从 vanilla 侧连续切换两个 React 路由（比如应用开发→智能体开发）时 URL 会变但页面内容不变，卡在上一个视图。解法是在触发 React 视图切换的地方手动 `window.dispatchEvent(new PopStateEvent('popstate'))`，具体实现见 `main.js` 里 `setUrlState` 的 `notifyReactRouter` 参数。
+5. **内联 `onclick="xxxFn()"` 调用的函数必须显式挂在 `window` 上**：`main.js` 是一个大 IIFE，`function xxxFn(){}` 声明默认是 IIFE 内部作用域，HTML 字符串里 `onclick="xxxFn()"` 这种写法是在全局作用域执行的，找不到会直接 `ReferenceError`。文件末尾有一段专门"内联事件用到的函数挂到 window"的列表——凡是新写的函数会被 vanilla HTML 字符串用 `onclick=` 调用，或者反过来 React 组件要用字符串形式调用 vanilla 函数，都要检查并加进这个列表。这个坑在 Phase 1 和 Phase 2 都各踩过一次一模一样的，读代码看不出来，只有点击时才会报错，**每次新增这类调用后必须实际点击测试**。
+6. **`eslint .` 会扫到不该扫的地方**：跑过 `npx wrangler dev` 之后会生成 `.wrangler/` 临时目录，跑过后台迁移任务的 worktree 也会留在 `.claude/worktrees/` 下，这两个目录都会被 `eslint .` 扫进去刷出一堆无关噪音（`.wrangler/` 里的 Worker bundle 用了 `console`/`Response` 这些 Node/Workers 全局量，`.claude/worktrees/` 里可能是别的分支状态的代码）。已经在 [eslint.config.js](../eslint.config.js) 的 `ignores` 里加了 `.wrangler/**` 和 `.claude/**`，如果又刷出一堆看起来不相关的报错，先检查是不是又有新的这类目录没加进去。
+
+## 11. 下一步
+
+Phase 0/1/2（部分）已经按上面 §0 的状态交接了。接下来按 §4 的顺序：先处理 §0 提到的那个未验证半成品分支（继续/重做/丢弃三选一），补完 Phase 2 剩下的约 10 个弹窗，再开始 Phase 3（会话页、协作开发页面本体、Design System、设置——工作量最大的一块，§6 早就标了"大"）。每个 Phase 的验证方式、硬约束（不能出现迁移到一半某个视图打不开）沿用前面几个 Phase 已经验证过有效的做法：一个一个迁、每迁完一个就用 `npx wrangler dev` + 真实测试账号在浏览器里实际点一遍，不是读代码觉得"应该没问题"就算完。
