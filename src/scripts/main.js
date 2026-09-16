@@ -1,5 +1,20 @@
 import billTemplate from '../artifacts/purchase-order.html?raw';
 import tokensCss from '../styles/tokens.css?raw';
+import { EXPERT_AV, GATE_ICON, AV_KEYS, WORK_MODES, COMP_NAMES, COMP_LEVELS, COMP_RANK, ASK, ASK_FALLBACK, MODE_MATCH, KW_MATCH } from '../data/expert-data';
+import { EXPERTS } from '../data/experts';
+import { PRESET_TEAMS } from '../data/teams';
+import { ENV_DATA_CENTERS, ERP_API_SCOPES } from '../data/environments';
+import { CV_PROJECTS, CV_TASKS, CV_REVIEWS, CV_MEMBERS } from '../data/collab';
+import { changelogData, changelogIcons } from '../data/changelog';
+import { mockReplies, MODE_BUILDERS } from '../data/chat-data';
+import { fullAppData } from '../data/apps-data';
+import * as expertStore from '../stores/expert-store';
+import * as envStore from '../stores/env-store';
+import * as chatStore from '../stores/chat-store';
+import * as modalStore from '../stores/modal-store';
+import { xav, xesc, parseComp, splitList, splitLines, blankExpert } from '../lib/utils';
+import { teamFlow, teamCoverage, teamLint, teamGates, hasGate, toggleGate, activeGates, teamById, teamDomains, teamCmdList } from '../lib/team-logic';
+import { toast as toastFn } from '../lib/toast';
 
 /* 产物预览与应用共用同一份设计令牌 */
 const billTemplateWithTokens = billTemplate.replace(
@@ -260,43 +275,6 @@ const billTemplateWithTokens = billTemplate.replace(
       document.addEventListener(ev,function(e){ unlock(e.target); },true);
     });
   })();
-
-  /* ---------- Changelog / 更新通知（与 Build_demo 完全一致） ---------- */
-  var changelogData=[
-    {id:'20',date:'2026-09-15',iconBg:'#eef3ff',iconColor:'#495dff',team:'ERP 环境弹窗迁移到 antd（Phase 2d）',body:'新增/编辑/查看 ERP 环境、授权等待页、浏览器授权页、断开确认、AccessToken 确认共 5 个弹窗改用 antd Modal 重写；删除 vanilla DOM 操作约 900 行，业务逻辑（验证、OAuth 流程、落库）通过 bridge 保留。'},
-    {id:'19',date:'2026-09-15',iconBg:'#eef3ff',iconColor:'#495dff',team:'专家/专家团弹窗迁移到 antd（Phase 2c）',body:'专家详情、创建/编辑专家、专家团配置、添加成员共 4 个弹窗改用 antd Modal/Form/Tabs 重写；新增 bridge touch/version 机制解决跨弹窗共享草稿（team↔member）的状态同步；接入 Vitest + Testing Library 补 10 条冒烟测试。'},
-    {id:'18',date:'2026-09-15',iconBg:'#f3eefe',iconColor:'#8b5cf6',team:'协作开发弹窗系统迁移到 antd（Phase 2 进行中）',body:'协作开发的同步任务/执行/转交/扭转/评审/添加人员/新建项目共 7 个弹窗改用 antd Modal/Form/Select 重写，原有手写显隐 DOM 与 CSS 已删除；弹窗对应的业务逻辑（落库、状态联动、toast）仍复用 main.js 既有实现，未重写。'},
-    {id:'17',date:'2026-09-15',iconBg:'#eef3ff',iconColor:'#495dff',team:'协作人员管理支持身份分级',body:'新增所有者/管理员/成员三级身份：管理员可调整普通成员身份、移除成员，所有者身份不可修改；「添加人员」按钮按权限显示。'},
-    {id:'16',date:'2026-09-15',iconBg:'#f3eefe',iconColor:'#8b5cf6',team:'启动 React 化迁移（Phase 0 + 1 进行中）',body:'产出 React 化迁移方案（docs/react-migration-plan.md）；接入 React 18 + antd 5 + react-router-dom，应用开发/技能开发/智能体开发三个卡片网格迁移为 React 组件；构建产物改为部署到 Cloudflare Pages，不再要求双击本地文件打开。'},
-    {id:'15',date:'2026-09-14',iconBg:'#eef3ff',iconColor:'#495dff',team:'应用开发列表 新建体验优化',body:'去除新建应用弹窗，新建应用流程调整为下拉选择应用开发类型，跳转到新会话。'},
-    {id:'14',date:'2026-09-14',iconBg:'#eef3ff',iconColor:'#495dff',team:'专家团支持人工审核确认节点',body:'专家团运行流程可在任意步骤后插入人工审核确认节点，到该节点编排暂停、确认后才继续；专家能力项由机器标识改为中文名加等级展示，专家卡片增加「可承担的工作」，专家团补充领域标签与能力覆盖；专家定义去掉「工作方式」「完成标准」，改为把需要用户提供的内容写进触发词占位符，发送时没填就在会话里追问；专家来源合并为「Lingee 内置」与「我创建的」两档，取消无数据支撑的「金蝶官方」；专家详情收敛为简介、触发词、挂载技能、能力项、可承担的工作五项；修复搜索框被浏览器自动填充账号导致列表被筛空。'},
-    {id:'13',date:'2026-09-11',iconBg:'#eef3ff',iconColor:'#495dff',team:'会话加号下拉菜单',body:'会话输入框加号按钮改为下拉菜单，提供添加文件（含本地文件、引用文件夹、知识库）、模式（含 Spec、目标）、连接器（含腾讯云等八项服务）三级菜单结构。'},
-    {id:'12',date:'2026-09-09',iconBg:'#eef3ff',iconColor:'#495dff',team:'新增协作开发模块',body:'左侧「专家」菜单改为「协作开发」，下设任务管理、待评审、协作人员管理、专家管理、专家团管理与设置六个页签；新增项目维度，任务、评审、协作人员按项目划分，专家与专家团为全局资产、项目内只绑定默认专家团。'},
-    {id:'11',date:'2026-09-08',iconBg:'#eef3ff',iconColor:'#495dff',team:'原型新增登录页',body:'新增登录页，需账号密码登录后才能查看原型。'},
-    {id:'10',date:'2026-08-27',iconBg:'#eef3ff',iconColor:'#495dff',team:'苍穹应用开发 · 预览区新增列表页签',body:'预览面板页签新增「列表」选项，支持列表视图展示。'},
-    {id:'9',date:'2026-08-27',iconBg:'#e8faef',iconColor:'#08a040',team:'苍穹应用开发 · 历史版本',body:'新增历史记录面板，支持查看版本时间线与版本描述，可回退到历史版本。'},
-    {id:'8',date:'2026-07-30',iconBg:'#fff1e8',iconColor:'#ff8d42',team:'新增 Design System 模块',body:'涵盖基础、布局、导航、数据录入、数据展示、反馈 6 大类共 67 个组件，提供组件预览、设计令牌展示、图标库等能力，作为 Lingee 统一的设计规范与组件文档平台。'},
-    {id:'7',date:'2026-07-28',iconBg:'#eef3ff',iconColor:'#495dff',team:'应用开发关联应用交互优化',body:'1、会话框：项目选择与应用选择分开展示\n2、下拉面板去除创建应用流程，调整为关联选择全量应用\n3、苍穹应用：选择关联苍穹应用，发起会话时应用开发列表自动创建展示苍穹应用卡片\n4、通用应用：无需关联应用，自动生成产物应用卡片\n5、未选择开发模式，意图识别苍穹应用开发时，会话过程收集苍穹应用编码\n6、选择应用时，下次新会话按项目记忆用户选项\n\n[视觉稿](https://www.figma.com/design/F8s5P9Y8f1Bq2GkXKCkC7L/%E5%BC%80%E5%8F%91?node-id=0-1&t=DHlFenPtUNP6C7Z5-1)'},
-  ];
-  // 每个数据条目对应的 avatar SVG 图标（与 Build_demo 的 lucide 图标一致）
-  var changelogIcons={
-    '20':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>',
-    '19':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
-    '18':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M9 16h6"/></svg>',
-    '17':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
-    '16':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>',
-    '15':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>',
-    '14':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m16 11 2 2 4-4"/></svg>',
-    '13':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M12 5v14M5 12h14"/></svg>',
-    '12':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M6 3v12"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>',
-    '11':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg>',
-    '9':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-6.36 2.64L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg>',
-    '10':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>',
-    '8':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125 0-.945.748-1.688 1.688-1.688h1.999c3.586 0 6.539-2.918 6.539-6.5C22 6.48 17.5 2 12 2z"/></svg>',
-    '7':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>',
-    '6':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M12 3a9 9 0 0 0 0 18M3 12h18"/></svg>',
-    '5':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>',
-  };
   var changelogReadIds=(function(){
     try{ return JSON.parse(localStorage.getItem('changelog_read_ids')||'[]'); }catch(e){return [];}
   })();
@@ -579,29 +557,6 @@ const billTemplateWithTokens = billTemplate.replace(
   var appSearchInput=$('#appSearchInput');
   var appList=$('#appList');
   var appItems=$$('.app-item',appList);
-  var fullAppData=[
-    {app:'采购订单管理',code:'po_mgmt',cloud:'供应链云'},
-    {app:'报价单管理',code:'quote_mgmt',cloud:'供应链云'},
-    {app:'资产领用',code:'asset_use',cloud:'财务云'},
-    {app:'请假管理',code:'leave_mgmt',cloud:'人力云'},
-    {app:'库存领用',code:'stock_use',cloud:'供应链云'},
-    {app:'费用报销单',code:'expense_reim',cloud:'财务云'},
-    {app:'销售合同',code:'sales_contract',cloud:'合同云'},
-    {app:'员工入职',code:'emp_onboard',cloud:'人力云'},
-    {app:'出差申请',code:'travel_req',cloud:'费用云'},
-    {app:'付款申请单',code:'pay_req',cloud:'财务云'},
-    {app:'采购入库单',code:'po_inbound',cloud:'供应链云'},
-    {app:'销售订单',code:'sales_order',cloud:'供应链云'},
-    {app:'项目立项',code:'project_init',cloud:'项目云'},
-    {app:'项目立项',code:'project_init_v2',cloud:'项目云'},
-    {app:'固定资产',code:'fixed_asset',cloud:'财务云'},
-    {app:'库存盘点',code:'stock_count',cloud:'供应链云'},
-    {app:'应收单',code:'ar_bill',cloud:'财务云'},
-    {app:'应付单',code:'ap_bill',cloud:'财务云'},
-    {app:'考勤汇总',code:'attend_sum',cloud:'人力云'},
-    {app:'预算编制',code:'budget_plan',cloud:'预算云'},
-    {app:'银行对账单',code:'bank_recon',cloud:'财务云'}
-  ];
   function appDisplayName(d,list){
     var dup=list.filter(function(x){return x.app===d.app;}).length>1;
     return dup&&d.code?(d.app+' ('+d.code+')'):d.app;
@@ -1028,20 +983,6 @@ const billTemplateWithTokens = billTemplate.replace(
     if(navigator.clipboard) navigator.clipboard.writeText(item.url);
     toast('已复制地址：'+item.url);
   }
-
-  /* ---------- ERP 环境弹窗 bridge（Phase 2d + Phase 3 数据驱动） ---------- */
-  var ENV_DATA_CENTERS=[
-    {id:'1561691182942805271',name:'多维联合集团有限公司'},
-    {id:'1288162917259',name:'蓝海集团测试数据中心'}
-  ];
-  var ERP_API_SCOPES=[
-    {name:'查询采购订单',path:'/kapi/v2/scm/pm/PurOrder'},
-    {name:'保存采购订单',path:'/kapi/v2/scm/pm/PurOrder/save'},
-    {name:'提交审核采购订单',path:'/kapi/v2/scm/pm/PurOrder/submitAndAudit'},
-    {name:'查询采购入库单',path:'/kapi/v2/scm/im/PurInBill'},
-    {name:'查询物料',path:'/kapi/v2/bd/Material'},
-    {name:'查询供应商',path:'/kapi/v2/bd/Supplier'}
-  ];
   var envMode='create';
   var envEditIndex=-1;
   var envProduct='';
@@ -1728,13 +1669,6 @@ const billTemplateWithTokens = billTemplate.replace(
       }
     });
   }
-
-  var mockReplies=[
-    '已完成采购订单管理应用的开发，以下是实现方案：\n\n## 功能模块\n\n**1. 采购订单创建**\n- 支持选择供应商、采购员、币别、付款条件\n- 明细行可添加物料编码、名称、规格、数量、单价\n- 自动计算含税金额、折扣金额、总金额\n\n**2. 审批流程**\n- 草稿 → 提交 → 部门主管审核 → 财务复核 → 总经理审批（金额>10万触发）\n- 审批意见可追溯，支持驳回退回至草稿\n\n**3. 变更与关闭**\n- 已审核订单支持变更，记录变更前后差异\n- 支持手工关闭和自动关闭（到货完成后自动关闭）\n\n## 技术要点\n- 基于苍穹平台 DynamicObject 实现单据模型，主表 + 明细表关联\n- 使用 QFilter 构建多维度查询（供应商、日期范围、单据状态）\n- 审批流集成 ProcessPlugin，支持节点回退和会签\n\n如需调整字段或流程配置，随时告诉我。',
-    '采购订单管理应用开发完成，核心交付内容如下：\n\n**已完成模块：**\n1. 采购订单单据模型（含 32 个字段，覆盖供应商、采购组织、明细行等）\n2. 列表页与详情页（支持批量审核、按状态筛选、模糊搜索）\n3. 审批流程（三级审核：部门主管 → 财务 → 总经理）\n4. 报表导出（PDF / Excel，支持自定义模板）\n\n**关键实现：**\n- 明细行金额自动计算：含税金额 = 数量 × 含税单价，折扣金额自动倒算\n- 供应商联动带出付款条件、币别、默认税率\n- 采购订单与入库单上下游联动，支持部分到货和分批入库\n\n**性能指标：**\n- 列表查询响应 < 200ms（万级数据量）\n- 审批提交 < 500ms\n\n可以直接发布到测试环境验证，或需要我调整某些细节？',
-    '基于采购订单管理需求，已完成应用搭建，以下是关键设计：\n\n## 数据模型\n- **采购订单主表**：单据编号、供应商、采购组织、币别、付款条件、交货日期、采购员\n- **采购订单明细**：物料编码、物料名称、规格型号、采购数量、单位、含税单价、金额、税率\n\n## 页面布局\n- 列表页：按单据状态（草稿 → 已提交 → 已审核 → 已关闭）分类筛选\n- 详情页：头信息 + 明细行 + 审批记录三段式布局\n- 支持从采购申请单下推生成采购订单，自动带出明细行\n\n## 业务规则\n1. 同一供应商同月采购金额超 50 万，自动触发总经理审批\n2. 含税金额 = 数量 × 含税单价，折扣金额 = 不含税金额 × 折扣率\n3. 到货数量不可超过采购数量，超量时拦截并提示\n4. 已关闭订单不允许生成入库单\n\n需要我针对哪个模块进一步展开说明？'
-  ];
-
   /* simple markdown → HTML renderer */
   /* 预览区开关状态：以 localStorage 为唯一来源，默认收起 */
   /* ---------- chat composer 发送 ---------- */
@@ -2123,27 +2057,6 @@ const billTemplateWithTokens = billTemplate.replace(
      数据取自 lingee-build/packages/opencode/builtin-experts/
      技能名取自 packages/opencode/builtin-skills/
      ============================================================ */
-  var EXPERT_AV = {
-    lead:'<rect width="128" height="128" rx="26" fill="#1e40af"/><circle cx="64" cy="44" r="19" fill="#dbeafe"/><path d="M27 104c4-23 18-34 37-34s33 11 37 34" fill="#93c5fd"/>',
-    pm:'<rect width="128" height="128" rx="26" fill="#c2410c"/><rect x="32" y="26" width="64" height="78" rx="9" fill="#ffedd5"/><path d="M45 48h38M45 65h38M45 82h24" stroke="#c2410c" stroke-width="7" stroke-linecap="round"/>',
-    arch:'<rect width="128" height="128" rx="26" fill="#6d28d9"/><path d="M26 94h76M36 94V56l28-21 28 21v38M52 94V72h24v22" fill="none" stroke="#ede9fe" stroke-width="8" stroke-linejoin="round"/>',
-    eng:'<rect width="128" height="128" rx="26" fill="#047857"/><path d="M50 40L26 64l24 24M78 40l24 24-24 24M70 30L58 98" fill="none" stroke="#d1fae5" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>',
-    qa:'<rect width="128" height="128" rx="26" fill="#be123c"/><path d="M64 22l36 14v26c0 24-14 37-36 45-22-8-36-21-36-45V36z" fill="#ffe4e6"/><path d="M46 63l13 13 26-28" fill="none" stroke="#be123c" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>',
-    cr:'<rect width="128" height="128" rx="26" fill="#0e7490"/><circle cx="57" cy="55" r="25" fill="none" stroke="#cffafe" stroke-width="9"/><path d="M76 75l24 24" stroke="#cffafe" stroke-width="10" stroke-linecap="round"/>',
-    sec:'<rect width="128" height="128" rx="26" fill="#3f3f46"/><path d="M64 22l35 13v29c0 23-13 36-35 44-22-8-35-21-35-44V35z" fill="none" stroke="#e4e4e7" stroke-width="9" stroke-linejoin="round"/><rect x="51" y="58" width="26" height="23" rx="4" fill="#e4e4e7"/><path d="M57 58v-7a7 7 0 0114 0v7" fill="none" stroke="#e4e4e7" stroke-width="7"/>',
-    ana:'<rect width="128" height="128" rx="26" fill="#475569"/><path d="M30 96V64M52 96V40M74 96V74M96 96V50" stroke="#e2e8f0" stroke-width="11" stroke-linecap="round"/>',
-    fe:'<rect width="128" height="128" rx="26" fill="#0369a1"/><rect x="24" y="30" width="80" height="62" rx="8" fill="#e0f2fe"/><path d="M24 48h80" stroke="#0369a1" stroke-width="7"/><circle cx="38" cy="39" r="4" fill="#0369a1"/><path d="M48 68h32" stroke="#0369a1" stroke-width="7" stroke-linecap="round"/>',
-    ux:'<rect width="128" height="128" rx="26" fill="#be185d"/><circle cx="48" cy="48" r="17" fill="#fce7f3"/><circle cx="80" cy="80" r="17" fill="#f9a8d4"/><path d="M48 65v15h15" stroke="#fce7f3" stroke-width="7" fill="none"/>',
-    form:'<rect width="128" height="128" rx="26" fill="#0f766e"/><rect x="28" y="24" width="72" height="80" rx="9" fill="#ccfbf1"/><path d="M42 46h30M42 64h44M42 82h20" stroke="#0f766e" stroke-width="7" stroke-linecap="round"/>',
-    flow:'<rect width="128" height="128" rx="26" fill="#7c3aed"/><circle cx="34" cy="34" r="13" fill="#ede9fe"/><circle cx="94" cy="64" r="13" fill="#ede9fe"/><circle cx="34" cy="94" r="13" fill="#ede9fe"/><path d="M47 40l35 18M47 88l35-18" stroke="#ede9fe" stroke-width="7"/>',
-    rpt:'<rect width="128" height="128" rx="26" fill="#a16207"/><path d="M34 94V54M60 94V32M86 94V68" stroke="#fef3c7" stroke-width="12" stroke-linecap="round"/><path d="M22 104h84" stroke="#fef3c7" stroke-width="7" stroke-linecap="round"/>',
-    plug:'<rect width="128" height="128" rx="26" fill="#4338ca"/><path d="M44 30v22M84 30v22" stroke="#e0e7ff" stroke-width="9" stroke-linecap="round"/><rect x="32" y="52" width="64" height="34" rx="10" fill="#e0e7ff"/><path d="M64 86v18" stroke="#e0e7ff" stroke-width="9" stroke-linecap="round"/>',
-    api:'<rect width="128" height="128" rx="26" fill="#0891b2"/><circle cx="38" cy="64" r="14" fill="#cffafe"/><circle cx="90" cy="38" r="14" fill="#cffafe"/><circle cx="90" cy="90" r="14" fill="#cffafe"/><path d="M50 58l28-14M50 70l28 14" stroke="#cffafe" stroke-width="7"/>'
-  };
-  function xav(k){ return 'data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">'+EXPERT_AV[k]+'</svg>'); }
-  var GATE_ICON='<svg class="x-gate-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m16 11 2 2 4-4"/></svg>';
-  function xesc(v){ return String(v==null?'':v).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]}); }
-
   var EXPERTS=[
     {id:'software-team-lead',k:'lead',name:'软件团队负责人',role:'交付负责人',by:'Lingee 内置',
      desc:'协调范围、分工、集成、风险与交付闭环，是专家团里唯一能开 kickoff 与做最终集成确认的角色。',
@@ -2250,55 +2163,12 @@ const billTemplateWithTokens = billTemplate.replace(
     EX={}; EXPERTS.forEach(function(e){EX[e.id]=e});
   }
   rebuildExperts();
-
-  /* 可选头像：复用内置的一套图形，创建专家时挑一个 */
-  var AV_KEYS=['lead','pm','arch','eng','qa','cr','sec','ana','fe','ux','form','flow','rpt','plug','api'];
-  var WORK_MODES=['分析','设计','实现','集成','评审','验证','恢复'];
-
   /* ---------- 能力项字典 ----------
      定义文件里能力项是机器标识（architecture.system-design · principal），
      直接摆到界面上没人看得懂。这里翻成中文名 + 等级，字典没覆盖的回退显示原串。 */
-  var COMP_NAMES={
-    'delivery.orchestration':'交付编排','delivery.integration':'集成收口',
-    'product.requirements':'需求定义','product.acceptance-design':'验收设计',
-    'architecture.system-design':'系统设计','architecture.reliability':'可靠性设计',
-    'engineering.implementation':'编码实现','engineering.integration':'工程集成',
-    'engineering.frontend':'前端工程',
-    'quality.verification':'质量验证','quality.regression-analysis':'回归分析',
-    'implementation-correctness':'实现正确性','concurrent-commit-model':'并发与提交模型',
-    'application-security':'应用安全','filesystem-safety':'文件系统安全',
-    'software.analysis':'源码分析','design.interaction':'交互设计',
-    'cosmic.form-design':'苍穹表单设计','cosmic.workflow':'苍穹工作流',
-    'cosmic.report':'苍穹报表','cosmic.plugin':'苍穹二开插件','cosmic.integration':'苍穹集成'
-  };
-  var COMP_LEVELS={principal:'资深',advanced:'精通',practitioner:'熟练',awareness:'了解'};
-
   /* ---------- 开工前需要的输入 ----------
      不再单独维护字段：需要什么输入，直接写进触发词的 [占位符] 里。
      发出去时占位符没被替换，就在会话里追问，而不是让专家拿着空输入硬跑。 */
-  var ASK={
-    '验收条件':{q:'这次做到什么程度算完成？',
-      o:['用软件产品经理刚出的验收条件','我直接说，你记下来','先不定，按最小可用实现']},
-    '架构决策':{q:'按哪份架构方案做？',
-      o:['用软件架构师刚出的方案','我把方案贴给你','还没有方案，你先出一版']},
-    '用户目标':{q:'这次要解决谁的什么问题？',
-      o:['我描述一下','用项目里已有的需求文档']},
-    '交付目标':{q:'这次交付要达成什么？',
-      o:['我说一下目标和时间','沿用上一轮没做完的范围']},
-    '需求':{q:'需求从哪来？',
-      o:['用软件产品经理的需求清单','我直接说','先读代码反推现状']},
-    '已确认需求':{q:'这次按哪份已确认的需求做？',
-      o:['用苍穹产品经理确认过的需求规格','我直接说','还没确认，先帮我理一版']},
-    '变更说明':{q:'这次改了什么？',
-      o:['用软件工程师提交的变更说明','读本次提交自己判断','我列一下改动点']},
-    '设计稿与规范':{q:'按哪份设计稿实现？',
-      o:['用界面设计专家出的设计说明','我贴 Figma 链接','没有设计稿，你按设计系统发挥']},
-    '接口契约':{q:'对接哪个接口？',
-      o:['我贴接口文档','用苍穹开放平台上已注册的接口','先帮我查一下有哪些可用']},
-    '应用编码':{q:'在哪个苍穹应用里开发？',
-      o:['用当前会话关联的应用','我填应用编码']}
-  };
-  var ASK_FALLBACK={q:'这一项从哪来？', o:['我直接说','用上一步的产出','先跳过，你按默认处理']};
   function askFor(name){ return ASK[name]||ASK_FALLBACK; }
   /* 文本里没被替换掉的 [占位符] */
   function pendingInputs(text){
@@ -2310,13 +2180,7 @@ const billTemplateWithTokens = billTemplate.replace(
   function phraseHtml(t){
     return xesc(t).replace(/\[([^\[\]]{1,20})\]/g,'<em class="x-ph">[$1]</em>');
   }
-  var COMP_RANK={principal:4,advanced:3,practitioner:2,awareness:1};
   /* 'architecture.system-design · principal' → 结构化 */
-  function parseComp(v){
-    var p=String(v==null?'':v).split('\u00b7');
-    var id=(p[0]||'').trim(), lv=(p[1]||'').trim();
-    return {id:id,name:COMP_NAMES[id]||id,lv:lv,level:COMP_LEVELS[lv]||lv,rank:COMP_RANK[lv]||0};
-  }
   function compChip(v){
     var c=(v&&typeof v==='object')?v:parseComp(v);
     return '<span class="ptag ptag-comp" title="'+xesc(c.id)+'">'+xesc(c.name)
@@ -2614,30 +2478,6 @@ const billTemplateWithTokens = billTemplate.replace(
   }
 
   /* ---------- 没选专家时的自动匹配 ---------- */
-  /* 专家团不是必选的：不选就由系统按开发模式 + 任务描述挑一个，并在会话里说明挑了谁 */
-  var MODE_MATCH={
-    '苍穹应用':{kind:'team',id:'cosmic-team'},
-    '原型探索':{kind:'expert',id:'ux-designer'},
-    '通用应用':{kind:'team',id:'fast-app'},
-    '业务组件':{kind:'expert',id:'software-engineer'},
-    '技能开发':{kind:'expert',id:'software-engineer'},
-    '智能体开发':{kind:'expert',id:'software-engineer'}
-  };
-  /* 关键词 → 专家。命中多个领域时升级成专家团 */
-  var KW_MATCH=[
-    {id:'cosmic-workflow', kw:['工作流','审批','流转','加签','会签','流程节点']},
-    {id:'cosmic-form',     kw:['表单','单据','字段','校验','联动']},
-    {id:'cosmic-report',   kw:['报表','取数','图表','口径']},
-    {id:'cosmic-plugin',   kw:['插件','扩展点','二开']},
-    {id:'cosmic-api',      kw:['接口','对接','鉴权','同步','集成']},
-    {id:'frontend-engineer',kw:['页面','前端','样式','组件','响应式','布局']},
-    {id:'ux-designer',     kw:['设计','交互','原型','信息架构','视觉']},
-    {id:'software-qa-engineer',kw:['测试','验证','回归','用例']},
-    {id:'security-reviewer',kw:['安全','漏洞','越权','威胁']},
-    {id:'code-reviewer',   kw:['评审','review','代码质量']},
-    {id:'software-architect',kw:['架构','选型','边界','技术方案']},
-    {id:'software-product-manager',kw:['需求','验收','范围','非目标']}
-  ];
   function autoMatch(text){
     var t=String(text||'');
     var hits=KW_MATCH.filter(function(r){
@@ -2789,10 +2629,6 @@ const billTemplateWithTokens = billTemplate.replace(
      读初始数据，保存时调 bridge.save(draft)。xeDraft/xeEditingId 仍在本文件维护
      供 bridge 方法读写，但 DOM 操作和事件监听全部删除。 */
   var xeDraft=null, xeEditingId=null;
-  function blankExpert(){
-    return {k:'eng',name:'',role:'',desc:'',visibility:'workspace',tags:[],modes:['分析','设计','实现'],
-            comp:[],cmds:[['','']]};
-  }
   function openExpertEditor(id){
     var e=id?EX[id]:null;
     xeEditingId=(e&&e.mine)?id:null;
@@ -2828,13 +2664,6 @@ const billTemplateWithTokens = billTemplate.replace(
     closeExpertEditor();
     saveTeams(); renderExpertGrid(); renderExpertChips(); cvRenderExperts();
   }
-  function splitList(v){
-    return String(v||'').split(/[、,，\n]/).map(function(x){return x.trim()}).filter(Boolean);
-  }
-  function splitLines(v){
-    return String(v||'').split('\n').map(function(x){return x.trim()}).filter(Boolean);
-  }
-
   /* ---------- 专家团配置弹窗 ---------- */
   /* ---------- 专家团配置弹窗（Phase 2c antd 化） ----------
      React 侧（ExpertModals.jsx）通过 bridge 读写 teamDraft，每次修改后
@@ -2950,14 +2779,6 @@ const billTemplateWithTokens = billTemplate.replace(
 
   /* 模式 → builder 名。来源见 lingee-build packages/kcode-web/src/components/prompt-input.tsx
      starterRecommendationCards；技能/智能体两项用 1.x 线的新名（用户确认） */
-  var MODE_BUILDERS={
-    '技能开发':{id:'skill-builder',    ic:'<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>'},
-    '智能体开发':{id:'agent-builder',  ic:'<rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V3"/><circle cx="12" cy="3" r="1.5" fill="currentColor"/><rect x="8" y="13" width="3" height="2" rx="1"/><rect x="13" y="13" width="3" height="2" rx="1"/>'},
-    '原型探索':{id:'prototype-builder',   ic:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 9v11"/>'},
-    '通用应用':{id:'general-app-builder', ic:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>'},
-    '苍穹应用':{id:'cosmic-app-builder', ic:'<path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/>'},
-    '业务组件':{id:'mcp-apps-builder', ic:'<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/>'}
-  };
   function renderModeTag(){
     var el=$('.mode-item.checked'), mode=el?el.getAttribute('data-val'):null;
     var b=mode?MODE_BUILDERS[mode]:forcedBuilder;
@@ -3098,14 +2919,6 @@ const billTemplateWithTokens = billTemplate.replace(
     {id:'purchase-domain',name:'采购域工作区',short:'采'}
   ];
   var cvWorkspace=CV_WORKSPACES[0].id;
-  var CV_PROJECTS=[
-    {id:'expense',name:'费用报销应用',dot:'blue',defaultTeam:'software-company',workspace:'finance-domain',
-      desc:'面向企业的费用报销全流程，覆盖提交、多级审批与统计分析',status:'active',owner:'王工',repo:'finance/expense-app',updated:'2 小时前'},
-    {id:'purchase',name:'采购管理系统',dot:'orange',defaultTeam:'cosmic-team',workspace:'purchase-domain',
-      desc:'采购订单、供应商管理与价格审批的一体化系统',status:'active',owner:'李工',repo:'erp/purchase-service',updated:'昨天'},
-    {id:'supply',name:'供应链协同平台',dot:'green',defaultTeam:null,workspace:'purchase-domain',
-      desc:'打通供应商协同门户，支持订单确认与交期回复',status:'planning',owner:'',repo:null,updated:'5 天前'}
-  ];
   /* 项目状态：人定的「还做不做」，跟任务状态（干出来的进度）是两套词表，配色沿用任务同义色 */
   var CV_PROJECT_STATUS=[
     {id:'planning',label:'计划中',tone:'#b8b8b8'},
@@ -3137,36 +2950,6 @@ const billTemplateWithTokens = billTemplate.replace(
     if(cvProject) return '';           /* 项目态下不必重复显示项目名 */
     return '<span class="cv-proj-tag">'+cvProjectName(row.project)+'</span>';
   }
-
-  var CV_TASKS = [
-    {type:'需求',size:'大',source:'Jira',sourceId:'PROJ-42',exec:'专家团',status:'待评审',collab:'Agent间协作',title:'审批流插件代码审查',desc:'审查费用报销审批流的插件实现，包括多级审批流转逻辑和异常处理',assignee:'王工',progress:0,project:'expense'},
-    {type:'Bug',size:'小',source:'TAPD',sourceId:'BUG-7831',exec:'自动执行',status:'进行中',collab:'人Agent协作',title:'报销金额精度丢失修复',desc:'当报销金额含小数时，后端 BigDecimal 序列化后精度丢失',assignee:'AI开发Agent',progress:62,project:'expense'},
-    {type:'需求',size:'小',source:'对话自建',sourceId:'CNV-001',exec:'自动执行',status:'已完成',collab:'无需协作',title:'费用类型新增团建费选项',desc:'在费用类型下拉中增加团建费选项，归属部门活动费用类别',assignee:'AI开发Agent',progress:100,project:'expense'},
-    {type:'任务',size:'大',source:'Jira',sourceId:'PROJ-56',exec:'专家团',status:'未开始',collab:'人人协作',title:'权限体系重构',desc:'基于 RBAC 模型重构权限体系，支持角色分级、数据权限和功能权限分离',assignee:'待分配',progress:0,project:'expense'},
-    {type:'改进',size:'小',source:'API',sourceId:'API-12',exec:'自动执行',status:'已完成',collab:'无需协作',title:'批量导出 Excel 格式支持',desc:'当前仅支持 CSV 导出，需要增加 Excel 格式导出功能',assignee:'AI开发Agent',progress:100,project:'expense'},
-    {type:'Bug',size:'小',source:'Jira',sourceId:'BUG-7845',exec:'自动执行',status:'未开始',collab:'人Agent协作',title:'附件上传偶发 502 错误',desc:'附件上传在弱网环境下偶发 502 错误，需要增加重试机制',assignee:'待分配',progress:0,project:'expense'},
-    {type:'需求',size:'大',source:'Jira',sourceId:'PROJ-61',exec:'专家团',status:'未开始',collab:'人人协作',title:'多级审批流性能优化',desc:'当前审批流在多级审批场景下存在性能瓶颈，需要优化审批流转逻辑',assignee:'待分配',progress:0,project:'expense'},
-    {type:'任务',size:'大',source:'TAPD',sourceId:'TASK-203',exec:'专家团',status:'待评审',collab:'Agent间协作',title:'审批流多级流转设计',desc:'设计多级审批流转逻辑，支持串行、并行、会签等多种审批模式',assignee:'王工',progress:0,project:'expense'},
-    {type:'改进',size:'小',source:'对话自建',sourceId:'CNV-003',exec:'自动执行',status:'进行中',collab:'人Agent协作',title:'打印模板优化',desc:'优化报销单打印模板，支持自定义页眉页脚和水印',assignee:'AI开发Agent',progress:35,project:'expense'},
-    {type:'Bug',size:'小',source:'TAPD',sourceId:'BUG-7852',exec:'自动执行',status:'已完成',collab:'无需协作',title:'列表搜索响应慢修复',desc:'当报销单数据量超过 5000 条时，列表页搜索响应时间超过 10 秒',assignee:'AI开发Agent',progress:100,project:'expense'},
-    {type:'需求',size:'大',source:'Jira',sourceId:'PROJ-68',exec:'专家团',status:'未开始',collab:'人人协作',title:'多币种报销支持',desc:'支持多币种报销，包括汇率转换、币种选择和金额展示逻辑',assignee:'待分配',progress:0,project:'expense'},
-    {type:'任务',size:'小',source:'对话自建',sourceId:'CNV-005',exec:'自动执行',status:'已完成',collab:'人Agent协作',title:'数据字典维护',desc:'维护费用类型、审批层级、权限角色等数据字典',assignee:'AI开发Agent',progress:100,project:'expense'},
-    {type:'Bug',size:'大',source:'Jira',sourceId:'BUG-7901',exec:'专家团',status:'已失败',collab:'Agent间协作',title:'审批流死锁问题修复',desc:'并发审批场景下出现死锁，需要重构审批流的锁机制',assignee:'AI开发Agent',progress:0,project:'expense'},
-    {type:'改进',size:'小',source:'API',sourceId:'API-18',exec:'自动执行',status:'未开始',collab:'无需协作',title:'移动端审批页面适配',desc:'当前审批页面在移动端显示异常，需要做响应式适配',assignee:'待分配',progress:0,project:'expense'},
-    {type:'需求',size:'大',source:'Jira',sourceId:'PROJ-75',exec:'专家团',status:'进行中',collab:'人人协作',title:'预算控制模块开发',desc:'新增预算控制模块，支持按部门/项目/月份设置预算上限，超标自动拦截',assignee:'李工',progress:45,project:'expense'},
-    {type:'任务',size:'小',source:'TAPD',sourceId:'TASK-215',exec:'自动执行',status:'未开始',collab:'人Agent协作',title:'审批日志查询接口',desc:'开发审批日志查询接口，支持按时间、人员、状态筛选',assignee:'待分配',progress:0,project:'expense'},
-    {type:'Bug',size:'小',source:'对话自建',sourceId:'CNV-008',exec:'自动执行',status:'已完成',collab:'无需协作',title:'日期格式显示不一致',desc:'不同页面日期格式不一致，有的显示 yyyy-MM-dd 有的显示 yyyy/MM/dd',assignee:'AI开发Agent',progress:100,project:'expense'},
-    {type:'需求',size:'大',source:'飞书',sourceId:'FS-33',exec:'专家团',status:'未开始',collab:'Agent间协作',title:'移动端审批流开发',desc:'开发移动端审批流程，支持微信/钉钉/飞书消息通知和审批操作',assignee:'待分配',progress:0,project:'expense'},
-    {type:'需求',size:'大',source:'Jira',sourceId:'PUR-18',exec:'专家团',status:'进行中',collab:'人人协作',title:'采购订单批量导入',desc:'支持 Excel 批量导入采购订单，含供应商匹配、价格校验与错误行回执',assignee:'李工',progress:38,project:'purchase'},
-    {type:'Bug',size:'小',source:'TAPD',sourceId:'BUG-8102',exec:'自动执行',status:'待评审',collab:'人Agent协作',title:'采购入库单反审核报错',desc:'反审核已关联付款单的入库单时抛空指针，需补充关联校验与提示',assignee:'AI开发Agent',progress:0,project:'purchase'},
-    {type:'任务',size:'小',source:'对话自建',sourceId:'CNV-011',exec:'自动执行',status:'已完成',collab:'无需协作',title:'采购订单列表新增供应商筛选',desc:'列表页筛选区增加供应商下拉，支持按编码与名称模糊匹配',assignee:'AI开发Agent',progress:100,project:'purchase'},
-    {type:'改进',size:'大',source:'Jira',sourceId:'PUR-25',exec:'专家团',status:'未开始',collab:'人人协作',title:'采购价格审批链重构',desc:'按金额分级审批，超阈值自动加签采购总监，并保留完整审批留痕',assignee:'待分配',progress:0,project:'purchase'},
-    {type:'需求',size:'大',source:'飞书',sourceId:'FS-52',exec:'专家团',status:'进行中',collab:'Agent间协作',title:'供应商协同门户对接',desc:'打通供应商门户的订单确认与交期回复，含消息推送与状态回写',assignee:'冯远',progress:52,project:'supply'},
-    {type:'任务',size:'小',source:'API',sourceId:'API-31',exec:'自动执行',status:'未开始',collab:'人Agent协作',title:'交期变更消息推送',desc:'交期变更时向采购员推送企业微信消息，推送失败进入重试队列',assignee:'待分配',progress:0,project:'supply'},
-    {type:'Bug',size:'小',source:'Jira',sourceId:'BUG-8155',exec:'自动执行',status:'已失败',collab:'Agent间协作',title:'供应商评级定时任务超时',desc:'评级任务在供应商超 2 万条时超时中断，需要改为分片执行',assignee:'AI开发Agent',progress:0,project:'supply'},
-    {type:'需求',size:'小',source:'对话自建',sourceId:'CNV-014',exec:'自动执行',status:'已完成',collab:'无需协作',title:'供应商档案资质到期提醒',desc:'资质到期前 30 天在档案列表标红，并向对接采购员推送提醒',assignee:'AI开发Agent',progress:100,project:'supply'}
-  ];
-
   var CV_REVIEW_ARTIFACTS={
   0:{tabs:['源代码','技术方案'],content:{
   '源代码':'<h1>审批流插件 - 源代码</h1><p>文件: ApprovalFlowPlugin.java</p><pre>public class ApprovalFlowPlugin extends AbstractPlugin {\n  @Override\n  public void execute(ExecutionContext ctx) {\n    ApprovalContext ac = ctx.getApprovalContext();\n    List&lt;ApprovalNode&gt; nodes = ac.getApprovalNodes();\n    for (ApprovalNode node : nodes) {\n      if (node.isTimeout(30, TimeUnit.MINUTES)) {\n        handleTimeout(node, ac);\n        continue;\n      }\n      if (node.getStatus() == NodeStatus.PENDING) {\n        notifyApprover(node);\n      }\n    }\n    // 多级审批流转\n    if (ac.allNodesProcessed()) {\n      ctx.complete();\n    }\n  }\n  private void handleTimeout(ApprovalNode node, ApprovalContext ac) {\n    // 超时自动升级\n    ac.escalateToSuperior(node);\n  }\n}</pre><p>文件: ApprovalFlowService.java</p><pre>public class ApprovalFlowService {\n  public ApprovalResult submit(ExpenseReport report) {\n    ApprovalFlow flow = buildFlow(report);\n    flow.start();\n    return flow.getResult();\n  }\n}</pre>',
@@ -3207,48 +2990,9 @@ const billTemplateWithTokens = billTemplate.replace(
   7:[{author:'李工',avatar:'李',type:'reject',text:'权限过滤用例失败，部门管理员可见下级数据的逻辑有 Bug，需要修复后重新提交。',time:'今日 14:00'},{author:'陈晨',avatar:'陈',type:'comment',text:'测试用例覆盖了主要场景，建议增加并发查询的用例。',time:'今日 15:30'}],
   8:[{author:'王工',avatar:'王',type:'comment',text:'灰度发布策略合理，建议第一阶段缩短到 1 小时。',time:'昨日 16:00'}]
   };
-
-  var CV_REVIEWS = [
-    {type:'任务',size:'大',source:'Jira',exec:'专家团',priority:'紧急',reviewType:'代码评审',title:'审批流插件代码审查',desc:'审查费用报销审批流的插件实现，包括多级审批流转逻辑和异常处理',reviewer:'王工',reviewerRole:'架构人员',deadline:'今日 18:00',deadlineColor:'var(--danger)',borderColor:'var(--danger)',from:'张工',fromTime:'今日 10:30',artifacts:['源代码','单元测试','技术方案'],project:'expense'},
-    {type:'需求',size:'大',source:'Jira',exec:'专家团',priority:'高',reviewType:'方案评审',title:'多级审批流性能优化方案',desc:'当前审批流在多级审批场景下存在性能瓶颈，需要优化审批流转逻辑',reviewer:'王工',reviewerRole:'架构人员',deadline:'明日 12:00',deadlineColor:'var(--warning)',borderColor:'var(--warning)',from:'张工',fromTime:'昨日 16:20',artifacts:['技术方案','需求规格'],project:'expense'},
-    {type:'任务',size:'大',source:'Jira',exec:'专家团',priority:'中',reviewType:'方案评审',title:'权限体系重构方案评审',desc:'基于 RBAC 模型重构权限体系，支持角色分级、数据权限和功能权限分离',reviewer:'张工',reviewerRole:'开发人员',deadline:'3 天后',deadlineColor:'var(--dot-blue)',borderColor:'var(--dot-blue)',from:'赵琳',fromTime:'2 天前',artifacts:['技术方案','需求规格','源代码'],project:'expense'},
-    {type:'改进',size:'小',source:'对话自建',exec:'自动执行',priority:'中',reviewType:'代码评审',title:'打印模板优化方案评审',desc:'优化报销单打印模板，支持自定义页眉页脚和水印',reviewer:'陈晨',reviewerRole:'测试人员',deadline:'2 天后',deadlineColor:'var(--dot-blue)',borderColor:'var(--dot-blue)',from:'AI开发Agent',fromTime:'3 小时前',artifacts:['源代码','技术方案'],project:'expense'},
-    {type:'Bug',size:'小',source:'TAPD',exec:'自动执行',priority:'紧急',reviewType:'代码评审',title:'附件上传 502 修复方案评审',desc:'附件上传在弱网环境下偶发 502 错误的重试机制实现',reviewer:'张工',reviewerRole:'开发人员',deadline:'今日 20:00',deadlineColor:'var(--danger)',borderColor:'var(--danger)',from:'AI开发Agent',fromTime:'1 小时前',artifacts:['源代码','单元测试'],project:'expense'},
-    {type:'需求',size:'小',source:'对话自建',exec:'自动执行',priority:'低',reviewType:'需求评审',title:'费用类型新增选项评审',desc:'在费用类型下拉中增加团建费选项的实现',reviewer:'吴芳',reviewerRole:'需求人员',deadline:'5 天后',deadlineColor:'var(--success)',borderColor:'var(--dot-blue)',from:'AI开发Agent',fromTime:'昨日 14:00',artifacts:['需求规格','源代码'],project:'expense'},
-    {type:'需求',size:'大',source:'Jira',exec:'专家团',priority:'高',reviewType:'需求评审',title:'多币种报销需求规格评审',desc:'支持多币种报销，含汇率转换、原币金额与本位币金额双重记录',reviewer:'赵琳',reviewerRole:'需求人员',deadline:'明日 18:00',deadlineColor:'var(--warning)',borderColor:'var(--warning)',from:'王工',fromTime:'今日 09:00',artifacts:['需求规格'],project:'expense'},
-    {type:'任务',size:'大',source:'Jira',exec:'专家团',priority:'中',reviewType:'测试评审',title:'费用明细列表页测试用例评审',desc:'审查费用明细列表页的测试用例覆盖度，包括边界值、异常场景、性能场景',reviewer:'陈晨',reviewerRole:'测试人员',deadline:'3 天后',deadlineColor:'var(--dot-blue)',borderColor:'var(--dot-blue)',from:'李工',fromTime:'昨日 11:00',artifacts:['测试用例','测试报告','源代码'],project:'expense'},
-    {type:'任务',size:'中',source:'TAPD',exec:'专家团',priority:'中',reviewType:'部署评审',title:'审批流插件部署方案评审',desc:'审批流插件灰度发布方案，含回滚策略和监控告警配置',reviewer:'周杰',reviewerRole:'运维人员',deadline:'4 天后',deadlineColor:'var(--dot-blue)',borderColor:'var(--dot-blue)',from:'王工',fromTime:'2 天前 15:00',artifacts:['部署方案','运维手册'],project:'expense'},
-    {type:'需求',size:'大',source:'Jira',exec:'专家团',priority:'高',reviewType:'方案评审',title:'采购价格审批链重构方案',desc:'按金额分级审批与超阈值自动加签的流程设计，含审批留痕方案',reviewer:'冯远',reviewerRole:'架构人员',deadline:'明日 10:00',deadlineColor:'var(--warning)',borderColor:'var(--warning)',from:'李工',fromTime:'今日 09:20',artifacts:['技术方案','需求规格'],project:'purchase'},
-    {type:'Bug',size:'小',source:'TAPD',exec:'自动执行',priority:'中',reviewType:'代码评审',title:'采购入库单反审核校验补充',desc:'反审核关联付款单的校验实现与回归用例',reviewer:'张工',reviewerRole:'开发人员',deadline:'3 天后',deadlineColor:'var(--dot-blue)',borderColor:'var(--dot-blue)',from:'AI开发Agent',fromTime:'今日 11:40',artifacts:['源代码','单元测试'],project:'purchase'},
-    {type:'需求',size:'大',source:'飞书',exec:'专家团',priority:'紧急',reviewType:'需求评审',title:'供应商协同门户对接需求规格',desc:'订单确认与交期回复的字段口径、异常处理与状态回写规则',reviewer:'张工',reviewerRole:'开发人员',deadline:'今日 20:00',deadlineColor:'var(--danger)',borderColor:'var(--danger)',from:'冯远',fromTime:'今日 08:50',artifacts:['需求规格','技术方案'],project:'supply'}
-  ];
-
   /* level/owner：协作身份分级（所有者/管理员/成员），见 cvCurrentLevel 等函数。
      梁平已经带着「所有者」角色标签，所有者身份归他；isMe 的张工给管理员，方便登录后
      直接体验"调整他人身份/移除成员"这套权限交互，不用切账号。 */
-  var CV_MEMBERS = [
-    {name:'张工',email:'zhang***@kingdee.com',roles:[{tag:'member-tag--dev',text:'开发'},{tag:'member-tag--arch',text:'架构'}],status:'available',source:'直接成员',isMe:true,level:'admin',projects:['expense','purchase','supply']},
-    {name:'李工',email:'li***@kingdee.com',roles:[{tag:'member-tag--dev',text:'开发'}],status:'available',source:'直接成员',level:'member',projects:['expense','purchase']},
-    {name:'王工',email:'wang***@kingdee.com',roles:[{tag:'member-tag--dev',text:'开发'},{tag:'member-tag--arch',text:'架构'}],status:'busy',source:'直接成员',level:'member',projects:['expense','supply']},
-    {name:'赵琳',email:'zha***@kingdee.com',roles:[{tag:'member-tag--pm',text:'需求'},{tag:'member-tag--pm',text:'产品'}],status:'available',source:'继承自 灵基AIOS',level:'member',projects:'*'},
-    {name:'陈晨',email:'chen***@kingdee.com',roles:[{tag:'member-tag--qa',text:'测试'}],status:'available',source:'直接成员',level:'member',projects:['expense']},
-    {name:'刘洋',email:'liu***@kingdee.com',roles:[{tag:'member-tag--qa',text:'测试'}],status:'busy',source:'直接成员',level:'member',projects:['purchase']},
-    {name:'周杰',email:'zhou***@kingdee.com',roles:[{tag:'member-tag--ops',text:'运维'}],status:'available',source:'直接成员',level:'member',projects:['expense','purchase']},
-    {name:'孙明',email:'sun***@kingdee.com',roles:[{tag:'member-tag--ops',text:'运维'}],status:'available',source:'继承自 灵基AIOS',level:'admin',projects:'*'},
-    {name:'吴芳',email:'wu***@kingdee.com',roles:[{tag:'member-tag--pm',text:'需求'}],status:'available',source:'直接成员',level:'member',projects:['expense']},
-    {name:'郑凯',email:'zheng***@kingdee.com',roles:[{tag:'member-tag--dev',text:'开发'}],status:'busy',source:'直接成员',level:'member',projects:['expense']},
-    {name:'钱涛',email:'qian***@kingdee.com',roles:[{tag:'member-tag--dev',text:'开发'}],status:'available',source:'直接成员',level:'member',projects:['purchase']},
-    {name:'宋宇',email:'song***@kingdee.com',roles:[{tag:'member-tag--pm',text:'产品'}],status:'available',source:'继承自 灵基AIOS',level:'member',projects:'*'},
-    {name:'冯远',email:'feng***@kingdee.com',roles:[{tag:'member-tag--arch',text:'架构'}],status:'available',source:'直接成员',level:'member',projects:['supply']},
-    {name:'许诺',email:'xu***@kingdee.com',roles:[{tag:'member-tag--dev',text:'开发'},{tag:'member-tag--arch',text:'架构'}],status:'busy',source:'直接成员',level:'member',projects:['purchase','supply']},
-    {name:'蒋雯',email:'jiang***@kingdee.com',roles:[{tag:'member-tag--pm',text:'需求'},{tag:'member-tag--pm',text:'产品'}],status:'available',source:'继承自 灵基AIOS',level:'member',projects:'*'},
-    {name:'何欣',email:'he***@kingdee.com',roles:[{tag:'member-tag--pm',text:'需求'}],status:'available',source:'直接成员',level:'member',projects:['supply']},
-    {name:'韩梅',email:'han***@kingdee.com',roles:[{tag:'member-tag--qa',text:'测试'}],status:'available',source:'直接成员',level:'member',projects:['purchase']},
-    {name:'罗静',email:'luo***@kingdee.com',roles:[{tag:'member-tag--qa',text:'测试'}],status:'busy',source:'直接成员',level:'member',projects:['supply']},
-    {name:'杨帆',email:'yang***@kingdee.com',roles:[{tag:'member-tag--ops',text:'运维'}],status:'available',source:'直接成员',level:'member',projects:['purchase']},
-    {name:'唐辉',email:'tang***@kingdee.com',roles:[{tag:'member-tag--ops',text:'运维'}],status:'available',source:'继承自 灵基AIOS',level:'member',projects:'*'},
-    {name:'梁平',email:'liang***@kingdee.com',roles:[{tag:'member-tag--pm',text:'产品'},{tag:'member-tag--owner',text:'所有者'}],status:'available',source:'直接成员',level:'admin',owner:true,projects:['expense','purchase','supply']}
-  ];
   var CV_ICON_OWNER='<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M5 16l-2-9 5.5 4L12 4l3.5 7L21 7l-2 9H5zm0 2h14v2H5v-2z"/></svg>';
   var CV_ICON_ADMIN='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg>';
   var CV_ICON_MEMBER='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>';
