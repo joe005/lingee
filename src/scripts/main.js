@@ -908,50 +908,7 @@ const billTemplateWithTokens = billTemplate.replace(
 
 
 
-  /* ---------- 预览：编辑 / 选择元素按钮 ---------- */
-  var previewEditBtn=$('#previewEdit'), previewPickBtn=$('#previewPick');
-  if(previewEditBtn){
-    previewEditBtn.addEventListener('click',function(){
-      var on=!previewEditBtn.classList.contains('on');
-      previewEditBtn.classList.toggle('on',on);
-      previewEditBtn.setAttribute('aria-pressed',on?'true':'false');
-      var d=previewDoc(); if(d) d.designMode=on?'on':'off';
-      if(on&&previewPickBtn&&previewPickBtn.classList.contains('on')){
-        previewPickBtn.classList.remove('on');
-        previewPickBtn.setAttribute('aria-pressed','false');
-        setPickMode(false);
-      }
-      toast(on?'已进入编辑模式，可直接修改页面文字':'已退出编辑模式');
-    });
-  }
-  if(previewPickBtn){
-    previewPickBtn.addEventListener('click',function(){
-      var on=!previewPickBtn.classList.contains('on');
-      previewPickBtn.classList.toggle('on',on);
-      previewPickBtn.setAttribute('aria-pressed',on?'true':'false');
-      if(on&&previewEditBtn&&previewEditBtn.classList.contains('on')){
-        previewEditBtn.classList.remove('on');
-        previewEditBtn.setAttribute('aria-pressed','false');
-        var d=previewDoc(); if(d) d.designMode='off';
-      }
-      setPickMode(on);
-    });
-  }
-
-  /* ---------- 标题栏：切换预览展开 / 收起 ---------- */
-  var togglePreviewBtn=$('#togglePreviewBtn');
-  if(togglePreviewBtn){
-    togglePreviewBtn.addEventListener('click',function(){
-      var view=$('#view-chat');
-      if(view.classList.contains('preview-open')){
-        var cb=$('#chatPreviewClose'); if(cb) cb.click();
-      }else{
-        var card=$('.artifact-card');
-        if(card) card.click(); else return;
-      }
-      syncTogglePreviewBtn();
-    });
-  }
+  /* 预览面板已迁到 React ChatView */
 
   /* ---------- 用户菜单：头像 / 姓名 ---------- */
   var userWrap=$('.user-wrap'), userBtn=$('#userBtn');
@@ -1564,33 +1521,7 @@ const billTemplateWithTokens = billTemplate.replace(
   var chatMessages=$('#chatMessages');
   var messagesList=$('#messagesList');
   /* 预览面板关闭按钮 */
-  var chatPreviewCloseBtn=$('#chatPreviewClose');
-  if(chatPreviewCloseBtn){
-    chatPreviewCloseBtn.addEventListener('click',function(){
-      var view=document.getElementById('view-chat');
-      var ps=document.getElementById('chatPreviewSide');
-      view.classList.remove('preview-open');
-      if(typeof syncTogglePreviewBtn==='function') syncTogglePreviewBtn();
-      try{localStorage.setItem('chatPreviewOpen','0')}catch(e){}
-      if(ps){ps.style.width='';ps.style.maxWidth='';}
-    });
-  }
-  /* 预览面板页签切换 */
-  function switchPreviewTab(target){
-    $$('.preview-tab').forEach(function(t){t.classList.toggle('active',t.getAttribute('data-tab')===target)});
-    var bodies={preview:$('#previewBodyPreview'),list:$('#previewBodyList'),entity:$('#previewBodyEntity'),plugin:$('#previewBodyPlugin'),api:$('#previewBodyApi'),mcp:$('#previewBodyMcp')};
-    Object.keys(bodies).forEach(function(k){
-      if(bodies[k]){bodies[k].classList.toggle('hidden',k!==target)}
-    });
-    var nav=$('#previewNav');
-    if(nav){nav.classList.toggle('hidden',target!=='preview')}
-    try{localStorage.setItem('chatPreviewTab',target)}catch(e){}
-  }
-  $$('.preview-tab').forEach(function(tab){
-    tab.addEventListener('click',function(){
-      switchPreviewTab(tab.getAttribute('data-tab'));
-    });
-  });
+  /* 预览面板关闭/页签/MCP 列表已迁到 React */
   /* MCP 工具列表渲染 */
   var mcpData=[
     {id:1,act:'新增',tool:'create_purchase_order',toolUniqueID:'post_v2_scm_po_save',desc:'新增采购订单，校验必填字段与金额上限',status:'published',actionType:'保存操作',domain:'采购管理',module:'purchase_order',sensitive:false,serviceSource:'系统内置',customParams:false,errorLog:'—',precond:'[{"condition":"用户具有采购订单新增权限"},{"condition":"供应商基础资料有效"},{"condition":"物料编码有效"}]',postcond:'[{"effect":"保存后数据状态为暂存","field":"billstatus","to_value":"A"}]',recovery:'{"open.100001":{"hint":"必填字段缺失","cause":"请求参数校验失败","suggestion":"请检查必填字段后重试","auto_recoverable":true}}',targetAPI:'POST /kapi/v2/scm/pm/purchaseorder'},
