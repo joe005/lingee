@@ -12,6 +12,44 @@ const billTemplateWithTokens = billTemplate.replace(
   var $=function(s,el){return (el||document).querySelector(s)};
   var $$=function(s,el){return Array.prototype.slice.call((el||document).querySelectorAll(s))};
 
+  /* ---------- 消息数据模型（Phase 3 数据驱动） ----------
+     chat 视图的消息列表改为数据数组，React 组件（ChatView.jsx）渲染。
+     simulateAIResponse 往数组里 push 步骤/结果，每次变更调 _chatTouch() 触发 React 重渲染。 */
+  var CHAT_MESSAGES=[];
+  var _chatVersion=0;
+  var _chatListeners=[];
+  function _chatTouch(){
+    _chatVersion++;
+    _chatListeners.slice().forEach(function(fn){ try{fn();}catch(e){} });
+  }
+  function _simulateResponse(){
+    var msgId=Date.now();
+    var msg={id:msgId,type:'assistant',steps:[],result:null,streaming:true};
+    CHAT_MESSAGES.push(msg);
+    var steps=[{title:'需求分析'},{title:'开发页面'},{title:'测试验收'}];
+    var currentStepIdx=0;
+    function addNextStep(){
+      if(currentStepIdx>=steps.length){
+        msg.streaming=false;
+        msg.result={markdown:mockReplies?mockReplies[Math.floor(Math.random()*(mockReplies.length||1))]||'已完成':'已完成',artifact:true};
+        _chatTouch();
+        if(window.__lingeeBridge&&window.__lingeeBridge.chat) window.__lingeeBridge.chat.touch();
+        return;
+      }
+      msg.steps.push({title:steps[currentStepIdx].title,status:'running'});
+      _chatTouch();
+      if(window.__lingeeBridge&&window.__lingeeBridge.chat) window.__lingeeBridge.chat.touch();
+      setTimeout(function(){
+        msg.steps[currentStepIdx].status='done';
+        currentStepIdx++;
+        _chatTouch();
+        if(window.__lingeeBridge&&window.__lingeeBridge.chat) window.__lingeeBridge.chat.touch();
+        setTimeout(addNextStep,300);
+      },800+Math.random()*600);
+    }
+    addNextStep();
+  }
+
   /* ---------- 弹窗状态桥工厂（Phase 2b antd 化，见 docs/react-migration-plan.md） ----------
      和 _cvModalState（协作开发 7 个弹窗，Phase 2）用的是同一套模式：这里只广播
      "当前该开哪个弹窗"，具体判断/落库/联动 UI 仍然 100% 留在本文件对应的业务
@@ -5103,6 +5141,53 @@ const billTemplateWithTokens = billTemplate.replace(
       getOpenModal:_envAuthConfirmBridge.getOpenModal,
       close:_closeAuthConfirm,
       confirm:_confirmAuthConfirm
+    },
+    /* ---------- composer + chat（Phase 3 数据驱动） ---------- */
+    composer:{
+      send:function(text){
+        if(!text||!text.trim()) return;
+        var t=text.trim();
+        /* 模式检查 */
+        var modeEl=$('.mode-item.checked');
+        var currentMode=modeEl?modeEl.getAttribute('data-val'):'';
+        /* 自动匹配专家 */
+        if(!pickValid()){
+          var am=autoMatch(t);
+          if(am){ activePick=am; renderExpertChips(); }
+        }
+        /* 切到 chat 视图 */
+        showView('chat');
+        /* 添加用户消息 */
+        CHAT_MESSAGES.push({id:Date.now(),type:'user',text:t});
+        /* 添加助手消息 + 模拟响应 */
+        _simulateResponse();
+        _chatTouch();
+        /* 清空输入（React 侧处理） */
+        if(input){ input.innerHTML=''; refreshSend(); }
+        if(chatInput){ chatInput.innerHTML=''; }
+        /* 聚焦 chat 输入 */
+        if(chatInput) setTimeout(function(){chatInput.focus();},100);
+      },
+      getMode:function(){
+        var modeEl=$('.mode-item.checked');
+        return modeEl?modeEl.getAttribute('data-val'):'';
+      },
+      setMode:function(mode){ applyMode(mode,true); },
+      getExpert:function(){ return activePick; },
+      clearExpert:function(){ clearPick(); renderExpertChips(); },
+      openFilePicker:openFilePicker,
+      getModes:function(){
+        return ['苍穹应用','通用应用','业务组件','技能开发','智能体开发','原型探索'];
+      }
+    },
+    chat:{
+      subscribe:function(fn){ _chatListeners.push(fn); return function(){ var i=_chatListeners.indexOf(fn); if(i>=0)_chatListeners.splice(i,1); }; },
+      getMessages:function(){ return CHAT_MESSAGES; },
+      getVersion:function(){ return _chatVersion; },
+      touch:_chatTouch,
+      clear:function(){ CHAT_MESSAGES=[]; _chatTouch(); },
+      getTitle:function(){ return $('#chatTitle')?$('#chatTitle').textContent:''; },
+      setTitle:function(t){ if($('#chatTitle')) $('#chatTitle').textContent=t; }
     }
   };
 
