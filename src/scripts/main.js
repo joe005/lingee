@@ -27,6 +27,45 @@ const billTemplateWithTokens = billTemplate.replace(
   var $=function(s,el){return (el||document).querySelector(s)};
   var $$=function(s,el){return Array.prototype.slice.call((el||document).querySelectorAll(s))};
 
+  /* ---------- 登录鉴权 ---------- */
+  var LOGIN_KEY='lingee_auth_session';
+  var REMEMBER_KEY='lingee_remember_user';
+  var USER_CREDENTIALS={
+    'wei_bu@kingdee.com':'lingee520',
+    'wuhc2023@gmail.com':'lingee520',
+    '6686612@qq.com':'lingee520',
+    '17299999999':'KDadm!@#2022',
+    'liangpingxian@gmail.com':'lingee520'
+  };
+  var loginOverlay=$('#loginOverlay'), loginForm=$('#loginForm'), loginBtn=$('#loginBtn'), loginError=$('#loginError');
+  function getAuthedUser(){ try{ return JSON.parse(sessionStorage.getItem(LOGIN_KEY)) }catch(e){ return null } }
+  function setAuthed(user){ try{ sessionStorage.setItem(LOGIN_KEY,JSON.stringify({user:user,ts:Date.now()})) }catch(e){} }
+  function applyUserInfo(user){ /* sidebar 显示用户名，vanilla 侧边栏处理 */ }
+  function hideLogin(){ if(loginOverlay) loginOverlay.classList.add('hidden'); }
+  function showLogin(){ if(loginOverlay) loginOverlay.classList.remove('hidden'); }
+  /* 恢复记住的账号密码 */
+  try{ var saved=localStorage.getItem(REMEMBER_KEY); if(saved){ saved=JSON.parse(saved); var lu=$('#loginUser'); if(lu) lu.value=saved.u||''; var lp=$('#loginPass'); if(lp) lp.value=saved.p||''; var lr=$('#loginRemember'); if(lr) lr.checked=true; } }catch(e){}
+  if(loginForm){
+    loginForm.addEventListener('submit',function(e){
+      e.preventDefault();
+      var user=$('#loginUser').value.trim(), pass=$('#loginPass').value.trim();
+      if(!user||!pass){ if(loginError) loginError.textContent='请输入账号和密码'; return; }
+      if(USER_CREDENTIALS[user] && USER_CREDENTIALS[user]===pass){
+        if(loginError) loginError.textContent='';
+        if(loginBtn){ loginBtn.classList.add('loading'); loginBtn.disabled=true; loginBtn.textContent='登录中'; }
+        try{ var rem=$('#loginRemember'); if(rem&&rem.checked) localStorage.setItem(REMEMBER_KEY,JSON.stringify({u:user,p:pass})); else localStorage.removeItem(REMEMBER_KEY); }catch(e){}
+        setTimeout(function(){ setAuthed(user); applyUserInfo(user); hideLogin(); if(loginBtn){ loginBtn.classList.remove('loading'); loginBtn.disabled=false; loginBtn.textContent='登录'; } },800);
+      }else{
+        if(loginError) loginError.textContent='账号或密码错误，请重试';
+        var lp=$('#loginPass'); if(lp) lp.value=''; if(lp) lp.focus();
+      }
+    });
+  }
+  /* 未登录显示登录页 */
+  var _authedUser=getAuthedUser();
+  if(!_authedUser){ showLogin(); try{localStorage.removeItem('lingeeUrlState')}catch(e){} }
+  else{ applyUserInfo(_authedUser.user); hideLogin(); }
+
   /* bridge 状态变量 */
   var _expertViewingId=null, _expertEditId=null, _teamEditingId=null;
   var teamDraft=null, envMode='create', envEditIndex=-1, envNormalAuthEnabled=false;
