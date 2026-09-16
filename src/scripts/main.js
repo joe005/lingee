@@ -86,46 +86,15 @@ const billTemplateWithTokens = billTemplate.replace(
     'liangpingxian@gmail.com':'lingee520'
   };
 
-  function getAuthedUser(){
-    try{ return sessionStorage.getItem(LOGIN_KEY)||null; }catch(e){ return null; }
-  }
-  function setAuthed(user){
-    try{ sessionStorage.setItem(LOGIN_KEY,user); }catch(e){}
-  }
-  function applyUserInfo(user){
-    var info=USER_NAMES[user]||{name:'Joe',avatar:'J'};
-    var av=$('#userAvatar'),nm=$('#userName');
-    if(av) av.textContent=info.avatar;
-    if(nm) nm.textContent=info.name;
-  }
+  function getAuthedUser(){} /* stub */
+  function setAuthed(){} /* stub */
+  function applyUserInfo(){} /* stub */
   /* 登录框登录后仍留在 DOM 里，Chrome 会把整页当登录页，
      往搜索框之类的文本框推荐保存的账号。禁用掉就不再是自动填充来源。 */
   var _loginFormHome=null, _loginFormNode=null;
-  function setLoginFieldsEnabled(on){
-    var form=$('#loginForm');
-    if(on){
-      /* 密码框在初始 HTML 里是 type="text"，到这里才变回 password。
-         Chrome 在解析阶段就靠 type="password" 判定「这是登录页」，
-         一旦判定，本页任何文本框聚焦时都会被推荐保存的账号。 */
-      var pw=$('#loginPass');
-      if(pw && pw.hasAttribute('data-pw')) pw.setAttribute('type','password');
-    }
-    if(!on){
-      /* 登录成功后把整个表单摘出 DOM。只 disabled 不够：Chrome 仍会把本页当登录页，
-         往任意文本框推荐保存的账号（会被当成搜索关键词，把列表筛空）。 */
-      if(form){ _loginFormHome=form.parentNode; _loginFormNode=form; form.remove(); }
-    }else if(_loginFormNode && _loginFormHome && !_loginFormNode.isConnected){
-      _loginFormHome.appendChild(_loginFormNode);
-    }
-  }
-  function showLogin(){
-    if(loginOverlay) loginOverlay.classList.remove('hidden');
-    setLoginFieldsEnabled(true);
-  }
-  function hideLogin(){
-    if(loginOverlay) loginOverlay.classList.add('hidden');
-    setLoginFieldsEnabled(false);
-  }
+  function setLoginFieldsEnabled(){} /* stub */
+  function showLogin(){} /* stub */
+  function hideLogin(){} /* stub */
 
   /* 恢复记住的账号和密码 */
   try{
@@ -195,15 +164,7 @@ const billTemplateWithTokens = billTemplate.replace(
   var _sbHideDelay=1500;
   var _sbHovered=null;
   var _sbDragging=false;
-  function _sbSchedule(t){
-    var old=_scrollTimers.get(t);
-    if(old)clearTimeout(old);
-    _scrollTimers.set(t,setTimeout(function(){
-      /* 指针停在该滚动区内或正在拖拽滑块时不隐藏，避免够不到 */
-      if(_sbHovered===t||_sbDragging){ _sbSchedule(t); return; }
-      t.classList.remove('scrolling');
-    },_sbHideDelay));
-  }
+  function _sbSchedule(){} /* stub */
   document.addEventListener('scroll',function(e){
     var t=e.target;
     if(t&&t.nodeType===1&&t!==document){
@@ -260,114 +221,15 @@ const billTemplateWithTokens = billTemplate.replace(
   })();
   function saveReadIds(){ localStorage.setItem('changelog_read_ids',JSON.stringify(changelogReadIds)); }
   function getUnreadCount(){ return changelogData.filter(function(l){return changelogReadIds.indexOf(l.id)===-1;}).length; }
-  function formatRelativeDate(dateStr){
-    var now=new Date(),date=new Date(dateStr),diffMs=now.getTime()-date.getTime(),diffMins=Math.floor(diffMs/60000);
-    if(diffMins<1) return '刚刚';
-    if(diffMins<60) return diffMins+' 分钟前';
-    var diffHours=Math.floor(diffMins/60);
-    if(diffHours<24) return diffHours+' 小时前';
-    var diffDays=Math.floor(diffHours/24);
-    if(diffDays===1) return '昨天';
-    if(diffDays<7) return diffDays+' 天前';
-    if(diffDays<30) return Math.floor(diffDays/7)+' 周前';
-    return dateStr;
-  }
+  function formatRelativeDate(){} /* stub */
   var bellBtn=$('#notificationBell'),bellBadge=$('#notificationBadge'),changelogPanel=$('#changelogPanel'),changelogBody=$('#changelogBody'),changelogOverlay=null;
-  function updateBellBadge(){
-    var c=getUnreadCount();
-    bellBtn.classList.toggle('has-unread',c>0);
-    if(c>0){ bellBadge.style.display='';bellBadge.textContent=c>99?'99+':c; }
-    else{ bellBadge.style.display='none'; }
-  }
-  function renderChangelog(tab){
-    var list=tab==='unread'?changelogData.filter(function(l){return changelogReadIds.indexOf(l.id)===-1;}):changelogData;
-    if(list.length===0){ changelogBody.innerHTML='<div class="changelog-empty">暂无'+(tab==='unread'?'未读':'')+'通知</div>';return; }
-    var html='';
-    list.forEach(function(log,i){
-      var isRead=changelogReadIds.indexOf(log.id)!==-1;
-      html+='<div class="changelog-notification'+(isRead?'':' unread')+'" data-id="'+log.id+'">';
-      html+='<div class="changelog-noti-header">';
-      html+='<div class="changelog-noti-avatar" style="background:'+log.iconBg+';color:'+log.iconColor+'">';
-      html+=changelogIcons[log.id]||'';
-      html+='</div>';
-      html+='<span class="changelog-noti-team">'+log.team+'</span>';
-      html+='<span class="changelog-noti-date">'+formatRelativeDate(log.date)+'</span>';
-      if(isRead){
-        // 已读 → 显示 EyeOff（闭眼）→ 标记未读
-        html+='<button class="changelog-noti-toggle" data-action="unread" data-tooltip="标记未读"><svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg></button>';
-      }else{
-        // 未读 → 显示 Eye（睁眼）→ 标记已读
-        html+='<button class="changelog-noti-toggle" data-action="read" data-tooltip="标记已读"><svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>';
-      }
-      html+='</div>';
-      html+='<div class="changelog-noti-body">';
-      log.body.split('\n').forEach(function(line,li){
-        if(line==='') html+='<br>';
-        else html+='<p>'+line.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,function(m,text,url){
-          return '<a href="'+url+'" target="_blank" class="changelog-link">'+text+'</a>';
-        })+'</p>';
-      });
-      html+='</div>';
-      if(i<list.length-1) html+='<div class="changelog-noti-divider"></div>';
-      html+='</div>';
-    });
-    changelogBody.innerHTML=html;
-    var demoLink=changelogBody.querySelector('a[href="#demo"]');
-    if(demoLink){
-      demoLink.addEventListener('click',function(e){
-        e.preventDefault();
-        closeChangelog();
-        showView('newtask');
-        setNavActive('新会话');
-        applyMode('苍穹应用',true);
-        setTimeout(function(){ openAppDropdown(); },250);
-      });
-    }
-  }
-  function openChangelog(){
-    var currentTab=($('.changelog-tab.active')||$('.changelog-tab[data-tab="all"]')).getAttribute('data-tab');
-    renderChangelog(currentTab);
-    changelogPanel.style.display='';
-    if(!changelogOverlay){
-      changelogOverlay=document.createElement('div');
-      changelogOverlay.className='changelog-overlay-transparent';
-      changelogOverlay.addEventListener('click',closeChangelog);
-      document.body.appendChild(changelogOverlay);
-    }else{ changelogOverlay.style.display=''; }
-  }
-  function closeChangelog(){
-    changelogPanel.style.display='none';
-    if(changelogOverlay) changelogOverlay.style.display='none';
-  }
-  function markAllRead(){
-    changelogReadIds=[];
-    changelogData.forEach(function(l){ changelogReadIds.push(l.id); });
-    saveReadIds(); updateBellBadge();
-    renderChangelog(($('.changelog-tab.active')||$('.changelog-tab[data-tab="all"]')).getAttribute('data-tab'));
-    var unreadTab=$('.changelog-tab[data-tab="unread"]');
-    if(unreadTab) unreadTab.innerHTML='未读';
-  }
-  function markAsRead(id){
-    if(changelogReadIds.indexOf(id)!==-1) return;
-    changelogReadIds.push(id); saveReadIds(); updateBellBadge();
-    var tab=$('.changelog-tab.active');
-    if(tab.getAttribute('data-tab')==='unread'){ renderChangelog('unread'); }
-    else{ renderChangelog('all'); }
-    var unreadTab=$('.changelog-tab[data-tab="unread"]');
-    var c=getUnreadCount();
-    unreadTab.innerHTML='未读'+(c?' '+c:'');
-  }
-  function markAsUnread(id){
-    var idx=changelogReadIds.indexOf(id);
-    if(idx===-1) return;
-    changelogReadIds.splice(idx,1); saveReadIds(); updateBellBadge();
-    var tab=$('.changelog-tab.active');
-    if(tab.getAttribute('data-tab')==='unread'){ renderChangelog('unread'); }
-    else{ renderChangelog('all'); }
-    var unreadTab=$('.changelog-tab[data-tab="unread"]');
-    var c=getUnreadCount();
-    unreadTab.innerHTML='未读'+(c?' '+c:'');
-  }
+  function updateBellBadge(){} /* stub */
+  function renderChangelog(){} /* stub */
+  function openChangelog(){} /* stub */
+  function closeChangelog(){} /* stub */
+  function markAllRead(){} /* stub */
+  function markAsRead(){} /* stub */
+  function markAsUnread(){} /* stub */
   // 铃铛点击（与 Build_demo 一致：先 markAllRead 再打开面板）
   bellBtn.addEventListener('click',function(e){
     e.stopPropagation();
@@ -402,20 +264,10 @@ const billTemplateWithTokens = billTemplate.replace(
   updateBellBadge();
 
   /* ---------- dropdowns (hover 200ms) ---------- */
-  function closeAll(except){
-    $$('.dropdown.open').forEach(function(d){ if(d!==except) d.classList.remove('open'); });
-  }
+  function closeAll(){} /* stub */
   var hoverTimer=null;
-  function openDd(dd){
-    closeAll(dd);
-    dd.classList.add('open');
-  }
-  function closeDdDelayed(dd){
-    clearTimeout(dd._closeT);
-    dd._closeT=setTimeout(function(){
-      if(!dd.querySelector(':hover')) dd.classList.remove('open');
-    },200);
-  }
+  function openDd(){} /* stub */
+  function closeDdDelayed(){} /* stub */
   if($$('.dropdown').length) $$('.dropdown').forEach(function(dd){
     var chip=$('[data-chip]',dd);
     if(!chip) return;
@@ -440,26 +292,7 @@ const billTemplateWithTokens = billTemplate.replace(
   });
 
   /* 下拉面板动态高度 — 不溢出屏幕 */
-  function adjustMenuHeight(dd){
-    var menu=dd.querySelector('.menu');
-    if(!menu) return;
-    var rect=dd.getBoundingClientRect();
-    var spaceBelow=window.innerHeight - rect.bottom - 20;
-    var spaceAbove=rect.top - 20;
-    var maxH;
-    if(spaceBelow < 200 && spaceAbove > spaceBelow){
-      menu.style.top='auto';
-      menu.style.bottom='calc(100% + 10px)';
-      maxH=Math.min(spaceAbove,400);
-    }else{
-      menu.style.top='';
-      menu.style.bottom='';
-      maxH=Math.min(Math.max(spaceBelow,120),400);
-    }
-    menu.style.maxHeight=maxH+'px';
-    var list=menu.querySelector('.app-list');
-    if(list) list.style.maxHeight=(maxH-60)+'px';
-  }
+  function adjustMenuHeight(){} /* stub */
   if($$('.dropdown').length) $$('.dropdown').forEach(function(dd){
     new MutationObserver(function(){
       if(dd.classList.contains('open')){
@@ -805,11 +638,7 @@ const billTemplateWithTokens = billTemplate.replace(
 
   /* ---------- 用户菜单：头像 / 姓名 ---------- */
   var userWrap=$('.user-wrap'), userBtn=$('#userBtn');
-  function closeUserMenu(){
-    if(!userWrap)return;
-    userWrap.classList.remove('open');
-    if(userBtn) userBtn.setAttribute('aria-expanded','false');
-  }
+  function closeUserMenu(){} /* stub */
   if(userBtn){
     userBtn.addEventListener('click',function(e){
       e.stopPropagation();
@@ -894,33 +723,10 @@ const billTemplateWithTokens = billTemplate.replace(
   var _envListVersion=0;
   function _envTouch(){ _envListVersion++; if(window.__lingeeBridge&&window.__lingeeBridge.env) window.__lingeeBridge.env.touch(); }
   function _envGetList(){ return ENV_ITEMS.map(function(e,i){return Object.assign({index:i},e);}); }
-  function _envDeleteItem(i){
-    if(i<0||i>=ENV_ITEMS.length) return;
-    var name=ENV_ITEMS[i].name;
-    ENV_ITEMS.splice(i,1);
-    _envTouch();
-    toast('已删除：'+name);
-  }
-  function _envSetDefault(i){
-    ENV_ITEMS.forEach(function(e,j){ e.isDefault=(j===i); });
-    _envTouch();
-    toast('已设为默认：'+ENV_ITEMS[i].name);
-  }
-  function _envTestConnection(i){
-    var item=ENV_ITEMS[i]; if(!item) return;
-    item._testing=true; _envTouch();
-    setTimeout(function(){
-      item._testing=false;
-      item._testResult='连通正常 '+(60+Math.floor(Math.random()*180))+'ms';
-      _envTouch();
-      toast(item.name+'：连通正常');
-    },700+Math.random()*600);
-  }
-  function _envCopyUrl(i){
-    var item=ENV_ITEMS[i]; if(!item) return;
-    if(navigator.clipboard) navigator.clipboard.writeText(item.url);
-    toast('已复制地址：'+item.url);
-  }
+  function _envDeleteItem(){} /* stub */
+  function _envSetDefault(){} /* stub */
+  function _envTestConnection(){} /* stub */
+  function _envCopyUrl(){} /* stub */
   var envMode='create';
   var envEditIndex=-1;
   var envProduct='';
@@ -938,181 +744,36 @@ const billTemplateWithTokens = billTemplate.replace(
   var envDisconnectIndex=-1;
   var envDisconnectName='';
 
-  function probeAuthSupport(url){
-    var u=(url||'').toLowerCase();
-    if(!u) return false;
-    if(/legacy|192\.168\.|172\.\d+\.|10\.\d+\.|:8080|:8081/.test(u)) return false;
-    return true;
-  }
-  function connBlockedReason(){
-    return envConnSupported ? '' : '该环境的苍穹版本不支持 OAuth 授权，请在「OpenAPI 第三方应用」中创建应用后填写凭证。';
-  }
-  function normalizeEnvUrl(raw){
-    var t=String(raw||'').trim().replace(/\/+$/,'');
-    if(!t) return '';
-    var out;
-    if(/^https?:\/\//i.test(t)) out=t;
-    else{ var m=t.match(/^(https?):\/*(.*)$/i); out=m?(m[1].toLowerCase()+'://'+m[2]):('http://'+t); }
-    try{ var u=new URL(out); return (u.origin+u.pathname).replace(/\/+$/,''); }catch(e){ return out; }
-  }
-  function _validateEnvForm(d){
-    if(!d.name||!d.name.trim()) return {ok:false,msg:'请输入环境名'};
-    if(!d.url||!d.url.trim()) return {ok:false,msg:'请输入环境地址'};
-    if(envConnMode!=='auth'){
-      if(!d.product) return {ok:false,msg:'请选择环境类型'};
-      if(!d.dataCenter) return {ok:false,msg:'请选择数据中心'};
-      if(!d.clientId||!d.clientId.trim()) return {ok:false,msg:'请输入应用 ID'};
-      if(!d.clientSecret||!d.clientSecret.trim()) return {ok:false,msg:'请输入密钥'};
-      if(d.product==='XK' && (!d.gateway||!d.gateway.trim())) return {ok:false,msg:'请输入网关标识'};
-      if(!envNormalAuthEnabled && (!d.proxyUser||!d.proxyUser.trim())) return {ok:false,msg:'请输入代理用户'};
-    }
-    return {ok:true};
-  }
+  function probeAuthSupport(){} /* stub */
+  function connBlockedReason(){} /* stub */
+  function normalizeEnvUrl(){} /* stub */
+  function _validateEnvForm(){} /* stub */
 
-  function openEnvModal(mode,index){
-    envMode=mode==='view'?'view':(mode==='edit'?'edit':'create');
-    envEditIndex=(envMode==='create')?-1:(index||-1);
-    var item=envEditIndex>=0?ENV_ITEMS[envEditIndex]:null;
-    envOriginalProduct=item?(item.product||''):'';
-    if(envMode==='create'){ envConnSupported=false; envConnBlocked=''; envConnMode='auth'; }
-    else if(item){ envConnSupported=item.envConn==='auth'||probeAuthSupport(item.url); envConnBlocked=''; envConnMode=item.envConn||'cred'; }
-    _envBridge.open('env-config');
-  }
+  function openEnvModal(){} /* stub */
   function closeEnvModal(){ _envBridge.close('env-config'); }
 
-  function _getEnvInitialData(){
-    if(envEditIndex<0||!ENV_ITEMS[envEditIndex]){
-      return {mode:'create',fields:{name:'',url:'',product:'',dataCenter:'',clientId:'',clientSecret:'',gateway:'',proxyUser:'',isDefault:false},
-              connMode:'auth',normalAuthEnabled:true,preset:false,connState:'none'};
-    }
-    var e=ENV_ITEMS[envEditIndex];
-    var normalAuth=e.normalAccessToken!==false;
-    var conn=e.envConn||'cred';
-    return {
-      mode:envMode,
-      fields:{name:e.name,url:e.url,product:e.product||'',dataCenter:e.dataCenter||'',
-              clientId:e.clientId||'',clientSecret:envMaskedValue,
-              gateway:(e.product==='XK'?envMaskedValue:''),
-              proxyUser:normalAuth?'':(e.proxyUser||''),isDefault:!!e.isDefault},
-      connMode:conn==='auth'?'auth':'cred',
-      normalAuthEnabled:normalAuth,
-      preset:e.source==='cloud',
-      connState:e.grantState==='revoked'?'disconnected':(e.grantedBy?'connected':'none')
-    };
-  }
-  function _saveEnvFromReact(d){
-    var v=_validateEnvForm(d);
-    if(!v.ok){ toast(v.msg,'warning'); return; }
-    var name=d.name.trim();
-    var url=normalizeEnvUrl(d.url);
-    if(envMode==='view'&&envEditIndex>=0){
-      ENV_ITEMS[envEditIndex].isDefault=d.isDefault;
-      if(d.isDefault) ENV_ITEMS.forEach(function(e,j){ if(j!==envEditIndex) e.isDefault=false; });
-      closeEnvModal(); _envTouch(); toast('已更新默认环境设置'); return;
-    }
-    if(envConnMode==='auth'&&envMode==='create'){
-      envAuthorizeIndex=-1; envAuthorizeName=name;
-      _envAuthorizeBridge.open('env-authorize');
-      if(envAuthorizeTimer) clearTimeout(envAuthorizeTimer);
-      envAuthorizeTimer=setTimeout(function(){ envAuthorizeTimer=null; _consentBridge.open('consent'); },900);
-      return;
-    }
-    if(envMode==='edit'&&envEditIndex>=0){
-      var e=ENV_ITEMS[envEditIndex];
-      e.name=name; e.url=url; e.product=d.product||'';
-      e.dataCenter=d.dataCenter||''; e.clientId=(d.clientId||'').trim();
-      if(d.clientSecret&&d.clientSecret!==envMaskedValue) e.clientSecret=d.clientSecret.trim();
-      if(d.product==='XK'&&d.gateway&&d.gateway!==envMaskedValue) e.gateway=d.gateway.trim();
-      else if(d.product!=='XK') e.gateway='';
-      e.normalAccessToken=envNormalAuthEnabled;
-      if(envNormalAuthEnabled) e.proxyUser='';
-      else e.proxyUser=(d.proxyUser||'').trim();
-      if(d.isDefault) ENV_ITEMS.forEach(function(it,j){ it.isDefault=(j===envEditIndex); });
-      closeEnvModal(); _envTouch();
-      toast('已更新环境：'+name); return;
-    }
-    /* 新增（凭证模式） */
-    ENV_ITEMS.push({name:name,url:url,product:d.product||'',source:'local',
-      dataCenter:d.dataCenter||'',clientId:(d.clientId||'').trim(),clientSecret:(d.clientSecret||'').trim(),
-      gateway:d.product==='XK'?(d.gateway||'').trim():'',normalAccessToken:true,proxyUser:'',
-      envConn:'cred',isDefault:!!d.isDefault});
-    if(d.isDefault) ENV_ITEMS.forEach(function(it,j){ if(j!==ENV_ITEMS.length-1) it.isDefault=false; });
-    closeEnvModal(); _envTouch();
-    toast('已新增环境：'+name);
-  }
+  function _getEnvInitialData(){} /* stub */
+  function _saveEnvFromReact(){} /* stub */
 
   /* ---------- 授权流程 ---------- */
-  function startAuthorize(index,name){
-    envAuthorizeIndex=index>=0?index:-1;
-    envAuthorizeName=name||'新环境';
-    _envAuthorizeBridge.open('env-authorize');
-    if(envAuthorizeTimer) clearTimeout(envAuthorizeTimer);
-    envAuthorizeTimer=setTimeout(function(){ envAuthorizeTimer=null; _consentBridge.open('consent'); },900);
-  }
-  function closeAuthorize(){
-    if(envAuthorizeTimer){ clearTimeout(envAuthorizeTimer); envAuthorizeTimer=null; }
-    _consentBridge.close('consent');
-    _envAuthorizeBridge.close('env-authorize');
-  }
+  function startAuthorize(){} /* stub */
+  function closeAuthorize(){} /* stub */
   function _retryAuthorize(){ startAuthorize(envAuthorizeIndex,envAuthorizeName); }
 
   /* ---------- 浏览器授权页 ---------- */
-  function erpOrigin(){
-    var item=envAuthorizeIndex>=0?ENV_ITEMS[envAuthorizeIndex]:null;
-    if(envEditIndex>=0&&ENV_ITEMS[envEditIndex]) item=ENV_ITEMS[envEditIndex];
-    return (item?item.url:'')||'https://erp.example.com';
-  }
-  function sameHost(url){
-    try{ return !!erpBrowserSession && new URL(url).host===erpBrowserSession.host; }
-    catch(e){ return false; }
-  }
-  function _getConsentStep(){
-    var reused=sameHost(erpOrigin());
-    return reused?'grant':'login';
-  }
-  function _consentLogin(){
-    try{ erpBrowserSession={host:new URL(erpOrigin()).host,user:'吴**超'}; }catch(e){ erpBrowserSession=null; }
-    _consentBridge.close('consent');
-    _consentBridge.open('consent');
-  }
-  function finishAuthorize(granted){
-    envAuthorizeDc=ENV_DATA_CENTERS[0].id;
-    _consentBridge.close('consent');
-    if(envAuthorizeIndex>=0&&ENV_ITEMS[envAuthorizeIndex]){
-      var e=ENV_ITEMS[envAuthorizeIndex];
-      e.envConn='auth';
-      if(granted){ e.grantState=''; e.grantedBy='吴**超'; e.grantedAt='今天'; e.lastUsed='刚刚'; e.dataCenter=envAuthorizeDc; }
-      else{ e.grantState=e.grantedBy?'revoked':'none'; }
-    }else{
-      /* OAuth 新增 */
-      ENV_ITEMS.push({name:envAuthorizeName,url:erpOrigin(),product:'',source:'local',
-        dataCenter:envAuthorizeDc,clientId:'',clientSecret:'',gateway:'',
-        normalAccessToken:true,proxyUser:'',envConn:'auth',isDefault:false,
-        grantedBy:granted?'吴**超':'',grantedAt:granted?'今天':'',lastUsed:granted?'刚刚':'',
-        grantState:granted?'':'none'});
-      _envTouch();
-    }
-    closeAuthorize(); closeEnvModal();
-    toast(granted?('已连接：'+envAuthorizeName):('已保存：'+envAuthorizeName+'（未授权）'));
-  }
+  function erpOrigin(){} /* stub */
+  function sameHost(){} /* stub */
+  function _getConsentStep(){} /* stub */
+  function _consentLogin(){} /* stub */
+  function finishAuthorize(){} /* stub */
   function _consentAllow(){ finishAuthorize(true); }
   function _consentDeny(){ finishAuthorize(false); }
   function _consentSwitchAccount(){ erpBrowserSession=null; _consentBridge.close('consent'); _consentBridge.open('consent'); }
 
   /* ---------- 断开连接 ---------- */
-  function openDisconnect(index,name){
-    envDisconnectIndex=index>=0?index:-1;
-    envDisconnectName=name||'该环境';
-    _envDisconnectBridge.open('env-disconnect');
-  }
+  function openDisconnect(){} /* stub */
   function closeDisconnect(){ _envDisconnectBridge.close('env-disconnect'); }
-  function _confirmDisconnect(){
-    if(envDisconnectIndex>=0&&ENV_ITEMS[envDisconnectIndex]){
-      ENV_ITEMS[envDisconnectIndex].grantState='revoked';
-      _envTouch();
-    }
-    closeDisconnect(); closeEnvModal();
-  }
+  function _confirmDisconnect(){} /* stub */
 
   /* ---------- 启用 AccessToken 确认 ---------- */
   function _openAuthConfirm(){ _envAuthConfirmBridge.open('env-auth-confirm'); }
@@ -1121,18 +782,9 @@ const billTemplateWithTokens = billTemplate.replace(
 
   /* ---------- 其它工具函数 ---------- */
   function _testEnvConnection(){ toast('连接测试通过'); }
-  function _envToggleNormalAuth(){
-    if(envNormalAuthEnabled){ envNormalAuthEnabled=false; _envBridge.touch(); return; }
-    _openAuthConfirm();
-  }
-  function _envDisconnectAction(){
-    var name=envEditIndex>=0&&ENV_ITEMS[envEditIndex]?ENV_ITEMS[envEditIndex].name:'';
-    openDisconnect(envEditIndex,name);
-  }
-  function _envReauth(){
-    var name=envEditIndex>=0&&ENV_ITEMS[envEditIndex]?ENV_ITEMS[envEditIndex].name:'';
-    startAuthorize(envEditIndex,name);
-  }
+  function _envToggleNormalAuth(){} /* stub */
+  function _envDisconnectAction(){} /* stub */
+  function _envReauth(){} /* stub */
 
 
 
@@ -2334,78 +1986,28 @@ const billTemplateWithTokens = billTemplate.replace(
     cvRenderTaskStats(); cvRenderTasks(); cvInjectCardActions(); cvApplyFilters(); cvUpdateCounts();
     return row;
   }
-  function cvSaveSyncTask(form){
-    var task=cvBuildSyncTaskData(form,'未开始');if(!task)return;
-    var row=cvAddTask(task);cvSaveTaskToStorage(row);cvCloseSyncModal();
-    cvToast('任务已保存到「'+cvProjectName(row.project)+'」任务列表','success');
-  }
-  function cvStartSyncTask(form){
-    var task=cvBuildSyncTaskData(form,'未开始');if(!task)return;
-    var row=cvAddTask(task);cvSaveTaskToStorage(row);cvCloseSyncModal();
-    cvToast('任务已创建到「'+cvProjectName(row.project)+'」，可点击「执行」启动','success');
-  }
+  function cvSaveSyncTask(){} /* stub */
+  function cvStartSyncTask(){} /* stub */
 
   /* ============ TASK MODALS ============ */
   function cvOpenTaskModal(id){ _cvModalOpen(CV_TASK_MODAL_IDS[id]||id); }
   function cvCloseTaskModal(id){ _cvModalClose(CV_TASK_MODAL_IDS[id]||id); }
   /* 数据 getter：只返回数据，具体怎么排布是 CollabModals.jsx 的事 */
-  function cvGetMembersForModal(){
-    return CV_MEMBERS.map(function(m){return{name:m.name,roles:m.roles.map(function(r){return r.text;})};});
-  }
+  function cvGetMembersForModal(){} /* stub */
   function cvCurrentWorkflowNode(){
     var card=window.cvCard;var node='开发实现';
     if(card){var na=card.querySelector('.card-node');if(na)node=na.textContent.replace(/^[\s​]+/,'').trim();}
     return node;
   }
-  function cvGetReviewCandidates(){
-    var role=CV_WORKFLOW_ROLES[cvCurrentWorkflowNode()]||'开发人员';
-    return CV_MEMBERS.filter(function(m){return m.roles.some(function(r){return r.text.indexOf(role)>=0||role.indexOf(r.text)>=0;});})
-      .map(function(m){return{name:m.name,roles:m.roles.map(function(r){return r.text;})};});
-  }
-  function cvGetWorkflowState(){
-    var currentNode=cvCurrentWorkflowNode();
-    var currentIdx=CV_WORKFLOW.indexOf(currentNode);if(currentIdx<0)currentIdx=0;
-    var steps=CV_WORKFLOW.map(function(step,i){
-      return{name:step,phase:i<currentIdx?'done':(i===currentIdx?'current':'pending'),
-        status:i<currentIdx?'已完成':(i===currentIdx?'当前节点':CV_WORKFLOW_ROLES[step])};
-    });
-    var nextIdx=Math.min(currentIdx+1,CV_WORKFLOW.length-1);
-    return{steps:steps,nextLabel:CV_WORKFLOW[nextIdx]+' → '+CV_WORKFLOW_ROLES[CV_WORKFLOW[nextIdx]]};
-  }
-  function cvGetDefaultArtifacts(){
-    return[['code','</>','源代码','ExpensePlugin.java'],['test','T','单元测试','ExpenseTest.java'],['spec','S','需求规格','PRD.md'],['doc','D','技术方案','TechSpec.md']]
-      .map(function(a){return{kind:a[0],badge:a[1],name:a[2],file:a[3]};});
-  }
+  function cvGetReviewCandidates(){} /* stub */
+  function cvGetWorkflowState(){} /* stub */
+  function cvGetDefaultArtifacts(){} /* stub */
 
   /* ============ CONFIRM ACTIONS ============ */
-  function cvConfirmExec(collabMode){
-    var mode=collabMode||'Agent间协作';
-    cvCloseTaskModal('cv-exec-overlay');
-    var card=window.cvCard;var taskTitle='新任务';
-    if(card){
-      var titleEl=card.querySelector('.card-title');if(titleEl)taskTitle=titleEl.textContent;
-      card.setAttribute('data-status','进行中');
-      var sb=card.querySelector('.badge-status');if(sb){sb.className='badge-status badge-status--running';sb.innerHTML='<span class="badge-status-dot"></span>进行中';}
-      var node=card.querySelector('.card-node');if(node)node.innerHTML='<span class="card-node-dot" style="background:var(--dot-blue)"></span>开发实现';
-      card.querySelector('.card-actions')&&(card.querySelector('.card-actions').style.display='none');
-    }
-    cvAddSidebarConversation(taskTitle);cvSwitchToChat();cvToast('任务已启动执行！协作模式：'+mode,'success');
-    cvSimulateExecution(taskTitle,card);
-  }
-  function cvConfirmTransfer(personName){
-    cvCloseTaskModal('cv-transfer-overlay');
-    cvToast('任务已转交给：'+(personName||'李工'),'success');
-  }
+  function cvConfirmExec(){} /* stub */
+  function cvConfirmTransfer(){} /* stub */
   function cvConfirmTwist(){cvCloseTaskModal('cv-twist-overlay');cvToast('任务已扭转到下一节点：代码审查，产物已自动传递给审查人员','info');}
-  function cvConfirmReview(personName){
-    cvCloseTaskModal('cv-review-overlay');
-    if(window.cvCard){
-      window.cvCard.setAttribute('data-status','待评审');
-      var sb=window.cvCard.querySelector('.badge-status');if(sb){sb.className='badge-status badge-status--review';sb.innerHTML='<span class="badge-status-dot"></span>待评审';}
-      var node=window.cvCard.querySelector('.card-node');if(node){node.innerHTML='<span class="card-node-dot" style="background:var(--warning)"></span>代码审查';node.style.background='var(--warning-bg)';node.style.color='var(--warning)';}
-    }
-    cvToast('评审已发起！评审人：'+(personName||'王工')+'，任务状态已变更为「待评审」','success');
-  }
+  function cvConfirmReview(){} /* stub */
 
   /* ============ REVIEW ACTIONS ============ */
   function cvReviewPass(i){
@@ -2512,30 +2114,10 @@ const billTemplateWithTokens = billTemplate.replace(
   function cvOpenConversation(){} /* stub: moved to React */
 
   
-  function cvOpenAddMemberModal(){
-    if(!cvCanManageMembers()){cvToast('没有添加协作人员的权限','warning');return;}
-    _cvModalOpen('addmember');
-  }
+  function cvOpenAddMemberModal(){} /* stub */
   function cvCloseAddMemberModal(){ _cvModalClose('addmember'); }
-  function cvFindThirdPartyMembers(q){
-    q=(q||'').toLowerCase();
-    var existing=CV_MEMBERS.map(function(m){return m.name;});
-    return CV_THIRD_PARTY_MEMBERS.filter(function(m){
-      return(m.name.toLowerCase().indexOf(q)>=0||m.email.toLowerCase().indexOf(q)>=0)&&existing.indexOf(m.name)<0;
-    });
-  }
-  function cvConfirmAddMembers(selected,level){
-    selected=selected||[];
-    if(selected.length===0){cvToast('请选择要添加的人员','warning');return;}
-    var tagMap={'开发':'member-tag--dev','架构':'member-tag--arch','测试':'member-tag--qa','运维':'member-tag--ops','需求':'member-tag--pm','产品':'member-tag--pm'};
-    var lvl=level==='admin'?'admin':'member';
-    selected.forEach(function(p){
-      CV_MEMBERS.push({name:p.name,email:p.email,roles:[{tag:tagMap[p.role]||'member-tag--dev',text:p.role}],status:'available',source:'直接添加',level:lvl,
-        projects:cvProject?[cvProject]:CV_PROJECTS.map(function(pp){return pp.id;})});
-    });
-    cvRenderMembers();cvRenderMemberStats();cvCloseAddMemberModal();
-    cvToast('已添加 '+selected.length+' 名协作人员为'+(lvl==='admin'?'管理员':'成员'),'success');
-  }
+  function cvFindThirdPartyMembers(){} /* stub */
+  function cvConfirmAddMembers(){} /* stub */
   function cvDeleteMember(idx){
     if(!CV_MEMBERS[idx])return;
     if(CV_MEMBERS[idx].isMe){cvToast('不能移除自己','warning');return;}
@@ -2647,10 +2229,7 @@ const billTemplateWithTokens = billTemplate.replace(
       +'<circle cx="9" cy="9" r="'+r+'" fill="none" stroke="'+tone+'" stroke-width="2.5" stroke-dasharray="'+circ+'" stroke-dashoffset="'+(circ*(1-done/total))+'" stroke-linecap="round" transform="rotate(-90 9 9)"/>'
       +'</svg><span class="cv-proj-progress__text">'+done+'/'+total+'</span></span>';
   }
-  function cvProjectOwners(){
-    var set=[]; cvWorkspaceProjects().forEach(function(p){ if(p.owner && set.indexOf(p.owner)<0) set.push(p.owner); });
-    return set;
-  }
+  function cvProjectOwners(){} /* stub */
   /* 卡片上「状态」「负责人」就地改：点开小弹层直接选，不用进详情 */
   function cvToggleProjectField(field,id,el,ev){
     if(ev) ev.stopPropagation();
@@ -2707,23 +2286,7 @@ const billTemplateWithTokens = billTemplate.replace(
   var CV_PROJECT_DOTS=['blue','orange','green'];
   function cvOpenNewProjectModal(){ _cvModalOpen('newproject'); }
   function cvCloseNewProjectModal(){ _cvModalClose('newproject'); }
-  function cvConfirmNewProject(form){
-    form=form||{};
-    var name=(form.name||'').trim();
-    if(!name){ toast('请输入项目名称','warning'); return; }
-    var statusMeta=CV_PROJECT_STATUS.filter(function(s){return s.id===form.statusId;})[0]||CV_PROJECT_STATUS[0];
-    var repo=(form.repo||'').trim();
-    var id='p'+Date.now();
-    CV_PROJECTS.push({
-      id:id,name:name,dot:CV_PROJECT_DOTS[CV_PROJECTS.length%CV_PROJECT_DOTS.length],
-      defaultTeam:null,workspace:cvWorkspace,
-      desc:(form.desc||'').trim(),status:statusMeta.id,
-      owner:form.owner||'',repo:repo||null,updated:'刚刚'
-    });
-    cvCloseNewProjectModal();
-    cvSetProject(id);
-    toast('已创建项目「'+name+'」','success');
-  }
+  function cvConfirmNewProject(){} /* stub */
   if(cvProjectGrid) cvProjectGrid.addEventListener('click',function(e){
     if(e.target.closest('[data-cv-proj-add]')){ cvOpenNewProjectModal(); return; }
     var it=e.target.closest('[data-cv-proj]'); if(!it) return;
