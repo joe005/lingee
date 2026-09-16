@@ -2197,26 +2197,7 @@ const billTemplateWithTokens = billTemplate.replace(
   /* cvRenderExperts 已迁到 React CollabView，保留 no-op 避免调用处报错 */
   function cvRenderExperts(){}
   function renderExpertGrid(){} /* moved to React */
-  $$('#expertTabs .tab').forEach(function(t){
-    t.addEventListener('click',function(){
-      $$('#expertTabs .tab').forEach(function(i){i.classList.remove('active')});
-      t.classList.add('active');
-      expertTab=t.getAttribute('data-etab');
-      renderExpertGrid();
-    });
-  });
-  var expertSearchInput=$('#expertSearchInput');
-  if(expertSearchInput) expertSearchInput.addEventListener('input',function(){ expertKw=this.value; renderExpertGrid(); });
-  if(expertGrid) expertGrid.addEventListener('click',function(e){
-    var ct=e.target.closest('[data-call-team]');
-    if(ct){ summon('team',ct.getAttribute('data-call-team')); return; }
-    var ce=e.target.closest('[data-call-expert]');
-    if(ce){ summon('expert',ce.getAttribute('data-call-expert')); return; }
-    if(e.target.closest('[data-new-team]')){ openTeamModal(null); return; }
-    if(e.target.closest('[data-new-expert]')){ openExpertEditor(null); return; }
-    var tc=e.target.closest('[data-team]'); if(tc){ openTeamModal(tc.getAttribute('data-team')); return; }
-    var ec=e.target.closest('[data-expert]'); if(ec){ openExpertModal(ec.getAttribute('data-expert')); return; }
-  });
+  /* expert grid/search/tabs 事件已迁到 React CollabView */
 
   /* ---------- 专家详情弹窗（Phase 2c antd 化） ---------- */
   function openExpertModal(id){
