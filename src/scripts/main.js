@@ -2128,36 +2128,6 @@ const billTemplateWithTokens = billTemplate.replace(
      不再单独维护字段：需要什么输入，直接写进触发词的 [占位符] 里。
      发出去时占位符没被替换，就在会话里追问，而不是让专家拿着空输入硬跑。 */
   function askFor(name){ return ASK[name]||ASK_FALLBACK; }
-  /* 文本里没被替换掉的 [占位符] */
-  function pendingInputs(text){
-    var out=[], re=/\[([^\[\]\n]{1,20})\]/g, m;
-    while((m=re.exec(String(text||'')))){ if(out.indexOf(m[1])<0) out.push(m[1]); }
-    return out;
-  }
-  /* 触发词里的占位符高亮显示 */
-  function phraseHtml(t){
-    return xesc(t).replace(/\[([^\[\]]{1,20})\]/g,'<em class="x-ph">[$1]</em>');
-  }
-  /* 'architecture.system-design · principal' → 结构化 */
-  function compChip(v){
-    var c=(v&&typeof v==='object')?v:parseComp(v);
-    return '<span class="ptag ptag-comp" title="'+xesc(c.id)+'">'+xesc(c.name)
-      +(c.level?'<i class="ptag-lv lv-'+xesc(c.lv)+'">'+xesc(c.level)+'</i>':'')+'</span>';
-  }
-  /* 一个团覆盖到的能力项：同一能力取成员里的最高等级 */
-  function teamCoverage(t){
-    var best={};
-    (t.members||[]).forEach(function(id){
-      var e=EX[id]; if(!e) return;
-      (e.comp||[]).forEach(function(v){
-        var c=parseComp(v);
-        if(!best[c.id]||c.rank>best[c.id].rank) best[c.id]=c;
-      });
-    });
-    return Object.keys(best).map(function(k){return best[k]})
-      .sort(function(a,b){return b.rank-a.rank||a.name.localeCompare(b.name)});
-  }
-
   var PRESET_TEAMS=[
     {id:'software-company',preset:true,name:'软件开发团队',by:'Lingee 内置',
      desc:'跨职能软件产品交付团队，覆盖需求、架构、实现、质量与集成的完整闭环。也是新建任务时的默认选择。',
@@ -2204,18 +2174,6 @@ const billTemplateWithTokens = billTemplate.replace(
   /* 选中对象：团或单个专家，同一语义位、只能选其一
      —— 对应 lingee-build 的 mode: team / personal */
   var activePick={kind:null,id:''};   /* 默认不指定，由系统自动匹配 */
-  function pickName(){
-    if(activePick.kind==='team') return (teamById(activePick.id)||{}).name||'';
-    if(activePick.kind==='expert') return (EX[activePick.id]||{}).name||'';
-    return '';
-  }
-  function pickValid(){
-    if(activePick.kind==='team') return !!teamById(activePick.id);
-    if(activePick.kind==='expert') return !!EX[activePick.id];
-    return false;
-  }
-  function clearPick(){ activePick={kind:null,id:'',auto:false}; }
-
   function loadTeams(){
     var raw=null;
     try{ raw=localStorage.getItem(TEAM_STORE_KEY); }catch(e){ return; }
@@ -2267,79 +2225,15 @@ const billTemplateWithTokens = billTemplate.replace(
       }));
     }catch(e){ /* 隐私模式 / 配额满：原型退化为内存态，不打扰用户 */ }
   }
-  function teamById(id){ for(var i=0;i<TEAMS.length;i++) if(TEAMS[i].id===id) return TEAMS[i]; return null; }
-
   /* ---------- 编排推导：成员 → 任务 DAG ----------
      不再有交付强度这个旋钮：团里有谁，流程里就有哪一步。
      实现环节始终保留——没人能领时显式标红，这是要暴露的问题，不是可以省掉的步骤。 */
-  function teamFlow(t){
-    function any(){ for(var i=0;i<arguments.length;i++) if(t.members.indexOf(arguments[i])>=0) return arguments[i]; return null; }
-    function byMode(m,skip){ for(var i=0;i<t.members.length;i++){ if(t.members[i]===skip) continue; var e=EX[t.members[i]]; if(e&&e.modes.indexOf(m)>=0) return t.members[i]; } return null; }
-    var f=[], multi=t.members.length>1;
-    var lead=any('software-team-lead');
-    if(multi && lead) f.push({id:'kickoff',k:'analyze',title:'协调范围与门禁',who:lead});
-    var pm=any('software-product-manager');
-    if(pm) f.push({id:'requirement',k:'analyze',title:'分析需求与验收',who:pm});
-    var des=any('software-architect','ux-designer');
-    if(des) f.push({id:'design',k:'design',title:'设计方案与实现计划',who:des});
-    var rev=any('code-reviewer','read-only-analyst');
-    if(rev) f.push({id:'precode-review',k:'review',title:'编码准入评审',who:rev});
-    f.push({id:'implement',k:'implement',title:'实现编码任务',
-      who:any('software-engineer','frontend-engineer','cosmic-form','cosmic-workflow','cosmic-report','cosmic-plugin','cosmic-api')||byMode('实现')});
-    var sec=any('security-reviewer');
-    if(sec) f.push({id:'security-review',k:'review',title:'安全评审',who:sec});
-    var qa=any('software-qa-engineer')||byMode('验证',lead);
-    if(qa) f.push({id:'verify',k:'test',title:'质量验证',who:qa});
-    var itg=lead||any('software-architect')||byMode('集成');
-    if(multi && itg) f.push({id:'integrate',k:'integrate',title:'集成与交付确认',who:itg});
-    return f;
-  }
   /* ---------- 人工审核确认节点 ----------
      挂在某个流程步骤之后：这一步产出后编排暂停，等人点过才继续。
      只存步骤 id，成员变动导致步骤消失时自动失效，不需要迁移数据。 */
-  function teamGates(t){ return Array.isArray(t&&t.gates)?t.gates:[]; }
-  function hasGate(t,stepId){ return teamGates(t).indexOf(stepId)>=0; }
-  /* 只统计当前流程里真实存在的步骤上挂的确认点 */
-  function activeGates(t,flow){
-    var f=flow||teamFlow(t);
-    return f.filter(function(s){ return hasGate(t,s.id); });
-  }
-  function toggleGate(t,stepId){
-    if(!t) return;
-    if(!Array.isArray(t.gates)) t.gates=[];
-    var i=t.gates.indexOf(stepId);
-    if(i>=0) t.gates.splice(i,1); else t.gates.push(stepId);
-  }
-
-  function teamLint(t){
-    var w=[];
-    var canImpl=false;
-    t.members.forEach(function(id){ if(EX[id]&&EX[id].modes.indexOf('实现')>=0) canImpl=true; });
-    if(!canImpl) w.push('没有成员具备「实现」工作模式，实现任务无人可领取。');
-    var canVerify=false;
-    t.members.forEach(function(id){ if(EX[id]&&EX[id].modes.indexOf('验证')>=0) canVerify=true; });
-    if(!canVerify) w.push('没有成员具备「验证」工作模式，产出不会被检查，建议加入「软件测试工程师」。');
-    return w;
-  }
-
-  /* 专家团的领域标签：优先用团自己声明的，没有就从成员标签聚合 */
-  function teamDomains(t){
-    if(t&&t.domains&&t.domains.length) return t.domains;
-    var seen={},out=[];
-    (t&&t.members||[]).forEach(function(id){
-      var e=EX[id]; if(!e) return;
-      (e.tags||[]).forEach(function(g){ if(!seen[g]){seen[g]=1;out.push(g);} });
-    });
-    return out;
-  }
-
   /* ---------- 专家库视图 ---------- */
   var expertTab='team', expertKw='';
   var expertGrid=$('#expertGrid');
-  function facesHtml(ids,n){
-    return '<span class="x-faces">'+ids.slice(0,n||4).map(function(i){
-      return '<img src="'+xav(EX[i].k)+'" alt="">'; }).join('')+'</span>';
-  }
   /* cvRenderExperts 已迁到 React CollabView，保留 no-op 避免调用处报错 */
   function cvRenderExperts(){}
   function renderExpertGrid(){} /* moved to React */
@@ -2379,28 +2273,6 @@ const billTemplateWithTokens = billTemplate.replace(
             tags:e.tags||[],modes:e.modes||[],comp:(e.comp||[]).map(parseComp),
             cmds:e.cmds||[],skills:e.skills,mine:e.mine,ro:e.ro};
   }
-
-  /* ---------- 没选专家时的自动匹配 ---------- */
-  function autoMatch(text){
-    var t=String(text||'');
-    var hits=KW_MATCH.filter(function(r){
-      return r.kw.some(function(k){ return t.toLowerCase().indexOf(k.toLowerCase())>=0; });
-    }).filter(function(r){ return !!EX[r.id]; });
-
-    /* 跨了两个以上领域，一个人扛不住，上专家团 */
-    if(hits.length>=2){
-      var cosmic=hits.filter(function(r){ return r.id.indexOf('cosmic-')===0; }).length;
-      var pick=cosmic>=2?'cosmic-team':'software-company';
-      if(teamById(pick)) return {kind:'team',id:pick,auto:true};
-    }
-    if(hits.length===1) return {kind:'expert',id:hits[0].id,auto:true};
-
-    var modeEl=$('.mode-item.checked'), m=modeEl?MODE_MATCH[modeEl.getAttribute('data-val')]:null;
-    if(m && ((m.kind==='team'&&teamById(m.id))||(m.kind==='expert'&&EX[m.id])))
-      return {kind:m.kind,id:m.id,auto:true};
-
-    return teamById('software-company')?{kind:'team',id:'software-company',auto:true}:null;
-  }
   /* 召唤 = 选中这个专家/专家团 + 把第一条触发词带进输入框 */
   function summon(kind,id,phrase){
     var o = kind==='team' ? teamById(id) : EX[id];
@@ -2424,30 +2296,6 @@ const billTemplateWithTokens = billTemplate.replace(
 
   /* 发出去的话里还留着没填的 [占位符] —— 专家先问清楚再开工。
      一次把缺的都问完，别挤牙膏式来回问。 */
-  function appendAskCard(names){
-    if(!messagesList||!names.length) return false;
-    var who = activePick.kind==='expert' ? EX[activePick.id] : null;
-    var av = who ? '<img src="'+xav(who.k)+'" alt="">' : '';
-    var box=document.createElement('div');
-    box.className='ask-card';
-    box.innerHTML='<div class="ask-head">'+av
-      +'<span>开始之前，我需要先确认'+(names.length>1?' '+names.length+' 件事':'一件事')+'</span></div>'
-      +names.map(function(n,qi){
-        var a=askFor(n);
-        return '<div class="ask-q" data-ask-q="'+qi+'">'
-          +'<div class="ask-q-t"><span class="x-ph">['+xesc(n)+']</span>'+xesc(a.q)+'</div>'
-          +'<div class="ask-opts">'
-          +a.o.map(function(t,oi){
-            return '<button type="button" class="ask-opt" data-ask-pick="'+qi+'" data-ask-oi="'+oi+'">'+xesc(t)+'</button>';
-          }).join('')
-          +'<button type="button" class="ask-opt ask-opt-other" data-ask-pick="'+qi+'" data-ask-oi="-1">其它…</button>'
-          +'</div></div>';
-      }).join('')
-      +'<div class="ask-foot" id="askFoot">选一个，或直接在下面输入框补充</div>';
-    messagesList.appendChild(box);
-    scrollChatBottom();
-    return true;
-  }
   if(messagesList) messagesList.addEventListener('click',function(ev){
     var b=ev.target.closest('[data-ask-pick]');
     if(!b) return;
@@ -2466,22 +2314,6 @@ const billTemplateWithTokens = billTemplate.replace(
       foot.textContent='还剩 '+(all-done)+' 项待确认';
     }
   });
-
-  function appendAutoNote(){
-    if(!messagesList||!activePick.auto||!pickValid()) return;
-    var isTeam=activePick.kind==='team';
-    var av=isTeam
-      ? teamById(activePick.id).members.slice(0,3).map(function(i){return '<img src="'+xav(EX[i].k)+'" alt="">'}).join('')
-      : '<img src="'+xav(EX[activePick.id].k)+'" alt="">';
-    var why=isTeam?'这次要跨多个环节，交给一个专家团':'按你描述的内容匹配到这位专家';
-    var note=document.createElement('div');
-    note.className='auto-note';
-    note.innerHTML='<span class="auto-note-av">'+av+'</span>'
-      +'<span class="auto-note-b">你没有指定专家，已自动匹配 <b>'+xesc(pickName())+'</b>'
-      +'<i>'+why+'。想换人，点下方输入框左侧的专家按钮。</i></span>';
-    messagesList.appendChild(note);
-  }
-
   /* ---------- 创建 / 编辑我的专家 ---------- */
   /* 两条路：手填这张表单，或者一句话交给 expert-manager 在对话里建（同 WorkBuddy） */
   var EXPERT_MANAGER={id:'expert-manager',
@@ -2573,10 +2405,6 @@ const billTemplateWithTokens = billTemplate.replace(
      调 _teamBridge.touch() 触发 React 重渲染。计算函数（teamFlow/
      teamCoverage/teamLint）保持不变，React 直接调 bridge.getFlow 等。 */
   var teamDraft=null, teamEditingId=null;
-  function teamCmdList(d){
-    return (d.cmds||[]).map(function(c){ return [String(c[0]||'').trim(),String(c[1]||'').trim()]; })
-                       .filter(function(c){ return c[0]; });
-  }
   function openTeamModal(id){
     var t=id?teamById(id):null;
     teamEditingId=id||null;
