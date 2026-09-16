@@ -850,12 +850,12 @@ const billTemplateWithTokens = billTemplate.replace(
     navItems.forEach(function(n){ n.classList.toggle('active', n.textContent.trim()===name); });
   }
   function applyMode(mode,fromChip){
-    modeItems.forEach(function(m){ m.classList.toggle('checked', m.getAttribute('data-val')===mode); });
-    appDd.classList.remove('error');
-    input.setAttribute('data-placeholder','布置'+mode+'任务');
-    appDd.classList.toggle('hidden', mode!=='苍穹应用');
-    if(mode!=='苍穹应用'){ appDd.classList.remove('open'); }
-    input.focus();
+    if(modeItems.length) modeItems.forEach(function(m){ m.classList.toggle('checked', m.getAttribute('data-val')===mode); });
+    if(appDd) appDd.classList.remove('error');
+    if(input) input.setAttribute('data-placeholder','布置'+mode+'任务');
+    if(appDd) appDd.classList.toggle('hidden', mode!=='苍穹应用');
+    if(mode!=='苍穹应用' && appDd){ appDd.classList.remove('open'); }
+    if(input) input.focus();
   }
   /* mode items click 已迁到 React NewTaskView */
 
