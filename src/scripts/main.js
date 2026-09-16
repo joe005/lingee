@@ -918,33 +918,7 @@ const billTemplateWithTokens = billTemplate.replace(
 
 
   /* ---------- 预览：编辑 / 选择元素按钮 ---------- */
-  function previewDoc(){
-    var f=$('#chatPreviewFrame');
-    try{ return f&&f.contentDocument }catch(e){ return null }
-  }
   var previewEditBtn=$('#previewEdit'), previewPickBtn=$('#previewPick');
-  function setPickMode(on){
-    var d=previewDoc(); if(!d||!d.body)return;
-    d.body.classList.toggle('pick-mode',on);
-    if(on&&!d._pickBound){
-      d._pickBound=true;
-      d.addEventListener('mouseover',function(e){
-        if(!d.body.classList.contains('pick-mode'))return;
-        if(d._hovered) d._hovered.style.outline='';
-        d._hovered=e.target;
-        e.target.style.outline='2px solid #495dff';
-        e.target.style.outlineOffset='-2px';
-      },true);
-      d.addEventListener('click',function(e){
-        if(!d.body.classList.contains('pick-mode'))return;
-        e.preventDefault(); e.stopPropagation();
-        var t=e.target;
-        var n=t.tagName.toLowerCase()+(t.className?'.'+String(t.className).split(' ').join('.'):'');
-        toast('已选中 '+n);
-      },true);
-    }
-    if(!on&&d._hovered){ d._hovered.style.outline=''; d._hovered=null; }
-  }
   if(previewEditBtn){
     previewEditBtn.addEventListener('click',function(){
       var on=!previewEditBtn.classList.contains('on');
@@ -975,13 +949,6 @@ const billTemplateWithTokens = billTemplate.replace(
 
   /* ---------- 标题栏：切换预览展开 / 收起 ---------- */
   var togglePreviewBtn=$('#togglePreviewBtn');
-  function syncTogglePreviewBtn(){
-    if(!togglePreviewBtn)return;
-    var open=$('#view-chat').classList.contains('preview-open');
-    togglePreviewBtn.classList.toggle('on',open);
-    togglePreviewBtn.setAttribute('aria-pressed',open?'true':'false');
-    togglePreviewBtn.setAttribute('data-tooltip',open?'收起预览':'显示预览');
-  }
   if(togglePreviewBtn){
     togglePreviewBtn.addEventListener('click',function(){
       var view=$('#view-chat');
@@ -1609,76 +1576,6 @@ const billTemplateWithTokens = billTemplate.replace(
   if(sendBtn) sendBtn.addEventListener('click',doSend);
   var chatMessages=$('#chatMessages');
   var messagesList=$('#messagesList');
-  function escapeHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-  function scrollChatBottom(){ chatMessages.scrollTop=chatMessages.scrollHeight; }
-
-  function appendUserMessage(text){
-    var msg=document.createElement('div');
-    msg.className='message user';
-    msg.innerHTML='<div class="message-content"><p>'+escapeHtml(text)+'</p></div>';
-    messagesList.appendChild(msg);
-    scrollChatBottom();
-  }
-
-  function appendAssistantMessage(){
-    var msg=document.createElement('div');
-    msg.className='message assistant';
-    msg.innerHTML='<div class="message-content"><div class="assistant-response"></div></div>';
-    messagesList.appendChild(msg);
-    return msg.querySelector('.assistant-response');
-  }
-
-  function createWorkStep(title,status){
-    var step=document.createElement('div');
-    step.className='work-step '+status;
-    var iconHtml=status==='done'
-      ?'<svg class="step-icon done" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>'
-      :'<svg class="step-icon running" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>';
-    var statusHtml=status==='running'?'<span class="step-status">执行中…</span>':'';
-    step.innerHTML='<div class="step-header">'
-      +'<div class="step-left">'+iconHtml+'<span class="step-title">'+title+'</span></div>'
-      +'<div class="step-right">'+statusHtml+'</div>'
-      +'</div>';
-    return step;
-  }
-
-  function createFinalResult(){
-    var result=document.createElement('div');
-    result.className='work-step done final-step';
-    result.innerHTML='<div class="step-header">'
-      +'<div class="step-left">'
-      +'<svg class="step-icon done" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>'
-      +'<span class="step-title">生成结果</span></div>'
-      +'</div>'
-      +'<div class="markdown-content"></div>';
-    return result;
-  }
-
-  function createArtifactCard(){
-    var card=document.createElement('div');
-    card.className='artifact-card';
-    card.innerHTML='<div class="artifact-preview"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></div>'
-      +'<div class="artifact-info"><div class="artifact-title">采购订单</div></div>'
-      +'<div class="artifact-action"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg></div>';
-    function openPreview(){
-      var view=document.getElementById('view-chat');
-      var frame=document.getElementById('chatPreviewFrame');
-      if(frame){
-        var html=billTemplateWithTokens;
-        var blob=new Blob([html],{type:'text/html'});
-        frame.src=URL.createObjectURL(blob);
-        view.classList.add('preview-open');
-        if(typeof syncTogglePreviewBtn==='function') syncTogglePreviewBtn();
-        try{localStorage.setItem('chatPreviewOpen','1')}catch(e){}
-        var savedW=localStorage.getItem('chatPreviewWidth');
-        var ps=document.getElementById('chatPreviewSide');
-        if(savedW&&ps){ps.style.width=savedW;ps.style.maxWidth='none';}
-      }
-    }
-    card.addEventListener('click',openPreview); /* 仅点击卡片时展开预览 */
-    card._openPreview=openPreview;
-    return card;
-  }
   /* 预览面板关闭按钮 */
   var chatPreviewCloseBtn=$('#chatPreviewClose');
   if(chatPreviewCloseBtn){
@@ -1921,193 +1818,7 @@ const billTemplateWithTokens = billTemplate.replace(
   ];
 
   /* simple markdown → HTML renderer */
-  function renderMarkdown(text){
-    var html=escapeHtml(text);
-    html=html.replace(/^### (.+)$/gm,'<h3>$1</h3>');
-    html=html.replace(/^## (.+)$/gm,'<h2>$1</h2>');
-    html=html.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
-    html=html.replace(/`([^`]+)`/g,'<code>$1</code>');
-    var lines=html.split('\n');
-    var out=[];
-    var inUl=false,inOl=false;
-    for(var i=0;i<lines.length;i++){
-      var line=lines[i];
-      if(/^\- (.+)$/.test(line)){
-        if(!inUl){out.push('<ul>');inUl=true;}
-        out.push('<li>'+line.replace(/^\- /,'')+'</li>');
-      } else if(/^\d+\. (.+)$/.test(line)){
-        if(!inOl){out.push('<ol>');inOl=true;}
-        out.push('<li>'+line.replace(/^\d+\. /,'')+'</li>');
-      } else {
-        if(inUl){out.push('</ul>');inUl=false;}
-        if(inOl){out.push('</ol>');inOl=false;}
-        if(line.trim()===''){out.push('');}
-        else if(/^<(h[23]|ul|ol|li)/.test(line)){out.push(line);}
-        else out.push('<p>'+line+'</p>');
-      }
-    }
-    if(inUl)out.push('</ul>');
-    if(inOl)out.push('</ol>');
-    return out.join('\n');
-  }
-
-  function streamText(targetEl,text,onDone){
-    var idx=0;
-    var cursor=document.createElement('span');
-    cursor.className='cursor-blink';
-    cursor.textContent='▌';
-    targetEl.appendChild(cursor);
-    targetEl.style.whiteSpace='pre-wrap';
-    targetEl.style.wordBreak='break-word';
-    var timer=null,done=false;
-    function finish(){
-      if(done) return;
-      done=true;
-      clearTimeout(timer);
-      cursor.remove();
-      targetEl.innerHTML=renderMarkdown(text);
-      targetEl.style.whiteSpace='';
-      targetEl.style.wordBreak='';
-      document.removeEventListener('keydown',finish);
-      document.removeEventListener('click',finish);
-      if(onDone) onDone();
-    }
-    function typeNext(){
-      if(done) return;
-      if(idx<text.length){
-        cursor.insertAdjacentText('beforebegin',text[idx]);
-        idx++;
-        scrollChatBottom();
-        var delay=text[idx-1]==='\n'?80:Math.random()*20+15;
-        timer=setTimeout(typeNext,delay);
-      }else{
-        finish();
-      }
-    }
-    document.addEventListener('keydown',finish);
-    document.addEventListener('click',finish);
-    typeNext();
-  }
-
   /* 预览区开关状态：以 localStorage 为唯一来源，默认收起 */
-  function syncPreviewOpen(artifact){
-    var apply=function(){
-      var v=document.getElementById('view-chat');
-      if(!v)return;
-      if(localStorage.getItem('chatPreviewOpen')==='1'){
-        if(!v.classList.contains('preview-open')&&artifact&&artifact._openPreview) artifact._openPreview();
-        /* 恢复预览页签选择 */
-        var savedTab='preview';
-        try{savedTab=localStorage.getItem('chatPreviewTab')||'preview'}catch(e){}
-        switchPreviewTab(savedTab);
-      }else{
-        v.classList.remove('preview-open');
-        var ps=document.getElementById('chatPreviewSide');
-        if(ps){ps.style.width='';ps.style.maxWidth='';}
-      }
-    };
-    apply();
-    /* 初始化中若有其它逻辑改动了面板，再以存储值校正一次 */
-    requestAnimationFrame(apply);
-  }
-  function simulateAIResponse(responseEl,instant){
-    var steps=[{title:'需求分析'},{title:'开发页面'},{title:'测试验收'}];
-    var timeline=document.createElement('div');
-    timeline.className='work-steps';
-    responseEl.appendChild(timeline);
-
-    if(instant){
-      steps.forEach(function(s){
-        timeline.appendChild(createWorkStep(s.title,'done'));
-      });
-      var result=createFinalResult();
-      timeline.appendChild(result);
-      var mc=result.querySelector('.markdown-content');
-      var text=mockReplies[Math.floor(Math.random()*mockReplies.length)];
-      mc.innerHTML=renderMarkdown(text);
-      var artifact=createArtifactCard();
-      result.appendChild(artifact);
-      scrollChatBottom(); /* 预览区保持收起，等待用户点击产物卡片 */
-      /* 预览区开关完全由 chatPreviewOpen 决定；默认收起 */
-      syncPreviewOpen(artifact);
-      return;
-    }
-
-    var stepEls=[];
-    var currentStepIdx=0;
-
-    function addNextStep(){
-      if(currentStepIdx>=steps.length){
-        var result=createFinalResult();
-        timeline.appendChild(result);
-        var mc=result.querySelector('.markdown-content');
-        var text=mockReplies[Math.floor(Math.random()*mockReplies.length)];
-        streamText(mc,text,function(){
-          var artifact=createArtifactCard();
-          result.appendChild(artifact);
-          scrollChatBottom();
-        });
-        return;
-      }
-      var step=createWorkStep(steps[currentStepIdx].title,'running');
-      timeline.appendChild(step);
-      stepEls.push(step);
-      scrollChatBottom();
-      setTimeout(function(){
-        step.classList.remove('running');
-        step.classList.add('done');
-        var icon=step.querySelector('.step-icon');
-        icon.className='step-icon done';
-        icon.innerHTML='<path d="M20 6 9 17l-5-5"/>';
-        step.querySelector('.step-status')&&step.querySelector('.step-status').remove();
-        currentStepIdx++;
-        setTimeout(addNextStep,300);
-      },800+Math.random()*600);
-    }
-    addNextStep();
-  }
-
-  function doSend(){
-    var t=input.textContent.trim();
-    if(!t){ input.focus(); return; }
-    /* 苍穹应用模式未选择关联应用时拦截 */
-    var modeEl=$('.mode-item.checked');
-    var currentMode=modeEl?modeEl.getAttribute('data-val'):'';
-    if(currentMode==='苍穹应用' && appChip.classList.contains('muted')){
-      toast('请先选择关联应用','error');
-      appDd.classList.remove('error');
-      void appDd.offsetWidth;
-      appDd.classList.add('error');
-      return;
-    }
-    var autoPicked=false;
-    if(!pickValid()){
-      var am=autoMatch(t);
-      if(am){ activePick=am; renderExpertChips(); autoPicked=true; }
-    }
-    showView('chat');
-    $('#chatTitle').textContent='采购订单管理应用开发';
-    var empty=$('#chatEmpty');
-    if(empty) empty.remove();
-    appendUserMessage(t);
-    if(autoPicked) appendAutoNote();
-    input.innerHTML=''; refreshSend();
-    var pend=pendingInputs(t);
-    if(pend.length && appendAskCard(pend)){
-      /* 缺输入就停在追问上，确认完再执行 */
-    }else{
-      var responseEl=appendAssistantMessage();
-      simulateAIResponse(responseEl);
-    }
-    chatInput.innerHTML='';
-    var chatSend=$('#chatSendBtn');
-    chatSend.classList.remove('active');
-    chatInput.focus();
-    /* 会话详情页关联应用默认选中"采购订单管理"，不可编辑 */
-    selectChatApp('采购订单管理');
-    chatAppDd.classList.add('disabled');
-  }
-
   /* ---------- chat composer 发送 ---------- */
   var chatInput=$('#chatInput');
   /* 所有下拉面板关闭时恢复焦点到输入框 */
@@ -2134,26 +1845,10 @@ const billTemplateWithTokens = billTemplate.replace(
     if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); chatDoSend(); }
   });
   if(chatSendBtn) chatSendBtn.addEventListener('click',chatDoSend);
-  function chatDoSend(){
-    var t=chatInput.textContent.trim();
-    if(!t){ chatInput.focus(); return; }
-    var empty=$('#chatEmpty');
-    if(empty) empty.remove();
-    appendUserMessage(t);
-    chatInput.innerHTML=''; refreshChatSend();
-    var responseEl=appendAssistantMessage();
-    simulateAIResponse(responseEl);
-    chatInput.focus();
-  }
-
   /* ---------- 历史记录面板 ---------- */
   var historyBtn=$('#historyBtn');
   var historyPanel=$('#historyPanel');
   var historyOverlay=$('#historyOverlay');
-  function closeHistory(){
-    historyPanel.classList.remove('show');
-    historyOverlay.classList.remove('show');
-  }
   if(historyBtn){
     if(historyBtn) historyBtn.addEventListener('click',function(){
       historyPanel.classList.add('show');
@@ -2241,111 +1936,6 @@ const billTemplateWithTokens = billTemplate.replace(
     fi.click();
   }
   /* ---------- ＋按钮下拉菜单 ---------- */
-  function bindAddDropdown(btn){
-    if(!btn) return;
-    var dd=btn.closest('.dropdown');
-    if(!dd) return;
-    btn.addEventListener('click',function(e){
-      e.stopPropagation();
-      e.preventDefault();
-      var isOpen=dd.classList.contains('open');
-      closeAll(null);
-      if(!isOpen) dd.classList.add('open');
-    });
-    $$('.menu-item',dd).forEach(function(item){
-      item.addEventListener('click',function(){
-        if(item.classList.contains('add-item--submenu')) return;
-        var action=item.getAttribute('data-action');
-        dd.classList.remove('open');
-        if(action==='attach'){ openFilePicker(); }
-        else if(action==='folder'){ toast('引用文件夹'); }
-        else if(action==='knowledge'){ toast('知识库'); }
-        else if(action==='connector'){ toast('连接器'); }
-        else if(action==='spec'){ toast('Spec'); }
-        else if(action==='goal'){ toast('目标'); }
-      });
-    });
-    /* 连接器子菜单交互 */
-    var connColors={腾讯云:'#00a4ff',阿里云:'#ff6a00',华为云:'#ff0000'};
-    var connLetters={腾讯云:'☁',阿里云:'☁',华为云:'☁'};
-    function addConnBadge(dd,name){
-      var badges=dd.closest('.composer-bar').querySelector('.connector-badges');
-      if(!badges||badges.querySelector('[data-conn="'+name+'"]')) return;
-      var b=document.createElement('span');b.className='conn-badge';
-      b.setAttribute('data-conn',name);b.title=name;
-      b.style.background=connColors[name]||'#888';
-      b.innerHTML='<svg viewBox="0 0 24 24" fill="none" style="width:12px;height:12px;display:block"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" fill="#fff" stroke="#fff" stroke-width=".5"/></svg>';
-      badges.appendChild(b);
-    }
-    function removeConnBadge(dd,name){
-      var badges=dd.closest('.composer-bar').querySelector('.connector-badges');
-      if(!badges) return;
-      var b=badges.querySelector('[data-conn="'+name+'"]');if(b)b.remove();
-    }
-    $$('.connector-btn',dd).forEach(function(btn){
-      btn.addEventListener('click',function(e){
-        e.stopPropagation();
-        var name=btn.closest('.connector-item').querySelector('.connector-name').textContent;
-        btn.textContent='正在连接';
-        btn.style.background='var(--hover)';
-        btn.style.color='var(--text-muted)';
-        btn.style.borderColor='var(--border)';
-        btn.style.pointerEvents='none';
-        setTimeout(function(){
-          window.open('https://tcb.cloud.tencent.com/login?cliAuth=1&_redirect_uri=https%3A%2F%2Ftcb.cloud.tencent.com%2Fdev%23%2Fcli-auth%3Fport%3D9012%26hash%3Dcbcbb3ce8c291a411c00cf7099fdc5ea%26mac%3D80%253Ad1%253Ace%253A0d%253Ae6%253A37%26os%3DM2607-0081.local%252FmacOS%252016.6%26from%3Dcli&authCallbackUrl=http%3A%2F%2F127.0.0.1%3A9012&port=9012&hash=cbcbb3ce8c291a411c00cf7099fdc5ea&mac=80%3Ad1%3Ace%3A0d%3Ae6%3A37&os=M2607-0081.local%2FmacOS%2016.6&from=cli','_blank');
-          toast('请完成网站授权','info');
-          setTimeout(function(){
-            var tg=document.createElement('div');
-            tg.className='connector-toggle on';
-            btn.replaceWith(tg);
-            bindToggle(tg);
-            addConnBadge(dd,name);
-            toast('连接器 '+name+' 已连接','success');
-          },3000);
-        },1000);
-      });
-    });
-    function bindToggle(t){
-      t.addEventListener('click',function(e){
-        e.stopPropagation();
-        var name=t.closest('.connector-item').querySelector('.connector-name').textContent;
-        if(t.classList.contains('on')){
-          t.classList.remove('on');
-          removeConnBadge(dd,name);
-        }else{
-          t.classList.add('connecting');
-          toast('连接器 '+name+' 连接中','info');
-          setTimeout(function(){
-            t.classList.remove('connecting');
-            t.classList.add('on');
-            addConnBadge(dd,name);
-            toast('连接器 '+name+' 已连接','success');
-          },1500);
-        }
-      });
-    }
-    $$('.connector-toggle',dd).forEach(bindToggle);
-    var cm=dd.querySelector('.connector-manage');
-    if(cm) cm.addEventListener('click',function(){dd.classList.remove('open');toast('管理连接器');});
-    var connectorItem=dd.querySelector('[data-action="connector"]');
-    if(connectorItem) connectorItem.addEventListener('mouseenter',function(){
-      var input=connectorItem.querySelector('.connector-search input');
-      if(input) setTimeout(function(){input.focus();},50);
-    });
-    /* 连接器搜索过滤 */
-    var searchInput=dd.querySelector('.connector-search input');
-    if(searchInput && !searchInput._filterBound){
-      searchInput._filterBound=true;
-      searchInput.addEventListener('input',function(){
-        var q=this.value.trim().toLowerCase();
-        var items=dd.querySelectorAll('.connector-item');
-        items.forEach(function(item){
-          var name=item.querySelector('.connector-name').textContent.toLowerCase();
-          item.style.display=(!q||name.indexOf(q)>-1)?'':'none';
-        });
-      });
-    }
-  }
   bindAddDropdown(addBtn);
   bindAddDropdown(chatAddBtn);
 
@@ -3039,6 +2629,8 @@ const billTemplateWithTokens = billTemplate.replace(
     return '<span class="x-faces">'+ids.slice(0,n||4).map(function(i){
       return '<img src="'+xav(EX[i].k)+'" alt="">'; }).join('')+'</span>';
   }
+  /* cvRenderExperts 已迁到 React CollabView，保留 no-op 避免调用处报错 */
+  function cvRenderExperts(){}
   function renderExpertGrid(){
     if(!expertGrid) return;
     var si=$('#expertSearchInput');
@@ -3870,11 +3462,6 @@ const billTemplateWithTokens = billTemplate.replace(
       return '<div class="stat" onclick="cvClickStat(this,\''+s.status+'\')"><div class="stat-num" style="color:'+s.color+'">'+s.num+'</div><div class="stat-label">'+s.label+'</div></div>';
     }).join('');
   }
-  function cvRenderTasks(){
-    var grid=document.getElementById('cv-task-grid');if(!grid)return;
-    grid.innerHTML=CV_TASKS.map(function(t,i){return cvInProject(t)?cvBuildTaskCard(t,i):'';}).join('');
-    if(!grid.innerHTML) grid.innerHTML='<div class="x-empty">该项目下还没有任务</div>';
-  }
   function cvBuildTaskCard(t,i){
     var typeCls={'需求':'badge-type','Bug':'badge-bug','任务':'badge-task','改进':'badge-improve'}[t.type]||'badge-type';
     var sizeCls=t.size==='大'?'badge-size-l':'badge-size-s';
@@ -3912,11 +3499,6 @@ const billTemplateWithTokens = billTemplate.replace(
     el.innerHTML=stats.map(function(s){
       return '<div class="stat" onclick="cvClickReviewStat(this,\''+s.filter+'\')"><div class="stat-num" style="color:'+s.color+'">'+s.num+'</div><div class="stat-label">'+s.label+'</div></div>';
     }).join('');
-  }
-  function cvRenderReviews(){
-    var grid=document.getElementById('cv-review-grid');if(!grid)return;
-    grid.innerHTML=CV_REVIEWS.map(function(r,i){return cvInProject(r)?cvBuildReviewCard(r,i):'';}).join('');
-    if(!grid.innerHTML) grid.innerHTML='<div class="x-empty">该项目下没有待评审的内容</div>';
   }
   function cvBuildReviewCard(r,i){
     var typeCls={'需求':'badge-type','Bug':'badge-bug','任务':'badge-task','改进':'badge-improve'}[r.type]||'badge-type';
@@ -4526,32 +4108,6 @@ const billTemplateWithTokens = billTemplate.replace(
       +'<div><div class="expert-stat-val">'+cmds+'</div><div class="expert-stat-label">触发词</div></div>'
       +'</div></div>';
   }
-  function cvRenderExperts(){
-    var box=$('#cvExpertSections'); if(!box) return;
-    /* 浏览器自动填充会往搜索框里塞账号，渲染时以 JS 里的关键词为准回写，别让框里显示的和实际筛选的不一致 */
-    var si=$('#cvExpertSearch');
-    if(si && si.value!==cvExpertKw) si.value=cvExpertKw;
-    var groups=cvExpertGroups();
-    /* 搜索把结果筛空时要说清楚，否则只剩一张「创建专家」卡，看着像数据没了 */
-    if(cvExpertKw.trim() && !groups.some(function(g){return g.list.length})){
-      box.innerHTML='<div class="x-empty">没有匹配「'+xesc(cvExpertKw.trim())+'」的专家</div>';
-      return;
-    }
-    var html=groups.map(function(g){
-      if(!g.list.length && g.title!=='我创建的') return '';
-      var cards=g.list.map(cvBuildExpertCard).join('');
-      if(g.title==='我创建的'){
-        cards+='<button type="button" class="expert-card expert-new" data-cv-new-expert>'
-          +'<span class="expert-new-ic">＋</span><span class="expert-new-t">创建专家</span>'
-          +'<span class="expert-new-s">手填表单，或一句话交给 expert-manager</span></button>';
-      }
-      return '<div class="expert-section-title">'+g.title
-        +'<span class="expert-section-desc">'+g.desc+'</span></div>'
-        +'<div class="expert-grid">'+cards+'</div>';
-    }).join('');
-    box.innerHTML=html||'<div class="x-empty">没有匹配的专家</div>';
-  }
-
 
   /* ---------- 项目（与任务管理平级的独立页签，归属当前工作区） ---------- */
   var cvProjectQuery='', cvProjectStatusF='', cvProjectOwnerF='';
