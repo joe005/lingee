@@ -27,6 +27,17 @@ const billTemplateWithTokens = billTemplate.replace(
   var $=function(s,el){return (el||document).querySelector(s)};
   var $$=function(s,el){return Array.prototype.slice.call((el||document).querySelectorAll(s))};
 
+  /* 以下函数已迁到 React/stores，保留 no-op 桩避免 bridge 引用报错 */
+  function saveTeams(){}
+  function rebuildExperts(){}
+  function deleteMyExpert(id){ expertStore.deleteExpert(id); }
+  function summon(kind,id,phrase){ /* moved to React */ }
+  function startExpertByChat(){ /* moved to React */ }
+  function startNewTaskWithMode(mode){ /* moved to React */ }
+  function openAppCardChat(name){ /* moved to React */ }
+  function resetPickForNewSession(){ /* moved to React */ }
+  function applyModeSilent(mode){ /* moved to React */ }
+
   /* ---------- 消息数据模型（Phase 3 数据驱动） ----------
      chat 视图的消息列表改为数据数组，React 组件（ChatView.jsx）渲染。
      simulateAIResponse 往数组里 push 步骤/结果，每次变更调 _chatTouch() 触发 React 重渲染。 */
@@ -1340,11 +1351,6 @@ const billTemplateWithTokens = billTemplate.replace(
       }
     });
   });
-  function applyModeSilent(mode){
-    modeItems.forEach(function(m){ m.classList.toggle('checked', m.getAttribute('data-val')===mode); });
-    input.focus();
-  }
-
   /* ---------- 我的应用 (apps view) ---------- */
   $$('#view-apps .tab').forEach(function(t){
     t.addEventListener('click',function(){
@@ -1356,27 +1362,6 @@ const billTemplateWithTokens = billTemplate.replace(
   /* 卡片点击打开会话预览。抽成具名函数：应用开发/技能开发/智能体开发三个卡片网格
      的 React 版本（src/views/*View.jsx）也调用这同一份逻辑（window.__lingeeBridge），
      避免两边各写一份、行为跑偏。 */
-  function openAppCardChat(name){
-    showView('chat');
-    setNavActive('新会话');
-    var titleEl=$('#chatTitle');
-    if(titleEl) titleEl.textContent=name;
-    var emptyEl=$('#chatEmpty');
-    if(emptyEl) emptyEl.remove();
-    /* 打开预览面板加载表单 */
-    var view=document.getElementById('view-chat');
-    var frame=document.getElementById('chatPreviewFrame');
-    var urlInput=document.getElementById('previewUrlText');
-    var url='https://feature.kingdee.com:1026/feature_vb';
-    if(frame) frame.src=url;
-    if(urlInput) urlInput.value=url;
-    if(view) view.classList.add('preview-open');
-    if(typeof syncTogglePreviewBtn==='function') syncTogglePreviewBtn();
-    try{localStorage.setItem('chatPreviewOpen','1')}catch(err){}
-    var savedW=localStorage.getItem('chatPreviewWidth');
-    var ps=document.getElementById('chatPreviewSide');
-    if(savedW&&ps){ps.style.width=savedW;ps.style.maxWidth='none';}
-  }
   $$('.app-card').forEach(function(c){
     c.addEventListener('click',function(e){
       if(e.target.closest('.card-more')){ e.stopPropagation(); toast('更多操作'); return; }
@@ -1742,12 +1727,6 @@ const billTemplateWithTokens = billTemplate.replace(
   /* ---------- 应用开发 新建下拉 ---------- */
   /* 从卡片网格页发起「新建」：跳到新会话并预选模式。抽成具名函数，
      应用开发页的 React 版本通过 window.__lingeeBridge 调这同一份逻辑。 */
-  function startNewTaskWithMode(mode){
-    showView('newtask');
-    setNavActive(mode);
-    applyMode(mode,true);
-    renderModeTag();
-  }
   var appsNewBtn=$('.apps-new-btn');
   var appsNewDd=$('#appsNewDropdown');
   if(appsNewBtn&&appsNewDd){
@@ -2116,10 +2095,6 @@ const billTemplateWithTokens = billTemplate.replace(
   var BUILTIN_EXPERTS=EXPERTS;
   var MY_EXPERTS=[];                 /* 我自己创建的专家，落 localStorage */
   var EX={};
-  function rebuildExperts(){
-    EXPERTS=BUILTIN_EXPERTS.concat(MY_EXPERTS);
-    EX={}; EXPERTS.forEach(function(e){EX[e.id]=e});
-  }
   rebuildExperts();
   /* ---------- 能力项字典 ----------
      定义文件里能力项是机器标识（architecture.system-design · principal），
@@ -2210,21 +2185,6 @@ const billTemplateWithTokens = billTemplate.replace(
     });
     TEAMS=PRESET_TEAMS.slice().concat(valid);
   }
-  function saveTeams(){
-    try{
-      localStorage.setItem(TEAM_STORE_KEY, JSON.stringify({
-        v:1,
-        teams:TEAMS.filter(function(t){return !t.preset}).map(function(t){
-          return {id:t.id,name:t.name,by:t.by,desc:t.desc,domains:t.domains||[],
-                  gates:teamGates(t),leadId:t.leadId,members:t.members,cmds:t.cmds};
-        }),
-        experts:MY_EXPERTS.map(function(e){
-          return {id:e.id,k:e.k,name:e.name,role:e.role,desc:e.desc,tags:e.tags,
-                  modes:e.modes,comp:e.comp,cmds:e.cmds};
-        })
-      }));
-    }catch(e){ /* 隐私模式 / 配额满：原型退化为内存态，不打扰用户 */ }
-  }
   /* ---------- 编排推导：成员 → 任务 DAG ----------
      不再有交付强度这个旋钮：团里有谁，流程里就有哪一步。
      实现环节始终保留——没人能领时显式标红，这是要暴露的问题，不是可以省掉的步骤。 */
@@ -2273,27 +2233,6 @@ const billTemplateWithTokens = billTemplate.replace(
             tags:e.tags||[],modes:e.modes||[],comp:(e.comp||[]).map(parseComp),
             cmds:e.cmds||[],skills:e.skills,mine:e.mine,ro:e.ro};
   }
-  /* 召唤 = 选中这个专家/专家团 + 把第一条触发词带进输入框 */
-  function summon(kind,id,phrase){
-    var o = kind==='team' ? teamById(id) : EX[id];
-    if(!o) return;
-    activePick={kind:kind,id:id,auto:false};
-    renderExpertChips();
-    showView('newtask'); setNavActive('新会话');
-    var text = phrase || ((o.cmds&&o.cmds.length)?o.cmds[0][0]:'');
-    if(input){
-      input.setAttribute('data-placeholder','布置任务');
-      input.textContent=text;
-      input.focus();
-      try{
-        var r=document.createRange(); r.selectNodeContents(input); r.collapse(false);
-        var sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
-      }catch(err){}
-    }
-    if(typeof refreshSend==='function') refreshSend();
-    toast('已召唤「'+o.name+'」','success');
-  }
-
   /* 发出去的话里还留着没填的 [占位符] —— 专家先问清楚再开工。
      一次把缺的都问完，别挤牙膏式来回问。 */
   if(messagesList) messagesList.addEventListener('click',function(ev){
@@ -2320,45 +2259,6 @@ const billTemplateWithTokens = billTemplate.replace(
     ic:'<path d="M16 20v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 4 18.5V20"/><circle cx="10" cy="8" r="3.2"/><path d="M18 6v6M15 9h6"/>'};
   var ONE_LINE_PROMPT='帮我创建一个 XXX 专家，擅长 XXXXX。我的经验是：[请补充你的行业背景、相关经验]';
   var forcedBuilder=null;
-
-  function startExpertByChat(){
-    closeExpertEditor();
-    closeExpertModal();
-    forcedBuilder=EXPERT_MANAGER;
-    $$('.mode-item').forEach(function(m){ m.classList.remove('checked') });
-    showView('newtask'); setNavActive('新会话');
-    renderModeTag();
-    if(input){
-      input.setAttribute('data-placeholder','布置任务');
-      input.textContent=ONE_LINE_PROMPT;
-      input.focus();
-      try{
-        var r=document.createRange(); r.selectNodeContents(input); r.collapse(false);
-        var sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
-      }catch(err){}
-    }
-    toast('已切到 expert-manager，把这句话补完就行','info');
-  }
-
-  function deleteMyExpert(id){
-    var e=EX[id]; if(!e||!e.mine) return;
-    var used=TEAMS.filter(function(t){ return t.members.indexOf(id)>=0; });
-    var msg='删除专家「'+e.name+'」？此操作不可撤销。';
-    if(used.length) msg+='\n他还在 '+used.length+' 个专家团里，删除后会一并移出。';
-    if(!window.confirm(msg)) return;
-    MY_EXPERTS=MY_EXPERTS.filter(function(x){ return x.id!==id; });
-    rebuildExperts();
-    TEAMS.forEach(function(t){
-      if(t.preset) return;
-      t.members=t.members.filter(function(m){ return m!==id; });
-      if(t.leadId===id) t.leadId=t.members[0]||null;
-    });
-    if(activePick.kind==='expert'&&activePick.id===id) clearPick();
-    closeExpertModal();
-    saveTeams(); renderExpertGrid(); renderExpertChips(); cvRenderExperts();
-    toast('已删除「'+e.name+'」','success');
-  }
-
   /* ---------- 创建/编辑专家弹窗（Phase 2c antd 化） ----------
      React 侧（ExpertModals.jsx）自己管理表单状态，打开时从 bridge.getInitialData()
      读初始数据，保存时调 bridge.save(draft)。xeDraft/xeEditingId 仍在本文件维护
@@ -2559,13 +2459,6 @@ const billTemplateWithTokens = billTemplate.replace(
     });
 
   });
-
-  /* 新会话不继承上一次的专家/专家团选择 */
-  function resetPickForNewSession(){
-    if(forcedBuilder){ forcedBuilder=null; renderModeTag(); }
-    if(!activePick.kind) return;
-    clearPick(); renderExpertChips();
-  }
   navItems.forEach(function(n){
     n.addEventListener('click',function(){ if(n.textContent.trim()==='新会话') resetPickForNewSession(); });
   });
@@ -2601,17 +2494,8 @@ const billTemplateWithTokens = billTemplate.replace(
     {id:'done',label:'已完成',tone:'#08a040'},
     {id:'cancelled',label:'已取消',tone:'#e04a3a'}
   ];
-  function cvProjectStatusMeta(id){
-    for(var i=0;i<CV_PROJECT_STATUS.length;i++){ if(CV_PROJECT_STATUS[i].id===id) return CV_PROJECT_STATUS[i]; }
-    return CV_PROJECT_STATUS[0];
-  }
   var cvProject='';                    /* 空串 = 全部项目（个人视角的聚合视图） */
   var cvConfigOverride={};             /* {项目id:{配置卡 key:是否项目覆盖}} */
-  function cvProjectById(id){
-    for(var i=0;i<CV_PROJECTS.length;i++){ if(CV_PROJECTS[i].id===id) return CV_PROJECTS[i]; }
-    return null;
-  }
-  function cvProjectName(id){ var p=cvProjectById(id); return p?p.name:'未归属项目'; }
   function cvWorkspaceProjects(){
     return CV_PROJECTS.filter(function(p){ return p.workspace===cvWorkspace; });
   }
@@ -2619,10 +2503,6 @@ const billTemplateWithTokens = billTemplate.replace(
     if(!cvProject) return true;
     if(row.projects) return row.projects==='*'||row.projects.indexOf(cvProject)>=0;
     return row.project===cvProject;
-  }
-  function cvProjectTag(row){
-    if(cvProject) return '';           /* 项目态下不必重复显示项目名 */
-    return '<span class="cv-proj-tag">'+cvProjectName(row.project)+'</span>';
   }
   var CV_REVIEW_ARTIFACTS={
   0:{tabs:['源代码','技术方案'],content:{
@@ -2692,31 +2572,6 @@ const billTemplateWithTokens = billTemplate.replace(
     if(lv==='admin')return target.level!=='admin';
     return false;
   }
-  function cvCloseMemberLevelMenus(exceptWrap){
-    document.querySelectorAll('.member-level-menu').forEach(function(d){
-      if(!exceptWrap||d.parentNode!==exceptWrap) d.remove();
-    });
-  }
-  function cvToggleMemberLevelMenu(btn,idx,ev){
-    if(ev){ev.stopPropagation();ev.preventDefault();}
-    var wrap=btn.parentNode;
-    var existing=wrap.querySelector('.member-level-menu');
-    cvCloseMemberLevelMenus(wrap);
-    if(existing){existing.remove();return;}
-    var m=CV_MEMBERS[idx];if(!m)return;
-    var menu=document.createElement('div');menu.className='member-level-menu';
-    [{level:'member',text:'成员',desc:'可参与任务与评审',icon:CV_ICON_MEMBER},
-     {level:'admin',text:'管理员',desc:'可管理人员与项目设置',icon:CV_ICON_ADMIN}].forEach(function(o){
-      var active=m.level===o.level;
-      var item=document.createElement('div');
-      item.className='member-level-menu__item'+(active?' member-level-menu__item--active':'');
-      item.innerHTML=o.icon+'<span class="member-level-menu__text"><b>'+o.text+'</b><small>'+o.desc+'</small></span>'
-        +(active?'<svg class="member-level-menu__check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>':'');
-      item.onclick=function(e){e.stopPropagation();menu.remove();cvSetMemberLevel(idx,o.level);};
-      menu.appendChild(item);
-    });
-    wrap.appendChild(menu);
-  }
   document.addEventListener('click',function(){cvCloseMemberLevelMenus(null);});
   function cvSetMemberLevel(idx,level){
     var m=CV_MEMBERS[idx];if(!m)return;
@@ -2751,24 +2606,6 @@ const billTemplateWithTokens = billTemplate.replace(
     {name:'贾旭',email:'jia***@kingdee.com',role:'测试',tag:'member-tag--qa',dept:'测试部'},
     {name:'武威',email:'wu***@kingdee.com',role:'运维',tag:'member-tag--ops',dept:'运维部'}
   ];
-
-  function cvRenderTaskStats(){
-    var counts={未开始:0,待评审:0,进行中:0,已完成:0,已失败:0};
-    var rows=CV_TASKS.filter(cvInProject);
-    rows.forEach(function(t){counts[t.status]=(counts[t.status]||0)+1;});
-    var el=document.getElementById('cv-task-stats');if(!el)return;
-    var stats=[
-      {num:rows.length,label:'全部任务',color:'var(--text)',status:'全部状态'},
-      {num:counts['未开始']||0,label:'未开始',color:'var(--text-secondary)',status:'未开始'},
-      {num:counts['待评审']||0,label:'待评审',color:'var(--warning)',status:'待评审'},
-      {num:counts['进行中']||0,label:'进行中',color:'var(--dot-blue)',status:'进行中'},
-      {num:counts['已完成']||0,label:'已完成',color:'var(--success)',status:'已完成'},
-      {num:counts['已失败']||0,label:'已失败',color:'var(--danger)',status:'已失败'}
-    ];
-    el.innerHTML=stats.map(function(s){
-      return '<div class="stat" onclick="cvClickStat(this,\''+s.status+'\')"><div class="stat-num" style="color:'+s.color+'">'+s.num+'</div><div class="stat-label">'+s.label+'</div></div>';
-    }).join('');
-  }
   function cvBuildTaskCard(t,i){
     var typeCls={'需求':'badge-type','Bug':'badge-bug','任务':'badge-task','改进':'badge-improve'}[t.type]||'badge-type';
     var sizeCls=t.size==='大'?'badge-size-l':'badge-size-s';
@@ -2790,22 +2627,6 @@ const billTemplateWithTokens = billTemplate.replace(
       +'<div class="card-desc">'+t.desc+'</div>'
       +'<div class="card-footer"><div class="assignee"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'+t.assignee+'</div><span style="font-size:11px;color:var(--text-soft)">'+t.source+' '+t.sourceId+'</span></div>'
       +'</div>';
-  }
-  function cvRenderReviewStats(){
-    var el=document.getElementById('cv-review-stats');if(!el)return;
-    var rows=CV_REVIEWS.filter(cvInProject);
-    var urgent=rows.filter(function(r){return r.priority==='紧急';}).length;
-    var mine=rows.filter(function(r){return r.from==='张工';}).length;
-    var assigned=rows.filter(function(r){return r.reviewer==='张工';}).length;
-    var stats=[
-      {num:rows.length,label:'待评审',color:'var(--warning)',filter:'全部待评审'},
-      {num:urgent,label:'即将到期',color:'var(--danger)',filter:'紧急'},
-      {num:mine,label:'我发起的',color:'var(--dot-blue)',filter:'我发起的'},
-      {num:assigned,label:'分配给我',color:'var(--success)',filter:'分配给我的'}
-    ];
-    el.innerHTML=stats.map(function(s){
-      return '<div class="stat" onclick="cvClickReviewStat(this,\''+s.filter+'\')"><div class="stat-num" style="color:'+s.color+'">'+s.num+'</div><div class="stat-label">'+s.label+'</div></div>';
-    }).join('');
   }
   function cvBuildReviewCard(r,i){
     var typeCls={'需求':'badge-type','Bug':'badge-bug','任务':'badge-task','改进':'badge-improve'}[r.type]||'badge-type';
@@ -2832,56 +2653,6 @@ const billTemplateWithTokens = billTemplate.replace(
       +'<button class="act-btn act-btn--reject" onclick="event.stopPropagation();cvReviewReject('+i+')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>驳回</button>'
       +'<button class="card-view-btn" onclick="event.stopPropagation();cvOpenReviewDetail('+i+')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>查看对话</button>'
       +'</div></div></div>';
-  }
-  function cvRenderMembers(){
-    var el=document.getElementById('cv-member-list');if(!el)return;
-    var addBtn=document.getElementById('cv-add-member-btn');
-    if(addBtn)addBtn.style.display=cvCanManageMembers()?'':'none';
-    el.innerHTML=CV_MEMBERS.map(function(m,i){
-      if(!cvInProject(m)) return '';
-      var tagHtml=m.roles.map(function(r){return '<span class="member-tag '+r.tag+'">'+r.text+'</span>';}).join('');
-      var statusCls=m.status==='available'?'member-status--available':'member-status--busy';
-      var statusText=m.status==='available'?'可用':'繁忙';
-      var avatarCls=m.isMe?'member-avatar member-avatar--me':'member-avatar';
-      var nameCls=m.isMe?'member-name member-name--me':'member-name';
-      var isAdmin=m.level==='admin';
-      var levelText=m.owner?'所有者':(isAdmin?'管理员':'成员');
-      var levelIcon=m.owner?CV_ICON_OWNER:(isAdmin?CV_ICON_ADMIN:CV_ICON_MEMBER);
-      var levelCls='member-level '+(m.owner?'member-level--owner':(isAdmin?'member-level--admin':'member-level--member'));
-      var levelHtml;
-      if(cvCanToggleLevel(m)){
-        var caret='<svg class="member-level-caret" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
-        levelHtml='<div class="member-level-wrap"><button type="button" class="'+levelCls+'" onclick="cvToggleMemberLevelMenu(this,'+i+',event)" title="设置协作身份，点击选择">'+levelIcon+levelText+caret+'</button></div>';
-      }else{
-        var lockTitle=m.isMe?'不能修改自己的身份':(m.owner?'所有者身份不可修改':'只有所有者可以调整管理员身份');
-        levelHtml='<span class="'+levelCls+' member-level--static" title="'+lockTitle+'">'+levelIcon+levelText+'</span>';
-      }
-      var delHtml=cvCanRemoveMember(m)?'<button class="member-del" onclick="cvDeleteMember('+i+')" title="移除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>':'';
-      return '<div class="member-row" data-role="'+m.roles.map(function(r){return r.text;}).join(' ')+'">'
-        +'<div class="'+avatarCls+'">'+m.name[0]+'</div>'
-        +'<div class="member-info"><div class="'+nameCls+'">'+m.name+(m.isMe?' （你）':'')+'</div><div class="member-email">'+m.email+'</div><div class="member-tags">'+tagHtml+'</div></div>'
-        +'<span class="member-status '+statusCls+'">'+statusText+'</span>'
-        +'<span class="member-source">'+m.source+'</span>'
-        +levelHtml
-        +delHtml
-        +'</div>';
-    }).join('');
-  }
-  function cvRenderMemberStats(){
-    var el=document.getElementById('cv-member-stats');if(!el)return;
-    var counts={需求:0,架构:0,开发:0,测试:0,运维:0,产品:0};
-    var rows=CV_MEMBERS.filter(cvInProject);
-    rows.forEach(function(m){m.roles.forEach(function(r){var k=r.text;if(counts[k]!==undefined)counts[k]++;});});
-    var stats=[
-      {num:rows.length,label:'全部成员',color:'var(--text)'},
-      {num:counts['需求'],label:'需求人员',color:'var(--dot-blue)'},
-      {num:counts['架构'],label:'架构人员',color:'var(--brand)'},
-      {num:counts['开发'],label:'开发人员',color:'var(--success)'},
-      {num:counts['测试'],label:'测试人员',color:'var(--warning)'},
-      {num:counts['运维'],label:'运维人员',color:'var(--danger)'},
-      {num:counts['产品'],label:'产品人员',color:'#7858f9'}
-    ];
-    el.innerHTML=stats.map(function(s){return '<div class="stat"><div class="stat-num" style="color:'+s.color+'">'+s.num+'</div><div class="stat-label">'+s.label+'</div></div>';}).join('');
   }
   function cvInjectCardActions(){
     document.querySelectorAll('#cv-task-grid .card').forEach(function(card){
@@ -2955,11 +2726,6 @@ const billTemplateWithTokens = billTemplate.replace(
       });
     }
   }
-  function cvGetFilterVal(view,type){
-    var g=view.querySelector('[data-filter-type="'+type+'"]');if(!g)return null;
-    var a=g.querySelector('.filter-btn--active');return a?a.textContent.trim():null;
-  }
-
   /* ============ STATS CLICK ============ */
   function cvClickStat(stat,status){
     var view=stat.closest('.cv-panel');if(!view)return;
@@ -3038,10 +2804,6 @@ const billTemplateWithTokens = billTemplate.replace(
     return{title:title,desc:(form.desc||'').trim(),type:form.type||'需求',priority:form.priority||'中',
       source:form.source||'对话自建',size:form.size||'小任务',status:status||'未开始',
       collab:form.collab||'Agent间协作',assignee:status==='进行中'?'AI开发Agent':'待分配',progress:0};
-  }
-  function cvSaveTaskToStorage(task){
-    var tasks=[];try{tasks=JSON.parse(localStorage.getItem('build_tasks')||'[]');}catch(e){}
-    tasks.unshift(task);localStorage.setItem('build_tasks',JSON.stringify(tasks));
   }
   /* 弹窗里的任务落库：归一化字段并挂到当前项目（聚合视图下默认第一个项目） */
   function cvNormalizeTask(task){
