@@ -2248,29 +2248,7 @@ const billTemplateWithTokens = billTemplate.replace(
       +'<button class="card-view-btn" onclick="event.stopPropagation();cvOpenReviewDetail('+i+')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>查看对话</button>'
       +'</div></div></div>';
   }
-  function cvInjectCardActions(){
-    document.querySelectorAll('#cv-task-grid .card').forEach(function(card){
-      if(card.querySelector('.card-actions'))return;
-      var idx=parseInt(card.getAttribute('data-idx'));
-      var t=CV_TASKS[idx];if(!t)return;
-      var status=t.status;
-      var nodeMap={'未开始':'需求分析','待评审':'代码审查','进行中':'开发实现','已完成':'部署发布','已失败':'开发实现'};
-      var node=nodeMap[status]||'需求分析';
-      var execBtn='<button class="act-btn act-btn--exec" onclick="event.stopPropagation();window.cvCard=this.closest(\'.card\');cvOpenTaskModal(\'cv-exec-overlay\')" title="执行任务"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3l14 9-14 9V3z"/></svg>执行</button>';
-      var transferBtn='<button class="act-btn act-btn--transfer" onclick="event.stopPropagation();window.cvCard=this.closest(\'.card\');cvOpenTaskModal(\'cv-transfer-overlay\')" title="转交任务"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>转交</button>';
-      var twistBtn='<button class="act-btn act-btn--twist" onclick="event.stopPropagation();window.cvCard=this.closest(\'.card\');cvOpenTaskModal(\'cv-twist-overlay\')" title="扭转任务"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.5 0 4.8 1 6.5 2.7"/><polyline points="21 3 21 9 15 9"/></svg>扭转</button>';
-      var reviewBtn='<button class="act-btn act-btn--review" onclick="event.stopPropagation();window.cvCard=this.closest(\'.card\');cvOpenTaskModal(\'cv-review-overlay\')" title="发起评审"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>评审</button>';
-      var viewBtn='<button class="card-view-btn" onclick="event.stopPropagation();cvOpenConversation(this.closest(\'.card\'))" title="查看对话"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>查看对话</button>';
-      var btns='';
-      if(status==='未开始'){btns=execBtn+transferBtn+twistBtn+reviewBtn;}
-      else if(status==='待评审'){btns=reviewBtn+viewBtn;}
-      else{btns=viewBtn;card.classList.add('card--clickable');card.onclick=function(e){if(!e.target.closest('.act-btn')&&!e.target.closest('.card-view-btn'))cvOpenConversation(card);};}
-      var ad=document.createElement('div');ad.className='card-actions';
-      ad.innerHTML='<span class="card-node"><span class="card-node-dot"></span>'+node+'</span><div style="display:flex;gap:4px;margin-left:auto">'+btns+'</div>';
-      card.appendChild(ad);
-      if(status==='进行中'){}
-    });
-  }
+  function cvInjectCardActions(){} /* stub: moved to React */
 
   /* ============ VIEW SWITCHING ============ */
   function cvSwitchFilter(btn){
@@ -2278,48 +2256,7 @@ const billTemplateWithTokens = billTemplate.replace(
     btn.classList.add('filter-btn--active');
     if(btn.closest('#cv-review')){cvApplyReviewFilters();}else{cvApplyFilters();}
   }
-  function cvApplyFilters(){
-    var taskView=document.getElementById('cv-tasks');
-    if(taskView&&taskView.classList.contains('active')){
-      var typeF=cvGetFilterVal(taskView,'type');
-      var statusF=cvGetFilterVal(taskView,'status');
-      var collabF=cvGetFilterVal(taskView,'collab');
-      var sizeF=cvGetFilterVal(taskView,'size');
-      var search=(taskView.querySelector('input')||{}).value||'';
-      search=search.toLowerCase();
-      taskView.querySelectorAll('.card').forEach(function(card){
-        var match=true;
-        if(typeF&&typeF!=='全部'&&card.getAttribute('data-type')!==typeF)match=false;
-        if(match&&statusF&&statusF!=='全部状态'&&card.getAttribute('data-status')!==statusF)match=false;
-        if(match&&collabF&&collabF!=='全部协作'&&card.getAttribute('data-collab')!==collabF)match=false;
-        if(match&&sizeF&&sizeF!=='全部大小'){
-          var cs=card.getAttribute('data-size');if((sizeF==='小任务'&&cs!=='小')||(sizeF==='大任务'&&cs!=='大'))match=false;
-        }
-        if(match&&search){
-          var title=(card.querySelector('.card-title')||{}).textContent||'';if(title.toLowerCase().indexOf(search)<0)match=false;
-        }
-        card.style.display=match?'':'none';
-      });
-    }
-    var memberView=document.getElementById('cv-members');
-    if(memberView&&memberView.classList.contains('active')){
-      var roleF=cvGetFilterVal(memberView,'role');
-      var msearch=(memberView.querySelector('input')||{}).value||'';
-      msearch=msearch.toLowerCase();
-      memberView.querySelectorAll('.member-row').forEach(function(row){
-        var match=true;
-        if(roleF&&roleF!=='全部'){
-          var roles=row.getAttribute('data-role')||'';if(roles.indexOf(roleF)<0)match=false;
-        }
-        if(match&&msearch){
-          var name=(row.querySelector('.member-name')||{}).textContent||'';
-          var email=(row.querySelector('.member-email')||{}).textContent||'';
-          if(name.toLowerCase().indexOf(msearch)<0&&email.toLowerCase().indexOf(msearch)<0)match=false;
-        }
-        row.style.display=match?'':'none';
-      });
-    }
-  }
+  function cvApplyFilters(){} /* stub: moved to React */
   /* ============ STATS CLICK ============ */
   function cvClickStat(stat,status){
     var view=stat.closest('.cv-panel');if(!view)return;
@@ -2355,23 +2292,7 @@ const billTemplateWithTokens = billTemplate.replace(
     }
     cvApplyReviewFilters();
   }
-  function cvApplyReviewFilters(){
-    var view=document.getElementById('cv-review');if(!view)return;
-    var typeF=cvGetFilterVal(view,'review-type');
-    var priorityF=cvGetFilterVal(view,'review-priority');
-    var search=(view.querySelector('input')||{}).value||'';search=search.toLowerCase();
-    view.querySelectorAll('.card').forEach(function(card){
-      var match=true;var idx=parseInt(card.getAttribute('data-idx'));
-      var r=CV_REVIEWS[idx];if(!r){card.style.display='none';return;}
-      if(typeF&&typeF!=='全部待评审'){
-        if(typeF==='我发起的'&&r.from!=='张工')match=false;
-        if(typeF==='分配给我的'&&r.reviewer!=='张工')match=false;
-      }
-      if(match&&priorityF&&priorityF!=='全部优先级'&&r.priority!==priorityF)match=false;
-      if(match&&search){if(r.title.toLowerCase().indexOf(search)<0)match=false;}
-      card.style.display=match?'':'none';
-    });
-  }
+  function cvApplyReviewFilters(){} /* stub: moved to React */
 
   /* ============ 弹窗状态桥（Phase 2 antd 化，见 docs/react-migration-plan.md） ============
      同步任务/执行/转交/扭转/评审/添加人员/新建项目这 7 个弹窗的 DOM 已经从
@@ -2492,20 +2413,7 @@ const billTemplateWithTokens = billTemplate.replace(
     var grid=document.getElementById('cv-review-grid');if(grid){var card=grid.children[i];if(card){card.style.transition='opacity .3s';card.style.opacity='0.3';}}
   }
   function cvReviewReject(i){cvToast('评审驳回！任务已退回给开发人员','error');}
-  function cvOpenReviewDetail(i){
-    var r=CV_REVIEWS[i];if(!r)return;
-    window.cvReviewIdx=i;
-    var titleEl=document.getElementById('cv-rv-title');if(titleEl)titleEl.textContent=r.title;
-    var arts=CV_REVIEW_ARTIFACTS[i]||{tabs:['产物'],content:{'产物':'<p>暂无产物内容</p>'}};
-    var tabsEl=document.getElementById('cv-rv-art-tabs');
-    if(tabsEl){tabsEl.innerHTML=arts.tabs.map(function(t,idx){return '<button class="rv-art-tab'+(idx===0?' rv-art-tab--active':'')+'" onclick="cvSwitchArtifact('+i+',\''+t+'\')">'+t+'</button>';}).join('');}
-    cvSwitchArtifact(i,arts.tabs[0]);
-    var headerEl=document.getElementById('cv-rv-panel-header');
-    if(headerEl){headerEl.innerHTML='<div class="rv-panel-title">评审信息</div><div class="rv-panel-info"><div class="rv-panel-info-item">评审人: <b>'+r.reviewer+'</b> ('+r.reviewerRole+')</div><div class="rv-panel-info-item">截止: <b style="color:'+r.deadlineColor+'">'+r.deadline+'</b></div><div class="rv-panel-info-item">发起人: <b>'+r.from+'</b> ('+r.fromTime+')</div><div class="rv-panel-info-item">优先级: <b>'+r.priority+'</b></div></div>';}
-    cvRenderReviewComments(i);
-    document.querySelectorAll('#view-collab .cv-panel').forEach(function(v){v.classList.remove('active');});
-    var view=document.getElementById('cv-review-detail');if(view)view.classList.add('active');
-  }
+  function cvOpenReviewDetail(){} /* stub: moved to React */
   function cvSwitchArtifact(idx,tab){
     var arts=CV_REVIEW_ARTIFACTS[idx];if(!arts)return;
     var tabsEl=document.getElementById('cv-rv-art-tabs');
@@ -2601,43 +2509,7 @@ const billTemplateWithTokens = billTemplate.replace(
   }
 
   /* ============ OPEN CONVERSATION ============ */
-  function cvOpenConversation(card){
-    if(!card)return;
-    var titleEl=card.querySelector('.card-title');var taskTitle=titleEl?titleEl.textContent:'任务对话';
-    var status=card.getAttribute('data-status')||'未开始';
-    window.cvCard=card;
-    var titleInput=document.getElementById('cv-chat-task-title');if(titleInput)titleInput.textContent=taskTitle;
-    var badge=document.getElementById('cv-chat-status-badge');
-    if(badge){
-      var sm={'未开始':['pending','var(--text-secondary)','未开始'],'待评审':['review','var(--warning)','待评审'],'进行中':['running','var(--dot-blue)','执行中'],'已完成':['done','var(--success)','已完成'],'已失败':['fail','var(--danger)','已失败']};
-      var s=sm[status]||['pending','var(--text-secondary)','未开始'];
-      badge.className='chat-status-badge chat-status-badge--'+s[0];
-      badge.innerHTML='<span style="width:6px;height:6px;border-radius:50%;background:'+s[1]+(status==='进行中'?';animation:cvPulse 1.5s infinite':'')+'"></span>'+s[2];
-    }
-    var body=document.getElementById('cv-chat-body');if(body)body.innerHTML='';
-    var dialogues={
-      '进行中':[['agent','正在分析任务需求...'],['agent','已生成需求规格说明书，包含 3 个功能点和 5 个验收标准。'],['agent','正在设计技术方案，确定使用苍穹元数据 + KWC 页面开发模式...'],['agent','技术方案已就绪。开始生成业务对象和字段定义...'],['user','字段命名规范要符合公司标准，请参考 ERP 字段命名规范。'],['agent','已调整字段命名规范。已生成 5 个业务对象、12 个字段。正在生成后端插件代码...']],
-      '待评审':[['agent','已完成任务开发，以下是生成的产物，请评审。'],['user','代码质量如何？有没有安全问题？'],['agent','代码已通过 SAST 扫描，无安全漏洞。单元测试覆盖率 92%。'],['agent','等待评审人确认...']],
-      '已完成':[['agent','正在分析任务需求...'],['agent','已生成需求规格说明书。'],['agent','技术方案已就绪，开始生成代码...'],['agent','插件代码已生成完成。单元测试全部通过（8/8）。'],['user','测试报告发一下。'],['agent','已生成测试报告，所有验收标准均通过。'],['agent','执行完成！所有产物已生成并归档。']],
-      '已失败':[['agent','正在分析任务需求...'],['agent','已生成需求规格说明书。'],['agent','开始生成代码...'],['agent','执行过程中出现错误：插件编译失败，缺少依赖 com.kingdee.cosmic.*'],['user','检查一下依赖配置。'],['agent','已排查，苍穹 SDK 版本不兼容。需要升级到 7.0+ 版本。'],['agent','任务执行失败，请检查环境配置后重试。']]
-    };
-    var msgs=dialogues[status]||[];msgs.forEach(function(m){cvAddChatMessage(m[0],m[1]);});
-    var artifacts={
-      '进行中':[['spec','S','需求规格说明书','PRD.md','已生成'],['doc','D','技术方案文档','TechSpec.md','已生成'],['code','</>','业务对象定义','ExpenseBO.java','已生成'],['code','</>','表单页面','ExpenseForm.kwc','生成中...']],
-      '待评审':[['code','</>','插件源代码','ExpensePlugin.java','待评审'],['test','T','单元测试','ExpenseTest.java','8/8通过'],['spec','S','需求规格','PRD.md','已生成'],['doc','D','技术方案','TechSpec.md','已生成']],
-      '已完成':[['spec','S','需求规格说明书','PRD.md','已归档'],['doc','D','技术方案文档','TechSpec.md','已归档'],['code','</>','业务对象定义','ExpenseBO.java','已归档'],['code','</>','插件源代码','ExpensePlugin.java','已归档'],['test','T','单元测试','ExpenseTest.java','8/8通过'],['code','</>','表单页面','ExpenseForm.kwc','已归档']],
-      '已失败':[['spec','S','需求规格说明书','PRD.md','已生成'],['doc','D','技术方案文档','TechSpec.md','已生成'],['code','</>','插件源代码','ExpensePlugin.java','编译失败']]
-    };
-    var arts=artifacts[status]||[];
-    if(arts.length>0&&body){
-      var artDiv=document.createElement('div');artDiv.className='chat-artifacts';
-      artDiv.innerHTML='<div class="chat-artifacts-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>产物列表</div>';
-      var iconMap={'spec':'artifact-icon--spec','doc':'artifact-icon--doc','code':'artifact-icon--code','test':'artifact-icon--test'};
-      arts.forEach(function(a){artDiv.innerHTML+='<div class="artifact-item"><div class="artifact-icon '+(iconMap[a[0]]||'artifact-icon--doc')+'">'+a[1]+'</div><span>'+a[2]+'</span><span class="artifact-meta">'+a[4]+'</span></div>';});
-      body.appendChild(artDiv);body.scrollTop=body.scrollHeight;
-    }
-    cvSwitchToChat();
-  }
+  function cvOpenConversation(){} /* stub: moved to React */
 
   
   function cvOpenAddMemberModal(){
@@ -2672,12 +2544,7 @@ const billTemplateWithTokens = billTemplate.replace(
     CV_MEMBERS.splice(idx,1);cvRenderMembers();cvRenderMemberStats();
     cvToast('已移除：'+name,'info');
   }
-  function cvLoadSavedTasks(){
-    try{
-      var tasks=JSON.parse(localStorage.getItem('build_tasks')||'[]');
-      tasks.forEach(function(task){CV_TASKS.unshift(cvNormalizeTask(task));});
-    }catch(e){}
-  }
+  function cvLoadSavedTasks(){} /* stub: moved to React */
 
   var CV_THIRD_PARTY_MEMBERS=[
     {name:'钱涛',email:'qian***@kingdee.com',role:'开发',tag:'member-tag--dev',dept:'研发部'},
@@ -2709,14 +2576,7 @@ const billTemplateWithTokens = billTemplate.replace(
     });
     cvUpdateMoreTrigger(name);
   }
-  function cvSwitchView(name){
-    cvLastTab=(name==='chat'||name==='review-detail')?cvLastTab:name;
-    cvShowPanel(name);
-    if(name==='teams') renderExpertGrid();
-    if(name==='experts') cvRenderExperts();
-    if(name==='projects') cvRenderProjectsPanel();
-    cvSyncUrl();
-  }
+  function cvSwitchView(){} /* stub: moved to React */
   /* 执行中的任务在侧边栏项目下挂一条会话 */
   function cvAddSidebarConversation(title){
     var group=$('.sb-scroll .project-group');
@@ -2838,20 +2698,8 @@ const billTemplateWithTokens = billTemplate.replace(
       return (p.name+' '+(p.desc||'')+' '+(p.repo||'')).toLowerCase().indexOf(q)>=0;
     });
   }
-  function cvSetProject(id){
-    cvProject=id||'';
-    cvRenderProjectsPanel();
-    cvRenderTaskStats(); cvRenderTasks(); cvInjectCardActions();
-    cvRenderReviewStats(); cvRenderReviews();
-    cvRenderMemberStats(); cvRenderMembers();
-    cvApplyFilters(); cvApplyReviewFilters();
-    cvRenderTeamBind(); cvApplyConfigScope(); cvUpdateCounts();
-    cvSyncUrl();
-  }
-  function cvUpdateCounts(){
-    var tc=$('#cvTaskCount'); if(tc) tc.textContent=CV_TASKS.filter(cvInProject).length;
-    var rc=$('#cvReviewCount'); if(rc) rc.textContent=CV_REVIEWS.filter(cvInProject).length;
-  }
+  function cvSetProject(){} /* stub: moved to React */
+  function cvUpdateCounts(){} /* stub: moved to React */
   function cvSyncUrl(){
     setUrlState('/collab?tab='+cvLastTab+(cvProject?'&proj='+cvProject:''));
   }
@@ -2898,20 +2746,7 @@ const billTemplateWithTokens = billTemplate.replace(
     var w=CV_WORKSPACES.filter(function(w){return w.id===id})[0];
     return w?w.name:'工作区';
   }
-  function cvRenderWsMenu(){
-    var trigger=$('#cvWsLabel'); if(trigger) trigger.textContent=cvWorkspaceName(cvWorkspace);
-    var dot=$('#cvWsDot'); if(dot) dot.textContent=(CV_WORKSPACES.filter(function(w){return w.id===cvWorkspace})[0]||{}).short||'';
-    var menu=$('#cvWsMenu'); if(!menu) return;
-    menu.innerHTML=CV_WORKSPACES.map(function(w){
-      return '<div class="cv-proj-item'+(w.id===cvWorkspace?' checked':'')+'" data-cv-ws="'+w.id+'">'
-        +'<span class="cv-proj-n">'+xesc(w.name)+'</span>'
-        +'<svg class="ic ic-sm cv-proj-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>';
-    }).join('')
-      +'<div class="menu-divider"></div>'
-      +'<div class="cv-proj-item cv-proj-add" data-cv-ws-add>'
-      +'<svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>'
-      +'<span class="cv-proj-n">新建工作区</span></div>';
-  }
+  function cvRenderWsMenu(){} /* stub: moved to React */
   function cvSetWorkspace(id){
     if(id===cvWorkspace) return;
     cvWorkspace=id;
@@ -2938,14 +2773,7 @@ const billTemplateWithTokens = billTemplate.replace(
 
   /* ---------- 「管理」收纳菜单：协作人员/专家/专家团/设置，选中态跟随当前页签，不做持久化 ---------- */
   var CV_MORE_VIEWS={members:'协作人员管理',experts:'专家管理',teams:'专家团管理',config:'设置'};
-  function cvUpdateMoreTrigger(name){
-    var isMore=!!CV_MORE_VIEWS[name];
-    var label=$('#cvMoreLabel'); if(label) label.textContent=isMore?CV_MORE_VIEWS[name]:'管理';
-    var btn=$('#cvMoreBtn'); if(btn) btn.classList.toggle('tab-nav-item--active',isMore);
-    $$('#cvMoreMenu .cv-proj-item').forEach(function(it){
-      it.classList.toggle('checked',isMore&&it.getAttribute('data-cvview')===name);
-    });
-  }
+  function cvUpdateMoreTrigger(){} /* stub: moved to React */
   var cvMoreBtn=$('#cvMoreBtn');
   if(cvMoreBtn) cvMoreBtn.addEventListener('click',function(e){
     e.stopPropagation();
@@ -2962,23 +2790,7 @@ const billTemplateWithTokens = billTemplate.replace(
   });
 
   /* ---------- 专家团：项目默认路由绑定 ---------- */
-  function cvRenderTeamBind(){
-    var bar=$('#cvTeamBind'); if(!bar) return;
-    bar.classList.toggle('hidden',!cvProject);
-    if(!cvProject) return;
-    var proj=cvProjectById(cvProject); if(!proj) return;
-    var nameEl=$('#cvBindProjName'); if(nameEl) nameEl.textContent=proj.name;
-    var team=proj.defaultTeam?TEAMS.filter(function(t){return t.id===proj.defaultTeam})[0]:null;
-    var lb=$('#cvBindTeamLabel'); if(lb) lb.textContent=team?team.name:'未指定';
-    var menu=$('#cvBindMenu');
-    if(menu) menu.innerHTML=[{id:'',name:'不绑定',desc:'大任务改为人工确认后路由'}]
-      .concat(TEAMS.map(function(t){return {id:t.id,name:t.name,desc:t.members.length+' 位专家'}}))
-      .map(function(t){
-        return '<div class="cv-proj-item'+(t.id===(proj.defaultTeam||'')?' checked':'')+'" data-cv-bind="'+t.id+'">'
-          +'<span class="cv-proj-n">'+xesc(t.name)+'<em>'+xesc(t.desc)+'</em></span>'
-          +'<svg class="ic ic-sm cv-proj-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>';
-      }).join('');
-  }
+  function cvRenderTeamBind(){} /* stub: moved to React */
   var cvBindBtn=$('#cvBindBtn');
   if(cvBindBtn) cvBindBtn.addEventListener('click',function(e){
     e.stopPropagation();
@@ -3004,12 +2816,7 @@ const billTemplateWithTokens = billTemplate.replace(
     if(card.getAttribute('data-cv-level')==='global') return 'global';
     return (cvProject && cvConfigOverridden(card.getAttribute('data-cv-config'))) ? cvProject : 'global';
   }
-  function cvCaptureConfigDefaults(){
-    if(cvConfigValues.global) return;
-    var g={};
-    $$('#cv-config [data-cv-toggle]').forEach(function(t){ g[t.getAttribute('data-cv-toggle')]=t.classList.contains('on'); });
-    cvConfigValues.global=g;
-  }
+  function cvCaptureConfigDefaults(){} /* stub: moved to React */
   function cvApplyConfigValues(){
     $$('#cv-config .config-card').forEach(function(card){
       var scope=cvConfigScopeKey(card), store=cvConfigValues[scope]||{};
@@ -3023,30 +2830,7 @@ const billTemplateWithTokens = billTemplate.replace(
   function cvConfigOverridden(key){
     return !!(cvProject && cvConfigOverride[cvProject] && cvConfigOverride[cvProject][key]);
   }
-  function cvApplyConfigScope(){
-    $$('#cv-config .config-card').forEach(function(card){
-      var key=card.getAttribute('data-cv-config');
-      var level=card.getAttribute('data-cv-level');
-      var chip=card.querySelector('[data-cv-scope-chip]');
-      var locked;
-      if(!cvProject){
-        locked=false;
-        if(chip){ chip.textContent=level==='global'?'全局设置':'全局默认'; chip.className='cv-scope-chip'; }
-      }else if(level==='global'){
-        locked=true;
-        if(chip){ chip.textContent='全局设置 · 项目不可改'; chip.className='cv-scope-chip'; }
-      }else{
-        locked=!cvConfigOverridden(key);
-        if(chip){
-          chip.textContent=locked?'跟随全局':'项目覆盖';
-          chip.className='cv-scope-chip cv-scope-chip--btn'+(locked?'':' cv-scope-chip--on');
-          chip.setAttribute('role','button');
-        }
-      }
-      card.classList.toggle('cv-card-locked',locked);
-    });
-    cvApplyConfigValues();
-  }
+  function cvApplyConfigScope(){} /* stub: moved to React */
   var cvConfigPanel=$('#cv-config');
   if(cvConfigPanel) cvConfigPanel.addEventListener('click',function(e){
     var tg=e.target.closest('[data-cv-toggle]');
