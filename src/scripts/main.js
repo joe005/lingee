@@ -2392,62 +2392,7 @@ const billTemplateWithTokens = billTemplate.replace(
   /* 模式 → builder 名。来源见 lingee-build packages/kcode-web/src/components/prompt-input.tsx
      starterRecommendationCards；技能/智能体两项用 1.x 线的新名（用户确认） */
   function renderModeTag(){} /* moved to React */
-  document.addEventListener('click',function(ev){
-    if(ev.target.closest('[data-clear-mode]')){
-      ev.stopPropagation();
-      $$('.mode-item').forEach(function(m){ m.classList.remove('checked') });
-      forcedBuilder=null;
-      renderModeTag(); return;
-    }
-    if(ev.target.closest('.mode-item')){ forcedBuilder=null; setTimeout(renderModeTag,0); }
-  });
-  function renderExpertChips(){} /* moved to React */
-  function openExpertPicker(pfx){
-    var dd=$('#'+pfx+'ExpertDropdown'); if(!dd) return;
-    var si=$('#'+pfx+'ExpertSearchInput');
-    closeAll(null);
-    renderExpertPicker(pfx, si?si.value:'');
-    dd.classList.add('open');
-    if(si) setTimeout(function(){ si.focus() },40);
-  }
-  ['nt','chat'].forEach(function(pfx){
-    var dd=$('#'+pfx+'ExpertDropdown'); if(!dd) return;
-    var chipEl=dd.querySelector('[data-chip]'), si=$('#'+pfx+'ExpertSearchInput');
-    chipEl.addEventListener('click',function(ev){
-      ev.stopPropagation();
-      if(dd.classList.contains('open')) dd.classList.remove('open');
-      else openExpertPicker(pfx);
-    });
-    if(si) si.addEventListener('input',function(){ renderExpertPicker(pfx,this.value) });
-    dd.addEventListener('click',function(ev){
-      var n;
-      if(n=ev.target.closest('[data-pick-team]')){
-        var tid=n.getAttribute('data-pick-team');
-        if(activePick.kind==='team'&&activePick.id===tid) clearPick();   /* 再点一次取消 */
-        else activePick={kind:'team',id:tid,auto:false};
-        saveTeams(); renderExpertChips(); dd.classList.remove('open'); return;
-      }
-      if(n=ev.target.closest('[data-pick-expert]')){
-        var eid=n.getAttribute('data-pick-expert');
-        if(activePick.kind==='expert'&&activePick.id===eid) clearPick();
-        else activePick={kind:'expert',id:eid,auto:false};
-        saveTeams(); renderExpertChips(); dd.classList.remove('open'); return;
-      }
-      if(ev.target.closest('[data-goto-experts]')){
-        dd.classList.remove('open');
-        showView('collab'); setNavActive('协作开发'); cvInit(); cvSwitchView('teams');
-      }
-    });
-
-  });
-  navItems.forEach(function(n){
-    n.addEventListener('click',function(){ if(n.textContent.trim()==='新会话') resetPickForNewSession(); });
-  });
-  if(brandEl) brandEl.addEventListener('click',resetPickForNewSession);
-  /* home card resetPick 已随 HomeView 迁移删除 */
-  document.addEventListener('keydown',function(e){
-    if((e.metaKey||e.ctrlKey) && !e.shiftKey && (e.key||'').toLowerCase()==='n') resetPickForNewSession();
-  });
+  /* expert picker + mode click + resetPick 已迁到 React */
 
   loadTeams();
   renderExpertChips();
