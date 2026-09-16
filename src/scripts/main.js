@@ -839,7 +839,7 @@ const billTemplateWithTokens = billTemplate.replace(
      这里只是多一条「这三个名字改成显隐 #react-view-root」的分支——React 那边用
      BrowserRouter（不是 HashRouter，见 src/App.jsx 顶部注释），和这里一样认
      location.pathname，不需要再单独维护一份 hash。 */
-  var REACT_VIEWS=['apps','skills','agents','design'];
+  var REACT_VIEWS=['apps','skills','agents','design','home'];
   function setUrlState(path,notifyReactRouter){
     try{history.replaceState(null,'',path);localStorage.setItem('lingeeUrlState',path)}catch(e){}
     /* react-router 的 BrowserRouter 只在 popstate 事件上重新读 location 决定渲染哪个
@@ -2505,30 +2505,7 @@ const billTemplateWithTokens = billTemplate.replace(
   /* header + footer small affordances */
   $$('.sb-head-icons .ic').forEach(function(i,idx){ i.addEventListener('click',function(){ toast(idx===0?'搜索':'折叠侧栏'); }); });
 
-  /* ---------- 首页导航卡片 ---------- */
-  $$('#view-home .home-card').forEach(function(c){
-    c.addEventListener('click',function(e){
-      var view=c.getAttribute('data-view');
-      var mode=c.getAttribute('data-mode');
-      if(!view) return;
-      e.preventDefault();
-      if(view==='newtask'){
-        showView('newtask');
-        if(mode){
-          setNavActive(mode);
-          applyMode(mode,false);
-        }else{
-          setNavActive('新会话');
-          input.setAttribute('data-placeholder','布置任务');
-          appDd.classList.add('hidden');
-          modeItems.forEach(function(m){m.classList.remove('checked')});
-        }
-      }else if(view==='apps'){
-        showView('apps');
-        setNavActive('苍穹应用');
-      }
-    });
-  });
+  /* 首页导航卡片已迁到 React，见 src/views/HomeView.jsx */
 
   /* ---------- Logo 点击回首页 ---------- */
   var brandEl=$('.brand');
@@ -3770,9 +3747,7 @@ const billTemplateWithTokens = billTemplate.replace(
     n.addEventListener('click',function(){ if(n.textContent.trim()==='新会话') resetPickForNewSession(); });
   });
   if(brandEl) brandEl.addEventListener('click',resetPickForNewSession);
-  $$('#view-home .home-card').forEach(function(c){
-    c.addEventListener('click',function(){ if(c.getAttribute('data-view')==='newtask') resetPickForNewSession(); });
-  });
+  /* home card resetPick 已随 HomeView 迁移删除 */
   document.addEventListener('keydown',function(e){
     if((e.metaKey||e.ctrlKey) && !e.shiftKey && (e.key||'').toLowerCase()==='n') resetPickForNewSession();
   });
