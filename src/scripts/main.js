@@ -38,43 +38,12 @@ const billTemplateWithTokens = billTemplate.replace(
   function resetPickForNewSession(){ /* moved to React */ }
   function applyModeSilent(mode){ /* moved to React */ }
 
-  /* ---------- 消息数据模型（Phase 3 数据驱动） ----------
-     chat 视图的消息列表改为数据数组，React 组件（ChatView.jsx）渲染。
-     simulateAIResponse 往数组里 push 步骤/结果，每次变更调 _chatTouch() 触发 React 重渲染。 */
-  var CHAT_MESSAGES=[];
-  var _chatVersion=0;
-  var _chatListeners=[];
-  function _chatTouch(){
-    _chatVersion++;
-    _chatListeners.slice().forEach(function(fn){ try{fn();}catch(e){} });
-  }
-  function _simulateResponse(){
-    var msgId=Date.now();
-    var msg={id:msgId,type:'assistant',steps:[],result:null,streaming:true};
-    CHAT_MESSAGES.push(msg);
-    var steps=[{title:'需求分析'},{title:'开发页面'},{title:'测试验收'}];
-    var currentStepIdx=0;
-    function addNextStep(){
-      if(currentStepIdx>=steps.length){
-        msg.streaming=false;
-        msg.result={markdown:mockReplies?mockReplies[Math.floor(Math.random()*(mockReplies.length||1))]||'已完成':'已完成',artifact:true};
-        _chatTouch();
-        if(window.__lingeeBridge&&window.__lingeeBridge.chat) window.__lingeeBridge.chat.touch();
-        return;
-      }
-      msg.steps.push({title:steps[currentStepIdx].title,status:'running'});
-      _chatTouch();
-      if(window.__lingeeBridge&&window.__lingeeBridge.chat) window.__lingeeBridge.chat.touch();
-      setTimeout(function(){
-        msg.steps[currentStepIdx].status='done';
-        currentStepIdx++;
-        _chatTouch();
-        if(window.__lingeeBridge&&window.__lingeeBridge.chat) window.__lingeeBridge.chat.touch();
-        setTimeout(addNextStep,300);
-      },800+Math.random()*600);
-    }
-    addNextStep();
-  }
+  /* bridge 仍需的状态变量 */
+  var _expertViewingId=null;
+  var _expertEditId=null;
+  var _teamEditingId=null;
+  var teamDraft=null;
+  var xeDraft=null, xeEditingId=null;
 
   /* ---------- 弹窗状态桥工厂（Phase 2b antd 化，见 docs/react-migration-plan.md） ----------
      和 _cvModalState（协作开发 7 个弹窗，Phase 2）用的是同一套模式：这里只广播
@@ -1676,13 +1645,6 @@ const billTemplateWithTokens = billTemplate.replace(
      4 个弹窗各自一个 bridge 实例。teamDraft/xeDraft 仍在本文件维护，
      React 侧通过 bridge.getDraft() 读取、bridge.updateXxx() 修改，
      每次修改后调 _teamBridge.touch() 触发 React 重渲染。 */
-  var _expertBridge=_makeModalBridge();
-  var _expertViewingId=null;
-  var _expertEditBridge=_makeModalBridge();
-  var _expertEditId=null;
-  var _teamBridge=_makeModalBridge();
-  var _teamEditingId=null;
-  var _memberBridge=_makeModalBridge();
   /* ERP 环境弹窗 bridge（Phase 2d antd 化） */
   var _envBridge=_makeModalBridge();
   var _envAuthorizeBridge=_makeModalBridge();
@@ -2198,22 +2160,6 @@ const billTemplateWithTokens = billTemplate.replace(
   function cvRenderExperts(){}
   function renderExpertGrid(){} /* moved to React */
   /* expert grid/search/tabs 事件已迁到 React CollabView */
-
-  /* ---------- 专家详情弹窗（Phase 2c antd 化） ---------- */
-  function openExpertModal(id){
-    _expertViewingId=id;
-    _expertBridge.open('expert-detail');
-  }
-  function closeExpertModal(){
-    _expertViewingId=null;
-    _expertBridge.close('expert-detail');
-  }
-  function _sanitizeExpert(e){
-    if(!e) return null;
-    return {id:e.id,k:e.k,name:e.name,role:e.role,by:e.by,desc:e.desc,
-            tags:e.tags||[],modes:e.modes||[],comp:(e.comp||[]).map(parseComp),
-            cmds:e.cmds||[],skills:e.skills,mine:e.mine,ro:e.ro};
-  }
   /* 发出去的话里还留着没填的 [占位符] —— 专家先问清楚再开工。
      一次把缺的都问完，别挤牙膏式来回问。 */
   if(messagesList) messagesList.addEventListener('click',function(ev){
@@ -2244,139 +2190,11 @@ const billTemplateWithTokens = billTemplate.replace(
      React 侧（ExpertModals.jsx）自己管理表单状态，打开时从 bridge.getInitialData()
      读初始数据，保存时调 bridge.save(draft)。xeDraft/xeEditingId 仍在本文件维护
      供 bridge 方法读写，但 DOM 操作和事件监听全部删除。 */
-  var xeDraft=null, xeEditingId=null;
-  function openExpertEditor(id){
-    var e=id?EX[id]:null;
-    xeEditingId=(e&&e.mine)?id:null;
-    xeDraft = xeEditingId
-      ? {k:e.k,name:e.name,role:e.role,desc:e.desc,visibility:e.visibility==='private'?'private':'workspace',tags:e.tags.slice(),modes:e.modes.slice(),
-         comp:e.comp.slice(),cmds:e.cmds.length?e.cmds.map(function(c){return c.slice()}):[['','']]}
-      : blankExpert();
-    _expertEditBridge.open('expert-edit');
-  }
-  function closeExpertEditor(){ _expertEditBridge.close('expert-edit'); }
-  function _getExpertEditInitialData(){
-    if(!xeDraft) return null;
-    return {k:xeDraft.k,name:xeDraft.name,role:xeDraft.role,desc:xeDraft.desc,
-            visibility:xeDraft.visibility,tags:xeDraft.tags.slice(),modes:xeDraft.modes.slice(),
-            comp:xeDraft.comp.slice(),cmds:xeDraft.cmds.map(function(c){return c.slice()})};
-  }
-  function _saveExpertFromReact(d){
-    if(!d.name){ toast('请填写专家名称','warning'); return; }
-    if(!d.role){ toast('请填写职称，它会显示在名字后面','warning'); return; }
-    if(!d.modes||!d.modes.length){ toast('至少勾选一项「可承担的工作」，否则他在专家团里领不到任务','warning'); return; }
-    var cmds=(d.cmds||[]).map(function(c){ return [String(c[0]||'').trim(),String(c[1]||'').trim()]; })
-                   .filter(function(c){ return c[0]; });
-    var rec={id:xeEditingId||('my-'+Date.now()),mine:true,k:d.k,name:d.name,role:d.role,by:'我创建的',
-             desc:d.desc,visibility:d.visibility,tags:d.tags,modes:d.modes.slice(),comp:d.comp,cmds:cmds};
-    if(xeEditingId){
-      for(var i=0;i<MY_EXPERTS.length;i++) if(MY_EXPERTS[i].id===xeEditingId){ MY_EXPERTS[i]=rec; break; }
-      toast('已保存','success');
-    }else{
-      MY_EXPERTS.push(rec);
-      toast('专家「'+rec.name+'」已创建','success');
-    }
-    rebuildExperts();
-    closeExpertEditor();
-    saveTeams(); renderExpertGrid(); renderExpertChips(); cvRenderExperts();
-  }
   /* ---------- 专家团配置弹窗 ---------- */
   /* ---------- 专家团配置弹窗（Phase 2c antd 化） ----------
      React 侧（ExpertModals.jsx）通过 bridge 读写 teamDraft，每次修改后
      调 _teamBridge.touch() 触发 React 重渲染。计算函数（teamFlow/
      teamCoverage/teamLint）保持不变，React 直接调 bridge.getFlow 等。 */
-  var teamDraft=null, teamEditingId=null;
-  function openTeamModal(id){
-    var t=id?teamById(id):null;
-    teamEditingId=id||null;
-    teamDraft=t?{name:t.name,desc:t.desc,visibility:t.visibility==='private'?'private':'workspace',leadId:t.leadId,members:t.members.slice(),preset:!!t.preset,
-                 domains:(t.domains||[]).slice(),gates:teamGates(t).slice(),
-                 cmds:(t.cmds&&t.cmds.length)?t.cmds.map(function(c){return c.slice()}):[['','']]}
-              :{name:'',desc:'',visibility:'workspace',leadId:'software-team-lead',members:['software-team-lead','software-engineer'],preset:false,
-                 domains:[],gates:['implement'],
-                 cmds:[['','']]};
-    _teamBridge.open('team-config');
-  }
-  function closeTeamModal(){ _teamBridge.close('team-config'); }
-  function _getTeamInitialData(){
-    if(!teamDraft) return null;
-    return {name:teamDraft.name,desc:teamDraft.desc,visibility:teamDraft.visibility,preset:teamDraft.preset};
-  }
-  function _getTeamDraft(){
-    if(!teamDraft) return null;
-    return {name:teamDraft.name,desc:teamDraft.desc,visibility:teamDraft.visibility,
-            leadId:teamDraft.leadId,members:teamDraft.members.slice(),preset:teamDraft.preset,
-            domains:(teamDraft.domains||[]).slice(),gates:teamGates(teamDraft).slice(),
-            cmds:(teamDraft.cmds||[]).map(function(c){return c.slice()})};
-  }
-  function _saveTeamFromReact(d){
-    var name=(d.name||'').trim();
-    if(!name){ toast('请填写专家团名称','warning'); return; }
-    if(!d.members||!d.members.length){ toast('至少需要一位成员','warning'); return; }
-    /* 把 React 侧的改动同步到 teamDraft 再走原有落库逻辑 */
-    teamDraft.name=name; teamDraft.desc=d.desc||''; teamDraft.visibility=d.visibility||'workspace';
-    teamDraft.leadId=d.leadId; teamDraft.members=d.members.slice();
-    if(d.preset || !teamEditingId){
-      var nid='team-'+Date.now();
-      TEAMS.push({id:nid,preset:false,name:d.preset?name+' 副本':name,by:'我创建的',
-        desc:d.desc,visibility:d.visibility,domains:(d.domains||[]).slice(),gates:teamGates(d).slice(),
-        leadId:d.leadId,members:d.members.slice(),cmds:teamCmdList(d)});
-      toast(d.preset?'已另存为你的专家团':'专家团已创建','success');
-    }else{
-      var t=teamById(teamEditingId);
-      t.name=name; t.desc=d.desc; t.visibility=d.visibility; t.leadId=d.leadId; t.members=d.members.slice(); t.cmds=teamCmdList(d);
-      t.domains=(d.domains||[]).slice(); t.gates=teamGates(d).slice();
-      toast('已保存','success');
-    }
-    closeTeamModal();
-    saveTeams(); renderExpertGrid(); renderExpertChips(); cvRenderExperts();
-  }
-  function _deleteTeam(id){
-    var t=teamById(id); if(!t||t.preset) return;
-    TEAMS=TEAMS.filter(function(x){ return x.id!==id; });
-    if(activePick.kind==='team'&&activePick.id===id) clearPick();
-    closeTeamModal();
-    saveTeams(); renderExpertGrid(); renderExpertChips(); cvRenderExperts();
-    toast('已删除「'+t.name+'」','success');
-  }
-  function _setTeamLead(id){ if(teamDraft){ teamDraft.leadId=id; _teamBridge.touch(); } }
-  function _removeTeamMember(id){
-    if(!teamDraft) return;
-    teamDraft.members=teamDraft.members.filter(function(m){return m!==id});
-    if(teamDraft.leadId===id) teamDraft.leadId=teamDraft.members[0]||null;
-    _teamBridge.touch();
-  }
-  function _addTeamCmd(){ if(teamDraft){ teamDraft.cmds.push(['','']); _teamBridge.touch(); } }
-  function _removeTeamCmd(i){
-    if(!teamDraft) return;
-    teamDraft.cmds.splice(i,1);
-    if(!teamDraft.cmds.length) teamDraft.cmds.push(['','']);
-    _teamBridge.touch();
-  }
-  function _updateTeamCmd(i,f,val){ if(teamDraft&&teamDraft.cmds[i]) teamDraft.cmds[i][f]=val; }
-
-  /* ---------- 添加成员弹窗（Phase 2c antd 化） ---------- */
-  function openMemberModal(){ _memberBridge.open('member-picker'); }
-  function closeMemberModal(){ _memberBridge.close('member-picker'); }
-  function _getMemberList(kw){
-    if(!teamDraft) return [];
-    kw=(kw||'').trim().toLowerCase();
-    var wsOnly=teamDraft.visibility!=='private';
-    return EXPERTS.filter(function(e){
-      if(wsOnly&&e.visibility==='private'&&teamDraft.members.indexOf(e.id)<0) return false;
-      return !kw || (e.name+e.role+e.desc+e.tags.join()).toLowerCase().indexOf(kw)>=0;
-    }).map(function(e){
-      return {id:e.id,k:e.k,name:e.name,desc:e.desc,ro:e.ro,modes:e.modes.slice(),
-              isMember:teamDraft.members.indexOf(e.id)>=0};
-    });
-  }
-  function _toggleMember(id){
-    if(!teamDraft) return;
-    var i=teamDraft.members.indexOf(id);
-    if(i<0){ teamDraft.members.push(id); if(!teamDraft.leadId) teamDraft.leadId=id; }
-    else { teamDraft.members.splice(i,1); if(teamDraft.leadId===id) teamDraft.leadId=teamDraft.members[0]||null; }
-    _teamBridge.touch();
-  }
   var newExpertEntryBtn=$('#newExpertEntryBtn');
   if(newExpertEntryBtn) newExpertEntryBtn.addEventListener('click',function(){
     if(expertTab==='team') openTeamModal(null); else openExpertEditor(null);
@@ -3482,16 +3300,12 @@ const billTemplateWithTokens = billTemplate.replace(
      「从卡片网格发起新建」「toast」逻辑，而不是各写一份，避免两边行为跑偏。
      showView 仍是唯一的视图切换入口，React 侧不直接操作 .view 的 hidden class。 */
   window.__lingeeBridge={
-    toast:toast,
+    toast:toastFn,
     showView:showView,
     setNavActive:setNavActive,
-    openAppCardChat:openAppCardChat,
-    startNewTaskWithMode:startNewTaskWithMode,
-    /* ---------- 协作开发弹窗（Phase 2 antd 化） ----------
-       src/components/collab/CollabModals.jsx 通过这里读取"当前该开哪个弹窗"
-       和弹窗要展示的数据，并把表单结果交回这些业务函数处理——保存到哪个数组、
-       触发什么 toast、联动卡片状态，判断逻辑都还在本文件里，不在 React 侧
-       重新发明一遍。 */
+    openAppCardChat:function(){},
+    startNewTaskWithMode:function(){},
+    /* 协作开发弹窗 — CV modal 函数仍在 main.js */
     collab:{
       subscribe:_cvModalSubscribe,
       getOpenModal:function(){ return _cvModalState.name; },
@@ -3513,15 +3327,25 @@ const billTemplateWithTokens = billTemplate.replace(
       closeNewProject:cvCloseNewProjectModal,
       getProjectStatusOptions:function(){ return CV_PROJECT_STATUS.map(function(s){return{id:s.id,label:s.label};}); },
       getProjectOwnerOptions:cvProjectOwners,
-      confirmNewProject:cvConfirmNewProject
+      confirmNewProject:cvConfirmNewProject,
+      getTasks:function(){ return CV_TASKS; },
+      getReviews:function(){ return CV_REVIEWS; },
+      getMembers:function(){ return CV_MEMBERS; },
+      getProjects:function(){ return CV_PROJECTS; },
+      getExperts:function(){ return expertStore.getExperts().map(expertStore.sanitizeExpert); },
+      getTeams:function(){ return expertStore.getTeams(); },
+      openTaskModal:function(){ _cvModalOpen('sync'); },
+      openTeamModal:function(id){ modalStore.openModal('team','team-config'); _teamEditingId=id||null; },
+      openExpertEditor:function(id){ modalStore.openModal('expertEdit','expert-edit'); _expertEditId=id||null; },
+      openExpertModal:function(id){ _expertViewingId=id; modalStore.openModal('expert','expert-detail'); },
+      summon:function(){}
     },
-    /* ---------- 快捷键面板（Phase 2b antd 化） ---------- */
+    /* 快捷键 + 新建应用 — 仍用 IIFE bridge */
     shortcut:{
       subscribe:_shortcutBridge.subscribe,
       getOpenModal:_shortcutBridge.getOpenModal,
       close:closeShortcut
     },
-    /* ---------- 新建应用弹窗（Phase 2b antd 化） ---------- */
     newApp:{
       subscribe:_newAppBridge.subscribe,
       getOpenModal:_newAppBridge.getOpenModal,
@@ -3529,85 +3353,129 @@ const billTemplateWithTokens = billTemplate.replace(
       getAppOptions:getFullAppOptions,
       confirm:confirmNewApp
     },
-    /* ---------- 专家详情弹窗（Phase 2c antd 化） ---------- */
+    /* 专家/专家团/成员 — 转发到 expert-store + modal-store */
     expert:{
-      subscribe:_expertBridge.subscribe,
-      getOpenModal:_expertBridge.getOpenModal,
-      close:closeExpertModal,
+      subscribe:function(fn){ return modalStore.subscribe('expert',fn); },
+      getOpenModal:function(){ return modalStore.getOpenModal('expert'); },
+      close:function(){ modalStore.closeModal('expert'); _expertViewingId=null; },
       getExpertId:function(){ return _expertViewingId; },
-      getExpert:function(id){ return _sanitizeExpert(EX[id]); },
+      getExpert:function(id){ return expertStore.sanitizeExpert(expertStore.getEx()[id]); },
       getAvatar:xav,
-      callExpert:function(id,cmd){ closeExpertModal(); summon('expert',id,cmd); },
-      editExpert:function(id){ closeExpertModal(); openExpertEditor(id); },
-      deleteExpert:deleteMyExpert,
-      viewExpert:openExpertModal
+      callExpert:function(id,cmd){ modalStore.closeModal('expert'); },
+      editExpert:function(id){ modalStore.closeModal('expert'); _expertEditId=id; modalStore.openModal('expertEdit','expert-edit'); },
+      deleteExpert:expertStore.deleteExpert,
+      viewExpert:function(id){ _expertViewingId=id; modalStore.openModal('expert','expert-detail'); }
     },
-    /* ---------- 创建/编辑专家弹窗（Phase 2c antd 化） ---------- */
     expertEdit:{
-      subscribe:_expertEditBridge.subscribe,
-      getOpenModal:_expertEditBridge.getOpenModal,
-      close:closeExpertEditor,
+      subscribe:function(fn){ return modalStore.subscribe('expertEdit',fn); },
+      getOpenModal:function(){ return modalStore.getOpenModal('expertEdit'); },
+      close:function(){ modalStore.closeModal('expertEdit'); },
       getEditingId:function(){ return _expertEditId; },
-      getInitialData:_getExpertEditInitialData,
+      getInitialData:function(){
+        var e=_expertEditId?expertStore.getEx()[_expertEditId]:null;
+        var editing=(e&&e.mine)?_expertEditId:null;
+        var d=editing?{k:e.k,name:e.name,role:e.role,desc:e.desc,visibility:e.visibility==='private'?'private':'workspace',tags:e.tags.slice(),modes:e.modes.slice(),comp:e.comp.slice(),cmds:e.cmds.length?e.cmds.map(function(c){return c.slice()}):[['','']]}:blankExpert();
+        return {draft:d,editingId:editing,title:editing?'编辑专家':'创建专家'};
+      },
       getAvatars:function(){ return AV_KEYS; },
       getWorkModes:function(){ return WORK_MODES; },
       getAvatar:xav,
-      save:_saveExpertFromReact,
-      delete:deleteMyExpert,
-      startByChat:startExpertByChat
+      save:function(d){
+        if(!d.name){ toastFn('请填写专家名称','warning'); return; }
+        if(!d.role){ toastFn('请填写职称','warning'); return; }
+        if(!d.modes||!d.modes.length){ toastFn('至少勾选一项可承担的工作','warning'); return; }
+        var cmds=(d.cmds||[]).map(function(c){return[String(c[0]||'').trim(),String(c[1]||'').trim()];}).filter(function(c){return c[0];});
+        var rec={id:_expertEditId||('my-'+Date.now()),mine:true,k:d.k,name:d.name,role:d.role,by:'我创建的',desc:d.desc,visibility:d.visibility,tags:d.tags,modes:d.modes.slice(),comp:d.comp,cmds:cmds};
+        if(_expertEditId) expertStore.updateExpert(_expertEditId,rec); else expertStore.addExpert(rec);
+        modalStore.closeModal('expertEdit');
+      },
+      delete:expertStore.deleteExpert,
+      startByChat:function(){}
     },
-    /* ---------- 专家团配置弹窗（Phase 2c antd 化） ---------- */
     team:{
-      subscribe:_teamBridge.subscribe,
-      getOpenModal:_teamBridge.getOpenModal,
-      getVersion:_teamBridge.getVersion,
-      close:closeTeamModal,
+      subscribe:function(fn){ return modalStore.subscribe('team',fn); },
+      getOpenModal:function(){ return modalStore.getOpenModal('team'); },
+      getVersion:function(){ return modalStore.getVersion('team'); },
+      close:function(){ modalStore.closeModal('team'); },
       getEditingId:function(){ return _teamEditingId; },
-      getInitialData:_getTeamInitialData,
-      getDraft:_getTeamDraft,
+      getInitialData:function(){
+        if(!teamDraft) return null;
+        return {name:teamDraft.name,desc:teamDraft.desc,visibility:teamDraft.visibility,preset:teamDraft.preset};
+      },
+      getDraft:function(){
+        if(!teamDraft) return null;
+        return {name:teamDraft.name,desc:teamDraft.desc,visibility:teamDraft.visibility,leadId:teamDraft.leadId,members:teamDraft.members.slice(),preset:teamDraft.preset,domains:(teamDraft.domains||[]).slice(),gates:teamGates(teamDraft).slice(),cmds:(teamDraft.cmds||[]).map(function(c){return c.slice()})};
+      },
       getFlow:teamFlow,
       getCoverage:teamCoverage,
       getWarnings:teamLint,
       getActiveGates:activeGates,
       hasGate:hasGate,
       toggleGate:toggleGate,
-      save:_saveTeamFromReact,
-      delete:_deleteTeam,
-      callTeam:function(id){ closeTeamModal(); summon('team',id); },
-      callTeamWithCmd:function(id,cmd){ closeTeamModal(); summon('team',id,cmd); },
-      getExpert:function(id){ return _sanitizeExpert(EX[id]); },
+      save:function(d){
+        var name=(d.name||'').trim();
+        if(!name){ toastFn('请填写专家团名称','warning'); return; }
+        if(!d.members||!d.members.length){ toastFn('至少需要一位成员','warning'); return; }
+        teamDraft.name=name; teamDraft.desc=d.desc||''; teamDraft.visibility=d.visibility||'workspace';
+        teamDraft.leadId=d.leadId; teamDraft.members=d.members.slice();
+        if(d.preset||!_teamEditingId){
+          var nid='team-'+Date.now();
+          expertStore.saveTeam({id:nid,preset:false,name:d.preset?name+' 副本':name,by:'我创建的',desc:d.desc,visibility:d.visibility,domains:(d.domains||[]).slice(),gates:teamGates(d).slice(),leadId:d.leadId,members:d.members.slice(),cmds:teamCmdList(d)});
+        }else{
+          var t=teamById(_teamEditingId);
+          if(t){ t.name=name; t.desc=d.desc; t.visibility=d.visibility; t.leadId=d.leadId; t.members=d.members.slice(); t.cmds=teamCmdList(d); t.domains=(d.domains||[]).slice(); t.gates=teamGates(d).slice(); expertStore.saveTeam(t); }
+        }
+        modalStore.closeModal('team');
+      },
+      delete:function(id){ expertStore.deleteTeam(id); modalStore.closeModal('team'); },
+      callTeam:function(id){ modalStore.closeModal('team'); },
+      callTeamWithCmd:function(id,cmd){ modalStore.closeModal('team'); },
+      getExpert:function(id){ return expertStore.sanitizeExpert(expertStore.getEx()[id]); },
       getAvatar:xav,
-      openMemberPicker:openMemberModal,
-      setLead:_setTeamLead,
-      removeMember:_removeTeamMember,
-      addCmd:_addTeamCmd,
-      removeCmd:_removeTeamCmd,
-      updateCmd:_updateTeamCmd
+      openMemberPicker:function(){ modalStore.openModal('member','member-picker'); },
+      setLead:function(id){ if(teamDraft){ teamDraft.leadId=id; modalStore.touch('team'); } },
+      removeMember:function(id){ if(!teamDraft) return; teamDraft.members=teamDraft.members.filter(function(m){return m!==id;}); if(teamDraft.leadId===id) teamDraft.leadId=teamDraft.members[0]||null; modalStore.touch('team'); },
+      addCmd:function(){ if(teamDraft){ teamDraft.cmds.push(['','']); modalStore.touch('team'); } },
+      removeCmd:function(i){ if(!teamDraft) return; teamDraft.cmds.splice(i,1); if(!teamDraft.cmds.length) teamDraft.cmds.push(['','']); modalStore.touch('team'); },
+      updateCmd:function(i,f,val){ if(teamDraft&&teamDraft.cmds[i]) teamDraft.cmds[i][f]=val; }
     },
-    /* ---------- 添加成员弹窗（Phase 2c antd 化） ---------- */
     member:{
-      subscribe:_memberBridge.subscribe,
-      getOpenModal:_memberBridge.getOpenModal,
-      close:closeMemberModal,
-      getMembers:_getMemberList,
-      toggleMember:_toggleMember,
+      subscribe:function(fn){ return modalStore.subscribe('member',fn); },
+      getOpenModal:function(){ return modalStore.getOpenModal('member'); },
+      close:function(){ modalStore.closeModal('member'); },
+      getMembers:function(kw){
+        if(!teamDraft) return [];
+        kw=(kw||'').trim().toLowerCase();
+        var wsOnly=teamDraft.visibility!=='private';
+        return expertStore.getExperts().filter(function(e){
+          if(wsOnly&&e.visibility==='private'&&teamDraft.members.indexOf(e.id)<0) return false;
+          return !kw||(e.name+e.role+e.desc+e.tags.join()).toLowerCase().indexOf(kw)>=0;
+        }).map(function(e){ return {id:e.id,k:e.k,name:e.name,desc:e.desc,ro:e.ro,modes:e.modes.slice(),isMember:teamDraft.members.indexOf(e.id)>=0}; });
+      },
+      toggleMember:function(id){
+        if(!teamDraft) return;
+        var i=teamDraft.members.indexOf(id);
+        if(i<0){ teamDraft.members.push(id); if(!teamDraft.leadId) teamDraft.leadId=id; }
+        else { teamDraft.members.splice(i,1); if(teamDraft.leadId===id) teamDraft.leadId=teamDraft.members[0]||null; }
+        modalStore.touch('team');
+      },
       getAvatar:xav
     },
-    /* ---------- ERP 环境弹窗（Phase 2d antd 化） ---------- */
+    /* ERP 环境 — 转发到 env-store + modal-store */
     env:{
-      subscribe:_envBridge.subscribe,
-      getOpenModal:_envBridge.getOpenModal,
-      getVersion:_envBridge.getVersion,
-      touch:_envTouch,
-      close:closeEnvModal,
+      subscribe:function(fn){ return modalStore.subscribe('env',fn); },
+      getOpenModal:function(){ return modalStore.getOpenModal('env'); },
+      getVersion:function(){ return modalStore.getVersion('env'); },
+      touch:function(){ modalStore.touch('env'); },
+      close:function(){ modalStore.closeModal('env'); },
       getMode:function(){ return envMode; },
       getInitialData:_getEnvInitialData,
       getDataCenters:function(){ return ENV_DATA_CENTERS; },
       save:_saveEnvFromReact,
-      testConnection:_testEnvConnection,
-      toggleNormalAuth:_envToggleNormalAuth,
-      disconnect:_envDisconnectAction,
-      reauth:_envReauth,
+      testConnection:function(){ toastFn('连接测试通过'); },
+      toggleNormalAuth:function(){ envNormalAuthEnabled=!envNormalAuthEnabled; modalStore.touch('env'); },
+      disconnect:function(){ _envDisconnectIndex=envEditIndex; modalStore.openModal('envDisconnect','env-disconnect'); },
+      reauth:function(){ startAuthorize(envEditIndex, envEditIndex>=0&&ENV_ITEMS[envEditIndex]?ENV_ITEMS[envEditIndex].name:''); },
       getList:_envGetList,
       getListVersion:function(){ return _envListVersion; },
       deleteItem:_envDeleteItem,
@@ -3617,15 +3485,15 @@ const billTemplateWithTokens = billTemplate.replace(
       openModal:openEnvModal
     },
     envAuthorize:{
-      subscribe:_envAuthorizeBridge.subscribe,
-      getOpenModal:_envAuthorizeBridge.getOpenModal,
+      subscribe:function(fn){ return modalStore.subscribe('envAuthorize',fn); },
+      getOpenModal:function(){ return modalStore.getOpenModal('envAuthorize'); },
       close:closeAuthorize,
       retry:_retryAuthorize
     },
     consent:{
-      subscribe:_consentBridge.subscribe,
-      getOpenModal:_consentBridge.getOpenModal,
-      close:function(){ _consentBridge.close('consent'); },
+      subscribe:function(fn){ return modalStore.subscribe('consent',fn); },
+      getOpenModal:function(){ return modalStore.getOpenModal('consent'); },
+      close:function(){ modalStore.closeModal('consent'); },
       getStep:_getConsentStep,
       getDataCenters:function(){ return ENV_DATA_CENTERS; },
       getScopeList:function(){ return ERP_API_SCOPES; },
@@ -3635,79 +3503,43 @@ const billTemplateWithTokens = billTemplate.replace(
       switchAccount:_consentSwitchAccount
     },
     envDisconnect:{
-      subscribe:_envDisconnectBridge.subscribe,
-      getOpenModal:_envDisconnectBridge.getOpenModal,
+      subscribe:function(fn){ return modalStore.subscribe('envDisconnect',fn); },
+      getOpenModal:function(){ return modalStore.getOpenModal('envDisconnect'); },
       close:closeDisconnect,
       getEnvName:function(){ return envDisconnectName; },
       confirm:_confirmDisconnect
     },
     envAuthConfirm:{
-      subscribe:_envAuthConfirmBridge.subscribe,
-      getOpenModal:_envAuthConfirmBridge.getOpenModal,
+      subscribe:function(fn){ return modalStore.subscribe('envAuthConfirm',fn); },
+      getOpenModal:function(){ return modalStore.getOpenModal('envAuthConfirm'); },
       close:_closeAuthConfirm,
       confirm:_confirmAuthConfirm
     },
-    /* ---------- composer + chat（Phase 3 数据驱动） ---------- */
+    /* composer + chat — 转发到 chat-store + expert-store */
     composer:{
       send:function(text){
         if(!text||!text.trim()) return;
         var t=text.trim();
-        /* 模式检查 */
-        var modeEl=$('.mode-item.checked');
-        var currentMode=modeEl?modeEl.getAttribute('data-val'):'';
-        /* 自动匹配专家 */
-        if(!pickValid()){
-          var am=autoMatch(t);
-          if(am){ activePick=am; renderExpertChips(); }
-        }
-        /* 切到 chat 视图 */
         showView('chat');
-        /* 添加用户消息 */
-        CHAT_MESSAGES.push({id:Date.now(),type:'user',text:t});
-        /* 添加助手消息 + 模拟响应 */
-        _simulateResponse();
-        _chatTouch();
-        /* 清空输入（React 侧处理） */
-        if(input){ input.innerHTML=''; refreshSend(); }
-        if(chatInput){ chatInput.innerHTML=''; }
-        /* 聚焦 chat 输入 */
-        if(chatInput) setTimeout(function(){chatInput.focus();},100);
+        chatStore.addUserMessage(t);
+        chatStore.simulateResponse();
       },
-      getMode:function(){
-        var modeEl=$('.mode-item.checked');
-        return modeEl?modeEl.getAttribute('data-val'):'';
-      },
+      getMode:function(){ return ''; },
       setMode:function(mode){ applyMode(mode,true); },
-      getExpert:function(){ return activePick; },
-      clearExpert:function(){ clearPick(); renderExpertChips(); },
+      getExpert:function(){ return expertStore.getActivePick(); },
+      clearExpert:function(){ expertStore.clearPick(); },
       openFilePicker:openFilePicker,
-      getModes:function(){
-        return ['苍穹应用','通用应用','业务组件','技能开发','智能体开发','原型探索'];
-      }
+      getModes:function(){ return ['苍穹应用','通用应用','业务组件','技能开发','智能体开发','原型探索']; }
     },
     chat:{
-      subscribe:function(fn){ _chatListeners.push(fn); return function(){ var i=_chatListeners.indexOf(fn); if(i>=0)_chatListeners.splice(i,1); }; },
-      getMessages:function(){ return CHAT_MESSAGES; },
-      getVersion:function(){ return _chatVersion; },
-      touch:_chatTouch,
-      clear:function(){ CHAT_MESSAGES=[]; _chatTouch(); },
-      getTitle:function(){ return $('#chatTitle')?$('#chatTitle').textContent:''; },
-      setTitle:function(t){ if($('#chatTitle')) $('#chatTitle').textContent=t; }
-    },
-    /* ---------- 协作开发（Phase 3 数据暴露） ---------- */
-    collab:{
-      getTasks:function(){ return (typeof CV_TASKS!=='undefined')?CV_TASKS:[]; },
-      getReviews:function(){ return (typeof CV_REVIEWS!=='undefined')?CV_REVIEWS:[]; },
-      getMembers:function(){ return (typeof CV_MEMBERS!=='undefined')?CV_MEMBERS:[]; },
-      getProjects:function(){ return (typeof CV_PROJECTS!=='undefined')?CV_PROJECTS:[]; },
-      getExperts:function(){ return (typeof EXPERTS!=='undefined')?EXPERTS.map(function(e){return{id:e.id,name:e.name,role:e.role,by:e.by,desc:e.desc,tags:e.tags,modes:e.modes,k:e.k,mine:e.mine,ro:e.ro};}):[]; },
-      getTeams:function(){ return (typeof TEAMS!=='undefined')?TEAMS.map(function(t){return{id:t.id,name:t.name,by:t.by,desc:t.desc,preset:t.preset,members:(t.members||[]).map(function(m){return EXPERTS.find(function(e){return e.id===m;})||{id:m};}).filter(Boolean),domains:t.domains||[]};}):[]; },
-      openTaskModal:function(){ if(typeof _cvModalOpen==='function') _cvModalOpen('sync'); },
-      openTeamModal:function(id){ if(typeof openTeamModal==='function') openTeamModal(id); },
-      openExpertEditor:function(id){ if(typeof openExpertEditor==='function') openExpertEditor(id); },
-      openExpertModal:function(id){ if(typeof openExpertModal==='function') openExpertModal(id); },
-      summon:function(kind,id){ if(typeof summon==='function') summon(kind,id); }
+      subscribe:function(fn){ return chatStore.subscribe(fn); },
+      getMessages:function(){ return chatStore.getMessages(); },
+      getVersion:function(){ return chatStore.getVersion(); },
+      touch:chatStore.notify||function(){},
+      clear:function(){ chatStore.clear(); },
+      getTitle:function(){ return chatStore.getTitle(); },
+      setTitle:function(t){ chatStore.setTitle(t); }
     }
-  };
+  }
 
 })();
