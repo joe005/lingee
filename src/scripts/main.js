@@ -842,11 +842,6 @@ const billTemplateWithTokens = billTemplate.replace(
   /* ---------- mode ↔ sidebar sync ---------- */
   var modeItems=$$('.mode-item');
   var input=$('#composerInput');
-  // 清空输入时恢复空提示占位符
-  if(input) input.addEventListener('input',function(){
-    var text=this.textContent||'';
-    if(text.trim()===''){ this.innerHTML=''; }
-  });
   var navItems=$$('.sb-scroll .nav-item');
   var navByName={};
   navItems.forEach(function(n){ navByName[n.textContent.trim()]=n; });
@@ -862,11 +857,7 @@ const billTemplateWithTokens = billTemplate.replace(
     if(mode!=='苍穹应用'){ appDd.classList.remove('open'); }
     input.focus();
   }
-  if(modeItems.length) modeItems.forEach(function(item){
-    item.addEventListener('click',function(){
-      applyMode(item.getAttribute('data-val'),true);
-    });
-  });
+  /* mode items click 已迁到 React NewTaskView */
 
   /* ---------- view switching ---------- */
   var viewHome=$('#view-home'), viewNew=$('#view-newtask'), viewChat=$('#view-chat'), viewApps=$('#view-apps'), viewSkills=$('#view-skills'), viewAgents=$('#view-agents'), viewCollab=$('#view-collab'), viewDesign=$('#view-design'), viewSettings=$('#view-settings');
@@ -1568,12 +1559,8 @@ const billTemplateWithTokens = billTemplate.replace(
 
   /* ---------- composer input + send ---------- */
   var sendBtn=$('#sendBtn');
-  function refreshSend(){ sendBtn.classList.toggle('active', input.textContent.trim().length>0); }
-  if(input) input.addEventListener('input',refreshSend);
-  if(input) input.addEventListener('keydown',function(e){
-    if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); doSend(); }
-  });
-  if(sendBtn) sendBtn.addEventListener('click',doSend);
+  function refreshSend(){ if(sendBtn) sendBtn.classList.toggle('active', input.textContent.trim().length>0); }
+  /* composer input/send 事件已迁到 React NewTaskView */
   var chatMessages=$('#chatMessages');
   var messagesList=$('#messagesList');
   /* 预览面板关闭按钮 */
@@ -1835,37 +1822,8 @@ const billTemplateWithTokens = billTemplate.replace(
       });
     }).observe(dd,{attributes:true,attributeFilter:['class'],attributeOldValue:true});
   });
-  var chatSendBtn=$('#chatSendBtn');
-  function refreshChatSend(){ chatSendBtn.classList.toggle('active', chatInput.textContent.trim().length>0); }
-  if(chatInput) chatInput.addEventListener('input',function(){
-    refreshChatSend();
-    if((this.textContent||'').trim()==='') this.innerHTML='';
-  });
-  if(chatInput) chatInput.addEventListener('keydown',function(e){
-    if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); chatDoSend(); }
-  });
-  if(chatSendBtn) chatSendBtn.addEventListener('click',chatDoSend);
-  /* ---------- 历史记录面板 ---------- */
-  var historyBtn=$('#historyBtn');
-  var historyPanel=$('#historyPanel');
-  var historyOverlay=$('#historyOverlay');
-  if(historyBtn){
-    if(historyBtn) historyBtn.addEventListener('click',function(){
-      historyPanel.classList.add('show');
-      historyOverlay.classList.add('show');
-    });
-    if($('#historyPanelClose')) $('#historyPanelClose').addEventListener('click',closeHistory);
-    if(historyOverlay) historyOverlay.addEventListener('click',closeHistory);
-    $$('.history-item-restore').forEach(function(btn){
-      btn.addEventListener('click',function(e){
-        e.stopPropagation();
-        var item=btn.closest('.history-item');
-        var ver=item.querySelector('.history-item-time').textContent.trim();
-        toast('已恢复 '+ver);
-        closeHistory();
-      });
-    });
-  }
+  /* chat input/send 已迁到 React ChatView */
+  /* 历史记录面板已迁到 React */
 
   /* ---------- 新建应用弹窗（Phase 2b antd 化，见 docs/react-migration-plan.md） ----------
      会话页/首页"关联应用"下拉里的"新建应用"子弹窗，已迁到 antd Modal +
