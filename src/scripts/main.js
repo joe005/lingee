@@ -458,7 +458,7 @@ const billTemplateWithTokens = billTemplate.replace(
       if(!dd.querySelector(':hover')) dd.classList.remove('open');
     },200);
   }
-  $$('.dropdown').forEach(function(dd){
+  if($$('.dropdown').length) $$('.dropdown').forEach(function(dd){
     var chip=$('[data-chip]',dd);
     if(!chip) return;
     /* 用 id 判断而非变量引用：appDd / chatAppDd 在本行之后才赋值，
@@ -502,7 +502,7 @@ const billTemplateWithTokens = billTemplate.replace(
     var list=menu.querySelector('.app-list');
     if(list) list.style.maxHeight=(maxH-60)+'px';
   }
-  $$('.dropdown').forEach(function(dd){
+  if($$('.dropdown').length) $$('.dropdown').forEach(function(dd){
     new MutationObserver(function(){
       if(dd.classList.contains('open')){
         requestAnimationFrame(function(){ adjustMenuHeight(dd); });
@@ -843,7 +843,7 @@ const billTemplateWithTokens = billTemplate.replace(
   var modeItems=$$('.mode-item');
   var input=$('#composerInput');
   // 清空输入时恢复空提示占位符
-  input.addEventListener('input',function(){
+  if(input) input.addEventListener('input',function(){
     var text=this.textContent||'';
     if(text.trim()===''){ this.innerHTML=''; }
   });
@@ -862,7 +862,7 @@ const billTemplateWithTokens = billTemplate.replace(
     if(mode!=='苍穹应用'){ appDd.classList.remove('open'); }
     input.focus();
   }
-  modeItems.forEach(function(item){
+  if(modeItems.length) modeItems.forEach(function(item){
     item.addEventListener('click',function(){
       applyMode(item.getAttribute('data-val'),true);
     });
@@ -1602,11 +1602,11 @@ const billTemplateWithTokens = billTemplate.replace(
   /* ---------- composer input + send ---------- */
   var sendBtn=$('#sendBtn');
   function refreshSend(){ sendBtn.classList.toggle('active', input.textContent.trim().length>0); }
-  input.addEventListener('input',refreshSend);
-  input.addEventListener('keydown',function(e){
+  if(input) input.addEventListener('input',refreshSend);
+  if(input) input.addEventListener('keydown',function(e){
     if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); doSend(); }
   });
-  sendBtn.addEventListener('click',doSend);
+  if(sendBtn) sendBtn.addEventListener('click',doSend);
   var chatMessages=$('#chatMessages');
   var messagesList=$('#messagesList');
   function escapeHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -2111,7 +2111,7 @@ const billTemplateWithTokens = billTemplate.replace(
   /* ---------- chat composer 发送 ---------- */
   var chatInput=$('#chatInput');
   /* 所有下拉面板关闭时恢复焦点到输入框 */
-  $$('.dropdown').forEach(function(dd){
+  if($$('.dropdown').length) $$('.dropdown').forEach(function(dd){
     new MutationObserver(function(mutations){
       mutations.forEach(function(m){
         if(m.attributeName==='class'){
@@ -2126,14 +2126,14 @@ const billTemplateWithTokens = billTemplate.replace(
   });
   var chatSendBtn=$('#chatSendBtn');
   function refreshChatSend(){ chatSendBtn.classList.toggle('active', chatInput.textContent.trim().length>0); }
-  chatInput.addEventListener('input',function(){
+  if(chatInput) chatInput.addEventListener('input',function(){
     refreshChatSend();
     if((this.textContent||'').trim()==='') this.innerHTML='';
   });
-  chatInput.addEventListener('keydown',function(e){
+  if(chatInput) chatInput.addEventListener('keydown',function(e){
     if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); chatDoSend(); }
   });
-  chatSendBtn.addEventListener('click',chatDoSend);
+  if(chatSendBtn) chatSendBtn.addEventListener('click',chatDoSend);
   function chatDoSend(){
     var t=chatInput.textContent.trim();
     if(!t){ chatInput.focus(); return; }
@@ -2155,12 +2155,12 @@ const billTemplateWithTokens = billTemplate.replace(
     historyOverlay.classList.remove('show');
   }
   if(historyBtn){
-    historyBtn.addEventListener('click',function(){
+    if(historyBtn) historyBtn.addEventListener('click',function(){
       historyPanel.classList.add('show');
       historyOverlay.classList.add('show');
     });
-    $('#historyPanelClose').addEventListener('click',closeHistory);
-    historyOverlay.addEventListener('click',closeHistory);
+    if($('#historyPanelClose')) $('#historyPanelClose').addEventListener('click',closeHistory);
+    if(historyOverlay) historyOverlay.addEventListener('click',closeHistory);
     $$('.history-item-restore').forEach(function(btn){
       btn.addEventListener('click',function(e){
         e.stopPropagation();
@@ -5188,6 +5188,20 @@ const billTemplateWithTokens = billTemplate.replace(
       clear:function(){ CHAT_MESSAGES=[]; _chatTouch(); },
       getTitle:function(){ return $('#chatTitle')?$('#chatTitle').textContent:''; },
       setTitle:function(t){ if($('#chatTitle')) $('#chatTitle').textContent=t; }
+    },
+    /* ---------- 协作开发（Phase 3 数据暴露） ---------- */
+    collab:{
+      getTasks:function(){ return (typeof CV_TASKS!=='undefined')?CV_TASKS:[]; },
+      getReviews:function(){ return (typeof CV_REVIEWS!=='undefined')?CV_REVIEWS:[]; },
+      getMembers:function(){ return (typeof CV_MEMBERS!=='undefined')?CV_MEMBERS:[]; },
+      getProjects:function(){ return (typeof CV_PROJECTS!=='undefined')?CV_PROJECTS:[]; },
+      getExperts:function(){ return (typeof EXPERTS!=='undefined')?EXPERTS.map(function(e){return{id:e.id,name:e.name,role:e.role,by:e.by,desc:e.desc,tags:e.tags,modes:e.modes,k:e.k,mine:e.mine,ro:e.ro};}):[]; },
+      getTeams:function(){ return (typeof TEAMS!=='undefined')?TEAMS.map(function(t){return{id:t.id,name:t.name,by:t.by,desc:t.desc,preset:t.preset,members:(t.members||[]).map(function(m){return EXPERTS.find(function(e){return e.id===m;})||{id:m};}).filter(Boolean),domains:t.domains||[]};}):[]; },
+      openTaskModal:function(){ if(typeof _cvModalOpen==='function') _cvModalOpen('sync'); },
+      openTeamModal:function(id){ if(typeof openTeamModal==='function') openTeamModal(id); },
+      openExpertEditor:function(id){ if(typeof openExpertEditor==='function') openExpertEditor(id); },
+      openExpertModal:function(id){ if(typeof openExpertModal==='function') openExpertModal(id); },
+      summon:function(kind,id){ if(typeof summon==='function') summon(kind,id); }
     }
   };
 
