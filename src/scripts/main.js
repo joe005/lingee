@@ -423,42 +423,7 @@ const billTemplateWithTokens = billTemplate.replace(
   /* 选中对象：团或单个专家，同一语义位、只能选其一
      —— 对应 lingee-build 的 mode: team / personal */
   var activePick={kind:null,id:''};   /* 默认不指定，由系统自动匹配 */
-  function loadTeams(){
-    var raw=null;
-    try{ raw=localStorage.getItem(TEAM_STORE_KEY); }catch(e){ return; }
-    if(!raw) return;
-    var d;
-    try{ d=JSON.parse(raw); }catch(e){ return; }
-    if(!d||typeof d!=='object') return;
-    var mine=Array.isArray(d.experts)?d.experts:[];
-    MY_EXPERTS=mine.filter(function(e){
-      return e&&typeof e.id==='string'&&e.id.indexOf('my-')===0&&typeof e.name==='string'&&e.name
-        &&Array.isArray(e.modes)&&e.modes.length;
-    }).map(function(e){
-      return {id:e.id,mine:true,k:AV_KEYS.indexOf(e.k)>=0?e.k:'eng',
-        name:e.name,role:e.role||'自定义专家',by:'我创建的',desc:e.desc||'',
-        tags:Array.isArray(e.tags)?e.tags:[],
-        modes:e.modes.filter(function(m){return WORK_MODES.indexOf(m)>=0}),
-        comp:Array.isArray(e.comp)?e.comp:[],
-        cmds:(Array.isArray(e.cmds)?e.cmds:[]).filter(function(c){return Array.isArray(c)&&c[0]}),
-
-      };
-    }).filter(function(e){ return e.modes.length; });
-    rebuildExperts();
-
-    var custom=Array.isArray(d.teams)?d.teams:[];
-    var valid=custom.filter(function(t){
-      return t&&typeof t.id==='string'&&!t.preset&&typeof t.name==='string'
-        &&Array.isArray(t.members)&&t.members.every(function(m){return !!EX[m]});
-    }).map(function(t){
-      return {id:t.id,preset:false,name:t.name,by:t.by||'我创建的',desc:t.desc||'',
-        domains:Array.isArray(t.domains)?t.domains:[],
-        gates:Array.isArray(t.gates)?t.gates.filter(function(g){return typeof g==='string'}):[],
-        leadId:EX[t.leadId]?t.leadId:(t.members[0]||null),members:t.members.slice(),
-        cmds:(Array.isArray(t.cmds)?t.cmds:[]).filter(function(c){return Array.isArray(c)&&c[0]})};
-    });
-    TEAMS=PRESET_TEAMS.slice().concat(valid);
-  }
+  function loadTeams(){} /* stub */
   /* ---------- 编排推导：成员 → 任务 DAG ----------
      不再有交付强度这个旋钮：团里有谁，流程里就有哪一步。
      实现环节始终保留——没人能领时显式标红，这是要暴露的问题，不是可以省掉的步骤。 */
@@ -513,11 +478,7 @@ const billTemplateWithTokens = billTemplate.replace(
   });
 
   /* ---------- composer：选中对象渲染为顶部标签 + 下拉选择 ---------- */
-  function pickIconSvg(){
-    return activePick.kind==='team'
-      ? '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 20v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 4 18.5V20"/><circle cx="10" cy="8" r="3.2"/><path d="M20 20v-1.5a3.5 3.5 0 0 0-2.6-3.4"/><path d="M15.4 5.2a3.2 3.2 0 0 1 0 5.6"/></svg>'
-      : '<img class="ctag-av" src="'+xav(EX[activePick.id].k)+'" alt="">';
-  }
+  function pickIconSvg(){} /* stub */
 
   /* 模式 → builder 名。来源见 lingee-build packages/kcode-web/src/components/prompt-input.tsx
      starterRecommendationCards；技能/智能体两项用 1.x 线的新名（用户确认） */
@@ -552,14 +513,8 @@ const billTemplateWithTokens = billTemplate.replace(
   ];
   var cvProject='';                    /* 空串 = 全部项目（个人视角的聚合视图） */
   var cvConfigOverride={};             /* {项目id:{配置卡 key:是否项目覆盖}} */
-  function cvWorkspaceProjects(){
-    return CV_PROJECTS.filter(function(p){ return p.workspace===cvWorkspace; });
-  }
-  function cvInProject(row){
-    if(!cvProject) return true;
-    if(row.projects) return row.projects==='*'||row.projects.indexOf(cvProject)>=0;
-    return row.project===cvProject;
-  }
+  function cvWorkspaceProjects(){} /* stub */
+  function cvInProject(){} /* stub */
   var CV_REVIEW_ARTIFACTS={
   0:{tabs:['源代码','技术方案'],content:{
   '源代码':'<h1>审批流插件 - 源代码</h1><p>文件: ApprovalFlowPlugin.java</p><pre>public class ApprovalFlowPlugin extends AbstractPlugin {\n  @Override\n  public void execute(ExecutionContext ctx) {\n    ApprovalContext ac = ctx.getApprovalContext();\n    List&lt;ApprovalNode&gt; nodes = ac.getApprovalNodes();\n    for (ApprovalNode node : nodes) {\n      if (node.isTimeout(30, TimeUnit.MINUTES)) {\n        handleTimeout(node, ac);\n        continue;\n      }\n      if (node.getStatus() == NodeStatus.PENDING) {\n        notifyApprover(node);\n      }\n    }\n    // 多级审批流转\n    if (ac.allNodesProcessed()) {\n      ctx.complete();\n    }\n  }\n  private void handleTimeout(ApprovalNode node, ApprovalContext ac) {\n    // 超时自动升级\n    ac.escalateToSuperior(node);\n  }\n}</pre><p>文件: ApprovalFlowService.java</p><pre>public class ApprovalFlowService {\n  public ApprovalResult submit(ExpenseReport report) {\n    ApprovalFlow flow = buildFlow(report);\n    flow.start();\n    return flow.getResult();\n  }\n}</pre>',
@@ -609,39 +564,12 @@ const billTemplateWithTokens = billTemplate.replace(
   /* 协作身份分级：所有者 > 管理员 > 成员。只有所有者能调整管理员身份，
      管理员能管普通成员但动不了另一个管理员，谁都改不了自己。 */
   function cvCurrentMember(){ return CV_MEMBERS.filter(function(m){return m.isMe;})[0]||null; }
-  function cvCurrentLevel(){
-    var me=cvCurrentMember();if(!me)return'member';
-    return me.owner?'owner':(me.level==='admin'?'admin':'member');
-  }
+  function cvCurrentLevel(){} /* stub */
   function cvCanManageMembers(){ var lv=cvCurrentLevel();return lv==='owner'||lv==='admin'; }
-  function cvCanRemoveMember(target){
-    if(!target||target.isMe||target.owner)return false;
-    var lv=cvCurrentLevel();
-    if(lv==='owner')return true;
-    if(lv==='admin')return target.level!=='admin';
-    return false;
-  }
-  function cvCanToggleLevel(target){
-    if(!target||target.isMe||target.owner)return false;
-    var lv=cvCurrentLevel();
-    if(lv==='owner')return true;
-    if(lv==='admin')return target.level!=='admin';
-    return false;
-  }
+  function cvCanRemoveMember(){} /* stub */
+  function cvCanToggleLevel(){} /* stub */
   document.addEventListener('click',function(){cvCloseMemberLevelMenus(null);});
-  function cvSetMemberLevel(idx,level){
-    var m=CV_MEMBERS[idx];if(!m)return;
-    if(!cvCanToggleLevel(m)){
-      if(m.isMe)cvToast('不能修改自己的身份','warning');
-      else if(m.owner)cvToast('所有者身份不可修改','warning');
-      else cvToast('只有所有者可以调整管理员身份','warning');
-      return;
-    }
-    if(m.level===level)return;
-    m.level=level;
-    cvRenderMembers();cvRenderMemberStats();cvApplyFilters();
-    cvToast(m.name+' 已设为'+(level==='admin'?'管理员':'成员'),'success');
-  }
+  function cvSetMemberLevel(){} /* stub */
 
   var CV_WORKFLOW = ['需求分析','方案设计','开发实现','代码审查','测试验证','部署发布'];
   var CV_WORKFLOW_ROLES = {'需求分析':'需求人员','方案设计':'架构人员','开发实现':'开发人员','代码审查':'开发人员','测试验证':'测试人员','部署发布':'运维人员'};
@@ -662,98 +590,16 @@ const billTemplateWithTokens = billTemplate.replace(
     {name:'贾旭',email:'jia***@kingdee.com',role:'测试',tag:'member-tag--qa',dept:'测试部'},
     {name:'武威',email:'wu***@kingdee.com',role:'运维',tag:'member-tag--ops',dept:'运维部'}
   ];
-  function cvBuildTaskCard(t,i){
-    var typeCls={'需求':'badge-type','Bug':'badge-bug','任务':'badge-task','改进':'badge-improve'}[t.type]||'badge-type';
-    var sizeCls=t.size==='大'?'badge-size-l':'badge-size-s';
-    var srcCls={'Jira':'source-tag--jira','TAPD':'source-tag--tapd','对话自建':'source-tag--build','API':'source-tag--api','飞书':'source-tag--feishu'}[t.source]||'source-tag--build';
-    var execCls=t.exec==='专家团'?'badge-expert':'badge-auto';
-    var statusMap={'未开始':'pending','待评审':'review','进行中':'running','已完成':'done','已失败':'fail'};
-    var sc=statusMap[t.status]||'pending';
-    var nodeMap={'未开始':'需求分析','待评审':'代码审查','进行中':'开发实现','已完成':'部署发布','已失败':'开发实现'};
-    var node=nodeMap[t.status]||'需求分析';
-    return '<div class="card" data-type="'+t.type+'" data-status="'+t.status+'" data-collab="'+t.collab+'" data-size="'+t.size+'" data-idx="'+i+'">'
-      +'<div class="card-top"><div class="card-row">'
-      +'<span class="badge '+typeCls+'">'+t.type+'</span>'
-      +'<span class="badge '+sizeCls+'">'+t.size+'</span>'
-      +'<span class="source-tag '+srcCls+'">'+t.source+'</span>'
-      +'<span class="badge-status badge-status--'+sc+'"><span class="badge-status-dot"></span>'+t.status+'</span>'
-      +cvProjectTag(t)
-      +'</div><span class="badge '+execCls+'">'+t.exec+'</span></div>'
-      +'<div class="card-title">'+t.title+'</div>'
-      +'<div class="card-desc">'+t.desc+'</div>'
-      +'<div class="card-footer"><div class="assignee"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'+t.assignee+'</div><span style="font-size:11px;color:var(--text-soft)">'+t.source+' '+t.sourceId+'</span></div>'
-      +'</div>';
-  }
-  function cvBuildReviewCard(r,i){
-    var typeCls={'需求':'badge-type','Bug':'badge-bug','任务':'badge-task','改进':'badge-improve'}[r.type]||'badge-type';
-    var sizeCls=r.size==='大'?'badge-size-l':'badge-size-s';
-    var srcCls={'Jira':'source-tag--jira','TAPD':'source-tag--tapd','对话自建':'source-tag--build','API':'source-tag--api','飞书':'source-tag--feishu'}[r.source]||'source-tag--build';
-    var artHtml=r.artifacts.map(function(a){return '<span class="review-artifact">'+a+'</span>';}).join(' · ');
-    return '<div class="card" data-idx="'+i+'" onclick="cvOpenReviewDetail('+i+')">'
-      +'<div class="card-top"><div class="card-row">'
-      +'<span class="badge '+typeCls+'">'+r.type+'</span>'
-      +'<span class="badge '+sizeCls+'">'+r.size+'</span>'
-      +'<span class="source-tag '+srcCls+'">'+r.source+'</span>'
-      +'<span class="badge-status badge-status--review"><span class="badge-status-dot"></span>待评审</span>'
-      +cvProjectTag(r)
-      +'</div><span class="badge badge-expert">'+r.exec+'</span></div>'
-      +'<div class="card-title">'+r.title+'</div>'
-      +'<div class="card-desc">'+r.desc+'</div>'
-      +'<div class="review-info">'
-      +'<div class="review-info-item"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg>评审人: <b>'+r.reviewer+'</b> <span>('+r.reviewerRole+')</span></div>'
-      +'<div class="review-info-item"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="'+r.deadlineColor+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>截止: <b style="color:'+r.deadlineColor+'">'+r.deadline+'</b></div>'
-      +'<div class="review-info-item"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>产物: '+artHtml+'</div>'
-      +'</div>'
-      +'<div class="card-actions"><span class="card-node"><span class="card-node-dot"></span>'+r.reviewType+'</span><div style="display:flex;gap:4px;margin-left:auto">'
-      +'<button class="act-btn act-btn--exec" onclick="event.stopPropagation();cvReviewPass('+i+')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>通过</button>'
-      +'<button class="act-btn act-btn--reject" onclick="event.stopPropagation();cvReviewReject('+i+')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>驳回</button>'
-      +'<button class="card-view-btn" onclick="event.stopPropagation();cvOpenReviewDetail('+i+')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>查看对话</button>'
-      +'</div></div></div>';
-  }
+  function cvBuildTaskCard(){} /* stub */
+  function cvBuildReviewCard(){} /* stub */
   function cvInjectCardActions(){} /* stub: moved to React */
 
   /* ============ VIEW SWITCHING ============ */
-  function cvSwitchFilter(btn){
-    var group=btn.closest('.filter-group');if(group){group.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('filter-btn--active');});}
-    btn.classList.add('filter-btn--active');
-    if(btn.closest('#cv-review')){cvApplyReviewFilters();}else{cvApplyFilters();}
-  }
+  function cvSwitchFilter(){} /* stub */
   function cvApplyFilters(){} /* stub: moved to React */
   /* ============ STATS CLICK ============ */
-  function cvClickStat(stat,status){
-    var view=stat.closest('.cv-panel');if(!view)return;
-    view.querySelectorAll('.stat').forEach(function(s){s.classList.remove('stat--active');});
-    stat.classList.add('stat--active');
-    if(status==='全部状态'){
-      view.querySelectorAll('.filter-group').forEach(function(g){
-        g.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('filter-btn--active');});
-        var first=g.querySelector('.filter-btn');if(first)first.classList.add('filter-btn--active');
-      });
-    }else if(status){
-      var sg=view.querySelector('[data-filter-type="status"]');if(sg){
-        sg.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('filter-btn--active');});
-        var match=Array.prototype.find.call(sg.querySelectorAll('.filter-btn'),function(b){return b.textContent.trim()===status;});
-        if(match)match.classList.add('filter-btn--active');
-      }
-    }
-    cvApplyFilters();
-  }
-  function cvClickReviewStat(stat,filter){
-    var view=stat.closest('.cv-panel');if(!view)return;
-    view.querySelectorAll('.stat').forEach(function(s){s.classList.remove('stat--active');});
-    stat.classList.add('stat--active');
-    if(filter&&filter!=='全部待评审'){
-      var groups=view.querySelectorAll('.filter-group');
-      groups.forEach(function(g){
-        var match=Array.prototype.find.call(g.querySelectorAll('.filter-btn'),function(b){return b.textContent.trim()===filter;});
-        if(match){
-          g.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('filter-btn--active');});
-          match.classList.add('filter-btn--active');
-        }
-      });
-    }
-    cvApplyReviewFilters();
-  }
+  function cvClickStat(){} /* stub */
+  function cvClickReviewStat(){} /* stub */
   function cvApplyReviewFilters(){} /* stub: moved to React */
 
   /* ============ 弹窗状态桥（Phase 2 antd 化，见 docs/react-migration-plan.md） ============
@@ -774,28 +620,10 @@ const billTemplateWithTokens = billTemplate.replace(
   /* ============ SYNC MODAL ============ */
   function cvOpenSyncModal(){ _cvModalOpen('sync'); }
   function cvCloseSyncModal(){ _cvModalClose('sync'); }
-  function cvBuildSyncTaskData(form,status){
-    form=form||{};
-    var title=(form.title||'').trim();
-    if(!title){cvToast('请输入任务标题','warning');return null;}
-    return{title:title,desc:(form.desc||'').trim(),type:form.type||'需求',priority:form.priority||'中',
-      source:form.source||'对话自建',size:form.size||'小任务',status:status||'未开始',
-      collab:form.collab||'Agent间协作',assignee:status==='进行中'?'AI开发Agent':'待分配',progress:0};
-  }
+  function cvBuildSyncTaskData(){} /* stub */
   /* 弹窗里的任务落库：归一化字段并挂到当前项目（聚合视图下默认第一个项目） */
-  function cvNormalizeTask(task){
-    var big=task.size==='大任务';
-    return {type:task.type,size:big?'大':'小',source:task.source,sourceId:task.sourceId||'新建',
-      exec:big?'专家团':'自动执行',status:task.status,collab:task.collab,title:task.title,
-      desc:task.desc||'暂无描述',assignee:task.assignee,progress:task.progress||0,
-      project:task.project||cvProject||CV_PROJECTS[0].id};
-  }
-  function cvAddTask(task){
-    var row=cvNormalizeTask(task);
-    CV_TASKS.unshift(row);
-    cvRenderTaskStats(); cvRenderTasks(); cvInjectCardActions(); cvApplyFilters(); cvUpdateCounts();
-    return row;
-  }
+  function cvNormalizeTask(){} /* stub */
+  function cvAddTask(){} /* stub */
   function cvSaveSyncTask(){} /* stub */
   function cvStartSyncTask(){} /* stub */
 
@@ -804,11 +632,7 @@ const billTemplateWithTokens = billTemplate.replace(
   function cvCloseTaskModal(id){ _cvModalClose(CV_TASK_MODAL_IDS[id]||id); }
   /* 数据 getter：只返回数据，具体怎么排布是 CollabModals.jsx 的事 */
   function cvGetMembersForModal(){} /* stub */
-  function cvCurrentWorkflowNode(){
-    var card=window.cvCard;var node='开发实现';
-    if(card){var na=card.querySelector('.card-node');if(na)node=na.textContent.replace(/^[\s​]+/,'').trim();}
-    return node;
-  }
+  function cvCurrentWorkflowNode(){} /* stub */
   function cvGetReviewCandidates(){} /* stub */
   function cvGetWorkflowState(){} /* stub */
   function cvGetDefaultArtifacts(){} /* stub */
@@ -820,141 +644,19 @@ const billTemplateWithTokens = billTemplate.replace(
   function cvConfirmReview(){} /* stub */
 
   /* ============ REVIEW ACTIONS ============ */
-  function cvReviewPass(i){
-    cvToast('评审通过！任务已流转到测试验证节点','success');
-    var grid=document.getElementById('cv-review-grid');if(grid){var card=grid.children[i];if(card){card.style.transition='opacity .3s';card.style.opacity='0.3';}}
-  }
+  function cvReviewPass(){} /* stub */
   function cvReviewReject(i){cvToast('评审驳回！任务已退回给开发人员','error');}
   function cvOpenReviewDetail(){} /* stub: moved to React */
-  function cvSwitchArtifact(idx,tab){
-    var arts=CV_REVIEW_ARTIFACTS[idx];if(!arts)return;
-    var tabsEl=document.getElementById('cv-rv-art-tabs');
-    if(tabsEl){tabsEl.querySelectorAll('.rv-art-tab').forEach(function(t){t.classList.toggle('rv-art-tab--active',t.textContent===tab);});}
-    var bodyEl=document.getElementById('cv-rv-art-body');
-    if(bodyEl){bodyEl.innerHTML='<div class="rv-doc">'+(arts.content[tab]||'<p>暂无内容</p>')+'</div>';}
-  }
-  function cvRenderReviewComments(idx){
-    var el=document.getElementById('cv-rv-comments');if(!el)return;
-    var comments=CV_REVIEW_COMMENTS[idx]||[];
-    var bm={'pass':['rv-comment-badge--pass','通过'],'reject':['rv-comment-badge--reject','驳回'],'comment':['rv-comment-badge--comment','评论']};
-    el.innerHTML=comments.map(function(c){var b=bm[c.type]||['rv-comment-badge--comment','评论'];return '<div class="rv-comment"><div class="rv-comment-avatar '+(c.isAgent?'rv-comment-avatar--agent':'')+'">'+(c.avatar||c.author[0])+'</div><div class="rv-comment-body"><div class="rv-comment-header"><span class="rv-comment-author">'+c.author+'</span><span class="rv-comment-badge '+b[0]+'">'+b[1]+'</span><span class="rv-comment-time">'+c.time+'</span></div><div class="rv-comment-text">'+c.text+'</div></div></div>';}).join('');
-  }
-  function cvSubmitReview(type){
-    var input=document.getElementById('cv-rv-input');var text=input?input.value.trim():'';
-    if(!text&&type==='comment'){cvToast('请输入评审意见','warning');return;}
-    var idx=window.cvReviewIdx;var r=CV_REVIEWS[idx];if(!r)return;
-    var el=document.getElementById('cv-rv-comments');
-    if(el&&text){var bm={'pass':['rv-comment-badge--pass','通过'],'reject':['rv-comment-badge--reject','驳回'],'comment':['rv-comment-badge--comment','评论']};var b=bm[type]||['rv-comment-badge--comment','评论'];var d=document.createElement('div');d.className='rv-comment';d.innerHTML='<div class="rv-comment-avatar">我</div><div class="rv-comment-body"><div class="rv-comment-header"><span class="rv-comment-author">张工（你）</span><span class="rv-comment-badge '+b[0]+'">'+b[1]+'</span><span class="rv-comment-time">刚刚</span></div><div class="rv-comment-text">'+text+'</div></div>';el.appendChild(d);el.scrollTop=el.scrollHeight;}
-    if(input)input.value='';
-    if(type==='pass'){cvToast('评审通过！任务已流转到测试验证节点','success');var g=document.getElementById('cv-review-grid');if(g&&g.children[idx]){g.children[idx].style.transition='opacity .3s';g.children[idx].style.opacity='0.4';}}
-    else if(type==='reject'){cvToast('评审驳回！任务已退回给开发人员','error');}
-    else{cvToast('评审意见已提交','info');}
-  }
+  function cvSwitchArtifact(){} /* stub */
+  function cvRenderReviewComments(){} /* stub */
+  function cvSubmitReview(){} /* stub */
 
   /* ============ CHAT ============ */
-  function cvSwitchToChat(){
-    cvShowPanel('chat');
-  }
-  function cvAddChatMessage(type,text){
-    var body=document.getElementById('cv-chat-body');if(!body)return;
-    var msg=document.createElement('div');msg.className='chat-msg chat-msg--'+type;
-    var avatar=type==='agent'?'AI':'我';
-    var time=new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'});
-    msg.innerHTML='<div class="chat-msg-avatar">'+avatar+'</div><div><div class="chat-msg-bubble">'+text+'</div><div class="chat-msg-time">'+time+'</div></div>';
-    body.appendChild(msg);body.scrollTop=body.scrollHeight;
-  }
-  function cvAddChatTyping(){
-    var body=document.getElementById('cv-chat-body');if(!body)return;
-    if(document.getElementById('cv-chat-typing-indicator'))return;
-    var t=document.createElement('div');t.className='chat-msg chat-msg--agent';t.id='cv-chat-typing-indicator';
-    t.innerHTML='<div class="chat-msg-avatar">AI</div><div class="chat-typing"><span class="chat-typing-dot"></span><span class="chat-typing-dot"></span><span class="chat-typing-dot"></span></div>';
-    body.appendChild(t);body.scrollTop=body.scrollHeight;
-  }
+  function cvSwitchToChat(){} /* stub */
+  function cvAddChatMessage(){} /* stub */
+  function cvAddChatTyping(){} /* stub */
   function cvRemoveChatTyping(){var t=document.getElementById('cv-chat-typing-indicator');if(t&&t.parentNode)t.parentNode.removeChild(t);}
-  function cvSimulateExecution(taskTitle,card){
-    var titleEl=document.getElementById('cv-chat-task-title');if(titleEl)titleEl.textContent=taskTitle;
-    var badge=document.getElementById('cv-chat-status-badge');if(badge){badge.className='chat-status-badge chat-status-badge--running';badge.innerHTML='<span style="width:6px;height:6px;border-radius:50%;background:var(--dot-blue);animation:cvPulse 1.5s infinite"></span>执行中';}
-    var body=document.getElementById('cv-chat-body');if(body)body.innerHTML='';
-    var steps=[
-      {delay:500,msg:'正在分析任务需求...'},
-      {delay:2000,msg:'已生成需求规格说明书，包含 3 个功能点和 5 个验收标准。'},
-      {delay:3000,msg:'正在设计技术方案，确定使用苍穹元数据 + KWC 页面开发模式...'},
-      {delay:3000,msg:'技术方案已就绪。开始生成业务对象和字段定义...'},
-      {delay:3000,msg:'已生成 5 个业务对象、12 个字段、2 个表单页面。正在生成后端插件代码...'},
-      {delay:3000,msg:'插件代码已生成完成。正在执行单元测试...'},
-      {delay:2500,msg:'单元测试全部通过（8/8）。正在生成测试报告...'},
-      {delay:2000,msg:'执行完成！所有产物已生成。',done:true}
-    ];
-    var i=0;
-    function next(){
-      if(i>=steps.length)return;var step=steps[i];
-      setTimeout(function(){
-        cvRemoveChatTyping();cvAddChatMessage('agent',step.msg);
-        if(step.done){
-          var b=document.getElementById('cv-chat-status-badge');if(b){b.className='chat-status-badge chat-status-badge--done';b.innerHTML='<span style="width:6px;height:6px;border-radius:50%;background:var(--success)"></span>已完成';}
-          if(card){
-            card.setAttribute('data-status','已完成');
-            var sb=card.querySelector('.badge-status');if(sb){sb.className='badge-status badge-status--done';sb.innerHTML='<span class="badge-status-dot"></span>已完成';}
-            var node=card.querySelector('.card-node');if(node)node.innerHTML='<span class="card-node-dot" style="background:var(--brand)"></span>部署发布';
-            var ca=card.querySelector('.card-actions');if(ca)ca.style.display='';ca.innerHTML='<span class="card-node"><span class="card-node-dot" style="background:var(--brand)"></span>部署发布</span><div style="display:flex;gap:4px;margin-left:auto"><button class="card-view-btn" onclick="event.stopPropagation();cvOpenConversation(this.closest(\'.card\'))" title="查看对话"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>查看对话</button></div>';
-            card.classList.add('card--clickable');card.onclick=function(e){if(!e.target.closest('.card-view-btn'))cvOpenConversation(card);};
-          }
-          var conv=document.querySelector('.sub-item.cv-running');if(conv){conv.classList.remove('cv-running');var dot=conv.querySelector('.dot');if(dot)dot.className='dot green';}
-          if(body){
-            var artDiv=document.createElement('div');artDiv.className='chat-artifacts';
-            artDiv.innerHTML='<div class="chat-artifacts-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>产物列表</div>';
-            var arts=[['spec','S','需求规格说明书','PRD.md','已归档'],['doc','D','技术方案文档','TechSpec.md','已归档'],['code','</>','业务对象定义','ExpenseBO.java','已归档'],['code','</>','插件源代码','ExpensePlugin.java','已归档'],['test','T','单元测试','ExpenseTest.java','8/8通过'],['code','</>','表单页面','ExpenseForm.kwc','已归档']];
-            var iconMap={'spec':'artifact-icon--spec','doc':'artifact-icon--doc','code':'artifact-icon--code','test':'artifact-icon--test'};
-            arts.forEach(function(a){artDiv.innerHTML+='<div class="artifact-item"><div class="artifact-icon '+(iconMap[a[0]]||'artifact-icon--doc')+'">'+a[1]+'</div><span>'+a[2]+'</span><span class="artifact-meta">'+a[4]+'</span></div>';});
-            body.appendChild(artDiv);body.scrollTop=body.scrollHeight;
-          }
-          cvToast('任务执行完成！','success');
-        }else{cvAddChatTyping();i++;next();}
-      },step.delay);
-    }
-    cvAddChatTyping();i=1;next();
-  }
-  function cvSendChatMessage(){
-    var input=document.getElementById('cv-chat-input');if(!input||!input.value.trim())return;
-    cvAddChatMessage('user',input.value.trim());input.value='';cvAddChatTyping();
-    setTimeout(function(){cvRemoveChatTyping();cvAddChatMessage('agent','收到，正在处理您的请求...');},1500);
-  }
-
-  /* ============ OPEN CONVERSATION ============ */
-  function cvOpenConversation(){} /* stub: moved to React */
-
-  
-  function cvOpenAddMemberModal(){} /* stub */
-  function cvCloseAddMemberModal(){ _cvModalClose('addmember'); }
-  function cvFindThirdPartyMembers(){} /* stub */
-  function cvConfirmAddMembers(){} /* stub */
-  function cvDeleteMember(idx){
-    if(!CV_MEMBERS[idx])return;
-    if(CV_MEMBERS[idx].isMe){cvToast('不能移除自己','warning');return;}
-    if(!cvCanRemoveMember(CV_MEMBERS[idx])){cvToast('没有权限移除该成员','warning');return;}
-    var name=CV_MEMBERS[idx].name;
-    CV_MEMBERS.splice(idx,1);cvRenderMembers();cvRenderMemberStats();
-    cvToast('已移除：'+name,'info');
-  }
-  function cvLoadSavedTasks(){} /* stub: moved to React */
-
-  var CV_THIRD_PARTY_MEMBERS=[
-    {name:'钱涛',email:'qian***@kingdee.com',role:'开发',tag:'member-tag--dev',dept:'研发部'},
-    {name:'宋宇',email:'song***@kingdee.com',role:'开发',tag:'member-tag--dev',dept:'研发部'},
-    {name:'冯远',email:'feng***@kingdee.com',role:'架构',tag:'member-tag--arch',dept:'架构部'},
-    {name:'许诺',email:'xu***@kingdee.com',role:'开发',tag:'member-tag--dev',dept:'研发部'},
-    {name:'韩梅',email:'han***@kingdee.com',role:'测试',tag:'member-tag--qa',dept:'测试部'},
-    {name:'罗静',email:'luo***@kingdee.com',role:'测试',tag:'member-tag--qa',dept:'测试部'},
-    {name:'杨帆',email:'yang***@kingdee.com',role:'运维',tag:'member-tag--ops',dept:'运维部'},
-    {name:'唐辉',email:'tang***@kingdee.com',role:'运维',tag:'member-tag--ops',dept:'运维部'},
-    {name:'蒋雯',email:'jiang***@kingdee.com',role:'需求',tag:'member-tag--pm',dept:'产品部'},
-    {name:'何欣',email:'he***@kingdee.com',role:'需求',tag:'member-tag--pm',dept:'产品部'},
-    {name:'梁平',email:'liang***@kingdee.com',role:'产品',tag:'member-tag--pm',dept:'产品部'},
-    {name:'范晨',email:'fan***@kingdee.com',role:'开发',tag:'member-tag--dev',dept:'研发部'},
-    {name:'董睿',email:'dong***@kingdee.com',role:'架构',tag:'member-tag--arch',dept:'架构部'},
-    {name:'贾旭',email:'jia***@kingdee.com',role:'测试',tag:'member-tag--qa',dept:'测试部'},
-    {name:'武威',email:'wu***@kingdee.com',role:'运维',tag:'member-tag--ops',dept:'运维部'}
-  ];
+  function cvSimulateExecution(){} /* stub */
 
   /* ---------- 面板切换 ---------- */
   var cvInited=false, cvLastTab='tasks';
@@ -970,128 +672,26 @@ const billTemplateWithTokens = billTemplate.replace(
   }
   function cvSwitchView(){} /* stub: moved to React */
   /* 执行中的任务在侧边栏项目下挂一条会话 */
-  function cvAddSidebarConversation(title){
-    var group=$('.sb-scroll .project-group');
-    if(!group) return;
-    var item=document.createElement('div');
-    item.className='sub-item cv-running';
-    item.innerHTML='<span class="dot blue"></span><span class="txt">'+xesc(title)+'</span>';
-    item.addEventListener('click',function(){ showView('collab'); setNavActive('协作开发'); cvSwitchView('chat'); });
-    var head=group.querySelector('.group-head');
-    if(head&&head.nextSibling) group.insertBefore(item,head.nextSibling); else group.appendChild(item);
-  }
+  function cvAddSidebarConversation(){} /* stub */
 
   /* ---------- 专家管理：分组卡片 ---------- */
   var cvExpertKw='';
-  function cvExpertGroups(){
-    var kw=cvExpertKw.trim();
-    var rows=EXPERTS.filter(function(e){
-      if(!kw) return true;
-      return (e.name+e.role+e.desc+(e.tags||[]).join()).indexOf(kw)>=0;
-    });
-    return [
-      {title:'Lingee 内置',desc:'随产品一起维护，覆盖交付全流程与苍穹、前端等领域',list:rows.filter(function(e){return e.by==='Lingee 内置'})},
-      {title:'我创建的',desc:'你自己建的专家，可随时改配置或删除',list:rows.filter(function(e){return e.mine})}
-    ];
-  }
-  function cvTeamCountOf(id){
-    return TEAMS.filter(function(t){ return t.members.indexOf(id)>=0 }).length;
-  }
-  function cvBuildExpertCard(e){
-    var tags=(e.tags||[]).map(function(t){return '<span class="expert-skill">'+xesc(t)+'</span>'}).join('');
-    var cmds=(e.cmds||[]).length, comps=(e.comp||[]).length;
-    /* 「能承担哪些工作」比「有几种工作模式」更能决定选不选他，直接摆出来 */
-    var mAll=e.modes||[], mShow=mAll.slice(0,3), mRest=mAll.length-mShow.length;
-    var modeRow=mAll.length
-      ? '<div class="expert-modes" title="可承担 '+xesc(mAll.join(' / '))+'"><span class="expert-modes-k">可承担</span>'
-        +mShow.map(function(m){return '<span class="expert-mode">'+xesc(m)+'</span>'}).join('')
-        +(mRest>0?'<span class="expert-mode expert-mode-more">+'+mRest+'</span>':'')+'</div>'
-      : '';
-    return '<div class="expert-card" data-cv-expert="'+e.id+'">'
-      +'<button type="button" class="expert-chat-btn" data-cv-call="'+e.id+'" title="召唤这位专家">召唤</button>'
-      +'<div class="expert-head"><img class="expert-av" src="'+xav(e.k)+'" alt="">'
-      +'<div><div class="expert-name">'+xesc(e.name)
-      +(e.ro?'<span class="expert-flag">只读</span>':'')
-      +(e.visibility==='private'?'<span class="expert-flag">个人</span>':'')+'</div>'
-      +'<div class="expert-role">'+xesc(e.role)+'</div></div></div>'
-      +'<div class="expert-intro">'+xesc(e.desc)+'</div>'
-      +'<div class="expert-skills">'+tags+'</div>'
-      +modeRow
-      +'<div class="expert-stats">'
-      +'<div><div class="expert-stat-val">'+cvTeamCountOf(e.id)+'</div><div class="expert-stat-label">所在专家团</div></div>'
-      +'<div><div class="expert-stat-val">'+comps+'</div><div class="expert-stat-label">能力项</div></div>'
-      +'<div><div class="expert-stat-val">'+cmds+'</div><div class="expert-stat-label">触发词</div></div>'
-      +'</div></div>';
-  }
+  function cvExpertGroups(){} /* stub */
+  function cvTeamCountOf(){} /* stub */
+  function cvBuildExpertCard(){} /* stub */
 
   /* ---------- 项目（与任务管理平级的独立页签，归属当前工作区） ---------- */
-  function cvProjectTaskStats(pid){
-    var tasks=CV_TASKS.filter(function(t){return t.project===pid;});
-    var n=function(s){return tasks.filter(function(t){return t.status===s;}).length;};
-    return {total:tasks.length,done:n('已完成'),doing:n('进行中'),review:n('待评审'),blocked:n('已失败')};
-  }
-  function cvProjectProgressHtml(done,total){
-    if(!total) return '<span class="cv-proj-progress__none">暂无任务</span>';
-    var pct=Math.round(done/total*100), r=7, circ=2*Math.PI*r;
-    var tone=pct>=100?'#08a040':pct>50?'#4d89ff':'#b8b8b8';
-    return '<span class="cv-proj-progress"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">'
-      +'<circle cx="9" cy="9" r="'+r+'" fill="none" stroke="#ececec" stroke-width="2.5"/>'
-      +'<circle cx="9" cy="9" r="'+r+'" fill="none" stroke="'+tone+'" stroke-width="2.5" stroke-dasharray="'+circ+'" stroke-dashoffset="'+(circ*(1-done/total))+'" stroke-linecap="round" transform="rotate(-90 9 9)"/>'
-      +'</svg><span class="cv-proj-progress__text">'+done+'/'+total+'</span></span>';
-  }
+  function cvProjectTaskStats(){} /* stub */
+  function cvProjectProgressHtml(){} /* stub */
   function cvProjectOwners(){} /* stub */
   /* 卡片上「状态」「负责人」就地改：点开小弹层直接选，不用进详情 */
-  function cvToggleProjectField(field,id,el,ev){
-    if(ev) ev.stopPropagation();
-    var wrap=el.parentNode;
-    var already=wrap.querySelector('.cv-proj-pop');
-    $$('.cv-proj-pop').forEach(function(d){ d.remove(); });
-    if(already) return; /* 再点一下同一个触发器，只收起 */
-    var p=cvProjectById(id); if(!p) return;
-    var opts = field==='status'
-      ? CV_PROJECT_STATUS.map(function(s){ return {value:s.id,label:s.label,tone:s.tone}; })
-      : cvProjectOwners().map(function(o){ return {value:o,label:o}; }).concat([{value:'',label:'无负责人'}]);
-    var current = field==='status' ? p.status : p.owner;
-    var dd=document.createElement('div'); dd.className='cv-proj-pop';
-    opts.forEach(function(o){
-      var item=document.createElement('div');
-      item.className='cv-proj-pop-item'+(o.value===current?' cv-proj-pop-item--active':'');
-      item.innerHTML=(o.tone?'<span class="cv-proj-pop-dot" style="background:'+o.tone+'"></span>':'')+xesc(o.label);
-      item.addEventListener('click',function(e){
-        e.stopPropagation();
-        if(field==='status') p.status=o.value; else p.owner=o.value;
-        dd.remove();
-        cvRenderProjectsPanel();
-      });
-      dd.appendChild(item);
-    });
-    wrap.appendChild(dd);
-  }
+  function cvToggleProjectField(){} /* stub */
   document.addEventListener('click',function(){ $$('.cv-proj-pop').forEach(function(d){ d.remove(); }); });
-  function cvPopulateProjectFilters(){
-    var sf=$('#cvProjectStatusFilter');
-    if(sf) sf.innerHTML='<option value="">全部状态</option>'+CV_PROJECT_STATUS.map(function(s){
-      return '<option value="'+s.id+'"'+(cvProjectStatusF===s.id?' selected':'')+'>'+s.label+'</option>';
-    }).join('');
-    var of=$('#cvProjectOwnerFilter');
-    if(of) of.innerHTML='<option value="">全部负责人</option>'+cvProjectOwners().map(function(o){
-      return '<option value="'+xesc(o)+'"'+(cvProjectOwnerF===o?' selected':'')+'>'+xesc(o)+'</option>';
-    }).join('')+'<option value="__none__"'+(cvProjectOwnerF==='__none__'?' selected':'')+'>无负责人</option>';
-  }
-  function cvFilteredProjects(){
-    var q=cvProjectQuery.trim().toLowerCase();
-    return cvWorkspaceProjects().filter(function(p){
-      if(cvProjectStatusF && p.status!==cvProjectStatusF) return false;
-      if(cvProjectOwnerF==='__none__' ? p.owner : (cvProjectOwnerF && p.owner!==cvProjectOwnerF)) return false;
-      if(!q) return true;
-      return (p.name+' '+(p.desc||'')+' '+(p.repo||'')).toLowerCase().indexOf(q)>=0;
-    });
-  }
+  function cvPopulateProjectFilters(){} /* stub */
+  function cvFilteredProjects(){} /* stub */
   function cvSetProject(){} /* stub: moved to React */
   function cvUpdateCounts(){} /* stub: moved to React */
-  function cvSyncUrl(){
-    setUrlState('/collab?tab='+cvLastTab+(cvProject?'&proj='+cvProject:''));
-  }
+  function cvSyncUrl(){} /* stub */
   /* ---------- 新建项目弹窗 ---------- */
   var CV_PROJECT_DOTS=['blue','orange','green'];
   function cvOpenNewProjectModal(){ _cvModalOpen('newproject'); }
@@ -1115,22 +715,9 @@ const billTemplateWithTokens = billTemplate.replace(
   if(cvNewProjectBtn) cvNewProjectBtn.addEventListener('click',function(){ cvOpenNewProjectModal(); });
 
   /* ---------- 工作区：项目归属的顶层容器，一次只能激活一个 ---------- */
-  function cvWorkspaceName(id){
-    var w=CV_WORKSPACES.filter(function(w){return w.id===id})[0];
-    return w?w.name:'工作区';
-  }
+  function cvWorkspaceName(){} /* stub */
   function cvRenderWsMenu(){} /* stub: moved to React */
-  function cvSetWorkspace(id){
-    if(id===cvWorkspace) return;
-    cvWorkspace=id;
-    cvRenderWsMenu();
-    /* 切换工作区后，若当前选中的项目不属于新工作区，回到「全部项目」聚合视角 */
-    if(cvProject && !cvWorkspaceProjects().some(function(p){return p.id===cvProject})){
-      cvSetProject('');
-    }else{
-      cvRenderProjectsPanel();
-    }
-  }
+  function cvSetWorkspace(){} /* stub */
   var cvWsBtn=$('#cvWsBtn');
   if(cvWsBtn) cvWsBtn.addEventListener('click',function(e){
     e.stopPropagation();
@@ -1184,25 +771,10 @@ const billTemplateWithTokens = billTemplate.replace(
 
   /* ---------- 设置：全局默认 / 项目覆盖 ---------- */
   var cvConfigValues={};               /* {'global'|项目id:{开关 key:是否开启}} */
-  function cvConfigScopeKey(card){
-    /* 全局设置项永远读写全局；项目可覆盖项在「项目覆盖」时读写本项目 */
-    if(card.getAttribute('data-cv-level')==='global') return 'global';
-    return (cvProject && cvConfigOverridden(card.getAttribute('data-cv-config'))) ? cvProject : 'global';
-  }
+  function cvConfigScopeKey(){} /* stub */
   function cvCaptureConfigDefaults(){} /* stub: moved to React */
-  function cvApplyConfigValues(){
-    $$('#cv-config .config-card').forEach(function(card){
-      var scope=cvConfigScopeKey(card), store=cvConfigValues[scope]||{};
-      $$('[data-cv-toggle]',card).forEach(function(t){
-        var k=t.getAttribute('data-cv-toggle');
-        var v=(k in store)?store[k]:cvConfigValues.global[k];
-        t.classList.toggle('on',!!v);
-      });
-    });
-  }
-  function cvConfigOverridden(key){
-    return !!(cvProject && cvConfigOverride[cvProject] && cvConfigOverride[cvProject][key]);
-  }
+  function cvApplyConfigValues(){} /* stub */
+  function cvConfigOverridden(){} /* stub */
   function cvApplyConfigScope(){} /* stub: moved to React */
   var cvConfigPanel=$('#cv-config');
   if(cvConfigPanel) cvConfigPanel.addEventListener('click',function(e){
