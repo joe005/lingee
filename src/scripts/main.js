@@ -839,7 +839,7 @@ const billTemplateWithTokens = billTemplate.replace(
      这里只是多一条「这三个名字改成显隐 #react-view-root」的分支——React 那边用
      BrowserRouter（不是 HashRouter，见 src/App.jsx 顶部注释），和这里一样认
      location.pathname，不需要再单独维护一份 hash。 */
-  var REACT_VIEWS=['apps','skills','agents','design','home'];
+  var REACT_VIEWS=['apps','skills','agents','design','home','newtask','chat','collab','settings'];
   function setUrlState(path,notifyReactRouter){
     try{history.replaceState(null,'',path);localStorage.setItem('lingeeUrlState',path)}catch(e){}
     /* react-router 的 BrowserRouter 只在 popstate 事件上重新读 location 决定渲染哪个
