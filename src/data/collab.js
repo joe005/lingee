@@ -1,0 +1,75 @@
+/* 从 main.js 提取的静态数据 */
+
+export const CV_PROJECTS = [
+    {id:'expense',name:'费用报销应用',dot:'blue',defaultTeam:'software-company',workspace:'finance-domain',
+      desc:'面向企业的费用报销全流程，覆盖提交、多级审批与统计分析',status:'active',owner:'王工',repo:'finance/expense-app',updated:'2 小时前'},
+    {id:'purchase',name:'采购管理系统',dot:'orange',defaultTeam:'cosmic-team',workspace:'purchase-domain',
+      desc:'采购订单、供应商管理与价格审批的一体化系统',status:'active',owner:'李工',repo:'erp/purchase-service',updated:'昨天'},
+    {id:'supply',name:'供应链协同平台',dot:'green',defaultTeam:null,workspace:'purchase-domain',
+      desc:'打通供应商协同门户，支持订单确认与交期回复',status:'planning',owner:'',repo:null,updated:'5 天前'}
+  ];
+export const CV_TASKS = [
+    {type:'需求',size:'大',source:'Jira',sourceId:'PROJ-42',exec:'专家团',status:'待评审',collab:'Agent间协作',title:'审批流插件代码审查',desc:'审查费用报销审批流的插件实现，包括多级审批流转逻辑和异常处理',assignee:'王工',progress:0,project:'expense'},
+    {type:'Bug',size:'小',source:'TAPD',sourceId:'BUG-7831',exec:'自动执行',status:'进行中',collab:'人Agent协作',title:'报销金额精度丢失修复',desc:'当报销金额含小数时，后端 BigDecimal 序列化后精度丢失',assignee:'AI开发Agent',progress:62,project:'expense'},
+    {type:'需求',size:'小',source:'对话自建',sourceId:'CNV-001',exec:'自动执行',status:'已完成',collab:'无需协作',title:'费用类型新增团建费选项',desc:'在费用类型下拉中增加团建费选项，归属部门活动费用类别',assignee:'AI开发Agent',progress:100,project:'expense'},
+    {type:'任务',size:'大',source:'Jira',sourceId:'PROJ-56',exec:'专家团',status:'未开始',collab:'人人协作',title:'权限体系重构',desc:'基于 RBAC 模型重构权限体系，支持角色分级、数据权限和功能权限分离',assignee:'待分配',progress:0,project:'expense'},
+    {type:'改进',size:'小',source:'API',sourceId:'API-12',exec:'自动执行',status:'已完成',collab:'无需协作',title:'批量导出 Excel 格式支持',desc:'当前仅支持 CSV 导出，需要增加 Excel 格式导出功能',assignee:'AI开发Agent',progress:100,project:'expense'},
+    {type:'Bug',size:'小',source:'Jira',sourceId:'BUG-7845',exec:'自动执行',status:'未开始',collab:'人Agent协作',title:'附件上传偶发 502 错误',desc:'附件上传在弱网环境下偶发 502 错误，需要增加重试机制',assignee:'待分配',progress:0,project:'expense'},
+    {type:'需求',size:'大',source:'Jira',sourceId:'PROJ-61',exec:'专家团',status:'未开始',collab:'人人协作',title:'多级审批流性能优化',desc:'当前审批流在多级审批场景下存在性能瓶颈，需要优化审批流转逻辑',assignee:'待分配',progress:0,project:'expense'},
+    {type:'任务',size:'大',source:'TAPD',sourceId:'TASK-203',exec:'专家团',status:'待评审',collab:'Agent间协作',title:'审批流多级流转设计',desc:'设计多级审批流转逻辑，支持串行、并行、会签等多种审批模式',assignee:'王工',progress:0,project:'expense'},
+    {type:'改进',size:'小',source:'对话自建',sourceId:'CNV-003',exec:'自动执行',status:'进行中',collab:'人Agent协作',title:'打印模板优化',desc:'优化报销单打印模板，支持自定义页眉页脚和水印',assignee:'AI开发Agent',progress:35,project:'expense'},
+    {type:'Bug',size:'小',source:'TAPD',sourceId:'BUG-7852',exec:'自动执行',status:'已完成',collab:'无需协作',title:'列表搜索响应慢修复',desc:'当报销单数据量超过 5000 条时，列表页搜索响应时间超过 10 秒',assignee:'AI开发Agent',progress:100,project:'expense'},
+    {type:'需求',size:'大',source:'Jira',sourceId:'PROJ-68',exec:'专家团',status:'未开始',collab:'人人协作',title:'多币种报销支持',desc:'支持多币种报销，包括汇率转换、币种选择和金额展示逻辑',assignee:'待分配',progress:0,project:'expense'},
+    {type:'任务',size:'小',source:'对话自建',sourceId:'CNV-005',exec:'自动执行',status:'已完成',collab:'人Agent协作',title:'数据字典维护',desc:'维护费用类型、审批层级、权限角色等数据字典',assignee:'AI开发Agent',progress:100,project:'expense'},
+    {type:'Bug',size:'大',source:'Jira',sourceId:'BUG-7901',exec:'专家团',status:'已失败',collab:'Agent间协作',title:'审批流死锁问题修复',desc:'并发审批场景下出现死锁，需要重构审批流的锁机制',assignee:'AI开发Agent',progress:0,project:'expense'},
+    {type:'改进',size:'小',source:'API',sourceId:'API-18',exec:'自动执行',status:'未开始',collab:'无需协作',title:'移动端审批页面适配',desc:'当前审批页面在移动端显示异常，需要做响应式适配',assignee:'待分配',progress:0,project:'expense'},
+    {type:'需求',size:'大',source:'Jira',sourceId:'PROJ-75',exec:'专家团',status:'进行中',collab:'人人协作',title:'预算控制模块开发',desc:'新增预算控制模块，支持按部门/项目/月份设置预算上限，超标自动拦截',assignee:'李工',progress:45,project:'expense'},
+    {type:'任务',size:'小',source:'TAPD',sourceId:'TASK-215',exec:'自动执行',status:'未开始',collab:'人Agent协作',title:'审批日志查询接口',desc:'开发审批日志查询接口，支持按时间、人员、状态筛选',assignee:'待分配',progress:0,project:'expense'},
+    {type:'Bug',size:'小',source:'对话自建',sourceId:'CNV-008',exec:'自动执行',status:'已完成',collab:'无需协作',title:'日期格式显示不一致',desc:'不同页面日期格式不一致，有的显示 yyyy-MM-dd 有的显示 yyyy/MM/dd',assignee:'AI开发Agent',progress:100,project:'expense'},
+    {type:'需求',size:'大',source:'飞书',sourceId:'FS-33',exec:'专家团',status:'未开始',collab:'Agent间协作',title:'移动端审批流开发',desc:'开发移动端审批流程，支持微信/钉钉/飞书消息通知和审批操作',assignee:'待分配',progress:0,project:'expense'},
+    {type:'需求',size:'大',source:'Jira',sourceId:'PUR-18',exec:'专家团',status:'进行中',collab:'人人协作',title:'采购订单批量导入',desc:'支持 Excel 批量导入采购订单，含供应商匹配、价格校验与错误行回执',assignee:'李工',progress:38,project:'purchase'},
+    {type:'Bug',size:'小',source:'TAPD',sourceId:'BUG-8102',exec:'自动执行',status:'待评审',collab:'人Agent协作',title:'采购入库单反审核报错',desc:'反审核已关联付款单的入库单时抛空指针，需补充关联校验与提示',assignee:'AI开发Agent',progress:0,project:'purchase'},
+    {type:'任务',size:'小',source:'对话自建',sourceId:'CNV-011',exec:'自动执行',status:'已完成',collab:'无需协作',title:'采购订单列表新增供应商筛选',desc:'列表页筛选区增加供应商下拉，支持按编码与名称模糊匹配',assignee:'AI开发Agent',progress:100,project:'purchase'},
+    {type:'改进',size:'大',source:'Jira',sourceId:'PUR-25',exec:'专家团',status:'未开始',collab:'人人协作',title:'采购价格审批链重构',desc:'按金额分级审批，超阈值自动加签采购总监，并保留完整审批留痕',assignee:'待分配',progress:0,project:'purchase'},
+    {type:'需求',size:'大',source:'飞书',sourceId:'FS-52',exec:'专家团',status:'进行中',collab:'Agent间协作',title:'供应商协同门户对接',desc:'打通供应商门户的订单确认与交期回复，含消息推送与状态回写',assignee:'冯远',progress:52,project:'supply'},
+    {type:'任务',size:'小',source:'API',sourceId:'API-31',exec:'自动执行',status:'未开始',collab:'人Agent协作',title:'交期变更消息推送',desc:'交期变更时向采购员推送企业微信消息，推送失败进入重试队列',assignee:'待分配',progress:0,project:'supply'},
+    {type:'Bug',size:'小',source:'Jira',sourceId:'BUG-8155',exec:'自动执行',status:'已失败',collab:'Agent间协作',title:'供应商评级定时任务超时',desc:'评级任务在供应商超 2 万条时超时中断，需要改为分片执行',assignee:'AI开发Agent',progress:0,project:'supply'},
+    {type:'需求',size:'小',source:'对话自建',sourceId:'CNV-014',exec:'自动执行',status:'已完成',collab:'无需协作',title:'供应商档案资质到期提醒',desc:'资质到期前 30 天在档案列表标红，并向对接采购员推送提醒',assignee:'AI开发Agent',progress:100,project:'supply'}
+  ];
+export const CV_REVIEWS = [
+    {type:'任务',size:'大',source:'Jira',exec:'专家团',priority:'紧急',reviewType:'代码评审',title:'审批流插件代码审查',desc:'审查费用报销审批流的插件实现，包括多级审批流转逻辑和异常处理',reviewer:'王工',reviewerRole:'架构人员',deadline:'今日 18:00',deadlineColor:'var(--danger)',borderColor:'var(--danger)',from:'张工',fromTime:'今日 10:30',artifacts:['源代码','单元测试','技术方案'],project:'expense'},
+    {type:'需求',size:'大',source:'Jira',exec:'专家团',priority:'高',reviewType:'方案评审',title:'多级审批流性能优化方案',desc:'当前审批流在多级审批场景下存在性能瓶颈，需要优化审批流转逻辑',reviewer:'王工',reviewerRole:'架构人员',deadline:'明日 12:00',deadlineColor:'var(--warning)',borderColor:'var(--warning)',from:'张工',fromTime:'昨日 16:20',artifacts:['技术方案','需求规格'],project:'expense'},
+    {type:'任务',size:'大',source:'Jira',exec:'专家团',priority:'中',reviewType:'方案评审',title:'权限体系重构方案评审',desc:'基于 RBAC 模型重构权限体系，支持角色分级、数据权限和功能权限分离',reviewer:'张工',reviewerRole:'开发人员',deadline:'3 天后',deadlineColor:'var(--dot-blue)',borderColor:'var(--dot-blue)',from:'赵琳',fromTime:'2 天前',artifacts:['技术方案','需求规格','源代码'],project:'expense'},
+    {type:'改进',size:'小',source:'对话自建',exec:'自动执行',priority:'中',reviewType:'代码评审',title:'打印模板优化方案评审',desc:'优化报销单打印模板，支持自定义页眉页脚和水印',reviewer:'陈晨',reviewerRole:'测试人员',deadline:'2 天后',deadlineColor:'var(--dot-blue)',borderColor:'var(--dot-blue)',from:'AI开发Agent',fromTime:'3 小时前',artifacts:['源代码','技术方案'],project:'expense'},
+    {type:'Bug',size:'小',source:'TAPD',exec:'自动执行',priority:'紧急',reviewType:'代码评审',title:'附件上传 502 修复方案评审',desc:'附件上传在弱网环境下偶发 502 错误的重试机制实现',reviewer:'张工',reviewerRole:'开发人员',deadline:'今日 20:00',deadlineColor:'var(--danger)',borderColor:'var(--danger)',from:'AI开发Agent',fromTime:'1 小时前',artifacts:['源代码','单元测试'],project:'expense'},
+    {type:'需求',size:'小',source:'对话自建',exec:'自动执行',priority:'低',reviewType:'需求评审',title:'费用类型新增选项评审',desc:'在费用类型下拉中增加团建费选项的实现',reviewer:'吴芳',reviewerRole:'需求人员',deadline:'5 天后',deadlineColor:'var(--success)',borderColor:'var(--dot-blue)',from:'AI开发Agent',fromTime:'昨日 14:00',artifacts:['需求规格','源代码'],project:'expense'},
+    {type:'需求',size:'大',source:'Jira',exec:'专家团',priority:'高',reviewType:'需求评审',title:'多币种报销需求规格评审',desc:'支持多币种报销，含汇率转换、原币金额与本位币金额双重记录',reviewer:'赵琳',reviewerRole:'需求人员',deadline:'明日 18:00',deadlineColor:'var(--warning)',borderColor:'var(--warning)',from:'王工',fromTime:'今日 09:00',artifacts:['需求规格'],project:'expense'},
+    {type:'任务',size:'大',source:'Jira',exec:'专家团',priority:'中',reviewType:'测试评审',title:'费用明细列表页测试用例评审',desc:'审查费用明细列表页的测试用例覆盖度，包括边界值、异常场景、性能场景',reviewer:'陈晨',reviewerRole:'测试人员',deadline:'3 天后',deadlineColor:'var(--dot-blue)',borderColor:'var(--dot-blue)',from:'李工',fromTime:'昨日 11:00',artifacts:['测试用例','测试报告','源代码'],project:'expense'},
+    {type:'任务',size:'中',source:'TAPD',exec:'专家团',priority:'中',reviewType:'部署评审',title:'审批流插件部署方案评审',desc:'审批流插件灰度发布方案，含回滚策略和监控告警配置',reviewer:'周杰',reviewerRole:'运维人员',deadline:'4 天后',deadlineColor:'var(--dot-blue)',borderColor:'var(--dot-blue)',from:'王工',fromTime:'2 天前 15:00',artifacts:['部署方案','运维手册'],project:'expense'},
+    {type:'需求',size:'大',source:'Jira',exec:'专家团',priority:'高',reviewType:'方案评审',title:'采购价格审批链重构方案',desc:'按金额分级审批与超阈值自动加签的流程设计，含审批留痕方案',reviewer:'冯远',reviewerRole:'架构人员',deadline:'明日 10:00',deadlineColor:'var(--warning)',borderColor:'var(--warning)',from:'李工',fromTime:'今日 09:20',artifacts:['技术方案','需求规格'],project:'purchase'},
+    {type:'Bug',size:'小',source:'TAPD',exec:'自动执行',priority:'中',reviewType:'代码评审',title:'采购入库单反审核校验补充',desc:'反审核关联付款单的校验实现与回归用例',reviewer:'张工',reviewerRole:'开发人员',deadline:'3 天后',deadlineColor:'var(--dot-blue)',borderColor:'var(--dot-blue)',from:'AI开发Agent',fromTime:'今日 11:40',artifacts:['源代码','单元测试'],project:'purchase'},
+    {type:'需求',size:'大',source:'飞书',exec:'专家团',priority:'紧急',reviewType:'需求评审',title:'供应商协同门户对接需求规格',desc:'订单确认与交期回复的字段口径、异常处理与状态回写规则',reviewer:'张工',reviewerRole:'开发人员',deadline:'今日 20:00',deadlineColor:'var(--danger)',borderColor:'var(--danger)',from:'冯远',fromTime:'今日 08:50',artifacts:['需求规格','技术方案'],project:'supply'}
+  ];
+export const CV_MEMBERS = [
+    {name:'张工',email:'zhang***@kingdee.com',roles:[{tag:'member-tag--dev',text:'开发'},{tag:'member-tag--arch',text:'架构'}],status:'available',source:'直接成员',isMe:true,level:'admin',projects:['expense','purchase','supply']},
+    {name:'李工',email:'li***@kingdee.com',roles:[{tag:'member-tag--dev',text:'开发'}],status:'available',source:'直接成员',level:'member',projects:['expense','purchase']},
+    {name:'王工',email:'wang***@kingdee.com',roles:[{tag:'member-tag--dev',text:'开发'},{tag:'member-tag--arch',text:'架构'}],status:'busy',source:'直接成员',level:'member',projects:['expense','supply']},
+    {name:'赵琳',email:'zha***@kingdee.com',roles:[{tag:'member-tag--pm',text:'需求'},{tag:'member-tag--pm',text:'产品'}],status:'available',source:'继承自 灵基AIOS',level:'member',projects:'*'},
+    {name:'陈晨',email:'chen***@kingdee.com',roles:[{tag:'member-tag--qa',text:'测试'}],status:'available',source:'直接成员',level:'member',projects:['expense']},
+    {name:'刘洋',email:'liu***@kingdee.com',roles:[{tag:'member-tag--qa',text:'测试'}],status:'busy',source:'直接成员',level:'member',projects:['purchase']},
+    {name:'周杰',email:'zhou***@kingdee.com',roles:[{tag:'member-tag--ops',text:'运维'}],status:'available',source:'直接成员',level:'member',projects:['expense','purchase']},
+    {name:'孙明',email:'sun***@kingdee.com',roles:[{tag:'member-tag--ops',text:'运维'}],status:'available',source:'继承自 灵基AIOS',level:'admin',projects:'*'},
+    {name:'吴芳',email:'wu***@kingdee.com',roles:[{tag:'member-tag--pm',text:'需求'}],status:'available',source:'直接成员',level:'member',projects:['expense']},
+    {name:'郑凯',email:'zheng***@kingdee.com',roles:[{tag:'member-tag--dev',text:'开发'}],status:'busy',source:'直接成员',level:'member',projects:['expense']},
+    {name:'钱涛',email:'qian***@kingdee.com',roles:[{tag:'member-tag--dev',text:'开发'}],status:'available',source:'直接成员',level:'member',projects:['purchase']},
+    {name:'宋宇',email:'song***@kingdee.com',roles:[{tag:'member-tag--pm',text:'产品'}],status:'available',source:'继承自 灵基AIOS',level:'member',projects:'*'},
+    {name:'冯远',email:'feng***@kingdee.com',roles:[{tag:'member-tag--arch',text:'架构'}],status:'available',source:'直接成员',level:'member',projects:['supply']},
+    {name:'许诺',email:'xu***@kingdee.com',roles:[{tag:'member-tag--dev',text:'开发'},{tag:'member-tag--arch',text:'架构'}],status:'busy',source:'直接成员',level:'member',projects:['purchase','supply']},
+    {name:'蒋雯',email:'jiang***@kingdee.com',roles:[{tag:'member-tag--pm',text:'需求'},{tag:'member-tag--pm',text:'产品'}],status:'available',source:'继承自 灵基AIOS',level:'member',projects:'*'},
+    {name:'何欣',email:'he***@kingdee.com',roles:[{tag:'member-tag--pm',text:'需求'}],status:'available',source:'直接成员',level:'member',projects:['supply']},
+    {name:'韩梅',email:'han***@kingdee.com',roles:[{tag:'member-tag--qa',text:'测试'}],status:'available',source:'直接成员',level:'member',projects:['purchase']},
+    {name:'罗静',email:'luo***@kingdee.com',roles:[{tag:'member-tag--qa',text:'测试'}],status:'busy',source:'直接成员',level:'member',projects:['supply']},
+    {name:'杨帆',email:'yang***@kingdee.com',roles:[{tag:'member-tag--ops',text:'运维'}],status:'available',source:'直接成员',level:'member',projects:['purchase']},
+    {name:'唐辉',email:'tang***@kingdee.com',roles:[{tag:'member-tag--ops',text:'运维'}],status:'available',source:'继承自 灵基AIOS',level:'member',projects:'*'},
+    {name:'梁平',email:'liang***@kingdee.com',roles:[{tag:'member-tag--pm',text:'产品'},{tag:'member-tag--owner',text:'所有者'}],status:'available',source:'直接成员',level:'admin',owner:true,projects:['expense','purchase','supply']}
+  ];
