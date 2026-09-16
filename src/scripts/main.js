@@ -1260,24 +1260,14 @@ const billTemplateWithTokens = billTemplate.replace(
     n.addEventListener('click',function(){
       var name=n.textContent.trim();
       setNavActive(name);
-      if(name==='应用开发' || name==='苍穹应用'){
-        showView('apps');
-      }else if(name==='技能开发'){
-        showView('skills');
-      }else if(name==='智能体开发'){
-        showView('agents');
-      }else if(name==='协作开发'){
-        showView('collab');
-        cvInit();
-        cvSwitchView(cvLastTab);
-      }else if(name==='新会话'){
-        showView('newtask');
-        input.setAttribute('data-placeholder','布置任务');
-        appDd.classList.add('hidden');
-        modeItems.forEach(function(m){m.classList.remove('checked')});
-      }
+      if(name==='应用开发'||name==='苍穹应用') showView('apps');
+      else if(name==='技能开发') showView('skills');
+      else if(name==='智能体开发') showView('agents');
+      else if(name==='协作开发') showView('collab');
+      else if(name==='新会话') showView('newtask');
     });
   });
+
   /* ---------- 我的应用 (apps view) ---------- */
   $$('#view-apps .tab').forEach(function(t){
     t.addEventListener('click',function(){
@@ -3083,33 +3073,11 @@ const billTemplateWithTokens = billTemplate.replace(
   });
 
   /* ---------- 初始化 ---------- */
-  function cvInit(){
-    if(cvInited) return;
-    cvInited=true;
-    cvLoadSavedTasks();
-    cvRenderTaskStats(); cvRenderTasks();
-    cvRenderReviewStats(); cvRenderReviews();
-    cvRenderMemberStats(); cvRenderMembers();
-    cvInjectCardActions();
-    cvCaptureConfigDefaults();
-    cvRenderWsMenu(); cvRenderProjectsPanel(); cvRenderTeamBind(); cvApplyConfigScope(); cvUpdateCounts();
-    cvUpdateMoreTrigger(cvLastTab);
-  }
-  var cvExpertSearch=$('#cvExpertSearch');
-  if(cvExpertSearch) cvExpertSearch.addEventListener('input',function(){ cvExpertKw=this.value; cvRenderExperts(); });
-  var cvNewExpertBtn=$('#cvNewExpertBtn');
-  if(cvNewExpertBtn) cvNewExpertBtn.addEventListener('click',function(){ openExpertEditor(null) });
-  var cvExpertSections=$('#cvExpertSections');
-  if(cvExpertSections) cvExpertSections.addEventListener('click',function(e){
-    var call=e.target.closest('[data-cv-call]');
-    if(call){ summon('expert',call.getAttribute('data-cv-call')); return; }
-    if(e.target.closest('[data-cv-new-expert]')){ openExpertEditor(null); return; }
-    var card=e.target.closest('[data-cv-expert]');
-    if(card) openExpertModal(card.getAttribute('data-cv-expert'));
-  });
+  function cvInit(){} /* moved to React CollabView */
+  /* expert search/new expert btn 事件已迁到 React CollabView */
 
 
-  /* URL 直接进入协作开发时，等模块加载完再渲染 */
+  /* URL 直接进入协作开发 — React 路由处理 */
   if(cvPendingTab){
     cvInit();
     if(cvPendingProj) cvSetProject(cvPendingProj);
