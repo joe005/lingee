@@ -775,8 +775,6 @@ const billTemplateWithTokens = billTemplate.replace(
     }
   }
   /* ---------- mode ↔ sidebar sync ---------- */
-  var modeItems=$$('.mode-item');
-  var input=$('#composerInput');
   var navItems=$$('.sb-scroll .nav-item');
   var navByName={};
   navItems.forEach(function(n){ navByName[n.textContent.trim()]=n; });
@@ -784,61 +782,21 @@ const billTemplateWithTokens = billTemplate.replace(
   function setNavActive(name){
     navItems.forEach(function(n){ n.classList.toggle('active', n.textContent.trim()===name); });
   }
-  function applyMode(mode,fromChip){
-    if(modeItems.length) modeItems.forEach(function(m){ m.classList.toggle('checked', m.getAttribute('data-val')===mode); });
-    if(appDd) appDd.classList.remove('error');
-    if(input) input.setAttribute('data-placeholder','布置'+mode+'任务');
-    if(appDd) appDd.classList.toggle('hidden', mode!=='苍穹应用');
-    if(mode!=='苍穹应用' && appDd){ appDd.classList.remove('open'); }
-    if(input) input.focus();
-  }
+  function applyMode(mode){ /* moved to React */ }
   /* mode items click 已迁到 React NewTaskView */
 
   /* ---------- view switching ---------- */
-  var viewHome=$('#view-home'), viewNew=$('#view-newtask'), viewChat=$('#view-chat'), viewApps=$('#view-apps'), viewSkills=$('#view-skills'), viewAgents=$('#view-agents'), viewCollab=$('#view-collab'), viewDesign=$('#view-design'), viewSettings=$('#view-settings');
   var viewReact=$('#react-view-root');
-  /* 已迁移到 React 的顶层视图：内容改由 src/views/*View.jsx 渲染进 #react-view-root，
-     #view-apps/#view-skills/#view-agents 这三个原容器留空、永久隐藏（见 index.html）。
-     showView() 本身的调用方（侧边栏点击、首页卡片、URL 恢复……）完全不用改，
-     这里只是多一条「这三个名字改成显隐 #react-view-root」的分支——React 那边用
-     BrowserRouter（不是 HashRouter，见 src/App.jsx 顶部注释），和这里一样认
-     location.pathname，不需要再单独维护一份 hash。 */
   var REACT_VIEWS=['apps','skills','agents','design','home','newtask','chat','collab','settings'];
   function setUrlState(path,notifyReactRouter){
     try{history.replaceState(null,'',path);localStorage.setItem('lingeeUrlState',path)}catch(e){}
-    /* react-router 的 BrowserRouter 只在 popstate 事件上重新读 location 决定渲染哪个
-       路由——history.replaceState() 本身不会触发这个事件（浏览器规范如此，只有前进/
-       后退才会），所以从 vanilla 侧切到应用/技能/智能体开发这三个 React 视图时，光改
-       URL 不够，路由不会跟着变，界面会停在上一个 React 视图不动。手动派发一个
-       popstate 补上这个通知，让 react-router 用改过的新 URL 重新算一遍。 */
-    if(notifyReactRouter){
-      try{ window.dispatchEvent(new PopStateEvent('popstate')); }catch(e){}
-    }
+    if(notifyReactRouter){ try{ window.dispatchEvent(new PopStateEvent('popstate')); }catch(e){} }
   }
   function showView(which){
-    if(REACT_VIEWS.indexOf(which)>=0){
-      viewHome.classList.add('hidden'); viewNew.classList.add('hidden'); viewChat.classList.add('hidden');
-      viewApps.classList.add('hidden'); viewSkills.classList.add('hidden'); viewAgents.classList.add('hidden');
-      viewCollab.classList.add('hidden'); viewDesign.classList.add('hidden'); viewSettings.classList.add('hidden');
-      if(viewReact) viewReact.classList.remove('hidden');
-      $('.sidebar').classList.remove('hidden');
-      closeAll(null);
-      setUrlState('/'+which,true);
-      return;
-    }
-    if(viewReact) viewReact.classList.add('hidden');
-    viewHome.classList.toggle('hidden', which!=='home');
-    viewNew.classList.toggle('hidden', which!=='newtask');
-    viewChat.classList.toggle('hidden', which!=='chat');
-    viewApps.classList.toggle('hidden', which!=='apps');
-    viewSkills.classList.toggle('hidden', which!=='skills');
-    viewAgents.classList.toggle('hidden', which!=='agents');
-    viewCollab.classList.toggle('hidden', which!=='collab');
-    viewDesign.classList.toggle('hidden', which!=='design');
-    viewSettings.classList.toggle('hidden', which!=='settings');
+    if(viewReact) viewReact.classList.remove('hidden');
     $('.sidebar').classList.toggle('hidden', which==='design');
     closeAll(null);
-    if(which!=='design') setUrlState('/'+which);
+    setUrlState('/'+which,true);
   }
 
 
@@ -1956,104 +1914,6 @@ const billTemplateWithTokens = billTemplate.replace(
      数据取自 lingee-build/packages/opencode/builtin-experts/
      技能名取自 packages/opencode/builtin-skills/
      ============================================================ */
-  var EXPERTS=[
-    {id:'software-team-lead',k:'lead',name:'软件团队负责人',role:'交付负责人',by:'Lingee 内置',
-     desc:'协调范围、分工、集成、风险与交付闭环，是专家团里唯一能开 kickoff 与做最终集成确认的角色。',
-     tags:['交付管理','团队协调'],modes:['分析','设计','集成','评审','验证','恢复'],
-     comp:['delivery.orchestration · principal','delivery.integration · advanced'],
-     cmds:[['帮我把[交付目标]拆成范围、非目标和验收门禁','闭合范围，明确谁负责、做到什么算完'],
-           ['这次交付复盘一下，还有哪些残余风险','汇总各角色证据，给出关闭或升级建议']]},
-    {id:'software-product-manager',k:'pm',name:'软件产品经理',role:'产品经理',by:'Lingee 内置',
-     desc:'把用户目标翻译成有优先级、可观察的需求与验收条件。',
-     tags:['需求分析','验收设计'],modes:['分析','设计','评审'],
-     comp:['product.requirements · principal','product.acceptance-design · advanced'],
-     cmds:[['把[用户目标]拆成一份带验收条件的清单','把目标整理成有范围、可验收的需求'],
-           ['帮我给这些需求补齐验收标准','补上可观察、可验证的验收条件'],
-           ['这次哪些事不做？帮我列一下非目标','明确边界，防止范围蔓延']]},
-    {id:'software-architect',k:'arch',name:'软件架构师',role:'软件架构师',by:'Lingee 内置',
-     desc:'设计可演进的系统边界、合同、数据流与失败处理，产出架构文档与可执行的实现计划。',
-     tags:['软件架构','可靠性'],modes:['分析','设计','集成','评审','恢复'],
-     comp:['architecture.system-design · principal','architecture.reliability · advanced'],
-     cmds:[['按[需求]设计系统的边界、合同和失败处理','从需求产出可演进的架构方案与迁移路径'],
-           ['这几个方案怎么选？帮我做技术选型','按质量属性评估备选方案并记录取舍'],
-           ['把架构拆成可以直接开工的实现计划','产出带可执行验证命令的编码任务图']]},
-    {id:'software-engineer',k:'eng',name:'软件工程师',role:'软件工程师',by:'Lingee 内置',
-     desc:'实现可维护的软件变更并完成针对性验证，只改授权范围内的代码。',
-     tags:['软件实现','系统集成'],modes:['分析','设计','实现','集成','验证','恢复'],
-     comp:['engineering.implementation · advanced','engineering.integration · advanced'],
-     skills:['cosmic-app-builder','general-app-builder','site-builder'],
-     cmds:[['按[验收条件]把功能实现出来','完成最小完整变更并跑通验证'],
-           ['这个 bug 帮我复现并修掉','定位根因、修复并补回归测试'],
-           ['做一个单页小工具，一次写完','小应用一次性写完全部代码 + build 验证']]},
-    {id:'software-qa-engineer',k:'qa',name:'软件测试工程师',role:'质量工程师',by:'Lingee 内置',
-     desc:'独立验证验收行为、回归影响与交付风险，给出基于证据的质量结论。',
-     tags:['质量保障','独立验证'],modes:['分析','设计','评审','验证'],
-     comp:['quality.verification · principal','quality.regression-analysis · advanced'],
-     cmds:[['针对[变更说明]出一份验证计划','按风险模型设计验收与回归场景'],
-           ['帮我端到端跑一遍，看看能不能过','实际跑 build、请求与用例并留存证据'],
-           ['这个版本能发吗？给个质量结论','给出 pass / pass-with-risk / fail 与理由']]},
-    {id:'code-reviewer',k:'cr',name:'代码评审专家',role:'实现代码评审',by:'Lingee 内置',ro:true,
-     desc:'独立评审实现代码的正确性、并发安全与合同落实情况，只读不改。',
-     tags:['只读评审','正确性'],modes:['评审','验证'],
-     comp:['implementation-correctness · principal','concurrent-commit-model · principal'],
-     cmds:[['帮我评审这段代码有没有正确性问题','把合同义务追溯到代码路径，报告可复现的缺陷']]},
-    {id:'security-reviewer',k:'sec',name:'安全评审专家',role:'应用安全评审',by:'Lingee 内置',ro:true,
-     desc:'基于信任边界建立威胁模型，演练滥用、竞态与绕过场景并给出风险判定。',
-     tags:['只读评审','威胁建模'],modes:['评审','验证'],
-     comp:['application-security · principal','filesystem-safety · advanced'],
-     cmds:[['这个功能有安全风险吗？帮我做威胁建模','演练滥用与绕过场景，判断风险是否可接受']]},
-    {id:'read-only-analyst',k:'ana',name:'只读分析专家',role:'软件分析',by:'Lingee 内置',ro:true,
-     desc:'在不改动工作区的前提下做有边界的源码分析与结论交叉验证。',
-     tags:['只读分析'],modes:['分析','评审','验证'],
-     comp:['software.analysis · advanced'],
-     cmds:[['帮我读一下这块代码是怎么跑的','有边界地读源码，给出结论与证据，不改文件']]},
-    {id:'frontend-engineer',k:'fe',name:'前端工程专家',role:'前端工程师',by:'Lingee 内置',
-     desc:'金蝶前端规范下的组件实现、响应式布局与交互调试。',
-     tags:['React','响应式','组件库'],modes:['设计','实现','验证'],
-     comp:['engineering.frontend · advanced'],skills:['cosmic-kwc-builder','frontend-design'],
-     cmds:[['按[设计稿与规范]把页面实现出来','实现响应式页面与交互'],
-           ['帮我抽一个可复用的组件','产出符合金蝶前端规范的组件'],
-           ['页面和设计稿对不上，帮我调一下','把实现调到与设计稿一致']]},
-    {id:'ux-designer',k:'ux',name:'界面设计专家',role:'交互 / 视觉设计',by:'Lingee 内置',
-     desc:'信息架构、交互流程与视觉规范，产出可直接交付前端的设计说明。',
-     tags:['交互设计','视觉规范'],modes:['分析','设计','评审'],
-     comp:['design.interaction · advanced'],skills:['prototype-builder','frontend-design'],
-     cmds:[['围绕[用户目标]先对齐设计目标','产出设计简报，对齐业务目标与设计策略'],
-           ['帮我梳理这个模块的信息架构','理清导航、层级与页面骨架'],
-           ['帮我走查一下这个页面','对已实现页面做规范与可用性检查']]},
-    {id:'cosmic-form',k:'form',name:'苍穹表单专家',role:'苍穹表单',by:'Lingee 内置',
-     desc:'KDDP 表单引擎的字段、校验、联动与权限配置。',
-     tags:['表单设计','字段校验'],modes:['分析','设计','实现'],
-     comp:['cosmic.form-design · advanced'],skills:['cosmic-requirements-spec'],
-     cmds:[['按[已确认需求]建一张苍穹单据','设计表单结构与字段'],
-           ['这几个字段要联动，帮我配一下','配置校验规则与字段联动逻辑'],
-           ['这张单据的权限怎么配？','设置单据与字段级权限']]},
-    {id:'cosmic-workflow',k:'flow',name:'苍穹工作流专家',role:'苍穹工作流',by:'Lingee 内置',
-     desc:'审批链配置与流程调试，处理加签、会签、条件流转等复杂场景。',
-     tags:['审批链','流程调试'],modes:['分析','设计','实现','验证'],
-     comp:['cosmic.workflow · advanced'],
-     cmds:[['按[已确认需求]设计一条苍穹审批流程','梳理审批场景并配置工作流'],
-           ['我的审批流节点卡住了，帮我排查','定位节点为什么不流转']]},
-    {id:'cosmic-report',k:'rpt',name:'苍穹报表专家',role:'苍穹报表',by:'Lingee 内置',
-     desc:'报表建模、取数逻辑与图表配置，兼顾查询性能与交互式分析。',
-     tags:['报表建模','取数逻辑'],modes:['分析','设计','实现'],
-     comp:['cosmic.report · advanced'],
-     cmds:[['按[已确认需求]做一张报表','设计报表数据模型与取数逻辑'],
-           ['报表查得太慢了，帮我优化','优化取数与查询性能']]},
-    {id:'cosmic-plugin',k:'plug',name:'苍穹二开插件专家',role:'苍穹二开',by:'Lingee 内置',
-     desc:'基于扩展点开发二开插件，处理注册、生命周期调试与升级兼容。',
-     tags:['插件开发','扩展点'],modes:['设计','实现','验证','恢复'],
-     comp:['cosmic.plugin · advanced'],skills:['cosmic-reverse-engineering'],
-     cmds:[['在[应用编码]里基于扩展点写一个二开插件','定位扩展点并实现插件逻辑'],
-           ['插件注册了但不生效，帮我看看','排查注册与生命周期问题']]},
-    {id:'cosmic-api',k:'api',name:'苍穹集成接口专家',role:'苍穹集成',by:'Lingee 内置',
-     desc:'开放接口对接、鉴权配置与数据同步，含异常重试与幂等设计。',
-     tags:['接口对接','鉴权'],modes:['设计','实现','集成','验证'],
-     comp:['cosmic.integration · advanced'],
-     cmds:[['按[接口契约]对接苍穹开放接口','确认契约与鉴权方式并实现对接'],
-           ['接口鉴权怎么配？','配置鉴权与安全策略'],
-           ['两边数据要同步，帮我设计方案','设计幂等同步任务与异常重试']]}
-  ];
   var BUILTIN_EXPERTS=EXPERTS;
   var MY_EXPERTS=[];                 /* 我自己创建的专家，落 localStorage */
   var EX={};
