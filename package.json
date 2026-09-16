@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "check": "node build/check-modules.mjs",
     "preview": "npm run build && wrangler dev",
     "format": "prettier --write \"src/**/*.{js,css,html}\"",
     "standalone": "node scripts/build-standalone.cjs",

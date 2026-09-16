@@ -1,13 +1,13 @@
 import { defineConfig } from 'vite';
 import { viteSingleFile } from 'vite-plugin-singlefile';
-
-import { cloudflare } from "@cloudflare/vite-plugin";
+import { cloudflare } from '@cloudflare/vite-plugin';
+import htmlInclude from './build/vite-plugin-html-include.js';
 
 // 演示原型：构建产出单个可双击打开的 index.html
 export default defineConfig({
   base: '/lingee/',
-  plugins: [viteSingleFile(), cloudflare()],
-  server: { open: true },
+  plugins: [htmlInclude(), viteSingleFile(), cloudflare()],
+  server: { port: 5199, open: true },
   build: {
     outDir: 'dist',
     assetsInlineLimit: 100000000,

@@ -1,0 +1,18 @@
+<!-- 添加成员 -->
+<div class="modal-overlay" id="memberModal">
+  <div class="modal-card member-picker-modal" role="dialog" aria-modal="true">
+    <div class="modal-header">
+      <div class="env-config-heading"><div class="modal-title">添加成员</div></div>
+      <button class="modal-close" id="memberModalClose" type="button" aria-label="关闭">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="app-search member-search">
+        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="search" id="memberSearchInput" placeholder="搜索专家、职业或能力" autocomplete="off" readonly>
+      </div>
+      <div class="member-list" id="memberList"></div>
+    </div>
+    <div class="modal-footer"><button type="button" class="modal-btn confirm" id="memberDoneBtn">完成</button></div>
+  </div>
+</div>
+

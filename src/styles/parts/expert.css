@@ -1,0 +1,468 @@
+/* ============================================================
+   专家 / 专家团
+   追加在文件末尾，遵循本工程的层叠顺序约定
+   配色一律取 tokens.css，勿在此写死色值
+   ============================================================ */
+
+/* ---- 库视图：卡片 ---- */
+.x-card { cursor: pointer; }
+.x-av { width: 34px; height: 34px; border-radius: 9px; flex: none; }
+.x-faces { display: inline-flex; flex: none; padding-right: 8px; }
+.x-faces img { width: 28px; height: 28px; border-radius: 8px; margin-right: -9px; border: 2px solid var(--bg); }
+.x-sub { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+.x-badge {
+  font-size: 11px; padding: 1px 6px; border-radius: 5px; margin-left: 6px;
+  background: var(--brand-fill); color: var(--brand); font-weight: 400;
+}
+.x-badge-ro { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); }
+.x-badge-lead { background: var(--brand-fill); color: var(--brand); }
+.x-empty { grid-column: 1 / -1; text-align: center; color: var(--text-soft); padding: 48px 0; font-size: 14px; }
+.x-empty-sm { color: var(--text-soft); font-size: 13px; text-align: center; padding: 18px; }
+
+/* ---- 专家团配置弹窗 ---- */
+.team-config-modal { width: min(720px, 92vw); }
+.team-readonly-tip {
+  background: var(--warning-bg); color: var(--warning);
+  border-radius: 8px; padding: 9px 12px; font-size: 13px; margin-bottom: 16px;
+}
+.team-hint { font-size: 12px; color: var(--text-secondary); margin: -4px 0 12px; }
+.team-count {
+  font-size: 12px; font-weight: 400; color: var(--text-secondary);
+  background: var(--fill-1); border-radius: 5px; padding: 1px 7px; margin-left: 6px;
+}
+.env-field-wide { grid-column: 1 / -1; }
+.env-field textarea {
+  width: 100%; resize: vertical; min-height: 56px; line-height: 1.6;
+  font: inherit; color: var(--text);
+  border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; background: var(--bg);
+}
+.env-field textarea:focus { outline: none; border-color: var(--border-focus); }
+
+/* 成员列表 */
+.team-members { display: flex; flex-direction: column; gap: 7px; }
+.x-member {
+  display: flex; align-items: center; gap: 11px;
+  border: 1px solid var(--border); border-radius: 10px; padding: 9px 11px;
+}
+.x-member img { width: 32px; height: 32px; border-radius: 9px; flex: none; cursor: pointer; }
+.x-member-b { flex: 1; min-width: 0; cursor: pointer; }
+.x-member-n { font-size: 13.5px; font-weight: 500; display: flex; align-items: center; flex-wrap: wrap; }
+.x-member-r { font-size: 11.5px; color: var(--text-secondary); margin-top: 1px; }
+.x-member-a { display: flex; gap: 2px; flex: none; opacity: 0; transition: opacity 0.12s; }
+.x-member:hover .x-member-a { opacity: 1; }
+.x-ic {
+  width: 26px; height: 26px; border: 0; background: none; cursor: pointer;
+  border-radius: 6px; color: var(--text-secondary); font-size: 13px; line-height: 1;
+}
+.x-ic:hover { background: var(--hover); color: var(--text); }
+.x-ic-dg:hover { color: var(--danger); }
+.team-add {
+  width: 100%; margin-top: 8px; padding: 10px;
+  border: 1px dashed var(--border); border-radius: 10px; background: none;
+  color: var(--text-secondary); font: inherit; font-size: 13px; cursor: pointer;
+}
+.team-add:hover { border-color: var(--brand); color: var(--brand); }
+
+/* 流程预览 */
+.team-flow-label { font-size: 12px; color: var(--text-secondary); margin: 18px 0 8px; }
+.team-flow { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+.x-node {
+  display: flex; align-items: center; gap: 8px;
+  border: 1px solid var(--border); border-radius: 9px; padding: 6px 10px 6px 7px; background: var(--bg);
+}
+.x-node img { width: 22px; height: 22px; border-radius: 6px; }
+.x-node b { font-size: 12.5px; font-weight: 500; white-space: nowrap; }
+.x-node i { font-style: normal; font-size: 11px; color: var(--text-secondary); white-space: nowrap; display: block; }
+.x-node.miss { border-color: var(--warning); background: var(--warning-bg); }
+.x-ar { color: var(--text-soft); font-size: 11px; }
+.x-kind {
+  font-size: 9.5px; color: var(--text-soft); border: 1px solid var(--border);
+  border-radius: 4px; padding: 0 4px; margin-left: 5px; vertical-align: 1px; font-weight: 400;
+}
+.team-mode-note {
+  display: flex; gap: 8px; align-items: center; margin-top: 12px;
+  background: var(--fill-1); border-radius: 8px; padding: 8px 12px;
+  font-size: 12.5px; color: var(--text-secondary);
+}
+.team-mode-note code {
+  font-size: 11.5px; background: var(--bg); border: 1px solid var(--border);
+  border-radius: 4px; padding: 1px 5px;
+}
+.x-warn {
+  display: flex; gap: 8px; margin-top: 9px;
+  background: var(--warning-bg); color: var(--warning);
+  border-radius: 8px; padding: 8px 12px; font-size: 12.5px;
+}
+
+/* ---- 添加成员弹窗 ---- */
+.member-picker-modal { width: min(560px, 92vw); }
+.member-search { margin-bottom: 12px; }
+.member-list { max-height: 52vh; overflow: auto; }
+.x-mrow {
+  display: flex; gap: 11px; align-items: flex-start; width: 100%; text-align: left;
+  border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px;
+  margin-bottom: 7px; background: var(--bg); cursor: pointer; font: inherit;
+}
+.x-mrow:hover { border-color: var(--brand); }
+.x-mrow.on { border-color: var(--brand); background: var(--brand-fill); }
+.x-mrow img { width: 30px; height: 30px; border-radius: 8px; flex: none; }
+.x-mrow-b { flex: 1; min-width: 0; }
+.x-mrow-n { display: flex; align-items: center; flex-wrap: wrap; font-size: 13.5px; font-weight: 500; color: var(--text); }
+.x-mrow-d { display: block; font-size: 12px; color: var(--text-secondary); margin-top: 2px; line-height: 1.55; }
+.x-mrow-m { display: block; font-size: 11.5px; color: var(--text-soft); margin-top: 4px; }
+
+/* ---- 专家详情弹窗 ---- */
+.expert-detail-modal { width: min(520px, 92vw); }
+.expert-detail-modal > .modal-body { min-height: 0; overflow-y: auto; }
+.expert-detail-head { align-items: flex-start; }
+.x-detail-head { display: flex; gap: 13px; align-items: center; }
+.x-av-lg { width: 46px; height: 46px; border-radius: 12px; }
+.x-sec { margin-bottom: 18px; }
+.x-sec-t { font-size: 11.5px; color: var(--text-soft); letter-spacing: 0.04em; margin-bottom: 8px; }
+.x-desc { color: var(--text-secondary); font-size: 13.5px; line-height: 1.65; }
+.x-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.x-ul { margin: 0; padding-left: 17px; color: var(--text-secondary); font-size: 13px; }
+.x-ul li { margin-bottom: 4px; }
+.x-cmd {
+  display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
+  border: 1px solid var(--border); border-radius: 9px; padding: 9px 12px;
+  margin-bottom: 6px; background: var(--bg); cursor: pointer; font: inherit;
+  color: var(--text-secondary);
+}
+.x-cmd:hover { border-color: var(--brand); background: var(--brand-fill); }
+.x-cmd-b { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.x-cmd-q { font-size: 13px; color: var(--text); line-height: 1.5; }
+.x-cmd-d { font-size: 11.5px; color: var(--text-soft); line-height: 1.5; }
+.x-cmd-go { flex: none; width: 15px; height: 15px; color: var(--text-soft); }
+.x-cmd:hover .x-cmd-go { color: var(--brand); }
+
+/* ---- composer 里的专家团 chip 与下拉 ---- */
+.chip-faces { display: inline-flex; margin-right: 2px; }
+.chip-faces img { width: 18px; height: 18px; border-radius: 5px; margin-right: -6px; border: 1.5px solid var(--bg); }
+.expert-menu { min-width: 280px; }
+.x-opt { display: flex; align-items: center; gap: 9px; }
+.x-opt-b { flex: 1; min-width: 0; }
+.x-opt-n { display: block; font-size: 13.5px; color: var(--text); }
+.x-opt-b i {
+  font-style: normal; display: block; font-size: 11px; color: var(--text-secondary);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* 专家团弹窗页脚：删除左置，主操作右置 */
+.team-modal-footer { justify-content: flex-start; }
+.team-footer-spacer { flex: 1; }
+.team-delete-btn { color: var(--danger); }
+.team-delete-btn:hover { background: var(--danger-bg); }
+
+/* 新会话页：模式改为输入框下方的图标胶囊（对齐实现） */
+#view-newtask .mode-bar {
+  flex-wrap: wrap; gap: 10px; justify-content: center;
+  margin: 20px 0 0; padding: 0; max-width: 800px;
+}
+#view-newtask .mode-item.mode-pill {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 16px; border-radius: 999px;
+  border: 1px solid var(--border); background: var(--bg);
+  font-size: 13.5px; color: var(--text);
+  box-shadow: var(--pill-shadow);
+}
+#view-newtask .mode-item.mode-pill .ic { width: 16px; height: 16px; flex: none; }
+#view-newtask .mode-item.mode-pill:hover { border-color: var(--border-hover); background: var(--bg); }
+#view-newtask .mode-item.mode-pill.checked {
+  background: var(--brand-fill); color: var(--brand-active);
+  border-color: var(--border-focus); font-weight: 500;
+}
+/* 标题去掉吉祥物后独立成行 */
+#view-newtask .greeting { display: block; text-align: center; }
+
+/* composer 顶部：选中的专家 / 专家团标签 */
+.composer-tags { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 4px 10px; }
+.composer-tags.hidden { display: none; }
+.ctag {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 6px 5px 10px; border-radius: 8px;
+  background: var(--brand-fill); color: var(--brand-active);
+  font-size: 13.5px; cursor: pointer; max-width: 100%;
+}
+.ctag:hover { background: #e4ecff; }
+.ctag .ic { width: 15px; height: 15px; flex: none; }
+.ctag-av { width: 17px; height: 17px; border-radius: 5px; flex: none; }
+.ctag-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ctag-x {
+  border: 0; background: none; padding: 2px; cursor: pointer; line-height: 0;
+  color: var(--brand-active); opacity: .55; border-radius: 4px; flex: none;
+}
+.ctag-x svg { width: 13px; height: 13px; }
+.ctag-x:hover { opacity: 1; background: rgba(73, 93, 255, .12); }
+
+/* 选择器分组 */
+.pick-group {
+  font-size: 11px; color: var(--text-soft); padding: 10px 10px 5px;
+  display: flex; align-items: baseline; gap: 8px;
+}
+.pick-group-note { font-size: 10.5px; color: var(--text-soft); opacity: .8; }
+.x-opt-av { width: 24px; height: 24px; border-radius: 7px; flex: none; }
+
+/* 标签行内的选择器：标签即触发器 */
+.composer-tags .expert-dd { position: relative; display: inline-flex; }
+.composer-tags .expert-dd .menu { top: calc(100% + 6px); left: 0; bottom: auto; }
+.ctag-slot { display: inline-flex; cursor: pointer; }
+.ctag-empty {
+  background: transparent; border: 1px dashed var(--border-hover);
+  color: var(--text-secondary);
+}
+.ctag-empty:hover { background: var(--fill-1); border-color: var(--brand); color: var(--brand); }
+/* 选择器列表：分组多，给足高度 */
+.expert-menu .app-list { max-height: 320px; overflow-y: auto; }
+
+/* 选择器：对齐「工作」页「选择智能体」的形态 */
+.chip-faces .ic { width: 15px; height: 15px; }
+.expert-menu .x-opt { gap: 9px; padding: 8px 10px; }
+.expert-menu .x-opt-n { font-size: 13.5px; color: var(--text); flex: 1; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.expert-menu .x-opt-av { width: 22px; height: 22px; border-radius: 50%; }
+.expert-menu .x-faces img { width: 20px; height: 20px; border-radius: 50%; margin-right: -7px; }
+/* 发送按钮：实心蓝（对齐实现） */
+#view-newtask .send-btn { background: var(--brand); color: #fff; }
+#view-newtask .send-btn:hover { background: var(--brand-hover); }
+
+/* 内置专家团：名称/说明只读 */
+.team-config-modal .x-ro,
+.team-config-modal .x-ro:focus {
+  background: #f7f7f7;
+  color: var(--text-secondary);
+  border-color: var(--border);
+  box-shadow: none;
+  cursor: default;
+  resize: none;
+}
+
+/* ---------- 我创建的专家：入口、编辑器 ---------- */
+#expertTabs .tab-count {
+  margin-left: 5px;
+  font-size: 12px;
+  color: var(--text-soft);
+  font-variant-numeric: tabular-nums;
+}
+#expertTabs .tab.active .tab-count { color: var(--text-secondary); }
+
+.x-new-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 168px;
+  border: 1px dashed var(--border-hover);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: center;
+}
+.x-new-card:hover { border-color: #c9c9c9; background: #fbfbfb; color: var(--text); }
+.x-new-ic {
+  width: 38px; height: 38px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  border: 1px solid var(--border-hover);
+  font-size: 20px;
+  line-height: 1;
+  color: var(--text-secondary);
+}
+.x-new-sub { font-size: 12px; font-weight: 400; color: var(--text-soft); max-width: 200px; }
+
+.x-badge-mine {
+  background: #eef3ff;
+  color: #495dff;
+}
+
+.x-chat-entry {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin-bottom: 18px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fafbff;
+  text-align: left;
+  cursor: pointer;
+}
+.x-chat-entry:hover { border-color: #c7d2fe; background: #f4f6ff; }
+.x-chat-ic {
+  flex: none;
+  width: 30px; height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid var(--border);
+  color: #495dff;
+}
+.x-chat-ic svg { width: 17px; height: 17px; }
+.x-chat-b { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.x-chat-t { font-size: 13px; font-weight: 600; color: var(--text); }
+.x-chat-d { font-size: 12px; color: var(--text-secondary); }
+.x-chat-go { flex: none; color: var(--text-soft); font-size: 18px; line-height: 1; }
+
+.x-sec-sub { margin-top: 18px; }
+
+.x-av-picker { display: flex; flex-wrap: wrap; gap: 8px; }
+.x-av-opt {
+  width: 40px; height: 40px;
+  padding: 2px;
+  border: 2px solid transparent;
+  border-radius: 11px;
+  background: transparent;
+  cursor: pointer;
+  line-height: 0;
+}
+.x-av-opt img { width: 100%; height: 100%; border-radius: 8px; }
+.x-av-opt:hover { border-color: var(--border-hover); }
+.x-av-opt.on { border-color: #495dff; }
+
+.x-mode-picker { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.x-mode-opt {
+  padding: 5px 13px;
+  border: 1px solid var(--border-hover);
+  border-radius: 999px;
+  background: #fff;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.x-mode-opt:hover { border-color: #c9c9c9; color: var(--text); }
+.x-mode-opt.on { border-color: #495dff; background: #eef3ff; color: #495dff; font-weight: 500; }
+
+.x-cmd-rows { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.x-cmd-row { display: flex; align-items: center; gap: 8px; }
+.x-cmd-row input {
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--border-hover);
+  border-radius: 8px;
+  background: #fff;
+  font-size: 13px;
+  color: var(--text);
+  font-family: inherit;
+}
+.x-cmd-row input:focus { outline: none; border-color: var(--border-focus); }
+.x-cmd-row .x-cmd-k { flex: 1; min-width: 0; }
+
+/* 未选专家时的自动匹配说明 */
+.auto-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0 0 18px;
+  padding: 10px 13px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fafafa;
+}
+.auto-note-av { flex: none; display: inline-flex; padding-right: 6px; }
+.auto-note-av img {
+  width: 22px; height: 22px;
+  border-radius: 6px;
+  margin-right: -6px;
+  border: 1.5px solid var(--bg);
+}
+.auto-note-b { font-size: 12.5px; color: var(--text-secondary); line-height: 1.6; }
+.auto-note-b b { color: var(--text); font-weight: 600; }
+.auto-note-b i { display: block; font-style: normal; font-size: 11.5px; color: var(--text-soft); margin-top: 2px; }
+
+/* ---------- 卡片上的快速召唤 ---------- */
+.x-card { position: relative; }
+.x-call {
+  position: absolute;
+  top: 12px; right: 12px;
+  padding: 3px 10px;
+  border: 1px solid var(--border-hover);
+  border-radius: 999px;
+  background: var(--bg);
+  font: inherit;
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity .12s, border-color .12s, color .12s;
+}
+.x-card:hover .x-call { opacity: 1; }
+.x-call:hover { border-color: var(--brand); color: var(--brand); }
+.x-call:focus-visible { opacity: 1; }
+@media (hover: none) { .x-call { opacity: 1; } }
+
+/* ---------- 专家团弹窗压缩 ---------- */
+.team-hint-inline {
+  margin-left: 8px;
+  font-size: 11.5px;
+  font-weight: 400;
+  color: var(--text-soft);
+  letter-spacing: 0;
+}
+
+/* 成员改两列，长职责单行截断，弹窗少滚一半 */
+.team-config-modal .team-members {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+}
+.team-config-modal .x-member { min-width: 0; }
+.team-config-modal .x-member-r {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (max-width: 700px) {
+  .team-config-modal .team-members { grid-template-columns: 1fr; }
+}
+
+/* 专家团的触发词单行显示（说明进 title），弹窗不至于太长 */
+.x-cmd-1 { padding: 7px 12px; margin-bottom: 5px; }
+.x-cmd-1 .x-cmd-q { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---------- 配置弹窗的页签 ---------- */
+.modal-tabs {
+  display: flex;
+  gap: 2px;
+  flex: none;
+  padding: 0 22px;
+  border-bottom: 1px solid var(--border);
+}
+.modal-tab {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 10px 2px 11px;
+  margin-right: 20px;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 13px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.modal-tab:hover { color: var(--text); }
+.modal-tab.active { color: var(--text); font-weight: 500; }
+.modal-tab.active:after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: -1px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--brand);
+}
+.modal-tab-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--warning);
+}
+.team-config-modal .modal-body { padding-top: 16px; }
+.team-hint-inline.is-warn { color: var(--warning); }
+
+/* 页签化之后弹窗窄一点更好读 */
+.team-config-modal { width: min(660px, 92vw); }
+

@@ -1,0 +1,29 @@
+  <!-- 附件弹窗 -->
+  <div class="modal-overlay" id="attachModal">
+    <div class="modal-box">
+      <div class="modal-head">
+        <span class="modal-title">选择附件</span>
+        <svg class="ic modal-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </div>
+      <div class="modal-body">
+        <div class="attach-item" data-attach="upload">
+          <span class="attach-icon" style="color:#3a7bff;background:#eef3ff"><svg class="ic" viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M5 20h14"/></svg></span>
+          <div class="attach-info"><div class="attach-name">上传文件</div><div class="attach-desc">从本地选择文件上传</div></div>
+        </div>
+        <div class="attach-item" data-attach="folder">
+          <span class="attach-icon" style="color:#ff8d42;background:#fff1e8"><svg class="ic" viewBox="0 0 24 24"><path d="M4 20V6a2 2 0 0 1 2-2h5l2 2h5a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/></svg></span>
+          <div class="attach-info"><div class="attach-name">选择文件夹</div><div class="attach-desc">批量上传整个目录</div></div>
+        </div>
+        <div class="attach-item" data-attach="link">
+          <span class="attach-icon" style="color:#08cc50;background:#e8faef"><svg class="ic" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.5-1.5"/></svg></span>
+          <div class="attach-info"><div class="attach-name">添加链接</div><div class="attach-desc">通过 URL 引用外部资源</div></div>
+        </div>
+        <div class="attach-item" data-attach="screenshot">
+          <span class="attach-icon" style="color:#8b5cf6;background:#f3eefe"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M6 16a3 3 0 0 1 6 0"/></svg></span>
+          <div class="attach-info"><div class="attach-name">截图</div><div class="attach-desc">截取屏幕区域作为附件</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<!-- 新建应用弹窗 -->

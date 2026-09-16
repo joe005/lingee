@@ -1,0 +1,132 @@
+<!-- 新增 ERP 测试环境 -->
+<div class="modal-overlay" id="envModal">
+  <form class="modal-card env-config-modal" id="envConfigForm" role="dialog" aria-modal="true" aria-labelledby="envModalTitle" novalidate>
+    <div class="modal-header">
+      <div class="env-config-heading">
+        <div class="modal-title" id="envModalTitle">新增 ERP 环境</div>
+      </div>
+      <button class="modal-close" id="envModalClose" type="button" aria-label="关闭">×</button>
+    </div>
+    <div class="modal-body env-config-body">
+      <section class="env-form-section" aria-labelledby="envBasicTitle">
+        <div class="env-form-section-title" id="envBasicTitle">基本信息</div>
+        <div class="env-form-grid">
+          <label class="env-field">
+            <span>环境名<span class="env-required">*</span></span>
+            <input type="text" id="envName" placeholder="为该环境取一个唯一名称" autocomplete="off" required>
+          </label>
+          <label class="env-field" id="envProductField">
+            <span>环境类型<span class="env-required">*</span></span>
+            <select id="envProduct" required>
+              <option value="" selected>请选择环境类型</option>
+              <option value="XK">AI 套件</option>
+              <option value="XH">AI 星瀚</option>
+            </select>
+          </label>
+          <label class="env-field">
+            <span>环境地址<span class="env-required">*</span></span>
+            <input type="url" id="envUrl" placeholder="http://192.168.1.100:8080" autocomplete="off" spellcheck="false" required>
+          </label>
+          <label class="env-field" id="envDataCenterField">
+            <span class="env-label-with-action">
+              <span>数据中心<span class="env-required">*</span></span>
+              <button type="button" id="envDcRefresh">重新拉取数据中心</button>
+            </span>
+            <select id="envDataCenter" required>
+              <option value="">请选择数据中心</option>
+            </select>
+          </label>
+        </div>
+      </section>
+
+      <!-- 授权类型：只在新增时选。已建环境不提供切换入口，换一种要新建 -->
+      <section class="env-form-section hidden" id="envConnSection" aria-labelledby="envConnTitle">
+        <div class="env-form-section-title" id="envConnTitle">授权类型</div>
+        <div class="env-conn-seg" id="envConnSeg" role="radiogroup" aria-labelledby="envConnTitle">
+          <button class="env-conn-opt" id="envTabAuth" type="button" role="radio" aria-checked="false" data-mode="auth">
+            <span class="env-conn-opt-name">OAuth 授权</span>
+            <span class="env-conn-opt-hint">在浏览器登录 ERP 并确认授权</span>
+          </button>
+          <button class="env-conn-opt" id="envTabCred" type="button" role="radio" aria-checked="false" data-mode="cred">
+            <span class="env-conn-opt-name">第三方应用</span>
+            <span class="env-conn-opt-hint">填写应用 ID 与密钥</span>
+          </button>
+        </div>
+        <div class="env-conn-current hidden" id="envConnCurrent">
+          <span class="env-conn-current-name" id="envConnCurrentName">OAuth 授权</span>
+          <span class="env-conn-current-hint" id="envConnCurrentHint"></span>
+        </div>
+        <div class="env-conn-note" id="envConnNote"></div>
+      </section>
+
+      <!-- OAuth 授权：新增时说清将发生什么，已连接时给出这次授权的归属 -->
+      <section class="env-form-section hidden" id="envAuthPanel" aria-label="OAuth 授权">
+        <ul class="env-auth-points" id="envAuthPoints">
+          <li>点「连接 ERP」后在浏览器登录并确认授权</li>
+          <li>数据中心在 ERP 的授权页面里选择</li>
+          <li>授权完成后数据中心回填到这条配置，可随时断开</li>
+        </ul>
+        <dl class="env-auth-grant hidden" id="envAuthGrant">
+          <dt>授权人</dt><dd id="envAuthGrantBy">—</dd>
+          <dt>数据中心</dt><dd id="envAuthGrantDc">—</dd>
+          <dt>授权时间</dt><dd id="envAuthGrantAt">—</dd>
+          <dt>授权范围</dt>
+          <dd><button class="env-scope-toggle" id="envAuthScopeToggle" type="button" aria-expanded="false">0 项 API 权限</button></dd>
+        </dl>
+        <ul class="env-scope-list hidden" id="envAuthScopeList"></ul>
+      </section>
+
+      <section class="env-form-section" id="envCredentialSection" aria-labelledby="envCredentialTitle">
+        <div class="env-form-section-title" id="envCredentialTitle">连接凭证</div>
+        <div class="env-create-notice" id="envCreateNotice">
+          请确保 ERP 第三方应用的「代理用户控制」已关闭
+        </div>
+        <div class="env-form-grid">
+          <label class="env-field full">
+            <span class="env-label-with-action">
+              <span>第三方应用 ID (client_id)<span class="env-required">*</span></span>
+              <a href="https://vip.kingdee.com/knowledge/864624126294927872?specialId=862650037874847232&amp;productLineId=40&amp;isKnowledge=2&amp;lang=zh-CN" target="_blank" rel="noreferrer">配置指导</a>
+            </span>
+            <input type="text" id="envClientId" autocomplete="off" required>
+          </label>
+          <label class="env-field full">
+            <span>第三方应用密钥 (client_secret)<span class="env-required" id="envSecretRequired">*</span></span>
+            <input type="password" id="envClientSecret" autocomplete="new-password" required>
+          </label>
+          <label class="env-field full hidden" id="envGatewayField">
+            <span>网关标识 (x-acgw-identity)<span class="env-required" id="envGatewayRequired">*</span></span>
+            <input type="password" id="envGateway" autocomplete="new-password" required>
+          </label>
+        </div>
+      </section>
+
+      <section class="env-form-section hidden" id="envLegacyAuthSection" aria-label="普通 Access Token 认证">
+        <div class="env-legacy-auth-card">
+          <div class="env-legacy-auth-main">
+            <div class="env-legacy-auth-title">普通 Access Token 认证<span class="env-auth-state" id="envAuthState">未启用</span></div>
+            <div class="env-legacy-auth-desc" id="envAuthDesc">该环境仍使用历史认证方式，需要填写代理用户。启用普通 AccessToken 认证后不可恢复。</div>
+          </div>
+          <button class="env-auth-switch" id="envAuthSwitch" type="button" role="switch" aria-checked="false" aria-label="普通 Access Token 认证"></button>
+        </div>
+        <label class="env-field full" id="envProxyUserField">
+          <span>代理用户<span class="env-required">*</span></span>
+          <input type="text" id="envProxyUser" placeholder="请输入代理用户" autocomplete="off">
+        </label>
+      </section>
+    </div>
+    <div class="modal-footer env-config-footer">
+      <div class="env-footer-lead">
+        <label class="env-default"><input type="checkbox" id="envDefault"><span>设为默认环境</span></label>
+        <!-- 断开连接离开主操作区：它是收尾动作，不该跟「保存」抢位置 -->
+        <button class="env-link-danger hidden" id="envDisconnect" type="button">断开连接</button>
+      </div>
+      <div class="env-footer-actions">
+        <button class="modal-btn cancel" id="envModalCancel" type="button">取消</button>
+        <button class="modal-btn test" id="envTest" type="button">测试连接</button>
+        <button class="modal-btn test hidden" id="envReauth" type="button">重新授权</button>
+        <button class="modal-btn confirm" id="envModalConfirm" type="submit">保存</button>
+      </div>
+    </div>
+  </form>
+</div>
+

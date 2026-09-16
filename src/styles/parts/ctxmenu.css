@@ -1,0 +1,68 @@
+  /* ============ 右键菜单 ============ */
+  .ctxmenu{display:none}
+  .ctxmenu.show{display:block}
+  .ctxmenu{
+    position:fixed;min-width:200px;background:#fff;border:1px solid #eee;
+    border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.12),0 2px 6px rgba(0,0,0,.06);
+    padding:6px;z-index:300;
+  }
+  .ctx-item{
+    display:flex;align-items:center;gap:10px;
+    padding:8px 10px;border-radius:8px;cursor:pointer;color:var(--text);font-size:13px;font-weight:500;
+  }
+  .ctx-item:hover{background:var(--hover)}
+  .ctx-item .ic{width:16px;height:16px;color:#5a5a5f}
+  .ctx-item .ctx-right{margin-left:auto;color:var(--text-soft);font-size:16px;line-height:1}
+  .ctx-sep{height:1px;background:var(--border);margin:4px 6px}
+  .ctx-item.danger{color:#e04a3a}
+  .ctx-item.danger .ic{color:#e04a3a}
+
+  .main-foot{
+    text-align:center;padding:16px;color:var(--text-soft);font-size:12px;
+  }
+
+  /* ---- interactive states ---- */
+  .menu{display:none}
+  .dropdown.open > .menu{display:block}
+  .dropdown.open > .menu.app-menu{display:flex}
+  .dropdown.open > .chip{background:var(--hover)}
+  .menu-item .menu-check{visibility:hidden}
+  .menu-item.checked .menu-check{visibility:visible}
+  /* selected app chip (已选态) */
+  .chip.selected{background:transparent;color:var(--text)}
+  .chip.selected .chip-label{color:var(--text);font-weight:500}
+  .chip .app-dot{display:none!important}
+  /* editable input */
+  .composer-input{outline:none}
+  .composer-input:empty:before{content:attr(data-placeholder);color:var(--text-soft);pointer-events:none}
+  /* project collapse */
+  .project-group.collapsed .sub-item{display:none}
+  .caret{transition:transform .15s ease}
+  .caret.rot{transform:rotate(-90deg)}
+  .hidden{display:none !important}
+  /* custom tooltip */
+.native-tip{position:fixed;background:#2d2d2d;color:#fff;padding:4px 8px;border-radius:6px;font-size:12px;line-height:1.4;white-space:nowrap;pointer-events:none;z-index:9999;opacity:0;transition:opacity .08s ease;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.native-tip.show{opacity:1}
+  /* toast 组件 */
+.toast{
+    position:fixed;left:50%;top:16px;bottom:auto;transform:translateX(-50%) translateY(-120%);
+    background:#fff;color:var(--text);padding:10px 16px;border-radius:10px;font-size:13px;
+    border:1px solid var(--border);
+    box-shadow:0 8px 28px rgba(0,0,0,.12),0 2px 6px rgba(0,0,0,.06);
+    opacity:0;transition:opacity .25s,transform .25s;
+    display:flex;align-items:center;gap:8px;max-width:90vw;
+    pointer-events:none;z-index:100;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .toast-icon{width:16px;height:16px;flex:none}
+  .toast-text{flex:1;white-space:nowrap}
+  .toast-close{width:16px;height:16px;color:var(--text-soft);cursor:pointer;flex:none}
+  .toast-close:hover{color:var(--text-muted)}
+  .toast.success .toast-icon{color:var(--success)}
+  .toast.error .toast-icon{color:var(--danger)}
+  .toast.error .toast-text{color:var(--danger)}
+    .dropdown.error .chip{color:#dc2626;animation:shake .35s ease}
+    .dropdown.error .chip .chip-label{color:#dc2626}
+    .dropdown.error .chip .caret{color:#dc2626}
+    @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
+

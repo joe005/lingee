@@ -1,0 +1,36 @@
+<div class="modal-overlay" id="newAppModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div class="modal-title">新建应用</div>
+      <button class="modal-close" id="newAppClose">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>创建类型<span class="help-icon" tabindex="0"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg><span class="tip-bubble"><div><b>新建</b>：从零创建，无任何关联</div><div><b>扩展</b>：改造原应用，一处改处处生效，不可新建表</div><div><b>继承</b>：派生独立新应用，各继承单互不干扰，可新建表</div></span></span></label>
+        <div class="type-options">
+          <label class="type-option"><input type="radio" name="createType" value="new" checked>新建</label>
+          <label class="type-option"><input type="radio" name="createType" value="extend">扩展新建</label>
+          <label class="type-option"><input type="radio" name="createType" value="inherit">继承新建</label>
+        </div>
+      </div>
+      <div class="form-group" id="sourceAppGroup" style="display:none">
+        <label>选择应用</label>
+        <div class="dropdown" id="sourceAppDropdown" style="position:relative">
+          <div class="chip muted" id="sourceAppChip" data-chip style="width:100%;justify-content:flex-start;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;box-sizing:border-box;min-height:38px">
+            <span class="chip-label" id="sourceAppLabel">&nbsp;</span>
+            <svg class="caret" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-left:auto;width:14px;height:14px"><path d="m5 7.5 5 5 5-5"/></svg>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>应用名称</label>
+        <input type="text" id="newAppName" placeholder="">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn cancel" id="newAppCancel">取消</button>
+      <button class="modal-btn confirm" id="newAppConfirm">确认</button>
+    </div>
+  </div>
+</div>
+

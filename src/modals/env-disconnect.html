@@ -1,0 +1,21 @@
+<!-- 断开连接：撤销服务端授权并删除本地凭证 -->
+<div class="modal-overlay" id="envDisconnectModal">
+  <div class="modal-card env-disconnect-card" role="alertdialog" aria-modal="true" aria-labelledby="envDisconnectHeading">
+    <div class="modal-header">
+      <div class="modal-title" id="envDisconnectHeading">断开连接</div>
+      <button class="modal-close" id="envDisconnectClose" type="button" aria-label="关闭">×</button>
+    </div>
+    <div class="modal-body" style="padding:6px 22px 4px">
+      <p class="env-disconnect-lead">确定要断开与 <b id="envDisconnectName">生产环境</b> 的连接吗？</p>
+      <div class="env-disconnect-note">
+        <p>客户端会通知 ERP 作废这条授权，并删除本机保存的凭证。断开后该环境下的智能体将无法访问 ERP 数据。</p>
+        <p>需要恢复时重新授权即可，环境配置不会丢失。</p>
+      </div>
+    </div>
+    <div class="modal-footer" style="justify-content:flex-end;gap:8px;padding:12px 22px">
+      <button class="modal-btn cancel" id="envDisconnectCancel" type="button">取消</button>
+      <button class="modal-btn danger" id="envDisconnectConfirm" type="button">断开连接</button>
+    </div>
+  </div>
+</div>
+

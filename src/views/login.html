@@ -1,0 +1,27 @@
+  <!-- ===================== LOGIN ===================== -->
+  <div class="login-overlay" id="loginOverlay">
+    <script>
+      try { if (sessionStorage.getItem('lingee_auth_session')) document.getElementById('loginOverlay').classList.add('hidden'); } catch(e) {}
+    </script>
+    <div class="login-card">
+      <div class="login-brand">
+        <span class="login-title">金蝶灵基</span>
+      </div>
+      <div class="login-subtitle">灵基一动 工作轻松</div>
+      <form class="login-form" id="loginForm" autocomplete="on" novalidate>
+        <div class="login-field">
+          <svg class="login-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <input type="text" id="loginUser" class="login-input" placeholder="账号" autocomplete="username" required>
+        </div>
+        <div class="login-field">
+          <svg class="login-field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <input type="text" id="loginPass" class="login-input" placeholder="密码" autocomplete="current-password" data-pw required>
+        </div>
+        <div class="login-error" id="loginError"></div>
+        <label class="login-remember"><input type="checkbox" id="loginRemember" checked> 记住账号</label>
+        <button type="submit" class="login-btn" id="loginBtn">登录</button>
+      </form>
+    </div>
+    <div class="login-bg-decor"></div>
+  </div>
+

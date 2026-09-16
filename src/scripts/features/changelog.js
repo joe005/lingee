@@ -1,0 +1,182 @@
+import { $, $$ } from '../core/dom.js';
+import { applyMode, setNavActive, showView } from '../core/view.js';
+import { openAppDropdown } from './attach-app.js';
+/* 更新通知面板
+   拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
+   由 main.js 按拆分前的原始顺序调用。 */
+
+
+/* ---------- Changelog / 更新通知（与 Build_demo 完全一致） ---------- */
+var changelogData=[
+  {id:'15',date:'2026-09-14',iconBg:'#eef3ff',iconColor:'#495dff',team:'应用开发列表 新建体验优化',body:'去除新建应用弹窗，新建应用流程调整为下拉选择应用开发类型，跳转到新会话。'},
+  {id:'14',date:'2026-09-14',iconBg:'#eef3ff',iconColor:'#495dff',team:'专家团支持人工审核确认节点',body:'专家团运行流程可在任意步骤后插入人工审核确认节点，到该节点编排暂停、确认后才继续；专家能力项由机器标识改为中文名加等级展示，专家卡片增加「可承担的工作」，专家团补充领域标签与能力覆盖；专家定义去掉「工作方式」「完成标准」，改为把需要用户提供的内容写进触发词占位符，发送时没填就在会话里追问；专家来源合并为「Lingee 内置」与「我创建的」两档，取消无数据支撑的「金蝶官方」；专家详情收敛为简介、触发词、挂载技能、能力项、可承担的工作五项；修复搜索框被浏览器自动填充账号导致列表被筛空。'},
+  {id:'13',date:'2026-09-11',iconBg:'#eef3ff',iconColor:'#495dff',team:'会话加号下拉菜单',body:'会话输入框加号按钮改为下拉菜单，提供添加文件（含本地文件、引用文件夹、知识库）、模式（含 Spec、目标）、连接器（含腾讯云等八项服务）三级菜单结构。'},
+  {id:'12',date:'2026-09-09',iconBg:'#eef3ff',iconColor:'#495dff',team:'新增协作开发模块',body:'左侧「专家」菜单改为「协作开发」，下设任务管理、待评审、协作人员管理、专家管理、专家团管理与设置六个页签；新增项目维度，任务、评审、协作人员按项目划分，专家与专家团为全局资产、项目内只绑定默认专家团。'},
+  {id:'11',date:'2026-09-08',iconBg:'#eef3ff',iconColor:'#495dff',team:'原型新增登录页',body:'新增登录页，需账号密码登录后才能查看原型。'},
+  {id:'10',date:'2026-08-27',iconBg:'#eef3ff',iconColor:'#495dff',team:'苍穹应用开发 · 预览区新增列表页签',body:'预览面板页签新增「列表」选项，支持列表视图展示。'},
+  {id:'9',date:'2026-08-27',iconBg:'#e8faef',iconColor:'#08a040',team:'苍穹应用开发 · 历史版本',body:'新增历史记录面板，支持查看版本时间线与版本描述，可回退到历史版本。'},
+  {id:'8',date:'2026-07-30',iconBg:'#fff1e8',iconColor:'#ff8d42',team:'新增 Design System 模块',body:'涵盖基础、布局、导航、数据录入、数据展示、反馈 6 大类共 67 个组件，提供组件预览、设计令牌展示、图标库等能力，作为 Lingee 统一的设计规范与组件文档平台。'},
+  {id:'7',date:'2026-07-28',iconBg:'#eef3ff',iconColor:'#495dff',team:'应用开发关联应用交互优化',body:'1、会话框：项目选择与应用选择分开展示\n2、下拉面板去除创建应用流程，调整为关联选择全量应用\n3、苍穹应用：选择关联苍穹应用，发起会话时应用开发列表自动创建展示苍穹应用卡片\n4、通用应用：无需关联应用，自动生成产物应用卡片\n5、未选择开发模式，意图识别苍穹应用开发时，会话过程收集苍穹应用编码\n6、选择应用时，下次新会话按项目记忆用户选项\n\n[视觉稿](https://www.figma.com/design/F8s5P9Y8f1Bq2GkXKCkC7L/%E5%BC%80%E5%8F%91?node-id=0-1&t=DHlFenPtUNP6C7Z5-1)'},
+];
+// 每个数据条目对应的 avatar SVG 图标（与 Build_demo 的 lucide 图标一致）
+var changelogIcons={
+  '15':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>',
+  '14':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m16 11 2 2 4-4"/></svg>',
+  '13':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M12 5v14M5 12h14"/></svg>',
+  '12':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M6 3v12"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>',
+  '11':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg>',
+  '9':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-6.36 2.64L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg>',
+  '10':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>',
+  '8':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125 0-.945.748-1.688 1.688-1.688h1.999c3.586 0 6.539-2.918 6.539-6.5C22 6.48 17.5 2 12 2z"/></svg>',
+  '7':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>',
+  '6':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M12 3a9 9 0 0 0 0 18M3 12h18"/></svg>',
+  '5':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>',
+};
+var changelogReadIds=(function(){
+  try{ return JSON.parse(localStorage.getItem('changelog_read_ids')||'[]'); }catch(e){return [];}
+})();
+function saveReadIds(){ localStorage.setItem('changelog_read_ids',JSON.stringify(changelogReadIds)); }
+function getUnreadCount(){ return changelogData.filter(function(l){return changelogReadIds.indexOf(l.id)===-1;}).length; }
+function formatRelativeDate(dateStr){
+  var now=new Date(),date=new Date(dateStr),diffMs=now.getTime()-date.getTime(),diffMins=Math.floor(diffMs/60000);
+  if(diffMins<1) return '刚刚';
+  if(diffMins<60) return diffMins+' 分钟前';
+  var diffHours=Math.floor(diffMins/60);
+  if(diffHours<24) return diffHours+' 小时前';
+  var diffDays=Math.floor(diffHours/24);
+  if(diffDays===1) return '昨天';
+  if(diffDays<7) return diffDays+' 天前';
+  if(diffDays<30) return Math.floor(diffDays/7)+' 周前';
+  return dateStr;
+}
+var bellBtn=$('#notificationBell'),bellBadge=$('#notificationBadge'),changelogPanel=$('#changelogPanel'),changelogBody=$('#changelogBody'),changelogOverlay=null;
+function updateBellBadge(){
+  var c=getUnreadCount();
+  bellBtn.classList.toggle('has-unread',c>0);
+  if(c>0){ bellBadge.style.display='';bellBadge.textContent=c>99?'99+':c; }
+  else{ bellBadge.style.display='none'; }
+}
+function renderChangelog(tab){
+  var list=tab==='unread'?changelogData.filter(function(l){return changelogReadIds.indexOf(l.id)===-1;}):changelogData;
+  if(list.length===0){ changelogBody.innerHTML='<div class="changelog-empty">暂无'+(tab==='unread'?'未读':'')+'通知</div>';return; }
+  var html='';
+  list.forEach(function(log,i){
+    var isRead=changelogReadIds.indexOf(log.id)!==-1;
+    html+='<div class="changelog-notification'+(isRead?'':' unread')+'" data-id="'+log.id+'">';
+    html+='<div class="changelog-noti-header">';
+    html+='<div class="changelog-noti-avatar" style="background:'+log.iconBg+';color:'+log.iconColor+'">';
+    html+=changelogIcons[log.id]||'';
+    html+='</div>';
+    html+='<span class="changelog-noti-team">'+log.team+'</span>';
+    html+='<span class="changelog-noti-date">'+formatRelativeDate(log.date)+'</span>';
+    if(isRead){
+      // 已读 → 显示 EyeOff（闭眼）→ 标记未读
+      html+='<button class="changelog-noti-toggle" data-action="unread" data-tooltip="标记未读"><svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg></button>';
+    }else{
+      // 未读 → 显示 Eye（睁眼）→ 标记已读
+      html+='<button class="changelog-noti-toggle" data-action="read" data-tooltip="标记已读"><svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>';
+    }
+    html+='</div>';
+    html+='<div class="changelog-noti-body">';
+    log.body.split('\n').forEach(function(line,li){
+      if(line==='') html+='<br>';
+      else html+='<p>'+line.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,function(m,text,url){
+        return '<a href="'+url+'" target="_blank" class="changelog-link">'+text+'</a>';
+      })+'</p>';
+    });
+    html+='</div>';
+    if(i<list.length-1) html+='<div class="changelog-noti-divider"></div>';
+    html+='</div>';
+  });
+  changelogBody.innerHTML=html;
+  var demoLink=changelogBody.querySelector('a[href="#demo"]');
+  if(demoLink){
+    demoLink.addEventListener('click',function(e){
+      e.preventDefault();
+      closeChangelog();
+      showView('newtask');
+      setNavActive('新会话');
+      applyMode('苍穹应用',true);
+      setTimeout(function(){ openAppDropdown(); },250);
+    });
+  }
+}
+function openChangelog(){
+  var currentTab=($('.changelog-tab.active')||$('.changelog-tab[data-tab="all"]')).getAttribute('data-tab');
+  renderChangelog(currentTab);
+  changelogPanel.style.display='';
+  if(!changelogOverlay){
+    changelogOverlay=document.createElement('div');
+    changelogOverlay.className='changelog-overlay-transparent';
+    changelogOverlay.addEventListener('click',closeChangelog);
+    document.body.appendChild(changelogOverlay);
+  }else{ changelogOverlay.style.display=''; }
+}
+function closeChangelog(){
+  changelogPanel.style.display='none';
+  if(changelogOverlay) changelogOverlay.style.display='none';
+}
+function markAllRead(){
+  changelogReadIds=[];
+  changelogData.forEach(function(l){ changelogReadIds.push(l.id); });
+  saveReadIds(); updateBellBadge();
+  renderChangelog(($('.changelog-tab.active')||$('.changelog-tab[data-tab="all"]')).getAttribute('data-tab'));
+  var unreadTab=$('.changelog-tab[data-tab="unread"]');
+  if(unreadTab) unreadTab.innerHTML='未读';
+}
+function markAsRead(id){
+  if(changelogReadIds.indexOf(id)!==-1) return;
+  changelogReadIds.push(id); saveReadIds(); updateBellBadge();
+  var tab=$('.changelog-tab.active');
+  if(tab.getAttribute('data-tab')==='unread'){ renderChangelog('unread'); }
+  else{ renderChangelog('all'); }
+  var unreadTab=$('.changelog-tab[data-tab="unread"]');
+  var c=getUnreadCount();
+  unreadTab.innerHTML='未读'+(c?' '+c:'');
+}
+function markAsUnread(id){
+  var idx=changelogReadIds.indexOf(id);
+  if(idx===-1) return;
+  changelogReadIds.splice(idx,1); saveReadIds(); updateBellBadge();
+  var tab=$('.changelog-tab.active');
+  if(tab.getAttribute('data-tab')==='unread'){ renderChangelog('unread'); }
+  else{ renderChangelog('all'); }
+  var unreadTab=$('.changelog-tab[data-tab="unread"]');
+  var c=getUnreadCount();
+  unreadTab.innerHTML='未读'+(c?' '+c:'');
+}
+
+export function initChangelog() {
+  // 铃铛点击（与 Build_demo 一致：先 markAllRead 再打开面板）
+  bellBtn.addEventListener('click',function(e){
+    e.stopPropagation();
+    if(changelogPanel.style.display!=='none'){ closeChangelog(); return; }
+    markAllRead();
+    openChangelog();
+  });
+  // Tab 切换
+  $$('.changelog-tab').forEach(function(tab){
+    tab.addEventListener('click',function(){
+      $$('.changelog-tab').forEach(function(t){t.classList.remove('active');});
+      tab.classList.add('active');
+      renderChangelog(tab.getAttribute('data-tab'));
+    });
+  });
+  // 全部已读
+  $('#markAllReadBtn').addEventListener('click',function(){ markAllRead(); });
+  // 事件委托：标记已读/未读
+  document.addEventListener('click',function(e){
+    var btn=e.target.closest('.changelog-noti-toggle');
+    if(!btn) return;
+    var noti=btn.closest('.changelog-notification');
+    if(!noti) return;
+    var id=noti.getAttribute('data-id');
+    if(btn.getAttribute('data-action')==='read') markAsRead(id);
+    else if(btn.getAttribute('data-action')==='unread') markAsUnread(id);
+  });
+  // ESC 关闭
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape' && changelogPanel.style.display!=='none') closeChangelog();
+  });
+  updateBellBadge();
+}

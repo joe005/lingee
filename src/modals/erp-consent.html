@@ -1,0 +1,72 @@
+<!-- 浏览器中的 ERP 授权页：用户确认就发生在这一屏 -->
+<div class="modal-overlay consent-overlay" id="erpConsentModal">
+  <div class="browser-window" role="dialog" aria-modal="true" aria-labelledby="consentHeading">
+    <div class="browser-chrome">
+      <span class="browser-dots"><i></i><i></i><i></i></span>
+      <div class="browser-addr"><span class="browser-lock" aria-hidden="true"></span><span id="consentUrl"></span></div>
+    </div>
+    <div class="browser-page">
+      <!-- 第一步：登录苍穹。数据中心在这里选，跟真实登录页一致 -->
+      <div id="consentLogin">
+        <div class="consent-brand">金蝶云 · 苍穹</div>
+        <h2 class="consent-title" id="consentHeading">登录后继续授权</h2>
+        <label class="consent-field">
+          <span>数据中心</span>
+          <select id="consentDc"></select>
+        </label>
+        <div class="consent-tabs" role="tablist">
+          <button class="consent-tab active" id="consentTabQr" type="button" role="tab" aria-selected="true">扫码登录</button>
+          <button class="consent-tab" id="consentTabPwd" type="button" role="tab" aria-selected="false">账号登录</button>
+        </div>
+        <div class="consent-pane" id="consentQrPane">
+          <button class="consent-qr" id="consentQr" type="button" aria-label="模拟扫码成功">
+            <svg viewBox="0 0 64 64" aria-hidden="true">
+              <rect x="4" y="4" width="18" height="18" rx="2"/><rect x="9" y="9" width="8" height="8" rx="1" class="in"/>
+              <rect x="42" y="4" width="18" height="18" rx="2"/><rect x="47" y="9" width="8" height="8" rx="1" class="in"/>
+              <rect x="4" y="42" width="18" height="18" rx="2"/><rect x="9" y="47" width="8" height="8" rx="1" class="in"/>
+              <rect x="28" y="4" width="6" height="6"/><rect x="28" y="16" width="6" height="6"/>
+              <rect x="28" y="28" width="6" height="6"/><rect x="40" y="28" width="6" height="6"/>
+              <rect x="52" y="28" width="6" height="6"/><rect x="28" y="40" width="6" height="6"/>
+              <rect x="40" y="40" width="6" height="6"/><rect x="52" y="52" width="6" height="6"/>
+              <rect x="40" y="52" width="6" height="6"/><rect x="16" y="28" width="6" height="6"/>
+            </svg>
+          </button>
+          <div class="consent-qr-hint">请用金蝶云之家扫码登录<br><span>（原型里点二维码即视为扫码成功）</span></div>
+        </div>
+        <div class="consent-pane hidden" id="consentPwdPane">
+          <label class="consent-field">
+            <span>用户名</span>
+            <input type="text" id="consentUser" placeholder="手机号 / 邮箱 / 用户名" autocomplete="off">
+          </label>
+          <label class="consent-field">
+            <span>密码</span>
+            <input type="password" id="consentPwd" placeholder="请输入密码" autocomplete="off">
+          </label>
+          <div class="consent-actions">
+            <button class="consent-btn primary" id="consentLoginBtn" type="button">登录</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 第二步：授权页，用户确认就在这里 -->
+      <div id="consentGrant" class="hidden">
+        <div class="consent-brand">金蝶云 · 苍穹</div>
+        <h2 class="consent-title">灵基 Build 请求访问你的 ERP</h2>
+        <p class="consent-account">当前登录 <b id="consentWho">吴**超</b> · 数据中心 <span id="consentDcName">—</span>
+          <button class="consent-switch" id="consentSwitch" type="button">切换账号</button>
+        </p>
+        <p class="consent-sso hidden" id="consentSso">已复用浏览器中的 ERP 登录态（单点登录），这次只需确认授权。</p>
+        <div class="consent-scope">
+          <div class="consent-scope-head">将授予以下 <b id="consentScopeCount">0</b> 项 API 权限</div>
+          <ul class="env-scope-list" id="consentScopeList"></ul>
+        </div>
+        <p class="consent-note">授权后可在 ERP 的「我的授权」里随时撤销。</p>
+        <div class="consent-actions">
+          <button class="consent-btn" id="consentDeny" type="button">拒绝</button>
+          <button class="consent-btn primary" id="consentAllow" type="button">允许</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

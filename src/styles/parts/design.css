@@ -1,0 +1,152 @@
+  /* ============ Design System Page ============ */
+  #view-design{background:#f7f7f8;overflow:hidden;display:flex}
+  .ds-page{display:flex;width:100%;height:100%}
+
+  /* 左侧分类导航 — Ant Design 风格 */
+  .ds-nav{
+    width:260px;flex:none;background:#fff;border-right:1px solid var(--border);
+    display:flex;flex-direction:column;overflow-y:auto;padding:0 0 24px;
+  }
+  .ds-nav-brand{display:flex;align-items:center;gap:8px;padding:20px 24px 16px;font-size:17px;font-weight:700;letter-spacing:.3px;color:var(--text);cursor:pointer;transition:opacity .15s}
+  .ds-nav-brand:hover{opacity:.7}
+  /* 顶部独立链接 */
+  .ds-nav-top{padding:0 12px 8px;border-bottom:1px solid var(--border);margin-bottom:4px}
+  .ds-nav-top .ds-nav-link{border-radius:6px}
+  /* 分类区域 */
+  .ds-nav-section{padding:4px 12px 0}
+  .ds-nav-label{font-size:14px;font-weight:600;color:var(--text);
+    padding:12px 8px 6px;border-bottom:1px solid var(--border);margin-bottom:4px;
+    display:flex;align-items:center;cursor:pointer;user-select:none}
+  .ds-nav-label .ds-nav-label-en{display:none}
+  .ds-nav-section.collapsed > :not(.ds-nav-label){display:none}
+  .ds-nav-section.collapsed .ds-nav-label{border-bottom:none;margin-bottom:0}
+  .ds-nav-section.collapsed .ds-nav-label:after{content:'▾';font-size:10px;color:var(--text-soft);margin-left:auto}
+  /* 导航项 — 英文名 + 中文名 */
+  .ds-nav-link{display:flex;align-items:center;gap:8px;
+    padding:6px 10px;border-radius:6px;cursor:pointer;color:var(--text);
+    font-size:14px;transition:background .12s,color .12s;line-height:1.5}
+  .ds-nav-link:hover{background:var(--hover);color:var(--text)}
+  .ds-nav-link.active{background:#eef3ff;color:#495dff;font-weight:500}
+  .ds-nav-link em{font-style:normal;font-size:14px;color:var(--text);font-weight:400}
+  .ds-nav-link.active em{color:#7c92ff}
+  .ds-nav-link .ds-nav-count{font-size:14px;color:var(--text-soft);margin-left:auto;font-weight:400}
+  .ds-nav-link.active .ds-nav-count{color:#8aa3ff}
+  .ds-nav-link .ds-new-tag{font-size:14px;color:#08a040;background:#e8faef;padding:1px 5px;border-radius:4px;font-weight:600}
+  .ds-nav-disabled-toggle{display:flex;align-items:center;gap:4px;padding:6px 12px;font-size:14px;color:var(--text-muted);cursor:pointer;border-radius:6px;margin-top:2px}
+  .ds-nav-disabled-toggle:hover{background:var(--hover)}
+  .ds-nav-disabled-toggle .caret{margin-left:auto;transition:transform .15s;font-size:14px}
+  .ds-nav-disabled-toggle.collapsed .caret{transform:rotate(-90deg)}
+  .ds-nav-disabled-items{display:none}
+  .ds-nav-disabled-items.collapsed{display:none}
+  .ds-nav-disabled{opacity:.4;pointer-events:none}
+
+  /* 右侧内容区 */
+  .ds-content{flex:1;overflow-y:auto;scroll-behavior:smooth;background:#fff}
+  .ds-inner{max-width:1100px;margin:0 auto;padding:32px 40px 48px}
+
+  /* Hero */
+  .ds-hero{margin-bottom:28px}
+  .ds-back-btn{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border:none;border-radius:6px;background:transparent;color:var(--text);cursor:pointer;transition:background .15s;flex:none}
+  .ds-back-btn:hover{background:var(--hover)}
+  .ds-back-btn .ic{width:18px;height:18px}
+
+  .ds-hero h1{font-size:32px;font-weight:700;letter-spacing:-.3px;color:#0f0f0f;margin-bottom:8px}
+  .ds-hero-desc{font-size:14px;color:var(--text-muted);line-height:1.6;max-width:620px}
+
+
+  /* Section */
+  .ds-section{margin-bottom:32px}
+  .ds-section-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:10px;
+    border-bottom:1px solid var(--border)}
+  .ds-section-icon{width:28px;height:28px;border-radius:8px;background:#eef3ff;color:#495dff;
+    display:flex;align-items:center;justify-content:center;flex:none}
+  .ds-section-icon .ic{width:16px;height:16px}
+  .ds-section-title{font-size:18px;font-weight:600;color:var(--text)}
+  .ds-section-sub{font-size:14px;color:var(--text-muted);margin-left:auto}
+
+  /* 组件卡片 */
+  .ds-comp{margin-bottom:12px}
+  .ds-comp-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px}
+  .ds-comp-name{font-size:14px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px}
+  .ds-comp-name .ds-comp-code{font-size:14px;font-family:Monaco,Menlo,monospace;color:var(--text-soft);
+    background:#f0f0f0;padding:1px 6px;border-radius:4px;font-weight:400}
+  .ds-comp-desc{font-size:14px;color:var(--text-muted);text-align:right}
+  .ds-comp-body{padding:20px 16px;position:relative;font-size:14px}
+  .ds-comp-body.compact{padding:14px 16px}
+  .ds-comp-body.dark{background:#1e1e22}
+  .ds-comp-body.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;align-items:start}
+  .ds-comp-body button:not([style*="opacity:.5"]):hover{filter:brightness(.95)}
+  .ds-comp-body button:not([style*="opacity:.5"]):active{transform:scale(.98)}
+  .ds-comp-body label[style*="cursor:pointer"]:hover{opacity:.85}
+  .ds-comp-body div[style*="cursor:pointer"]:hover{filter:brightness(.97)}
+  .ds-comp-body div[style*="cursor:pointer"]:active{transform:scale(.98)}
+  .ds-comp-body [data-ds-act="switch"]:hover{opacity:.85}
+  .ds-comp-vars{padding:10px 16px;border-top:1px solid var(--border);background:#fafafa;
+    font-size:14px;font-family:Monaco,Menlo,monospace;color:var(--text-muted);line-height:1.8}
+  .ds-comp-vars .dv-key{color:#7c7cf0}
+  .ds-comp-vars .dv-val{color:#08a040}
+  .ds-comp-vars .dv-cmt{color:var(--text-soft)}
+
+  /* Design Tokens — 色彩 */
+  .ds-color-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+  .ds-color-card{border:1px solid var(--border);border-radius:10px;overflow:hidden}
+  .ds-color-swatch{height:64px;flex:none}
+  .ds-color-meta{padding:8px 10px}
+  .ds-color-name{font-size:14px;font-weight:600;color:var(--text)}
+  .ds-color-val{font-size:14px;color:var(--text-muted);font-family:Monaco,Menlo,monospace;margin-top:2px}
+
+  /* Design Tokens — 间距/圆角/阴影 */
+  .ds-token-row{display:flex;align-items:center;gap:16px;padding:10px 0;border-bottom:1px solid var(--border)}
+  .ds-token-row:last-child{border-bottom:none}
+  .ds-token-label{font-size:14px;color:var(--text);width:140px;flex:none}
+  .ds-token-val{font-size:14px;color:var(--text-muted);font-family:Monaco,Menlo,monospace;width:120px;flex:none}
+  .ds-token-preview{flex:1;display:flex;align-items:center;gap:8px}
+
+  /* 组件预览 — 通用 */
+  .ds-preview-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+  .ds-preview-row:last-child{margin-bottom:0}
+  .ds-preview-label{font-size:14px;color:var(--text-soft);width:80px;flex:none}
+
+  /* 组件预览 — 状态标记 */
+  .ds-status-tag{display:inline-flex;align-items:center;gap:4px;font-size:14px;font-weight:500;
+    padding:2px 8px;border-radius:6px}
+  .ds-status-done{background:#e8faef;color:#08a040}
+  .ds-status-wip{background:#fff1e8;color:#c06010}
+  .ds-status-plan{background:#f4f4f4;color:#888}
+
+  /* 模拟画布容器 */
+  .ds-canvas{border:1px dashed #d4d4d8;border-radius:10px;padding:16px;overflow:hidden}
+  .ds-canvas.dark{background:#fbfbfb}
+
+  /* 图标库网格 */
+  .ds-icon-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:8px}
+  .ds-icon-cell{display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:6px;padding:12px 4px;border-radius:8px;cursor:default;transition:background .12s}
+  .ds-icon-cell:hover{background:var(--hover)}
+  .ds-icon-cell .ic{width:20px;height:20px;color:rgba(0,0,0,.64)}
+  .ds-icon-cell span{font-size:14px;color:var(--text);text-align:center;word-break:break-all}
+
+  /* 全局样式 — 紧凑表格 */
+  .ds-table{width:100%;border-collapse:collapse;font-size:14px;table-layout:fixed}
+  .ds-note{margin-top:10px;padding:10px 12px;background:#f7f8fa;border-left:2px solid var(--border);border-radius:0 6px 6px 0;font-size:13px;color:var(--text-muted);line-height:1.6}
+  .ds-note code{font-family:Monaco,Menlo,monospace;font-size:12px;background:#fff;padding:1px 5px;border-radius:3px;color:var(--text)}
+  .ds-table th{text-align:left;font-weight:600;color:var(--text-muted);padding:6px 10px;border-bottom:2px solid var(--border);background:#fafafa;font-size:14px;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+  .ds-table td{padding:6px 10px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ds-table tr:hover td{background:#fafafa}
+  .ds-table td:first-child{overflow:visible;text-overflow:clip}
+  /* 色卡/阴影/圆角方块用 vertical-align 消除基线间隙，不再用 font-size:0（会压掉同列文字） */
+  .ds-swatch-sm,.ds-shadow-sm,.ds-radius-sm{vertical-align:middle}
+  .ds-table .ds-swatch-sm{width:20px;height:20px;border-radius:4px;border:1px solid #eee;display:block;flex:none}
+  .ds-table .ds-shadow-sm{width:28px;height:28px;border-radius:6px;background:#fff;display:inline-block;flex:none}
+  .ds-table .ds-radius-sm{width:24px;height:24px;background:#eef3ff;border:1px solid #c7d2fe;display:inline-block;flex:none}
+  .ds-table-group{margin-bottom:28px}
+  .ds-table-group-title{font-size:26px;font-weight:600;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+
+  .ds-type-sample{overflow:hidden;text-overflow:ellipsis}
+
+  /* 响应式 */
+  @media(max-width:900px){
+    .ds-nav{display:none}
+    .ds-inner{padding:32px 24px 56px}
+  }
+

@@ -1,0 +1,38 @@
+<!-- 授权连接：等待浏览器回调 / 唤起失败 / 授权成功 -->
+<div class="modal-overlay" id="envAuthorizeModal">
+  <div class="modal-card env-authorize-card" role="dialog" aria-modal="true" aria-labelledby="envAuthorizeHeading">
+    <div class="modal-header">
+      <div class="modal-title" id="envAuthorizeHeading">连接 ERP</div>
+      <button class="modal-close" id="envAuthorizeClose" type="button" aria-label="关闭">×</button>
+    </div>
+    <div class="modal-body env-authorize-body">
+      <!-- 等待中 -->
+      <div id="envAuthorizeWaiting">
+        <div class="env-authorize-spin"></div>
+        <div class="env-authorize-title">已在浏览器中打开授权页面</div>
+        <div class="env-authorize-desc">请在浏览器里登录 ERP 并点击「允许」<br>完成后会自动回到这里</div>
+        <div class="env-authorize-note">浏览器可能会询问「是否打开 Kingdee Lingee」，请选择打开。</div>
+      </div>
+      <!-- 唤起失败 -->
+      <div id="envAuthorizeFailed" class="hidden">
+        <div class="env-authorize-title" style="margin-top:14px">浏览器没能唤起客户端</div>
+        <div class="env-authorize-desc">授权可能已经完成，但结果没有回到客户端</div>
+        <div class="env-authorize-note warn">
+          可以尝试：
+          <ol>
+            <li>回到浏览器页面，点击「打开 Kingdee Lingee」</li>
+            <li>若提示已拦截，允许该站点打开应用后重试</li>
+            <li>仍然不行，重新安装客户端以恢复协议注册</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer env-authorize-foot">
+      <button class="env-authorize-retry" id="envAuthorizeAlt" type="button">没有跳转？重新打开</button>
+      <div class="env-footer-actions">
+        <button class="modal-btn cancel" id="envAuthorizeCancel" type="button">取消</button>
+      </div>
+    </div>
+  </div>
+</div>
+

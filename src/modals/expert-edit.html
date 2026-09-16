@@ -1,0 +1,68 @@
+<!-- 创建 / 编辑我的专家 -->
+<div class="modal-overlay" id="expertEditModal">
+  <form class="modal-card env-config-modal team-config-modal" id="expertEditForm" role="dialog" aria-modal="true" aria-labelledby="expertEditTitle" novalidate>
+    <div class="modal-header">
+      <div class="env-config-heading"><div class="modal-title" id="expertEditTitle">创建专家</div></div>
+      <button class="modal-close" id="expertEditClose" type="button" aria-label="关闭">×</button>
+    </div>
+    <div class="modal-tabs" id="xeTabs">
+      <button type="button" class="modal-tab active" data-xtab="base">专家</button>
+      <button type="button" class="modal-tab" data-xtab="more">触发词与工作方式</button>
+    </div>
+    <div class="modal-body env-config-body">
+      <button type="button" class="x-chat-entry" id="xeChatBtn">
+        <span class="x-chat-ic">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H7l-4 3v-6.5A8 8 0 0 1 11 4h2a8 8 0 0 1 8 8z"/></svg>
+        </span>
+        <span class="x-chat-b">
+          <span class="x-chat-t">不想填表单？一句话交给 expert-manager</span>
+          <span class="x-chat-d">在对话里描述你要什么样的专家，它会问清背景后帮你建好</span>
+        </span>
+        <span class="x-chat-go">›</span>
+      </button>
+      <div class="team-pane" data-xpane="base">
+        <section class="env-form-section">
+          <div class="env-form-grid">
+            <label class="env-field"><span>名称<span class="env-required">*</span></span>
+              <input type="text" id="xeName" placeholder="例如：苍穹工作流开发专家" autocomplete="off"></label>
+            <label class="env-field"><span>职称<span class="env-required">*</span></span>
+              <input type="text" id="xeRole" placeholder="例如：苍穹流程建模师" autocomplete="off"></label>
+            <label class="env-field env-field-wide"><span>简介</span>
+              <textarea id="xeDesc" rows="2" placeholder="他深耕什么领域、擅长什么、能帮你解决什么"></textarea></label>
+            <label class="env-field env-field-wide"><span>标签</span>
+              <input type="text" id="xeTags" placeholder="用逗号分隔，例如：流程建模, 苍穹工作流, 流程设计" autocomplete="off"></label>
+          </div>
+          <div class="env-form-section-title x-sec-sub">头像</div>
+          <div class="x-av-picker" id="xeAvatars"></div>
+        </section>
+        <section class="env-form-section">
+          <div class="env-form-section-title">可承担的工作<span class="env-required">*</span>
+            <span class="team-hint-inline">决定他在专家团里能领哪些任务</span></div>
+          <div class="x-mode-picker" id="xeModes"></div>
+        </section>
+      </div>
+
+      <div class="team-pane hidden" data-xpane="more">
+        <section class="env-form-section">
+          <div class="env-form-section-title">常见触发词
+            <span class="team-hint-inline">用户平时会怎么找他做事。需要用户提供的内容写成 [方括号]，发送时没填会在会话里追问</span></div>
+          <div class="x-cmd-rows" id="xeCmds"></div>
+          <button type="button" class="team-add" id="xeAddCmd">＋ 添加一条</button>
+        </section>
+        <section class="env-form-section">
+          <div class="env-form-grid">
+            <label class="env-field env-field-wide"><span>能力项</span>
+              <input type="text" id="xeComp" placeholder="用逗号分隔，例如：cosmic.workflow · advanced" autocomplete="off"></label>
+          </div>
+        </section>
+      </div>
+    </div>
+    <div class="modal-footer team-modal-footer">
+      <button type="button" class="btn-link team-delete-btn hidden" id="xeDeleteBtn">删除该专家</button>
+      <div class="team-footer-spacer"></div>
+      <button type="button" class="modal-btn cancel" id="xeCancelBtn">取消</button>
+      <button type="submit" class="modal-btn confirm" id="xeSaveBtn">保存</button>
+    </div>
+  </form>
+</div>
+

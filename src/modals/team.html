@@ -1,0 +1,63 @@
+<!-- 专家团配置 -->
+<div class="modal-overlay" id="teamModal">
+  <form class="modal-card env-config-modal team-config-modal" id="teamConfigForm" role="dialog" aria-modal="true" aria-labelledby="teamModalTitle" novalidate>
+    <div class="modal-header">
+      <div class="env-config-heading"><div class="modal-title" id="teamModalTitle">新建专家团</div></div>
+      <button class="modal-close" id="teamModalClose" type="button" aria-label="关闭">×</button>
+    </div>
+    <div class="modal-tabs" id="teamTabs">
+      <button type="button" class="modal-tab active" data-ttab="base">团队<span class="modal-tab-dot hidden" id="teamTabDotBase"></span></button>
+      <button type="button" class="modal-tab" data-ttab="more">触发词与流程<span class="modal-tab-dot hidden" id="teamTabDotMore"></span></button>
+    </div>
+    <div class="modal-body env-config-body">
+      <div class="team-readonly-tip hidden" id="teamReadonlyTip">内置专家团由官方维护，仅供查看。可另存为自己的专家团后再调整。</div>
+
+      <div class="team-pane" data-tpane="base">
+        <section class="env-form-section">
+          <div class="env-form-grid">
+            <label class="env-field env-field-wide"><span>名称<span class="env-required">*</span></span>
+              <input type="text" id="teamName" placeholder="给这个专家团起个名字" autocomplete="off" required></label>
+            <label class="env-field env-field-wide"><span>说明</span>
+              <textarea id="teamDesc" rows="2" placeholder="它擅长什么、适合什么场景"></textarea></label>
+          </div>
+        </section>
+        <section class="env-form-section">
+          <div class="env-form-section-title">成员 <span class="team-count" id="teamCount">0</span>
+            <span class="team-hint-inline">点名字看定义，星标设组长</span></div>
+          <div class="team-members" id="teamMembers"></div>
+          <button type="button" class="team-add" id="teamAddBtn">＋ 添加成员</button>
+        </section>
+        <section class="env-form-section">
+          <div class="env-form-section-title">能力覆盖
+            <span class="team-hint-inline">成员合起来能承担的能力项，同一项取最高等级</span></div>
+          <div class="x-chips" id="teamCoverageChips"></div>
+        </section>
+        <div id="teamWarnings"></div>
+      </div>
+
+      <div class="team-pane hidden" data-tpane="more">
+        <section class="env-form-section">
+          <div class="env-form-section-title">常见触发词
+            <span class="team-hint-inline" id="teamCmdHint">召唤时会带上第一条</span></div>
+          <div class="x-cmd-rows" id="teamCmds"></div>
+          <button type="button" class="team-add" id="teamAddCmd">＋ 添加一条</button>
+        </section>
+        <section class="env-form-section">
+          <div class="env-form-section-title">运行流程
+            <span class="team-hint-inline" id="teamFlowSummary"></span></div>
+          <div class="team-flow" id="teamFlow"></div>
+          <div class="team-gate-hint" id="teamGateHint"></div>
+          <div class="team-mode-note" id="teamModeNote"></div>
+        </section>
+      </div>
+    </div>
+    <div class="modal-footer team-modal-footer">
+      <button type="button" class="btn-link team-delete-btn hidden" id="teamDeleteBtn">删除该专家团</button>
+      <div class="team-footer-spacer"></div>
+      <button type="button" class="modal-btn cancel" id="teamCancelBtn">取消</button>
+      <button type="button" class="modal-btn cancel" id="teamCallBtn">召唤专家团</button>
+      <button type="submit" class="modal-btn confirm" id="teamSaveBtn">保存</button>
+    </div>
+  </form>
+</div>
+

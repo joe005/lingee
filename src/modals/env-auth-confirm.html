@@ -1,0 +1,17 @@
+<!-- 启用普通 AccessToken 认证：不可逆二次确认 -->
+<div class="modal-overlay" id="envAuthConfirmModal">
+  <div class="modal-card env-auth-confirm-card" role="alertdialog" aria-modal="true" aria-labelledby="envAuthConfirmTitle">
+    <div class="modal-header">
+      <div class="modal-title" id="envAuthConfirmTitle">启用普通 AccessToken 认证？</div>
+      <button class="modal-close" id="envAuthConfirmClose" type="button" aria-label="关闭">×</button>
+    </div>
+    <div class="modal-body">
+      <p class="env-auth-confirm-lead">保存后将切换为普通 AccessToken 认证，且不能切回原有认证方式。</p>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn cancel" id="envAuthConfirmCancel" type="button">取消</button>
+      <button class="modal-btn confirm" id="envAuthConfirmOk" type="button">确认启用</button>
+    </div>
+  </div>
+</div>
+

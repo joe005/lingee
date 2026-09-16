@@ -1,0 +1,536 @@
+  <!-- ===================== CHAT VIEW ===================== -->
+  <div class="view hidden" id="view-chat">
+    <div class="chat-container">
+      <div class="chat-header">
+        <div class="chat-header-info">
+          <div class="chat-header-title" id="chatTitle">新会话</div>
+        </div>
+        <button class="header-btn" id="historyBtn" data-tooltip="历史记录" aria-label="历史记录" tabindex="0" aria-keyshortcuts="Meta+Shift+H Control+Shift+H">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-6.36 2.64L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg>
+        </button>
+        <button class="header-btn" id="togglePreviewBtn" data-tooltip="显示预览" aria-label="切换预览" aria-pressed="false" tabindex="0">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18z"/></svg>
+        </button>
+      </div>
+      <div class="chat-messages" id="chatMessages">
+        <div class="messages-list" id="messagesList">
+          <div class="chat-empty" id="chatEmpty">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7A8.5 8.5 0 1 1 21 11.5z"/></svg>
+            <span>开始新会话</span>
+          </div>
+        </div>
+      </div>
+      <div class="chat-composer-wrap">
+        <div class="composer">
+          <div class="composer-tags hidden" id="chatTags"></div>
+          <div class="composer-input" id="chatInput" contenteditable="true" data-placeholder="输入消息…"></div>
+          <div class="composer-bar">
+            <div class="dropdown add-dropdown" id="chatAddDropdown">
+              <button class="round-btn" data-tooltip="添加" aria-label="chat-add">
+                <svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+              </button>
+              <div class="menu add-menu">
+                <div class="menu-item add-item add-item--submenu" data-action="addfile">
+                  <span class="left">
+                    <svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                    <span>添加文件</span>
+                  </span>
+                  <svg class="ic ic-sm submenu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                  <div class="submenu">
+                    <div class="menu-item add-item" data-action="attach">
+                      <span class="left">
+                        <svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6M9 15h6"/></svg>
+                        <span>本地文件</span>
+                      </span>
+                    </div>
+                    <div class="menu-item add-item" data-action="folder">
+                      <span class="left">
+                        <svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z"/></svg>
+                        <span>引用文件夹</span>
+                      </span>
+                    </div>
+                    <div class="menu-item add-item" data-action="knowledge">
+                      <span class="left">
+                        <svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><rect x="2" y="7" width="20" height="10" rx="1"/></svg>
+                        <span>知识库</span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div class="menu-item add-item add-item--submenu" data-action="mode">
+                  <span class="left">
+                    <svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    <span>模式</span>
+                  </span>
+                  <svg class="ic ic-sm submenu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                  <div class="submenu">
+                    <div class="menu-item add-item" data-action="spec">
+                      <span class="left">
+                        <svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h12M9 12h12M9 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>
+                        <span>Spec</span>
+                      </span>
+                    </div>
+                    <div class="menu-item add-item" data-action="goal">
+                      <span class="left">
+                        <svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                        <span>目标</span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div class="menu-item add-item add-item--submenu" data-action="connector">
+                  <span class="left">
+                    <svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2v6M15 2v6M5 8h14v4a5 5 0 0 1-5 5h-4a5 5 0 0 1-5-5V8zM12 17v5"/></svg>
+                    <span>连接器</span>
+                  </span>
+                  <svg class="ic ic-sm submenu-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                  <div class="submenu connector-submenu">
+                    <div class="connector-search">
+                      <svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                      <input type="text" placeholder="搜索" />
+                    </div>
+                    <div class="connector-list">
+                      <div class="connector-item">
+<img class="connector-logo-img" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAAA4CAYAAACohjseAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAIRSURBVHgB7dk9TwIxAMbxpwWd2QyDybk5OEBMnHXTTQfdndTJD+Dg8SF8nZicHd3UTwCLmjjhCAyyC9SWJoR3rvTa45r+F2PvlPvdEbj2AJ/P5/MtHsECnTUal4SxAnTrdkv3+XwNBstCsfN6/ZoxFjLox8/uO/9RhsGUgD0cECKG+P8pPeTzZRgu8ls0btzj2loIC0UCphUnmgtMM040E5h2nGgq0AWcaCLQFZxoDOgSTjQEdA0n6gNdxIl6QFdxIuIyTkROfn5+KZCDZpTS6tP6enF0/OCWHTKCS+j39nJBSlAs+9ls1viZ15/6AEGhUgmqxWJtcJDjcvzS7kK/3f07BlUkbWcyRyCkBv1yf93uq0AODvIDKnOg8pmfGEPIkdcqf9L7kNnkB5XhBwfGAujGT9YKpXujV3L/hoX81ZQObvprIIx6JftfE64ih77oXUSO3aq5hpx4s+0Scup0yRXkzAmvC8i5SxZpR0ZadEozMvKyYVqRSkv3aUQqP5uIGXn6sb1dHh3eumpVCCFxTAAWe/gikNl2O4BG/PlG62Nnpzq24fi7gA6rII4InhcCGkviXhHD/JTjquis7i0P0AAOzxut5QAawslfk84gTg4lmWGcHE4qCzi5KYks4eRm21nEyV1sZhknd7NVAji5q40SwsndTXf4FfB1fXFvaR0nojAd7S3bJ4Lz+Xw+n29O/yrorSpqVmGIAAAAAElFTkSuQmCC" style="width:20px;height:20px;border-radius:3px;flex:none" alt="腾讯云">
+                        <span class="connector-name">腾讯云</span>
+                        <button class="connector-btn">连接</button>
+                      </div>
+                      <div class="connector-item">
+                        <svg class="connector-logo-svg" viewBox="0 0 24 24" fill="none" style="width:20px;height:20px;flex:none"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" fill="#ff6a00" stroke="#ff6a00" stroke-width=".5"/></svg>
+                        <span class="connector-name">阿里云</span>
+                        <div class="connector-toggle"></div>
+                      </div>
+                      <div class="connector-item">
+<svg class="connector-logo-svg" viewBox="0 0 24 24" fill="none" style="width:20px;height:20px;flex:none"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" fill="#c7000b" stroke="#c7000b" stroke-width=".5"/></svg>
+                        <span class="connector-name">华为云</span>
+                        <button class="connector-btn">连接</button>
+                      </div>
+                      <div class="connector-item">
+                        <img class="connector-logo-img" src="https://www.kingdee.com/r/cms/www/default/v0.1/images/favicon.ico" style="width:20px;height:20px;border-radius:3px;flex:none" alt="金蝶AI 星瀚">
+                        <span class="connector-name">金蝶AI 星瀚</span>
+                        <div class="connector-toggle"></div>
+                      </div>
+                      <div class="connector-item">
+                        <img class="connector-logo-img" src="https://www.kingdee.com/r/cms/www/default/v0.1/images/favicon.ico" style="width:20px;height:20px;border-radius:3px;flex:none" alt="金蝶AI 星空">
+                        <span class="connector-name">金蝶AI 星空</span>
+                        <div class="connector-toggle"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- model -->
+
+            <!-- app binding -->
+            <div class="dropdown" data-dd="app" id="chatAppDropdown">
+              <div class="chip muted" data-chip>
+                <span class="app-dot"></span>
+                <span class="chip-label">关联应用</span>
+                <svg class="caret" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 7.5 5 5 5-5"/></svg>
+              </div>
+              <div class="menu app-menu">
+                <div class="app-search-wrap">
+                  <div class="app-search">
+                    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                    <input type="text" id="chatAppSearchInput" placeholder="搜索" autocomplete="off">
+                  </div>
+                </div>
+                <div class="app-list" id="chatAppList"></div>
+                <div class="app-foot">
+                  <div class="app-foot-item" id="chatExpandAppBtn">
+                    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                    新建
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="dropdown" data-dd="expert" id="chatExpertDropdown">
+              <div class="chip muted" data-chip>
+                <span class="chip-faces" id="chatExpertFaces"></span>
+                <span class="chip-label" id="chatExpertLabel">选择专家</span>
+                <svg class="caret" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 7.5 5 5 5-5"/></svg>
+              </div>
+              <div class="menu app-menu expert-menu">
+                <div class="app-search-wrap">
+                  <div class="app-search">
+                    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                    <input type="search" id="chatExpertSearchInput" placeholder="搜索专家" autocomplete="off" readonly>
+                  </div>
+                </div>
+                <div class="app-list" id="chatExpertList"></div>
+                <div class="app-foot">
+                  <div class="app-foot-item" data-goto-experts>
+                    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M9 7h8v8"/></svg>
+                    管理专家团
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="connector-badges" id="chatConnectorBadges"></div>
+
+            <div class="spacer"></div>
+            <div class="dropdown" data-dd="model">
+              <div class="chip" data-chip>
+                <span class="chip-label">快速</span>
+                <svg class="caret" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 7.5 5 5 5-5"/></svg>
+              </div>
+              <div class="menu">
+                <div class="menu-item checked" data-val="快速"><span class="left">快速</span><svg class="ic ic-sm menu-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
+                <div class="menu-item" data-val="深度"><span class="left">深度</span><svg class="ic ic-sm menu-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
+                <div class="menu-item" data-val="专家"><span class="left">专家</span><svg class="ic ic-sm menu-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
+              </div>
+            </div>
+            <button class="round-btn" data-tooltip="提示词增强" aria-label="enhance">
+              <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6.3 6.3l2.8 2.8M14.9 14.9l2.8 2.8M17.7 6.3l-2.8 2.8M9.1 14.9l-2.8 2.8"/></svg>
+            </button>
+            <button class="round-btn" data-tooltip="语音输入" aria-label="mic">
+              <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+            </button>
+
+            <button class="send-btn" id="chatSendBtn" data-tooltip="发送" aria-label="send">
+              <svg class="ic" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="workspace-bar">
+          <div class="dropdown" data-dd="workspace">
+            <div class="chip" data-chip>
+              <span class="chip-label">Workspace</span>
+              <svg class="caret" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 7.5 5 5 5-5"/></svg>
+            </div>
+            <div class="menu">
+              <div class="menu-item checked" data-val="Workspace"><span class="left">Workspace</span><svg class="ic ic-sm menu-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
+              <div class="menu-item" data-val="Personal"><span class="left">Personal</span><svg class="ic ic-sm menu-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div>
+              <div class="menu-divider"></div>
+              <div class="menu-item menu-item-new">
+                <svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><path d="M12 11v6M9 14h6"/></svg>
+                <span>新增项目</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="chat-resizer" id="chatResizer"></div>
+    <div class="chat-preview-side" id="chatPreviewSide">
+      <div class="preview-header">
+        <div class="preview-tabs">
+          <div class="preview-tab active" data-tab="preview" tabindex="0">表单</div>
+          <div class="preview-tab" data-tab="list" tabindex="0">列表</div>
+          <div class="preview-tab" data-tab="entity" tabindex="0">实体</div>
+          <div class="preview-tab" data-tab="plugin" tabindex="0">插件</div>
+          <div class="preview-tab" data-tab="api" tabindex="0">API</div>
+          <div class="preview-tab" data-tab="mcp" tabindex="0">MCP</div>
+        </div>
+        <button class="preview-close" id="chatPreviewClose" aria-label="关闭预览"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </div>
+      <div class="preview-nav" id="previewNav">
+        <div class="preview-nav-inner">
+          <button class="preview-nav-btn" id="previewBack" data-tooltip="后退" disabled>
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+          </button>
+          <button class="preview-nav-btn" id="previewForward" data-tooltip="前进" disabled>
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+          <button class="preview-nav-btn" id="previewRefresh" data-tooltip="刷新">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-6.36 2.64L3 8"/><path d="M3 3v5h5"/></svg>
+          </button>
+          <div class="preview-url">
+            <input type="text" class="preview-url-text" id="previewUrlText" value="https://feature.kingdee.com" spellcheck="false" autocomplete="off" aria-label="预览地址">
+          </div>
+          <button class="preview-nav-btn" id="previewEdit" data-tooltip="编辑" aria-label="编辑" aria-pressed="false">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg>
+          </button>
+          <button class="preview-nav-btn" id="previewPick" data-tooltip="选择元素" aria-label="选择元素" aria-pressed="false">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4.037 4.688a.495.495 0 0 1 .651-.651l16 6.5a.5.5 0 0 1-.063.947l-6.124 1.58a2 2 0 0 0-1.438 1.435l-1.579 6.126a.5.5 0 0 1-.947.063z"/></svg>
+          </button>
+          <button class="preview-nav-btn" id="previewViewport" data-tooltip="切换到移动尺寸" aria-label="切换预览尺寸" aria-pressed="false">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="preview-body" id="previewBodyPreview">
+        <iframe class="preview-frame" id="chatPreviewFrame"></iframe>
+      </div>
+      <div class="preview-body hidden" id="previewBodyList">
+        <div class="list-view-panel">
+          <div class="list-toolbar">
+            <div class="list-toolbar-row">
+              <div class="list-title">采购订单</div>
+              <div class="list-toolbar-right">
+                <div class="list-search">
+                  <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                  <input type="text" placeholder="搜索单据编号、供应商…" id="listSearchInput">
+                </div>
+              </div>
+            </div>
+            <div class="list-actions">
+              <button class="list-act-btn primary" id="listNewBtn"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>新建</button>
+              <button class="list-act-btn" id="listDeleteBtn">删除</button>
+              <button class="list-act-btn" id="listSubmitBtn">提交</button>
+              <button class="list-act-btn" id="listAuditBtn">审核</button>
+              <button class="list-act-btn" id="listExportBtn">导出</button>
+              <button class="list-act-btn" id="listPrintBtn">打印</button>
+            </div>
+          </div>
+          <div class="list-table-wrap">
+            <table class="list-table">
+              <thead>
+                <tr>
+                  <th class="list-cb"><input type="checkbox" id="listCheckAll"></th>
+                  <th class="sortable" data-col="0">单据编号<span class="sort-arrow"></span></th>
+                  <th class="sortable" data-col="1">供应商<span class="sort-arrow"></span></th>
+                  <th class="sortable" data-col="2">采购组织<span class="sort-arrow"></span></th>
+                  <th class="sortable" data-col="3">采购员<span class="sort-arrow"></span></th>
+                  <th class="sortable" data-col="4">订单日期<span class="sort-arrow"></span></th>
+                  <th class="r sortable" data-col="5">总金额<span class="sort-arrow"></span></th>
+                  <th class="sortable" data-col="6">单据状态<span class="sort-arrow"></span></th>
+                </tr>
+              </thead>
+              <tbody id="listBody">
+                <tr data-id="PO-2026-0001">
+                  <td class="list-cb"><input type="checkbox"></td>
+                  <td class="c-code">PO-2026-0001</td>
+                  <td>深圳恒达科技有限公司</td>
+                  <td>采购一部</td>
+                  <td>张伟</td>
+                  <td>2026-07-28</td>
+                  <td class="r total">145,205.00</td>
+                  <td><span class="list-tag ok">已审核</span></td>
+                  
+                </tr>
+                <tr data-id="PO-2026-0002">
+                  <td class="list-cb"><input type="checkbox"></td>
+                  <td class="c-code">PO-2026-0002</td>
+                  <td>上海博远电子有限公司</td>
+                  <td>采购二部</td>
+                  <td>李敏</td>
+                  <td>2026-07-25</td>
+                  <td class="r total">89,350.00</td>
+                  <td><span class="list-tag ok">已审核</span></td>
+                  
+                </tr>
+                <tr data-id="PO-2026-0003">
+                  <td class="list-cb"><input type="checkbox"></td>
+                  <td class="c-code">PO-2026-0003</td>
+                  <td>广州华信科技有限公司</td>
+                  <td>采购一部</td>
+                  <td>张伟</td>
+                  <td>2026-07-22</td>
+                  <td class="r total">216,800.00</td>
+                  <td><span class="list-tag ok">已审核</span></td>
+                  
+                </tr>
+                <tr data-id="PO-2026-0004">
+                  <td class="list-cb"><input type="checkbox"></td>
+                  <td class="c-code">PO-2026-0004</td>
+                  <td>北京天元科技有限公司</td>
+                  <td>采购三部</td>
+                  <td>王强</td>
+                  <td>2026-07-20</td>
+                  <td class="r total">56,320.00</td>
+                  <td><span class="list-tag warn">待审核</span></td>
+                  
+                </tr>
+                <tr data-id="PO-2026-0005">
+                  <td class="list-cb"><input type="checkbox"></td>
+                  <td class="c-code">PO-2026-0005</td>
+                  <td>深圳恒达科技有限公司</td>
+                  <td>采购一部</td>
+                  <td>张伟</td>
+                  <td>2026-07-18</td>
+                  <td class="r total">34,260.00</td>
+                  <td><span class="list-tag ok">已审核</span></td>
+                  
+                </tr>
+                <tr data-id="PO-2026-0006">
+                  <td class="list-cb"><input type="checkbox"></td>
+                  <td class="c-code">PO-2026-0006</td>
+                  <td>成都鼎盛科技有限公司</td>
+                  <td>采购二部</td>
+                  <td>李敏</td>
+                  <td>2026-07-15</td>
+                  <td class="r total">178,430.00</td>
+                  <td><span class="list-tag warn">待审核</span></td>
+                  
+                </tr>
+                <tr data-id="PO-2026-0007">
+                  <td class="list-cb"><input type="checkbox"></td>
+                  <td class="c-code">PO-2026-0007</td>
+                  <td>杭州云天信息技术有限公司</td>
+                  <td>采购三部</td>
+                  <td>王强</td>
+                  <td>2026-07-12</td>
+                  <td class="r total">92,600.00</td>
+                  <td><span class="list-tag ok">已审核</span></td>
+                  
+                </tr>
+                <tr data-id="PO-2026-0008">
+                  <td class="list-cb"><input type="checkbox"></td>
+                  <td class="c-code">PO-2026-0008</td>
+                  <td>苏州工业园区新科电子</td>
+                  <td>采购一部</td>
+                  <td>张伟</td>
+                  <td>2026-07-10</td>
+                  <td class="r total">67,850.00</td>
+                  <td><span class="list-tag ok">已审核</span></td>
+                  
+                </tr>
+                <tr data-id="PO-2026-0009">
+                  <td class="list-cb"><input type="checkbox"></td>
+                  <td class="c-code">PO-2026-0009</td>
+                  <td>武汉长江通讯设备有限公司</td>
+                  <td>采购二部</td>
+                  <td>李敏</td>
+                  <td>2026-07-08</td>
+                  <td class="r total">123,400.00</td>
+                  <td><span class="list-tag ok">已审核</span></td>
+                  
+                </tr>
+                <tr data-id="PO-2026-0010">
+                  <td class="list-cb"><input type="checkbox"></td>
+                  <td class="c-code">PO-2026-0010</td>
+                  <td>南京瑞丰科技有限公司</td>
+                  <td>采购三部</td>
+                  <td>王强</td>
+                  <td>2026-07-05</td>
+                  <td class="r total">45,780.00</td>
+                  <td><span class="list-tag danger">已关闭</span></td>
+                  
+                </tr>
+                <tr data-id="PO-2026-0011">
+                  <td class="list-cb"><input type="checkbox"></td>
+                  <td class="c-code">PO-2026-0011</td>
+                  <td>深圳恒达科技有限公司</td>
+                  <td>采购一部</td>
+                  <td>张伟</td>
+                  <td>2026-07-03</td>
+                  <td class="r total">201,500.00</td>
+                  <td><span class="list-tag ok">已审核</span></td>
+                  
+                </tr>
+                <tr data-id="PO-2026-0012">
+                  <td class="list-cb"><input type="checkbox"></td>
+                  <td class="c-code">PO-2026-0012</td>
+                  <td>厦门海天科技有限公司</td>
+                  <td>采购二部</td>
+                  <td>李敏</td>
+                  <td>2026-07-01</td>
+                  <td class="r total">78,920.00</td>
+                  <td><span class="list-tag ok">已审核</span></td>
+                  
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="list-pager">
+            <span class="pager-info">第 1-12 条，共 12 条</span>
+            <div class="pager-btns">
+              <button class="pager-btn" disabled>‹</button>
+              <button class="pager-btn on">1</button>
+              <button class="pager-btn" disabled>›</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="preview-body hidden" id="previewBodyEntity">
+        <div class="entity-layout">
+          <div class="entity-left">
+            <div class="entity-left-item active">
+              <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M8 13h8M8 17h5"/></svg>
+              <span class="entity-left-name">采购订单主表</span>
+              <span class="entity-left-count">12字段</span>
+            </div>
+            <div class="entity-left-item">
+              <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M8 13h8M8 17h5"/></svg>
+              <span class="entity-left-name">采购订单明细</span>
+              <span class="entity-left-count">8字段</span>
+            </div>
+            <div class="entity-left-item">
+              <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M8 13h8M8 17h5"/></svg>
+              <span class="entity-left-name">采购入库单</span>
+              <span class="entity-left-count">10字段</span>
+            </div>
+            <div class="entity-left-item">
+              <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M8 13h8M8 17h5"/></svg>
+              <span class="entity-left-name">供应商</span>
+              <span class="entity-left-count">6字段</span>
+            </div>
+          </div>
+          <div class="entity-right">
+            <table class="entity-table">
+              <thead><tr><th>字段名称</th><th>字段标识</th><th>字段类型</th><th>是否必录</th></tr></thead>
+              <tbody>
+                <tr><td>单据编号</td><td class="code">billno</td><td>单据编号</td><td><span class="plugin-check"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td></tr>
+                <tr><td>单据状态</td><td class="code">billstatus</td><td>下拉列表</td><td><span class="plugin-check"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td></tr>
+                <tr><td>供应商</td><td class="code">supplier</td><td>基础资料</td><td><span class="plugin-check"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td></tr>
+                <tr><td>采购组织</td><td class="code">purchaseorg</td><td>基础资料</td><td><span class="plugin-check"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td></tr>
+                <tr><td>订单日期</td><td class="code">orderdate</td><td>日期</td><td><span class="plugin-check off"></span></td></tr>
+                <tr><td>币别</td><td class="code">currency</td><td>基础资料</td><td><span class="plugin-check off"></span></td></tr>
+                <tr><td>含税金额</td><td class="code">totalamount</td><td>金额</td><td><span class="plugin-check off"></span></td></tr>
+                <tr><td>采购员</td><td class="code">purchaser</td><td>基础资料</td><td><span class="plugin-check off"></span></td></tr>
+                <tr><td>备注</td><td class="code">remark</td><td>文本</td><td><span class="plugin-check off"></span></td></tr>
+                <tr><td>创建人</td><td class="code">creator</td><td>基础资料</td><td><span class="plugin-check off"></span></td></tr>
+                <tr><td>创建时间</td><td class="code">createtime</td><td>日期时间</td><td><span class="plugin-check off"></span></td></tr>
+                <tr><td>修改时间</td><td class="code">modifytime</td><td>日期时间</td><td><span class="plugin-check off"></span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="preview-body hidden" id="previewBodyPlugin">
+        <table class="plugin-table">
+          <thead><tr><th>插件类型</th><th>类名</th><th>描述</th><th>是否启用</th></tr></thead>
+          <tbody>
+            <tr><td class="type">表单插件</td><td class="code">kd.bos.form.plugin.FormPlugin</td><td>表单加载时初始化字段默认值</td><td><span class="plugin-check"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td></tr>
+            <tr><td class="type">表单插件</td><td class="code">kd.bos.form.plugin.ValidatePlugin</td><td>提交前校验必填字段</td><td><span class="plugin-check"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td></tr>
+            <tr><td class="type">表单插件</td><td class="code">kd.bos.form.plugin.DataChangePlugin</td><td>字段联动：供应商变更时刷新币别</td><td><span class="plugin-check"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td></tr>
+            <tr><td class="type">列表插件</td><td class="code">kd.bos.list.plugin.ListPlugin</td><td>列表查询数据过滤</td><td><span class="plugin-check"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td></tr>
+            <tr><td class="type">操作插件</td><td class="code">kd.bos.entity.plugin.SubmitPlugin</td><td>提交时更新单据状态</td><td><span class="plugin-check"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td></tr>
+            <tr><td class="type">操作插件</td><td class="code">kd.bos.entity.plugin.AuditPlugin</td><td>审核时校验金额上限</td><td><span class="plugin-check"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></td></tr>
+            <tr><td class="type">调度插件</td><td class="code">kd.bos.schedule.plugin.SyncPlugin</td><td>定时同步外部采购数据</td><td><span class="plugin-check off"></span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="preview-body hidden" id="previewBodyApi">
+        <table class="plugin-table api-table">
+          <thead><tr><th>方法</th><th>路径</th><th>说明</th><th>备注</th></tr></thead>
+          <tbody><tr><td><span class="api-method m-get">GET</span></td><td class="code">/kapi/v2/scm/pm/purchaseorder</td><td>查询采购订单列表</td><td>分页、按状态/供应商/日期过滤</td></tr><tr><td><span class="api-method m-get">GET</span></td><td class="code">/kapi/v2/scm/pm/purchaseorder/{id}</td><td>查询采购订单详情</td><td>返回单头 + 明细行</td></tr><tr><td><span class="api-method m-post">POST</span></td><td class="code">/kapi/v2/scm/pm/purchaseorder</td><td>新增采购订单</td><td>校验必填与金额上限</td></tr><tr><td><span class="api-method m-put">PUT</span></td><td class="code">/kapi/v2/scm/pm/purchaseorder/{id}</td><td>修改采购订单</td><td>仅草稿态可改</td></tr><tr><td><span class="api-method m-post">POST</span></td><td class="code">/kapi/v2/scm/pm/purchaseorder/{id}/submit</td><td>提交审批</td><td>触发三级审批流</td></tr><tr><td><span class="api-method m-post">POST</span></td><td class="code">/kapi/v2/scm/pm/purchaseorder/{id}/audit</td><td>审核</td><td>写入审核人与审核时间</td></tr><tr><td><span class="api-method m-post">POST</span></td><td class="code">/kapi/v2/scm/pm/purchaseorder/{id}/unaudit</td><td>反审核</td><td>下游已生成入库单时拒绝</td></tr><tr><td><span class="api-method m-post">POST</span></td><td class="code">/kapi/v2/scm/pm/purchaseorder/{id}/push</td><td>下推入库单</td><td>按未入库数量生成</td></tr><tr><td><span class="api-method m-delete">DELETE</span></td><td class="code">/kapi/v2/scm/pm/purchaseorder/{id}</td><td>删除采购订单</td><td>仅草稿态可删</td></tr></tbody>
+        </table>
+      </div>
+      <div class="preview-body hidden" id="previewBodyMcp">
+        <div class="mcp-list" id="mcpList"></div>
+      </div>
+    </div>
+    <div class="history-overlay" id="historyOverlay"></div>
+    <div class="history-panel" id="historyPanel">
+      <div class="history-panel-head">
+        <div class="history-panel-title">历史记录</div>
+        <button class="history-panel-close" id="historyPanelClose">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="history-list">
+        <div class="history-item">
+          <div class="history-item-time">2024-01-15 14:30 · 版本 3</div>
+          <div class="history-item-desc">添加审批流程节点，支持三级审核与驳回退回</div>
+          <div class="history-item-actions"><span class="history-item-current">当前版本</span></div>
+        </div>
+        <div class="history-item">
+          <div class="history-item-time">2024-01-15 11:20 · 版本 2</div>
+          <div class="history-item-desc">调整数据模型字段，新增含税单价与折扣金额</div>
+          <div class="history-item-actions"><span class="history-item-restore"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 5 5v0a5 5 0 0 1-5 5H9"/></svg>回退</span></div>
+        </div>
+        <div class="history-item">
+          <div class="history-item-time">2024-01-15 09:00 · 版本 1</div>
+          <div class="history-item-desc">初始版本：采购订单主表 + 明细表基础结构</div>
+          <div class="history-item-actions"><span class="history-item-restore"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 5 5v0a5 5 0 0 1-5 5H9"/></svg>回退</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+

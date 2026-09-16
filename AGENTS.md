@@ -30,12 +30,12 @@ Consult the wiki when working on features, debugging, or onboarding to a new are
 
 ### 消息通知同步更新
 
-每次实质性功能变更后，需在 `src/scripts/main.js` 的 `changelogData` 数组中新增一条消息通知。规范：
+每次实质性功能变更后，需在 `src/scripts/features/changelog.js` 的 `changelogData` 数组中新增一条消息通知。规范：
 
 1. 仅记录核心功能变更，小 BUG 修复及细节调整不记录
 2. 描述精炼为一句，突出重点，不逐条罗列
 3. 同一更新人同一天的多次变更合并为一条通知
-4. 分配递增 id，并在 `changelogIcons` 中添加对应图标
+4. 分配递增 id，并在同文件的 `changelogIcons` 中添加对应图标
 5. 日期使用当天日期
 
 ### CHANGELOG.md 同步更新
@@ -47,3 +47,17 @@ Consult the wiki when working on features, debugging, or onboarding to a new are
 3. 版本号遵循 SemVer：MAJOR 对应不兼容变更、MINOR 对应新功能、PATCH 对应修复与优化
 4. 更新人从 git 提交记录获取，填写提交者姓名
 5. 描述内容与消息通知对应，但采用 `1. 2. 3. 4.` 编号、`<br>` 换行罗列的格式
+
+### 源码结构（2026-09-16 拆分后）
+
+原来的单文件 `src/scripts/main.js`（6515 行）与 `index.html`（2310 行）已按
+功能拆开，改动前先读 [README.md](README.md) 的「源码结构」与「注意事项」。
+三条硬约束：
+
+1. `src/styles/app.css` 里的 `@import` 顺序等于拆分前的行顺序，**不可调整**
+2. 模块只放声明，副作用放进导出的 `init*()`，由 `src/scripts/main.js` 按
+   原始顺序调用；入口里的行号注释指向拆分前的位置
+3. 跨模块写共享状态要走 `set_xxx()`——ES 的 import 绑定只读
+
+改完跑 `npm run check`（模块自检）再跑 `npm run build`。
+

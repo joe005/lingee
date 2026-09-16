@@ -1,0 +1,92 @@
+/* ============================================================
+   专家 / 专家团 —— 能力项、可承担工作、人工审核确认节点
+   追加在文件末尾，勿前置（层叠顺序见 README）
+   ============================================================ */
+
+/* 能力项：中文名 + 等级徽标，等级用色阶区分 */
+.ptag-comp{display:inline-flex;align-items:center;gap:6px}
+.ptag-lv{font-style:normal;font-size:10.5px;line-height:1;padding:2px 5px;border-radius:4px;
+  background:var(--hover);color:var(--text-secondary)}
+.ptag-lv.lv-principal{background:#eef3ff;color:var(--brand)}
+.ptag-lv.lv-advanced{background:var(--success-bg);color:var(--success)}
+.ptag-lv.lv-practitioner{background:var(--fill-1);color:var(--text-secondary)}
+.ptag-lv.lv-awareness{background:var(--fill-1);color:var(--text-soft)}
+
+/* 专家卡片上的「可承担的工作」 */
+.x-modes{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin-top:7px}
+.x-modes-k{font-size:11px;color:var(--text-soft);margin-right:1px}
+.x-mode{font-size:11px;line-height:1;color:var(--text-secondary);background:var(--fill-1);
+  border:1px solid var(--border);padding:3px 6px;border-radius:5px;white-space:nowrap}
+
+/* 人工审核确认节点 */
+.x-gate{display:flex;align-items:center;gap:7px;padding:6px 8px 6px 9px;border-radius:9px;
+  border:1px solid var(--border-focus);background:var(--brand-fill);color:var(--brand)}
+.x-gate b{font-size:12.5px;font-weight:500;white-space:nowrap;color:var(--brand)}
+.x-gate i{font-style:normal;font-size:11px;color:var(--text-secondary);white-space:nowrap;display:block}
+.x-gate .x-kind{border-color:var(--border-focus);color:var(--brand)}
+.x-gate-ic{width:16px;height:16px;flex:none}
+.x-gate .x-ic{margin-left:2px}
+
+/* 步骤之间的插槽：点它插入一个确认节点 */
+.x-gate-add{width:22px;height:22px;flex:none;display:inline-flex;align-items:center;justify-content:center;
+  margin:0 1px;padding:0;font-size:13px;line-height:1;cursor:pointer;color:var(--text-soft);
+  border:1px dashed var(--border-hover);border-radius:50%;background:transparent;transition:.15s}
+.x-gate-add:hover{color:var(--brand);border-color:var(--brand);border-style:solid;background:var(--brand-fill)}
+
+.team-gate-hint{margin-top:9px;font-size:12px;color:var(--text-secondary)}
+.x-sub-gate{color:var(--brand)}
+
+/* 专家管理卡片上的「可承担的工作」 */
+#view-collab .expert-modes{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-bottom:8px}
+#view-collab .expert-modes-k{font-size:10.5px;color:var(--text-soft);margin-right:1px}
+#view-collab .expert-mode{font-size:10px;line-height:1;color:var(--text-secondary);
+  background:var(--bg);border:1px solid var(--border);padding:3px 5px;border-radius:4px;white-space:nowrap}
+#view-collab .expert-modes{flex-wrap:nowrap;overflow:hidden}
+#view-collab .expert-mode-more{color:var(--text-soft);border-style:dashed}
+.x-modes{flex-wrap:nowrap;overflow:hidden}
+.x-mode-more{color:var(--text-soft);border-style:dashed}
+
+/* 专家卡片召唤按钮：与专家团卡片的 .x-call 统一，别让浏览器默认按钮样式漏出来 */
+#view-collab .expert-chat-btn{position:absolute;top:12px;right:12px;width:auto;height:auto;
+  padding:3px 10px;border:1px solid var(--border-hover);border-radius:999px;background:var(--bg);
+  font:inherit;font-size:11.5px;line-height:1.5;color:var(--text-secondary);cursor:pointer;
+  opacity:0;transition:opacity .12s,border-color .12s,color .12s}
+#view-collab .expert-chat-btn:hover{background:var(--bg);border-color:var(--brand);color:var(--brand)}
+#view-collab .expert-chat-btn:focus-visible{opacity:1}
+@media (hover:none){#view-collab .expert-chat-btn{opacity:1}}
+
+/* 搜索框用 type="search" 挡掉 Chrome 自动填充，同时隐藏 WebKit 原生清除按钮，外观不变 */
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearance:none;display:none}
+
+/* 完成标准：勾选清单样式，与「工作方式」的圆点列表区分开 */
+.x-ck{margin:0;padding:0;list-style:none}
+.x-ck li{position:relative;padding-left:20px;margin-bottom:5px;font-size:13px;color:var(--text-secondary);line-height:1.55}
+.x-ck li::before{content:'';position:absolute;left:0;top:4px;width:12px;height:12px;border-radius:3px;
+  border:1px solid var(--success);background:var(--success-bg)}
+.x-ck li::after{content:'';position:absolute;left:3.5px;top:7px;width:5px;height:2.5px;
+  border-left:1.5px solid var(--success);border-bottom:1.5px solid var(--success);transform:rotate(-45deg)}
+/* 空态：说明「没有」本身就是一种设计结论，不要隐藏 */
+.x-none{font-size:12.5px;color:var(--text-soft)}
+
+/* 触发词里的输入占位符 */
+.x-ph{font-style:normal;color:var(--brand);background:var(--brand-fill);
+  padding:0 4px;border-radius:4px;margin-right:4px}
+
+/* 缺输入时的追问卡片 */
+.ask-card{border:1px solid var(--border);border-radius:12px;background:var(--bg);
+  padding:14px 16px;margin:10px 0;max-width:720px}
+.ask-head{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:500;color:var(--text);margin-bottom:12px}
+.ask-head img{width:24px;height:24px;border-radius:7px;flex:none}
+.ask-q{padding:10px 0;border-top:1px solid var(--divider)}
+.ask-q:first-of-type{border-top:none;padding-top:0}
+.ask-q-t{font-size:13px;color:var(--text);margin-bottom:8px}
+.ask-opts{display:flex;flex-wrap:wrap;gap:6px}
+.ask-opt{font:inherit;font-size:12.5px;line-height:1.5;padding:5px 11px;border-radius:8px;cursor:pointer;
+  border:1px solid var(--border-hover);background:var(--bg);color:var(--text-secondary);transition:.12s}
+.ask-opt:hover{border-color:var(--brand);color:var(--brand)}
+.ask-opt.on{border-color:var(--brand);background:var(--brand-fill);color:var(--brand);font-weight:500}
+.ask-opt-other{border-style:dashed;color:var(--text-soft)}
+.ask-foot{margin-top:12px;padding-top:10px;border-top:1px solid var(--divider);
+  font-size:12px;color:var(--text-soft)}
+.ask-foot-done{color:var(--success)}

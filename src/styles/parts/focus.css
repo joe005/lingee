@@ -1,0 +1,10 @@
+  /* ============ 键盘焦点指示器 ============ */
+  *:focus{outline:none}
+  *:focus-visible{outline:none}
+  /* 可交互元素默认可聚焦 */
+  .nav-item,.sub-item,.flat-item,.chip,.menu-item,.app-item,
+  .btn-new,.header-btn,.send-btn,.round-btn,.seg-item,.tab,
+  .mode-item,.sb-head-icons .ic,.lbl-icons .ic,.card-more{
+    -webkit-tap-highlight-color:transparent
+  }
+
