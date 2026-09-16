@@ -423,71 +423,13 @@ const billTemplateWithTokens = billTemplate.replace(
      协作开发（任务管理 / 待评审 / 协作人员 / 专家 / 专家团 / 设置）
      任务、评审、协作人员数据与交互移植自协作开发原型稿
      ============================================================ */
-  /* 项目维度：任务 / 评审 / 协作人员按项目分；专家与专家团为全局资产，项目内只绑定默认专家团。
-     工作区是项目归属的顶层容器，一次只能激活一个。 */
-  var CV_WORKSPACES=[
-    {id:'finance-domain',name:'财务域工作区',short:'财'},
-    {id:'purchase-domain',name:'采购域工作区',short:'采'}
-  ];
-  var cvWorkspace=CV_WORKSPACES[0].id;
-  /* 项目状态：人定的「还做不做」，跟任务状态（干出来的进度）是两套词表，配色沿用任务同义色 */
-  var CV_PROJECT_STATUS=[
-    {id:'planning',label:'计划中',tone:'#b8b8b8'},
-    {id:'active',label:'进行中',tone:'#4d89ff'},
-    {id:'paused',label:'已暂停',tone:'#c06010'},
-    {id:'done',label:'已完成',tone:'#08a040'},
-    {id:'cancelled',label:'已取消',tone:'#e04a3a'}
-  ];
-  var cvProject='';                    /* 空串 = 全部项目（个人视角的聚合视图） */
-  var cvConfigOverride={};             /* {项目id:{配置卡 key:是否项目覆盖}} */
+  /* CV data moved to src/data/collab.js */
+
   function cvWorkspaceProjects(){} /* stub */
   function cvInProject(){} /* stub */
-  var CV_REVIEW_ARTIFACTS={
-  0:{tabs:['源代码','技术方案'],content:{
-  '源代码':'<h1>审批流插件 - 源代码</h1><p>文件: ApprovalFlowPlugin.java</p><pre>public class ApprovalFlowPlugin extends AbstractPlugin {\n  @Override\n  public void execute(ExecutionContext ctx) {\n    ApprovalContext ac = ctx.getApprovalContext();\n    List&lt;ApprovalNode&gt; nodes = ac.getApprovalNodes();\n    for (ApprovalNode node : nodes) {\n      if (node.isTimeout(30, TimeUnit.MINUTES)) {\n        handleTimeout(node, ac);\n        continue;\n      }\n      if (node.getStatus() == NodeStatus.PENDING) {\n        notifyApprover(node);\n      }\n    }\n    // 多级审批流转\n    if (ac.allNodesProcessed()) {\n      ctx.complete();\n    }\n  }\n  private void handleTimeout(ApprovalNode node, ApprovalContext ac) {\n    // 超时自动升级\n    ac.escalateToSuperior(node);\n  }\n}</pre><p>文件: ApprovalFlowService.java</p><pre>public class ApprovalFlowService {\n  public ApprovalResult submit(ExpenseReport report) {\n    ApprovalFlow flow = buildFlow(report);\n    flow.start();\n    return flow.getResult();\n  }\n}</pre>',
-  '技术方案':'<h1>审批流插件技术方案</h1><h2>1. 概述</h2><p>基于苍穹插件机制实现费用报销多级审批流转，支持串行/并行审批、超时自动升级、异常回退。</p><h2>2. 核心设计</h2><h3>2.1 审批节点模型</h3><table><tr><th>字段</th><th>类型</th><th>说明</th></tr><tr><td>nodeId</td><td>String</td><td>节点唯一标识</td></tr><tr><td>approver</td><td>String</td><td>审批人ID</td></tr><tr><td>status</td><td>Enum</td><td>PENDING/APPROVED/REJECTED</td></tr><tr><td>timeout</td><td>int</td><td>超时时间(分钟)</td></tr></table><h3>2.2 流转规则</h3><ul><li>串行模式：按节点顺序依次审批</li><li>并行模式：同级节点同时审批，全部通过后进入下一级</li><li>超时处理：超过 timeout 分钟自动升级到上级</li></ul><h2>3. 异常处理</h2><ul><li>审批人离职：自动转交代理人</li><li>审批人拒绝：流程回退到发起人</li><li>系统异常：记录日志并发送告警</li></ul>'}},
-  1:{tabs:['技术方案','需求规格'],content:{
-  '技术方案':'<h1>多级审批流性能优化方案</h1><h2>1. 性能问题分析</h2><p>当前审批流在 5000+ 并发场景下平均响应时间 > 3s，瓶颈在数据库查询和节点状态同步。</p><h2>2. 优化方案</h2><h3>2.1 缓存优化</h3><ul><li>审批节点状态缓存到 Redis，TTL 5 分钟</li><li>批量查询替代循环单条查询</li></ul><h3>2.2 异步化</h3><ul><li>通知发送改为异步消息队列</li><li>超时检查改为定时任务批量扫描</li></ul><h3>2.3 数据库优化</h3><table><tr><th>优化项</th><th>预计提升</th></tr><tr><td>索引优化</td><td>40%</td></tr><tr><td>分页查询</td><td>30%</td></tr><tr><td>读写分离</td><td>20%</td></tr></table>',
-  '需求规格':'<h1>需求规格说明书 - PRD</h1><h2>1. 背景与目标</h2><p>随着报销业务量增长，现有审批流在高峰期出现严重性能瓶颈，需要优化以支持千人并发审批。</p><h2>2. 功能需求</h2><h3>2.1 性能指标</h3><ul><li>支持 1000+ 并发审批</li><li>平均响应时间 < 500ms</li><li>99.9% 请求在 1s 内完成</li></ul><h3>2.2 兼容性</h3><ul><li>向下兼容现有审批流配置</li><li>支持灰度发布</li></ul>'}},
-  2:{tabs:['技术方案','需求规格','源代码'],content:{
-  '技术方案':'<h1>权限体系重构技术方案 - Spec</h1><h2>1. 设计目标</h2><p>基于 RBAC 模型重构权限体系，实现数据权限与功能权限分离，支持角色继承和细粒度授权。</p><h2>2. 权限模型</h2><h3>2.1 角色层级</h3><table><tr><th>层级</th><th>角色</th><th>权限范围</th></tr><tr><td>L1</td><td>系统管理员</td><td>全部</td></tr><tr><td>L2</td><td>部门管理员</td><td>本部门</td></tr><tr><td>L3</td><td>普通用户</td><td>个人数据</td></tr></table><h3>2.2 权限类型</h3><ul><li>功能权限：菜单、按钮、API 接口</li><li>数据权限：行级、列级过滤</li><li>字段权限：字段可见/可编辑</li></ul>',
-  '需求规格':'<h1>权限体系重构需求规格</h1><h2>1. 业务背景</h2><p>当前权限体系不支持角色继承，数据权限与功能权限耦合，维护成本高。</p><h2>2. 功能需求</h2><ul><li>支持角色继承，子角色自动继承父角色权限</li><li>数据权限支持行级过滤（按部门/项目）</li><li>支持字段级权限控制</li><li>权限变更实时生效，无需重新登录</li></ul>',
-  '源代码':'<h1>权限服务 - 源代码</h1><pre>public class PermissionService {\n  public boolean hasPermission(String userId, String resource, String action) {\n    List&lt;Role&gt; roles = roleService.getUserRoles(userId);\n    return roles.stream().anyMatch(r ->\n      r.hasPermission(resource, action) ||\n      (r.getParent() != null && r.getParent().hasPermission(resource, action))\n    );\n  }\n  public DataFilter getDataFilter(String userId, String resource) {\n    List&lt;Role&gt; roles = roleService.getUserRoles(userId);\n    return DataFilterComposer.compose(roles, resource);\n  }\n}</pre>'}},
-  3:{tabs:['源代码','技术方案'],content:{
-  '源代码':'<h1>打印模板优化 - 源代码</h1><pre>public class PrintTemplateRenderer {\n  public byte[] render(ExpenseReport report, TemplateConfig config) {\n    Workbook wb = new XSSFWorkbook();\n    Sheet header = wb.createSheet("报销单");\n    // 页眉\n    if (config.hasHeader()) {\n      renderHeader(header, config.getHeader());\n    }\n    // 水印\n    if (config.hasWatermark()) {\n      addWatermark(wb, config.getWatermark());\n    }\n    // 数据行\n    renderRows(header, report.getItems());\n    return wb.getBytes();\n  }\n}</pre>',
-  '技术方案':'<h1>打印模板优化方案</h1><h2>1. 需求</h2><p>支持自定义页眉页脚、水印、多页打印、Excel 格式输出。</p><h2>2. 技术选型</h2><ul><li>基于 Apache POI 5.x 生成 Excel</li><li>水印通过 Sheet 背景图实现</li><li>页眉页脚通过 HeaderFooter API</li></ul>'}},
-  4:{tabs:['源代码','单元测试'],content:{
-  '源代码':'<h1>附件上传 502 修复 - 源代码</h1><pre>public class AttachmentUploadHandler {\n  @Override\n  public UploadResult handle(UploadRequest req) {\n    int maxRetry = 3;\n    for (int i = 0; i &lt; maxRetry; i++) {\n      try {\n        return uploadToStorage(req.getFile());\n      } catch (StorageException e) {\n        if (i == maxRetry - 1) throw e;\n        Thread.sleep(1000 * (i + 1)); // 指数退避\n      }\n    }\n    throw new StorageException("Upload failed after retries");\n  }\n}</pre>',
-  '单元测试':'<h1>附件上传 - 单元测试报告</h1><h2>测试用例</h2><table><tr><th>用例</th><th>输入</th><th>预期</th><th>结果</th></tr><tr><td>正常上传</td><td>1MB 文件</td><td>成功</td><td>✅ 通过</td></tr><tr><td>弱网重试</td><td>模拟 502</td><td>重试 3 次后成功</td><td>✅ 通过</td></tr><tr><td>超时</td><td>10s 超时</td><td>返回超时错误</td><td>✅ 通过</td></tr><tr><td>空文件</td><td>0 字节</td><td>拒绝上传</td><td>✅ 通过</td></tr></table><p>覆盖率: 95% | 通过: 4/4</p>'}},
-  5:{tabs:['需求规格','源代码'],content:{
-  '需求规格':'<h1>需求规格 - 团建费选项</h1><h2>1. 需求描述</h2><p>在费用类型下拉中增加"团建费"选项，归属"部门活动费用"类别。</p><h2>2. 验收标准</h2><ul><li>费用类型下拉列表中可见"团建费"</li><li>选择后归属类别显示为"部门活动费用"</li><li>报销统计报表中可按团建费维度统计</li></ul>'}},
-  6:{tabs:['需求规格'],content:{
-  '需求规格':'<h1>多币种报销需求规格 - PRD</h1><h2>1. 业务背景</h2><p>随着国际化业务扩展，员工出差涉及多币种报销，需支持原币金额与本位币金额双重记录。</p><h2>2. 功能需求</h2><h3>2.1 币种管理</h3><ul><li>支持人民币(CNY)、美元(USD)、欧元(EUR)、日元(JPY)、港币(HKD)</li><li>币种汇率每日自动更新，支持手动调整</li></ul><h3>2.2 报销录入</h3><ul><li>选择币种后自动带出当日汇率</li><li>原币金额 + 汇率 = 本位币金额（自动计算，可手动修正）</li><li>同一报销单支持多币种明细行</li></ul><h2>3. 验收标准</h2><table><tr><th>场景</th><th>预期</th></tr><tr><td>单币种报销</td><td>正常提交审批</td></tr><tr><td>多币种混合报销</td><td>按行汇总本位币金额</td></tr><tr><td>汇率手动修正</td><td>记录修正人和修正时间</td></tr></table>'}},
-  7:{tabs:['测试用例','测试报告','源代码'],content:{
-  '测试用例':'<h1>费用明细列表页 - 测试用例</h1><h2>测试场景</h2><table><tr><th>用例</th><th>输入</th><th>预期</th><th>优先级</th></tr><tr><td>正常分页查询</td><td>page=1,size=20</td><td>返回 20 条数据</td><td>P0</td></tr><tr><td>大数据量查询</td><td>10000 条数据</td><td>响应 &lt; 500ms</td><td>P0</td></tr><tr><td>模糊搜索</td><td>keyword="差旅"</td><td>返回含"差旅"的记录</td><td>P1</td></tr><tr><td>时间范围筛选</td><td>startDate ~ endDate</td><td>返回范围内数据</td><td>P1</td></tr><tr><td>空结果处理</td><td>查无数据</td><td>显示"暂无数据"</td><td>P2</td></tr><tr><td>权限过滤</td><td>普通用户</td><td>仅返回本人数据</td><td>P0</td></tr></table>',
-  '测试报告':'<h1>费用明细列表页 - 测试报告</h1><h2>执行结果</h2><table><tr><th>用例</th><th>结果</th><th>备注</th></tr><tr><td>正常分页查询</td><td>✅ 通过</td><td>-</td></tr><tr><td>大数据量查询</td><td>✅ 通过</td><td>平均 280ms</td></tr><tr><td>模糊搜索</td><td>✅ 通过</td><td>-</td></tr><tr><td>时间范围筛选</td><td>✅ 通过</td><td>-</td></tr><tr><td>空结果处理</td><td>✅ 通过</td><td>-</td></tr><tr><td>权限过滤</td><td>❌ 失败</td><td>部门管理员可见下级数据，实际返回空</td></tr></table><p>通过: 5/6 | 覆盖率: 87%</p>',
-  '源代码':'<h1>费用明细列表页 - 源代码</h1><pre>public class ExpenseDetailListService {\n  public PageResult&lt;ExpenseDetail&gt; query(ExpenseQuery query) {\n    // 权限过滤\n    if (!query.getUser().isAdmin()) {\n      query.setUserId(query.getUser().getId());\n    }\n    // 分页查询\n    return expenseDetailDao.selectByPage(query, query.getPage(), query.getSize());\n  }\n}</pre>'}},
-  8:{tabs:['部署方案','运维手册'],content:{
-  '部署方案':'<h1>审批流插件部署方案</h1><h2>1. 部署策略</h2><h3>1.1 灰度发布</h3><ul><li>第一阶段：10% 流量灰度，观察 2 小时</li><li>第二阶段：50% 流量，观察 4 小时</li><li>第三阶段：100% 全量发布</li></ul><h3>1.2 回滚方案</h3><ul><li>自动回滚：错误率 &gt; 5% 时自动触发</li><li>手动回滚：一键切换到旧版本</li><li>数据回滚：审批流状态数据不回滚，仅回滚插件代码</li></ul><h2>2. 监控告警</h2><table><tr><th>指标</th><th>阈值</th><th>告警方式</th></tr><tr><td>审批流错误率</td><td>&gt; 1%</td><td>钉钉 + 邮件</td></tr><tr><td>审批响应时间</td><td>&gt; 2s</td><td>钉钉</td></tr><tr><td>审批队列积压</td><td>&gt; 100 条</td><td>钉钉 + 短信</td></tr></table>',
-  '运维手册':'<h1>审批流插件 - 运维手册</h1><h2>1. 常用命令</h2><pre># 查看插件状态\nkubectl get pods -l app=approval-flow-plugin\n\n# 查看插件日志\nkubectl logs -f deployment/approval-flow-plugin\n\n# 回滚到上一版本\nkubectl rollout undo deployment/approval-flow-plugin</pre><h2>2. 常见问题</h2><h3>2.1 审批流卡住</h3><ul><li>检查 Redis 连接是否正常</li><li>检查审批节点状态是否为 PENDING</li><li>查看审批超时配置是否生效</li></ul><h3>2.2 性能下降</h3><ul><li>检查数据库索引是否生效</li><li>检查缓存命中率</li><li>查看是否有慢查询</li></ul>'}}
-  };
-  var CV_REVIEW_COMMENTS={
-  0:[{author:'李工',avatar:'李',type:'comment',text:'代码结构清晰，但建议将审批超时逻辑抽离为独立的 TimeoutHandler 类，提高可测试性。',time:'今日 14:20'},{author:'陈晨',avatar:'陈',type:'comment',text:'单元测试覆盖了多级审批场景，但缺少异常分支测试（审批人离职、系统异常等）。',time:'今日 15:30'}],
-  1:[{author:'王工',avatar:'王',type:'comment',text:'缓存方案合理，但需要考虑 Redis 宕机时的降级策略。建议增加本地缓存兜底。',time:'昨日 16:00'},{author:'张工',avatar:'张',type:'pass',text:'方案整体可行，性能指标满足要求。同意推进。',time:'今日 09:15'}],
-  2:[{author:'王工',avatar:'王',type:'comment',text:'RBAC 模型设计合理，角色继承逻辑需要补充循环依赖检测。',time:'2 天前 10:00'},{author:'陈晨',avatar:'陈',type:'comment',text:'数据权限行级过滤方案需要验证大数据量下的性能。',time:'昨日 14:30'},{author:'李工',avatar:'李',type:'reject',text:'PermissionService.hasPermission 方法在角色链较深时性能有问题，建议增加缓存。',time:'今日 11:00'}],
-  3:[{author:'陈晨',avatar:'陈',type:'comment',text:'水印实现方案可行，但多页打印时页眉需要每页重复渲染。',time:'3 小时前'}],
-  4:[{author:'刘洋',avatar:'刘',type:'comment',text:'指数退避策略合理，但建议增加熔断机制，避免连续重试拖垮系统。',time:'1 小时前'}],
-  5:[{author:'吴芳',avatar:'吴',type:'pass',text:'需求简单明确，实现完整，同意合入。',time:'昨日 14:30'}],
-  6:[{author:'王工',avatar:'王',type:'comment',text:'多币种需求描述清晰，但汇率自动更新的时间需要明确（每日凌晨还是实时？）',time:'今日 10:00'}],
-  7:[{author:'李工',avatar:'李',type:'reject',text:'权限过滤用例失败，部门管理员可见下级数据的逻辑有 Bug，需要修复后重新提交。',time:'今日 14:00'},{author:'陈晨',avatar:'陈',type:'comment',text:'测试用例覆盖了主要场景，建议增加并发查询的用例。',time:'今日 15:30'}],
-  8:[{author:'王工',avatar:'王',type:'comment',text:'灰度发布策略合理，建议第一阶段缩短到 1 小时。',time:'昨日 16:00'}]
-  };
   /* level/owner：协作身份分级（所有者/管理员/成员），见 cvCurrentLevel 等函数。
      梁平已经带着「所有者」角色标签，所有者身份归他；isMe 的张工给管理员，方便登录后
      直接体验"调整他人身份/移除成员"这套权限交互，不用切账号。 */
-  var CV_ICON_OWNER='<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M5 16l-2-9 5.5 4L12 4l3.5 7L21 7l-2 9H5zm0 2h14v2H5v-2z"/></svg>';
-  var CV_ICON_ADMIN='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg>';
-  var CV_ICON_MEMBER='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>';
   /* 协作身份分级：所有者 > 管理员 > 成员。只有所有者能调整管理员身份，
      管理员能管普通成员但动不了另一个管理员，谁都改不了自己。 */
   function cvCurrentMember(){ return CV_MEMBERS.filter(function(m){return m.isMe;})[0]||null; }
@@ -495,28 +437,8 @@ const billTemplateWithTokens = billTemplate.replace(
   function cvCanManageMembers(){ var lv=cvCurrentLevel();return lv==='owner'||lv==='admin'; }
   function cvCanRemoveMember(){} /* stub */
   function cvCanToggleLevel(){} /* stub */
-  document.addEventListener('click',function(){cvCloseMemberLevelMenus(null);});
   function cvSetMemberLevel(){} /* stub */
 
-  var CV_WORKFLOW = ['需求分析','方案设计','开发实现','代码审查','测试验证','部署发布'];
-  var CV_WORKFLOW_ROLES = {'需求分析':'需求人员','方案设计':'架构人员','开发实现':'开发人员','代码审查':'开发人员','测试验证':'测试人员','部署发布':'运维人员'};
-  var CV_THIRD_PARTY_MEMBERS=[
-    {name:'钱涛',email:'qian***@kingdee.com',role:'开发',tag:'member-tag--dev',dept:'研发部'},
-    {name:'宋宇',email:'song***@kingdee.com',role:'开发',tag:'member-tag--dev',dept:'研发部'},
-    {name:'冯远',email:'feng***@kingdee.com',role:'架构',tag:'member-tag--arch',dept:'架构部'},
-    {name:'许诺',email:'xu***@kingdee.com',role:'开发',tag:'member-tag--dev',dept:'研发部'},
-    {name:'韩梅',email:'han***@kingdee.com',role:'测试',tag:'member-tag--qa',dept:'测试部'},
-    {name:'罗静',email:'luo***@kingdee.com',role:'测试',tag:'member-tag--qa',dept:'测试部'},
-    {name:'杨帆',email:'yang***@kingdee.com',role:'运维',tag:'member-tag--ops',dept:'运维部'},
-    {name:'唐辉',email:'tang***@kingdee.com',role:'运维',tag:'member-tag--ops',dept:'运维部'},
-    {name:'蒋雯',email:'jiang***@kingdee.com',role:'需求',tag:'member-tag--pm',dept:'产品部'},
-    {name:'何欣',email:'he***@kingdee.com',role:'需求',tag:'member-tag--pm',dept:'产品部'},
-    {name:'梁平',email:'liang***@kingdee.com',role:'产品',tag:'member-tag--pm',dept:'产品部'},
-    {name:'范晨',email:'fan***@kingdee.com',role:'开发',tag:'member-tag--dev',dept:'研发部'},
-    {name:'董睿',email:'dong***@kingdee.com',role:'架构',tag:'member-tag--arch',dept:'架构部'},
-    {name:'贾旭',email:'jia***@kingdee.com',role:'测试',tag:'member-tag--qa',dept:'测试部'},
-    {name:'武威',email:'wu***@kingdee.com',role:'运维',tag:'member-tag--ops',dept:'运维部'}
-  ];
   function cvBuildTaskCard(){} /* stub */
   function cvBuildReviewCard(){} /* stub */
   function cvInjectCardActions(){} /* stub: moved to React */
@@ -542,8 +464,6 @@ const billTemplateWithTokens = billTemplate.replace(
   function _cvModalOpen(name){ _cvModalState={name:name}; _cvModalNotify(); }
   function _cvModalClose(name){ if(!name||_cvModalState.name===name){ _cvModalState={name:null}; _cvModalNotify(); } }
   function _cvModalSubscribe(fn){ _cvModalListeners.push(fn); return function(){ var i=_cvModalListeners.indexOf(fn); if(i>=0)_cvModalListeners.splice(i,1); }; }
-  var CV_TASK_MODAL_IDS={'cv-exec-overlay':'exec','cv-transfer-overlay':'transfer','cv-twist-overlay':'twist','cv-review-overlay':'review'};
-
   /* ============ SYNC MODAL ============ */
   function cvOpenSyncModal(){ _cvModalOpen('sync'); }
   function cvCloseSyncModal(){ _cvModalClose('sync'); }
@@ -582,27 +502,15 @@ const billTemplateWithTokens = billTemplate.replace(
   function cvSwitchToChat(){} /* stub */
   function cvAddChatMessage(){} /* stub */
   function cvAddChatTyping(){} /* stub */
-  function cvRemoveChatTyping(){var t=document.getElementById('cv-chat-typing-indicator');if(t&&t.parentNode)t.parentNode.removeChild(t);}
   function cvSimulateExecution(){} /* stub */
 
   /* ---------- 面板切换 ---------- */
-  var cvInited=false, cvLastTab='tasks';
-  window.cvCard=null; window.cvReviewIdx=0;
-  var cvPendingTab, cvPendingProj;   /* 由上面的 URL 恢复逻辑先行赋值，故此处不带初始值 */
   function cvToast(msg,type){ toast(msg, type==='error'?'error':undefined); }
-  function cvShowPanel(name){
-    $$('#view-collab .cv-panel').forEach(function(p){ p.classList.toggle('active', p.id==='cv-'+name); });
-    $$('#cvTabNav .tab-nav-item').forEach(function(t){
-      t.classList.toggle('tab-nav-item--active', t.getAttribute('data-cvview')===name);
-    });
-    cvUpdateMoreTrigger(name);
-  }
   function cvSwitchView(){} /* stub: moved to React */
   /* 执行中的任务在侧边栏项目下挂一条会话 */
   function cvAddSidebarConversation(){} /* stub */
 
   /* ---------- 专家管理：分组卡片 ---------- */
-  var cvExpertKw='';
   function cvExpertGroups(){} /* stub */
   function cvTeamCountOf(){} /* stub */
   function cvBuildExpertCard(){} /* stub */
@@ -613,120 +521,21 @@ const billTemplateWithTokens = billTemplate.replace(
   function cvProjectOwners(){} /* stub */
   /* 卡片上「状态」「负责人」就地改：点开小弹层直接选，不用进详情 */
   function cvToggleProjectField(){} /* stub */
-  document.addEventListener('click',function(){ $$('.cv-proj-pop').forEach(function(d){ d.remove(); }); });
   function cvPopulateProjectFilters(){} /* stub */
   function cvFilteredProjects(){} /* stub */
   function cvSetProject(){} /* stub: moved to React */
   function cvUpdateCounts(){} /* stub: moved to React */
   function cvSyncUrl(){} /* stub */
   /* ---------- 新建项目弹窗 ---------- */
-  var CV_PROJECT_DOTS=['blue','orange','green'];
   function cvOpenNewProjectModal(){ _cvModalOpen('newproject'); }
   function cvCloseNewProjectModal(){ _cvModalClose('newproject'); }
   function cvConfirmNewProject(){} /* stub */
-  if(cvProjectGrid) cvProjectGrid.addEventListener('click',function(e){
-    if(e.target.closest('[data-cv-proj-add]')){ cvOpenNewProjectModal(); return; }
-    var it=e.target.closest('[data-cv-proj]'); if(!it) return;
-    cvSetProject(it.getAttribute('data-cv-proj'));
-  });
-  if(cvProjectSearchInput) cvProjectSearchInput.addEventListener('input',function(){
-    cvProjectQuery=this.value; cvRenderProjectsPanel();
-  });
-  if(cvProjectStatusSel) cvProjectStatusSel.addEventListener('change',function(){
-    cvProjectStatusF=this.value; cvRenderProjectsPanel();
-  });
-  if(cvProjectOwnerSel) cvProjectOwnerSel.addEventListener('change',function(){
-    cvProjectOwnerF=this.value; cvRenderProjectsPanel();
-  });
-  var cvNewProjectBtn=$('#cvNewProjectBtn');
-  if(cvNewProjectBtn) cvNewProjectBtn.addEventListener('click',function(){ cvOpenNewProjectModal(); });
 
-  /* ---------- 工作区：项目归属的顶层容器，一次只能激活一个 ---------- */
+  /* ---------- 工作区 ---------- */
   function cvWorkspaceName(){} /* stub */
   function cvRenderWsMenu(){} /* stub: moved to React */
   function cvSetWorkspace(){} /* stub */
-  var cvWsBtn=$('#cvWsBtn');
-  if(cvWsBtn) cvWsBtn.addEventListener('click',function(e){
-    e.stopPropagation();
-    $('#cvWsSwitch').classList.toggle('open');
-  });
-  var cvWsMenu=$('#cvWsMenu');
-  if(cvWsMenu) cvWsMenu.addEventListener('click',function(e){
-    if(e.target.closest('[data-cv-ws-add]')){ $('#cvWsSwitch').classList.remove('open'); toast('新建工作区（示意）'); return; }
-    var it=e.target.closest('[data-cv-ws]'); if(!it) return;
-    $('#cvWsSwitch').classList.remove('open');
-    cvSetWorkspace(it.getAttribute('data-cv-ws'));
-  });
-
-  /* ---------- 「管理」收纳菜单：协作人员/专家/专家团/设置，选中态跟随当前页签，不做持久化 ---------- */
-  var CV_MORE_VIEWS={members:'协作人员管理',experts:'专家管理',teams:'专家团管理',config:'设置'};
-  function cvUpdateMoreTrigger(){} /* stub: moved to React */
-  var cvMoreBtn=$('#cvMoreBtn');
-  if(cvMoreBtn) cvMoreBtn.addEventListener('click',function(e){
-    e.stopPropagation();
-    $('#cvMoreSwitch').classList.toggle('open');
-  });
-  var cvMoreMenu=$('#cvMoreMenu');
-  if(cvMoreMenu) cvMoreMenu.addEventListener('click',function(e){
-    var it=e.target.closest('[data-cvview]'); if(!it) return;
-    $('#cvMoreSwitch').classList.remove('open');
-    cvSwitchView(it.getAttribute('data-cvview'));
-  });
-  document.addEventListener('click',function(){
-    $$('#view-collab .cv-proj.open').forEach(function(el){el.classList.remove('open')});
-  });
-
-  /* ---------- 专家团：项目默认路由绑定 ---------- */
-  function cvRenderTeamBind(){} /* stub: moved to React */
-  var cvBindBtn=$('#cvBindBtn');
-  if(cvBindBtn) cvBindBtn.addEventListener('click',function(e){
-    e.stopPropagation();
-    $('#cvBindSwitch').classList.toggle('open');
-  });
-  var cvBindMenu=$('#cvBindMenu');
-  if(cvBindMenu) cvBindMenu.addEventListener('click',function(e){
-    var it=e.target.closest('[data-cv-bind]'); if(!it) return;
-    var proj=cvProjectById(cvProject); if(!proj) return;
-    proj.defaultTeam=it.getAttribute('data-cv-bind')||null;
-    $('#cvBindSwitch').classList.remove('open');
-    cvRenderTeamBind();
-    toast(proj.defaultTeam?('已将「'+proj.name+'」的大任务默认路由到 '+$('#cvBindTeamLabel').textContent):'已取消默认路由，大任务改为人工确认');
-  });
-  document.addEventListener('click',function(){
-    $$('#view-collab .cv-proj.open').forEach(function(el){el.classList.remove('open')});
-  });
-
-  /* ---------- 设置：全局默认 / 项目覆盖 ---------- */
-  var cvConfigValues={};               /* {'global'|项目id:{开关 key:是否开启}} */
-  function cvConfigScopeKey(){} /* stub */
-  function cvCaptureConfigDefaults(){} /* stub: moved to React */
-  function cvApplyConfigValues(){} /* stub */
-  function cvConfigOverridden(){} /* stub */
-  function cvApplyConfigScope(){} /* stub: moved to React */
-  var cvConfigPanel=$('#cv-config');
-  if(cvConfigPanel) cvConfigPanel.addEventListener('click',function(e){
-    var tg=e.target.closest('[data-cv-toggle]');
-    if(tg){
-      var tcard=tg.closest('.config-card');
-      if(tcard.classList.contains('cv-card-locked')) return;
-      var scope=cvConfigScopeKey(tcard);
-      if(!cvConfigValues[scope]) cvConfigValues[scope]={};
-      cvConfigValues[scope][tg.getAttribute('data-cv-toggle')]=!tg.classList.contains('on');
-      cvApplyConfigValues();
-      return;
-    }
-    var chip=e.target.closest('.cv-scope-chip--btn'); if(!chip||!cvProject) return;
-    var card=chip.closest('.config-card'), key=card.getAttribute('data-cv-config');
-    if(!cvConfigOverride[cvProject]) cvConfigOverride[cvProject]={};
-    var on=!cvConfigOverridden(key);
-    cvConfigOverride[cvProject][key]=on;
-    if(on && !cvConfigValues[cvProject]){
-      cvConfigValues[cvProject]={};      /* 首次覆盖时继承一份全局值再改 */
-      Object.keys(cvConfigValues.global).forEach(function(k){ cvConfigValues[cvProject][k]=cvConfigValues.global[k]; });
-    }
-    cvApplyConfigScope();
-    toast(on?('「'+cvProjectName(cvProject)+'」已改为项目覆盖，可单独调整'):'已恢复跟随全局设置');
-  });
+  /* CV 事件监听已迁到 React CollabView */
 
   /* ---------- 初始化 ---------- */
   function cvInit(){} /* moved to React CollabView */
@@ -742,39 +551,6 @@ const billTemplateWithTokens = billTemplate.replace(
   }
 
   /* 内联事件用到的函数挂到 window */
-  window.cvSwitchView=cvSwitchView;
-  window.cvSwitchFilter=cvSwitchFilter;
-  window.cvApplyFilters=cvApplyFilters;
-  window.cvApplyReviewFilters=cvApplyReviewFilters;
-  window.cvClickStat=cvClickStat;
-  window.cvClickReviewStat=cvClickReviewStat;
-  window.cvOpenSyncModal=cvOpenSyncModal;
-  window.cvCloseSyncModal=cvCloseSyncModal;
-  window.cvSaveSyncTask=cvSaveSyncTask;
-  window.cvStartSyncTask=cvStartSyncTask;
-  window.cvOpenTaskModal=cvOpenTaskModal;
-  window.cvCloseTaskModal=cvCloseTaskModal;
-  window.cvConfirmExec=cvConfirmExec;
-  window.cvConfirmTransfer=cvConfirmTransfer;
-  window.cvConfirmTwist=cvConfirmTwist;
-  window.cvConfirmReview=cvConfirmReview;
-  window.cvReviewPass=cvReviewPass;
-  window.cvReviewReject=cvReviewReject;
-  window.cvOpenReviewDetail=cvOpenReviewDetail;
-  window.cvSwitchArtifact=cvSwitchArtifact;
-  window.cvSubmitReview=cvSubmitReview;
-  window.cvSendChatMessage=cvSendChatMessage;
-  window.cvOpenConversation=cvOpenConversation;
-  window.cvOpenAddMemberModal=cvOpenAddMemberModal;
-  window.cvCloseAddMemberModal=cvCloseAddMemberModal;
-  window.cvConfirmAddMembers=cvConfirmAddMembers;
-  window.cvDeleteMember=cvDeleteMember;
-  window.cvToggleMemberLevelMenu=cvToggleMemberLevelMenu;
-  window.cvOpenNewProjectModal=cvOpenNewProjectModal;
-  window.cvCloseNewProjectModal=cvCloseNewProjectModal;
-  window.cvConfirmNewProject=cvConfirmNewProject;
-  window.cvToggleProjectField=cvToggleProjectField;
-
   /* 未登录时清理 URL，确保页面仅显示登录页 */
   if(!_authedUser) history.replaceState(null,'','/');
 
