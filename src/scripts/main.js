@@ -1464,48 +1464,6 @@ const billTemplateWithTokens = billTemplate.replace(
   /* 预览面板关闭按钮 */
   /* 预览面板关闭/页签/MCP 列表已迁到 React */
   /* MCP 工具列表渲染 */
-  var mcpData=[
-    {id:1,act:'新增',tool:'create_purchase_order',toolUniqueID:'post_v2_scm_po_save',desc:'新增采购订单，校验必填字段与金额上限',status:'published',actionType:'保存操作',domain:'采购管理',module:'purchase_order',sensitive:false,serviceSource:'系统内置',customParams:false,errorLog:'—',precond:'[{"condition":"用户具有采购订单新增权限"},{"condition":"供应商基础资料有效"},{"condition":"物料编码有效"}]',postcond:'[{"effect":"保存后数据状态为暂存","field":"billstatus","to_value":"A"}]',recovery:'{"open.100001":{"hint":"必填字段缺失","cause":"请求参数校验失败","suggestion":"请检查必填字段后重试","auto_recoverable":true}}',targetAPI:'POST /kapi/v2/scm/pm/purchaseorder'},
-    {id:2,act:'提交',tool:'submit_purchase_order',toolUniqueID:'post_v2_scm_po_submit',desc:'提交采购订单审批，触发三级审批流程',status:'published',actionType:'提交操作',domain:'采购管理',module:'purchase_order',sensitive:false,serviceSource:'系统内置',customParams:false,errorLog:'—',precond:'[{"condition":"订单状态为暂存"},{"condition":"金额>10万需总经理审批"}]',postcond:'[{"effect":"订单状态变为审批中","field":"billstatus","to_value":"B"},{"effect":"通知相关审批人"}]',recovery:'{"flow.1001":{"hint":"审批流程异常","cause":"审批节点配置异常","suggestion":"联系管理员检查审批流配置","auto_recoverable":false}}',targetAPI:'POST /kapi/v2/scm/pm/purchaseorder/{id}/submit'},
-    {id:3,act:'审核',tool:'audit_purchase_order',toolUniqueID:'post_v2_scm_po_audit',desc:'审核采购订单，写入审核人与审核时间',status:'published',actionType:'审核操作',domain:'采购管理',module:'purchase_order',sensitive:true,serviceSource:'系统内置',customParams:false,errorLog:'—',precond:'[{"condition":"订单状态为审批中"},{"condition":"当前用户具有审核权限"}]',postcond:'[{"effect":"订单状态变为已审核","field":"billstatus","to_value":"C"},{"effect":"记录审核人与审核时间"}]',recovery:'{"audit.1001":{"hint":"审核失败","cause":"订单金额超出您的审批额度","suggestion":"请联系上级审批人处理","auto_recoverable":false}}',targetAPI:'POST /kapi/v2/scm/pm/purchaseorder/{id}/audit'},
-    {id:4,act:'反审核',tool:'unaudit_purchase_order',toolUniqueID:'post_v2_scm_po_unaudit',desc:'反审核已审核的采购订单',status:'published',actionType:'反审核操作',domain:'采购管理',module:'purchase_order',sensitive:true,serviceSource:'系统内置',customParams:false,errorLog:'—',precond:'[{"condition":"订单状态为已审核"},{"condition":"下游未生成入库单"}]',postcond:'[{"effect":"订单状态变为暂存","field":"billstatus","to_value":"A"}]',recovery:'{"audit.1002":{"hint":"反审核拒绝","cause":"下游已生成入库单","suggestion":"请先删除入库单后重试","auto_recoverable":false}}',targetAPI:'POST /kapi/v2/scm/pm/purchaseorder/{id}/unaudit'},
-    {id:5,act:'下推',tool:'push_purchase_order',toolUniqueID:'post_v2_scm_po_push',desc:'按未入库数量下推生成入库单',status:'draft',actionType:'下推操作',domain:'采购管理',module:'purchase_order',sensitive:false,serviceSource:'自定义',customParams:true,errorLog:'2026-09-11 下推超时',precond:'[{"condition":"订单状态为已审核"},{"condition":"存在未入库数量"}]',postcond:'[{"effect":"生成入库单草稿"},{"effect":"更新已下推数量"}]',recovery:'{"push.1001":{"hint":"下推失败","cause":"无可下推的未入库数量","suggestion":"请检查采购数量","auto_recoverable":true}}',targetAPI:'POST /kapi/v2/scm/pm/purchaseorder/{id}/push'},
-    {id:6,act:'删除',tool:'delete_purchase_order',toolUniqueID:'delete_v2_scm_po',desc:'删除草稿态的采购订单',status:'published',actionType:'删除操作',domain:'采购管理',module:'purchase_order',sensitive:true,serviceSource:'系统内置',customParams:false,errorLog:'—',precond:'[{"condition":"订单状态为暂存"}]',postcond:'[{"effect":"订单被物理删除不可恢复"}]',recovery:'{"delete.1001":{"hint":"删除失败","cause":"订单不是草稿态","suggestion":"请先反审核后删除","auto_recoverable":false}}',targetAPI:'DELETE /kapi/v2/scm/pm/purchaseorder/{id}'},
-    {id:7,act:'修改',tool:'update_purchase_order',toolUniqueID:'put_v2_scm_po_update',desc:'修改草稿态的采购订单',status:'published',actionType:'保存操作',domain:'采购管理',module:'purchase_order',sensitive:false,serviceSource:'系统内置',customParams:false,errorLog:'—',precond:'[{"condition":"订单状态为暂存"}]',postcond:'[{"effect":"更新订单数据"},{"effect":"记录修改日志"}]',recovery:'{"update.1001":{"hint":"修改失败","cause":"订单不是草稿态","suggestion":"请先反审核后修改","auto_recoverable":false}}',targetAPI:'PUT /kapi/v2/scm/pm/purchaseorder/{id}'},
-    {id:8,act:'查询列表',tool:'query_purchase_order_list',toolUniqueID:'get_v2_scm_po_list',desc:'分页查询采购订单列表，支持按状态/供应商/日期过滤',status:'published',actionType:'查询操作',domain:'采购管理',module:'purchase_order',sensitive:false,serviceSource:'系统内置',customParams:false,errorLog:'—',precond:'[{"condition":"用户具有查询权限"}]',postcond:'[{"effect":"返回采购订单分页列表"}]',recovery:'',targetAPI:'GET /kapi/v2/scm/pm/purchaseorder'},
-    {id:9,act:'查询详情',tool:'query_purchase_order_detail',toolUniqueID:'get_v2_scm_po_detail',desc:'查询采购订单详情，返回单头+明细行完整数据',status:'published',actionType:'查询操作',domain:'采购管理',module:'purchase_order',sensitive:false,serviceSource:'系统内置',customParams:false,errorLog:'—',precond:'[{"condition":"用户具有查询权限"}]',postcond:'[{"effect":"返回订单完整数据"}]',recovery:'',targetAPI:'GET /kapi/v2/scm/pm/purchaseorder/{id}'}
-  ];
-  function renderMcpList(){
-    var el=$('#mcpList'); if(!el)return;
-    el.innerHTML='<table class="plugin-table mcp-table"><thead><tr><th>工具名称</th><th>说明</th><th>操作类型</th><th>注册状态</th><th></th></tr></thead><tbody>'
-      +mcpData.map(function(d){
-        var statusText='<span style="color:var(--text)">'+(d.status==='published'?'已发布':'失败')+'</span>';
-        var detail='<div style="padding:4px 0;font-size:12px;line-height:1.8;display:grid;grid-template-columns:auto 1fr;gap:4px 16px">'
-          +'<span style="color:var(--text-muted)">工具唯一标识</span><span class="code">'+d.toolUniqueID+'</span>'
-          +'<span style="color:var(--text-muted)">目标API</span><span class="code">'+d.targetAPI+'</span>'
-          +'<span style="color:var(--text-muted)">所属领域</span><span>'+d.domain+'</span>'
-          +'<span style="color:var(--text-muted)">所属模块</span><span>'+d.module+'</span>'
-          +'<span style="color:var(--text-muted)">是否敏感操作</span><span>'+(d.sensitive?'<span style="color:#e04a3a">敏感</span>':'否')+'</span>'
-          +'<span style="color:var(--text-muted)">服务来源</span><span>'+d.serviceSource+'</span>'
-          +'<span style="color:var(--text-muted)">自定义参数扩展</span><span>'+(d.customParams?'已配置':'—')+'</span>'
-          +'<span style="color:var(--text-muted)">异常日志</span><span>'+d.errorLog+'</span>'
-          +(d.precond?'<span style="color:var(--text-muted);align-self:start">前置条件</span><pre style="margin:0;white-space:pre-wrap;font-size:11px;background:var(--fill-1);padding:6px 8px;border-radius:4px">'+d.precond+'</pre>':'')
-          +(d.postcond?'<span style="color:var(--text-muted);align-self:start">后置效果</span><pre style="margin:0;white-space:pre-wrap;font-size:11px;background:var(--fill-1);padding:6px 8px;border-radius:4px">'+d.postcond+'</pre>':'')
-          +(d.recovery?'<span style="color:var(--text-muted);align-self:start">错误恢复</span><pre style="margin:0;white-space:pre-wrap;font-size:11px;background:var(--fill-1);padding:6px 8px;border-radius:4px">'+d.recovery+'</pre>':'')
-          +'</div>';
-        return '<tr style="cursor:pointer" onclick="var r=this.nextElementSibling;if(r&&r.classList.contains(\'mcp-detail-row\')){r.classList.toggle(\'hidden\');this.querySelector(\'.mcp-arrow\').classList.toggle(\'open\')}">'
-          +'<td class="mcp-tool">'+d.tool+'</td>'
-          +'<td class="mcp-desc">'+d.desc+'</td>'
-          +'<td style="color:var(--text)">'+d.actionType+'</td>'
-          +'<td>'+statusText+'</td>'
-          +'<td style="text-align:center;padding:0 12px">'
-          +'<svg class="ic mcp-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;color:var(--text-muted);transition:transform .15s"><polyline points="9 18 15 12 9 6"/></svg>'
-          +'</td>'
-          +'</tr>'
-          +'<tr class="mcp-detail-row hidden"><td colspan="5">'+detail+'</td></tr>';
-      }).join('')
-      +'</tbody></table>';
-  }
   renderMcpList();
   var listBodyEl=$('#listBody');
   if(listBodyEl){
@@ -2384,62 +2342,7 @@ const billTemplateWithTokens = billTemplate.replace(
   }
   /* cvRenderExperts 已迁到 React CollabView，保留 no-op 避免调用处报错 */
   function cvRenderExperts(){}
-  function renderExpertGrid(){
-    if(!expertGrid) return;
-    var si=$('#expertSearchInput');
-    if(si && si.value!==expertKw) si.value=expertKw;
-    var kw=expertKw.trim(), html='';
-    if(expertTab==='team'){
-      var rows=TEAMS.filter(function(t){
-        if(!kw) return true;
-        return (t.name+t.desc+teamDomains(t).join()+t.members.map(function(m){return EX[m].name}).join()).indexOf(kw)>=0;
-      });
-      html=rows.map(function(t){
-        var gn=activeGates(t).length;
-        return '<div class="app-card x-card" data-team="'+t.id+'">'
-          +'<button type="button" class="x-call" data-call-team="'+t.id+'" title="召唤这个专家团">召唤</button>'
-          +'<div class="card-top">'+facesHtml(t.members,4)
-          +'<div class="card-titles"><div class="card-title-row"><span class="card-title">'+xesc(t.name)+'</span>'
-          +(t.preset?'<span class="x-badge">内置</span>':'')
-          +(t.visibility==='private'?'<span class="x-badge">个人</span>':'')+'</div>'
-          +'<div class="x-sub">'+xesc(t.by)+' · '+t.members.length+' 位专家'
-          +(gn?' · <span class="x-sub-gate">'+gn+' 个人工确认</span>':'')+'</div></div></div>'
-          +'<div class="card-desc">'+xesc(t.desc)+'</div>'
-          +'<div class="card-tags">'
-          +teamDomains(t).slice(0,4).map(function(g){return '<span class="ptag">'+xesc(g)+'</span>'}).join('')+'</div></div>';
-      }).join('');
-    }else{
-      var rows2=EXPERTS.filter(function(e){
-        if(!kw) return true;
-        return (e.name+e.role+e.desc+e.tags.join()).indexOf(kw)>=0;
-      });
-      html=rows2.map(function(e){
-        return '<div class="app-card x-card" data-expert="'+e.id+'">'
-          +'<button type="button" class="x-call" data-call-expert="'+e.id+'" title="召唤这位专家">召唤</button>'
-          +'<div class="card-top"><img class="x-av" src="'+xav(e.k)+'" alt="">'
-          +'<div class="card-titles"><div class="card-title-row"><span class="card-title">'+xesc(e.name)+'</span>'
-          +(e.ro?'<span class="x-badge x-badge-ro">只读</span>':'')
-          +(e.mine?'<span class="x-badge x-badge-mine">我创建的</span>':'')+'</div>'
-          +'<div class="x-sub">'+xesc(e.role)+' · '+xesc(e.by)+'</div></div></div>'
-          +'<div class="card-desc">'+xesc(e.desc)+'</div>'
-          +'<div class="card-tags">'+e.tags.slice(0,3).map(function(t){return '<span class="ptag">'+xesc(t)+'</span>'}).join('')+'</div>'
-          +'<div class="x-modes" title="可承担 '+xesc(e.modes.join(' / '))+'"><span class="x-modes-k">可承担</span>'
-          +e.modes.slice(0,3).map(function(m){return '<span class="x-mode">'+xesc(m)+'</span>'}).join('')
-          +(e.modes.length>3?'<span class="x-mode x-mode-more">+'+(e.modes.length-3)+'</span>':'')+'</div></div>';
-      }).join('');
-    }
-    if(!kw) html += expertTab==='team'
-      ? '<button type="button" class="app-card x-new-card" data-new-team><span class="x-new-ic">＋</span><span>新建专家团</span>'
-        +'<span class="x-new-sub">从专家库里挑几个人，定好交付强度</span></button>'
-      : '<button type="button" class="app-card x-new-card" data-new-expert><span class="x-new-ic">＋</span><span>创建专家</span>'
-        +'<span class="x-new-sub">手填表单，或一句话交给 expert-manager</span></button>';
-    expertGrid.innerHTML = html || '<div class="x-empty">没有匹配的结果</div>';
-    var tc=$('#teamTabCount'), ec=$('#expertTabCount');
-    if(tc) tc.textContent=TEAMS.length;
-    if(ec) ec.textContent=EXPERTS.length;
-    var lb=$('#newExpertEntryLabel');
-    if(lb) lb.textContent = expertTab==='team' ? '新建专家团' : '创建专家';
-  }
+  function renderExpertGrid(){} /* moved to React */
   $$('#expertTabs .tab').forEach(function(t){
     t.addEventListener('click',function(){
       $$('#expertTabs .tab').forEach(function(i){i.classList.remove('active')});
@@ -2779,21 +2682,7 @@ const billTemplateWithTokens = billTemplate.replace(
 
   /* 模式 → builder 名。来源见 lingee-build packages/kcode-web/src/components/prompt-input.tsx
      starterRecommendationCards；技能/智能体两项用 1.x 线的新名（用户确认） */
-  function renderModeTag(){
-    var el=$('.mode-item.checked'), mode=el?el.getAttribute('data-val'):null;
-    var b=mode?MODE_BUILDERS[mode]:forcedBuilder;
-    ['nt','chat'].forEach(function(pfx){
-      var tags=$('#'+pfx+'Tags'); if(!tags) return;
-      tags.innerHTML = b
-        ? '<span class="ctag"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+b.ic+'</svg>'
-          +'<span class="ctag-label">'+b.id+'</span>'
-          +'<button type="button" class="ctag-x" data-clear-mode aria-label="移除">'
-          +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>'
-          +'</button></span>'
-        : '';
-      tags.classList.toggle('hidden', !b);
-    });
-  }
+  function renderModeTag(){} /* moved to React */
   document.addEventListener('click',function(ev){
     if(ev.target.closest('[data-clear-mode]')){
       ev.stopPropagation();
@@ -2803,50 +2692,7 @@ const billTemplateWithTokens = billTemplate.replace(
     }
     if(ev.target.closest('.mode-item')){ forcedBuilder=null; setTimeout(renderModeTag,0); }
   });
-
-  function renderExpertChips(){
-    var has=pickValid();
-    ['nt','chat'].forEach(function(pfx){
-      var label=$('#'+pfx+'ExpertLabel'), faces=$('#'+pfx+'ExpertFaces');
-      if(label) label.textContent = has ? pickName() : '选择专家';
-      if(faces){
-        faces.innerHTML = has
-          ? (activePick.kind==='team'
-              ? teamById(activePick.id).members.slice(0,3).map(function(i){
-                  return '<img src="'+xav(EX[i].k)+'" alt="">'; }).join('')
-              : '<img src="'+xav(EX[activePick.id].k)+'" alt="">')
-          : '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 20v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 4 18.5V20"/><circle cx="10" cy="8" r="3.2"/><path d="M20 20v-1.5a3.5 3.5 0 0 0-2.6-3.4"/><path d="M15.4 5.2a3.2 3.2 0 0 1 0 5.6"/></svg>';
-      }
-      var dd=$('#'+pfx+'ExpertDropdown');
-      if(dd){ var c=dd.querySelector('[data-chip]'); if(c) c.classList.toggle('muted', !has); }
-    });
-  }
-  function renderExpertPicker(pfx,kw){
-    var list=$('#'+pfx+'ExpertList'); if(!list) return;
-    kw=(kw||'').trim();
-    var teams=TEAMS.filter(function(t){ return !kw || (t.name+t.desc).indexOf(kw)>=0; });
-    var experts=EXPERTS.filter(function(e){ return !kw || (e.name+e.role+e.desc+e.tags.join()).indexOf(kw)>=0; });
-    var html='';
-    if(teams.length){
-      html+='<div class="pick-group">专家团</div>'+teams.map(function(t){
-        var on=activePick.kind==='team'&&activePick.id===t.id;
-        return '<div class="app-item x-opt'+(on?' checked':'')+'" data-pick-team="'+t.id+'">'
-          +facesHtml(t.members,3)
-          +'<span class="x-opt-n">'+xesc(t.name)+'</span>'
-          +(on?'<svg class="ic ic-sm menu-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>':'')+'</div>';
-      }).join('');
-    }
-    if(experts.length){
-      html+='<div class="pick-group">专家</div>'+experts.map(function(e){
-        var on=activePick.kind==='expert'&&activePick.id===e.id;
-        return '<div class="app-item x-opt'+(on?' checked':'')+'" data-pick-expert="'+e.id+'">'
-          +'<img class="x-opt-av" src="'+xav(e.k)+'" alt="">'
-          +'<span class="x-opt-n">'+xesc(e.name)+'</span>'
-          +(on?'<svg class="ic ic-sm menu-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>':'')+'</div>';
-      }).join('');
-    }
-    list.innerHTML = html || '<div class="x-empty-sm">没有匹配的专家或专家团</div>';
-  }
+  function renderExpertChips(){} /* moved to React */
   function openExpertPicker(pfx){
     var dd=$('#'+pfx+'ExpertDropdown'); if(!dd) return;
     var si=$('#'+pfx+'ExpertSearchInput');
@@ -3743,7 +3589,6 @@ const billTemplateWithTokens = billTemplate.replace(
   }
 
   /* ---------- 项目（与任务管理平级的独立页签，归属当前工作区） ---------- */
-  var cvProjectQuery='', cvProjectStatusF='', cvProjectOwnerF='';
   function cvProjectTaskStats(pid){
     var tasks=CV_TASKS.filter(function(t){return t.project===pid;});
     var n=function(s){return tasks.filter(function(t){return t.status===s;}).length;};
@@ -3809,47 +3654,6 @@ const billTemplateWithTokens = billTemplate.replace(
       return (p.name+' '+(p.desc||'')+' '+(p.repo||'')).toLowerCase().indexOf(q)>=0;
     });
   }
-  function cvRenderProjectsPanel(){
-    var grid=$('#cvProjectGrid'); if(!grid) return;
-    cvPopulateProjectFilters();
-    var all=cvWorkspaceProjects();
-    var desc=$('#cvProjectDesc');
-    if(desc) desc.textContent='工作区内的全部项目 · 共 '+all.length+' 个 · '
-      +all.filter(function(p){return p.status==='active';}).length+' 个进行中';
-    var rows=cvFilteredProjects();
-    var projectCards=rows.map(function(p){
-      var meta=cvProjectStatusMeta(p.status), s=cvProjectTaskStats(p.id);
-      var flow=[];
-      if(s.doing) flow.push(s.doing+' 进行中');
-      if(s.review) flow.push(s.review+' 待审');
-      var flowHtml=flow.join(' · ')+(s.blocked?' <span class="cv-proj-blocked">· '+s.blocked+' 阻塞</span>':'');
-      var repoDim=p.repo
-        ? '<span class="assignee"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>'+xesc(p.repo)+'</span>'
-        : '<span class="assignee assignee--muted"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>未关联代码</span>';
-      var statusField='<span class="cv-proj-field">'
-        +'<button type="button" class="cv-proj-status-chip cv-proj-editable" style="background:'+meta.tone+'22;color:'+meta.tone+'" onclick="cvToggleProjectField(\'status\',\''+p.id+'\',this,event)">'
-        +meta.label+'<svg class="cv-proj-caret" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button></span>';
-      var ownerField='<span class="cv-proj-field"><button type="button" class="assignee cv-proj-editable'+(p.owner?'':' assignee--muted')+'" onclick="cvToggleProjectField(\'owner\',\''+p.id+'\',this,event)">'
-        +'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'+xesc(p.owner||'无负责人')
-        +'<svg class="cv-proj-caret" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button></span>';
-      return '<div class="app-card x-card cv-project-card" data-cv-proj="'+p.id+'">'
-        +'<div class="card-top"><svg class="cv-proj-ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>'
-        +'<div class="card-titles"><div class="card-title-row"><span class="card-title">'+xesc(p.name)+'</span>'
-        +statusField+'</div></div></div>'
-        +'<div class="card-desc">'+xesc(p.desc||'暂无描述')+'</div>'
-        +'<div class="cv-proj-progress-row">'+cvProjectProgressHtml(s.done,s.total)
-        +(s.total?'<span class="cv-proj-flow">'+flowHtml+'</span>':'')+'</div>'
-        +'<div class="card-footer"><span class="cv-proj-dims">'+ownerField+repoDim+'</span>'
-        +'<span class="cv-proj-time">'+xesc(p.updated||'')+'</span></div></div>';
-    }).join('');
-    var newCard=cvProjectQuery?'':('<button type="button" class="app-card x-new-card" data-cv-proj-add><span class="x-new-ic">＋</span><span>新建项目</span>'
-      +'<span class="x-new-sub">归属「'+xesc(cvWorkspaceName(cvWorkspace))+'」，可选择关联 Git 仓库</span></button>');
-    if(!rows.length && cvProjectQuery){
-      grid.innerHTML='<div class="x-empty">没有匹配的项目</div>';
-    }else{
-      grid.innerHTML=projectCards+newCard;
-    }
-  }
   function cvSetProject(id){
     cvProject=id||'';
     cvRenderProjectsPanel();
@@ -3888,21 +3692,17 @@ const billTemplateWithTokens = billTemplate.replace(
     cvSetProject(id);
     toast('已创建项目「'+name+'」','success');
   }
-  var cvProjectGrid=$('#cvProjectGrid');
   if(cvProjectGrid) cvProjectGrid.addEventListener('click',function(e){
     if(e.target.closest('[data-cv-proj-add]')){ cvOpenNewProjectModal(); return; }
     var it=e.target.closest('[data-cv-proj]'); if(!it) return;
     cvSetProject(it.getAttribute('data-cv-proj'));
   });
-  var cvProjectSearchInput=$('#cvProjectSearch');
   if(cvProjectSearchInput) cvProjectSearchInput.addEventListener('input',function(){
     cvProjectQuery=this.value; cvRenderProjectsPanel();
   });
-  var cvProjectStatusSel=$('#cvProjectStatusFilter');
   if(cvProjectStatusSel) cvProjectStatusSel.addEventListener('change',function(){
     cvProjectStatusF=this.value; cvRenderProjectsPanel();
   });
-  var cvProjectOwnerSel=$('#cvProjectOwnerFilter');
   if(cvProjectOwnerSel) cvProjectOwnerSel.addEventListener('change',function(){
     cvProjectOwnerF=this.value; cvRenderProjectsPanel();
   });
