@@ -30,6 +30,7 @@ import { initCollabProjects } from './features/collab/projects.js';
 import { initCollabConfig } from './features/collab/config.js';
 import { initCollab } from './features/collab/index.js';
 import { _authedUser } from './features/login.js';
+import { withBase } from './core/base-path.js';
 
 /* 产物预览与应用共用同一份设计令牌 */
 const billTemplateWithTokens = billTemplate.replace(
@@ -84,4 +85,4 @@ initCollabConfig();               /* 6370  features/collab/config.js */
 initCollab();                     /* 6445  features/collab/index.js */
 
 /* 未登录时清理 URL，确保页面仅显示登录页 */
-if (!_authedUser) history.replaceState(null, '', '/');
+if (!_authedUser) history.replaceState(null, '', withBase('/'));

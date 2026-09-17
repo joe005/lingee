@@ -3,6 +3,7 @@ import { appDd } from '../features/attach-app.js';
 import { cvInit } from '../features/collab/index.js';
 import { cvLastTab, cvSwitchView } from '../features/collab/view.js';
 import { closeAll } from '../features/dropdown.js';
+import { withBase } from './base-path.js';
 /* 视图切换、侧边栏导航、首页卡片、Logo 回首页
    拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
    由 main.js 按拆分前的原始顺序调用。 */
@@ -29,7 +30,9 @@ function applyMode(mode,fromChip){
 /* ---------- view switching ---------- */
 var viewHome=$('#view-home'), viewNew=$('#view-newtask'), viewChat=$('#view-chat'), viewApps=$('#view-apps'), viewSkills=$('#view-skills'), viewAgents=$('#view-agents'), viewCollab=$('#view-collab'), viewDesign=$('#view-design'), viewSettings=$('#view-settings');
 function setUrlState(path){
-  try{history.replaceState(null,'',path);localStorage.setItem('lingeeUrlState',path)}catch(e){}
+  /* path 是应用内路径（/collab、/design?token=…）；写进地址栏要带上部署前缀，
+     存进 localStorage 的仍是应用内路径，换部署路径后旧记录依然可用 */
+  try{history.replaceState(null,'',withBase(path));localStorage.setItem('lingeeUrlState',path)}catch(e){}
 }
 function showView(which){
   viewHome.classList.toggle('hidden', which!=='home');

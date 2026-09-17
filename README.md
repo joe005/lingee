@@ -84,20 +84,30 @@ src/
 新增一个视图 / 弹窗：在 `src/views/` 或 `src/modals/` 放一个片段，
 再去 `index.html` 加一行 `<!--#include -->`。位置就是它在 DOM 里的位置。
 
-### 刷新页面为什么可能 404
+### 部署路径与刷新
 
-原型用 `history.replaceState` 把地址改成 `/collab`、`/apps` 这类干净路径
-（[src/scripts/core/view.js](src/scripts/core/view.js) 的 `setUrlState`）。
-地址栏好看了，但服务器上并没有这些文件——**在这种地址上按刷新，浏览器会真的去
-请求 `/collab`**。
+线上走 **GitHub Pages**（`.github/workflows/deploy.yml`，push main 自动构建），
+地址是 `https://joe005.github.io/lingee/`——**带 `/lingee/` 这层前缀**。
+`package.json` 里的 wrangler / Cloudflare 脚本目前没有实际使用。
 
-开发时由 [build/vite-plugin-spa-fallback.js](build/vite-plugin-spa-fallback.js)
-把这类请求重写回 `/`，所以 `npm run dev` 下刷新是正常的。
+两件相关的事：
 
-**部署到 Cloudflare 时这条回退不生效**，需要在 wrangler 配置里声明
-`assets.not_found_handling = "single-page-application"`。当前仓库没有根级
-wrangler 配置（`dist/wrangler.json` 由 `@cloudflare/vite-plugin` 自动生成，
-里面没有这一项），线上直接访问 `/collab` 仍会 404，要修得先补一份根配置。
+**地址前缀。** 应用内部按「站点在根目录」写地址（`setUrlState('/collab')`），
+由 [src/scripts/core/base-path.js](src/scripts/core/base-path.js) 统一补上和剥掉
+部署前缀。前缀从首屏文档所在目录推导，不能用 `import.meta.env.BASE_URL`——
+`vite-plugin-singlefile` 会把 base 改写成 `'./'`。
+
+**刷新。** 原型用 `replaceState` 把地址改成 `/collab` 这类干净路径，但服务器上
+并没有这些文件，直接刷新会去请求它：
+
+- 开发时由 [build/vite-plugin-spa-fallback.js](build/vite-plugin-spa-fallback.js)
+  把这类请求重写回 `/`
+- 线上由 [build/vite-plugin-pages-404.js](build/vite-plugin-pages-404.js) 构建出
+  一份 `404.html`（index.html 的副本）。Pages 对站内未知路径返回它，浏览器照常
+  渲染，应用正常启动。HTTP 状态码仍是 404，对演示原型没有影响。
+
+另外 `boot/route.js` 里的视图名过白名单：`showView()` 对认不出的名字会把九个
+视图**全部隐藏**，线上曾因此登录后一片空白。认不出就按「没指定」处理。
 
 ### CSS 依赖源码顺序
 
