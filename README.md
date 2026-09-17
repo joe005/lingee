@@ -84,6 +84,21 @@ src/
 新增一个视图 / 弹窗：在 `src/views/` 或 `src/modals/` 放一个片段，
 再去 `index.html` 加一行 `<!--#include -->`。位置就是它在 DOM 里的位置。
 
+### 刷新页面为什么可能 404
+
+原型用 `history.replaceState` 把地址改成 `/collab`、`/apps` 这类干净路径
+（[src/scripts/core/view.js](src/scripts/core/view.js) 的 `setUrlState`）。
+地址栏好看了，但服务器上并没有这些文件——**在这种地址上按刷新，浏览器会真的去
+请求 `/collab`**。
+
+开发时由 [build/vite-plugin-spa-fallback.js](build/vite-plugin-spa-fallback.js)
+把这类请求重写回 `/`，所以 `npm run dev` 下刷新是正常的。
+
+**部署到 Cloudflare 时这条回退不生效**，需要在 wrangler 配置里声明
+`assets.not_found_handling = "single-page-application"`。当前仓库没有根级
+wrangler 配置（`dist/wrangler.json` 由 `@cloudflare/vite-plugin` 自动生成，
+里面没有这一项），线上直接访问 `/collab` 仍会 404，要修得先补一份根配置。
+
 ### CSS 依赖源码顺序
 
 `.menu{display:none}` 与 `.app-menu{display:flex}` 等选择器特异性相同，

@@ -12,6 +12,8 @@ import { dsNavEl, renderOverview } from '../features/design/index.js';
 /* 路径优先解析视图，兼容旧 ?view= 链接，无则从 localStorage 恢复 */
 var _savedPath=localStorage.getItem('lingeeUrlState')||'';
 var _pathParts=location.pathname.replace(/^\/+|\/+$/g,'').split('/');
+/* showView() 里的 setUrlState 会把查询串抹掉，所以在任何视图切换之前先存下来 */
+var _origSearch=location.search;
 var dsViewParam=_pathParts[0]||'';
 var dsSearch;
 var dsTokenParam;
@@ -55,9 +57,12 @@ export function initRoute() {
     else if(dsViewParam==='apps') setNavActive('应用开发');
     else if(dsViewParam==='collab'){
       setNavActive('协作开发');
-      /* 协作开发模块在文件末尾才初始化，这里只记下要打开的页签 */
-      set_cvPendingTab(new URLSearchParams(dsSearch).get('tab')||'tasks');
-      set_cvPendingProj(new URLSearchParams(dsSearch).get('proj')||'');
+      /* 协作开发模块最后才初始化，这里只记下要打开的页签。
+         取真实的 location.search：dsSearch 是为兼容旧 ?view= 链接合成的，
+         只含 view=，读不到 setUrlState 写进地址栏的 tab= / proj=。 */
+      var cvQuery=new URLSearchParams(_origSearch);
+      set_cvPendingTab(cvQuery.get('tab')||'tasks');
+      set_cvPendingProj(cvQuery.get('proj')||'');
     }
   }else{
     /* 默认显示新会话 */
