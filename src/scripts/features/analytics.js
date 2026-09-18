@@ -211,7 +211,7 @@ export function initAnalytics(){
       rangeBtns.forEach(function(b){b.classList.remove('active')});
       btn.classList.add('active');
       var r=btn.getAttribute('data-range');
-      if(r==='6')renderTrend(range7);
+      if(r==='7')renderTrend(range7);
       else renderTrend(range30);
     });
   });
