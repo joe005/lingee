@@ -28,7 +28,7 @@ function applyMode(mode,fromChip){
 }
 
 /* ---------- view switching ---------- */
-var viewHome=$('#view-home'), viewNew=$('#view-newtask'), viewChat=$('#view-chat'), viewApps=$('#view-apps'), viewSkills=$('#view-skills'), viewAgents=$('#view-agents'), viewCollab=$('#view-collab'), viewDesign=$('#view-design'), viewSettings=$('#view-settings');
+var viewHome=$('#view-home'), viewNew=$('#view-newtask'), viewChat=$('#view-chat'), viewApps=$('#view-apps'), viewSkills=$('#view-skills'), viewAgents=$('#view-agents'), viewCollab=$('#view-collab'), viewDesign=$('#view-design'), viewSettings=$('#view-settings'), viewAnalytics=$('#view-analytics');
 function setUrlState(path){
   /* path 是应用内路径（/collab、/design?token=…）；写进地址栏要带上部署前缀，
      存进 localStorage 的仍是应用内路径，换部署路径后旧记录依然可用 */
@@ -44,6 +44,7 @@ function showView(which){
   viewCollab.classList.toggle('hidden', which!=='collab');
   viewDesign.classList.toggle('hidden', which!=='design');
   viewSettings.classList.toggle('hidden', which!=='settings');
+  viewAnalytics.classList.toggle('hidden', which!=='analytics');
   $('.sidebar').classList.toggle('hidden', which==='design');
   closeAll(null);
   if(which!=='design') setUrlState('/'+which);

@@ -2,20 +2,24 @@
 
 ## Repo Wiki
 
-Auto-generated Wiki documentation (6 pages) is available at `.lingeebuild/repowiki/zh/content`.
-> Lingee 高保真演示原型，开发时模块化，构建产出零依赖的单个 HTML 文件。
+Auto-generated Wiki documentation (32 pages) is available at `.lingeebuild/repowiki/zh/content`.
+> Lingee 高保真交互原型，构建为单个可独立打开的 HTML 文件
 
 ### Key Files
 
 - Project overview: `.lingeebuild/repowiki/zh/content/index.md`
 - Architecture design: `.lingeebuild/repowiki/zh/content/architecture.md`
 - Reading guide: `.lingeebuild/repowiki/zh/content/reading-guide.md`
+- Recent Git changes: `.lingeebuild/repowiki/zh/content/git-changes/index.md`
+- Wiki usage guide: `.lingeebuild/repowiki/zh/content/wiki-guide.md`
 - Source-to-doc mapping (JSON): `.lingeebuild/repowiki/zh/content/index.json`
 
 ### Categories
 
 - 项目总览
-- 原型模块开发
+- 认证与授权
+- 性能优化
+- 开发指南
 
 ### Usage
 

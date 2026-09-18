@@ -141,6 +141,14 @@ export function initUserMenu() {
     });
     document.addEventListener('keydown',function(e){ if(e.key==='Escape') closeUserMenu(); });
   }
+  var userMenuAnalytics=$('#userMenuAnalytics');
+  if(userMenuAnalytics){
+    userMenuAnalytics.addEventListener('click',function(){
+      closeUserMenu();
+      showView('analytics');
+      $$('.nav-item').forEach(function(n){n.classList.remove('active')});
+    });
+  }
   if(userMenuSettings){
     userMenuSettings.addEventListener('click',function(){
       closeUserMenu();

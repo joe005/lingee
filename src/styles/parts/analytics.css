@@ -1,0 +1,113 @@
+/* 用户行为分析看板 */
+#view-analytics{background:#fafafa;overflow-y:auto;padding:34px 40px 56px}
+.analytics-wrap{max-width:1100px;width:100%;margin:0 auto}
+.analytics-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.analytics-title{font-size:22px;font-weight:600}
+.analytics-range{display:flex;gap:4px;background:#fff;border:1px solid var(--border);border-radius:8px;padding:2px}
+.range-btn{border:none;background:none;padding:6px 14px;border-radius:6px;font-size:13px;color:var(--text-secondary);cursor:pointer;transition:all .12s}
+.range-btn.active{background:var(--brand);color:#fff}
+.range-btn:hover:not(.active){background:var(--hover);color:var(--text)}
+
+/* KPI 卡片 */
+.analytics-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.kpi-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:18px 20px}
+.kpi-label{font-size:13px;color:var(--text-secondary);margin-bottom:8px}
+.kpi-value{font-size:28px;font-weight:600;color:var(--text);line-height:1.2}
+.kpi-unit{font-size:16px;font-weight:500;margin-left:1px}
+.kpi-trend{font-size:12px;margin-top:6px}
+.kpi-trend.up{color:var(--success)}
+.kpi-trend.down{color:var(--danger)}
+
+/* 图表行 */
+.analytics-row{display:flex;gap:16px;margin-bottom:16px}
+.analytics-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:18px 20px}
+.card-title{font-size:18px;font-weight:600;margin-bottom:14px}
+.chart-area{height:200px;position:relative}
+
+/* 模式分布条形图 */
+.mode-list{display:flex;flex-direction:column;gap:10px}
+.mode-bar{display:flex;align-items:center;gap:10px}
+.mode-name{width:70px;font-size:13px;color:var(--text);flex:none}
+.bar-track{flex:1;height:8px;background:var(--fill-1);border-radius:4px;overflow:hidden}
+.bar-track.sm{height:6px}
+.bar-fill{height:100%;border-radius:4px;transition:width .3s}
+.mode-count{width:32px;text-align:right;font-size:13px;color:var(--text-secondary);flex:none}
+
+/* 功能排行 */
+.feature-list{display:flex;flex-direction:column;gap:10px}
+.feature-row{display:flex;align-items:center;gap:10px}
+.feature-rank{width:20px;height:20px;border-radius:4px;background:var(--brand-fill);color:var(--brand);font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;flex:none}
+.feature-name{width:120px;font-size:13px;color:var(--text);flex:none}
+.feature-count{width:40px;text-align:right;font-size:13px;color:var(--text-secondary);flex:none}
+
+/* 事件流 */
+.event-list{display:flex;flex-direction:column;gap:2px}
+.event-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--divider)}
+.event-row:last-child{border-bottom:none}
+.event-time{width:40px;font-size:12px;color:var(--text-soft);flex:none}
+.event-user{width:50px;font-size:13px;font-weight:500;color:var(--brand);flex:none}
+.event-action{font-size:13px;color:var(--text)}
+
+/* 热力图 */
+.heatmap{display:grid;grid-template-columns:auto repeat(24,1fr);gap:3px;margin-top:4px}
+.heatmap-label{font-size:11px;color:var(--text-soft);text-align:right;padding-right:6px;display:flex;align-items:center}
+.heatmap-cell{height:24px;border-radius:3px;background:var(--fill-1);cursor:default;transition:background .1s}
+.heatmap-cell:hover{outline:2px solid var(--brand)}
+
+@media(max-width:900px){.analytics-kpis{grid-template-columns:repeat(2,1fr)}.analytics-row{flex-direction:column}}
+
+/* 扇形图 */
+.pie-wrap{display:flex;align-items:center;gap:24px;padding:12px 0}
+.pie-chart{flex:none}
+.pie-chart svg{display:block}
+.pie-legend{flex:1;display:flex;flex-direction:column;gap:10px}
+.pie-leg-item{display:flex;align-items:center;gap:8px;font-size:13px}
+.pie-dot{width:10px;height:10px;border-radius:2px;flex:none}
+.pie-leg-name{color:var(--text);white-space:nowrap;min-width:72px}
+.feature-list{max-height:290px;overflow-y:auto;overflow-x:hidden}
+.pie-leg-pct{color:var(--text-muted);font-size:12px;margin-left:auto}
+.pie-leg-count{color:var(--text-soft);font-size:12px;min-width:28px;text-align:right}
+
+/* 蚂蚁动效 - 图表加载 */
+@keyframes drawPath{from{stroke-dashoffset:2000}to{stroke-dashoffset:0}}
+@keyframes dotPop{0%{opacity:0;transform:scale(0)}60%{opacity:1;transform:scale(1.3)}100%{opacity:.8;transform:scale(1)}}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeInScale{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+@keyframes barGrow{from{width:0}to{width:var(--w)}}
+@keyframes sliceIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+
+/* KPI 卡片 */
+.kpi-card{animation:fadeInUp .4s ease forwards;opacity:0}
+.kpi-card:nth-child(1){animation-delay:0ms}
+.kpi-card:nth-child(2){animation-delay:80ms}
+.kpi-card:nth-child(3){animation-delay:160ms}
+.kpi-card:nth-child(4){animation-delay:240ms}
+
+/* 图表卡片 */
+.analytics-card{animation:fadeInScale .4s ease forwards;opacity:0}
+.analytics-card:nth-child(1){animation-delay:120ms}
+.analytics-card:nth-child(2){animation-delay:200ms}
+
+/* 功能排行行 */
+.feature-row{animation:fadeInUp .3s ease forwards;opacity:0}
+
+/* 饼图扇区 */
+.pie-chart path{transform-origin:center;animation:sliceIn .4s ease forwards}
+
+/* 错误操作分析 */
+.error-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.error-stat-item{background:var(--fill-1);border-radius:8px;padding:12px 14px}
+.error-stat-label{font-size:12px;color:var(--text-secondary);margin-bottom:4px}
+.error-stat-value{font-size:20px;font-weight:600;color:var(--text)}
+.error-stat-trend{font-size:11px;margin-top:2px}
+.error-stat-trend.up{color:var(--danger)}
+.error-stat-trend.down{color:var(--success)}
+.error-table-wrap{overflow-x:auto;max-height:340px;overflow-y:auto;border-radius:8px;border:1px solid var(--border)}
+.error-table{width:100%;border-collapse:collapse;font-size:13px}
+.error-table th{text-align:left;padding:10px 12px;border-bottom:2px solid var(--border);color:var(--text-secondary);font-weight:600;position:sticky;top:0;background:#fff;z-index:1;white-space:nowrap}
+.error-table td{padding:9px 12px;border-bottom:1px solid var(--divider);color:var(--text)}
+.error-table tbody tr:hover{background:var(--hover)}
+.error-table td.error-msg{color:var(--danger)}
+.error-table td.error-count{text-align:right;font-weight:600;color:var(--brand);white-space:nowrap}
+.error-table th:last-child{text-align:right}
+.error-table tbody tr:last-child td{border-bottom:none}

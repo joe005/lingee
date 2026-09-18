@@ -1,0 +1,137 @@
+<!-- ===================== 用户行为分析 ===================== -->
+<div class="view hidden" id="view-analytics">
+  <div class="analytics-wrap">
+    <div class="analytics-head">
+      <h1 class="analytics-title">用户行为分析</h1>
+      <div class="analytics-range">
+        <button class="range-btn" data-range="6">6月</button>
+        <button class="range-btn active" data-range="12">12月</button>
+      </div>
+    </div>
+
+    <!-- KPI 卡片 -->
+    <div class="analytics-kpis">
+      <div class="kpi-card">
+        <div class="kpi-label">活跃用户</div>
+        <div class="kpi-value">860</div>
+        <div class="kpi-trend up">↑ 5.2%</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">活跃客户</div>
+        <div class="kpi-value">230</div>
+        <div class="kpi-trend up">↑ 8.3%</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">使用点数</div>
+        <div class="kpi-value">238.6<span class="kpi-unit">万</span></div>
+        <div class="kpi-trend up">↑ 15.2%</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">产物总数</div>
+        <div class="kpi-value">1,248</div>
+        <div class="kpi-trend up">↑ 12.5%</div>
+      </div>
+    </div>
+
+    <!-- 开发模式分布 + 会话趋势 -->
+    <div class="analytics-row">
+      <div class="analytics-card" style="flex:1">
+        <div class="card-title">开发模式分布</div>
+        <div class="pie-wrap" id="modePie">
+          <div class="pie-chart" id="pieChart"></div>
+          <div class="pie-legend" id="pieLegend"></div>
+        </div>
+      </div>
+      <div class="analytics-card" style="flex:2">
+        <div class="card-title">增长趋势</div>
+        <div class="chart-area" id="trendChart">
+          <!-- 折线图 SVG 占位，JS 渲染 -->
+        </div>
+      </div>
+    </div>
+
+    <!-- 功能使用排行 + 最近事件 -->
+    <div class="analytics-row">
+      <div class="analytics-card" style="flex:1">
+        <div class="card-title">功能使用排行</div>
+        <div class="feature-list" id="featureRank">
+          <div class="feature-row"><span class="feature-rank">1</span><span class="feature-name">新建 - 苍穹应用</span><span class="feature-count">342</span><div class="bar-track sm"><div class="bar-fill" style="width:100%;background:#495dff"></div></div></div>
+          <div class="feature-row"><span class="feature-rank">2</span><span class="feature-name">新建 - 通用应用</span><span class="feature-count">298</span><div class="bar-track sm"><div class="bar-fill" style="width:87%;background:#495dff"></div></div></div>
+          <div class="feature-row"><span class="feature-rank">3</span><span class="feature-name">查看实体</span><span class="feature-count">245</span><div class="bar-track sm"><div class="bar-fill" style="width:72%;background:#495dff"></div></div></div>
+          <div class="feature-row"><span class="feature-rank">4</span><span class="feature-name">查看API</span><span class="feature-count">198</span><div class="bar-track sm"><div class="bar-fill" style="width:58%;background:#495dff"></div></div></div>
+          <div class="feature-row"><span class="feature-rank">5</span><span class="feature-name">列表搜索</span><span class="feature-count">176</span><div class="bar-track sm"><div class="bar-fill" style="width:51%;background:#495dff"></div></div></div>
+          <div class="feature-row"><span class="feature-rank">6</span><span class="feature-name">查看表单</span><span class="feature-count">154</span><div class="bar-track sm"><div class="bar-fill" style="width:45%;background:#495dff"></div></div></div>
+          <div class="feature-row"><span class="feature-rank">7</span><span class="feature-name">查看插件</span><span class="feature-count">132</span><div class="bar-track sm"><div class="bar-fill" style="width:39%;background:#495dff"></div></div></div>
+          <div class="feature-row"><span class="feature-rank">8</span><span class="feature-name">产物卡片</span><span class="feature-count">118</span><div class="bar-track sm"><div class="bar-fill" style="width:35%;background:#495dff"></div></div></div>
+          <div class="feature-row"><span class="feature-rank">9</span><span class="feature-name">新建环境配置</span><span class="feature-count">95</span><div class="bar-track sm"><div class="bar-fill" style="width:28%;background:#495dff"></div></div></div>
+          <div class="feature-row"><span class="feature-rank">10</span><span class="feature-name">选择专家团</span><span class="feature-count">78</span><div class="bar-track sm"><div class="bar-fill" style="width:23%;background:#495dff"></div></div></div>
+          <div class="feature-row"><span class="feature-rank">11</span><span class="feature-name">产物详情弹窗</span><span class="feature-count">67</span><div class="bar-track sm"><div class="bar-fill" style="width:20%;background:#495dff"></div></div></div>
+          <div class="feature-row"><span class="feature-rank">12</span><span class="feature-name">测试连接</span><span class="feature-count">56</span><div class="bar-track sm"><div class="bar-fill" style="width:16%;background:#495dff"></div></div></div>
+          <div class="feature-row"><span class="feature-rank">13</span><span class="feature-name">查看MCP</span><span class="feature-count">44</span><div class="bar-track sm"><div class="bar-fill" style="width:13%;background:#495dff"></div></div></div>
+          <div class="feature-row"><span class="feature-rank">14</span><span class="feature-name">列表 - 编辑卡片</span><span class="feature-count">31</span><div class="bar-track sm"><div class="bar-fill" style="width:9%;background:#495dff"></div></div></div>
+          <div class="feature-row"><span class="feature-rank">15</span><span class="feature-name">列表 - 删除卡片</span><span class="feature-count">21</span><div class="bar-track sm"><div class="bar-fill" style="width:6%;background:#495dff"></div></div></div>
+        </div>
+      </div>
+      <div class="analytics-card" style="flex:1">
+        <div class="card-title">技能调用排名</div>
+        <div class="feature-list" id="skillRank">
+          <div class="feature-row"><span class="feature-rank">1</span><span class="feature-name">cosmic-meta-modeling</span><span class="feature-count">412</span><div class="bar-track sm"><div class="bar-fill" style="width:100%;background:#495dff"></div></div></div>
+          <div class="feature-row"><span class="feature-rank">2</span><span class="feature-name">cosmic-meta-api</span><span class="feature-count">356</span><div class="bar-track sm"><div class="bar-fill" style="width:86%;background:#495dff"></div></div></div>
+          <div class="feature-row"><span class="feature-rank">3</span><span class="feature-name">cosmic-coding-impl</span><span class="feature-count">298</span><div class="bar-track sm"><div class="bar-fill" style="width:72%;background:#495dff"></div></div></div>
+          <div class="feature-row"><span class="feature-rank">4</span><span class="feature-name">cosmic-meta-modifier</span><span class="feature-count">245</span><div class="bar-track sm"><div class="bar-fill" style="width:59%;background:#495dff"></div></div></div>
+          <div class="feature-row"><span class="feature-rank">5</span><span class="feature-name">cosmic-meta-knowledge</span><span class="feature-count">201</span><div class="bar-track sm"><div class="bar-fill" style="width:49%;background:#495dff"></div></div></div>
+          <div class="feature-row"><span class="feature-rank">6</span><span class="feature-name">cosmic-coding-script</span><span class="feature-count">178</span><div class="bar-track sm"><div class="bar-fill" style="width:43%;background:#495dff"></div></div></div>
+          <div class="feature-row"><span class="feature-rank">7</span><span class="feature-name">cosmic-meta-ui</span><span class="feature-count">142</span><div class="bar-track sm"><div class="bar-fill" style="width:34%;background:#495dff"></div></div></div>
+          <div class="feature-row"><span class="feature-rank">8</span><span class="feature-name">openapi-gen</span><span class="feature-count">89</span><div class="bar-track sm"><div class="bar-fill" style="width:22%;background:#495dff"></div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 活跃热力图 -->
+    <div class="analytics-card" style="display:none">
+      <div class="card-title">用户活跃热力图（按小时段）</div>
+      <div class="heatmap" id="heatmap">
+        <!-- 7行 × 24列热力格，JS 渲染 -->
+      </div>
+    </div>
+
+    <!-- 错误操作分析 -->
+    <div class="analytics-card">
+      <div class="card-title">错误分析</div>
+      <div class="error-stats">
+        <div class="error-stat-item">
+          <div class="error-stat-label">错误总数</div>
+          <div class="error-stat-value">680</div>
+          <div class="error-stat-trend up">↑ 2.3%</div>
+        </div>
+        <div class="error-stat-item">
+          <div class="error-stat-label">错误率</div>
+          <div class="error-stat-value">5.2%</div>
+          <div class="error-stat-trend down">↓ 0.8%</div>
+        </div>
+        <div class="error-stat-item">
+          <div class="error-stat-label">错误类型数</div>
+          <div class="error-stat-value">12</div>
+          <div class="error-stat-trend down">↓ 1</div>
+        </div>
+        <div class="error-stat-item">
+          <div class="error-stat-label">高频错误页面</div>
+          <div class="error-stat-value">应用开发</div>
+        </div>
+      </div>
+      <div class="error-table-wrap">
+        <table class="error-table">
+          <thead>
+            <tr>
+              <th>页面</th>
+              <th>按钮名称</th>
+              <th>错误提示</th>
+              <th>提示次数</th>
+            </tr>
+          </thead>
+          <tbody id="errorTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
