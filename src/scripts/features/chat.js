@@ -58,6 +58,7 @@ function pushPreviewUrl(url){
   var f=$('#chatPreviewFrame');
   var cur=f&&f.getAttribute('src')||'';
   if(cur) previewHistory.push(cur);
+  if(f) f.src=url;
   var back=$('#previewBack');
   if(back) back.removeAttribute('disabled');
   var urlInput=$('#previewUrlText');
