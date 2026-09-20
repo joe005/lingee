@@ -55,7 +55,7 @@ function autoMatch(text){
 
   return teamById('software-company')?{kind:'team',id:'software-company',auto:true}:null;
 }
-/* 召唤 = 选中这个专家/专家团 + 把第一条触发词带进输入框 */
+/* 对话 = 选中这个专家/专家团 + 把第一条触发词带进输入框 */
 function summon(kind,id,phrase){
   var o = kind==='team' ? teamById(id) : EX[id];
   if(!o) return;
@@ -73,7 +73,7 @@ function summon(kind,id,phrase){
     }catch(err){}
   }
   if(typeof refreshSend==='function') refreshSend();
-  toast('已召唤「'+o.name+'」','success');
+  toast('已带「'+o.name+'」发起对话','success');
 }
 
 /* 发出去的话里还留着没填的 [占位符] —— 专家先问清楚再开工。

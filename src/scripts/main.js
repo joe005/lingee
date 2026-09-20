@@ -23,6 +23,7 @@ import { initExpertData } from './features/expert/data.js';
 import { initExpertLibrary } from './features/expert/library.js';
 import { initAutoMatch } from './features/expert/automatch.js';
 import { initExpertEditor } from './features/expert/editor.js';
+import { initExpertKnowledge } from './features/expert/knowledge.js';
 import { initTeamModal } from './features/expert/team-modal.js';
 import { initExpertChips } from './features/expert/chips.js';
 import { initCollabView, initCollabTabs } from './features/collab/view.js';
@@ -78,6 +79,7 @@ initExpertData();                 /* 4234  features/expert/data.js */
 initExpertLibrary();              /* 4627  features/expert/library.js */
 initAutoMatch();                  /* 4759  features/expert/automatch.js */
 initExpertEditor();               /* 4885  features/expert/editor.js */
+initExpertKnowledge();            /*       features/expert/knowledge.js（拆分后新增） */
 initTeamModal();                  /* 5034  features/expert/team-modal.js */
 initExpertChips();                /* 5261  features/expert/chips.js */
 initCollabView();                 /* 5714  features/collab/view.js */

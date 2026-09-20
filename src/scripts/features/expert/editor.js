@@ -3,6 +3,7 @@ import { toast } from '../../core/toast.js';
 import { input, setNavActive, showView } from '../../core/view.js';
 import { renderExpertChips, renderModeTag } from './chips.js';
 import { AV_KEYS, EX, MY_EXPERTS, WORK_MODES, rebuildExperts, set_MY_EXPERTS, xav, xesc } from './data.js';
+import { renderKnPane, resetKnPane } from './knowledge.js';
 import { expertModal, renderExpertGrid } from './library.js';
 import { TEAMS, activePick, clearPick, saveTeams } from './store.js';
 /* 创建 / 编辑我的专家
@@ -62,22 +63,27 @@ function setXeTab(which){
   var body=$('#expertEditModal .modal-body'); if(body) body.scrollTop=0;
 }
 function blankExpert(){
-  return {k:'eng',name:'',role:'',desc:'',tags:[],modes:['分析','设计','实现'],
-          comp:[],cmds:[['','']]};
+  /* mine:true——编辑器只处理「我创建的」专家，没有预置知识这一层，
+     知识模块靠这个字段判断不用去查租户知识覆盖层 */
+  return {k:'eng',name:'',role:'',desc:'',tags:[],modes:['分析','设计','实现'],mine:true,
+          comp:[],cmds:[['','']],kn:[],knOff:[],knDocOff:[],knUp:[]};
 }
 function openExpertEditor(id){
   if(!expertEditModal) return;
   var e=id?EX[id]:null;
   xeEditingId=(e&&e.mine)?id:null;
   xeDraft = xeEditingId
-    ? {k:e.k,name:e.name,role:e.role,desc:e.desc,tags:e.tags.slice(),modes:e.modes.slice(),
-       comp:e.comp.slice(),cmds:e.cmds.length?e.cmds.map(function(c){return c.slice()}):[['','']]}
+    ? {k:e.k,name:e.name,role:e.role,desc:e.desc,tags:e.tags.slice(),modes:e.modes.slice(),mine:true,
+       comp:e.comp.slice(),cmds:e.cmds.length?e.cmds.map(function(c){return c.slice()}):[['','']],
+       kn:(e.kn||[]).slice(),knOff:(e.knOff||[]).slice(),knDocOff:(e.knDocOff||[]).slice(),
+       knUp:(e.knUp||[]).map(function(f){return {n:f.n,t:f.t,up:f.up,by:f.by}})}
     : blankExpert();
   $('#expertEditTitle').textContent = xeEditingId ? '编辑专家' : '创建专家';
   $('#xeName').value=xeDraft.name; $('#xeRole').value=xeDraft.role; $('#xeDesc').value=xeDraft.desc;
   $('#xeTags').value=xeDraft.tags.join('、'); $('#xeComp').value=xeDraft.comp.join('、');
   $('#xeDeleteBtn').classList.toggle('hidden', !xeEditingId);
   setXeTab('base');
+  resetKnPane(xeDraft);
   renderExpertEditor();
   expertEditModal.classList.add('show');
   setTimeout(function(){ $('#xeName').focus(); },40);
@@ -96,6 +102,8 @@ function renderExpertEditor(){
     return '<div class="x-cmd-row"><input type="text" class="x-cmd-k" data-xe-cmd="'+i+'" data-f="0" value="'+xesc(c[0])+'" placeholder="用户会怎么说，需要用户提供的内容写成 [方括号]，例如：按[验收条件]把功能实现出来" autocomplete="off">'
       +'<button type="button" class="x-ic x-ic-dg" data-xe-rmcmd="'+i+'" title="删除">✕</button></div>';
   }).join('');
+
+  renderKnPane(d);
 }
 function splitList(v){
   return String(v||'').split(/[、,，\n]/).map(function(x){return x.trim()}).filter(Boolean);
@@ -133,7 +141,9 @@ export function initExpertEditor() {
     });
     expertEditModal.addEventListener('input',function(ev){
       var c=ev.target.closest('[data-xe-cmd]');
-      if(c){ xeDraft.cmds[+c.getAttribute('data-xe-cmd')][+c.getAttribute('data-f')]=c.value; }
+      if(c){ xeDraft.cmds[+c.getAttribute('data-xe-cmd')][+c.getAttribute('data-f')]=c.value; return; }
+      /* 能力项要实时同步进草稿：知识页签按能力项自动带目录，边填边看才对得上 */
+      if(ev.target===$('#xeComp')){ xeDraft.comp=splitList(ev.target.value); renderKnPane(); }
     });
     $('#expertEditForm').addEventListener('submit',function(ev){
       ev.preventDefault();
@@ -147,6 +157,7 @@ export function initExpertEditor() {
                      .filter(function(c){ return c[0]; });
       var rec={id:xeEditingId||('my-'+Date.now()),mine:true,k:d.k,name:d.name,role:d.role,by:'我创建的',
                desc:d.desc,tags:d.tags,modes:d.modes.slice(),comp:d.comp,cmds:cmds,
+               kn:(d.kn||[]).slice(),knOff:(d.knOff||[]).slice(),knDocOff:(d.knDocOff||[]).slice(),knUp:(d.knUp||[]).slice()
               };
       if(xeEditingId){
         for(var i=0;i<MY_EXPERTS.length;i++) if(MY_EXPERTS[i].id===xeEditingId){ MY_EXPERTS[i]=rec; break; }

@@ -1,0 +1,23 @@
+<!-- 添加企业知识：专家「知识」页签里点＋添加弹出的选择器 -->
+<div class="modal-overlay" id="knPickModal">
+  <div class="modal-card kn-pick-modal" role="dialog" aria-modal="true" aria-labelledby="knPickTitle">
+    <div class="modal-header">
+      <div class="modal-title" id="knPickTitle">添加企业知识</div>
+      <button class="modal-close" type="button" id="knPickClose" aria-label="关闭">×</button>
+    </div>
+    <div class="modal-body kn-pick-body">
+      <div class="kn-pick-notice"><span class="kn-pick-notice-ic">!</span>勾选目录即整体关联；关联后可以在右侧对个别文档取消勾选，把它排除在检索之外</div>
+      <input type="search" class="kn-pick-search" id="knPickSearch" placeholder="搜索知识目录、文件名或创建者" autocomplete="off">
+      <div class="kn-pick-cols">
+        <div class="kn-pick-side" id="knPickSide"></div>
+        <div class="kn-pick-docs" id="knPickDocs"></div>
+      </div>
+    </div>
+    <div class="modal-footer kn-pick-foot">
+      <div class="kn-pick-count" id="knPickCount">已选 0 个知识目录</div>
+      <div class="team-footer-spacer"></div>
+      <button type="button" class="modal-btn cancel" id="knPickCancel">取消</button>
+      <button type="button" class="modal-btn confirm" id="knPickOk">确定</button>
+    </div>
+  </div>
+</div>

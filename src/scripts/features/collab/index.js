@@ -8,6 +8,7 @@ import { cvOpenReviewDetail, cvReviewPass, cvReviewReject, cvSubmitReview, cvSwi
 import { cvApplyReviewFilters, cvClickReviewStat, cvClickStat, cvCloseSyncModal, cvCloseTaskModal, cvConfirmExec, cvConfirmReview, cvConfirmTransfer, cvConfirmTwist, cvOpenSyncModal, cvOpenTaskModal, cvSaveSyncTask, cvSelectCollabMode, cvSelectPersonItem, cvStartSyncTask, cvToggleSyncDropdown } from './tasks.js';
 import { cvApplyFilters, cvInited, cvPendingProj, cvPendingTab, cvSwitchFilter, cvSwitchView, set_cvInited, set_cvPendingProj, set_cvPendingTab } from './view.js';
 import { summon } from '../expert/automatch.js';
+import { EX } from '../expert/data.js';
 import { openExpertEditor } from '../expert/editor.js';
 import { openExpertModal } from '../expert/library.js';
 /* 协作开发：初始化与对外暴露
@@ -39,7 +40,11 @@ export function initCollab() {
     if(call){ summon('expert',call.getAttribute('data-cv-call')); return; }
     if(e.target.closest('[data-cv-new-expert]')){ openExpertEditor(null); return; }
     var card=e.target.closest('[data-cv-expert]');
-    if(card) openExpertModal(card.getAttribute('data-cv-expert'));
+    if(card){
+      var eid=card.getAttribute('data-cv-expert'), ex=EX[eid];
+      /* 自己建的专家没有「只读详情」这一说，点开就是编辑；预置专家不能改，点开还是详情 */
+      if(ex&&ex.mine) openExpertEditor(eid); else openExpertModal(eid);
+    }
   });
 
 

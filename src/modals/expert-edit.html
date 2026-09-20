@@ -8,19 +8,20 @@
     <div class="modal-tabs" id="xeTabs">
       <button type="button" class="modal-tab active" data-xtab="base">专家</button>
       <button type="button" class="modal-tab" data-xtab="more">触发词与工作方式</button>
+      <button type="button" class="modal-tab" data-xtab="kn">知识</button>
     </div>
     <div class="modal-body env-config-body">
-      <button type="button" class="x-chat-entry" id="xeChatBtn">
-        <span class="x-chat-ic">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H7l-4 3v-6.5A8 8 0 0 1 11 4h2a8 8 0 0 1 8 8z"/></svg>
-        </span>
-        <span class="x-chat-b">
-          <span class="x-chat-t">不想填表单？一句话交给 expert-manager</span>
-          <span class="x-chat-d">在对话里描述你要什么样的专家，它会问清背景后帮你建好</span>
-        </span>
-        <span class="x-chat-go">›</span>
-      </button>
       <div class="team-pane" data-xpane="base">
+        <button type="button" class="x-chat-entry" id="xeChatBtn">
+          <span class="x-chat-ic">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H7l-4 3v-6.5A8 8 0 0 1 11 4h2a8 8 0 0 1 8 8z"/></svg>
+          </span>
+          <span class="x-chat-b">
+            <span class="x-chat-t">不想填表单？一句话交给 expert-manager</span>
+            <span class="x-chat-d">在对话里描述你要什么样的专家，它会问清背景后帮你建好</span>
+          </span>
+          <span class="x-chat-go">›</span>
+        </button>
         <section class="env-form-section">
           <div class="env-form-grid">
             <label class="env-field"><span>名称<span class="env-required">*</span></span>
@@ -55,6 +56,21 @@
               <input type="text" id="xeComp" placeholder="用逗号分隔，例如：cosmic.workflow · advanced" autocomplete="off"></label>
           </div>
         </section>
+      </div>
+
+      <div class="team-pane hidden" data-xpane="kn">
+        <div class="xk-bar">
+          <button type="button" class="xk-btn" id="xkAddBtn">＋ 添加</button>
+          <button type="button" class="xk-btn" id="xkUpBtn">⬆ 上传</button>
+          <input type="file" id="xkFile" multiple hidden>
+          <div class="xk-bar-sp"></div>
+          <input type="search" class="xk-search" id="xkSearch" placeholder="搜索知识目录、文件名或创建者" autocomplete="off">
+        </div>
+        <div class="xk-hint">勾了能力项会自动带出对应目录（标着服务哪项能力）；也可以手动追加，或直接上传文件。文档本身留在企业知识库里，这里只记录挂了哪些目录。</div>
+        <div class="xk-cols">
+          <div class="xk-side" id="xkSide"></div>
+          <div class="xk-docs" id="xkDocs"></div>
+        </div>
       </div>
     </div>
     <div class="modal-footer team-modal-footer">

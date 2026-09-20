@@ -25,7 +25,6 @@ var EXPERT_AV = {
   api:'<rect width="128" height="128" rx="26" fill="#0891b2"/><circle cx="38" cy="64" r="14" fill="#cffafe"/><circle cx="90" cy="38" r="14" fill="#cffafe"/><circle cx="90" cy="90" r="14" fill="#cffafe"/><path d="M50 58l28-14M50 70l28 14" stroke="#cffafe" stroke-width="7"/>'
 };
 function xav(k){ return 'data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">'+EXPERT_AV[k]+'</svg>'); }
-var GATE_ICON='<svg class="x-gate-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m16 11 2 2 4-4"/></svg>';
 function xesc(v){ return String(v==null?'':v).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]}); }
 
 var EXPERTS=[
@@ -223,16 +222,14 @@ var PRESET_TEAMS=[
   {id:'software-company',preset:true,name:'软件开发团队',by:'Lingee 内置',
    desc:'跨职能软件产品交付团队，覆盖需求、架构、实现、质量与集成的完整闭环。也是新建任务时的默认选择。',
    domains:['通用软件','后端','前端','数据库'],
-   gates:['design','verify'],
    leadId:'software-team-lead',
    members:['software-team-lead','software-product-manager','software-architect','software-engineer','software-qa-engineer'],
-   cmds:[['帮我把这个想法做成一个能上线的功能','从需求到验收走完整闭环'],
-         ['这个模块要重做，帮我走一遍完整流程','需求、架构、实现、测试、集成逐环节推进'],
-         ['需求还没理清，先帮我拆一版方案再动手','先出需求与实现计划，评审通过再编码']]},
+   cmds:[['帮我把"购物车支持优惠券"这个想法做成能上线的功能','从需求到验收走完整闭环'],
+         ['订单导出模块要重做，需求、架构、实现、测试、集成走一遍','逐环节推进，每一步都留下可核验的产出'],
+         ['登录鉴权这块需求还没理清，先帮我拆一版方案再动手','先出需求与实现计划，评审通过再编码']]},
   {id:'fast-app',preset:true,name:'应用速成小队',by:'Lingee 内置',
    desc:'工程师一次性写完全部代码，QA 端到端验证。适合单页应用、小游戏、原型页这类一次交付的活。',
    domains:['单页应用','原型','小工具'],
-   gates:[],
    leadId:'software-engineer',
    members:['software-engineer','software-qa-engineer'],
    cmds:[['做一个单页小工具，今天就要用','一次性写完代码并跑通 build'],
@@ -241,7 +238,6 @@ var PRESET_TEAMS=[
   {id:'cosmic-team',preset:true,name:'苍穹交付团队',by:'Lingee 内置',
    desc:'面向苍穹配置化交付：需求规格 → 表单与流程配置 → 报表 → 二开插件 → 接口集成。',
    domains:['苍穹','表单','工作流','报表','集成'],
-   gates:['requirement'],
    leadId:'software-team-lead',
    members:['software-team-lead','software-product-manager','cosmic-form','cosmic-workflow','cosmic-report','cosmic-api'],
    cmds:[['帮我在苍穹上做一套请假申请，从单据到审批','表单、流程、报表、接口一条龙配下来'],
@@ -250,7 +246,6 @@ var PRESET_TEAMS=[
   {id:'web-team',preset:true,name:'网页交付小队',by:'Lingee 内置',
    desc:'设计与前端配对交付：信息架构与视觉规范先行，前端按规范实现并做设计走查。',
    domains:['Web','前端','视觉设计'],
-   gates:['design'],
    leadId:'ux-designer',
    members:['ux-designer','frontend-engineer','software-qa-engineer'],
    cmds:[['帮我做一个官网首页，设计和前端都要','先出设计规范，再按规范实现'],
@@ -265,4 +260,4 @@ export function initExpertData() {
 /* MY_EXPERTS 由其它模块写回；import 绑定只读，所以走这个 setter */
 export function set_MY_EXPERTS(v){ MY_EXPERTS=v; return v; }
 
-export { AV_KEYS, EX, EXPERTS, GATE_ICON, MY_EXPERTS, PRESET_TEAMS, WORK_MODES, askFor, compChip, pendingInputs, phraseHtml, rebuildExperts, teamCoverage, xav, xesc };
+export { AV_KEYS, EX, EXPERTS, MY_EXPERTS, PRESET_TEAMS, WORK_MODES, askFor, compChip, parseComp, pendingInputs, phraseHtml, rebuildExperts, teamCoverage, xav, xesc };

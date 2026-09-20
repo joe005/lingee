@@ -1,5 +1,6 @@
 import { $ } from '../../core/dom.js';
 import { EXPERTS, xav, xesc } from '../expert/data.js';
+import { knCountOf } from '../expert/knowledge.js';
 import { TEAMS } from '../expert/store.js';
 /* 协作开发：专家管理分组卡片
    拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
@@ -33,7 +34,7 @@ function cvBuildExpertCard(e){
       +(mRest>0?'<span class="expert-mode expert-mode-more">+'+mRest+'</span>':'')+'</div>'
     : '';
   return '<div class="expert-card" data-cv-expert="'+e.id+'">'
-    +'<button type="button" class="expert-chat-btn" data-cv-call="'+e.id+'" title="召唤这位专家">召唤</button>'
+    +'<button type="button" class="expert-chat-btn" data-cv-call="'+e.id+'" title="对话这位专家">对话</button>'
     +'<div class="expert-head"><img class="expert-av" src="'+xav(e.k)+'" alt="">'
     +'<div><div class="expert-name">'+xesc(e.name)
     +(e.ro?'<span class="expert-flag">只读</span>':'')+'</div>'
@@ -45,6 +46,7 @@ function cvBuildExpertCard(e){
     +'<div><div class="expert-stat-val">'+cvTeamCountOf(e.id)+'</div><div class="expert-stat-label">所在专家团</div></div>'
     +'<div><div class="expert-stat-val">'+comps+'</div><div class="expert-stat-label">能力项</div></div>'
     +'<div><div class="expert-stat-val">'+cmds+'</div><div class="expert-stat-label">触发词</div></div>'
+    +'<div><div class="expert-stat-val">'+knCountOf(e)+'</div><div class="expert-stat-label">知识</div></div>'
     +'</div></div>';
 }
 function cvRenderExperts(){

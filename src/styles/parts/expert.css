@@ -26,6 +26,8 @@
   border-radius: 8px; padding: 9px 12px; font-size: 13px; margin-bottom: 16px;
 }
 .team-hint { font-size: 12px; color: var(--text-secondary); margin: -4px 0 12px; }
+/* 内置团查看态：一句话说明，不摆只读表单 */
+.team-view-desc { font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; margin: -4px 0 18px; }
 .team-count {
   font-size: 12px; font-weight: 400; color: var(--text-secondary);
   background: var(--fill-1); border-radius: 5px; padding: 1px 7px; margin-left: 6px;
@@ -47,7 +49,6 @@
 .x-member img { width: 32px; height: 32px; border-radius: 9px; flex: none; cursor: pointer; }
 .x-member-b { flex: 1; min-width: 0; cursor: pointer; }
 .x-member-n { font-size: 13.5px; font-weight: 500; display: flex; align-items: center; flex-wrap: wrap; }
-.x-member-r { font-size: 11.5px; color: var(--text-secondary); margin-top: 1px; }
 .x-member-a { display: flex; gap: 2px; flex: none; opacity: 0; transition: opacity 0.12s; }
 .x-member:hover .x-member-a { opacity: 1; }
 .x-ic {
@@ -63,31 +64,6 @@
 }
 .team-add:hover { border-color: var(--brand); color: var(--brand); }
 
-/* 流程预览 */
-.team-flow-label { font-size: 12px; color: var(--text-secondary); margin: 18px 0 8px; }
-.team-flow { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
-.x-node {
-  display: flex; align-items: center; gap: 8px;
-  border: 1px solid var(--border); border-radius: 9px; padding: 6px 10px 6px 7px; background: var(--bg);
-}
-.x-node img { width: 22px; height: 22px; border-radius: 6px; }
-.x-node b { font-size: 12.5px; font-weight: 500; white-space: nowrap; }
-.x-node i { font-style: normal; font-size: 11px; color: var(--text-secondary); white-space: nowrap; display: block; }
-.x-node.miss { border-color: var(--warning); background: var(--warning-bg); }
-.x-ar { color: var(--text-soft); font-size: 11px; }
-.x-kind {
-  font-size: 9.5px; color: var(--text-soft); border: 1px solid var(--border);
-  border-radius: 4px; padding: 0 4px; margin-left: 5px; vertical-align: 1px; font-weight: 400;
-}
-.team-mode-note {
-  display: flex; gap: 8px; align-items: center; margin-top: 12px;
-  background: var(--fill-1); border-radius: 8px; padding: 8px 12px;
-  font-size: 12.5px; color: var(--text-secondary);
-}
-.team-mode-note code {
-  font-size: 11.5px; background: var(--bg); border: 1px solid var(--border);
-  border-radius: 4px; padding: 1px 5px;
-}
 .x-warn {
   display: flex; gap: 8px; margin-top: 9px;
   background: var(--warning-bg); color: var(--warning);
@@ -112,8 +88,10 @@
 .x-mrow-m { display: block; font-size: 11.5px; color: var(--text-soft); margin-top: 4px; }
 
 /* ---- 专家详情弹窗 ---- */
-.expert-detail-modal { width: min(520px, 92vw); }
-.expert-detail-modal > .modal-body { min-height: 0; overflow-y: auto; }
+/* 跟专家团配置弹窗一样宽，别让专家详情挤成一条；
+   高度也定死——概览短、知识长，不定死切页签时弹窗会跟着跳一下 */
+.expert-detail-modal { width: min(720px, 92vw); height: min(600px, 86vh); }
+.expert-detail-modal > .modal-body { flex: 1; min-height: 0; overflow-y: auto; }
 .expert-detail-head { align-items: flex-start; }
 .x-detail-head { display: flex; gap: 13px; align-items: center; }
 .x-av-lg { width: 46px; height: 46px; border-radius: 12px; }
@@ -225,17 +203,6 @@
 /* 发送按钮：实心蓝（对齐实现） */
 #view-newtask .send-btn { background: var(--brand); color: #fff; }
 #view-newtask .send-btn:hover { background: var(--brand-hover); }
-
-/* 内置专家团：名称/说明只读 */
-.team-config-modal .x-ro,
-.team-config-modal .x-ro:focus {
-  background: #f7f7f7;
-  color: var(--text-secondary);
-  border-color: var(--border);
-  box-shadow: none;
-  cursor: default;
-  resize: none;
-}
 
 /* ---------- 我创建的专家：入口、编辑器 ---------- */
 #expertTabs .tab-count {
@@ -373,7 +340,7 @@
 .auto-note-b b { color: var(--text); font-weight: 600; }
 .auto-note-b i { display: block; font-style: normal; font-size: 11.5px; color: var(--text-soft); margin-top: 2px; }
 
-/* ---------- 卡片上的快速召唤 ---------- */
+/* ---------- 卡片上的快速对话 ---------- */
 .x-card { position: relative; }
 .x-call {
   position: absolute;
@@ -403,18 +370,13 @@
   letter-spacing: 0;
 }
 
-/* 成员改两列，长职责单行截断，弹窗少滚一半 */
+/* 成员改两列，弹窗少滚一半 */
 .team-config-modal .team-members {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 7px;
 }
 .team-config-modal .x-member { min-width: 0; }
-.team-config-modal .x-member-r {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 @media (max-width: 700px) {
   .team-config-modal .team-members { grid-template-columns: 1fr; }
 }
@@ -463,6 +425,7 @@
 .team-config-modal .modal-body { padding-top: 16px; }
 .team-hint-inline.is-warn { color: var(--warning); }
 
-/* 页签化之后弹窗窄一点更好读 */
-.team-config-modal { width: min(660px, 92vw); }
+/* 创建/编辑专家弹窗有 3 个页签，内容高矮不一样（知识页签的两栏、专家页签的头像格）；
+   定死高度，切页签时弹窗不再跟着跳 */
+#expertEditForm { height: min(640px, 84vh); }
 

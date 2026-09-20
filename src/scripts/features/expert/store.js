@@ -1,5 +1,6 @@
 import { AV_KEYS, EX, MY_EXPERTS, PRESET_TEAMS, WORK_MODES, rebuildExperts, set_MY_EXPERTS } from './data.js';
-/* 专家 / 专家团：持久化、编排推导、人工审核节点
+import { knDir } from './knowledge.js';
+/* 专家 / 专家团：持久化、能力自检
    拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
    由 main.js 按拆分前的原始顺序调用。 */
 
@@ -41,7 +42,11 @@ function loadTeams(){
       modes:e.modes.filter(function(m){return WORK_MODES.indexOf(m)>=0}),
       comp:Array.isArray(e.comp)?e.comp:[],
       cmds:(Array.isArray(e.cmds)?e.cmds:[]).filter(function(c){return Array.isArray(c)&&c[0]}),
-
+      /* 知识：只认平台上还存在的目录，绑定失效就自然掉了 */
+      kn:(Array.isArray(e.kn)?e.kn:[]).filter(function(x){ return !!knDir(x) }),
+      knOff:(Array.isArray(e.knOff)?e.knOff:[]).filter(function(x){ return !!knDir(x) }),
+      knUp:(Array.isArray(e.knUp)?e.knUp:[]).filter(function(f){ return f&&typeof f.n==='string' })
+        .map(function(f){ return {n:f.n,t:f.t||'FILE',sz:f.sz||'',up:f.up||'',by:f.by||'我'} })
     };
   }).filter(function(e){ return e.modes.length; }));
   rebuildExperts();
@@ -53,7 +58,6 @@ function loadTeams(){
   }).map(function(t){
     return {id:t.id,preset:false,name:t.name,by:t.by||'我创建的',desc:t.desc||'',
       domains:Array.isArray(t.domains)?t.domains:[],
-      gates:Array.isArray(t.gates)?t.gates.filter(function(g){return typeof g==='string'}):[],
       leadId:EX[t.leadId]?t.leadId:(t.members[0]||null),members:t.members.slice(),
       cmds:(Array.isArray(t.cmds)?t.cmds:[]).filter(function(c){return Array.isArray(c)&&c[0]})};
   });
@@ -65,59 +69,21 @@ function saveTeams(){
       v:1,
       teams:TEAMS.filter(function(t){return !t.preset}).map(function(t){
         return {id:t.id,name:t.name,by:t.by,desc:t.desc,domains:t.domains||[],
-                gates:teamGates(t),leadId:t.leadId,members:t.members,cmds:t.cmds};
+                leadId:t.leadId,members:t.members,cmds:t.cmds};
       }),
       experts:MY_EXPERTS.map(function(e){
         return {id:e.id,k:e.k,name:e.name,role:e.role,desc:e.desc,tags:e.tags,
-                modes:e.modes,comp:e.comp,cmds:e.cmds};
+                modes:e.modes,comp:e.comp,cmds:e.cmds,
+                kn:e.kn||[],knOff:e.knOff||[],knUp:e.knUp||[]};
       })
     }));
   }catch(e){ /* 隐私模式 / 配额满：原型退化为内存态，不打扰用户 */ }
 }
 function teamById(id){ for(var i=0;i<TEAMS.length;i++) if(TEAMS[i].id===id) return TEAMS[i]; return null; }
 
-/* ---------- 编排推导：成员 → 任务 DAG ----------
-   不再有交付强度这个旋钮：团里有谁，流程里就有哪一步。
-   实现环节始终保留——没人能领时显式标红，这是要暴露的问题，不是可以省掉的步骤。 */
-function teamFlow(t){
-  function any(){ for(var i=0;i<arguments.length;i++) if(t.members.indexOf(arguments[i])>=0) return arguments[i]; return null; }
-  function byMode(m,skip){ for(var i=0;i<t.members.length;i++){ if(t.members[i]===skip) continue; var e=EX[t.members[i]]; if(e&&e.modes.indexOf(m)>=0) return t.members[i]; } return null; }
-  var f=[], multi=t.members.length>1;
-  var lead=any('software-team-lead');
-  if(multi && lead) f.push({id:'kickoff',k:'analyze',title:'协调范围与门禁',who:lead});
-  var pm=any('software-product-manager');
-  if(pm) f.push({id:'requirement',k:'analyze',title:'分析需求与验收',who:pm});
-  var des=any('software-architect','ux-designer');
-  if(des) f.push({id:'design',k:'design',title:'设计方案与实现计划',who:des});
-  var rev=any('code-reviewer','read-only-analyst');
-  if(rev) f.push({id:'precode-review',k:'review',title:'编码准入评审',who:rev});
-  f.push({id:'implement',k:'implement',title:'实现编码任务',
-    who:any('software-engineer','frontend-engineer','cosmic-form','cosmic-workflow','cosmic-report','cosmic-plugin','cosmic-api')||byMode('实现')});
-  var sec=any('security-reviewer');
-  if(sec) f.push({id:'security-review',k:'review',title:'安全评审',who:sec});
-  var qa=any('software-qa-engineer')||byMode('验证',lead);
-  if(qa) f.push({id:'verify',k:'test',title:'质量验证',who:qa});
-  var itg=lead||any('software-architect')||byMode('集成');
-  if(multi && itg) f.push({id:'integrate',k:'integrate',title:'集成与交付确认',who:itg});
-  return f;
-}
-/* ---------- 人工审核确认节点 ----------
-   挂在某个流程步骤之后：这一步产出后编排暂停，等人点过才继续。
-   只存步骤 id，成员变动导致步骤消失时自动失效，不需要迁移数据。 */
-function teamGates(t){ return Array.isArray(t&&t.gates)?t.gates:[]; }
-function hasGate(t,stepId){ return teamGates(t).indexOf(stepId)>=0; }
-/* 只统计当前流程里真实存在的步骤上挂的确认点 */
-function activeGates(t,flow){
-  var f=flow||teamFlow(t);
-  return f.filter(function(s){ return hasGate(t,s.id); });
-}
-function toggleGate(t,stepId){
-  if(!t) return;
-  if(!Array.isArray(t.gates)) t.gates=[];
-  var i=t.gates.indexOf(stepId);
-  if(i>=0) t.gates.splice(i,1); else t.gates.push(stepId);
-}
-
+/* ---------- 团队能力自检 ----------
+   专家团不是一条写死的流程，谁做哪一步由编排在运行时按当前任务动态决定；
+   团队定义只负责声明「这个团合起来能干什么」，这里检查这份能力声明是否有明显缺口。 */
 function teamLint(t){
   var w=[];
   var canImpl=false;
@@ -145,4 +111,4 @@ export function set_TEAMS(v){ TEAMS=v; return v; }
 /* activePick 由其它模块写回；import 绑定只读，所以走这个 setter */
 export function set_activePick(v){ activePick=v; return v; }
 
-export { TEAMS, activeGates, activePick, clearPick, hasGate, loadTeams, pickName, pickValid, saveTeams, teamById, teamDomains, teamFlow, teamGates, teamLint, toggleGate };
+export { TEAMS, activePick, clearPick, loadTeams, pickName, pickValid, saveTeams, teamById, teamDomains, teamLint };

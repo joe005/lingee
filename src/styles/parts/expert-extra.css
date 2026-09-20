@@ -1,5 +1,5 @@
 /* ============================================================
-   专家 / 专家团 —— 能力项、可承担工作、人工审核确认节点
+   专家 / 专家团 —— 能力项、可承担工作
    追加在文件末尾，勿前置（层叠顺序见 README）
    ============================================================ */
 
@@ -18,24 +18,6 @@
 .x-mode{font-size:11px;line-height:1;color:var(--text-secondary);background:var(--fill-1);
   border:1px solid var(--border);padding:3px 6px;border-radius:5px;white-space:nowrap}
 
-/* 人工审核确认节点 */
-.x-gate{display:flex;align-items:center;gap:7px;padding:6px 8px 6px 9px;border-radius:9px;
-  border:1px solid var(--border-focus);background:var(--brand-fill);color:var(--brand)}
-.x-gate b{font-size:12.5px;font-weight:500;white-space:nowrap;color:var(--brand)}
-.x-gate i{font-style:normal;font-size:11px;color:var(--text-secondary);white-space:nowrap;display:block}
-.x-gate .x-kind{border-color:var(--border-focus);color:var(--brand)}
-.x-gate-ic{width:16px;height:16px;flex:none}
-.x-gate .x-ic{margin-left:2px}
-
-/* 步骤之间的插槽：点它插入一个确认节点 */
-.x-gate-add{width:22px;height:22px;flex:none;display:inline-flex;align-items:center;justify-content:center;
-  margin:0 1px;padding:0;font-size:13px;line-height:1;cursor:pointer;color:var(--text-soft);
-  border:1px dashed var(--border-hover);border-radius:50%;background:transparent;transition:.15s}
-.x-gate-add:hover{color:var(--brand);border-color:var(--brand);border-style:solid;background:var(--brand-fill)}
-
-.team-gate-hint{margin-top:9px;font-size:12px;color:var(--text-secondary)}
-.x-sub-gate{color:var(--brand)}
-
 /* 专家管理卡片上的「可承担的工作」 */
 #view-collab .expert-modes{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-bottom:8px}
 #view-collab .expert-modes-k{font-size:10.5px;color:var(--text-soft);margin-right:1px}
@@ -46,7 +28,7 @@
 .x-modes{flex-wrap:nowrap;overflow:hidden}
 .x-mode-more{color:var(--text-soft);border-style:dashed}
 
-/* 专家卡片召唤按钮：与专家团卡片的 .x-call 统一，别让浏览器默认按钮样式漏出来 */
+/* 专家卡片对话按钮：与专家团卡片的 .x-call 统一，别让浏览器默认按钮样式漏出来 */
 #view-collab .expert-chat-btn{position:absolute;top:12px;right:12px;width:auto;height:auto;
   padding:3px 10px;border:1px solid var(--border-hover);border-radius:999px;background:var(--bg);
   font:inherit;font-size:11.5px;line-height:1.5;color:var(--text-secondary);cursor:pointer;

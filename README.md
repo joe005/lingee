@@ -38,11 +38,12 @@ src/
 │  ├─ login.html  sidebar.html  home.html  newtask.html  chat.html
 │  └─ apps.html   collab.html   skills.html  agents.html  settings.html
 │                 design.html  overlays.html
-├─ modals/                    14 个弹窗各一份 HTML 片段
-│  ├─ team.html               专家团配置
+├─ modals/                    15 个弹窗各一份 HTML 片段
+│  ├─ team.html               专家团配置（单页：团队 + 触发词，没有运行流程）
 │  ├─ expert-detail.html      专家详情
 │  ├─ expert-edit.html        创建 / 编辑我的专家
 │  ├─ member.html             专家团加成员
+│  ├─ knowledge-pick.html     专家知识页签「＋ 添加」弹出的目录选择器
 │  ├─ env-*.html              ERP 环境配置 / 授权 / 断开（5 个）
 │  └─ attach.html  new-app.html  shortcut.html  collab.html  …
 ├─ styles/
@@ -59,7 +60,8 @@ src/
 │     ├─ chat.js  apps.js  attach-app.js  shortcuts.js  env.js
 │     ├─ design/              Design System：交互 / 令牌 / 图标 / 组件预览
 │     ├─ expert/              专家与专家团：data / store / library /
-│     │                       automatch / editor / team-modal / chips
+│     │                       automatch / editor / knowledge /
+│     │                       team-modal / chips
 │     └─ collab/              协作开发：data / view / tasks / reviews /
 │                             chat / experts / projects / config / index
 └─ artifacts/
