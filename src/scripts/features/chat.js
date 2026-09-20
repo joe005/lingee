@@ -63,6 +63,7 @@ function pushPreviewUrl(url){
   var urlInput=$('#previewUrlText');
   if(urlInput) urlInput.value=url;
 }
+var previewBackBtn;
 function popPreviewUrl(){
   if(!previewHistory.length)return;
   var f=$('#chatPreviewFrame'); if(!f)return;
@@ -73,10 +74,10 @@ function popPreviewUrl(){
   var back=$('#previewBack');
   if(back) back.disabled=!previewHistory.length;
 }
-var previewBackBtn=$('#previewBack');
-if(previewBackBtn) previewBackBtn.addEventListener('click',popPreviewUrl);
 
 export function initPreview() {
+  previewBackBtn=$('#previewBack');
+  if(previewBackBtn) previewBackBtn.addEventListener('click',popPreviewUrl);
   if(previewEditBtn){
     previewEditBtn.addEventListener('click',function(){
       var on=!previewEditBtn.classList.contains('on');
