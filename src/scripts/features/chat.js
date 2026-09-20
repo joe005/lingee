@@ -91,7 +91,6 @@ export function initPreview() {
         setPickMode(false);
       }
       if(on) pushPreviewUrl('https://feature.kingdee.com:1026/feature_vb/?byPageId=root1e74498fa8d347ae969274e1708de3cb&isCosmicUI=true');
-      toast(on?'已进入编辑模式，可直接修改页面文字':'已退出编辑模式');
     });
   }
   if(previewPickBtn){
