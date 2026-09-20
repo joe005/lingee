@@ -52,6 +52,30 @@ function closeHistory(){
   historyOverlay.classList.remove('show');
 }
 
+/* ---------- 预览导航历史 ---------- */
+var previewHistory=[];
+function pushPreviewUrl(url){
+  var f=$('#chatPreviewFrame');
+  var cur=f&&f.getAttribute('src')||'';
+  if(cur) previewHistory.push(cur);
+  var back=$('#previewBack');
+  if(back) back.removeAttribute('disabled');
+  var urlInput=$('#previewUrlText');
+  if(urlInput) urlInput.value=url;
+}
+function popPreviewUrl(){
+  if(!previewHistory.length)return;
+  var f=$('#chatPreviewFrame'); if(!f)return;
+  var url=previewHistory.pop();
+  f.src=url;
+  var urlInput=$('#previewUrlText');
+  if(urlInput) urlInput.value=url;
+  var back=$('#previewBack');
+  if(back) back.disabled=!previewHistory.length;
+}
+var previewBackBtn=$('#previewBack');
+if(previewBackBtn) previewBackBtn.addEventListener('click',popPreviewUrl);
+
 export function initPreview() {
   if(previewEditBtn){
     previewEditBtn.addEventListener('click',function(){
@@ -64,7 +88,7 @@ export function initPreview() {
         previewPickBtn.setAttribute('aria-pressed','false');
         setPickMode(false);
       }
-      if(on){ var f=$('#chatPreviewFrame'); if(f) f.src='https://feature.kingdee.com:1026/feature_vb/?byPageId=root1e74498fa8d347ae969274e1708de3cb&isCosmicUI=true'; }
+      if(on) pushPreviewUrl('https://feature.kingdee.com:1026/feature_vb/?byPageId=root1e74498fa8d347ae969274e1708de3cb&isCosmicUI=true');
       toast(on?'已进入编辑模式，可直接修改页面文字':'已退出编辑模式');
     });
   }
