@@ -64,7 +64,7 @@ export function initPreview() {
         previewPickBtn.setAttribute('aria-pressed','false');
         setPickMode(false);
       }
-      if(on) window.open('https://feature.kingdee.com:1026/feature_vb/?byPageId=root1e74498fa8d347ae969274e1708de3cb&isCosmicUI=true','_blank');
+      if(on){ var f=$('#chatPreviewFrame'); if(f) f.src='https://feature.kingdee.com:1026/feature_vb/?byPageId=root1e74498fa8d347ae969274e1708de3cb&isCosmicUI=true'; }
       toast(on?'已进入编辑模式，可直接修改页面文字':'已退出编辑模式');
     });
   }
