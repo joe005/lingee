@@ -1,0 +1,1899 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>lingeebuild-prototype 云上部署方案</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f3f7fb;
+      --surface: #ffffff;
+      --surface-soft: #f8fbff;
+      --ink: #152238;
+      --muted: #64748b;
+      --line: #d8e2ef;
+      --blue-900: #0b2a4a;
+      --blue-800: #123d68;
+      --blue-700: #145fd7;
+      --blue-100: #eaf3ff;
+      --blue-050: #f5f9ff;
+      --orange: #d97706;
+      --orange-strong: #b45309;
+      --orange-soft: #fff4df;
+      --green: #0f766e;
+      --purple: #6d28d9;
+      --shadow: 0 18px 42px rgba(15, 45, 78, 0.08);
+      --radius: 8px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        linear-gradient(180deg, #e8f1fb 0, var(--bg) 260px),
+        var(--bg);
+      color: var(--ink);
+      line-height: 1.58;
+    }
+    header {
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(135deg, var(--blue-900) 0%, var(--blue-800) 58%, #0f5b7b 100%);
+      color: #ffffff;
+      padding: 44px clamp(22px, 5vw, 72px) 38px;
+    }
+    header::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.07) 1px, transparent 1px);
+      background-size: 32px 32px;
+      opacity: 0.45;
+      pointer-events: none;
+    }
+    .hero-inner {
+      position: relative;
+      z-index: 1;
+      max-width: 1180px;
+      margin: 0 auto;
+    }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 10px;
+      border: 1px solid rgba(255,255,255,0.28);
+      border-radius: 999px;
+      color: #dbeafe;
+      font-size: 13px;
+      font-weight: 700;
+      background: rgba(255,255,255,0.08);
+    }
+    h1 {
+      margin: 16px 0 0;
+      font-size: clamp(30px, 5vw, 52px);
+      line-height: 1.08;
+      letter-spacing: 0;
+    }
+    header p {
+      max-width: 850px;
+      margin: 14px 0 0;
+      color: #d8e8ff;
+      font-size: 16px;
+    }
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 26px clamp(14px, 3vw, 28px) 56px;
+    }
+    .toc {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .toc a {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      background: rgba(255,255,255,0.8);
+      color: #31445e;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+    }
+    .toc a:hover,
+    .toc a:focus {
+      border-color: #9cc8ff;
+      background: #f3f8ff;
+      color: var(--blue-700);
+    }
+    section {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin: 0 0 22px;
+      overflow: hidden;
+    }
+    .section-head {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+      padding: clamp(18px, 3vw, 26px) clamp(18px, 3vw, 30px) 16px;
+      background: linear-gradient(180deg, #ffffff 0%, var(--blue-050) 100%);
+    }
+    .section-index {
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      background: var(--orange);
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 800;
+    }
+    .section-head h2 {
+      margin: 0;
+      font-size: 23px;
+      line-height: 1.25;
+      letter-spacing: 0;
+    }
+    .section-body {
+      padding: clamp(18px, 3vw, 30px);
+    }
+    h3 {
+      margin: 22px 0 10px;
+      font-size: 17px;
+      color: #1f3350;
+    }
+    h4 {
+      margin: 16px 0 7px;
+      font-size: 13px;
+      color: #53657d;
+      text-transform: uppercase;
+      letter-spacing: 0;
+    }
+    a { color: var(--blue-700); }
+    code, pre {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+    }
+    pre {
+      background: #0c1728;
+      color: #e7edf8;
+      padding: 14px;
+      border-radius: var(--radius);
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      overflow-wrap: anywhere;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .table-scroll {
+      width: 100%;
+      overflow-x: auto;
+      border-radius: var(--radius);
+    }
+    .table-scroll table {
+      min-width: 860px;
+    }
+    .resource-table {
+      min-width: 900px;
+    }
+    .resource-table th,
+    .resource-table td {
+      font-size: 12px;
+    }
+    .comparison-summary-table {
+      min-width: 920px;
+      table-layout: fixed;
+    }
+    .comparison-summary-table .plan-name-col {
+      width: 76px;
+    }
+    .comparison-summary-table .price-col {
+      width: 168px;
+    }
+    .comparison-summary-table .balanced-col {
+      width: calc((100% - 244px) / 2);
+    }
+    .comparison-summary-table th,
+    .comparison-summary-table td {
+      font-size: 12.5px;
+      line-height: 1.45;
+      text-align: left;
+      vertical-align: middle;
+    }
+    .comparison-summary-table th {
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .comparison-summary-table tr:not(:first-child) > th {
+      white-space: normal;
+      overflow-wrap: break-word;
+    }
+    .comparison-summary-table th:first-child {
+      width: 76px;
+      font-size: 13px;
+    }
+    .comparison-summary-table .price-estimate {
+      width: 168px;
+      min-width: 168px;
+      white-space: nowrap;
+    }
+    .price-estimate .price-line {
+      white-space: nowrap;
+    }
+    .price-estimate strong {
+      font-size: 12.5px;
+    }
+    .price-estimate span {
+      color: var(--muted);
+      font-size: 11.5px;
+      font-weight: 700;
+    }
+    .resource-table td {
+      overflow-wrap: break-word;
+      word-break: normal;
+    }
+    .resource-spec-list {
+      display: grid;
+      gap: 10px;
+    }
+    .resource-spec-item {
+      display: grid;
+      gap: 3px;
+    }
+    .resource-spec-item strong,
+    .resource-spec-item span {
+      display: block;
+    }
+    .resource-spec-item strong {
+      color: #17345c;
+    }
+    .resource-spec-item span {
+      color: #40536d;
+    }
+    .resource-spec-item .resource-spec-label {
+      margin-top: 2px;
+      font-weight: 700;
+      color: #31445e;
+    }
+    .resource-spec-item .resource-spec-indent {
+      padding-left: 18px;
+    }
+    .resource-spec-item .reason-tooltip {
+      display: inline-grid;
+      vertical-align: middle;
+    }
+    .pros-cons {
+      display: grid;
+      gap: 8px;
+    }
+    .pros-cons strong {
+      display: block;
+      color: #17345c;
+      font-size: 12px;
+      font-weight: 850;
+      margin-bottom: 3px;
+    }
+    .pros-cons .cons strong {
+      color: #7c4a03;
+    }
+    .pros-cons-conclusion {
+      border-top: 1px solid var(--line);
+      padding-top: 8px;
+    }
+    .pros-cons-conclusion strong {
+      color: var(--orange-strong);
+    }
+    .pros-cons-conclusion p {
+      margin: 0;
+      color: #334155;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+    .pros-cons ul {
+      margin: 0;
+      padding-left: 16px;
+    }
+    .pros-cons li {
+      margin: 0;
+      color: #334155;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    .pros-cons li + li {
+      margin-top: 3px;
+    }
+    th, td {
+      border-bottom: 1px solid var(--line);
+      padding: 11px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+    tr:last-child th, tr:last-child td { border-bottom: 0; }
+    th {
+      color: #31445e;
+      font-size: 13px;
+      font-weight: 800;
+      background: #f2f7fd;
+    }
+    td { color: #26364d; }
+    .key-orange,
+    .warn,
+    .plan-price {
+      color: var(--orange-strong);
+      font-weight: 800;
+    }
+    .note { color: var(--muted); }
+    .pill {
+      display: inline-block;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 4px 10px;
+      margin: 3px 5px 3px 0;
+      background: #f8fafc;
+      font-size: 13px;
+      font-weight: 700;
+      color: #334155;
+    }
+    .pill.minimal { border-color: #9cc8ff; background: #edf5ff; color: #1557a8; }
+    .pill.recommended { border-color: #7dd3c7; background: #eafaf7; color: #0f766e; }
+    .pill.future { border-color: #c7b2ff; background: #f4efff; color: #5b21b6; }
+    .summary-grid,
+    .analysis-grid,
+    .evaluation-grid,
+    .need-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 14px;
+    }
+    .recommendation-grid {
+      grid-template-columns: 1.05fr 1.25fr 0.9fr;
+    }
+    .summary-grid {
+      align-items: start;
+    }
+    .recommendation-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 0.95fr) minmax(320px, 1.15fr);
+      gap: 16px;
+      align-items: stretch;
+    }
+    .recommendation-left {
+      display: grid;
+      grid-template-rows: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      min-width: 0;
+    }
+    .recommendation-item,
+    .recommendation-resources {
+      min-height: 0;
+    }
+    .recommendation-resources {
+      display: flex;
+      flex-direction: column;
+    }
+    .recommendation-resources .compact-list {
+      margin-top: 12px;
+    }
+    .summary-card,
+    .metric,
+    .evaluation-card,
+    .need-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 15px;
+      background: var(--surface-soft);
+      min-height: 104px;
+    }
+    .summary-card p,
+    .evaluation-card p,
+    .need-card p {
+      margin: 8px 0 0;
+      color: #40536d;
+    }
+    .summary-card.primary {
+      background: linear-gradient(180deg, #fffaf2, var(--orange-soft));
+      border-color: #f2c37d;
+    }
+    .summary-card .compact-list {
+      margin-top: 8px;
+    }
+    .summary-card .compact-list li {
+      font-size: 13px;
+      color: #40536d;
+    }
+    .scan-facts-table th {
+      width: 132px;
+      white-space: nowrap;
+    }
+    .scan-facts-table td {
+      width: calc((100% - 264px) / 2);
+    }
+    .scan-overview {
+      display: grid;
+      grid-template-columns: minmax(0, 1.45fr) minmax(260px, 0.75fr);
+      gap: 14px;
+      margin: 8px 0 18px;
+      align-items: stretch;
+    }
+    .scan-overview-main,
+    .scan-overview-side {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface-soft);
+      padding: 14px;
+      min-width: 0;
+    }
+    .scan-overview-main > strong,
+    .scan-overview-side > strong {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+    .scan-overview-items {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .scan-overview-item {
+      border-left: 3px solid #bdd7f2;
+      padding: 2px 0 2px 10px;
+      min-width: 0;
+    }
+    .scan-overview-item strong {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+    .scan-overview-item span,
+    .scan-overview-side span {
+      display: block;
+      color: #17345c;
+      font-size: 15px;
+      line-height: 1.35;
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
+    .scan-overview-item p,
+    .scan-overview-side p {
+      margin: 6px 0 0;
+      color: #40536d;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .scan-overview-side .compact-list {
+      margin-top: 12px;
+      color: #40536d;
+      font-size: 13px;
+    }
+    .scan-summary-grid,
+    .module-card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 10px;
+      margin: 8px 0 18px;
+    }
+    .scan-card,
+    .module-mini-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--surface-soft);
+      padding: 12px 13px;
+      min-height: 116px;
+    }
+    .scan-card strong,
+    .module-mini-card strong {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+    .scan-card span,
+    .module-mini-card span {
+      display: block;
+      color: #17345c;
+      font-size: 15px;
+      line-height: 1.35;
+      font-weight: 800;
+    }
+    .scan-card p,
+    .module-mini-card p {
+      margin: 8px 0 0;
+      color: #40536d;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .evaluation-card.minimal { border-left: 5px solid var(--blue-700); }
+    .evaluation-card.recommended { border-left: 5px solid var(--green); }
+    .evaluation-card.future { border-left: 5px solid var(--purple); }
+    .summary-card strong,
+    .metric strong,
+    .need-card strong {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 7px;
+    }
+    .summary-card span,
+    .metric span {
+      display: block;
+      font-size: 20px;
+      font-weight: 800;
+      color: #17345c;
+    }
+    .summary-card.resource-card span {
+      font-size: 14px;
+      line-height: 1.45;
+    }
+    .callout {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin: 0 0 16px;
+      background: #f8fafc;
+    }
+    .callout.warning {
+      border-color: #f2c37d;
+      background: #fff7e8;
+      color: #7c4a03;
+    }
+    .callout.neutral {
+      border-color: #bdd7f2;
+      background: #f3f8ff;
+      color: #17345c;
+    }
+    .diagram-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 22px;
+      align-items: start;
+    }
+    .diagram-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px;
+      background: #ffffff;
+      min-width: 0;
+      overflow: visible;
+    }
+    .diagram-card.minimal { border-left: 5px solid var(--blue-700); }
+    .diagram-card.recommended { border-left: 5px solid var(--green); }
+    .diagram-card.future {
+      border-left: 5px solid var(--purple);
+    }
+    .diagram-heading {
+      display: flex;
+      margin-bottom: 12px;
+    }
+    .diagram-heading h3 { margin: 0; }
+    .diagram-body {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(280px, 320px);
+      gap: 16px;
+      align-items: start;
+    }
+    .mermaid {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px;
+      background: #fbfdff;
+      overflow-x: auto;
+      min-height: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+    .mermaid svg {
+      display: block;
+      width: min(100%, 760px) !important;
+      height: auto !important;
+      margin: 0 auto;
+    }
+    .project-architecture .mermaid {
+      justify-content: center;
+      overscroll-behavior-inline: contain;
+      max-height: 100vh;
+      overflow-y: hidden;
+    }
+    .project-architecture .mermaid svg {
+      width: auto !important;
+      max-width: none !important;
+      margin: 0;
+    }
+    .diagram-visual {
+      position: relative;
+      min-width: 0;
+    }
+    .diagram-side {
+      display: grid;
+      gap: 12px;
+      min-width: 0;
+    }
+    .cost-pie-panel {
+      padding: 2px 0 13px;
+      border-bottom: 1px solid var(--line);
+      min-width: 0;
+    }
+    .cost-pie-title {
+      display: block;
+      margin-bottom: 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .cost-pie-layout {
+      display: grid;
+      grid-template-columns: 104px minmax(0, 1fr);
+      gap: 12px;
+      align-items: center;
+    }
+    .cost-pie {
+      width: 104px;
+      height: 104px;
+      display: block;
+      overflow: visible;
+    }
+    .cost-pie-background {
+      fill: #eef2f7;
+    }
+    .cost-pie-outline {
+      fill: none;
+      stroke: rgba(15, 39, 74, 0.18);
+      stroke-width: 1;
+      pointer-events: none;
+      vector-effect: non-scaling-stroke;
+    }
+    .cost-pie-segment {
+      cursor: help;
+      transform-box: fill-box;
+      transform-origin: center;
+      transition: transform 140ms ease, filter 140ms ease;
+    }
+    .cost-pie-segment:hover,
+    .cost-pie-segment:focus-visible {
+      transform: translate(var(--cost-offset-x), var(--cost-offset-y)) scale(1.025);
+      filter: brightness(1.04) drop-shadow(0 3px 3px rgba(15, 45, 78, 0.18));
+      outline: none;
+    }
+    .cost-legend {
+      display: grid;
+      grid-template-columns: 10px minmax(0, 1fr) max-content;
+      gap: 6px 8px;
+      min-width: 0;
+    }
+    .cost-legend-item {
+      display: grid;
+      grid-column: 1 / -1;
+      grid-template-columns: subgrid;
+      column-gap: 8px;
+      align-items: center;
+      min-width: 0;
+      color: #334155;
+      font-size: 11px;
+      line-height: 1.25;
+      cursor: help;
+    }
+    .cost-legend-item:focus-visible,
+    .bar-segment:focus-visible {
+      outline: 2px solid var(--orange);
+      outline-offset: 2px;
+    }
+    .cost-legend-swatch {
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+    }
+    .cost-legend-name {
+      min-width: 0;
+      overflow-wrap: anywhere;
+      font-weight: 750;
+    }
+    .cost-legend-price {
+      color: var(--orange-strong);
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+      text-align: right;
+    }
+    .cost-empty {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .diagram-legend {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 3;
+      display: grid;
+      grid-template-columns: repeat(2, max-content);
+      gap: 5px 10px;
+      padding: 8px 10px;
+      border: 1px solid rgba(148, 163, 184, 0.55);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: 0 10px 24px rgba(15, 45, 78, 0.10);
+      pointer-events: none;
+    }
+    .diagram-legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      color: #334155;
+      font-size: 11px;
+      font-weight: 800;
+      line-height: 1.15;
+      white-space: nowrap;
+    }
+    .diagram-legend-swatch {
+      width: 11px;
+      height: 11px;
+      border-radius: 3px;
+      border: 1px solid rgba(15, 39, 74, 0.14);
+    }
+    .diagram-legend-swatch.user { background: #DBEAFE; border-color: #60A5FA; }
+    .diagram-legend-swatch.runtime { background: #FEF9C3; border-color: #EAB308; }
+    .diagram-legend-swatch.access { background: #CCFBF1; border-color: #14B8A6; }
+    .diagram-legend-swatch.app { background: #DCFCE7; border-color: #22C55E; }
+    .diagram-legend-swatch.data { background: #EDE9FE; border-color: #8B5CF6; }
+    .diagram-legend-swatch.external { background: #FFEDD5; border-color: #F97316; }
+    .diagram-note {
+      border: 1px solid #f2c37d;
+      border-radius: var(--radius);
+      padding: 14px 14px 13px;
+      background: #fffaf2;
+      color: #17345c;
+      min-height: 188px;
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+    .diagram-note-block + .diagram-note-block {
+      border-top: 1px solid #f2d3a0;
+      padding-top: 12px;
+    }
+    .diagram-note strong {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+    .diagram-note p {
+      margin: 0 0 10px;
+      font-size: 14px;
+      font-weight: 400;
+      line-height: 1.55;
+    }
+    .architect-guidance {
+      color: var(--orange-strong);
+      font-weight: 800;
+    }
+    .diagram-note-block.capacity p {
+      color: #17345c;
+    }
+    .diagram-note li {
+      font-size: 12.5px;
+      line-height: 1.48;
+      color: #40536d;
+    }
+    .comparison-table th:first-child,
+    .role-table th:first-child {
+      color: var(--ink);
+    }
+    .role-table td:last-child {
+      font-size: 13px;
+      color: #344054;
+    }
+    .bars {
+      display: grid;
+      gap: 12px;
+      margin: 16px 0 20px;
+    }
+    .bar-row {
+      display: grid;
+      grid-template-columns: 130px 1fr 130px;
+      align-items: center;
+      gap: 12px;
+    }
+    .bar-track {
+      height: 18px;
+      background: #e5edf6;
+      border-radius: 1px;
+      overflow: hidden;
+    }
+    .bar-stack {
+      display: flex;
+      height: 100%;
+      min-width: 4px;
+      border-radius: 1px;
+      overflow: hidden;
+    }
+    .bar-segment {
+      display: block;
+      height: 100%;
+      min-width: 2px;
+      border-right: 1px solid rgba(255, 255, 255, 0.72);
+      cursor: help;
+    }
+    .bar-segment:last-child {
+      border-right: 0;
+    }
+    .bar-segment:hover {
+      filter: brightness(1.12);
+    }
+    .bar-value {
+      color: var(--orange-strong);
+      font-size: 13px;
+      font-weight: 800;
+      text-align: right;
+    }
+    .scroll-hint {
+      display: none;
+      margin: 8px 0 10px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .mobile-comparison-cards {
+      display: none;
+    }
+    .mobile-comparison-card {
+      border: 1px solid var(--line);
+      border-left: 5px solid var(--blue-700);
+      border-radius: var(--radius);
+      padding: 14px;
+      background: var(--surface-soft);
+    }
+    .mobile-comparison-card.recommended { border-left-color: var(--green); }
+    .mobile-comparison-card.future { border-left-color: var(--purple); }
+    .mobile-comparison-card .mobile-card-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+    .mobile-comparison-card h3 {
+      margin: 0;
+      font-size: 16px;
+    }
+    .mobile-comparison-card .mobile-card-head span {
+      color: var(--orange-strong);
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    .mobile-comparison-card p {
+      margin: 7px 0 0;
+      color: #40536d;
+      font-size: 13px;
+    }
+    .mobile-comparison-card .pros-cons {
+      margin-top: 9px;
+    }
+    .mobile-comparison-card .pros-cons li {
+      font-size: 12.5px;
+    }
+    .timeline {
+      display: grid;
+      gap: 12px;
+      counter-reset: step;
+      margin-top: 14px;
+    }
+    .timeline li {
+      list-style: none;
+      position: relative;
+      padding: 13px 14px 13px 48px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+    }
+    .timeline li::before {
+      counter-increment: step;
+      content: counter(step);
+      position: absolute;
+      left: 14px;
+      top: 13px;
+      width: 24px;
+      height: 24px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--blue-700);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    ol, ul { padding-left: 22px; }
+    li + li { margin-top: 8px; }
+    .compact-list {
+      margin: 0;
+      padding-left: 18px;
+    }
+    .compact-list li + li { margin-top: 4px; }
+    .reason-tooltip {
+      position: relative;
+      display: inline-grid;
+      place-items: center;
+      width: 16px;
+      height: 16px;
+      margin-left: 5px;
+      border-radius: 50%;
+      background: var(--orange);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 900;
+      cursor: help;
+    }
+    .reason-bubble {
+      position: absolute;
+      right: 0;
+      bottom: 22px;
+      z-index: 20;
+      display: none;
+      width: min(320px, 70vw);
+      padding: 9px 10px;
+      border: 1px solid #f2c37d;
+      border-radius: 6px;
+      background: #fffaf0;
+      color: #5f3b06;
+      box-shadow: 0 12px 28px rgba(15, 45, 78, 0.14);
+      font-size: 12px;
+      line-height: 1.45;
+      text-align: left;
+      pointer-events: none;
+    }
+    .reason-tooltip:hover .reason-bubble {
+      display: block;
+    }
+    .enhanced-tooltips .reason-bubble {
+      display: none !important;
+    }
+    .reason-floating-bubble {
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 9999;
+      display: none;
+      max-width: min(340px, calc(100vw - 24px));
+      padding: 10px 11px;
+      border: 1px solid #f2c37d;
+      border-radius: 6px;
+      background: #fffaf0;
+      color: #5f3b06;
+      box-shadow: 0 16px 34px rgba(15, 45, 78, 0.18);
+      font-size: 12px;
+      line-height: 1.45;
+      text-align: left;
+      pointer-events: none;
+    }
+    .reason-floating-bubble[data-show="true"] {
+      display: block;
+    }
+    .cost-floating-bubble {
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 10000;
+      display: none;
+      max-width: min(380px, calc(100vw - 24px));
+      padding: 10px 12px;
+      border: 1px solid #9fb8d5;
+      border-radius: 6px;
+      background: #ffffff;
+      color: #17345c;
+      box-shadow: 0 16px 34px rgba(15, 45, 78, 0.2);
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      text-align: left;
+      pointer-events: none;
+    }
+    .cost-floating-bubble[data-show="true"] {
+      display: block;
+    }
+    .resource-location {
+      margin-bottom: 8px;
+      color: var(--navy);
+      font-weight: 800;
+    }
+    .resource-scale-summary {
+      line-height: 1.65;
+    }
+    .mobile-resource-scale {
+      margin: 0 0 12px;
+    }
+    .mobile-resource-scale > strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+    footer {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 0 clamp(14px, 3vw, 28px) 34px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    footer p {
+      margin: 0 0 8px;
+      line-height: 1.65;
+    }
+    footer p:last-child {
+      margin-bottom: 0;
+    }
+    @media (max-width: 760px) {
+      header { padding: 34px 18px 28px; }
+      main { padding: 18px 12px 38px; }
+      .section-head { padding: 18px 16px 14px; }
+      .section-body { padding: 16px; }
+      .diagram-grid { grid-template-columns: 1fr; }
+      .diagram-card.future { grid-column: auto; }
+      .recommendation-grid,
+      .recommendation-layout,
+      .scan-overview,
+      .scan-overview-items {
+        grid-template-columns: 1fr;
+      }
+      .recommendation-left {
+        grid-template-rows: none;
+      }
+      .scan-facts-table th,
+      .scan-facts-table td {
+        display: block;
+        width: auto;
+      }
+      .scan-facts-table th:nth-child(3) {
+        border-top: 1px solid var(--line);
+      }
+      .diagram-body { grid-template-columns: 1fr; }
+      .diagram-note { min-height: 0; }
+      .cost-pie-layout {
+        grid-template-columns: 88px minmax(0, 1fr);
+      }
+      .cost-pie {
+        width: 88px;
+        height: 88px;
+      }
+      .diagram-legend {
+        grid-template-columns: 1fr;
+        gap: 4px;
+        max-width: calc(100% - 20px);
+      }
+      .bar-row { grid-template-columns: 1fr; gap: 6px; }
+      .bar-value { text-align: left; }
+      .scroll-hint { display: block; }
+      .mobile-comparison-cards {
+        display: grid;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+      th, td { font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="hero-inner">
+      <div class="eyebrow">腾讯云项目部署方案</div>
+      <h1>lingeebuild-prototype 云上部署方案</h1>
+    </div>
+  </header>
+  <main>
+    <nav class="toc" aria-label="报告章节">
+      <a href="#section-1">1. 整体部署建议</a>
+      <a href="#section-2">2. 项目扫描分析</a>
+      <a href="#section-3">3. 三套部署方案架构图</a>
+      <a href="#section-4">4. 方案对比表格</a>
+      <a href="#section-5">5. 备案提醒和参考链接</a>
+    </nav>
+    
+<section id="section-1" class="proposal-section">
+  <div class="section-head">
+    <span class="section-index">1</span>
+    <div>
+      <h2>整体部署建议</h2>
+    </div>
+  </div>
+  <div class="section-body">
+    
+<div class="callout neutral">
+  <strong>建议：</strong>
+  建议优先采用 <span class="key-orange">推荐方案</span>。应用、入口和本地数据仍放在主云服务器上，另用一台低配云服务器保存备份和监控数据，避免备份只留在同一块盘上。
+  <br><span>依据：你选择了真实用户访问，需要比单机更好的备份、监控和恢复能力。</span>
+</div>
+<div class="recommendation-layout">
+  <div class="recommendation-left">
+    <article class="summary-card primary recommendation-item">
+      <strong>部署建议</strong>
+      <span>推荐方案</span>
+      <p>有独立备份位置，适合认真长期跑。</p>
+    </article>
+    <article class="summary-card recommendation-item">
+      <strong>部署地域</strong>
+      <span>广州（ap-guangzhou）</span>
+      <p>用于查询资源价格，并判断是否涉及备案。</p>
+    </article>
+    <article class="summary-card recommendation-item">
+      <strong>开销成本</strong>
+      <span>¥271 / 月</span>
+      <p>¥2,733.96 / 年。基础资源已真实查价，但按流量超额费用等用量型账单尚未计入，不能称为完整总价，最终以腾讯云购买页为准。</p>
+    </article>
+  </div>
+  <aside class="summary-card resource-card recommendation-resources">
+    <strong>资源清单</strong>
+    <span>2 台 Lighthouse，合计 4 核 / 10G 内存，系统盘 130GB，数据盘 360GB，公网峰值带宽 7 Mbps，套餐流量 800GB/月</span>
+    <ul class="compact-list resource-spec-list"><li class="resource-spec-item"><strong>Lighthouse · 应用和数据服务器套餐 · 1 台</strong><span class="resource-spec-label">套餐配置：</span><span class="resource-spec-indent">入门型，2 核 CPU，8GB 内存，80GB 系统盘</span><span class="resource-spec-indent">公网：7 Mbps 峰值带宽，套餐内流量包：800GB/月</span><span class="resource-spec-indent">纯系统镜像：Ubuntu 24.04 LTS</span><span>数据盘：160GB 数据盘，购买后经确认挂载至 /data</span></li><li class="resource-spec-item"><strong>Lighthouse · 备份和监控服务器套餐 · 1 台</strong><span class="resource-spec-label">套餐配置：</span><span class="resource-spec-indent">锐驰型，2 核 CPU，2GB 内存，50GB 系统盘</span><span class="resource-spec-indent">公网：套餐自带 200 Mbps 峰值带宽，不开放业务端口，不限流量</span><span class="resource-spec-indent">纯系统镜像：Ubuntu 24.04 LTS</span><span>数据盘：200GB 数据盘，购买后经确认挂载至 /data</span><span>网络：通过同地域内网互联传输备份数据</span></li></ul>
+  </aside>
+</div>
+
+  </div>
+</section>
+
+<section id="section-2" class="proposal-section">
+  <div class="section-head">
+    <span class="section-index">2</span>
+    <div>
+      <h2>项目扫描分析</h2>
+    </div>
+  </div>
+  <div class="section-body">
+    
+<h3>扫描摘要</h3><div class="scan-overview"><article class="scan-overview-main"><strong>项目概览</strong><div class="scan-overview-items"><div class="scan-overview-item"><strong>项目形态</strong><span>前端网站</span><p>主要语言：javascript</p></div><div class="scan-overview-item"><strong>技术栈</strong><span>vite</span><p>前端：Vite</p></div><div class="scan-overview-item"><strong>运行入口</strong><span>npm run preview 等 2 项</span><p>运行方式：普通进程/二进制；端口：5173</p></div><div class="scan-overview-item"><strong>数据与 AI</strong><span>未识别持久化依赖</span><p>AI/模型：未识别 AI/模型能力；模型名：未识别具体模型名</p></div></div></article><aside class="scan-overview-side"><strong>部署判断</strong><span>项目上云适配信息较完整（8/8）</span><p>表示部署信息是否齐全，不等同于代码质量评价。</p><ul class="compact-list"><li>运行方式：普通进程/二进制</li><li>公网端口：80 / 443；应用端口：5173</li><li>状态服务：未识别持久化依赖</li></ul></aside></div>
+
+
+
+<h3>项目内部架构和调用链</h3>
+<div class="project-architecture diagram-visual">
+  <div class="mermaid">---
+config:
+  layout: elk
+  elk:
+    mergeEdges: true
+    nodePlacementStrategy: LINEAR_SEGMENTS
+---
+flowchart TB
+  classDef user fill:#0f274a,color:#ffffff,stroke:#0f274a,stroke-width:1px;
+  classDef public fill:#e0f2fe,stroke:#1466d8,color:#0f274a;
+  classDef app fill:#ecfdf5,stroke:#0f9f8f,color:#064e3b;
+  classDef runtime fill:#fef9c3,stroke:#eab308,color:#713f12;
+  classDef data fill:#fff7ed,stroke:#d97706,color:#7c2d12,stroke-width:1.5px;
+  classDef file fill:#eff6ff,stroke:#3b82f6,color:#1e3a8a,stroke-width:1.5px;
+  classDef external fill:#fef2f2,stroke:#dc2626,color:#7f1d1d,stroke-width:1.5px;
+  subgraph project_entry_group[&quot;前端与项目入口&quot;]
+    project_user[&quot;用户访问&quot;]:::user
+    project_frontend[&quot;前端页面&quot;]:::public
+  end
+  subgraph project_internal_group[&quot;核心业务模块&quot;]
+    project_src_scripts_main[&quot;Js 模块&quot;]:::app
+  end
+  subgraph project_database_group[&quot;数据库与状态读写&quot;]
+    project_lingeebuild_repowiki_zh_content_mermaid_min[&quot;Js 模块&quot;]:::data
+  end
+  project_user --&gt;|浏览器访问| project_frontend
+  project_frontend --&gt;|业务调用| project_src_scripts_main
+  project_src_scripts_main --&gt;|数据读写| project_lingeebuild_repowiki_zh_content_mermaid_min
+  style project_entry_group fill:#CCFBF1,stroke:#14B8A6,stroke-width:1px,stroke-dasharray: 6 4,color:#145fd7;
+  style project_internal_group fill:#DCFCE7,stroke:#22C55E,stroke-width:1px,stroke-dasharray: 6 4,color:#145fd7;
+  style project_database_group fill:#EDE9FE,stroke:#8B5CF6,stroke-width:1px,stroke-dasharray: 6 4,color:#145fd7;
+  linkStyle default stroke:#94a3b8,stroke-width:1.2px;</div>
+  <div class="diagram-legend" aria-label="项目内部架构图例"><span class="diagram-legend-item"><span class="diagram-legend-swatch access"></span>前端与项目入口</span><span class="diagram-legend-item"><span class="diagram-legend-swatch app"></span>核心业务模块</span><span class="diagram-legend-item"><span class="diagram-legend-swatch data"></span>数据库与状态读写</span></div>
+</div>
+<h3>关键模块</h3><div class="module-card-grid"><article class="module-mini-card"><strong>Js 模块</strong><span>内部组件</span><p>随主应用发布，按 Js 模块 的调用链补齐配置和运行监控。</p></article><article class="module-mini-card"><strong>前端页面</strong><span>内部组件</span><p>部署在应用 CVM，重点确认 前端页面 的启动命令、端口和环境变量。</p></article></div>
+
+
+
+  </div>
+</section>
+
+<section id="section-3" class="proposal-section">
+  <div class="section-head">
+    <span class="section-index">3</span>
+    <div>
+      <h2>三套部署方案架构图</h2>
+    </div>
+  </div>
+  <div class="section-body">
+    <div class="diagram-grid">
+    <article class="diagram-card minimal">
+      <div class="diagram-heading">
+        <h3>最小方案</h3>
+      </div>
+      <div class="diagram-body">
+        <div class="diagram-visual">
+          <div class="mermaid">---
+config:
+  layout: elk
+  elk:
+    mergeEdges: true
+    nodePlacementStrategy: LINEAR_SEGMENTS
+---
+flowchart TB
+  classDef user fill:#0f274a,color:#ffffff,stroke:#0f274a,stroke-width:1px;
+  classDef public fill:#e0f2fe,stroke:#1466d8,color:#0f274a;
+  classDef app fill:#ecfdf5,stroke:#0f9f8f,color:#064e3b;
+  classDef data fill:#fff7ed,stroke:#f59e0b,color:#7c2d12;
+  classDef managed fill:#fff7ed,stroke:#d97706,color:#7c2d12,stroke-width:1.5px;
+  classDef accessManaged fill:#ccfbf1,stroke:#0f766e,color:#134e4a,stroke-width:1.5px;
+  classDef external fill:#fef2f2,stroke:#dc2626,color:#7f1d1d,stroke-width:1.5px;
+  classDef ops fill:#f5f3ff,stroke:#7c3aed,color:#4c1d95;
+  subgraph minimal_user_layer[&quot; &quot;]
+    minimal_user([用户访问]):::user
+  end
+  subgraph minimal_runtime_layer[&quot; &quot;]
+    minimal_entry[公网入口\n域名/IP + HTTPS]:::public
+    minimal_all_in_one[&quot;综合服务器\n1台 x 2c/4G\n系统盘90GB / 数据盘0GB&quot;]:::app
+  end
+  minimal_user --&gt; minimal_entry
+  minimal_entry --&gt; minimal_all_in_one
+  style minimal_user_layer fill:#DBEAFE,stroke:#60A5FA,stroke-width:1px,stroke-dasharray: 6 4,color:#145fd7;
+  style minimal_runtime_layer fill:#FEF9C3,stroke:#EAB308,stroke-width:1px,stroke-dasharray: 6 4,color:#145fd7;
+  linkStyle default stroke:#94a3b8,stroke-width:1.2px;</div>
+          <div class="diagram-legend" aria-label="架构层级图例"><span class="diagram-legend-item"><span class="diagram-legend-swatch user"></span>用户层</span><span class="diagram-legend-item"><span class="diagram-legend-swatch runtime"></span>接入/应用/数据层</span></div>
+        </div>
+        <div class="diagram-side">
+          
+<div class="cost-pie-panel">
+  <strong class="cost-pie-title">月付成本构成</strong>
+  <div class="cost-pie-layout">
+    <svg class="cost-pie" viewBox="0 0 120 120" role="img" aria-label="接入/应用/数据层 · Lighthouse ¥80，占比 100.0%">
+      <circle class="cost-pie-background" cx="60" cy="60" r="48"></circle>
+      <circle class="cost-pie-segment cost-tooltip-trigger" tabindex="0" data-cost-tooltip="接入/应用/数据层：Lighthouse，¥80，100%" aria-label="接入/应用/数据层：Lighthouse，¥80，100%" fill="#E67E22" stroke="#ffffff" stroke-width="1.25" vector-effect="non-scaling-stroke" style="--cost-offset-x:0.00px;--cost-offset-y:3.00px" cx="60" cy="60" r="48"></circle>
+      <circle class="cost-pie-outline" cx="60" cy="60" r="48"></circle>
+    </svg>
+    <div class="cost-legend">
+    <div class="cost-legend-item cost-tooltip-trigger" tabindex="0" data-cost-tooltip="接入/应用/数据层 · Lighthouse：Lighthouse 通用型 / 2c / 4GB / 90GB 系统盘 / 6Mbps / 800GB/月流量，¥80/月，占该方案月付总价 100.0%">
+      <span class="cost-legend-swatch" style="background:#E67E22"></span>
+      <span class="cost-legend-name">接入/应用/数据层：Lighthouse</span>
+      <span class="cost-legend-price">¥80</span>
+    </div>
+</div>
+  </div>
+</div>
+
+          
+<aside class="diagram-note">
+  <div class="diagram-note-block summary">
+    <strong>方案说明</strong>
+    <p>把入口、应用和本地数据放在一台 CVM 上，以最低成本先完成上线。<br>单机故障会影响全部服务。</p>
+  </div>
+  <div class="diagram-note-block capacity performance">
+    <strong>性能预估</strong>
+    <p>提供约 30-80 QPS/TPS，10-30 并发用户；<br>按轻量 Web/API 和短请求估算，真实上线前建议压测。</p>
+  </div>
+  <div class="diagram-note-block capacity scenario">
+    <strong>适用场景</strong>
+    <p>适合个人 Demo、小范围试用或早期内测。</p>
+  </div>
+  <div class="diagram-note-block capacity upgrade">
+    <strong>升级说明</strong>
+    <p>如果每天稳定有人使用，建议升到推荐方案。</p>
+  </div>
+</aside>
+
+        </div>
+      </div>
+    </article>
+
+    <article class="diagram-card recommended">
+      <div class="diagram-heading">
+        <h3>推荐方案</h3>
+      </div>
+      <div class="diagram-body">
+        <div class="diagram-visual">
+          <div class="mermaid">---
+config:
+  layout: elk
+  elk:
+    mergeEdges: true
+    nodePlacementStrategy: LINEAR_SEGMENTS
+---
+flowchart TB
+  classDef user fill:#0f274a,color:#ffffff,stroke:#0f274a,stroke-width:1px;
+  classDef public fill:#e0f2fe,stroke:#1466d8,color:#0f274a;
+  classDef app fill:#ecfdf5,stroke:#0f9f8f,color:#064e3b;
+  classDef data fill:#fff7ed,stroke:#f59e0b,color:#7c2d12;
+  classDef managed fill:#fff7ed,stroke:#d97706,color:#7c2d12,stroke-width:1.5px;
+  classDef accessManaged fill:#ccfbf1,stroke:#0f766e,color:#134e4a,stroke-width:1.5px;
+  classDef external fill:#fef2f2,stroke:#dc2626,color:#7f1d1d,stroke-width:1.5px;
+  classDef ops fill:#f5f3ff,stroke:#7c3aed,color:#4c1d95;
+  subgraph recommended_user_layer[&quot; &quot;]
+    recommended_user([用户访问]):::user
+  end
+  subgraph recommended_access_layer[&quot; &quot;]
+    recommended_entry[公网入口\n域名/IP + HTTPS]:::public
+  end
+  subgraph recommended_app_layer[&quot; &quot;]
+    recommended_app_data[&quot;应用和数据服务器\n1台 x 2c/8G\n系统盘80GB / 数据盘160GB&quot;]:::app
+  end
+  subgraph recommended_data_layer[&quot; &quot;]
+    recommended_backup_monitor[&quot;备份和监控服务器\n1台 x 2c/2G\n系统盘50GB / 数据盘200GB&quot;]:::ops
+  end
+  recommended_user --&gt; recommended_entry
+  recommended_entry --&gt; recommended_app_data
+  recommended_app_data -.备份/监控.-&gt; recommended_backup_monitor
+  style recommended_user_layer fill:#DBEAFE,stroke:#60A5FA,stroke-width:1px,stroke-dasharray: 6 4,color:#145fd7;
+  style recommended_access_layer fill:#CCFBF1,stroke:#14B8A6,stroke-width:1px,stroke-dasharray: 6 4,color:#145fd7;
+  style recommended_app_layer fill:#DCFCE7,stroke:#22C55E,stroke-width:1px,stroke-dasharray: 6 4,color:#145fd7;
+  style recommended_data_layer fill:#EDE9FE,stroke:#8B5CF6,stroke-width:1px,stroke-dasharray: 6 4,color:#145fd7;
+  linkStyle default stroke:#94a3b8,stroke-width:1.2px;</div>
+          <div class="diagram-legend" aria-label="架构层级图例"><span class="diagram-legend-item"><span class="diagram-legend-swatch user"></span>用户层</span><span class="diagram-legend-item"><span class="diagram-legend-swatch access"></span>接入层</span><span class="diagram-legend-item"><span class="diagram-legend-swatch app"></span>应用层</span><span class="diagram-legend-item"><span class="diagram-legend-swatch data"></span>数据层</span></div>
+        </div>
+        <div class="diagram-side">
+          
+<div class="cost-pie-panel">
+  <strong class="cost-pie-title">月付成本构成</strong>
+  <div class="cost-pie-layout">
+    <svg class="cost-pie" viewBox="0 0 120 120" role="img" aria-label="应用层 · Lighthouse ¥151，占比 55.7%；数据层 · Lighthouse ¥120，占比 44.3%">
+      <circle class="cost-pie-background" cx="60" cy="60" r="48"></circle>
+      <path class="cost-pie-segment cost-tooltip-trigger" tabindex="0" data-cost-tooltip="应用层：Lighthouse，¥151，55.7%" aria-label="应用层：Lighthouse，¥151，55.7%" fill="#E67E22" stroke="#ffffff" stroke-width="1.25" vector-effect="non-scaling-stroke" style="--cost-offset-x:2.95px;--cost-offset-y:0.54px" d="M 60 60 L 60.000 12.000 A 48 48 0 1 1 43.119 104.934 Z"></path><path class="cost-pie-segment cost-tooltip-trigger" tabindex="0" data-cost-tooltip="数据层：Lighthouse，¥120，44.3%" aria-label="数据层：Lighthouse，¥120，44.3%" fill="#3498DB" stroke="#ffffff" stroke-width="1.25" vector-effect="non-scaling-stroke" style="--cost-offset-x:-2.95px;--cost-offset-y:-0.54px" d="M 60 60 L 43.119 104.934 A 48 48 0 0 1 60.000 12.000 Z"></path>
+      <circle class="cost-pie-outline" cx="60" cy="60" r="48"></circle>
+    </svg>
+    <div class="cost-legend">
+    <div class="cost-legend-item cost-tooltip-trigger" tabindex="0" data-cost-tooltip="应用层 · Lighthouse：Lighthouse 入门型 / 2c / 8GB / 80GB 系统盘 / 160GB 数据盘 / 7Mbps / 800GB/月流量，¥151/月，占该方案月付总价 55.7%">
+      <span class="cost-legend-swatch" style="background:#E67E22"></span>
+      <span class="cost-legend-name">应用层：Lighthouse</span>
+      <span class="cost-legend-price">¥151</span>
+    </div>
+
+    <div class="cost-legend-item cost-tooltip-trigger" tabindex="0" data-cost-tooltip="数据层 · Lighthouse：Lighthouse 锐驰型 / 2c / 2GB / 50GB 系统盘 / 200GB 数据盘 / 200Mbps，¥120/月，占该方案月付总价 44.3%">
+      <span class="cost-legend-swatch" style="background:#3498DB"></span>
+      <span class="cost-legend-name">数据层：Lighthouse</span>
+      <span class="cost-legend-price">¥120</span>
+    </div>
+</div>
+  </div>
+</div>
+
+          
+<aside class="diagram-note">
+  <div class="diagram-note-block summary">
+    <strong>方案说明</strong>
+    <p>主服务负责业务运行，备份监控独立保存，恢复路径比单机更稳。<br>仍需要维护开源组件和备份脚本。</p>
+  </div>
+  <div class="diagram-note-block capacity performance">
+    <strong>性能预估</strong>
+    <p>提供约 40-120 QPS/TPS，16-50 并发用户；<br>按短请求和基础缓存命中估算，上线前建议做一次小流量压测。</p>
+  </div>
+  <div class="diagram-note-block capacity scenario">
+    <strong>适用场景</strong>
+    <p>适合小型真实服务和早期用户阶段。</p>
+  </div>
+  <div class="diagram-note-block capacity upgrade">
+    <strong>升级说明</strong>
+    <p>如果访问量持续增长，建议升到高扩展性方案。</p>
+  </div>
+</aside>
+
+        </div>
+      </div>
+    </article>
+
+    <article class="diagram-card future">
+      <div class="diagram-heading">
+        <h3>高扩展性方案</h3>
+      </div>
+      <div class="diagram-body">
+        <div class="diagram-visual">
+          <div class="mermaid">---
+config:
+  layout: elk
+  elk:
+    mergeEdges: true
+    nodePlacementStrategy: LINEAR_SEGMENTS
+---
+flowchart TB
+  classDef user fill:#0f274a,color:#ffffff,stroke:#0f274a,stroke-width:1px;
+  classDef public fill:#e0f2fe,stroke:#1466d8,color:#0f274a;
+  classDef app fill:#ecfdf5,stroke:#0f9f8f,color:#064e3b;
+  classDef data fill:#fff7ed,stroke:#f59e0b,color:#7c2d12;
+  classDef managed fill:#fff7ed,stroke:#d97706,color:#7c2d12,stroke-width:1.5px;
+  classDef accessManaged fill:#ccfbf1,stroke:#0f766e,color:#134e4a,stroke-width:1.5px;
+  classDef external fill:#fef2f2,stroke:#dc2626,color:#7f1d1d,stroke-width:1.5px;
+  classDef ops fill:#f5f3ff,stroke:#7c3aed,color:#4c1d95;
+  subgraph future_scale_user_layer[&quot; &quot;]
+    future_scale_user([用户访问]):::user
+  end
+  subgraph future_scale_access_layer[&quot; &quot;]
+    future_scale_entry[公网入口\n域名/IP + HTTPS]:::public
+    future_scale_managed_0_Tencent_Cloud_CLB[&quot;Tencent Cloud CLB\n公网负载均衡，HTTPS/HTTP 监听，20Mbps 起步，后端绑定多台应用 CVM&quot;]:::accessManaged
+  end
+  subgraph future_scale_app_layer[&quot; &quot;]
+    future_scale_app[&quot;应用服务器\n2台 x 4c/8G\n系统盘50GB / 数据盘160GB&quot;]:::app
+  end
+  subgraph future_scale_data_layer[&quot; &quot;]
+    future_scale_observability_backup[&quot;监控和备份服务器\n1台 x 2c/4G\n系统盘50GB / 数据盘160GB&quot;]:::ops
+  end
+  future_scale_user --&gt; future_scale_entry
+  future_scale_entry --&gt; future_scale_managed_0_Tencent_Cloud_CLB
+  future_scale_managed_0_Tencent_Cloud_CLB --&gt;|健康检查/流量分发| future_scale_app
+  future_scale_app -.备份/监控.-&gt; future_scale_observability_backup
+  style future_scale_user_layer fill:#DBEAFE,stroke:#60A5FA,stroke-width:1px,stroke-dasharray: 6 4,color:#145fd7;
+  style future_scale_access_layer fill:#CCFBF1,stroke:#14B8A6,stroke-width:1px,stroke-dasharray: 6 4,color:#145fd7;
+  style future_scale_app_layer fill:#DCFCE7,stroke:#22C55E,stroke-width:1px,stroke-dasharray: 6 4,color:#145fd7;
+  style future_scale_data_layer fill:#EDE9FE,stroke:#8B5CF6,stroke-width:1px,stroke-dasharray: 6 4,color:#145fd7;
+  linkStyle default stroke:#94a3b8,stroke-width:1.2px;</div>
+          <div class="diagram-legend" aria-label="架构层级图例"><span class="diagram-legend-item"><span class="diagram-legend-swatch user"></span>用户层</span><span class="diagram-legend-item"><span class="diagram-legend-swatch access"></span>接入层</span><span class="diagram-legend-item"><span class="diagram-legend-swatch app"></span>应用层</span><span class="diagram-legend-item"><span class="diagram-legend-swatch data"></span>数据层</span></div>
+        </div>
+        <div class="diagram-side">
+          
+<div class="cost-pie-panel">
+  <strong class="cost-pie-title">月付成本构成</strong>
+  <div class="cost-pie-layout">
+    <svg class="cost-pie" viewBox="0 0 120 120" role="img" aria-label="接入层 · CLB ¥1,469，占比 62.6%；应用层 · CVM ¥671.8，占比 28.7%；数据层 · CVM ¥204.7，占比 8.7%">
+      <circle class="cost-pie-background" cx="60" cy="60" r="48"></circle>
+      <path class="cost-pie-segment cost-tooltip-trigger" tabindex="0" data-cost-tooltip="接入层：CLB，¥1,469，62.6%" aria-label="接入层：CLB，¥1,469，62.6%" fill="#E67E22" stroke="#ffffff" stroke-width="1.25" vector-effect="non-scaling-stroke" style="--cost-offset-x:2.77px;--cost-offset-y:1.16px" d="M 60 60 L 60.000 12.000 A 48 48 0 1 1 25.782 93.662 Z"></path><path class="cost-pie-segment cost-tooltip-trigger" tabindex="0" data-cost-tooltip="应用层：CVM，¥671.8，28.7%" aria-label="应用层：CVM，¥671.8，28.7%" fill="#3498DB" stroke="#ffffff" stroke-width="1.25" vector-effect="non-scaling-stroke" style="--cost-offset-x:-2.98px;--cost-offset-y:-0.37px" d="M 60 60 L 25.782 93.662 A 48 48 0 0 1 34.978 19.038 Z"></path><path class="cost-pie-segment cost-tooltip-trigger" tabindex="0" data-cost-tooltip="数据层：CVM，¥204.7，8.7%" aria-label="数据层：CVM，¥204.7，8.7%" fill="#EC407A" stroke="#ffffff" stroke-width="1.25" vector-effect="non-scaling-stroke" style="--cost-offset-x:-0.81px;--cost-offset-y:-2.89px" d="M 60 60 L 34.978 19.038 A 48 48 0 0 1 60.000 12.000 Z"></path>
+      <circle class="cost-pie-outline" cx="60" cy="60" r="48"></circle>
+    </svg>
+    <div class="cost-legend">
+    <div class="cost-legend-item cost-tooltip-trigger" tabindex="0" data-cost-tooltip="接入层 · CLB：CLB 20Mbps，¥1,469/月，占该方案月付总价 62.6%">
+      <span class="cost-legend-swatch" style="background:#E67E22"></span>
+      <span class="cost-legend-name">接入层：CLB</span>
+      <span class="cost-legend-price">¥1,469</span>
+    </div>
+
+    <div class="cost-legend-item cost-tooltip-trigger" tabindex="0" data-cost-tooltip="应用层 · CVM：CVM 2 台 / SA9.LARGE8 / 4c / 8GB / 50GB 系统盘 / 160GB 数据盘，¥671.8/月，占该方案月付总价 28.7%">
+      <span class="cost-legend-swatch" style="background:#3498DB"></span>
+      <span class="cost-legend-name">应用层：CVM</span>
+      <span class="cost-legend-price">¥671.8</span>
+    </div>
+
+    <div class="cost-legend-item cost-tooltip-trigger" tabindex="0" data-cost-tooltip="数据层 · CVM：CVM SA9.MEDIUM4 / 2c / 4GB / 50GB 系统盘 / 160GB 数据盘，¥204.7/月，占该方案月付总价 8.7%">
+      <span class="cost-legend-swatch" style="background:#EC407A"></span>
+      <span class="cost-legend-name">数据层：CVM</span>
+      <span class="cost-legend-price">¥204.7</span>
+    </div>
+</div>
+  </div>
+</div>
+
+          
+<aside class="diagram-note">
+  <div class="diagram-note-block summary">
+    <strong>方案说明</strong>
+    <p>CLB、应用和监控备份分层，流量增长时可以逐步增加应用节点。<br>当前未检测到必须购买的托管数据产品。<br><span class="architect-guidance">建议联系腾讯云架构师协助规划设计，并在购买前确认最终规格。</span></p>
+  </div>
+  <div class="diagram-note-block capacity performance">
+    <strong>性能预估</strong>
+    <p>提供约 200-600 QPS/TPS，80-240 并发用户；<br>按 CLB 后应用节点横向扩容估算；最终容量以压测和托管产品规格为准。</p>
+  </div>
+  <div class="diagram-note-block capacity scenario">
+    <strong>适用场景</strong>
+    <p>适合增长明确、需要横向扩容的生产服务。</p>
+  </div>
+  <div class="diagram-note-block capacity upgrade">
+    <strong>升级说明</strong>
+    <p>数据、缓存、消息队列等组件可按瓶颈单独扩容。</p>
+  </div>
+</aside>
+
+        </div>
+      </div>
+    </article>
+</div>
+  </div>
+</section>
+
+<section id="section-4" class="proposal-section">
+  <div class="section-head">
+    <span class="section-index">4</span>
+    <div>
+      <h2>三套部署方案对比表格</h2>
+    </div>
+  </div>
+  <div class="section-body">
+    
+
+<div>
+  <h3>价格区间对比</h3>
+  <p class="note">当前条形图只包含已报价基础资源；套餐外公网出流量等用量型费用未计入，最终以实际账单为准。</p>
+  <div class="bars">
+    <div class="bar-row">
+      <strong>最小方案</strong>
+      <div class="bar-track">
+        <div class="bar-stack" style="width:3%"><span class="bar-segment cost-tooltip-trigger" tabindex="0" data-cost-tooltip="接入/应用/数据层：
+• Lighthouse 通用型 / 2c / 4GB / 90GB 系统盘 / 6Mbps / 800GB/月流量
+合计：¥80/月
+占比：100.0%" aria-label="接入/应用/数据层：
+• Lighthouse 通用型 / 2c / 4GB / 90GB 系统盘 / 6Mbps / 800GB/月流量
+合计：¥80/月
+占比：100.0%" style="width:100.0%;background:#E67E22"></span></div>
+      </div>
+      <span class="bar-value">¥80/月</span>
+    </div>
+
+    <div class="bar-row">
+      <strong>推荐方案</strong>
+      <div class="bar-track">
+        <div class="bar-stack" style="width:12%"><span class="bar-segment cost-tooltip-trigger" tabindex="0" data-cost-tooltip="应用层：
+• Lighthouse 入门型 / 2c / 8GB / 80GB 系统盘 / 160GB 数据盘 / 7Mbps / 800GB/月流量
+合计：¥151/月
+占比：55.7%" aria-label="应用层：
+• Lighthouse 入门型 / 2c / 8GB / 80GB 系统盘 / 160GB 数据盘 / 7Mbps / 800GB/月流量
+合计：¥151/月
+占比：55.7%" style="width:55.7%;background:#E67E22"></span><span class="bar-segment cost-tooltip-trigger" tabindex="0" data-cost-tooltip="数据层：
+• Lighthouse 锐驰型 / 2c / 2GB / 50GB 系统盘 / 200GB 数据盘 / 200Mbps
+合计：¥120/月
+占比：44.3%" aria-label="数据层：
+• Lighthouse 锐驰型 / 2c / 2GB / 50GB 系统盘 / 200GB 数据盘 / 200Mbps
+合计：¥120/月
+占比：44.3%" style="width:44.3%;background:#3498DB"></span></div>
+      </div>
+      <span class="bar-value">¥271/月</span>
+    </div>
+
+    <div class="bar-row">
+      <strong>高扩展性方案</strong>
+      <div class="bar-track">
+        <div class="bar-stack" style="width:100%"><span class="bar-segment cost-tooltip-trigger" tabindex="0" data-cost-tooltip="接入层：
+• CLB 20Mbps
+合计：¥1,469/月
+占比：62.6%" aria-label="接入层：
+• CLB 20Mbps
+合计：¥1,469/月
+占比：62.6%" style="width:62.6%;background:#E67E22"></span><span class="bar-segment cost-tooltip-trigger" tabindex="0" data-cost-tooltip="应用层：
+• CVM 2 台 / SA9.LARGE8 / 4c / 8GB / 50GB 系统盘 / 160GB 数据盘
+合计：¥671.8/月
+占比：28.7%" aria-label="应用层：
+• CVM 2 台 / SA9.LARGE8 / 4c / 8GB / 50GB 系统盘 / 160GB 数据盘
+合计：¥671.8/月
+占比：28.7%" style="width:28.7%;background:#3498DB"></span><span class="bar-segment cost-tooltip-trigger" tabindex="0" data-cost-tooltip="数据层：
+• CVM SA9.MEDIUM4 / 2c / 4GB / 50GB 系统盘 / 160GB 数据盘
+合计：¥204.7/月
+占比：8.7%" aria-label="数据层：
+• CVM SA9.MEDIUM4 / 2c / 4GB / 50GB 系统盘 / 160GB 数据盘
+合计：¥204.7/月
+占比：8.7%" style="width:8.7%;background:#EC407A"></span></div>
+      </div>
+      <span class="bar-value">¥2,345.5/月</span>
+    </div>
+</div>
+</div>
+
+<h3>三方案对比表</h3>
+<div class="mobile-comparison-cards">
+<article class="mobile-comparison-card minimal">
+  <div class="mobile-card-head">
+    <h3>最小方案</h3>
+    <span>可选</span>
+  </div>
+  <p><strong>价格：</strong>¥80/月，¥816/年</p>
+  <div class="mobile-resource-scale"><strong>资源：</strong><div class="resource-location">广州 三区</div><div class="resource-scale-summary">1 台 Lighthouse，合计 2 核 / 4G 内存，系统盘 90GB，不含独立数据盘，公网峰值带宽 6 Mbps，套餐流量 800GB/月</div></div>
+  
+<div class="pros-cons">
+  <div class="pros">
+    <strong>优势</strong>
+    <ul><li>成本最低，部署和排障最简单。</li><li>容量：约 30-80 QPS/TPS，10-30 并发用户（规划估算）</li><li>适用：个人项目、Demo、低访问量工具</li></ul>
+  </div>
+  <div class="cons">
+    <strong>劣势</strong>
+    <ul><li>单机承载，机器故障会影响全部服务。</li></ul>
+  </div>
+  
+</div>
+
+</article>
+
+<article class="mobile-comparison-card recommended">
+  <div class="mobile-card-head">
+    <h3>推荐方案</h3>
+    <span>推荐优先看</span>
+  </div>
+  <p><strong>价格：</strong>¥271/月，¥2,733.96/年</p>
+  <div class="mobile-resource-scale"><strong>资源：</strong><div class="resource-location">广州 三区</div><div class="resource-scale-summary">2 台 Lighthouse，合计 4 核 / 10G 内存，系统盘 130GB，数据盘 360GB，公网峰值带宽 7 Mbps，套餐流量 800GB/月</div></div>
+  
+<div class="pros-cons">
+  <div class="pros">
+    <strong>优势</strong>
+    <ul><li>主服务和备份/监控分开，主机坏掉时更容易恢复。</li><li>容量：约 40-120 QPS/TPS，16-50 并发用户（规划估算）</li><li>适用：有真实用户、需要保存数据的小服务</li></ul>
+  </div>
+  <div class="cons">
+    <strong>劣势</strong>
+    <ul><li>成本高于最小方案，仍需维护开源组件和备份策略。</li></ul>
+  </div>
+  
+</div>
+
+</article>
+
+<article class="mobile-comparison-card future">
+  <div class="mobile-card-head">
+    <h3>高扩展性方案</h3>
+    <span>可选</span>
+  </div>
+  <p><strong>价格：</strong>¥2,345.5/月，¥21,865.5/年</p>
+  <div class="mobile-resource-scale"><strong>资源：</strong><div class="resource-location">广州 五区</div><div class="resource-scale-summary">3 台 CVM，合计 10 核 / 20G 内存，系统盘 150GB，数据盘 480GB，公网入口固定带宽 20 Mbps，另含 1 个接入层云产品</div></div>
+  
+<div class="pros-cons">
+  <div class="pros">
+    <strong>优势</strong>
+    <ul><li>公网入口交给 CLB，应用、监控备份分开，访问增长时可以增加应用 CVM。</li><li>容量：约 200-600 QPS/TPS，80-240 并发用户（规划估算）</li><li>适用：用户增长、需要横向增加应用节点、需要更明确故障隔离的服务</li></ul>
+  </div>
+  <div class="cons">
+    <strong>劣势</strong>
+    <ul><li>成本最高；需先确认高扩展投入是否必要。</li></ul>
+  </div>
+  
+</div>
+
+</article>
+</div>
+<p class="scroll-hint">完整表格可横向滑动查看。</p>
+<div class="table-scroll"><table class="comparison-table comparison-summary-table"><colgroup><col class="plan-name-col"><col class="balanced-col"><col class="price-col"><col class="balanced-col"></colgroup><tr><th>方案</th><th>资源规模</th><th>价格预估</th><th>优劣势</th></tr><tr><th>最小方案</th><td class="resource-scale-cell"><div class="resource-location">广州 三区</div><div class="resource-scale-summary">1 台 Lighthouse，合计 2 核 / 4G 内存，系统盘 90GB，不含独立数据盘，公网峰值带宽 6 Mbps，套餐流量 800GB/月</div></td><td class="price-estimate"><div class="price-line"><span>月付</span> <strong class="key-orange">¥80</strong></div><div class="price-line"><span>年付</span> <strong>¥816</strong></div></td><td>
+<div class="pros-cons">
+  <div class="pros">
+    <strong>优势</strong>
+    <ul><li>成本最低，部署和排障最简单。</li><li>容量：约 30-80 QPS/TPS，10-30 并发用户（规划估算）</li><li>适用：个人项目、Demo、低访问量工具</li></ul>
+  </div>
+  <div class="cons">
+    <strong>劣势</strong>
+    <ul><li>单机承载，机器故障会影响全部服务。</li></ul>
+  </div>
+  
+  <div class="pros-cons-conclusion">
+    <strong>结论</strong>
+    <p>可选：先用最少成本上线，适合试运行。</p>
+  </div>
+
+</div>
+</td></tr>
+<tr><th>推荐方案</th><td class="resource-scale-cell"><div class="resource-location">广州 三区</div><div class="resource-scale-summary">2 台 Lighthouse，合计 4 核 / 10G 内存，系统盘 130GB，数据盘 360GB，公网峰值带宽 7 Mbps，套餐流量 800GB/月</div></td><td class="price-estimate"><div class="price-line"><span>月付</span> <strong class="key-orange">¥271</strong></div><div class="price-line"><span>年付</span> <strong>¥2,733.96</strong></div></td><td>
+<div class="pros-cons">
+  <div class="pros">
+    <strong>优势</strong>
+    <ul><li>主服务和备份/监控分开，主机坏掉时更容易恢复。</li><li>容量：约 40-120 QPS/TPS，16-50 并发用户（规划估算）</li><li>适用：有真实用户、需要保存数据的小服务</li></ul>
+  </div>
+  <div class="cons">
+    <strong>劣势</strong>
+    <ul><li>成本高于最小方案，仍需维护开源组件和备份策略。</li></ul>
+  </div>
+  
+  <div class="pros-cons-conclusion">
+    <strong>结论</strong>
+    <p>推荐优先看：有独立备份位置，适合认真长期跑。</p>
+  </div>
+
+</div>
+</td></tr>
+<tr><th>高扩展性方案</th><td class="resource-scale-cell"><div class="resource-location">广州 五区</div><div class="resource-scale-summary">3 台 CVM，合计 10 核 / 20G 内存，系统盘 150GB，数据盘 480GB，公网入口固定带宽 20 Mbps，另含 1 个接入层云产品</div></td><td class="price-estimate"><div class="price-line"><span>月付</span> <strong class="key-orange">¥2,345.5</strong></div><div class="price-line"><span>年付</span> <strong>¥21,865.5</strong></div></td><td>
+<div class="pros-cons">
+  <div class="pros">
+    <strong>优势</strong>
+    <ul><li>公网入口交给 CLB，应用、监控备份分开，访问增长时可以增加应用 CVM。</li><li>容量：约 200-600 QPS/TPS，80-240 并发用户（规划估算）</li><li>适用：用户增长、需要横向增加应用节点、需要更明确故障隔离的服务</li></ul>
+  </div>
+  <div class="cons">
+    <strong>劣势</strong>
+    <ul><li>成本最高；需先确认高扩展投入是否必要。</li></ul>
+  </div>
+  
+  <div class="pros-cons-conclusion">
+    <strong>结论</strong>
+    <p>可选：CLB、应用和监控备份分层，为应用增长预留空间。</p>
+  </div>
+
+</div>
+</td></tr></table></div>
+<h3>各方案需购买的腾讯云资源清单</h3>
+<p class="scroll-hint">资源清单包含购买规格、计费项和主要部署服务，可横向滑动查看。</p>
+<div class="table-scroll"><table class="comparison-table resource-table"><tr><th>方案</th><th>需购买的腾讯云资源规格</th><th>主要计费项</th><th>主要部署服务</th></tr><tr><th>最小方案</th><td><ul class="compact-list resource-spec-list"><li class="resource-spec-item"><strong>Lighthouse · 综合服务器套餐 · 1 台</strong><span class="resource-spec-label">套餐配置：</span><span class="resource-spec-indent">通用型，2 核 CPU，4GB 内存，90GB 系统盘</span><span class="resource-spec-indent">公网：6 Mbps 峰值带宽，套餐内流量包：800GB/月</span><span class="resource-spec-indent">纯系统镜像：Ubuntu 24.04 LTS</span></li></ul></td><td><ul class="compact-list"><li>Lighthouse 轻量应用服务器套餐</li></ul></td><td><ul class="compact-list"><li>用户主应用程序</li><li>Caddy/Nginx 静态文件和 HTTPS</li><li>备份脚本</li></ul></td></tr>
+<tr><th>推荐方案</th><td><ul class="compact-list resource-spec-list"><li class="resource-spec-item"><strong>Lighthouse · 应用和数据服务器套餐 · 1 台</strong><span class="resource-spec-label">套餐配置：</span><span class="resource-spec-indent">入门型，2 核 CPU，8GB 内存，80GB 系统盘</span><span class="resource-spec-indent">公网：7 Mbps 峰值带宽，套餐内流量包：800GB/月</span><span class="resource-spec-indent">纯系统镜像：Ubuntu 24.04 LTS</span><span>数据盘：160GB 数据盘，购买后经确认挂载至 /data</span></li><li class="resource-spec-item"><strong>Lighthouse · 备份和监控服务器套餐 · 1 台</strong><span class="resource-spec-label">套餐配置：</span><span class="resource-spec-indent">锐驰型，2 核 CPU，2GB 内存，50GB 系统盘</span><span class="resource-spec-indent">公网：套餐自带 200 Mbps 峰值带宽，不开放业务端口，不限流量</span><span class="resource-spec-indent">纯系统镜像：Ubuntu 24.04 LTS</span><span>数据盘：200GB 数据盘，购买后经确认挂载至 /data</span><span>网络：通过同地域内网互联传输备份数据</span></li></ul></td><td><ul class="compact-list"><li>Lighthouse 轻量应用服务器套餐</li><li>Lighthouse 独立高性能云硬盘</li></ul></td><td><ul class="compact-list"><li>用户主应用程序</li><li>Caddy/Nginx 静态文件和 HTTPS</li><li>备份脚本</li></ul></td></tr>
+<tr><th>高扩展性方案</th><td><ul class="compact-list resource-spec-list"><li class="resource-spec-item"><strong>CVM · 应用服务器 · 2 台</strong><span>配置：SA9 机型，4 核 CPU，8GB 内存，50GB 系统盘，160GB 数据盘</span><span>数据盘：购买后经确认挂载至 /data</span><span>公网：无需配置公网带宽</span></li><li class="resource-spec-item"><strong>CVM · 监控和备份服务器 · 1 台</strong><span>配置：SA9 机型，2 核 CPU，4GB 内存，50GB 系统盘，160GB 数据盘</span><span>数据盘：购买后经确认挂载至 /data</span><span>公网：无需配置公网带宽</span></li><li class="resource-spec-item"><strong>Tencent Cloud CLB · 1 个</strong><span>规格：公网负载均衡，HTTPS/HTTP 监听，20Mbps 起步，后端绑定多台应用 CVM</span></li></ul></td><td><ul class="compact-list"><li>CVM 实例</li><li>系统云硬盘</li><li>数据云硬盘</li><li>CLB 实例</li><li>公网带宽/流量</li><li>LCU/连接数等规格项</li><li>证书与监听配置按实际账单</li></ul></td><td><ul class="compact-list"><li>用户主应用程序</li><li>Caddy/Nginx 静态文件和 HTTPS</li><li>备份脚本</li></ul></td></tr></table></div>
+
+  </div>
+</section>
+
+<section id="section-5" class="proposal-section">
+  <div class="section-head">
+    <span class="section-index">5</span>
+    <div>
+      <h2>备案提醒和参考链接</h2>
+    </div>
+  </div>
+  <div class="section-body">
+    
+<div class="callout warning">
+  <strong>计划使用中国大陆地域公网服务。当前未提供域名；若后续绑定真实域名，需要先确认 ICP 备案或腾讯云接入备案。</strong>
+</div>
+<h3>基本原则</h3>
+<ul><li>使用中国大陆地域并绑定真实域名对外提供网站、API、后台或 APP 服务时，通常需要先完成 ICP 备案或接入备案。</li><li>如果只是先用公网 IP 测试，不等同于正式域名上线；绑定正式域名前再确认备案状态。</li><li>网站或 APP 正式开通后，按要求在规定时间内办理公安联网备案。</li></ul>
+<p class="note">详细流程参考腾讯云文档：<a href="https://cloud.tencent.com/document/product/243/18907">备案概述</a> <a href="https://cloud.tencent.com/document/product/243/39038">如何快速备案您的网站或 APP</a></p>
+
+  </div>
+</section>
+
+  </main>
+  <footer>
+    <p>本报告根据项目代码和部署线索生成，无法做到完全准确，请仔细确认您的项目需求。</p><p>购买资源前请再次确认价格、配额、备案、域名和安全规则，必要时，请联系腾讯云官网销售或者架构协助决策。</p>
+  </footer>
+  <script>
+    const MERMAID_BASE_FONT_PX = 16;
+    const PROJECT_DIAGRAM_MIN_FONT_PX = 11;
+    const PROJECT_DIAGRAM_MAX_FONT_PX = 15;
+
+    function sizeProjectArchitectureDiagrams() {
+      document.querySelectorAll(".project-architecture .mermaid svg").forEach((svg) => {
+        const viewBoxWidth = svg.viewBox && svg.viewBox.baseVal
+          ? svg.viewBox.baseVal.width
+          : 0;
+        const viewBoxHeight = svg.viewBox && svg.viewBox.baseVal
+          ? svg.viewBox.baseVal.height
+          : 0;
+        const container = svg.closest(".mermaid");
+        if (!viewBoxWidth || !viewBoxHeight || !container) return;
+
+        const fitWidth = Math.max(0, container.clientWidth - 32);
+        const minimumReadableWidth = Math.ceil(
+          viewBoxWidth * PROJECT_DIAGRAM_MIN_FONT_PX / MERMAID_BASE_FONT_PX
+        );
+        const maximumReadableWidth = Math.floor(
+          viewBoxWidth * PROJECT_DIAGRAM_MAX_FONT_PX / MERMAID_BASE_FONT_PX
+        );
+        const preferredWidth = Math.min(
+          Math.max(fitWidth, minimumReadableWidth),
+          maximumReadableWidth
+        );
+        const maximumDiagramHeight = Math.max(360, window.innerHeight - 64);
+        const heightBoundWidth = Math.floor(
+          viewBoxWidth * maximumDiagramHeight / viewBoxHeight
+        );
+        const renderWidth = Math.min(preferredWidth, heightBoundWidth);
+        const actualVisualFontSize = (
+          MERMAID_BASE_FONT_PX * renderWidth / viewBoxWidth
+        );
+        svg.style.setProperty("width", `${renderWidth}px`, "important");
+        svg.style.setProperty("max-width", "none", "important");
+        svg.style.setProperty("height", "auto", "important");
+        svg.dataset.minimumVisualFontSize = String(PROJECT_DIAGRAM_MIN_FONT_PX);
+        svg.dataset.maximumVisualFontSize = String(PROJECT_DIAGRAM_MAX_FONT_PX);
+        svg.dataset.actualVisualFontSize = actualVisualFontSize.toFixed(2);
+        container.dataset.compactMode = String(renderWidth < minimumReadableWidth);
+      });
+    }
+
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "default",
+      securityLevel: "strict",
+      themeVariables: {
+        fontSize: `${MERMAID_BASE_FONT_PX}px`
+      },
+      flowchart: {
+        htmlLabels: true,
+        nodeSpacing: 36,
+        rankSpacing: 54
+      }
+    });
+
+    async function renderMermaidDiagrams() {
+      try {
+        await mermaid.run({ querySelector: ".mermaid" });
+        sizeProjectArchitectureDiagrams();
+      } catch (error) {
+        console.error("架构图渲染失败", error);
+      }
+    }
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", renderMermaidDiagrams, { once: true });
+    } else {
+      renderMermaidDiagrams();
+    }
+    window.addEventListener("resize", sizeProjectArchitectureDiagrams);
+
+    (function initReasonTooltips() {
+      const triggers = Array.from(document.querySelectorAll(".reason-tooltip"));
+      if (!triggers.length) return;
+      document.body.classList.add("enhanced-tooltips");
+
+      const bubble = document.createElement("div");
+      bubble.className = "reason-floating-bubble";
+      bubble.setAttribute("role", "tooltip");
+      bubble.dataset.show = "false";
+      document.body.appendChild(bubble);
+
+      function clamp(value, min, max) {
+        return Math.min(Math.max(value, min), max);
+      }
+
+      function positionReasonBubble(trigger) {
+        const source = trigger.querySelector(".reason-bubble");
+        if (!source) return;
+        bubble.textContent = source.textContent || "";
+        bubble.dataset.show = "true";
+
+        const margin = 12;
+        const triggerRect = trigger.getBoundingClientRect();
+        const bubbleRect = bubble.getBoundingClientRect();
+        const left = clamp(
+          triggerRect.left + triggerRect.width / 2 - bubbleRect.width / 2,
+          margin,
+          window.innerWidth - bubbleRect.width - margin
+        );
+        const topCandidate = triggerRect.top - bubbleRect.height - 10;
+        const top = topCandidate >= margin ? topCandidate : triggerRect.bottom + 10;
+        bubble.style.left = `${left}px`;
+        bubble.style.top = `${clamp(top, margin, window.innerHeight - bubbleRect.height - margin)}px`;
+      }
+
+      function hideReasonBubble() {
+        bubble.dataset.show = "false";
+      }
+
+      triggers.forEach((trigger) => {
+        trigger.addEventListener("mouseenter", () => positionReasonBubble(trigger));
+        trigger.addEventListener("mouseleave", hideReasonBubble);
+      });
+      window.addEventListener("scroll", hideReasonBubble, true);
+      window.addEventListener("resize", hideReasonBubble);
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") hideReasonBubble();
+      });
+    })();
+    (function initCostTooltips() {
+      const triggers = Array.from(document.querySelectorAll("[data-cost-tooltip]"));
+      if (!triggers.length) return;
+
+      const bubble = document.createElement("div");
+      bubble.className = "cost-floating-bubble";
+      bubble.setAttribute("role", "tooltip");
+      bubble.dataset.show = "false";
+      document.body.appendChild(bubble);
+
+      function clamp(value, min, max) {
+        return Math.min(Math.max(value, min), max);
+      }
+
+      function showCostBubble(trigger) {
+        bubble.textContent = trigger.dataset.costTooltip || "";
+        bubble.dataset.show = "true";
+
+        const margin = 12;
+        const triggerRect = trigger.getBoundingClientRect();
+        const bubbleRect = bubble.getBoundingClientRect();
+        const left = clamp(
+          triggerRect.left + triggerRect.width / 2 - bubbleRect.width / 2,
+          margin,
+          window.innerWidth - bubbleRect.width - margin
+        );
+        const topCandidate = triggerRect.top - bubbleRect.height - 10;
+        const top = topCandidate >= margin ? topCandidate : triggerRect.bottom + 10;
+        bubble.style.left = `${left}px`;
+        bubble.style.top = `${clamp(top, margin, window.innerHeight - bubbleRect.height - margin)}px`;
+      }
+
+      function hideCostBubble() {
+        bubble.dataset.show = "false";
+      }
+
+      triggers.forEach((trigger) => {
+        trigger.addEventListener("mouseenter", () => showCostBubble(trigger));
+        trigger.addEventListener("mouseleave", hideCostBubble);
+        trigger.addEventListener("focus", () => showCostBubble(trigger));
+        trigger.addEventListener("blur", hideCostBubble);
+      });
+      window.addEventListener("scroll", hideCostBubble, true);
+      window.addEventListener("resize", hideCostBubble);
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") hideCostBubble();
+      });
+    })();
+  </script>
+</body>
+</html>

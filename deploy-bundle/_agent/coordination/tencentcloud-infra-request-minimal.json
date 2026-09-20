@@ -1,0 +1,504 @@
+{
+  "target_skill": "tencentcloud-vibe-deploy",
+  "target_runner": "built-in-purchase-precheck",
+  "operation": "precheck_then_execute_once_after_exact_approval",
+  "precheck_command": "python3 scripts/purchase_precheck.py _agent/coordination/tencentcloud-infra-request-minimal.json --output _agent/coordination/tencentcloud-purchase-precheck-minimal.json --profile default",
+  "dry_run": true,
+  "dry_run_required": true,
+  "dry_run_note": "第一阶段必须是预检/DryRun。随后生成未审批购买批次并展示精确资源和费用清单；审批后逐项持久化进度，不得自动支付或重试。",
+  "real_write_execution_policy": "approved_exact_resource_batch_with_resumable_checkpoint",
+  "agent_non_dry_run_requires_approved_batch": true,
+  "unapproved_batch_write_forbidden": true,
+  "approval_reuse_for_different_manifest_forbidden": true,
+  "approved_batch_resume_requires_explicit_failure_decision": true,
+  "high_value_monthly_threshold_cny": 1000,
+  "high_value_policy": "超过 1000 元/月时仅生成订单交接清单，由用户在腾讯云控制台确认并支付。",
+  "automatic_recovery_forbidden": [
+    "delete",
+    "terminate",
+    "recreate",
+    "retry_create"
+  ],
+  "order_confirmation_policy": {
+    "mode": "precheck_then_approved_resumable_purchase_batch",
+    "test_stop_point": "测试在 DryRun、精确清单和授权提示生成后停止；测试不得创建资源或支付。",
+    "independent_payment_api_called": false,
+    "create_api_may_charge_or_freeze_funds": true,
+    "forbid_payment_in_test": true,
+    "agent_write_allowed_after_exact_batch_approval": true,
+    "unapproved_batch_write_forbidden": true,
+    "approval_reuse_for_different_manifest_forbidden": true,
+    "approved_batch_resume_requires_explicit_failure_decision": true,
+    "high_value_monthly_threshold_cny": 1000,
+    "high_value_policy": "月成本超过 1000 元时只生成订单交接清单，由用户在腾讯云控制台确认并支付。",
+    "requires_customer_confirmation_before_order_generation": true,
+    "requires_customer_confirmation_before_payment": true,
+    "requires_voucher_query_and_customer_choice": true,
+    "resource_tags": [
+      {
+        "Key": "from",
+        "Value": "tencentcloud-vibe-deploy-skill"
+      }
+    ],
+    "tagging_policy_reference": "references/13-purchase-precheck-and-approval.md",
+    "resource_checklist": [
+      "Lighthouse：1 台 综合服务器套餐，套餐配置：通用型，2 核 CPU，4GB 内存，90GB 系统盘；公网：6 Mbps 峰值带宽，套餐内流量包：800GB/月；纯系统镜像：Ubuntu 24.04 LTS"
+    ],
+    "precheck": [
+      "先读 references/13-purchase-precheck-and-approval.md，确认各资源的标签方式和代金券处理边界。",
+      "Lighthouse 先用 `DescribeBundles` 匹配套餐和可售可用区，用 `DescribeBlueprints` 选择镜像，再用带单一 `--Zones` 的 `CreateInstances --DryRun true` 做购买预检。",
+      "查询未使用且适用于预付费新购的代金券，展示候选后询问用户是否使用。",
+      "先执行价格、可用区、库存、配额和参数预检。",
+      "能使用 DryRun 的 API，先使用 DryRun=true；DryRun 通过不代表已生成订单。",
+      "向用户展示资源清单、地域、计费方式、真实价格和费用变化，取得仅适用于本清单的一次性明确授权。"
+    ],
+    "cvm_order_boundary": "CVM RunInstances 不提供安全的只生成未支付订单阶段；DryRun=true 只预检不会创建资源，DryRun=false 会直接创建实例，预付费会扣款，后付费会冻结费用；仅当月成本不超过 1000 元且用户对本次精确清单明确授权时，Agent 才可执行一次。",
+    "hai_order_boundary": "",
+    "lighthouse_order_boundary": "Lighthouse 可通过 tccli lighthouse InquirePriceCreateInstances 询价，通过 tccli lighthouse CreateInstances 创建实例；CreateInstances 支持 DryRun=true，但必须显式传单一 Zones。方案已明确独立数据盘时，主机、磁盘购买和附加关系进入同一组合审批；执行时先创建主机并核验实际可用区，再刷新云盘库存、价格、代金券和余额，符合原清单后才创建并附加。",
+    "order_query_capabilities": [
+      {
+        "product": "Lighthouse 轻量应用服务器",
+        "query": "tccli lighthouse InquirePriceCreateInstances --region <region> --BundleId <BundleId> --InstanceChargePrepaid '{\"Period\":1,\"RenewFlag\":\"NOTIFY_AND_MANUAL_RENEW\"}' --InstanceCount <count>\ntccli lighthouse CreateInstances --region <region> --Zones '[\"<placement_zone>\"]' --BundleId <BundleId> --BlueprintId <BlueprintId> --InstanceChargePrepaid '{\"Period\":1,\"RenewFlag\":\"NOTIFY_AND_MANUAL_RENEW\"}' --InstanceCount <count> --DryRun true",
+        "notes": "Lighthouse CreateInstances 支持 DryRun；必须显式绑定查价确认的单一可用区，并核对 BundleId、BlueprintId、地域、数量和费用。"
+      }
+    ],
+    "resource_verification": [
+      "如果 API 返回 DealName，优先用对应产品的 DescribeOrders 查询订单详情并核对资源清单。",
+      "如果 API 返回 InstanceIdSet 或资源 ID，使用 DescribeInstancesStatus、DescribeInstances、DescribeDisks 等查询资源状态和规格。",
+      "如果创建的是 HAI，使用 `tccli hai DescribeInstances` 查询实例状态、规格和地域。",
+      "如果创建的是 Lighthouse，按实例 ID 查询实际地域和可用区；独立数据盘创建前后都用 verify_resource_placement.py 核验同地域、同可用区关系。",
+      "把查询结果与 purchase-checklist.html、plans/purchase-checklist.yaml 和本 JSON 的 resources_to_purchase 对照。",
+      "核对通过后报告结果；已在组合审批中明确的数据盘附加不重复询问，格式化/挂载及其他新的创建、扩容、续费或删除必须重新展示精确清单并取得明确授权。"
+    ]
+  },
+  "requires_explicit_customer_approval": true,
+  "selected_plan": "minimal",
+  "region": "ap-guangzhou",
+  "profile": "default",
+  "project": {
+    "name": "lingeebuild-prototype",
+    "slug": "lingeebuild-prototype"
+  },
+  "deployment_context": {
+    "production_inputs": "partial",
+    "external_ai_readiness": "not_required",
+    "missing_inputs": [
+      "生产环境变量注入方案",
+      "域名/DNS 与代码交付方式"
+    ],
+    "secret_handling": "只确认配置项是否就绪，不把真实密钥写入答案、方案、审批文件或对话。"
+  },
+  "resources_to_purchase": [
+    {
+      "resource_type": "lighthouse",
+      "purchase_product_type": "lighthouse",
+      "role": "all-in-one",
+      "count": 1,
+      "product": "Tencent Cloud Lighthouse",
+      "os": "Ubuntu Server LTS or TencentOS Server",
+      "cpu": 2,
+      "memory_gb": 4,
+      "system_disk_gb": 90,
+      "data_disk_gb": 0,
+      "public_bandwidth_mbps": 6,
+      "components": [
+        "Caddy or Nginx",
+        "systemd",
+        "language/runtime dependencies",
+        "process/binary deployment",
+        "UFW/firewalld",
+        "Restic backup",
+        "Prometheus node_exporter"
+      ],
+      "accelerator": "",
+      "public_network_billing_mode": "traffic",
+      "internet_charge_type": "TRAFFIC_POSTPAID_BY_HOUR",
+      "bandwidth_range_mbps": "1-10",
+      "bandwidth_selection_reason": "按低复杂度业务在 1-10Mbps 区间内选择 1Mbps。",
+      "bandwidth_billing_advice": "已匹配 Lighthouse 套餐，公网带宽和月流量包以套餐规则为准。",
+      "compute_product_policy": "lighthouse_only",
+      "lighthouse_data_disk_policy": "system_disk_only",
+      "lighthouse_bundle_selection": "lowest_price_after_coverage",
+      "BundleId": "bundle_gen_mc_med4_01",
+      "placement_zone": "ap-guangzhou-3",
+      "placement_zone_name": "广州三区",
+      "lighthouse_bundle_type": "GENERAL_BUNDLE",
+      "lighthouse_bundle_type_description": "通用型",
+      "lighthouse_monthly_traffic_gb": 800,
+      "lighthouse_traffic_unlimited": false,
+      "lighthouse_bundle_note": "通用型 800GB/月流量包",
+      "lighthouse_bundle_detail": "通用型，800GB/月流量包",
+      "BlueprintId": "lhbp-1l4ptuvm",
+      "lighthouse_blueprint_type": "PURE_OS",
+      "lighthouse_blueprint_title": "Ubuntu 24.04 LTS",
+      "lighthouse_os_name": "Ubuntu Server 24.04 LTS 64bit",
+      "lighthouse_blueprint_strategy": "PURE_OS",
+      "region": "ap-guangzhou"
+    }
+  ],
+  "purchase_cost": {
+    "status": "quoted",
+    "monthly_total_cny": 80.0,
+    "annual_total_cny": 816.0,
+    "resource_coverage": {
+      "expected_resource_count": 1,
+      "priced_line_item_count": 1,
+      "expected_resource_types": {
+        "lighthouse": 1
+      },
+      "priced_resource_types": {
+        "lighthouse": 1
+      }
+    },
+    "billing_basis": "tccli 实时询价；月付按 1 个月查询，年付按 12 个月查询。若产品没有年付询价参数，会在明细中标记为月价换算。",
+    "pricing_complete": false,
+    "pricing_completeness": "quoted_with_unpriced_usage",
+    "unpriced_usage_dimensions": [
+      "public_egress_overage_after_included_traffic"
+    ],
+    "line_items": [
+      {
+        "product": "Tencent Cloud Lighthouse",
+        "role": "all-in-one",
+        "resource_type": "lighthouse",
+        "count": 1,
+        "monthly_total_cny": 80.0,
+        "annual_total_cny": 816.0,
+        "price_terms": {
+          "monthly": {
+            "period_months": 1,
+            "total_cny": 80.0,
+            "source": "live_query"
+          },
+          "annual": {
+            "period_months": 12,
+            "total_cny": 816.0,
+            "source": "live_query"
+          }
+        },
+        "source_api": "tccli lighthouse InquirePriceCreateInstances",
+        "sku": {
+          "BundleId": "bundle_gen_mc_med4_01",
+          "zone": "ap-guangzhou-3",
+          "zone_name": "广州三区",
+          "bundle_type": "GENERAL_BUNDLE",
+          "bundle_type_description": "通用型",
+          "bundle_selection_basis": "lowest_describe_bundles_monthly_price_after_coverage",
+          "advertised_monthly_price_cny": 80.0,
+          "cpu": 2,
+          "memory_gb": 4,
+          "system_disk_gb": 90,
+          "bandwidth_mbps": 6,
+          "monthly_traffic_gb": 800,
+          "traffic_unlimited": false,
+          "internet_charge_type": "TRAFFIC_POSTPAID_BY_HOUR",
+          "BlueprintId": "lhbp-1l4ptuvm",
+          "blueprint_type": "PURE_OS",
+          "blueprint_title": "Ubuntu 24.04 LTS",
+          "blueprint_name": "ubuntu24",
+          "blueprint_version": "24.04 LTS",
+          "os_name": "Ubuntu Server 24.04 LTS 64bit",
+          "blueprint_required_system_disk_gb": 10,
+          "blueprint_required_memory_gb": 1,
+          "blueprint_selection_strategy": "PURE_OS",
+          "blueprint_fallback_reason": null,
+          "blueprint_note": null,
+          "data_disk_gb": 0,
+          "data_disk_type": "",
+          "data_disk_count": 0,
+          "data_disk_available_zones": [],
+          "data_disk_mount_point": ""
+        },
+        "price_components": {
+          "instance": {
+            "monthly": {
+              "period_months": 1,
+              "total_cny": 80.0,
+              "source": "live_query"
+            },
+            "annual": {
+              "period_months": 12,
+              "total_cny": 816.0,
+              "source": "live_query"
+            }
+          }
+        },
+        "priced_components": {
+          "compute": true,
+          "system_disk": true,
+          "data_disk": false,
+          "public_bandwidth": true
+        },
+        "unpriced_usage_dimensions": [
+          "public_egress_overage_after_included_traffic"
+        ],
+        "pricing_complete": false,
+        "pricing_completeness": "quoted_with_unpriced_usage"
+      }
+    ],
+    "assumptions": [
+      "已调用腾讯云 tccli 询价 API。",
+      "年付金额保留产品接口返回的 12 个月价格，不再按月价简单乘 12。",
+      "不包含优惠券、账号专属折扣、活动价和后续用量型账单。",
+      "按流量计费套餐只覆盖基础套餐和套餐内流量；超出流量包后的公网出流量费用尚未计入总价。"
+    ]
+  },
+  "resource_tags": [
+    {
+      "Key": "from",
+      "Value": "tencentcloud-vibe-deploy-skill"
+    }
+  ],
+  "voucher_policy_reference": "references/13-purchase-precheck-and-approval.md",
+  "tagging_policy_reference": "references/13-purchase-precheck-and-approval.md",
+  "cvm_roles": [
+    {
+      "role": "all-in-one",
+      "count": 1,
+      "product": "Tencent Cloud Lighthouse",
+      "os": "Ubuntu Server LTS or TencentOS Server",
+      "cpu": 2,
+      "memory_gb": 4,
+      "system_disk_gb": 90,
+      "data_disk_gb": 0,
+      "public_bandwidth_mbps": 6,
+      "components": [
+        "Caddy or Nginx",
+        "systemd",
+        "language/runtime dependencies",
+        "process/binary deployment",
+        "UFW/firewalld",
+        "Restic backup",
+        "Prometheus node_exporter"
+      ],
+      "accelerator": "",
+      "public_network_billing_mode": "traffic",
+      "internet_charge_type": "TRAFFIC_POSTPAID_BY_HOUR",
+      "bandwidth_range_mbps": "1-10",
+      "bandwidth_selection_reason": "按低复杂度业务在 1-10Mbps 区间内选择 1Mbps。",
+      "bandwidth_billing_advice": "已匹配 Lighthouse 套餐，公网带宽和月流量包以套餐规则为准。",
+      "compute_product_policy": "lighthouse_only",
+      "lighthouse_data_disk_policy": "system_disk_only",
+      "lighthouse_bundle_selection": "lowest_price_after_coverage",
+      "BundleId": "bundle_gen_mc_med4_01",
+      "placement_zone": "ap-guangzhou-3",
+      "placement_zone_name": "广州三区",
+      "lighthouse_bundle_type": "GENERAL_BUNDLE",
+      "lighthouse_bundle_type_description": "通用型",
+      "lighthouse_monthly_traffic_gb": 800,
+      "lighthouse_traffic_unlimited": false,
+      "lighthouse_bundle_note": "通用型 800GB/月流量包",
+      "lighthouse_bundle_detail": "通用型，800GB/月流量包",
+      "BlueprintId": "lhbp-1l4ptuvm",
+      "lighthouse_blueprint_type": "PURE_OS",
+      "lighthouse_blueprint_title": "Ubuntu 24.04 LTS",
+      "lighthouse_os_name": "Ubuntu Server 24.04 LTS 64bit",
+      "lighthouse_blueprint_strategy": "PURE_OS"
+    }
+  ],
+  "managed_resources": [],
+  "compliance": {
+    "region": "ap-guangzhou",
+    "planned_domain": "",
+    "is_mainland_china_region": true,
+    "public_access_planned": true,
+    "reminder_level": "conditional",
+    "icp_filing_required_before_domain_launch": "required_if_domain_is_bound",
+    "public_security_filing_after_launch": "required_after_icp_and_launch",
+    "summary": "计划使用中国大陆地域公网服务。当前未提供域名；若后续绑定真实域名，需要先确认 ICP 备案或腾讯云接入备案。",
+    "purchase_decision_oral_reminder": "提醒一下：这个方案会使用中国大陆地域的公网服务。现在还没确定域名；如果后续要绑定真实域名，购买和上线前需要先确认 ICP 备案或腾讯云接入备案，备案后上线 30 日内还要做公安联网备案。",
+    "customer_confirmations_before_deploy": [
+      "确认目标域名是否已经完成 ICP 备案，以及是否已经接入腾讯云。",
+      "如果域名还没有备案，先完成 ICP 备案，再正式绑定域名上线。",
+      "如果域名以前在其他云厂商备案，需要先做腾讯云接入备案，再把域名解析到腾讯云大陆 CVM。",
+      "正式绑定域名前，需要先向客户确认目标域名。"
+    ],
+    "guardrails": [
+      "备案或接入备案未确认前，不要把正式域名解析到中国大陆 CVM。",
+      "未备案域名不要配置成正式 HTTPS 站点。",
+      "ICP 备案完成并开通网站/APP 后，提醒客户在 30 日内办理公安联网备案。"
+    ],
+    "reference_urls": [
+      "https://cloud.tencent.com/document/product/243/18907",
+      "https://cloud.tencent.com/document/product/243/39038"
+    ]
+  },
+  "initialization_steps": [
+    "绑定域名或开放正式域名访问前，先检查 compliance 里的备案要求。",
+    "月成本不超过 1000 元时，客户可授权 Agent 按精确清单创建一次 Lighthouse/CVM/HAI；超过阈值或产品不支持安全执行时，由客户在腾讯云控制台完成。",
+    "该最小 Lighthouse 方案不配置独立数据盘；业务数据暂与系统共盘，部署前先配置异机/对象存储备份，重装或扩容前必须完成备份。",
+    "加固 SSH，并配置安全组/防火墙，只开放 SSH、HTTP、HTTPS 和必要的内网服务端口。",
+    "按项目语言安装必要运行时、包管理器和系统依赖。",
+    "使用 systemd 管理普通进程或二进制程序；如需构建，先执行 build_commands，再部署产物。",
+    "在公网入口机器上安装并配置 Caddy 或 Nginx。",
+    "创建应用、数据、日志和备份目录。",
+    "最小/推荐方案按项目依赖安装开源数据库/缓存/MQ；高扩展性方案优先写入托管产品连接配置，不在 CVM 上自建生产数据库/Redis/MQ。",
+    "在所有机器上安装基础监控组件 Prometheus node_exporter。",
+    "用 Restic 或等价开源工具配置备份脚本。",
+    "客户补齐生产环境变量、域名/备案和代码交付方式后，再按 application_deployment 部署应用。",
+    "返回公网 IP、内网 IP、初始化账号、部署状态和冒烟测试地址。"
+  ],
+  "application_deployment": {
+    "deploy_application": true,
+    "source_project_name": "lingeebuild-prototype",
+    "source_project_path": "使用本次 skill 输入的原始本地项目目录。",
+    "deployment_mode": "runtime-systemd",
+    "build_commands": [
+      "npm run build"
+    ],
+    "start_commands": [
+      "npm run preview",
+      "npm run dev"
+    ],
+    "app_ports": [
+      5173
+    ],
+    "target_directory": "/opt/vibe-apps/lingeebuild-prototype",
+    "process_manager": "已有 compose 时使用 Docker Compose；已有 Dockerfile 时构建镜像运行；否则使用 systemd 管理普通进程或二进制程序。",
+    "required_customer_inputs": [
+      "_agent/analysis.json 里识别到的生产环境变量取值。",
+      "如果需要用真实域名访问，需要提供域名和 DNS 解析方案。",
+      "代码交付方式：Git 地址、压缩包、容器镜像，或允许从本地项目目录传输代码。",
+      "确认目标域名是否已经完成 ICP 备案，以及是否已经接入腾讯云。",
+      "如果域名还没有备案，先完成 ICP 备案，再正式绑定域名上线。",
+      "如果域名以前在其他云厂商备案，需要先做腾讯云接入备案，再把域名解析到腾讯云大陆 CVM。",
+      "正式绑定域名前，需要先向客户确认目标域名。"
+    ],
+    "ai_capabilities": {
+      "capabilities": [],
+      "optional_capabilities": [],
+      "optional_model_runtime": false,
+      "optional_ai_features": [],
+      "model_names": [],
+      "local_model_runtime": false,
+      "realtime_audio": false,
+      "cloud_ai_services": [],
+      "provider_integrations": [],
+      "resource_profile": "general-web",
+      "gpu_requirements": {
+        "required": false,
+        "profiles": []
+      },
+      "runtime_constraints": [],
+      "deployment_notes": [],
+      "storage_implications": []
+    },
+    "architecture_graph": {
+      "modules": [
+        {
+          "id": "user",
+          "name": "用户访问",
+          "kind": "actor",
+          "category": "user_entry",
+          "category_label": "用户入口",
+          "deployment_need": "用户访问入口，不需要购买计算资源。",
+          "required_for_deployment": true,
+          "activation_status": "",
+          "activation_condition": ""
+        },
+        {
+          "id": "frontend",
+          "name": "前端页面",
+          "kind": "frontend",
+          "category": "internal_component",
+          "category_label": "内部组件",
+          "deployment_need": "部署在应用 CVM，随主应用一起发布和监控。",
+          "required_for_deployment": true,
+          "activation_status": "",
+          "activation_condition": ""
+        },
+        {
+          "id": "src_scripts_main",
+          "name": "src/scripts/main.js",
+          "kind": "code-module",
+          "category": "internal_component",
+          "category_label": "内部组件",
+          "deployment_need": "部署在应用 CVM，随主应用一起发布和监控。",
+          "required_for_deployment": true,
+          "activation_status": "",
+          "activation_condition": ""
+        },
+        {
+          "id": "lingeebuild_repowiki_zh_content_mermaid_min",
+          "name": ".lingeebuild/repowiki/zh/content/mermaid.min.js",
+          "kind": "code-module",
+          "category": "internal_component",
+          "category_label": "内部组件",
+          "deployment_need": "部署在应用 CVM，随主应用一起发布和监控。",
+          "required_for_deployment": true,
+          "activation_status": "",
+          "activation_condition": ""
+        }
+      ],
+      "module_categories": {
+        "internal_component": {
+          "label": "内部组件",
+          "modules": [
+            {
+              "id": "frontend",
+              "name": "前端页面",
+              "kind": "frontend",
+              "deployment_need": "部署在应用 CVM，随主应用一起发布和监控。"
+            },
+            {
+              "id": "src_scripts_main",
+              "name": "src/scripts/main.js",
+              "kind": "code-module",
+              "deployment_need": "部署在应用 CVM，随主应用一起发布和监控。"
+            },
+            {
+              "id": "lingeebuild_repowiki_zh_content_mermaid_min",
+              "name": ".lingeebuild/repowiki/zh/content/mermaid.min.js",
+              "kind": "code-module",
+              "deployment_need": "部署在应用 CVM，随主应用一起发布和监控。"
+            }
+          ],
+          "deployment_note": "部署在应用 CVM，负责页面、API 和业务代码。"
+        },
+        "local_storage": {
+          "label": "本地存储部分",
+          "modules": [],
+          "deployment_note": "放在独立数据盘，并纳入备份。"
+        },
+        "external_storage": {
+          "label": "外部存储",
+          "modules": [],
+          "deployment_note": "当前未检测到原项目直接依赖 COS/S3/MinIO；高扩展性方案中的 COS 属于后续扩容建议，不是现有代码依赖。"
+        },
+        "internal_ai": {
+          "label": "内部 AI 能力调用",
+          "modules": [],
+          "deployment_note": "需要 AI 推理资源；低并发可先用 CPU，实时多路或低延迟场景需要评估 GPU。"
+        },
+        "external_service": {
+          "label": "外部服务调用",
+          "modules": [],
+          "deployment_note": "当前未检测到明确的外部云服务或第三方 API 调用。"
+        }
+      },
+      "edges": [
+        {
+          "source": "user",
+          "target": "frontend",
+          "label": "浏览器访问"
+        }
+      ],
+      "api_summary": {
+        "route_count": 0,
+        "frontend_call_count": 0,
+        "health_paths": [],
+        "streaming_route_count": 0,
+        "file_route_count": 0
+      },
+      "deployment_implications": []
+    },
+    "safety": [
+      "不要自动读取或上传本地 .env 文件。",
+      "不要编造生产密钥或生产环境变量。",
+      "如果生产环境变量缺失，资源初始化后先暂停，向客户确认后再部署应用。",
+      "备案或接入备案未确认前，不要把正式域名解析到中国大陆 CVM。",
+      "未备案域名不要配置成正式 HTTPS 站点。",
+      "ICP 备案完成并开通网站/APP 后，提醒客户在 30 日内办理公安联网备案。"
+    ]
+  }
+}

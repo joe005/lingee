@@ -1,0 +1,77 @@
+schema_version: 1.0
+title: 购买清单
+notes:
+  - 系统盘只用于操作系统和非业务软件。
+  - 应用代码、上传文件、数据库文件、日志、备份和运行数据放在独立数据盘。
+  - 最小方案和推荐方案先完成预检，再展示精确资源、费用变化和清单指纹并重新征求授权。
+  - 月成本不超过 1000 元时，Agent 可在整批清单审批后执行，并逐项保存进度；超过 1000 元时只生成订单交接清单，由客户在控制台确认并支付。
+  - CVM RunInstances 不提供安全的只生成未支付订单阶段；DryRun 只做预检，真实创建必须符合金额边界和已审批购买批次。
+  - 高扩展性方案只作为架构规划参考，建议联系腾讯云官网架构师确认后再购买。
+plans:
+  -
+    plan_id: minimal
+    title: 最小方案
+    direct_purchase_supported: true
+    purchase_note: 先完成预检并展示精确资源和费用清单；月成本不超过 1000 元时，可在用户本次明确授权后执行一次创建。
+    monthly_estimate: ¥80
+    annual_estimate: ¥816
+    resource_tags:
+      -
+        Key: from
+        Value: tencentcloud-vibe-deploy-skill
+    tencent_cloud_resources:
+      - Lighthouse：1 台 综合服务器套餐，套餐配置：通用型，2 核 CPU，4GB 内存，90GB 系统盘；公网：6 Mbps 峰值带宽，套餐内流量包：800GB/月；纯系统镜像：Ubuntu 24.04 LTS
+    billing_items:
+      - Lighthouse 轻量应用服务器套餐
+    main_services_to_deploy:
+      - 用户主应用程序
+      - Caddy/Nginx 静态文件和 HTTPS
+      - 备份脚本
+  -
+    plan_id: recommended
+    title: 推荐方案
+    direct_purchase_supported: true
+    purchase_note: 先完成预检并展示精确资源和费用清单；月成本不超过 1000 元时，可在用户本次明确授权后执行一次创建。
+    monthly_estimate: ¥271
+    annual_estimate: ¥2,733.96
+    resource_tags:
+      -
+        Key: from
+        Value: tencentcloud-vibe-deploy-skill
+    tencent_cloud_resources:
+      - Lighthouse：1 台 应用和数据服务器套餐，套餐配置：入门型，2 核 CPU，8GB 内存，80GB 系统盘；公网：7 Mbps 峰值带宽，套餐内流量包：800GB/月；纯系统镜像：Ubuntu 24.04 LTS；数据盘：160GB 数据盘，购买后经确认挂载至 /data
+      - Lighthouse：1 台 备份和监控服务器套餐，套餐配置：锐驰型，2 核 CPU，2GB 内存，50GB 系统盘；公网：套餐自带 200 Mbps 峰值带宽，不开放业务端口，不限流量；纯系统镜像：Ubuntu 24.04 LTS；数据盘：200GB 数据盘，购买后经确认挂载至 /data
+    billing_items:
+      - Lighthouse 轻量应用服务器套餐
+      - Lighthouse 独立高性能云硬盘
+    main_services_to_deploy:
+      - 用户主应用程序
+      - Caddy/Nginx 静态文件和 HTTPS
+      - 备份脚本
+  -
+    plan_id: future-scale
+    title: 高扩展性方案
+    direct_purchase_supported: false
+    purchase_note: 仅作规划参考；建议联系腾讯云官网架构师确认规格、迁移和购买。
+    monthly_estimate: ¥2,345.5
+    annual_estimate: ¥21,865.5
+    resource_tags:
+      -
+        Key: from
+        Value: tencentcloud-vibe-deploy-skill
+    tencent_cloud_resources:
+      - CVM：2 台 应用服务器，SA9 机型，4c / 8G / 50GB / 160GB，公网带宽：无需配置公网带宽
+      - CVM：1 台 监控和备份服务器，SA9 机型，2c / 4G / 50GB / 160GB，公网带宽：无需配置公网带宽
+      - Tencent Cloud CLB：1 个，公网负载均衡，HTTPS/HTTP 监听，20Mbps 起步，后端绑定多台应用 CVM
+    billing_items:
+      - CVM 实例
+      - 系统云硬盘
+      - 数据云硬盘
+      - CLB 实例
+      - 公网带宽/流量
+      - LCU/连接数等规格项
+      - 证书与监听配置按实际账单
+    main_services_to_deploy:
+      - 用户主应用程序
+      - Caddy/Nginx 静态文件和 HTTPS
+      - 备份脚本

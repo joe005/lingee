@@ -1,0 +1,399 @@
+{
+  "status": "needs_customer_answers",
+  "region": "ap-guangzhou",
+  "project": {
+    "name": "lingeebuild-prototype",
+    "path": "/Volumes/Joe/Lingee Build/原型/lingeebuild-prototype",
+    "total_files_seen": 40,
+    "top_level": [
+      ".DS_Store",
+      ".github",
+      ".gitignore",
+      ".lingeebuild",
+      ".lingeebuild-beta",
+      ".opencode",
+      ".prettierrc",
+      "AGENTS.md",
+      "CHANGELOG.md",
+      "README.md",
+      "docs",
+      "index.html",
+      "package-lock.json",
+      "package.json",
+      "scripts",
+      "src",
+      "vite.config.js"
+    ],
+    "suffix_counts": {
+      ".md": 15,
+      ".json": 8,
+      "[no extension]": 7,
+      ".html": 3,
+      ".js": 3,
+      ".css": 2,
+      ".cjs": 1,
+      ".yml": 1
+    }
+  },
+  "scan_summary": {
+    "app_kind": "frontend",
+    "frameworks": [
+      "vite"
+    ],
+    "frontend_stack": [
+      "Vite"
+    ],
+    "databases": [],
+    "caches": [],
+    "object_storage": false,
+    "ai_capabilities": [],
+    "optional_ai_capabilities": [],
+    "optional_model_runtime": false,
+    "ai_resource_profile": "general-web",
+    "resource_demands": {
+      "categories": {},
+      "resource_types": {},
+      "gpu_profiles": [],
+      "requires_gpu_or_accelerator": false,
+      "requires_local_device_bridge": false,
+      "has_external_service_calls": false,
+      "has_realtime_network": false,
+      "apple_ecosystem_dependency": {
+        "score": 0,
+        "level": "none",
+        "cloud_fit": "cloud_native_or_unknown",
+        "migration_difficulty": "unknown",
+        "llm_review_recommended": false,
+        "summary": "未检测到明显 Apple/macOS 生态依赖。",
+        "factors": [],
+        "replacement_candidates": [],
+        "llm_review_focus": []
+      },
+      "ignored_or_weak_signal_count": 1,
+      "evidence_level_counts": {
+        "weak": 1
+      },
+      "confidence_counts": {
+        "low": 1
+      },
+      "evidence_review": {
+        "review_recommended": true,
+        "project_tree_summary": [
+          {
+            "path": "AGENTS.md",
+            "kind": "file",
+            "path_role": "documentation",
+            "runtime_relevance": "supporting_context",
+            "reason": "文档只能作为辅助证据",
+            "has_resource_signal": false
+          },
+          {
+            "path": "CHANGELOG.md",
+            "kind": "file",
+            "path_role": "documentation",
+            "runtime_relevance": "supporting_context",
+            "reason": "文档只能作为辅助证据",
+            "has_resource_signal": false
+          },
+          {
+            "path": "docs/",
+            "kind": "dir",
+            "path_role": "test_doc_example",
+            "runtime_relevance": "supporting_context",
+            "reason": "测试、文档或示例目录",
+            "has_resource_signal": false
+          },
+          {
+            "path": "index.html",
+            "kind": "file",
+            "path_role": "project_root_or_unknown",
+            "runtime_relevance": "supporting_context",
+            "reason": "项目根目录或未识别目录",
+            "has_resource_signal": false
+          },
+          {
+            "path": "package-lock.json",
+            "kind": "file",
+            "path_role": "dependency_manifest",
+            "runtime_relevance": "active_runtime",
+            "reason": "依赖清单直接影响运行环境",
+            "has_resource_signal": false
+          },
+          {
+            "path": "package.json",
+            "kind": "file",
+            "path_role": "dependency_manifest",
+            "runtime_relevance": "active_runtime",
+            "reason": "依赖清单直接影响运行环境",
+            "has_resource_signal": false
+          },
+          {
+            "path": "README.md",
+            "kind": "file",
+            "path_role": "documentation",
+            "runtime_relevance": "supporting_context",
+            "reason": "文档只能作为辅助证据",
+            "has_resource_signal": false
+          },
+          {
+            "path": "scripts/",
+            "kind": "dir",
+            "path_role": "runtime_source_tree",
+            "runtime_relevance": "active_runtime",
+            "reason": "运行时代码或脚本目录",
+            "has_resource_signal": false
+          },
+          {
+            "path": "src/",
+            "kind": "dir",
+            "path_role": "runtime_source_tree",
+            "runtime_relevance": "active_runtime",
+            "reason": "运行时代码或脚本目录",
+            "has_resource_signal": false
+          },
+          {
+            "path": "vite.config.js",
+            "kind": "file",
+            "path_role": "runtime_source",
+            "runtime_relevance": "active_runtime",
+            "reason": "根目录入口或源码文件",
+            "has_resource_signal": false
+          }
+        ],
+        "candidates": [
+          {
+            "demand_id": "external.http_api",
+            "label": "外部 HTTP/API 调用",
+            "category": "external_service",
+            "resource_type": "http_api",
+            "current_evidence_level": "weak",
+            "ignored_for_sizing": false,
+            "path_role_counts": {
+              "project_root_or_unknown": 1
+            },
+            "runtime_relevance_counts": {
+              "supporting_context": 1
+            },
+            "question": "这些命中是否代表运行时资源需求，还是只来自业务数据、日志、文档或测试？",
+            "evidence": [
+              {
+                "source": ".lingeebuild/repowiki/zh/content/mermaid.min.js",
+                "line": 13,
+                "match": "fetch(",
+                "source_kind": "source",
+                "signal_strength": "weak",
+                "path_role": "project_root_or_unknown",
+                "runtime_relevance": "supporting_context",
+                "path_reason": "项目根目录或未识别目录"
+              }
+            ]
+          }
+        ],
+        "strict_json_schema": {
+          "resource_evidence_review": {
+            "decisions": [
+              {
+                "demand_id": "string",
+                "decision": "valid_runtime_requirement|weak_hint|not_runtime_requirement|needs_human",
+                "evidence_level": "strong|medium|weak|ignored",
+                "reason": "string",
+                "evidence": [
+                  "path:line or scanner evidence"
+                ]
+              }
+            ],
+            "notes": [
+              "string"
+            ]
+          }
+        },
+        "prompt": "Review resource-demand evidence by using both project tree roles and exact signal file paths. Treat data/, logs/, llm_logs/, cache/, reports/, tests/, docs/, examples/ as non-runtime or supporting unless code/config/manifest evidence proves otherwise. Return strict JSON only."
+      }
+    },
+    "unknowns": [],
+    "deployment_readiness": {
+      "level": "complete",
+      "label": "项目上云适配信息较完整",
+      "score": 8,
+      "max_score": 8,
+      "ready_items": [
+        {
+          "id": "stack",
+          "label": "技术栈/框架",
+          "weight": 2,
+          "ready": true,
+          "detail": [
+            "vite"
+          ]
+        },
+        {
+          "id": "runtime",
+          "label": "启动命令",
+          "weight": 2,
+          "ready": true,
+          "detail": [
+            "npm run preview",
+            "npm run dev"
+          ]
+        },
+        {
+          "id": "ports",
+          "label": "应用端口",
+          "weight": 1,
+          "ready": true,
+          "detail": [
+            5173
+          ]
+        },
+        {
+          "id": "key_files",
+          "label": "关键文件",
+          "weight": 1,
+          "ready": true,
+          "detail": [
+            "index.html",
+            "vite.config.js",
+            "package-lock.json",
+            "package.json"
+          ]
+        },
+        {
+          "id": "deployment_mode",
+          "label": "部署方式",
+          "weight": 1,
+          "ready": true,
+          "detail": "process/systemd"
+        },
+        {
+          "id": "app_kind",
+          "label": "应用类型",
+          "weight": 1,
+          "ready": true,
+          "detail": "frontend"
+        }
+      ],
+      "missing_items": [],
+      "meaning": "用于说明当前项目离可直接上云部署还差多少信息或改造，不表示代码理解是否可靠。"
+    },
+    "existing_deployment": {
+      "detected": false,
+      "confidence": "none",
+      "decision_required": false,
+      "evidence": [],
+      "note": "未发现明确的已部署状态证据。"
+    },
+    "confidence": {
+      "overall": "high",
+      "notes": {
+        "ports": "assumed",
+        "runtime": "detected",
+        "docs_required": false
+      }
+    }
+  },
+  "priority_notice": "",
+  "questions": [
+    {
+      "id": "deployment_region",
+      "question": "计划优先部署到哪个腾讯云地域？这会影响价格查询和备案判断。",
+      "options": [
+        {
+          "id": "ap-guangzhou",
+          "label": "广州",
+          "description": "华南常用默认地域；绑定域名对外服务时通常需要备案。"
+        },
+        {
+          "id": "ap-shanghai",
+          "label": "上海",
+          "description": "华东常用地域；绑定域名对外服务时通常需要备案。"
+        },
+        {
+          "id": "ap-beijing",
+          "label": "北京",
+          "description": "华北常用地域；绑定域名对外服务时通常需要备案。"
+        },
+        {
+          "id": "ap-hongkong",
+          "label": "中国香港",
+          "description": "通常不需要 ICP 备案，但价格、延迟和可售规格要单独确认。"
+        }
+      ],
+      "recommended_option_id": "ap-guangzhou"
+    },
+    {
+      "id": "deployment_priority",
+      "question": "这次上云最优先考虑什么？",
+      "options": [
+        {
+          "id": "balanced",
+          "label": "稳定优先",
+          "description": "推荐方案会优先照顾长期运行、备份和后续小幅扩容。"
+        },
+        {
+          "id": "lowest_cost",
+          "label": "成本最低",
+          "description": "倾向最小方案，先用较少资源把服务跑起来。"
+        },
+        {
+          "id": "high_scalability",
+          "label": "扩展性优先",
+          "description": "倾向高扩展性方案，为更多访问量和分层扩容预留空间。"
+        }
+      ],
+      "recommended_option_id": "balanced"
+    },
+    {
+      "id": "traffic_expectation",
+      "question": "你预计上线初期的访问量级接近哪一种？",
+      "options": [
+        {
+          "id": "small",
+          "label": "个人/小范围",
+          "description": "适合最小方案或较轻量推荐方案。"
+        },
+        {
+          "id": "real_users",
+          "label": "真实用户",
+          "description": "建议用推荐方案，留出备份、磁盘和排障空间。"
+        },
+        {
+          "id": "growth",
+          "label": "增长明确",
+          "description": "需要考虑高扩展性方案，入口、应用、数据分层。"
+        }
+      ],
+      "recommended_option_id": "real_users"
+    },
+    {
+      "id": "production_inputs",
+      "question": "生产部署所需信息现在准备到什么程度？",
+      "options": [
+        {
+          "id": "ready",
+          "label": "基本齐全",
+          "description": "已准备生产环境变量、域名/DNS 和代码交付方式。"
+        },
+        {
+          "id": "partial",
+          "label": "部分缺失",
+          "description": "可以先出部署报告，购买或上线前补齐。"
+        },
+        {
+          "id": "not_ready",
+          "label": "还未准备",
+          "description": "只适合先做方案评估，不应直接购买部署。"
+        }
+      ],
+      "recommended_option_id": "partial"
+    }
+  ],
+  "answer_format": {
+    "answers": [
+      {
+        "question_id": "deployment_region",
+        "selected_option_id": "ap-guangzhou",
+        "note": ""
+      }
+    ]
+  }
+}

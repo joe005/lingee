@@ -1,0 +1,26 @@
+{
+  "schema_version": "1.0",
+  "project": {
+    "name": "lingeebuild-prototype",
+    "path": "/Volumes/Joe/Lingee Build/原型/lingeebuild-prototype"
+  },
+  "capabilities": [],
+  "optional_capabilities": [],
+  "optional_model_runtime": false,
+  "optional_ai_features": [],
+  "model_names": [],
+  "env_names": [],
+  "local_model_runtime": false,
+  "realtime_audio": false,
+  "cloud_ai_services": [],
+  "provider_integrations": [],
+  "resource_profile": "general-web",
+  "gpu_requirements": {
+    "required": false,
+    "profiles": []
+  },
+  "runtime_constraints": [],
+  "deployment_notes": [],
+  "storage_implications": [],
+  "evidence": {}
+}

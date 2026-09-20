@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0",
+  "report": "/Volumes/Joe/Lingee Build/原型/lingeebuild-prototype/deploy-bundle/report.html",
+  "status": "pass",
+  "summary": {
+    "visible_text_chars": 4153,
+    "text_blocks": 262,
+    "high_findings": 0,
+    "medium_findings": 0,
+    "low_findings": 0
+  },
+  "findings": [],
+  "style_guidance": [
+    "面向客户的报告只写结论、依据、影响和下一步。",
+    "同一判断只表达一次，表格里已出现的信息不要在段落里重复解释。",
+    "避免暴露 Agent 工作流、内部 JSON 路径和内部执行指令。",
+    "优先使用短句，少用抽象词，保持普通用户能听懂。"
+  ]
+}

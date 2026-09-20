@@ -1,0 +1,237 @@
+{
+  "target_skill": "tencentcloud-vibe-deploy",
+  "target_runner": "built-in-purchase-precheck",
+  "operation": "advisory_only_do_not_purchase",
+  "precheck_command": "python3 scripts/purchase_precheck.py _agent/coordination/tencentcloud-infra-request-future-scale.json --output _agent/coordination/tencentcloud-purchase-precheck-future-scale.json --profile default",
+  "requires_explicit_customer_approval": true,
+  "selected_plan": "future-scale",
+  "region": "ap-guangzhou",
+  "profile": "default",
+  "project": {
+    "name": "lingeebuild-prototype",
+    "slug": "lingeebuild-prototype"
+  },
+  "deployment_context": {
+    "production_inputs": "partial",
+    "external_ai_readiness": "not_required",
+    "missing_inputs": [
+      "生产环境变量注入方案",
+      "域名/DNS 与代码交付方式"
+    ],
+    "secret_handling": "只确认配置项是否就绪，不把真实密钥写入答案、方案、审批文件或对话。"
+  },
+  "resources_for_architect_review": [
+    {
+      "resource_type": "cvm",
+      "purchase_product_type": "cvm",
+      "role": "app",
+      "count": 2,
+      "product": "Tencent Cloud CVM",
+      "os": "Ubuntu Server LTS or TencentOS Server",
+      "cpu": 4,
+      "memory_gb": 8,
+      "system_disk_gb": 50,
+      "data_disk_gb": 160,
+      "public_bandwidth_mbps": 0,
+      "components": [
+        "systemd",
+        "language/runtime dependencies",
+        "process/binary deployment",
+        "Prometheus node_exporter"
+      ],
+      "accelerator": "",
+      "data_disk_mount_point": "/data",
+      "data_disk_type": "CLOUD_PREMIUM",
+      "InstanceType": "SA9.LARGE8",
+      "placement_zone": "ap-guangzhou-5",
+      "ImageId": "img-dk53t5vb",
+      "system_disk_type": "CLOUD_PREMIUM",
+      "public_network_billing_mode": "fixed_bandwidth",
+      "internet_charge_type": "BANDWIDTH_PREPAID",
+      "post_purchase_mount_confirmation_required": true,
+      "region": "ap-guangzhou"
+    },
+    {
+      "resource_type": "cvm",
+      "purchase_product_type": "cvm",
+      "role": "observability-backup",
+      "count": 1,
+      "product": "Tencent Cloud CVM",
+      "os": "Ubuntu Server LTS or TencentOS Server",
+      "cpu": 2,
+      "memory_gb": 4,
+      "system_disk_gb": 50,
+      "data_disk_gb": 160,
+      "public_bandwidth_mbps": 0,
+      "components": [
+        "Grafana",
+        "Prometheus",
+        "Loki or filebeat-compatible stack",
+        "Restic backup repository for app files/config"
+      ],
+      "accelerator": "",
+      "backup_fault_domain": "separate_instance",
+      "restore_test_required": true,
+      "backup_status": "planned_not_verified",
+      "data_disk_mount_point": "/data",
+      "data_disk_type": "CLOUD_PREMIUM",
+      "InstanceType": "SA9.MEDIUM4",
+      "placement_zone": "ap-guangzhou-5",
+      "ImageId": "img-dk53t5vb",
+      "system_disk_type": "CLOUD_PREMIUM",
+      "public_network_billing_mode": "fixed_bandwidth",
+      "internet_charge_type": "BANDWIDTH_PREPAID",
+      "post_purchase_mount_confirmation_required": true,
+      "region": "ap-guangzhou"
+    },
+    {
+      "resource_type": "load-balancer",
+      "product": "Tencent Cloud CLB",
+      "count": 1,
+      "spec": "公网负载均衡，HTTPS/HTTP 监听，20Mbps 起步，后端绑定多台应用 CVM",
+      "purpose": "作为高扩展性方案的统一公网入口，负责 TLS 终止、健康检查和流量分发",
+      "billing_items": [
+        "CLB 实例",
+        "公网带宽/流量",
+        "LCU/连接数等规格项",
+        "证书与监听配置按实际账单"
+      ],
+      "dependency": "public_entry",
+      "notes": [
+        "高扩展性方案不使用单台 CVM 充当入口负载均衡，避免入口本身成为单点。"
+      ],
+      "layer": "access",
+      "public_bandwidth_mbps": 20,
+      "public_network_billing_mode": "fixed_bandwidth",
+      "internet_charge_type": "BANDWIDTH_PREPAID",
+      "bandwidth_range_mbps": "20-100",
+      "bandwidth_selection_reason": "按高扩展方案 20Mbps 起步选择 20Mbps，后续可按访问量扩容到 100Mbps 或更高。",
+      "bandwidth_billing_advice": "查价按固定带宽；访问量较稳定或需要预算可控时，优先使用固定带宽计费。",
+      "traffic_billing_alternative": {
+        "internet_charge_type": "TRAFFIC_POSTPAID_BY_HOUR",
+        "when_to_use": "流量波动大、无法准确预估流量、早期试运行且需要为实际出流量付费时考虑。",
+        "caveat": "按流量计费的最终账单取决于真实公网出方向流量，报告中的月/年价格不把未知流量硬估进去。"
+      },
+      "region": "ap-guangzhou"
+    }
+  ],
+  "cvm_roles": [
+    {
+      "role": "app",
+      "count": 2,
+      "product": "Tencent Cloud CVM",
+      "os": "Ubuntu Server LTS or TencentOS Server",
+      "cpu": 4,
+      "memory_gb": 8,
+      "system_disk_gb": 50,
+      "data_disk_gb": 160,
+      "public_bandwidth_mbps": 0,
+      "components": [
+        "systemd",
+        "language/runtime dependencies",
+        "process/binary deployment",
+        "Prometheus node_exporter"
+      ],
+      "accelerator": "",
+      "data_disk_mount_point": "/data",
+      "data_disk_type": "CLOUD_PREMIUM",
+      "InstanceType": "SA9.LARGE8",
+      "placement_zone": "ap-guangzhou-5",
+      "ImageId": "img-dk53t5vb",
+      "system_disk_type": "CLOUD_PREMIUM",
+      "public_network_billing_mode": "fixed_bandwidth",
+      "internet_charge_type": "BANDWIDTH_PREPAID",
+      "post_purchase_mount_confirmation_required": true
+    },
+    {
+      "role": "observability-backup",
+      "count": 1,
+      "product": "Tencent Cloud CVM",
+      "os": "Ubuntu Server LTS or TencentOS Server",
+      "cpu": 2,
+      "memory_gb": 4,
+      "system_disk_gb": 50,
+      "data_disk_gb": 160,
+      "public_bandwidth_mbps": 0,
+      "components": [
+        "Grafana",
+        "Prometheus",
+        "Loki or filebeat-compatible stack",
+        "Restic backup repository for app files/config"
+      ],
+      "accelerator": "",
+      "backup_fault_domain": "separate_instance",
+      "restore_test_required": true,
+      "backup_status": "planned_not_verified",
+      "data_disk_mount_point": "/data",
+      "data_disk_type": "CLOUD_PREMIUM",
+      "InstanceType": "SA9.MEDIUM4",
+      "placement_zone": "ap-guangzhou-5",
+      "ImageId": "img-dk53t5vb",
+      "system_disk_type": "CLOUD_PREMIUM",
+      "public_network_billing_mode": "fixed_bandwidth",
+      "internet_charge_type": "BANDWIDTH_PREPAID",
+      "post_purchase_mount_confirmation_required": true
+    }
+  ],
+  "managed_resources": [
+    {
+      "resource_type": "load-balancer",
+      "product": "Tencent Cloud CLB",
+      "count": 1,
+      "spec": "公网负载均衡，HTTPS/HTTP 监听，20Mbps 起步，后端绑定多台应用 CVM",
+      "purpose": "作为高扩展性方案的统一公网入口，负责 TLS 终止、健康检查和流量分发",
+      "billing_items": [
+        "CLB 实例",
+        "公网带宽/流量",
+        "LCU/连接数等规格项",
+        "证书与监听配置按实际账单"
+      ],
+      "dependency": "public_entry",
+      "notes": [
+        "高扩展性方案不使用单台 CVM 充当入口负载均衡，避免入口本身成为单点。"
+      ],
+      "layer": "access",
+      "public_bandwidth_mbps": 20,
+      "public_network_billing_mode": "fixed_bandwidth",
+      "internet_charge_type": "BANDWIDTH_PREPAID",
+      "bandwidth_range_mbps": "20-100",
+      "bandwidth_selection_reason": "按高扩展方案 20Mbps 起步选择 20Mbps，后续可按访问量扩容到 100Mbps 或更高。",
+      "bandwidth_billing_advice": "查价按固定带宽；访问量较稳定或需要预算可控时，优先使用固定带宽计费。",
+      "traffic_billing_alternative": {
+        "internet_charge_type": "TRAFFIC_POSTPAID_BY_HOUR",
+        "when_to_use": "流量波动大、无法准确预估流量、早期试运行且需要为实际出流量付费时考虑。",
+        "caveat": "按流量计费的最终账单取决于真实公网出方向流量，报告中的月/年价格不把未知流量硬估进去。"
+      }
+    }
+  ],
+  "compliance": {
+    "region": "ap-guangzhou",
+    "planned_domain": "",
+    "is_mainland_china_region": true,
+    "public_access_planned": true,
+    "reminder_level": "conditional",
+    "icp_filing_required_before_domain_launch": "required_if_domain_is_bound",
+    "public_security_filing_after_launch": "required_after_icp_and_launch",
+    "summary": "计划使用中国大陆地域公网服务。当前未提供域名；若后续绑定真实域名，需要先确认 ICP 备案或腾讯云接入备案。",
+    "purchase_decision_oral_reminder": "提醒一下：这个方案会使用中国大陆地域的公网服务。现在还没确定域名；如果后续要绑定真实域名，购买和上线前需要先确认 ICP 备案或腾讯云接入备案，备案后上线 30 日内还要做公安联网备案。",
+    "customer_confirmations_before_deploy": [
+      "确认目标域名是否已经完成 ICP 备案，以及是否已经接入腾讯云。",
+      "如果域名还没有备案，先完成 ICP 备案，再正式绑定域名上线。",
+      "如果域名以前在其他云厂商备案，需要先做腾讯云接入备案，再把域名解析到腾讯云大陆 CVM。",
+      "正式绑定域名前，需要先向客户确认目标域名。"
+    ],
+    "guardrails": [
+      "备案或接入备案未确认前，不要把正式域名解析到中国大陆 CVM。",
+      "未备案域名不要配置成正式 HTTPS 站点。",
+      "ICP 备案完成并开通网站/APP 后，提醒客户在 30 日内办理公安联网备案。"
+    ],
+    "reference_urls": [
+      "https://cloud.tencent.com/document/product/243/18907",
+      "https://cloud.tencent.com/document/product/243/39038"
+    ]
+  },
+  "no_purchase": true,
+  "customer_message": "高扩展性方案通常涉及较高成本、数据库迁移、容量评估和托管产品规格确认。建议联系腾讯云官网架构师协助完成最终设计和购买，本 skill 不直接发起高扩展性方案的资源购买。",
+  "recommended_next_step": "请客户通过腾讯云官网联系架构师或售前团队，带上 report.html、plans/future-scale.yaml 和本 JSON 作为沟通材料。"
+}
