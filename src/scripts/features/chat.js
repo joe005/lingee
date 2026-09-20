@@ -91,6 +91,7 @@ export function initPreview() {
         setPickMode(false);
       }
       if(on) pushPreviewUrl('https://feature.kingdee.com:1026/feature_vb/?byPageId=root1e74498fa8d347ae969274e1708de3cb&isCosmicUI=true');
+      else popPreviewUrl();
     });
   }
   if(previewPickBtn){
