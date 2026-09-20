@@ -83,6 +83,9 @@
   /* 预览打开时会话区的真实下限，拖拽上限与之对齐 */
   #view-chat.preview-open .chat-container{min-width:360px}
   #view-chat .chat-preview-side{width:0;overflow:hidden;flex:none;display:flex;flex-direction:column;background:#fff;will-change:width;min-width:0}
+  /* 关闭预览时 #view-chat 还是 column 方向，只收 width 挡不住纵向占位，
+     预览侧栏会按内容高度在会话区下面顶出一段空隙（约 48px） */
+  #view-chat:not(.preview-open) .chat-preview-side{height:0}
   /* 分割线只由 .chat-resizer 提供 */
   #view-chat.preview-open .chat-preview-side{width:50%;min-width:0;overflow:hidden}
   #view-chat.preview-open .chat-resizer.dragging{background:rgba(73,93,255,.15)}

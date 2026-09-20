@@ -46,6 +46,16 @@
     color:#5a5a5f;cursor:pointer;flex:none;
   }
   .round-btn:hover{background:var(--hover)}
+  /* 提示词增强三态：idle(增强) / loading(转圈) / applied(撤回) */
+  .enhance-btn .enhance-ic{display:none}
+  .enhance-btn:not(.is-loading):not(.is-applied) .enhance-ic-idle{display:block}
+  .enhance-btn.is-loading .enhance-ic-loading{display:block;animation:enhance-spin .8s linear infinite}
+  .enhance-btn.is-applied .enhance-ic-applied{display:block}
+  .enhance-btn.is-loading{cursor:default}
+  .enhance-btn.is-empty{opacity:.35;cursor:default}
+  .enhance-btn.is-empty:hover{background:transparent}
+  @keyframes enhance-spin{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion:reduce){.enhance-btn.is-loading .enhance-ic-loading{animation:none}}
   .chip{
     display:flex;align-items:center;gap:5px;
     padding:4px 8px;border-radius:999px;border:none;

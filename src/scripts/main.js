@@ -12,6 +12,7 @@ import { initPreview, initHistoryPanel } from './features/chat.js';
 import { initEnvConfig, initEnvAuth, initEnvDisconnect } from './features/env.js';
 import { initApps, initNewAppModal, initAppsNewDropdown } from './features/apps.js';
 import { initComposer, initPlusMenu } from './features/composer.js';
+import { initPromptEnhance } from './features/prompt-enhance.js';
 import { initTestParam } from './boot/test-param.js';
 import { initTooltip } from './features/tooltip.js';
 import { initShortcuts } from './features/shortcuts.js';
@@ -60,6 +61,7 @@ initSidebarNav();                 /* 2180  core/view.js */
 initApps();                       /* 2208  features/apps.js */
 initSegmentedTabs();              /* 2289  features/sidebar.js */
 initComposer();                   /* 2312  features/composer.js */
+initPromptEnhance();              /* 提示词增强：idle/loading/applied 三态 */
 initHistoryPanel();               /* 2859  features/chat.js */
 initNewAppModal();                /* 2885  features/apps.js */
 initAttachModal();                /* 2996  features/attach-app.js */
