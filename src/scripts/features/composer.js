@@ -578,22 +578,20 @@ export function initComposer() {
     });
   }
   if(previewUrlInput){
-    var _urlCommitted=previewUrlInput.value;
     previewUrlInput.addEventListener('focus',function(){ this.select(); });
     previewUrlInput.addEventListener('keydown',function(e){
       if(e.key==='Enter'){
         var v=this.value.trim();
-        if(!v){ this.value=_urlCommitted; this.blur(); return; }
+        if(!v) return;
         if(!/^[a-z][a-z0-9+.-]*:/i.test(v)) v='https://'+v;
         this.value=v;
-        _urlCommitted=v;
+        var f=$('#chatPreviewFrame');
+        if(f&&f.src!==v){ pushPreviewUrl(v); }
         this.blur();
       }else if(e.key==='Escape'){
-        this.value=_urlCommitted;
         this.blur();
       }
     });
-    previewUrlInput.addEventListener('blur',function(){ this.value=_urlCommitted; this.scrollLeft=0; });
   }
   if(previewRefreshBtn){
     previewRefreshBtn.addEventListener('click',function(){
