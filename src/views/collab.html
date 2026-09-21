@@ -2,7 +2,6 @@
   <div class="view hidden" id="view-collab">
     <div class="tab-nav" id="cvTabNav">
       <button class="tab-nav-item tab-nav-item--active" data-cvview="tasks" onclick="cvSwitchView('tasks')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>任务管理<span class="tab-nav-count" id="cvTaskCount">0</span></button>
-      <button class="tab-nav-item" data-cvview="review" onclick="cvSwitchView('review')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>待评审<span class="tab-nav-count tab-nav-count--warn" id="cvReviewCount">0</span></button>
       <button class="tab-nav-item" data-cvview="members" onclick="cvSwitchView('members')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>协作人员管理</button>
       <button class="tab-nav-item" data-cvview="experts" onclick="cvSwitchView('experts')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>专家管理</button>
       <button class="tab-nav-item" data-cvview="teams" onclick="cvSwitchView('teams')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>专家团管理</button>
@@ -19,83 +18,65 @@
 
     <!-- 任务管理 -->
     <div class="cv-panel active" id="cv-tasks">
-      <div class="filter-bar">
-        <div class="filter-group" data-filter-type="type">
-          <button class="filter-btn filter-btn--active" onclick="cvSwitchFilter(this)">全部</button>
-          <button class="filter-btn" onclick="cvSwitchFilter(this)">需求</button>
-          <button class="filter-btn" onclick="cvSwitchFilter(this)">Bug</button>
-          <button class="filter-btn" onclick="cvSwitchFilter(this)">任务</button>
-          <button class="filter-btn" onclick="cvSwitchFilter(this)">改进</button>
-        </div>
-        <div class="filter-group" data-filter-type="status">
-          <button class="filter-btn filter-btn--active" onclick="cvSwitchFilter(this)">全部状态</button>
-          <button class="filter-btn" onclick="cvSwitchFilter(this)">未开始</button>
-          <button class="filter-btn" onclick="cvSwitchFilter(this)">待评审</button>
-          <button class="filter-btn" onclick="cvSwitchFilter(this)">进行中</button>
-          <button class="filter-btn" onclick="cvSwitchFilter(this)">已完成</button>
-          <button class="filter-btn" onclick="cvSwitchFilter(this)">已失败</button>
-        </div>
-        <div class="filter-group" data-filter-type="collab">
-          <button class="filter-btn filter-btn--active" onclick="cvSwitchFilter(this)">全部协作</button>
-          <button class="filter-btn" onclick="cvSwitchFilter(this)">人人协作</button>
-          <button class="filter-btn" onclick="cvSwitchFilter(this)">人Agent协作</button>
-          <button class="filter-btn" onclick="cvSwitchFilter(this)">Agent间协作</button>
-          <button class="filter-btn" onclick="cvSwitchFilter(this)">无需协作</button>
-        </div>
-        <div class="filter-group" data-filter-type="size">
-          <button class="filter-btn filter-btn--active" onclick="cvSwitchFilter(this)">全部大小</button>
-          <button class="filter-btn" onclick="cvSwitchFilter(this)">小任务</button>
-          <button class="filter-btn" onclick="cvSwitchFilter(this)">大任务</button>
-        </div>
-        <button class="sync-btn" onclick="cvOpenSyncModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>同步任务</button>
-      </div>
       <div class="stats" id="cv-task-stats"></div>
+      <div class="filter-bar">
+        <div class="search-wrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input placeholder="搜索任务标题" onkeyup="cvApplyFilters()"></div>
+        <div class="cv-fdd" data-cvfdd="status">
+          <button type="button" class="cv-fdd-btn" data-cvfdd-toggle><span class="cv-fdd-k">状态</span><span class="cv-fdd-label">全部状态</span><svg class="cv-fdd-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+          <div class="cv-fdd-menu">
+            <button type="button" class="cv-fdd-item on" data-cvfdd-val="全部状态">全部状态</button>
+            <button type="button" class="cv-fdd-item" data-cvfdd-val="未开始">未开始</button>
+            <button type="button" class="cv-fdd-item" data-cvfdd-val="待评审">待评审</button>
+            <button type="button" class="cv-fdd-item" data-cvfdd-val="进行中">进行中</button>
+            <button type="button" class="cv-fdd-item" data-cvfdd-val="已完成">已完成</button>
+            <button type="button" class="cv-fdd-item" data-cvfdd-val="已失败">已失败</button>
+          </div>
+        </div>
+        <div class="cv-fdd" data-cvfdd="type">
+          <button type="button" class="cv-fdd-btn" data-cvfdd-toggle><span class="cv-fdd-k">类型</span><span class="cv-fdd-label">全部</span><svg class="cv-fdd-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+          <div class="cv-fdd-menu">
+            <button type="button" class="cv-fdd-item on" data-cvfdd-val="全部">全部</button>
+            <button type="button" class="cv-fdd-item" data-cvfdd-val="需求">需求</button>
+            <button type="button" class="cv-fdd-item" data-cvfdd-val="Bug">Bug</button>
+            <button type="button" class="cv-fdd-item" data-cvfdd-val="任务">任务</button>
+            <button type="button" class="cv-fdd-item" data-cvfdd-val="改进">改进</button>
+          </div>
+        </div>
+        <div class="cv-fdd" data-cvfdd="collab">
+          <button type="button" class="cv-fdd-btn" data-cvfdd-toggle><span class="cv-fdd-k">协作</span><span class="cv-fdd-label">全部协作</span><svg class="cv-fdd-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+          <div class="cv-fdd-menu">
+            <button type="button" class="cv-fdd-item on" data-cvfdd-val="全部协作">全部协作</button>
+            <button type="button" class="cv-fdd-item" data-cvfdd-val="人人协作">人人协作</button>
+            <button type="button" class="cv-fdd-item" data-cvfdd-val="人Agent协作">人Agent协作</button>
+            <button type="button" class="cv-fdd-item" data-cvfdd-val="Agent间协作">Agent间协作</button>
+            <button type="button" class="cv-fdd-item" data-cvfdd-val="无需协作">无需协作</button>
+          </div>
+        </div>
+        <div class="cv-fdd" data-cvfdd="size">
+          <button type="button" class="cv-fdd-btn" data-cvfdd-toggle><span class="cv-fdd-k">大小</span><span class="cv-fdd-label">全部大小</span><svg class="cv-fdd-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+          <div class="cv-fdd-menu">
+            <button type="button" class="cv-fdd-item on" data-cvfdd-val="全部大小">全部大小</button>
+            <button type="button" class="cv-fdd-item" data-cvfdd-val="小任务">小任务</button>
+            <button type="button" class="cv-fdd-item" data-cvfdd-val="大任务">大任务</button>
+          </div>
+        </div>
+        <button class="sync-btn cv-tasks-sync" onclick="cvOpenSyncModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>同步任务</button>
+      </div>
       <div class="scroll">
         <div class="card-grid" id="cv-task-grid"></div>
       </div>
     </div>
 
-    <!-- 待评审 -->
-    <div class="cv-panel" id="cv-review">
-      <div class="filter-bar">
-        <div class="filter-group" data-filter-type="review-type">
-          <button class="filter-btn filter-btn--active" onclick="cvSwitchFilter(this)">全部待评审</button>
-          <button class="filter-btn" onclick="cvSwitchFilter(this)">我发起的</button>
-          <button class="filter-btn" onclick="cvSwitchFilter(this)">分配给我的</button>
-        </div>
-        <div class="filter-group" data-filter-type="review-priority">
-          <button class="filter-btn filter-btn--active" onclick="cvSwitchFilter(this)">全部优先级</button>
-          <button class="filter-btn" onclick="cvSwitchFilter(this)">紧急</button>
-          <button class="filter-btn" onclick="cvSwitchFilter(this)">高</button>
-          <button class="filter-btn" onclick="cvSwitchFilter(this)">中</button>
-          <button class="filter-btn" onclick="cvSwitchFilter(this)">低</button>
-        </div>
-        <div class="search-wrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input placeholder="搜索评审任务" onkeyup="cvApplyReviewFilters()"></div>
-      </div>
-      <div class="stats" id="cv-review-stats"></div>
-      <div class="scroll">
-        <div class="card-grid" id="cv-review-grid"></div>
-      </div>
-    </div>
-
-    <!-- 协作人员管理 -->
+    <!-- 协作人员管理：团队（与项目不挂钩） -->
     <div class="cv-panel" id="cv-members">
       <div class="filter-bar">
-        <div class="filter-group" data-filter-type="role">
-          <button class="filter-btn filter-btn--active" onclick="cvSwitchFilter(this)">全部</button>
-          <button class="filter-btn" onclick="cvSwitchFilter(this)">需求</button>
-          <button class="filter-btn" onclick="cvSwitchFilter(this)">架构</button>
-          <button class="filter-btn" onclick="cvSwitchFilter(this)">开发</button>
-          <button class="filter-btn" onclick="cvSwitchFilter(this)">测试</button>
-          <button class="filter-btn" onclick="cvSwitchFilter(this)">运维</button>
-          <button class="filter-btn" onclick="cvSwitchFilter(this)">产品</button>
-        </div>
-        <div class="search-wrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input placeholder="搜索姓名、邮箱" onkeyup="cvApplyFilters()"></div>
-        <button class="sync-btn" onclick="cvOpenAddMemberModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>添加人员</button>
+        <div class="sq-bar-title">团队 <span id="cv-squad-count">0</span></div>
+        <div class="search-wrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input placeholder="搜索团队或成员" onkeyup="cvApplyFilters()"></div>
+        <button class="sync-btn" onclick="cvOpenNewSquadModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>新建团队</button>
       </div>
-      <div class="stats" id="cv-member-stats"></div>
       <div class="scroll">
-        <div id="cv-member-list"></div>
+        <div id="cv-squad-list"></div>
+        <div id="cv-squad-detail" class="hidden"></div>
       </div>
     </div>
 

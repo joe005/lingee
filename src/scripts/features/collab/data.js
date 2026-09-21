@@ -251,40 +251,6 @@ function cvBuildReviewCard(r,i){
     +'<button class="card-view-btn" onclick="event.stopPropagation();cvOpenReviewDetail('+i+')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>查看对话</button>'
     +'</div></div></div>';
 }
-function cvRenderMembers(){
-  var el=document.getElementById('cv-member-list');if(!el)return;
-  el.innerHTML=CV_MEMBERS.map(function(m,i){
-    if(!cvInProject(m)) return '';
-    var tagHtml=m.roles.map(function(r){return '<span class="member-tag '+r.tag+'">'+r.text+'</span>';}).join('');
-    var statusCls=m.status==='available'?'member-status--available':'member-status--busy';
-    var statusText=m.status==='available'?'可用':'繁忙';
-    var avatarCls=m.isMe?'member-avatar member-avatar--me':'member-avatar';
-    var nameCls=m.isMe?'member-name member-name--me':'member-name';
-    return '<div class="member-row" data-role="'+m.roles.map(function(r){return r.text;}).join(' ')+'">'
-      +'<div class="'+avatarCls+'">'+m.name[0]+'</div>'
-      +'<div class="member-info"><div class="'+nameCls+'">'+m.name+(m.isMe?' （你）':'')+'</div><div class="member-email">'+m.email+'</div><div class="member-tags">'+tagHtml+'</div></div>'
-      +'<span class="member-status '+statusCls+'">'+statusText+'</span>'
-      +'<span class="member-source">'+m.source+'</span>'
-      +(m.isMe?'':'<button class="member-del" onclick="cvDeleteMember('+i+')" title="移除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>')
-      +'</div>';
-  }).join('');
-}
-function cvRenderMemberStats(){
-  var el=document.getElementById('cv-member-stats');if(!el)return;
-  var counts={需求:0,架构:0,开发:0,测试:0,运维:0,产品:0};
-  var rows=CV_MEMBERS.filter(cvInProject);
-  rows.forEach(function(m){m.roles.forEach(function(r){var k=r.text;if(counts[k]!==undefined)counts[k]++;});});
-  var stats=[
-    {num:rows.length,label:'全部成员',color:'var(--text)'},
-    {num:counts['需求'],label:'需求人员',color:'var(--dot-blue)'},
-    {num:counts['架构'],label:'架构人员',color:'var(--brand)'},
-    {num:counts['开发'],label:'开发人员',color:'var(--success)'},
-    {num:counts['测试'],label:'测试人员',color:'var(--warning)'},
-    {num:counts['运维'],label:'运维人员',color:'var(--danger)'},
-    {num:counts['产品'],label:'产品人员',color:'#7858f9'}
-  ];
-  el.innerHTML=stats.map(function(s){return '<div class="stat"><div class="stat-num" style="color:'+s.color+'">'+s.num+'</div><div class="stat-label">'+s.label+'</div></div>';}).join('');
-}
 function cvInjectCardActions(){
   document.querySelectorAll('#cv-task-grid .card').forEach(function(card){
     if(card.querySelector('.card-actions'))return;
@@ -295,7 +261,7 @@ function cvInjectCardActions(){
     var node=nodeMap[status]||'需求分析';
     var execBtn='<button class="act-btn act-btn--exec" onclick="event.stopPropagation();window.cvCard=this.closest(\'.card\');cvOpenTaskModal(\'cv-exec-overlay\')" title="执行任务"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3l14 9-14 9V3z"/></svg>执行</button>';
     var transferBtn='<button class="act-btn act-btn--transfer" onclick="event.stopPropagation();window.cvCard=this.closest(\'.card\');cvOpenTaskModal(\'cv-transfer-overlay\')" title="转交任务"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>转交</button>';
-    var twistBtn='<button class="act-btn act-btn--twist" onclick="event.stopPropagation();window.cvCard=this.closest(\'.card\');cvOpenTaskModal(\'cv-twist-overlay\')" title="扭转任务"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.5 0 4.8 1 6.5 2.7"/><polyline points="21 3 21 9 15 9"/></svg>扭转</button>';
+    var twistBtn='<button class="act-btn act-btn--twist" onclick="event.stopPropagation();window.cvCard=this.closest(\'.card\');cvOpenTaskModal(\'cv-twist-overlay\')" title="流转任务"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.5 0 4.8 1 6.5 2.7"/><polyline points="21 3 21 9 15 9"/></svg>流转</button>';
     var reviewBtn='<button class="act-btn act-btn--review" onclick="event.stopPropagation();window.cvCard=this.closest(\'.card\');cvOpenTaskModal(\'cv-review-overlay\')" title="发起评审"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>评审</button>';
     var viewBtn='<button class="card-view-btn" onclick="event.stopPropagation();cvOpenConversation(this.closest(\'.card\'))" title="查看对话"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>查看对话</button>';
     var btns='';
@@ -312,4 +278,4 @@ function cvInjectCardActions(){
 /* cvProject 由其它模块写回；import 绑定只读，所以走这个 setter */
 export function set_cvProject(v){ cvProject=v; return v; }
 
-export { CV_MEMBERS, CV_PROJECTS, CV_REVIEWS, CV_REVIEW_ARTIFACTS, CV_REVIEW_COMMENTS, CV_TASKS, CV_THIRD_PARTY_MEMBERS, CV_WORKFLOW, CV_WORKFLOW_ROLES, cvConfigOverride, cvInProject, cvInjectCardActions, cvProject, cvProjectById, cvProjectName, cvRenderMemberStats, cvRenderMembers, cvRenderReviewStats, cvRenderReviews, cvRenderTaskStats, cvRenderTasks };
+export { CV_MEMBERS, CV_PROJECTS, CV_REVIEWS, CV_REVIEW_ARTIFACTS, CV_REVIEW_COMMENTS, CV_TASKS, CV_THIRD_PARTY_MEMBERS, CV_WORKFLOW, CV_WORKFLOW_ROLES, cvConfigOverride, cvInProject, cvInjectCardActions, cvProject, cvProjectById, cvProjectName, cvRenderReviewStats, cvRenderReviews, cvRenderTaskStats, cvRenderTasks };

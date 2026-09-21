@@ -1,7 +1,8 @@
 import { $ } from '../../core/dom.js';
 import { cvCloseAddMemberModal, cvConfirmAddMembers, cvDeleteMember, cvLoadSavedTasks, cvOpenAddMemberModal, cvOpenConversation, cvSearchThirdPartyMembers, cvSendChatMessage } from './chat.js';
 import { cvApplyConfigScope, cvCaptureConfigDefaults } from './config.js';
-import { cvInjectCardActions, cvRenderMemberStats, cvRenderMembers, cvRenderReviewStats, cvRenderReviews, cvRenderTaskStats, cvRenderTasks } from './data.js';
+import { cvInjectCardActions, cvRenderReviewStats, cvRenderReviews, cvRenderTaskStats, cvRenderTasks } from './data.js';
+import { cvArchiveSquad, cvCloseNewSquadModal, cvConfirmNewSquad, cvHideSquadDetail, cvOpenNewSquadModal, cvRenderSquadList, cvSetSquadLeader, cvShowSquadDetail, cvSwitchSquadTab } from './squads.js';
 import { cvRenderExperts, set_cvExpertKw } from './experts.js';
 import { cvRenderProjMenu, cvRenderTeamBind, cvSetProject, cvUpdateCounts } from './projects.js';
 import { cvOpenReviewDetail, cvReviewPass, cvReviewReject, cvSubmitReview, cvSwitchArtifact } from './reviews.js';
@@ -23,7 +24,7 @@ function cvInit(){
   cvLoadSavedTasks();
   cvRenderTaskStats(); cvRenderTasks();
   cvRenderReviewStats(); cvRenderReviews();
-  cvRenderMemberStats(); cvRenderMembers();
+  cvRenderSquadList();
   cvInjectCardActions();
   cvCaptureConfigDefaults();
   cvRenderProjMenu(); cvRenderTeamBind(); cvApplyConfigScope(); cvUpdateCounts();
@@ -33,6 +34,18 @@ var cvNewExpertBtn=$('#cvNewExpertBtn');
 var cvExpertSections=$('#cvExpertSections');
 
 export function initCollab() {
+  var cvMembersPanel=$('#cv-members');
+  if(cvMembersPanel) cvMembersPanel.addEventListener('click',function(e){
+    var row=e.target.closest('[data-cv-squad]');
+    if(row){ cvShowSquadDetail(row.getAttribute('data-cv-squad')); return; }
+    if(e.target.closest('[data-cv-sqback]')){ cvHideSquadDetail(); return; }
+    if(e.target.closest('[data-cv-sq-archive]')){ cvArchiveSquad(); return; }
+    var tab=e.target.closest('[data-cv-sq-tab]');
+    if(tab){ cvSwitchSquadTab(tab.getAttribute('data-cv-sq-tab')); return; }
+    if(e.target.closest('[data-cv-sq-addmember]')){ cvOpenAddMemberModal(); return; }
+    var setL=e.target.closest('[data-cv-sq-setleader]');
+    if(setL){ cvSetSquadLeader(+setL.getAttribute('data-cv-sq-setleader')); return; }
+  });
   if(cvExpertSearch) cvExpertSearch.addEventListener('input',function(){ set_cvExpertKw(this.value); cvRenderExperts(); });
   if(cvNewExpertBtn) cvNewExpertBtn.addEventListener('click',function(){ openExpertEditor(null) });
   if(cvExpertSections) cvExpertSections.addEventListener('click',function(e){
@@ -88,6 +101,9 @@ export function initCollab() {
   window.cvSearchThirdPartyMembers=cvSearchThirdPartyMembers;
   window.cvConfirmAddMembers=cvConfirmAddMembers;
   window.cvDeleteMember=cvDeleteMember;
+  window.cvOpenNewSquadModal=cvOpenNewSquadModal;
+  window.cvCloseNewSquadModal=cvCloseNewSquadModal;
+  window.cvConfirmNewSquad=cvConfirmNewSquad;
 }
 
 export { cvInit };

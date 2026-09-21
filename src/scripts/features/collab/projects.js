@@ -2,7 +2,8 @@ import { $, $$ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
 import { setUrlState } from '../../core/view.js';
 import { cvApplyConfigScope } from './config.js';
-import { CV_PROJECTS, CV_REVIEWS, CV_TASKS, cvInProject, cvInjectCardActions, cvProject, cvProjectById, cvProjectName, cvRenderMemberStats, cvRenderMembers, cvRenderReviewStats, cvRenderReviews, cvRenderTaskStats, cvRenderTasks, set_cvProject } from './data.js';
+import { CV_PROJECTS, CV_REVIEWS, CV_TASKS, cvInProject, cvInjectCardActions, cvProject, cvProjectById, cvProjectName, cvRenderReviewStats, cvRenderReviews, cvRenderTaskStats, cvRenderTasks, set_cvProject } from './data.js';
+import { cvRenderSquadList } from './squads.js';
 import { cvApplyReviewFilters } from './tasks.js';
 import { cvApplyFilters, cvLastTab } from './view.js';
 import { xesc } from '../expert/data.js';
@@ -35,14 +36,14 @@ function cvSetProject(id){
   cvRenderProjMenu();
   cvRenderTaskStats(); cvRenderTasks(); cvInjectCardActions();
   cvRenderReviewStats(); cvRenderReviews();
-  cvRenderMemberStats(); cvRenderMembers();
+  cvRenderSquadList();
   cvApplyFilters(); cvApplyReviewFilters();
   cvRenderTeamBind(); cvApplyConfigScope(); cvUpdateCounts();
   cvSyncUrl();
 }
 function cvUpdateCounts(){
   var tc=$('#cvTaskCount'); if(tc) tc.textContent=CV_TASKS.filter(cvInProject).length;
-  var rc=$('#cvReviewCount'); if(rc) rc.textContent=CV_REVIEWS.filter(cvInProject).length;
+  /* 待评审已合并到任务管理，不再单独计数 */
 }
 function cvSyncUrl(){
   setUrlState('/collab?tab='+cvLastTab+(cvProject?'&proj='+cvProject:''));

@@ -1,5 +1,6 @@
 import { input } from '../../core/view.js';
-import { CV_MEMBERS, CV_PROJECTS, CV_TASKS, CV_THIRD_PARTY_MEMBERS, cvProject, cvRenderMemberStats, cvRenderMembers } from './data.js';
+import { CV_MEMBERS, CV_TASKS, CV_THIRD_PARTY_MEMBERS } from './data.js';
+import { cvRenderSquadDetail, cvRenderSquadList, cvSquadAddPerson } from './squads.js';
 import { cvNormalizeTask } from './tasks.js';
 import { cvShowPanel, cvToast } from './view.js';
 /* 协作开发：会话
@@ -144,21 +145,23 @@ function cvConfirmAddMembers(){
   var selected=document.querySelectorAll('#cv-tp-list .tp-item--selected');
   if(selected.length===0){cvToast('请选择要添加的人员','warning');return;}
   var tagMap={'开发':'member-tag--dev','架构':'member-tag--arch','测试':'member-tag--qa','运维':'member-tag--ops','需求':'member-tag--pm','产品':'member-tag--pm'};
+  var n=0;
   selected.forEach(function(el){
     var name=el.querySelector('.tp-name').textContent;
     var email=el.querySelector('.tp-email').textContent;
     var role=el.querySelector('.tp-role').textContent;
-    CV_MEMBERS.push({name:name,email:email,roles:[{tag:tagMap[role]||'member-tag--dev',text:role}],status:'available',source:'直接添加',
-      projects:cvProject?[cvProject]:CV_PROJECTS.map(function(p){return p.id})});
+    CV_MEMBERS.push({name:name,email:email,roles:[{tag:tagMap[role]||'member-tag--dev',text:role}],status:'available',source:'直接添加',projects:'*'});
+    cvSquadAddPerson(CV_MEMBERS.length-1);
+    n++;
   });
-  cvRenderMembers();cvRenderMemberStats();cvCloseAddMemberModal();
-  cvToast('已添加 '+selected.length+' 名协作人员','success');
+  cvCloseAddMemberModal();
+  cvToast('已添加 '+n+' 名协作人员到团队','success');
 }
 function cvDeleteMember(idx){
   if(CV_MEMBERS[idx]&&CV_MEMBERS[idx].isMe){cvToast('不能移除自己','warning');return;}
   if(!CV_MEMBERS[idx])return;
   var name=CV_MEMBERS[idx].name;
-  CV_MEMBERS.splice(idx,1);cvRenderMembers();cvRenderMemberStats();
+  CV_MEMBERS.splice(idx,1);cvRenderSquadDetail();cvRenderSquadList();
   cvToast('已移除：'+name,'info');
 }
 function cvLoadSavedTasks(){

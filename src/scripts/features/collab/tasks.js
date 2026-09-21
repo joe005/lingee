@@ -2,7 +2,7 @@ import { cvSimulateExecution, cvSwitchToChat } from './chat.js';
 import { CV_MEMBERS, CV_PROJECTS, CV_REVIEWS, CV_TASKS, CV_WORKFLOW, CV_WORKFLOW_ROLES, cvInjectCardActions, cvProject, cvProjectName, cvRenderTaskStats, cvRenderTasks } from './data.js';
 import { cvUpdateCounts } from './projects.js';
 import { cvAddSidebarConversation, cvApplyFilters, cvGetFilterVal, cvToast } from './view.js';
-/* 协作开发：任务统计、同步、执行 / 转交 / 扭转
+/* 协作开发：任务统计、同步、执行 / 转交 / 流转
    拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
    由 main.js 按拆分前的原始顺序调用。 */
 
@@ -12,17 +12,12 @@ function cvClickStat(stat,status){
   var view=stat.closest('.cv-panel');if(!view)return;
   view.querySelectorAll('.stat').forEach(function(s){s.classList.remove('stat--active');});
   stat.classList.add('stat--active');
-  if(status==='全部状态'){
-    view.querySelectorAll('.filter-group').forEach(function(g){
-      g.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('filter-btn--active');});
-      var first=g.querySelector('.filter-btn');if(first)first.classList.add('filter-btn--active');
-    });
-  }else if(status){
-    var sg=view.querySelector('[data-filter-type="status"]');if(sg){
-      sg.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('filter-btn--active');});
-      var match=Array.prototype.find.call(sg.querySelectorAll('.filter-btn'),function(b){return b.textContent.trim()===status;});
-      if(match)match.classList.add('filter-btn--active');
-    }
+  /* 点统计卡同步选中状态下拉项 */
+  var dd=view.querySelector('[data-cvfdd="status"]');
+  if(dd){
+    var val=status||'全部状态';
+    dd.querySelectorAll('.cv-fdd-item').forEach(function(x){x.classList.toggle('on',x.getAttribute('data-cvfdd-val')===val);});
+    var lbl=dd.querySelector('.cv-fdd-label');if(lbl)lbl.textContent=val;
   }
   cvApplyFilters();
 }
@@ -192,7 +187,7 @@ function cvConfirmTransfer(){
   cvCloseTaskModal('cv-transfer-overlay');
   cvToast('任务已转交给：'+(sel?sel.textContent:'李工'),'success');
 }
-function cvConfirmTwist(){cvCloseTaskModal('cv-twist-overlay');cvToast('任务已扭转到下一节点：代码审查，产物已自动传递给审查人员','info');}
+function cvConfirmTwist(){cvCloseTaskModal('cv-twist-overlay');cvToast('任务已流转到下一节点：代码审查，产物已自动传递给审查人员','info');}
 function cvConfirmReview(){
   var sel=document.querySelector('#cv-review-person-list .person-item--selected .person-name-sm');
   cvCloseTaskModal('cv-review-overlay');

@@ -385,17 +385,18 @@ function knSecHtmlPreset(e){
           +'<span class="xk-dir-ic">🔒</span><span class="xk-dir-n">'+xesc(dir.name)+'</span>'
           +'<span class="xk-dir-c">'+knDirCount(dir)+'</span></div></div>'+knSubDirs(dir,true);
       }).join('') : '<div class="xk-none">这位专家没有预置知识</div>')
-    +'<div class="xk-grp">知识扩展</div>'
-    +(dirs.map(function(dir){
+    +'<div class="xk-grp">关联企业知识</div>'
+    +(dirs.length ? dirs.map(function(dir){
         return '<div class="xk-dir'+(xkDetailPick===dir.id?' on':'')+'" data-xk-dtl-pick="'+dir.id+'"><div class="xk-dir-row1">'
           +'<span class="xk-dir-ic">📁</span><span class="xk-dir-n">'+xesc(dir.name)+'</span>'
           +'<span class="xk-dir-c">'+knDirVisibleCount(dir,offDocs)+'</span>'
           +'<button type="button" class="x-ic x-ic-dg xk-dir-x" data-xk-dtl-unlink="'+dir.id+'" title="解除关联">✕</button></div></div>'+knSubDirs(dir,false);
-      }).join('')
-      +(ups.length ? '<div class="xk-dir'+(xkDetailPick==='__myup'?' on':'')+'" data-xk-dtl-pick="__myup"><div class="xk-dir-row1">'
-        +'<span class="xk-dir-ic">📁</span><span class="xk-dir-n">我上传的文件</span>'
-        +'<span class="xk-dir-c">'+ups.length+'</span></div></div>' : '')
-      || '<div class="xk-none">暂无，点上面「＋ 添加」关联目录，或「⬆ 上传」加几个文件</div>');
+      }).join('') : '<div class="xk-none">暂无</div>')
+    +'<div class="xk-grp">上传知识</div>'
+    +(ups.length ? ups.map(function(f){
+        return '<div class="xk-dir"><div class="xk-dir-row1">'
+          +'<span class="xk-dir-ic">📄</span><span class="xk-dir-n">'+xesc(f.n)+'</span></div></div>';
+      }).join('') : '<div class="xk-none">暂无</div>');
   var rows=[], showAll=!xkDetailPick;
   function collectDir(dir,locked){
     (dir.docs||[]).forEach(function(doc,i){
@@ -410,8 +411,8 @@ function knSecHtmlPreset(e){
   if(showAll||dirs.some(function(d){return d.id===xkDetailPick;})){
     dirs.filter(function(d){return showAll||d.id===xkDetailPick;}).forEach(function(dir){ collectDir(dir,false); });
   }
-  if(showAll||xkDetailPick==='__myup'){
-    ups.forEach(function(f,i){ rows.push({from:'我上传的文件',dirId:'__up',idx:i,n:f.n,t:f.t,sz:f.sz,up:f.up,by:f.by||'我'}); });
+  if(showAll){
+    ups.forEach(function(f,i){ rows.push({from:'上传知识',dirId:'__up',idx:i,n:f.n,t:f.t,sz:f.sz,up:f.up,by:f.by||'我'}); });
   }
   var kw=xkDetailKw.trim().toLowerCase();
   if(kw) rows=rows.filter(function(r){

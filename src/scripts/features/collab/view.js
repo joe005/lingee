@@ -3,7 +3,6 @@ import { toast } from '../../core/toast.js';
 import { setNavActive, showView } from '../../core/view.js';
 import { cvRenderExperts } from './experts.js';
 import { cvSyncUrl } from './projects.js';
-import { cvApplyReviewFilters } from './tasks.js';
 import { xesc } from '../expert/data.js';
 import { renderExpertGrid } from '../expert/library.js';
 /* 协作开发：视图与页签切换
@@ -15,7 +14,7 @@ import { renderExpertGrid } from '../expert/library.js';
 function cvSwitchFilter(btn){
   var group=btn.closest('.filter-group');if(group){group.querySelectorAll('.filter-btn').forEach(function(b){b.classList.remove('filter-btn--active');});}
   btn.classList.add('filter-btn--active');
-  if(btn.closest('#cv-review')){cvApplyReviewFilters();}else{cvApplyFilters();}
+  cvApplyFilters();
 }
 function cvApplyFilters(){
   var taskView=document.getElementById('cv-tasks');
@@ -42,24 +41,28 @@ function cvApplyFilters(){
   }
   var memberView=document.getElementById('cv-members');
   if(memberView&&memberView.classList.contains('active')){
-    var roleF=cvGetFilterVal(memberView,'role');
     var msearch=(memberView.querySelector('input')||{}).value||'';
     msearch=msearch.toLowerCase();
-    memberView.querySelectorAll('.member-row').forEach(function(row){
-      var match=true;
-      if(roleF&&roleF!=='全部'){
-        var roles=row.getAttribute('data-role')||'';if(roles.indexOf(roleF)<0)match=false;
-      }
-      if(match&&msearch){
-        var name=(row.querySelector('.member-name')||{}).textContent||'';
-        var email=(row.querySelector('.member-email')||{}).textContent||'';
-        if(name.toLowerCase().indexOf(msearch)<0&&email.toLowerCase().indexOf(msearch)<0)match=false;
-      }
-      row.style.display=match?'':'none';
-    });
+    var detail=memberView.querySelector('#cv-squad-detail');
+    if(detail&&!detail.classList.contains('hidden')){
+      detail.querySelectorAll('.sq-member').forEach(function(card){
+        var name=(card.querySelector('.sq-member-name')||{}).textContent||'';
+        card.style.display=(!msearch||name.toLowerCase().indexOf(msearch)>=0)?'':'none';
+      });
+    }else{
+      memberView.querySelectorAll('.sq-row').forEach(function(row){
+        var name=(row.querySelector('.sq-n')||{}).textContent||'';
+        row.style.display=(!msearch||name.toLowerCase().indexOf(msearch)>=0)?'':'none';
+      });
+    }
   }
 }
 function cvGetFilterVal(view,type){
+  var dd=view.querySelector('[data-cvfdd="'+type+'"]');
+  if(dd){
+    var on=dd.querySelector('.cv-fdd-item.on');
+    return on?on.getAttribute('data-cvfdd-val'):null;
+  }
   var g=view.querySelector('[data-filter-type="'+type+'"]');if(!g)return null;
   var a=g.querySelector('.filter-btn--active');return a?a.textContent.trim():null;
 }
@@ -93,7 +96,29 @@ function cvAddSidebarConversation(title){
 }
 
 export function initCollabView() {
-
+  /* 下拉筛选器：按钮开合、选项选中后刷新列表、点空白处收起 */
+  document.addEventListener('click',function(e){
+    var tog=e.target.closest('[data-cvfdd-toggle]');
+    if(tog){
+      var dd=tog.closest('.cv-fdd');
+      var wasOpen=dd.classList.contains('open');
+      document.querySelectorAll('.cv-fdd.open').forEach(function(x){x.classList.remove('open');});
+      if(!wasOpen) dd.classList.add('open');
+      return;
+    }
+    var item=e.target.closest('.cv-fdd-item');
+    if(item){
+      var box=item.closest('.cv-fdd');
+      box.querySelectorAll('.cv-fdd-item').forEach(function(x){x.classList.remove('on');});
+      item.classList.add('on');
+      box.classList.remove('open');
+      var lbl=box.querySelector('.cv-fdd-label');
+      if(lbl) lbl.textContent=item.getAttribute('data-cvfdd-val');
+      cvApplyFilters();
+      return;
+    }
+    if(!e.target.closest('.cv-fdd')) document.querySelectorAll('.cv-fdd.open').forEach(function(x){x.classList.remove('open');});
+  });
 }
 
 export function initCollabTabs() {

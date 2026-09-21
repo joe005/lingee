@@ -1,7 +1,5 @@
 import { $ } from '../../core/dom.js';
 import { EXPERTS, xav, xesc } from '../expert/data.js';
-import { knCountOf } from '../expert/knowledge.js';
-import { TEAMS } from '../expert/store.js';
 /* 协作开发：专家管理分组卡片
    拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
    由 main.js 按拆分前的原始顺序调用。 */
@@ -20,12 +18,8 @@ function cvExpertGroups(){
     {title:'我创建的',desc:'你自己建的专家，可随时改配置或删除',list:rows.filter(function(e){return e.mine})}
   ];
 }
-function cvTeamCountOf(id){
-  return TEAMS.filter(function(t){ return t.members.indexOf(id)>=0 }).length;
-}
 function cvBuildExpertCard(e){
   var tags=(e.tags||[]).map(function(t){return '<span class="expert-skill">'+xesc(t)+'</span>'}).join('');
-  var cmds=(e.cmds||[]).length, comps=(e.comp||[]).length;
   /* 「能承担哪些工作」比「有几种工作模式」更能决定选不选他，直接摆出来 */
   var mAll=e.modes||[], mShow=mAll.slice(0,3), mRest=mAll.length-mShow.length;
   var modeRow=mAll.length
@@ -42,11 +36,7 @@ function cvBuildExpertCard(e){
     +'<div class="expert-intro">'+xesc(e.desc)+'</div>'
     +'<div class="expert-skills">'+tags+'</div>'
     +modeRow
-    +'<div class="expert-stats">'
-    +'<div><div class="expert-stat-val">'+cvTeamCountOf(e.id)+'</div><div class="expert-stat-label">所在专家团</div></div>'
-    +'<div><div class="expert-stat-val">'+comps+'</div><div class="expert-stat-label">能力项</div></div>'
-     +'<div><div class="expert-stat-val">'+knCountOf(e)+'</div><div class="expert-stat-label">知识</div></div>'
-    +'</div></div>';
+    +'</div>';
 }
 function cvRenderExperts(){
   var box=$('#cvExpertSections'); if(!box) return;
