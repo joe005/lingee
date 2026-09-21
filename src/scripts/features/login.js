@@ -12,19 +12,13 @@ var loginError=$('#loginError');
 var LOGIN_KEY='lingee_auth_session';
 var REMEMBER_KEY='lingee_remember_user';
 
-var USER_NAMES={
-  'wei_bu@kingdee.com':{name:'Wei',avatar:'W'},
-  'wuhc2023@gmail.com':{name:'Chao',avatar:'C'},
-  '6686612@qq.com':{name:'Joe',avatar:'J'},
-  '17299999999':{name:'Dev',avatar:'D'},
-  'liangpingxian@gmail.com':{name:'Xian',avatar:'L'}
-};
-var USER_CREDENTIALS={
-  'wei_bu@kingdee.com':'lingee520',
-  'wuhc2023@gmail.com':'lingee520',
-  '6686612@qq.com':'lingee520',
-  '17299999999':'KDadm!@#2022',
-  'liangpingxian@gmail.com':'lingee520'
+/* 账号 → 角色：登录后进入对应角色（密码统一，不对外暴露） */
+var ACCOUNTS={
+  'wuhc2023@gmail.com':{pass:'lingee520',role:'owner',name:'吴宏超',avatar:'吴'},
+  '17299999999':{pass:'lingee520',role:'dev',name:'张工',avatar:'张'},
+  'liangpingxian@gmail.com':{pass:'lingee520',role:'pm',name:'赵琳',avatar:'赵'},
+  '6686612@qq.com':{pass:'lingee520',role:'qa',name:'陈晨',avatar:'陈'},
+  'wei_bu@kingdee.com':{pass:'lingee520',role:'ops',name:'周杰',avatar:'周'}
 };
 
 /* 演示角色：不同角色登录后看到不同视图（权限差异演示） */
@@ -58,11 +52,16 @@ function setAuthed(user){
   try{ sessionStorage.setItem(LOGIN_KEY,user); }catch(e){}
 }
 function applyUserInfo(user){
-  var info=USER_NAMES[user]||{name:'Joe',avatar:'J'};
+  var acc=ACCOUNTS[user]||{name:'Joe',avatar:'J',role:'owner'};
   var av=$('#userAvatar'),nm=$('#userName');
-  if(av) av.textContent=info.avatar;
-  if(nm) nm.textContent=info.name;
-  var tag=$('#userRoleTag'); if(tag) tag.textContent='所有者';
+  if(av) av.textContent=acc.avatar;
+  if(nm) nm.textContent=acc.name;
+  var tag=$('#userRoleTag');
+  if(!tag){
+    var nb=nm&&nm.parentNode;
+    if(nb){ tag=document.createElement('span'); tag.id='userRoleTag'; tag.className='user-role-tag'; nb.insertBefore(tag,nm.nextSibling); }
+  }
+  if(tag) tag.textContent=(DEMO_ROLES.filter(function(r){return r.id===acc.role;})[0]||{}).label||'所有者';
 }
 /* 登录框登录后仍留在 DOM 里，Chrome 会把整页当登录页，
    往搜索框之类的文本框推荐保存的账号。禁用掉就不再是自动填充来源。 */
@@ -117,7 +116,8 @@ export function initLogin() {
         loginError.textContent='请输入账号和密码';
         return;
       }
-      if(USER_CREDENTIALS[user] && USER_CREDENTIALS[user]===pass){
+      var acc=ACCOUNTS[user];
+      if(acc && acc.pass===pass){
         loginError.textContent='';
         loginBtn.classList.add('loading');
         loginBtn.disabled=true;
@@ -129,7 +129,7 @@ export function initLogin() {
         }catch(e){}
         setTimeout(function(){
           setAuthed(user);
-          setRole('owner');
+          setRole(acc.role);
           applyUserInfo(user);
           applyRole();
           hideLogin();
