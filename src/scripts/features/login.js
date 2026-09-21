@@ -12,8 +12,16 @@ var loginError=$('#loginError');
 var LOGIN_KEY='lingee_auth_session';
 var REMEMBER_KEY='lingee_remember_user';
 
-/* 账号 → 角色：登录后进入对应角色（虚拟账号，密码统一） */
+/* 账号 → 角色：登录后进入对应角色
+   原有账号为全功能（所有者）；虚拟账号按角色；密码统一 */
 var ACCOUNTS={
+  /* 原有账号（全功能） */
+  'wuhc2023@gmail.com':{pass:'lingee520',role:'owner',name:'吴宏超',avatar:'吴'},
+  '17299999999':{pass:'lingee520',role:'owner',name:'张工',avatar:'张'},
+  'wei_bu@kingdee.com':{pass:'lingee520',role:'owner',name:'Wei',avatar:'W'},
+  '6686612@qq.com':{pass:'lingee520',role:'owner',name:'Joe',avatar:'J'},
+  'liangpingxian@gmail.com':{pass:'lingee520',role:'owner',name:'Xian',avatar:'L'},
+  /* 虚拟账号（按角色） */
   'owner':{pass:'lingee520',role:'owner',name:'吴宏超',avatar:'吴'},
   'dev':{pass:'lingee520',role:'dev',name:'张工',avatar:'张'},
   'pm':{pass:'lingee520',role:'pm',name:'赵琳',avatar:'赵'},
