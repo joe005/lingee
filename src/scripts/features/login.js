@@ -17,7 +17,7 @@ var REMEMBER_KEY='lingee_remember_user';
 var ACCOUNTS={
   /* 原有账号（全功能） */
   'wuhc2023@gmail.com':{pass:'lingee520',role:'owner',name:'吴宏超',avatar:'吴'},
-  '17299999999':{pass:'lingee520',role:'owner',name:'张工',avatar:'张'},
+  '17299999999':{pass:['KDadm!@#2022','lingee520'],role:'owner',name:'张工',avatar:'张'},
   'wei_bu@kingdee.com':{pass:'lingee520',role:'owner',name:'Wei',avatar:'W'},
   '6686612@qq.com':{pass:'lingee520',role:'owner',name:'Joe',avatar:'J'},
   'liangpingxian@gmail.com':{pass:'lingee520',role:'owner',name:'Xian',avatar:'L'},
@@ -125,7 +125,8 @@ export function initLogin() {
         return;
       }
       var acc=ACCOUNTS[user];
-      if(acc && acc.pass===pass){
+      var passOk=acc && (acc.pass===pass || (Array.isArray(acc.pass)&&acc.pass.indexOf(pass)>=0));
+      if(passOk){
         loginError.textContent='';
         loginBtn.classList.add('loading');
         loginBtn.disabled=true;
