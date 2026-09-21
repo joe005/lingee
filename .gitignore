@@ -14,11 +14,15 @@ dist/
 .claude/
 .opencode/
 .lingeebuild/
+.lingeebuild-beta/
 skills/
 app/
 **/_runtime/
 **/*token_cache*
 **/*.lock
+
+# 部署产物
+deploy-bundle/
 
 # 临时与备份（历史存档另行保留）
 *.bak

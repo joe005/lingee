@@ -1,6 +1,9 @@
 /* ============ MAIN ============ */
+  /* min-width:0 是拖拽分栏的必要条件：flex 子项默认 min-width:auto，
+     最小尺寸由内容决定。预览区被拖大时它会顶宽 main 本身，形成
+     「预览越宽 → main 越宽 → 拖拽上限越松」的正反馈，最终整行溢出页面。 */
   .main{
-    flex:1;display:flex;flex-direction:column;position:relative;
+    flex:1;display:flex;flex-direction:column;position:relative;min-width:0;
     background:
       radial-gradient(60% 45% at 50% 42%, rgba(120,120,255,.035), transparent 70%),
       var(--bg);

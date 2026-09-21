@@ -120,7 +120,7 @@ export function initApps() {
       try{localStorage.setItem('chatPreviewOpen','1')}catch(err){}
       var savedW=localStorage.getItem('chatPreviewWidth');
       var ps=document.getElementById('chatPreviewSide');
-      if(savedW&&ps){ps.style.width=savedW;ps.style.maxWidth='none';}
+      if(savedW&&ps){ps.style.width=savedW;}
     });
   });
 

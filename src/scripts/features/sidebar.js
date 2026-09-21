@@ -81,7 +81,6 @@ function absorbSidebarDelta(fn){
   var maxW=view.offsetWidth-360-(chatResizer?chatResizer.offsetWidth:1);
   if(w>maxW)w=maxW;
   if(w<200)w=200;
-  ps.style.maxWidth='none';
   ps.style.width=w+'px';
   try{localStorage.setItem('chatPreviewWidth',w+'px')}catch(e){}
 }

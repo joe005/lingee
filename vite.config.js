@@ -9,7 +9,7 @@ import pages404 from './build/vite-plugin-pages-404.js';
 export default defineConfig({
   base: '/lingee/',
   plugins: [spaFallback(), htmlInclude(), viteSingleFile(), cloudflare(), pages404()],
-  server: { port: 5199, open: true },
+  server: { port: Number(process.env.PORT) || 5199, open: true },
   build: {
     outDir: 'dist',
     assetsInlineLimit: 100000000,

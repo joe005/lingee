@@ -87,7 +87,10 @@
      预览侧栏会按内容高度在会话区下面顶出一段空隙（约 48px） */
   #view-chat:not(.preview-open) .chat-preview-side{height:0}
   /* 分割线只由 .chat-resizer 提供 */
-  #view-chat.preview-open .chat-preview-side{width:50%;min-width:0;overflow:hidden}
+  /* max-width 是拖拽上限的兜底：100% 即 #view-chat 宽度，减去会话区下限 360px
+     和 1px 分割线。JS 的 clamp 只在拖拽时生效，这里覆盖恢复历史宽度、
+     侧边栏折叠、窗口缩放等所有路径，任何 px 宽度都不会撑破布局。 */
+  #view-chat.preview-open .chat-preview-side{width:50%;min-width:0;overflow:hidden;max-width:calc(100% - 361px)}
   #view-chat.preview-open .chat-resizer.dragging{background:rgba(73,93,255,.15)}
   #view-chat .chat-resizer{width:1px;flex:none;cursor:col-resize;background:var(--border);transition:background .15s;z-index:5;position:relative}
   #view-chat .chat-resizer::before{content:'';position:absolute;top:0;bottom:0;left:-4px;right:-4px}
@@ -201,12 +204,11 @@
   .entity-tag.req{color:#e04a3a}
   .entity-tag.opt{color:#b8b8b8}
   /* 插件面板 - 表格 */
-  .mcp-list{margin:0;padding:0;overflow:auto;flex:1;max-height:100%;overflow-anchor:none}
-  .mcp-table{width:100%;min-width:600px;border-spacing:0}
-  .mcp-table td{padding:8px 12px;font-size:13px;color:var(--text);border-bottom:1px solid #f5f5f5}
-  .mcp-table td.mcp-tool{font-family:Monaco,Menlo,monospace;font-size:12px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .mcp-table td.mcp-tool{font-family:Monaco,Menlo,monospace;font-size:12px;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .mcp-table td.mcp-desc{max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .mcp-list{margin:0;padding:0;overflow:auto;flex:1;max-height:100%;min-width:0;overflow-anchor:none;scrollbar-gutter:stable}
+  .mcp-table{width:100%;min-width:600px;border-spacing:0;table-layout:auto}
+  .mcp-table td{padding:8px 12px;font-size:13px;color:var(--text);border-bottom:1px solid #f5f5f5;white-space:nowrap}
+  .mcp-table td.mcp-tool{font-family:Monaco,Menlo,monospace;font-size:12px;white-space:nowrap}
+  .mcp-table td.mcp-desc{white-space:nowrap}
   .mcp-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500;line-height:1.5}
   .mcp-badge.published{background:#e6f7ed;color:#08a040}
   .mcp-badge.draft{background:#f4f4f4;color:#b8b8b8}

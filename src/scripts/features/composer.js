@@ -83,7 +83,7 @@ function createArtifactCard(){
       try{localStorage.setItem('chatPreviewOpen','1')}catch(e){}
       var savedW=localStorage.getItem('chatPreviewWidth');
       var ps=document.getElementById('chatPreviewSide');
-      if(savedW&&ps){ps.style.width=savedW;ps.style.maxWidth='none';}
+      if(savedW&&ps){ps.style.width=savedW;}
     }
   }
   card.addEventListener('click',openPreview); /* 仅点击卡片时展开预览 */
@@ -117,7 +117,9 @@ var mcpData=[
 ];
 function renderMcpList(){
   var el=$('#mcpList'); if(!el)return;
-  el.innerHTML='<table class="plugin-table mcp-table"><thead><tr><th>工具名称</th><th>说明</th><th>操作类型</th><th>注册状态</th><th></th></tr></thead><tbody>'
+  el.innerHTML='<table class="plugin-table mcp-table">'
+    +'<colgroup><col style="width:33%"><col style="width:36%"><col style="width:12%"><col style="width:11%"><col style="width:8%"></colgroup>'
+    +'<thead><tr><th>工具名称</th><th>说明</th><th>操作类型</th><th>注册状态</th><th></th></tr></thead><tbody>'
     +mcpData.map(function(d){
       var statusText='<span style="color:var(--text)">'+(d.status==='published'?'已发布':'失败')+'</span>';
       var detail='<div style="padding:4px 0;font-size:12px;line-height:1.8;display:grid;grid-template-columns:auto 1fr;gap:4px 16px">'
@@ -618,7 +620,6 @@ export function initComposer() {
       _maxW=view.offsetWidth-360-chatResizer.offsetWidth;
       if(_maxW<200)_maxW=200;
       if(cc)cc.style.minWidth='0';
-      ps.style.maxWidth='none';
       e.preventDefault();
     });
     document.addEventListener('mousemove',function(e){
