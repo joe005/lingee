@@ -1,3 +1,4 @@
+import { renderTaskBoard } from './task-board.js';
 import { $, $$ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
 import { setNavActive, showView } from '../../core/view.js';
@@ -19,25 +20,7 @@ function cvSwitchFilter(btn){
 function cvApplyFilters(){
   var taskView=document.getElementById('cv-tasks');
   if(taskView&&taskView.classList.contains('active')){
-    var typeF=cvGetFilterVal(taskView,'type');
-    var statusF=cvGetFilterVal(taskView,'status');
-    var collabF=cvGetFilterVal(taskView,'collab');
-    var sizeF=cvGetFilterVal(taskView,'size');
-    var search=(taskView.querySelector('input')||{}).value||'';
-    search=search.toLowerCase();
-    taskView.querySelectorAll('.card').forEach(function(card){
-      var match=true;
-      if(typeF&&typeF!=='全部'&&card.getAttribute('data-type')!==typeF)match=false;
-      if(match&&statusF&&statusF!=='全部状态'&&card.getAttribute('data-status')!==statusF)match=false;
-      if(match&&collabF&&collabF!=='全部协作'&&card.getAttribute('data-collab')!==collabF)match=false;
-      if(match&&sizeF&&sizeF!=='全部大小'){
-        var cs=card.getAttribute('data-size');if((sizeF==='小任务'&&cs!=='小')||(sizeF==='大任务'&&cs!=='大'))match=false;
-      }
-      if(match&&search){
-        var title=(card.querySelector('.card-title')||{}).textContent||'';if(title.toLowerCase().indexOf(search)<0)match=false;
-      }
-      card.style.display=match?'':'none';
-    });
+    renderTaskBoard();
   }
   var memberView=document.getElementById('cv-members');
   if(memberView&&memberView.classList.contains('active')){

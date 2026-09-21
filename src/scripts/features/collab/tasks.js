@@ -90,7 +90,7 @@ function cvSaveTaskToStorage(task){
 }
 /* 弹窗里的任务落库：归一化字段并挂到当前项目（聚合视图下默认第一个项目） */
 function cvNormalizeTask(task){
-  var big=task.size==='大任务';
+  var big=task.size==='大任务'||task.size==='大';
   return {type:task.type,size:big?'大':'小',source:task.source,sourceId:task.sourceId||'新建',
     exec:big?'专家团':'自动执行',status:task.status,collab:task.collab,title:task.title,
     desc:task.desc||'暂无描述',assignee:task.assignee,progress:task.progress||0,

@@ -1,5 +1,5 @@
 import { $ } from '../../core/dom.js';
-import { EXPERTS, xav, xesc } from '../expert/data.js';
+import { EXPERTS, skillInfo, xav, xesc } from '../expert/data.js';
 /* 协作开发：专家管理分组卡片
    拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
    由 main.js 按拆分前的原始顺序调用。 */
@@ -11,7 +11,7 @@ function cvExpertGroups(){
   var kw=cvExpertKw.trim();
   var rows=EXPERTS.filter(function(e){
     if(!kw) return true;
-    return (e.name+e.role+e.desc+(e.tags||[]).join()).indexOf(kw)>=0;
+    return (e.name+e.role+e.desc+(e.tags||[]).join()+(e.skills||[]).map(function(id){return skillInfo(id).name}).join()).indexOf(kw)>=0;
   });
   return [
     {title:'Lingee 内置',desc:'随产品一起维护，覆盖交付全流程与苍穹、前端等领域',list:rows.filter(function(e){return e.by==='Lingee 内置'})},
@@ -19,7 +19,10 @@ function cvExpertGroups(){
   ];
 }
 function cvBuildExpertCard(e){
-  var tags=(e.tags||[]).map(function(t){return '<span class="expert-skill">'+xesc(t)+'</span>'}).join('');
+  var skills=(e.skills||[]).map(function(id){return skillInfo(id)});
+  var shown=skills.slice(0,2), rest=skills.length-shown.length;
+  var tags=shown.map(function(s){return '<span class="expert-skill">'+xesc(s.name)+'</span>'}).join('')
+    +(rest>0?'<span class="expert-skill expert-skill-more">+'+rest+'</span>':'');
   /* 「能承担哪些工作」比「有几种工作模式」更能决定选不选他，直接摆出来 */
   var mAll=e.modes||[], mShow=mAll.slice(0,3), mRest=mAll.length-mShow.length;
   var modeRow=mAll.length
@@ -34,7 +37,7 @@ function cvBuildExpertCard(e){
     +(e.ro?'<span class="expert-flag">只读</span>':'')+'</div>'
     +'<div class="expert-role">'+xesc(e.role)+'</div></div></div>'
     +'<div class="expert-intro">'+xesc(e.desc)+'</div>'
-    +'<div class="expert-skills">'+tags+'</div>'
+    +(skills.length?'<div class="expert-skills"><span class="expert-skills-label">技能</span>'+tags+'</div>':'')
     +modeRow
     +'</div>';
 }

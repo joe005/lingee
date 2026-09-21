@@ -167,7 +167,7 @@ function cvDeleteMember(idx){
 function cvLoadSavedTasks(){
   try{
     var tasks=JSON.parse(localStorage.getItem('build_tasks')||'[]');
-    tasks.forEach(function(task){CV_TASKS.unshift(cvNormalizeTask(task));});
+    tasks.forEach(function(task){var row=cvNormalizeTask(task);if(!CV_TASKS.some(function(t){return t.source===row.source&&t.sourceId===row.sourceId&&t.project===row.project;}))CV_TASKS.unshift(row);});
   }catch(e){}
 }
 

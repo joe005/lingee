@@ -1,3 +1,4 @@
+import { initTaskBoard } from './task-board.js';
 import { $ } from '../../core/dom.js';
 import { cvCloseAddMemberModal, cvConfirmAddMembers, cvDeleteMember, cvLoadSavedTasks, cvOpenAddMemberModal, cvOpenConversation, cvSearchThirdPartyMembers, cvSendChatMessage } from './chat.js';
 import { cvApplyConfigScope, cvCaptureConfigDefaults } from './config.js';
@@ -34,6 +35,7 @@ var cvNewExpertBtn=$('#cvNewExpertBtn');
 var cvExpertSections=$('#cvExpertSections');
 
 export function initCollab() {
+  initTaskBoard();
   var cvMembersPanel=$('#cv-members');
   if(cvMembersPanel) cvMembersPanel.addEventListener('click',function(e){
     var row=e.target.closest('[data-cv-squad]');

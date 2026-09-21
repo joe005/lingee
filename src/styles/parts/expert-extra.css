@@ -28,6 +28,26 @@
 .x-modes{flex-wrap:nowrap;overflow:hidden}
 .x-mode-more{color:var(--text-soft);border-style:dashed}
 
+/* 专家详情技能页签：中文技能名和用途说明形成稳定的纵向扫描线。 */
+.x-skill-head{display:flex;align-items:baseline;gap:8px;padding:18px 0 12px;border-bottom:1px solid var(--divider)}
+.x-skill-head strong{font-size:15px;color:var(--text)}
+.x-skill-head span{font-size:12px;color:var(--text-soft)}
+.x-skill-list{display:flex;flex-direction:column;padding:4px 0}
+.x-skill-row{display:flex;align-items:flex-start;gap:14px;padding:15px 2px;border-bottom:1px solid var(--divider)}
+.x-skill-row:last-child{border-bottom:0}
+.x-skill-icon{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none;
+  background:var(--brand-fill);color:var(--brand);font-size:17px;border:1px solid var(--border)}
+.x-skill-icon.tone-green{background:var(--success-bg);color:var(--success)}
+.x-skill-icon.tone-orange{background:var(--warning-bg);color:var(--warning)}
+.x-skill-icon.tone-red{background:var(--danger-bg);color:var(--danger)}
+.x-skill-icon.tone-gray{background:var(--fill-1);color:var(--text-secondary)}
+.x-skill-copy{min-width:0;display:flex;flex-direction:column;gap:5px;padding-top:1px}
+.x-skill-copy strong{font-size:14px;line-height:1.4;color:var(--text)}
+.x-skill-copy>span{font-size:12.5px;line-height:1.65;color:var(--text-secondary)}
+.x-skill-empty{padding:36px 0;text-align:center;font-size:13px;color:var(--text-soft)}
+#view-collab .expert-skills-label{font-size:10px;color:var(--text-soft);padding:2px 1px}
+#view-collab .expert-skill-more{border:1px dashed var(--border);background:var(--bg);color:var(--text-soft)}
+
 /* 专家卡片对话按钮：与专家团卡片的 .x-call 统一，别让浏览器默认按钮样式漏出来 */
 #view-collab .expert-chat-btn{position:absolute;top:12px;right:12px;width:auto;height:auto;
   padding:3px 10px;border:1px solid var(--border-hover);border-radius:999px;background:var(--bg);
@@ -72,3 +92,8 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
 .ask-foot{margin-top:12px;padding-top:10px;border-top:1px solid var(--divider);
   font-size:12px;color:var(--text-soft)}
 .ask-foot-done{color:var(--success)}
+
+/* 所有标准弹窗都交给遮罩层做居中，避免 fixed 子项受父级 transform 影响跑到左上角。 */
+.modal-overlay{display:flex;align-items:center;justify-content:center}
+.modal-overlay>.modal-card{position:relative;top:auto;left:auto;transform:scale(.96)}
+.modal-overlay.show>.modal-card{transform:scale(1)}

@@ -8,6 +8,7 @@ import { openAppDropdown } from './attach-app.js';
 
 /* ---------- Changelog / 更新通知（与 Build_demo 完全一致） ---------- */
 var changelogData=[
+  {id:'25',date:'2026-09-21',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',team:'协作开发体验升级',body:'任务管理升级为状态看板与列表，任务详情采用左侧任务主页、右侧属性栏的页内工作台；专家新增技能页签与技能用途说明，内置专家团聚焦苍穹应用开发、通用应用开发、金蝶 SaaS 实施和金蝶二次开发，同时修复交互弹窗居中规则。'},
   {id:'24',date:'2026-09-21',iconBg:'#e6f7f0',iconColor:'#0d9d6c',team:'协作人员改为团队模型',body:'协作人员管理重构为团队模型：团队列表与详情两层（概况卡＋成员/指引页签），支持新建团队、归档、添加成员、设某成员为队长（一队一队长），去掉智能体概念；任务管理改为统计卡在上、搜索与下拉筛选在下的布局，状态筛选改下拉并与统计卡点选联动；专家详情知识页签左栏分预置/关联企业/上传三组；全局「小队」更名「团队」、「扭转」更名「流转」。'},
   {id:'23',date:'2026-09-21',iconBg:'#eef3ff',iconColor:'#3d63dd',team:'专家知识左树右表布局',body:'专家详情弹窗知识页签改为左树右表独立容器+独立滚动条，补全 .x-detail-pane 断裂的 flex 链条；去掉文档卡片复选框和目录点击筛选；预置知识支持子级目录展示；添加企业知识弹窗右侧不再支持文档级排除，默认全部加进来；去掉知识页签的灰色提示文字。'},
   {id:'22',date:'2026-09-21',iconBg:'#eef3ff',iconColor:'#3d63dd',team:'知识搜索修复',body:'修复专家知识搜索框无法输入中文：三处搜索框（添加企业知识弹窗、详情弹窗知识页签、编辑器知识页签）在输入法组合输入时直接重渲染 DOM 打断输入，现按 compositionstart/compositionend 模式跳过组合过程中的重渲染；添加企业知识弹窗点确定时如未勾选任何目录给出提示，避免用户以为按钮没反应。'},
@@ -29,6 +30,7 @@ var changelogData=[
 ];
 // 每个数据条目对应的 avatar SVG 图标（与 Build_demo 的 lucide 图标一致）
 var changelogIcons={
+  '25':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 4v16"/></svg>',
   '24':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
   '23':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>',
   '22':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/></svg>',

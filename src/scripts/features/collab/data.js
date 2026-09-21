@@ -1,3 +1,4 @@
+import { renderTaskBoard, renderTaskSummary } from './task-board.js';
 import { cvOpenConversation } from './chat.js';
 /* 协作开发：项目 / 任务 / 评审 / 人员数据与卡片渲染
    拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
@@ -10,8 +11,8 @@ import { cvOpenConversation } from './chat.js';
    ============================================================ */
 /* 项目维度：任务 / 评审 / 协作人员按项目分；专家与专家团为全局资产，项目内只绑定默认专家团 */
 var CV_PROJECTS=[
-  {id:'expense',name:'费用报销应用',dot:'blue',defaultTeam:'software-company'},
-  {id:'purchase',name:'采购管理系统',dot:'orange',defaultTeam:'cosmic-team'},
+  {id:'expense',name:'费用报销应用',dot:'blue',defaultTeam:'kingdee-saas-implementation'},
+  {id:'purchase',name:'采购管理系统',dot:'orange',defaultTeam:'cosmic-app-dev'},
   {id:'supply',name:'供应链协同平台',dot:'green',defaultTeam:null}
 ];
 var cvProject='';                    /* 空串 = 全部项目（个人视角的聚合视图） */
@@ -161,27 +162,12 @@ var CV_THIRD_PARTY_MEMBERS=[
 ];
 
 function cvRenderTaskStats(){
-  var counts={未开始:0,待评审:0,进行中:0,已完成:0,已失败:0};
-  var rows=CV_TASKS.filter(cvInProject);
-  rows.forEach(function(t){counts[t.status]=(counts[t.status]||0)+1;});
-  var el=document.getElementById('cv-task-stats');if(!el)return;
-  var stats=[
-    {num:rows.length,label:'全部任务',color:'var(--text)',status:'全部状态'},
-    {num:counts['未开始']||0,label:'未开始',color:'var(--text-secondary)',status:'未开始'},
-    {num:counts['待评审']||0,label:'待评审',color:'var(--warning)',status:'待评审'},
-    {num:counts['进行中']||0,label:'进行中',color:'var(--dot-blue)',status:'进行中'},
-    {num:counts['已完成']||0,label:'已完成',color:'var(--success)',status:'已完成'},
-    {num:counts['已失败']||0,label:'已失败',color:'var(--danger)',status:'已失败'}
-  ];
-  el.innerHTML=stats.map(function(s){
-    return '<div class="stat" onclick="cvClickStat(this,\''+s.status+'\')"><div class="stat-num" style="color:'+s.color+'">'+s.num+'</div><div class="stat-label">'+s.label+'</div></div>';
-  }).join('');
+  renderTaskSummary();
 }
 function cvRenderTasks(){
-  var grid=document.getElementById('cv-task-grid');if(!grid)return;
-  grid.innerHTML=CV_TASKS.map(function(t,i){return cvInProject(t)?cvBuildTaskCard(t,i):'';}).join('');
-  if(!grid.innerHTML) grid.innerHTML='<div class="x-empty">该项目下还没有任务</div>';
+  renderTaskBoard();
 }
+
 function cvBuildTaskCard(t,i){
   var typeCls={'需求':'badge-type','Bug':'badge-bug','任务':'badge-task','改进':'badge-improve'}[t.type]||'badge-type';
   var sizeCls=t.size==='大'?'badge-size-l':'badge-size-s';
@@ -252,6 +238,7 @@ function cvBuildReviewCard(r,i){
     +'</div></div></div>';
 }
 function cvInjectCardActions(){
+  if(document.getElementById('tb-layout')) return;
   document.querySelectorAll('#cv-task-grid .card').forEach(function(card){
     if(card.querySelector('.card-actions'))return;
     var idx=parseInt(card.getAttribute('data-idx'));
