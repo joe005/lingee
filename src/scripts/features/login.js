@@ -12,13 +12,13 @@ var loginError=$('#loginError');
 var LOGIN_KEY='lingee_auth_session';
 var REMEMBER_KEY='lingee_remember_user';
 
-/* 账号 → 角色：登录后进入对应角色（密码统一，不对外暴露） */
+/* 账号 → 角色：登录后进入对应角色（虚拟账号，密码统一） */
 var ACCOUNTS={
-  'wuhc2023@gmail.com':{pass:'lingee520',role:'owner',name:'吴宏超',avatar:'吴'},
-  '17299999999':{pass:'lingee520',role:'dev',name:'张工',avatar:'张'},
-  'liangpingxian@gmail.com':{pass:'lingee520',role:'pm',name:'赵琳',avatar:'赵'},
-  '6686612@qq.com':{pass:'lingee520',role:'qa',name:'陈晨',avatar:'陈'},
-  'wei_bu@kingdee.com':{pass:'lingee520',role:'ops',name:'周杰',avatar:'周'}
+  'owner':{pass:'lingee520',role:'owner',name:'吴宏超',avatar:'吴'},
+  'dev':{pass:'lingee520',role:'dev',name:'张工',avatar:'张'},
+  'pm':{pass:'lingee520',role:'pm',name:'赵琳',avatar:'赵'},
+  'qa':{pass:'lingee520',role:'qa',name:'陈晨',avatar:'陈'},
+  'ops':{pass:'lingee520',role:'ops',name:'周杰',avatar:'周'}
 };
 
 /* 演示角色：不同角色登录后看到不同视图（权限差异演示） */
