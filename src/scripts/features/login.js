@@ -93,25 +93,6 @@ function hideLogin(){
   setLoginFieldsEnabled(false);
 }
 
-/* 登录页角色选择：点击直接以该角色进入 */
-function renderDemoRoles(){
-  var el=$('#loginRoles'); if(!el) return;
-  el.innerHTML=DEMO_ROLES.map(function(r){
-    return '<button type="button" class="login-role" data-demo-role="'+r.id+'">'
-      +'<span class="login-role-av">'+r.avatar+'</span>'
-      +'<span class="login-role-body"><b>'+r.label+'</b><em>'+r.desc+'</em></span></button>';
-  }).join('');
-  el.addEventListener('click',function(e){
-    var b=e.target.closest('[data-demo-role]'); if(!b) return;
-    var r=DEMO_ROLES.filter(function(x){return x.id===b.getAttribute('data-demo-role');})[0]; if(!r) return;
-    setRole(r.id);
-    setAuthed('demo:'+r.id);
-    applyRoleUser(r);
-    applyRole();
-    hideLogin();
-  });
-}
-
 /* 未登录则显示登录页，已登录则恢复用户信息 */
 var _authedUser=getAuthedUser();
 
@@ -171,7 +152,6 @@ export function initLogin() {
   });
   }
   if(!_authedUser){
-    renderDemoRoles();
     showLogin();
     try{localStorage.removeItem('lingeeUrlState')}catch(e){}
   }else{
