@@ -586,7 +586,7 @@ export function initComposer() {
         if(!/^[a-z][a-z0-9+.-]*:/i.test(v)) v='https://'+v;
         this.value=v;
         var f=$('#chatPreviewFrame');
-        if(f&&f.src!==v){ pushPreviewUrl(v); }
+        if(f){ var cur=f.getAttribute('src'); if(cur&&cur!==v) f.src=v; else f.src=v; }
         this.blur();
       }else if(e.key==='Escape'){
         this.blur();
