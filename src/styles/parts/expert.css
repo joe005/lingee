@@ -91,7 +91,7 @@
 /* 跟专家团配置弹窗一样宽，别让专家详情挤成一条；
    高度也定死——概览短、知识长，不定死切页签时弹窗会跟着跳一下 */
 .expert-detail-modal { width: min(720px, 92vw); height: min(600px, 86vh); }
-.expert-detail-modal > .modal-body { flex: 1; min-height: 0; overflow-y: auto; }
+.expert-detail-modal > .modal-body { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
 .expert-detail-head { align-items: flex-start; }
 .x-detail-head { display: flex; gap: 13px; align-items: center; }
 .x-av-lg { width: 46px; height: 46px; border-radius: 12px; }

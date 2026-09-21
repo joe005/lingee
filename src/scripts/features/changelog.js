@@ -8,6 +8,8 @@ import { openAppDropdown } from './attach-app.js';
 
 /* ---------- Changelog / 更新通知（与 Build_demo 完全一致） ---------- */
 var changelogData=[
+  {id:'23',date:'2026-09-21',iconBg:'#eef3ff',iconColor:'#3d63dd',team:'专家知识左树右表布局',body:'专家详情弹窗知识页签改为左树右表独立容器+独立滚动条，补全 .x-detail-pane 断裂的 flex 链条；去掉文档卡片复选框和目录点击筛选；预置知识支持子级目录展示；添加企业知识弹窗右侧不再支持文档级排除，默认全部加进来；去掉知识页签的灰色提示文字。'},
+  {id:'22',date:'2026-09-21',iconBg:'#eef3ff',iconColor:'#3d63dd',team:'知识搜索修复',body:'修复专家知识搜索框无法输入中文：三处搜索框（添加企业知识弹窗、详情弹窗知识页签、编辑器知识页签）在输入法组合输入时直接重渲染 DOM 打断输入，现按 compositionstart/compositionend 模式跳过组合过程中的重渲染；添加企业知识弹窗点确定时如未勾选任何目录给出提示，避免用户以为按钮没反应。'},
   {id:'21',date:'2026-09-20',iconBg:'#eaf1ff',iconColor:'#3d63dd',team:'知识界面统一为目录模型',body:'自己创建的专家点击卡片直接进编辑表单，不再先弹只读详情。知识界面统一为「目录」模型：预置知识、知识扩展（原「自己的知识」）、自己上传的文件都以目录形式摆在左边，点目录筛选右边文档；预置知识支持看到目录名和文件名，但不能查看正文、不能修改；关联的企业知识目录支持对单篇文档单独勾选排除；预置专家的知识改动先落草稿，页脚新增「取消／保存」；「添加企业知识」弹窗定死高度，不再随搜索结果忽大忽小；修复专家卡片鼠标悬停出现的蓝色描边。'},
   {id:'20',date:'2026-09-20',iconBg:'#e6f7f0',iconColor:'#0d9d6c',team:'专家知识分预置与自己上传',body:'专家知识分两层：预置知识是 Lingee 内置专家按能力项配置好的，官方维护，不可查看也不可修改，详情弹窗只报一个锁住的篇数；自己的知识谁都能在专家详情里直接上传文件，不用先编辑。自己创建的专家不受影响，仍是关联企业知识 + 上传两块。创建/编辑专家弹窗定死高度，三个页签来回切不再跳动；专家团成员卡片去掉重复的职位行；全局把「召唤」相关文案改成「对话」。'},
   {id:'19',date:'2026-09-20',iconBg:'#f0e6ff',iconColor:'#7c3aed',team:'专家团弹窗改成单页',body:'专家团配置弹窗取消页签，团队、成员、能力覆盖、触发词合并到同一屏；查看内置专家团时不再重复摆只读表单——标题已经是名字，正文只留一句话说明，只读提示和「名称」输入框都去掉，自建团的编辑表单不受影响；专家详情弹窗定死高度，「概览／知识」页签切换不再跳动。'},
@@ -26,6 +28,8 @@ var changelogData=[
 ];
 // 每个数据条目对应的 avatar SVG 图标（与 Build_demo 的 lucide 图标一致）
 var changelogIcons={
+  '23':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>',
+  '22':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/></svg>',
   '16':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M4 6h10M18 6h2"/><circle cx="16" cy="6" r="2"/><path d="M4 12h4M12 12h8"/><circle cx="10" cy="12" r="2"/><path d="M4 18h10M18 18h2"/><circle cx="16" cy="18" r="2"/></svg>',
   '15':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M12 5v14M5 12h14"/></svg>',
   '14':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m16 11 2 2 4-4"/></svg>',

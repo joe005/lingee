@@ -16,9 +16,11 @@ var KN_DIRS=[
     {n:'金蝶前端组件库使用规范 v3.2',t:'PDF',sz:'1.8 MB',by:'赵媛媛',up:'2026/8/18',pg:12},
     {n:'响应式栅格与断点约定',t:'DOCX',sz:'420 KB',by:'赵媛媛',up:'2026/7/30',pg:6},
     {n:'KWC 组件命名与目录结构',t:'MD',sz:'18 KB',by:'林波',up:'2026/8/2',pg:3}]},
-  {id:'kn-form-guide',name:'苍穹表单建模指南',by:'苍穹平台组',comps:['cosmic.form-design'],docs:[
-    {n:'单据字段类型与校验规则清单',t:'PDF',sz:'2.4 MB',by:'李文彬',up:'2026/8/11',pg:18},
-    {n:'字段联动与可见性配置示例',t:'DOCX',sz:'660 KB',by:'李文彬',up:'2026/6/24',pg:9}]},
+  {id:'kn-form-guide',name:'苍穹表单建模指南',by:'苍穹平台组',comps:['cosmic.form-design'],docs:[],children:[
+    {id:'kn-form-guide-base',name:'基础配置',by:'苍穹平台组',docs:[
+      {n:'单据字段类型与校验规则清单',t:'PDF',sz:'2.4 MB',by:'李文彬',up:'2026/8/11',pg:18}]},
+    {id:'kn-form-guide-adv',name:'高级配置',by:'苍穹平台组',docs:[
+      {n:'字段联动与可见性配置示例',t:'DOCX',sz:'660 KB',by:'李文彬',up:'2026/6/24',pg:9}]}]},
   {id:'kn-flow-manual',name:'苍穹工作流配置手册',by:'苍穹平台组',comps:['cosmic.workflow'],docs:[
     {n:'审批链建模与加签会签场景',t:'PDF',sz:'3.1 MB',by:'周敏',up:'2026/8/16',pg:24},
     {n:'流程不流转的常见原因排查表',t:'DOCX',sz:'380 KB',by:'周敏',up:'2026/8/5',pg:5},
@@ -32,9 +34,11 @@ var KN_DIRS=[
   {id:'kn-api-contract',name:'苍穹开放接口契约',by:'集成中心',comps:['cosmic.integration','engineering.integration'],docs:[
     {n:'开放平台鉴权方式对比',t:'PDF',sz:'1.1 MB',by:'何俊',up:'2026/8/1',pg:8},
     {n:'幂等与重试设计约定',t:'DOCX',sz:'340 KB',by:'何俊',up:'2026/6/30',pg:6}]},
-  {id:'kn-req-template',name:'需求与验收模板库',by:'产品部',comps:['product.requirements','product.acceptance-design'],docs:[
-    {n:'需求规格说明书模板',t:'DOCX',sz:'520 KB',by:'吴宏超',up:'2026/8/20',pg:10},
-    {n:'验收条件编写指引',t:'PDF',sz:'760 KB',by:'吴宏超',up:'2026/7/15',pg:7}]},
+  {id:'kn-req-template',name:'需求与验收模板库',by:'产品部',comps:['product.requirements','product.acceptance-design'],docs:[],children:[
+    {id:'kn-req-template-req',name:'需求模板',by:'产品部',docs:[
+      {n:'需求规格说明书模板',t:'DOCX',sz:'520 KB',by:'吴宏超',up:'2026/8/20',pg:10}]},
+    {id:'kn-req-template-acc',name:'验收模板',by:'产品部',docs:[
+      {n:'验收条件编写指引',t:'PDF',sz:'760 KB',by:'吴宏超',up:'2026/7/15',pg:7}]}]},
   {id:'kn-quality-gate',name:'交付质量门禁',by:'质量部',comps:['quality.verification','quality.regression-analysis','delivery.orchestration','delivery.integration'],docs:[
     {n:'发布准入检查清单',t:'PDF',sz:'980 KB',by:'陈亮',up:'2026/8/17',pg:9},
     {n:'回归范围评估方法',t:'DOCX',sz:'450 KB',by:'陈亮',up:'2026/7/2',pg:8}]},
@@ -200,6 +204,7 @@ function knPreviewHtml(d,backText){
 var xkDraft=null;      /* 指向 editor.js 的 xeDraft，渲染时传进来 */
 var xkPick='';         /* 右侧文档列表当前看的是哪个目录：'' 全部 / 目录 id / '__up' 上传知识 */
 var xkKw='';
+var xkSearchComposing=false;  /* IME 组合输入中，跳过重渲染 */
 var xkPv=null;         /* 正在预览的文档，null = 显示列表 */
 
 function knFileType(name){
@@ -252,13 +257,10 @@ function knRows(){
   }
   return rows.filter(function(r){ return knHit(r.n)||knHit(r.from)||knHit(r.by); });
 }
-/* r.key 存在（来自企业知识目录）时带一个勾选框，勾掉表示把这一篇单独排除在检索之外，
-   目录本身还是关联着；上传知识用 dirId==='__up' 标识，只有移除没有排除 */
+/* r.key 存在（来自企业知识目录）时不再显示勾选框，默认全部包含 */
 function knDocCard(r){
   var toggle=r.locked
     ? '<span class="xk-doc-lock" title="官方维护，不可修改">🔒</span>'
-    : r.key
-    ? '<span class="xk-ck'+(r.off?'':' ck')+'" data-xk-doc-toggle="'+r.key+'" role="checkbox" aria-checked="'+(!r.off)+'" title="'+(r.off?'已排除，检索时跳过':'检索时包含这篇')+'"></span>'
     : '';
   return '<div class="xk-doc'+(r.key?' xk-doc-pv':'')+'"'+(r.key?' data-xk-pv="'+r.key+'"':'')+'>'
     +'<div class="xk-doc-top">'+toggle+'<span class="xk-doc-from">'+xesc(r.from)+'</span>'
@@ -322,6 +324,7 @@ var xkDetailEx=null;   /* 详情弹窗当前是哪位专家，重绘这一节时
 var xkDetailDraft=null;/* {kn:[],knUp:[]} 当前专家未保存的草稿 */
 var xkDetailPv=null;   /* 详情里正在预览的文档 */
 var xkDetailKw='';     /* 详情里的知识搜索关键字 */
+var xkDtlComposing=false;  /* IME 组合输入中，跳过重渲染 */
 var xkDetailPick='';   /* 右侧当前只看哪一组：'' 全部 / 目录id（含预置） / '__myup' 自己上传的文件 */
 function resetKnDetail(){ xkDetailEx=null; xkDetailDraft=null; xkDetailPv=null; xkDetailKw=''; xkDetailPick=''; }
 function xkDetailDraftFor(e){
@@ -362,37 +365,50 @@ function knSecHtmlPreset(e){
     +'<button type="button" class="xk-btn" id="xkDtlUpBtn">⬆ 上传</button>'
     +'<div class="xk-bar-sp"></div>'
     +'<input type="search" class="xk-search" id="xkDtlSearch" placeholder="搜索知识目录、文件名或创建者" autocomplete="off" value="'+xesc(xkDetailKw)+'"></div>';
-  var hint='<div class="xk-hint">预置知识由官方按能力项配置，可以看有哪些目录和文件，但不能修改；知识扩展支持关联企业知识目录，或上传属于你自己的文件。</div>';
+  var hint='';
+  function knDirCount(dir){ return (dir.children&&dir.children.length) ? dir.children.reduce(function(s,c){return s+c.docs.length;},0) : dir.docs.length; }
+  function knSubDirs(dir,preset){
+    return (dir.children||[]).map(function(c){
+      var cls='xk-dir xk-dir-sub'+(xkDetailPick===c.id?' on':'');
+      var cnt=preset?c.docs.length:knDirVisibleCount(c,offDocs);
+      var html='<div class="'+cls+'" data-xk-dtl-pick="'+c.id+'"><div class="xk-dir-row1">'
+        +'<span class="xk-dir-ic">'+(preset?'🔒':'📁')+'</span><span class="xk-dir-n">'+xesc(c.name)+'</span>'
+        +'<span class="xk-dir-c">'+cnt+'</span>';
+      if(!preset) html+='<button type="button" class="x-ic x-ic-dg xk-dir-x" data-xk-dtl-unlink="'+c.id+'" title="解除关联">✕</button>';
+      html+='</div></div>';
+      return html;
+    }).join('');
+  }
   var side='<div class="xk-grp">预置知识</div>'
     +(presetDirs.length ? presetDirs.map(function(dir){
         return '<div class="xk-dir'+(xkDetailPick===dir.id?' on':'')+'" data-xk-dtl-pick="'+dir.id+'"><div class="xk-dir-row1">'
           +'<span class="xk-dir-ic">🔒</span><span class="xk-dir-n">'+xesc(dir.name)+'</span>'
-          +'<span class="xk-dir-c">'+dir.docs.length+'</span></div></div>';
+          +'<span class="xk-dir-c">'+knDirCount(dir)+'</span></div></div>'+knSubDirs(dir,true);
       }).join('') : '<div class="xk-none">这位专家没有预置知识</div>')
     +'<div class="xk-grp">知识扩展</div>'
     +(dirs.map(function(dir){
         return '<div class="xk-dir'+(xkDetailPick===dir.id?' on':'')+'" data-xk-dtl-pick="'+dir.id+'"><div class="xk-dir-row1">'
           +'<span class="xk-dir-ic">📁</span><span class="xk-dir-n">'+xesc(dir.name)+'</span>'
           +'<span class="xk-dir-c">'+knDirVisibleCount(dir,offDocs)+'</span>'
-          +'<button type="button" class="x-ic x-ic-dg xk-dir-x" data-xk-dtl-unlink="'+dir.id+'" title="解除关联">✕</button></div></div>';
+          +'<button type="button" class="x-ic x-ic-dg xk-dir-x" data-xk-dtl-unlink="'+dir.id+'" title="解除关联">✕</button></div></div>'+knSubDirs(dir,false);
       }).join('')
       +(ups.length ? '<div class="xk-dir'+(xkDetailPick==='__myup'?' on':'')+'" data-xk-dtl-pick="__myup"><div class="xk-dir-row1">'
         +'<span class="xk-dir-ic">📁</span><span class="xk-dir-n">我上传的文件</span>'
         +'<span class="xk-dir-c">'+ups.length+'</span></div></div>' : '')
       || '<div class="xk-none">暂无，点上面「＋ 添加」关联目录，或「⬆ 上传」加几个文件</div>');
   var rows=[], showAll=!xkDetailPick;
-  if(showAll||presetDirs.some(function(d){return d.id===xkDetailPick;})){
-    presetDirs.filter(function(d){return showAll||d.id===xkDetailPick;}).forEach(function(dir){
-      dir.docs.forEach(function(doc){ rows.push({from:dir.name,dirId:dir.id,locked:true,n:doc.n,t:doc.t,sz:doc.sz,by:doc.by,up:doc.up}); });
+  function collectDir(dir,locked){
+    (dir.docs||[]).forEach(function(doc,i){
+      if(locked){ rows.push({from:dir.name,dirId:dir.id,locked:true,n:doc.n,t:doc.t,sz:doc.sz,by:doc.by,up:doc.up}); }
+      else{ var key=knDocKey(dir.id,i); rows.push({key:key,from:dir.name,dirId:dir.id,off:offDocs.indexOf(key)>=0,n:doc.n,t:doc.t,sz:doc.sz,by:doc.by,up:doc.up,pg:doc.pg}); }
     });
+    (dir.children||[]).forEach(function(sub){ collectDir(sub,locked); });
+  }
+  if(showAll||presetDirs.some(function(d){return d.id===xkDetailPick;})){
+    presetDirs.filter(function(d){return showAll||d.id===xkDetailPick;}).forEach(function(dir){ collectDir(dir,true); });
   }
   if(showAll||dirs.some(function(d){return d.id===xkDetailPick;})){
-    dirs.filter(function(d){return showAll||d.id===xkDetailPick;}).forEach(function(dir){
-      dir.docs.forEach(function(doc,i){
-        var key=knDocKey(dir.id,i);
-        rows.push({key:key,from:dir.name,dirId:dir.id,off:offDocs.indexOf(key)>=0,n:doc.n,t:doc.t,sz:doc.sz,by:doc.by,up:doc.up,pg:doc.pg});
-      });
-    });
+    dirs.filter(function(d){return showAll||d.id===xkDetailPick;}).forEach(function(dir){ collectDir(dir,false); });
   }
   if(showAll||xkDetailPick==='__myup'){
     ups.forEach(function(f,i){ rows.push({from:'我上传的文件',dirId:'__up',idx:i,n:f.n,t:f.t,sz:f.sz,up:f.up,by:f.by||'我'}); });
@@ -434,6 +450,7 @@ var knPickModal=$('#knPickModal');
 var knPickSel=[];      /* 弹窗里已勾选的目录 id，确定时整批写回 xkDraft.kn */
 var knPickActive='';   /* 右侧正在看哪个目录的文档 */
 var knPickKw='';
+var knPickComposing=false;  /* IME 组合输入中，跳过重渲染 */
 var knPickCovered=[];   /* 已经按能力项自动带出的目录 id，不用在弹窗里再选一遍 */
 var knPickDocOff=[];    /* 目录整体关联着，但被单独排除的文档 key（目录id#下标） */
 var knPickOnConfirm=null;
@@ -472,9 +489,7 @@ function renderKnPick(){
   var activeDir=knDir(knPickActive);
   $('#knPickDocs').innerHTML = activeDir
     ? (activeDir.docs.length ? activeDir.docs.map(function(doc,i){
-        var key=knDocKey(activeDir.id,i), off=knPickDocOff.indexOf(key)>=0;
         return '<div class="xk-doc"><div class="xk-doc-top">'
-          +'<span class="xk-ck'+(off?'':' ck')+'" data-kp-doc-toggle="'+key+'" role="checkbox" aria-checked="'+(!off)+'" title="'+(off?'已排除，检索时跳过':'检索时包含这篇')+'"></span>'
           +'<span class="xk-doc-from">'+xesc(activeDir.name)+'</span>'
           +'<span class="xk-doc-t">'+xesc(doc.t)+(doc.sz?' · '+xesc(doc.sz):'')+'</span></div>'
           +'<div class="xk-doc-n">'+xesc(doc.n)+'</div>'
@@ -504,7 +519,13 @@ export function initExpertKnowledge() {
     $('#knPickClose').addEventListener('click',function(){ knPickModal.classList.remove('show') });
     $('#knPickCancel').addEventListener('click',function(){ knPickModal.classList.remove('show') });
     knPickModal.addEventListener('click',function(ev){ if(ev.target===knPickModal) knPickModal.classList.remove('show'); });
-    $('#knPickSearch').addEventListener('input',function(){ knPickKw=this.value; renderKnPick(); });
+    var knPickSearchEl=$('#knPickSearch');
+    knPickSearchEl.addEventListener('compositionstart',function(){knPickComposing=true});
+    knPickSearchEl.addEventListener('compositionend',function(){knPickComposing=false;knPickKw=this.value;renderKnPick()});
+    knPickSearchEl.addEventListener('input',function(){
+      if(knPickComposing) return;
+      knPickKw=this.value; renderKnPick();
+    });
     if(kpSide) kpSide.addEventListener('click',function(ev){
       var t=ev.target.closest('[data-kp-toggle]');
       if(t){
@@ -515,20 +536,13 @@ export function initExpertKnowledge() {
       var r=ev.target.closest('[data-kp-dir]');
       if(r){ knPickActive=r.getAttribute('data-kp-dir'); renderKnPick(); }
     });
-    var kpDocs=$('#knPickDocs');
-    if(kpDocs) kpDocs.addEventListener('click',function(ev){
-      var dt=ev.target.closest('[data-kp-doc-toggle]');
-      if(!dt) return;
-      var key=dt.getAttribute('data-kp-doc-toggle'), i=knPickDocOff.indexOf(key);
-      if(i<0) knPickDocOff.push(key); else knPickDocOff.splice(i,1);
-      renderKnPick();
-    });
+    /* 右侧文档不支持选中或部分排除，默认全部包含 */
     $('#knPickOk').addEventListener('click',function(){
       var cb=knPickOnConfirm, ids=knPickSel.slice();
-      /* 排除标记只对还勾着的目录有意义，目录被取消勾选就把它的排除记录一并丢掉 */
-      var docOff=knPickDocOff.filter(function(k){ return ids.indexOf(k.split('#')[0])>=0; });
+      if(!ids.length){ toast('请先在左侧勾选要关联的知识目录','info'); return; }
+      /* 默认全部文档都加进来，不再支持文档级排除 */
       knPickModal.classList.remove('show');
-      if(cb) cb(ids,docOff);
+      if(cb) cb(ids,[]);
     });
   }
   if($('#xkUpBtn')) $('#xkUpBtn').addEventListener('click',function(){
@@ -545,9 +559,15 @@ export function initExpertKnowledge() {
     xkPv=null; renderKnPane();
     toast('已加入 '+list.length+' 个文件，保存后生效','success');
   });
-  if($('#xkSearch')) $('#xkSearch').addEventListener('input',function(){
-    xkKw=this.value; xkPv=null; renderKnPane();
-  });
+  var xkSearchEl=$('#xkSearch');
+  if(xkSearchEl){
+    xkSearchEl.addEventListener('compositionstart',function(){xkSearchComposing=true});
+    xkSearchEl.addEventListener('compositionend',function(){xkSearchComposing=false;xkKw=this.value;xkPv=null;renderKnPane()});
+    xkSearchEl.addEventListener('input',function(){
+      if(xkSearchComposing) return;
+      xkKw=this.value; xkPv=null; renderKnPane();
+    });
+  }
 
   if(side) side.addEventListener('click',function(ev){
     var t=ev.target.closest('[data-xk-toggle]');
@@ -658,17 +678,27 @@ export function initExpertKnowledge() {
     }
     var pk=ev.target.closest('[data-xk-dtl-pick]');
     if(pk){
-      var pid=pk.getAttribute('data-xk-dtl-pick');
-      xkDetailPick=(xkDetailPick===pid)?'':pid;
-      reRenderKnSec(e);
+      /* 暂不支持单选某个目录下的文档，点击不做筛选 */
       return;
     }
   });
-  if(body) body.addEventListener('input',function(ev){
-    if(ev.target.id!=='xkDtlSearch') return;
-    xkDetailKw=ev.target.value;
-    reRenderKnSec(xkDetailEx);
-  });
+  if(body){
+    body.addEventListener('compositionstart',function(ev){
+      if(ev.target.id==='xkDtlSearch') xkDtlComposing=true;
+    });
+    body.addEventListener('compositionend',function(ev){
+      if(ev.target.id!=='xkDtlSearch') return;
+      xkDtlComposing=false;
+      xkDetailKw=ev.target.value;
+      reRenderKnSec(xkDetailEx);
+    });
+    body.addEventListener('input',function(ev){
+      if(ev.target.id!=='xkDtlSearch') return;
+      if(xkDtlComposing) return;
+      xkDetailKw=ev.target.value;
+      reRenderKnSec(xkDetailEx);
+    });
+  }
   return box;
 }
 /* 详情弹窗底部「保存」按钮：footer 跟正文分开重建，点击由 library.js 转发过来 */

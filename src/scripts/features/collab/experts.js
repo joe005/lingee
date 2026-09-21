@@ -45,8 +45,7 @@ function cvBuildExpertCard(e){
     +'<div class="expert-stats">'
     +'<div><div class="expert-stat-val">'+cvTeamCountOf(e.id)+'</div><div class="expert-stat-label">所在专家团</div></div>'
     +'<div><div class="expert-stat-val">'+comps+'</div><div class="expert-stat-label">能力项</div></div>'
-    +'<div><div class="expert-stat-val">'+cmds+'</div><div class="expert-stat-label">触发词</div></div>'
-    +'<div><div class="expert-stat-val">'+knCountOf(e)+'</div><div class="expert-stat-label">知识</div></div>'
+     +'<div><div class="expert-stat-val">'+knCountOf(e)+'</div><div class="expert-stat-label">知识</div></div>'
     +'</div></div>';
 }
 function cvRenderExperts(){

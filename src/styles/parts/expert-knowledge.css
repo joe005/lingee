@@ -18,7 +18,9 @@
 /* 详情弹窗顶部「概览 / 知识」页签：复用 .modal-tabs 视觉，但这里已经在有内边距的
    modal-body 里，去掉它自带的左右内边距，否则会比下面的内容多缩进一截 */
 #xdTabs.modal-tabs{padding:0;margin-bottom:14px}
-.x-detail-pane.hidden{display:none}
+  .x-detail-pane{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column}
+  .x-detail-pane.hidden{display:none}
+  .x-detail-pane[data-xdpane="kn"]{overflow:hidden}
 
 /* ---- 左目录 / 右文档：跟智能体开发的知识页签同一形态 ---- */
 .xk-cols{display:grid;grid-template-columns:minmax(0,240px) minmax(0,1fr);gap:12px}
@@ -43,7 +45,10 @@
   background:var(--brand-fill);color:var(--brand);white-space:nowrap;display:inline-block;max-width:calc(100% - 41px);overflow:hidden;text-overflow:ellipsis}
 .xk-dir-tag-flat{margin-left:20px}
 .xk-dir.on .xk-dir-tag{background:var(--bg)}
-.xk-dir-c{flex:none;font-size:11px;color:var(--text-soft);font-variant-numeric:tabular-nums}
+  .xk-dir-c{flex:none;font-size:11px;color:var(--text-soft);font-variant-numeric:tabular-nums}
+  .xk-dir-sub{padding-left:26px;font-size:12.5px;opacity:.92}
+  .xk-dir-sub .xk-dir-ic{font-size:11px}
+  .xk-dir-sub .xk-dir-n{font-size:12.5px}
 .xk-dir-x{flex:none;width:22px;height:22px;opacity:0}
 .xk-dir:hover .xk-dir-x{opacity:1}
 
@@ -84,6 +89,11 @@
 /* 详情弹窗窄，两列比编辑器再紧凑一点 */
 .xk-cols-detail{grid-template-columns:minmax(0,220px) minmax(0,1fr)}
 .xk-cols-detail .xk-side,.xk-cols-detail .xk-docs{max-height:320px}
+/* 详情弹窗知识页签：左右栏参考「添加企业知识」弹窗，各自独立容器+滚动条 */
+#xkSec{flex:1;min-height:0;display:flex;flex-direction:column;margin-bottom:0}
+.expert-detail-modal .xk-cols{flex:1;min-height:0;grid-template-rows:minmax(0,1fr)}
+.expert-detail-modal .xk-side{max-height:none;overflow-y:auto;min-height:0;display:flex;flex-direction:column;gap:2px}
+.expert-detail-modal .xk-docs{max-height:none;overflow-y:auto;min-height:0;border:1px solid var(--border);border-radius:10px;padding:10px;background:var(--fill-1);display:flex;flex-direction:column;gap:8px}
 
 .x-kn-doclist{display:flex;flex-direction:column;gap:4px;max-height:320px;overflow-y:auto;padding-right:2px}
 .x-kn-doc{display:flex;align-items:center;gap:8px;width:100%;padding:7px 9px;border:0;border-radius:7px;
