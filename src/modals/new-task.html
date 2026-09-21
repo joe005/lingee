@@ -1,0 +1,40 @@
+<div class="sync-overlay" id="cv-newtask-overlay" style="display:none" onclick="if(event.target===this)cvCloseNewTask()">
+  <div class="nt-modal">
+    <div class="nt-head">
+      <div class="nt-crumb"><span class="nt-user">wuhc</span><span class="nt-sep">›</span><span id="cv-nt-mode-label">手动创建</span></div>
+      <button class="sync-modal__close" onclick="cvCloseNewTask()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <!-- 手动创建 -->
+    <div class="nt-body" id="cv-nt-manual">
+      <input class="nt-title" id="cv-nt-title" placeholder="任务标题" maxlength="120">
+      <textarea class="nt-desc" id="cv-nt-desc" rows="3" placeholder="添加描述"></textarea>
+      <div class="nt-hint">创建后 <b id="cv-nt-hint-agent">专家团</b> 会立即开始工作。</div>
+      <div class="nt-attrs">
+        <span class="nt-chip nt-chip--static">待办</span>
+        <select class="nt-select" id="cv-nt-priority"><option>无优先级</option><option>高</option><option>中</option><option>低</option></select>
+        <select class="nt-select" id="cv-nt-assignee"></select>
+      </div>
+      <div class="nt-chips">
+        <button type="button" class="nt-chip nt-chip--add">＋ 添加标签</button>
+        <span class="nt-proj"><span id="cv-nt-proj-name">项目</span><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>
+      </div>
+      <div class="nt-files">
+        <button type="button" class="nt-chip nt-chip--add" id="cv-nt-addfile">＋ 添加附件</button>
+        <div class="nt-file-list" id="cv-nt-file-list"></div>
+      </div>
+    </div>
+    <!-- 通过智能体创建 -->
+    <div class="nt-body hidden" id="cv-nt-agent">
+      <div class="nt-agent-row"><span>创建者</span><select class="nt-select" id="cv-nt-creator"></select></div>
+      <textarea class="nt-desc" id="cv-nt-prompt" rows="4" placeholder="告诉智能体要做什么，例如：“让架构专家把权限体系重构成 RBAC，并补上回归用例”"></textarea>
+      <div class="nt-chips"><span class="nt-proj"><span id="cv-nt-proj-name2">项目</span><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span></div>
+    </div>
+    <div class="nt-foot">
+      <button type="button" class="nt-link" id="cv-nt-toggle">切换到智能体</button>
+      <div class="nt-foot-right">
+        <button type="button" class="nt-btn" id="cv-nt-continue">继续创建</button>
+        <button type="button" class="nt-btn nt-btn--primary" id="cv-nt-submit">创建任务</button>
+      </div>
+    </div>
+  </div>
+</div>

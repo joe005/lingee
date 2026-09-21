@@ -160,5 +160,51 @@
     </div>
   </div>
 </div>
-</div>
 
+
+<!-- 设置 · 项目设置弹窗 -->
+<div class="sync-overlay" id="cv-projedit-overlay" style="display:none" onclick="if(event.target===this)cvCloseProjEdit()">
+  <div class="sync-modal" style="width:520px">
+    <div class="sync-modal__header">
+      <h3 class="sync-modal__title" id="cv-pe-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>项目设置</h3>
+      <button class="sync-modal__close" onclick="cvCloseProjEdit()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="sync-modal__body">
+      <div class="sync-modal__field">
+        <label class="sync-modal__label">标题</label>
+        <input id="cv-pe-name" style="width:100%;padding:8px 10px;border:1px solid var(--border-hover);border-radius:8px;font-size:13px;color:var(--text);outline:none" />
+      </div>
+      <div class="sync-modal__field">
+        <label class="sync-modal__label">描述</label>
+        <textarea id="cv-pe-desc" rows="2" style="width:100%;padding:8px 10px;border:1px solid var(--border-hover);border-radius:8px;font-size:13px;color:var(--text);outline:none;resize:vertical"></textarea>
+      </div>
+      <div class="sync-modal__field" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div>
+          <label class="sync-modal__label">优先级</label>
+          <select id="cv-pe-priority" style="width:100%;padding:8px 10px;border:1px solid var(--border-hover);border-radius:8px;font-size:13px;color:var(--text);outline:none;background:#fff"><option>高</option><option>中</option><option>低</option></select>
+        </div>
+        <div>
+          <label class="sync-modal__label">负责人</label>
+          <select id="cv-pe-owner" style="width:100%;padding:8px 10px;border:1px solid var(--border-hover);border-radius:8px;font-size:13px;color:var(--text);outline:none;background:#fff"></select>
+        </div>
+      </div>
+      <div class="sync-modal__field">
+        <label class="sync-modal__label">关联代码仓库</label>
+        <input id="cv-pe-repo" placeholder="如 https://github.com/kingdee/expense-app" style="width:100%;padding:8px 10px;border:1px solid var(--border-hover);border-radius:8px;font-size:13px;color:var(--text);outline:none" />
+      </div>
+      <div class="sync-modal__field">
+        <label class="sync-modal__label">里程碑</label>
+        <div style="display:flex;align-items:center;gap:8px">
+          <input id="cv-pe-start" type="date" style="flex:1;padding:8px 10px;border:1px solid var(--border-hover);border-radius:8px;font-size:13px;color:var(--text);outline:none" />
+          <span style="color:var(--text-soft)">→</span>
+          <input id="cv-pe-end" type="date" style="flex:1;padding:8px 10px;border:1px solid var(--border-hover);border-radius:8px;font-size:13px;color:var(--text);outline:none" />
+        </div>
+      </div>
+    </div>
+    <div class="sync-modal__footer">
+      <button class="sync-modal__btn sync-modal__btn--ghost" onclick="cvCloseProjEdit()">取消</button>
+      <button class="sync-modal__btn sync-modal__btn--primary" onclick="cvSaveProjEdit()">保存</button>
+    </div>
+  </div>
+</div>
+</div>

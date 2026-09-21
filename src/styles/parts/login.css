@@ -46,3 +46,28 @@
   .ic{width:18px;height:18px;stroke:currentColor;stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round;flex:none}
   .ic-sm{width:16px;height:16px}
 
+
+/* ============ 登录页：演示角色 ============ */
+.login-roles{margin-top:22px;padding-top:18px;border-top:1px solid var(--border)}
+.login-roles-title{font-size:12px;color:var(--text-soft);margin-bottom:10px;text-align:center}
+.login-roles-list{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.login-role{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:#fff;cursor:pointer;text-align:left;transition:all .15s;font-family:inherit}
+.login-role:hover{border-color:var(--brand);background:var(--brand-fill)}
+.login-role:last-child{grid-column:1/-1}
+.login-role-av{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#7c5cfc,#5b8def);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex:none}
+.login-role-body{display:flex;flex-direction:column;min-width:0}
+.login-role-body b{font-size:12.5px;color:var(--text)}
+.login-role-body em{font-style:normal;font-size:10.5px;color:var(--text-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* 顶栏角色标签 */
+.user-role-tag{font-size:10px;line-height:1;color:var(--brand);background:var(--brand-fill);border-radius:4px;padding:3px 6px;margin-left:6px;flex:none}
+
+/* ============ 角色权限：按 body[data-role] 控制可见性 ============
+   data-perm="owner" 仅所有者可见；data-perm="dev" 所有者与开发可见 */
+body[data-role="dev"] [data-perm="owner"],
+body[data-role="pm"] [data-perm="owner"],
+body[data-role="qa"] [data-perm="owner"],
+body[data-role="ops"] [data-perm="owner"]{display:none!important}
+body[data-role="pm"] [data-perm="dev"],
+body[data-role="qa"] [data-perm="dev"],
+body[data-role="ops"] [data-perm="dev"]{display:none!important}

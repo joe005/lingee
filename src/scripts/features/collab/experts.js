@@ -19,25 +19,24 @@ function cvExpertGroups(){
   ];
 }
 function cvBuildExpertCard(e){
+  /* 与专家团卡片统一用 app-card x-card 结构，更清爽 */
   var skills=(e.skills||[]).map(function(id){return skillInfo(id)});
-  var shown=skills.slice(0,2), rest=skills.length-shown.length;
-  var tags=shown.map(function(s){return '<span class="expert-skill">'+xesc(s.name)+'</span>'}).join('')
-    +(rest>0?'<span class="expert-skill expert-skill-more">+'+rest+'</span>':'');
-  /* 「能承担哪些工作」比「有几种工作模式」更能决定选不选他，直接摆出来 */
+  var tags=skills.slice(0,3).map(function(s){return '<span class="ptag">'+xesc(s.name)+'</span>'}).join('')
+    +(skills.length>3?'<span class="ptag">+'+(skills.length-3)+'</span>':'');
   var mAll=e.modes||[], mShow=mAll.slice(0,3), mRest=mAll.length-mShow.length;
   var modeRow=mAll.length
-    ? '<div class="expert-modes" title="可承担 '+xesc(mAll.join(' / '))+'"><span class="expert-modes-k">可承担</span>'
-      +mShow.map(function(m){return '<span class="expert-mode">'+xesc(m)+'</span>'}).join('')
-      +(mRest>0?'<span class="expert-mode expert-mode-more">+'+mRest+'</span>':'')+'</div>'
+    ? '<div class="x-modes" title="可承担 '+xesc(mAll.join(' / '))+'"><span class="x-modes-k">可承担</span>'
+      +mShow.map(function(m){return '<span class="x-mode">'+xesc(m)+'</span>'}).join('')
+      +(mRest>0?'<span class="x-mode x-mode-more">+'+mRest+'</span>':'')+'</div>'
     : '';
-  return '<div class="expert-card" data-cv-expert="'+e.id+'">'
-    +'<button type="button" class="expert-chat-btn" data-cv-call="'+e.id+'" title="对话这位专家">对话</button>'
-    +'<div class="expert-head"><img class="expert-av" src="'+xav(e.k)+'" alt="">'
-    +'<div><div class="expert-name">'+xesc(e.name)
-    +(e.ro?'<span class="expert-flag">只读</span>':'')+'</div>'
-    +'<div class="expert-role">'+xesc(e.role)+'</div></div></div>'
-    +'<div class="expert-intro">'+xesc(e.desc)+'</div>'
-    +(skills.length?'<div class="expert-skills"><span class="expert-skills-label">技能</span>'+tags+'</div>':'')
+  return '<div class="app-card x-card" data-cv-expert="'+e.id+'">'
+    +'<button type="button" class="x-call" data-cv-call="'+e.id+'" title="对话这位专家">对话</button>'
+    +'<div class="card-top"><img class="x-av" src="'+xav(e.k)+'" alt="">'
+    +'<div class="card-titles"><div class="card-title-row"><span class="card-title">'+xesc(e.name)+'</span>'
+    +(e.ro?'<span class="x-badge x-badge-ro">只读</span>':'')+'</div>'
+    +'<div class="x-sub">'+xesc(e.role)+' · '+xesc(e.by)+'</div></div></div>'
+    +'<div class="card-desc">'+xesc(e.desc)+'</div>'
+    +(tags?'<div class="card-tags">'+tags+'</div>':'')
     +modeRow
     +'</div>';
 }
@@ -56,13 +55,13 @@ function cvRenderExperts(){
     if(!g.list.length && g.title!=='我创建的') return '';
     var cards=g.list.map(cvBuildExpertCard).join('');
     if(g.title==='我创建的'){
-      cards+='<button type="button" class="expert-card expert-new" data-cv-new-expert>'
-        +'<span class="expert-new-ic">＋</span><span class="expert-new-t">创建专家</span>'
-        +'<span class="expert-new-s">手填表单，或一句话交给 expert-manager</span></button>';
+      cards+='<button type="button" class="app-card x-new-card" data-cv-new-expert>'
+        +'<span class="x-new-ic">＋</span><span>创建专家</span>'
+        +'<span class="x-new-sub">手填表单，或一句话交给 expert-manager</span></button>';
     }
     return '<div class="expert-section-title">'+g.title
       +'<span class="expert-section-desc">'+g.desc+'</span></div>'
-      +'<div class="expert-grid">'+cards+'</div>';
+      +'<div class="apps-grid">'+cards+'</div>';
   }).join('');
   box.innerHTML=html||'<div class="x-empty">没有匹配的专家</div>';
 }

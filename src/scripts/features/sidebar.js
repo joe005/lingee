@@ -159,6 +159,8 @@ export function initUserMenu() {
   if(userMenuLogout) userMenuLogout.addEventListener('click',function(){
     closeUserMenu();
     try{ sessionStorage.removeItem(LOGIN_KEY); }catch(e){}
+    try{ sessionStorage.removeItem('lingee_demo_role'); }catch(e){}
+    if(document.body) document.body.removeAttribute('data-role');
     if(loginForm) loginForm.reset();
     if(loginError) loginError.textContent='';
     /* 重新回填记住的账号和密码 */

@@ -472,6 +472,13 @@
 /* ============ 协作开发 · 项目维度 ============ */
 #view-collab .tab-nav{position:relative}
 #view-collab .cv-proj{position:relative;margin-left:auto;padding-left:12px}
+/* 工作区栏：顶部全局，始终显示 */
+#view-collab .cv-wsbar{display:flex;align-items:center;padding:10px 28px;border-bottom:1px solid var(--border);background:#fff;flex-shrink:0}
+#view-collab .cv-ws{margin-left:0;padding-left:0}
+#view-collab .cv-ws .cv-proj-btn{padding:6px 12px;font-size:13px;font-weight:600;color:var(--text)}
+#view-collab .cv-ws .cv-proj-menu{left:0;right:auto}
+/* 项目切换器：页签行右侧，仅任务管理/项目管理下显示 */
+#view-collab #cvProjSwitch.hidden{display:none}
 #view-collab .cv-proj-btn{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border:1px solid var(--border-hover);
   border-radius:8px;background:#fff;font-family:inherit;font-size:12.5px;color:var(--text-secondary);cursor:pointer;transition:all .15s;white-space:nowrap}
 #view-collab .cv-proj-btn:hover{border-color:var(--border-focus);color:var(--text)}
@@ -524,7 +531,8 @@
 #cv-tasks .tb-scopes button[aria-pressed=true]{background:var(--active);color:var(--text);font-weight:600}
 #cv-tasks .tb-scopes span{margin-left:4px;font-size:var(--tb-caption-size)}
 #cv-tasks .tb-tools input{width:170px}
-#cv-tasks .tb-primary{background:var(--text)!important;color:var(--bg)!important;border-color:var(--text)!important}
+#cv-tasks .tb-primary{background:var(--brand)!important;color:#fff!important;border-color:var(--brand)!important}
+#cv-tasks .tb-primary:hover{background:var(--brand-hover)!important;border-color:var(--brand-hover)!important}
 #cv-tasks .tb-summary{display:flex;align-items:center;gap:20px;padding:12px 28px;border-top:1px solid var(--border);font-size:var(--tb-small-size);color:var(--text-secondary)}
 #cv-tasks .tb-live{color:var(--brand)}
 #cv-tasks .tb-summary-note{margin-left:auto;font-size:var(--tb-caption-size);color:var(--text-secondary)}
@@ -579,19 +587,22 @@
 #cv-tasks .tb-detail-layout{display:grid;grid-template-columns:minmax(0,1fr) 330px;flex:1;min-height:0}
 #cv-tasks .tb-detail-main{overflow-y:auto;padding:38px clamp(28px,5vw,72px) 56px}
 #cv-tasks .tb-detail-aside{display:flex;flex-direction:column;gap:18px;overflow-y:auto;padding:26px 24px 0;border-left:1px solid var(--border);background:var(--fill-2)}
-#cv-tasks .tb-detail-main label,#cv-tasks .tb-detail-aside label{display:flex;flex-direction:column;gap:8px;font-size:var(--tb-small-size);color:var(--text-secondary)}
-#cv-tasks .tb-detail-main input,#cv-tasks .tb-detail-main textarea,#cv-tasks .tb-detail-aside select{width:100%;box-sizing:border-box;border:1px solid var(--border-hover);border-radius:var(--tb-radius);padding:10px 12px;background:var(--bg);color:var(--text);font-size:var(--tb-small-size)}
-#cv-tasks .tb-title-label input{border:0;border-bottom:1px solid var(--border);border-radius:0;padding:8px 0 18px;font-size:28px;font-weight:650;letter-spacing:-.02em}
-#cv-tasks .tb-title-label input:focus{border-bottom-color:var(--brand);outline:0}
-#cv-tasks .tb-description-field{margin-top:34px}
-#cv-tasks .tb-description-field textarea{border:0;padding:10px 0;resize:vertical;font-size:var(--tb-body-size);line-height:1.8}
+#cv-tasks .tb-detail-main label{display:flex;flex-direction:column;gap:8px;font-size:13px;font-weight:600;color:var(--text)}
+#cv-tasks .tb-detail-aside label{display:flex;flex-direction:column;gap:8px;font-size:var(--tb-small-size);color:var(--text-secondary)}
+#cv-tasks .tb-detail-main input,#cv-tasks .tb-detail-main textarea,#cv-tasks .tb-detail-aside select{width:100%;box-sizing:border-box;border:1px solid var(--border-hover);border-radius:var(--tb-radius);padding:10px 12px;background:var(--bg);color:var(--text);font-size:var(--tb-small-size);font-family:inherit}
+#cv-tasks .tb-detail-main input:focus,#cv-tasks .tb-detail-main textarea:focus{outline:0;border-color:var(--brand)}
+#cv-tasks .tb-title-label input{font-size:15px;font-weight:600}
+#cv-tasks .tb-description-field{margin-top:18px}
+#cv-tasks .tb-description-field textarea{resize:vertical;line-height:1.7;font-weight:400}
 #cv-tasks .tb-detail-aside>h3{margin:0 0 2px;font-size:var(--tb-body-size)}
 #cv-tasks .tb-detail-aside select{appearance:auto}
 #cv-tasks .tb-detail-meta{display:grid;grid-template-columns:1fr auto;gap:10px;padding-top:16px;border-top:1px solid var(--border);font-size:var(--tb-caption-size)}
 #cv-tasks .tb-detail-meta span{color:var(--text-secondary)}
 #cv-tasks .tb-detail-meta b{font-weight:500;color:var(--text)}
-#cv-tasks .tb-detail-aside footer{display:grid;grid-template-columns:1fr auto;gap:8px;margin:auto -24px 0;padding:16px 24px;border-top:1px solid var(--border);background:var(--bg);position:sticky;bottom:0}
-#cv-tasks .tb-detail-aside footer>span{grid-column:1/-1;color:var(--text-secondary);font-size:var(--tb-caption-size)}
+#cv-tasks .tb-detail-aside footer{display:flex;flex-direction:column;gap:10px;margin:auto -24px 0;padding:16px 24px;border-top:1px solid var(--border);background:var(--bg);position:sticky;bottom:0}
+#cv-tasks .tb-detail-aside footer>span{color:var(--text-secondary);font-size:var(--tb-caption-size)}
+#cv-tasks .tb-detail-aside footer .tb-foot-acts{display:flex;gap:8px}
+#cv-tasks .tb-detail-aside footer .tb-foot-acts button{flex:1}
 #cv-tasks .tb-detail-aside footer button{border:1px solid var(--border-hover);border-radius:var(--tb-radius);padding:8px 12px;background:var(--bg);color:var(--text);font-size:var(--tb-small-size)}
 #cv-tasks .tb-detail-section h3{font-size:var(--tb-body-size);margin:0 0 10px}
 #cv-tasks .tb-detail-section p{font-size:var(--tb-small-size);line-height:1.7;color:var(--text-secondary)}
@@ -605,3 +616,324 @@
 #cv-tasks .tb-activity-empty{display:block!important;color:var(--text-soft)}
 #cv-tasks .tb-activity-section>textarea{margin-top:16px;resize:vertical}
 @media(max-width:900px){#cv-tasks .tb-tools{flex-wrap:wrap}#cv-tasks .tb-summary-note{display:none}#cv-tasks .tb-list .tb-card{grid-template-columns:100px minmax(150px,1fr)}#cv-tasks .tb-list .tb-project{display:none}#cv-tasks .tb-detail-layout{grid-template-columns:1fr}#cv-tasks .tb-detail-aside{border-left:0;border-top:1px solid var(--border)}#cv-tasks .tb-detail-main,#cv-tasks .tb-detail-aside{overflow:visible}#cv-tasks .tb-workspace{overflow-y:auto}}
+/* ============ 二级子页签（专家 / 设置） ============ */
+#view-collab .cv-subnav{display:flex;gap:6px;padding:10px 28px;background:var(--fill-2);border-bottom:1px solid var(--divider)}
+#view-collab .cv-subnav.hidden{display:none}
+#view-collab .cv-subnav-item{border:1px solid transparent;background:none;padding:5px 14px;font-size:12.5px;color:var(--text-secondary);cursor:pointer;border-radius:8px;transition:all .15s}
+#view-collab .cv-subnav-item:hover{background:var(--hover)}
+#view-collab .cv-subnav-item.on{background:#fff;color:var(--brand);font-weight:600;box-shadow:var(--pill-shadow)}
+/* ============ 产物中心 ============ */
+#view-collab .art-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;padding:4px 0 20px}
+#view-collab .art-card{border:1px solid var(--border);border-radius:12px;background:#fff;padding:14px;display:flex;flex-direction:column;gap:8px;transition:all .15s}
+#view-collab .art-card:hover{border-color:var(--border-focus);box-shadow:0 4px 16px rgba(73,93,255,.08)}
+#view-collab .art-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+#view-collab .art-type{font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:5px;flex:none}
+#view-collab .art-type--doc{background:var(--brand-fill);color:var(--brand)}
+#view-collab .art-type--code{background:#e6f7ed;color:var(--success)}
+#view-collab .art-type--test{background:#fff1e8;color:var(--warning)}
+#view-collab .art-type--plan{background:#f5f3ff;color:#7858f9}
+#view-collab .art-type--api{background:#e8f4ff;color:#1a73e8}
+#view-collab .art-src{font-size:11px;color:var(--text-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#view-collab .art-card-name{font-size:14px;font-weight:600;color:var(--text)}
+#view-collab .art-card-meta{font-size:11px;color:var(--text-soft)}
+#view-collab .art-card-acts{display:flex;gap:6px;margin-top:auto}
+/* ============ 设置表格（项目设置 / 人员与权限） ============ */
+#view-collab .cfg-table{border:1px solid var(--border);border-radius:12px;background:#fff;overflow:hidden;margin-top:14px}
+#view-collab .cfg-table-head,#view-collab .cfg-table-row{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) minmax(0,1fr) minmax(0,.8fr);gap:12px;padding:12px 16px;align-items:center}
+#view-collab .cfg-table-head{background:var(--fill-1);font-size:12px;color:var(--text-soft)}
+#view-collab .cfg-table-row{border-top:1px solid var(--fill-1);font-size:13px;color:var(--text)}
+#view-collab .cfg-t-name{display:flex;align-items:center;gap:8px;min-width:0}
+#view-collab .cfg-dot{width:8px;height:8px;border-radius:50%;flex:none;display:inline-block}
+#view-collab .cfg-t-on{color:var(--success)}
+#view-collab .cfg-t-off{color:var(--text-soft)}
+#view-collab .cv-proj-head,#view-collab .cv-proj-row{grid-template-columns:minmax(0,1.8fr) .5fr .7fr minmax(0,1.4fr) minmax(0,1.1fr) .5fr}
+#view-collab .cv-proj-desc{display:block;font-style:normal;font-size:11px;color:var(--text-soft);margin-top:2px}
+#view-collab .cv-proj-repo{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-secondary)}
+
+/* ============ 项目管理：项目卡片列表 + 项目详情（选协作人员） ============ */
+#view-collab #cv-members .scroll{display:flex;flex-direction:column}
+#view-collab #cv-proj-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+#view-collab .pj-card{border:1px solid var(--border);border-radius:12px;background:#fff;padding:14px;cursor:pointer;transition:all .15s}
+#view-collab .pj-card:hover{border-color:var(--border-focus);box-shadow:0 4px 16px rgba(73,93,255,.08)}
+#view-collab .pj-head{display:flex;align-items:center;gap:8px}
+#view-collab .pj-dot{width:9px;height:9px;border-radius:50%;flex:none;display:inline-block}
+#view-collab .pj-dot--sm{width:8px;height:8px}
+#view-collab .pj-name{font-size:15px;font-weight:700;color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#view-collab .pj-pri{margin-left:auto;flex:none;font-size:11px;color:var(--text-secondary);background:var(--fill-1);border-radius:6px;padding:2px 8px}
+#view-collab .pj-desc{font-size:12.5px;color:var(--text-secondary);margin-top:8px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+#view-collab .pj-meta{display:flex;align-items:center;gap:14px;margin-top:12px;font-size:12px;color:var(--text-soft)}
+#view-collab .pj-meta .pj-owner{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#view-collab .pj-meta .pj-owner b{color:var(--text);font-weight:500}
+#view-collab .pj-meta .pj-mcount{flex:none;white-space:nowrap}
+#view-collab .pj-foot{display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:12px;border-top:1px solid var(--fill-1)}
+#view-collab .pj-stack{display:flex;align-items:center}
+#view-collab .ps-av-sm{width:26px;height:26px;border-radius:50%;margin-left:-6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:600;border:2px solid #fff;flex:none}
+#view-collab .ps-av-sm:first-child{margin-left:0}
+#view-collab .ps-av-more{width:26px;height:26px;border-radius:50%;margin-left:-6px;background:var(--fill-2);border:2px solid #fff;color:var(--text-soft);font-size:10px;display:flex;align-items:center;justify-content:center;flex:none}
+#view-collab .pj-set{flex:none;border:1px solid var(--border-hover);background:#fff;color:var(--text-secondary);font-size:12px;cursor:pointer;padding:4px 12px;border-radius:6px;transition:all .15s}
+#view-collab .pj-set:hover{color:var(--brand);border-color:var(--brand);background:var(--brand-fill)}
+#view-collab .pj-crumb{display:flex;align-items:center;gap:8px;padding:2px 0 14px}
+#view-collab .pj-back{border:none;background:none;color:var(--text-secondary);font-size:13px;cursor:pointer;padding:0}
+#view-collab .pj-back:hover{color:var(--brand)}
+#view-collab .pj-crumb-sep{color:var(--text-soft)}
+#view-collab .pj-crumb-name{font-size:14px;font-weight:600;color:var(--text)}
+#view-collab .pj-set--crumb{margin-left:auto}
+#view-collab .pj-detail-meta{display:flex;gap:20px;flex-wrap:wrap;padding:12px 16px;border:1px solid var(--border);border-radius:10px;background:#fff;font-size:12.5px;color:var(--text-soft);margin-bottom:16px}
+#view-collab .pj-detail-meta b{color:var(--text);font-weight:500;margin-left:2px}
+#view-collab .pj-detail-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+#view-collab .pj-detail-t{font-size:15px;font-weight:700;color:var(--text)}
+#view-collab .pj-detail-acts{display:flex;gap:8px}
+#view-collab .sync-btn--ghost{background:#fff;color:var(--text-secondary);border:1px solid var(--border-hover)}
+#view-collab .pj-member-list .sq-member{align-items:center}
+#view-collab .pj-remove{flex:none;border:1px solid var(--border-hover);background:#fff;color:var(--danger);font-size:12px;cursor:pointer;padding:5px 12px;border-radius:6px;transition:all .15s}
+#view-collab .pj-remove:hover{background:var(--danger-bg);border-color:var(--danger)}
+#view-collab .ps-me{font-size:10px;color:#fff;background:#08a040;border-radius:4px;padding:1px 5px;margin-left:6px;vertical-align:2px}
+
+/* ============ 人员与权限：成员 + 角色表格 ============ */
+#view-collab .cv-perm-head,#view-collab .cv-perm-row{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) auto}
+#view-collab .ps-av{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:600;flex:none;margin-right:10px}
+#view-collab .cv-proj-desc-wrap{display:flex;flex-direction:column;min-width:0}
+#view-collab .cv-proj-desc-wrap b{font-weight:500;color:var(--text)}
+#view-collab .ps-roles{display:flex;gap:6px;flex-wrap:wrap}
+#view-collab .ps-role{font-size:11px;color:var(--text-secondary);background:var(--fill-1);border-radius:5px;padding:2px 8px;white-space:nowrap}
+#view-collab .cv-perm-acts{display:flex;gap:6px}
+#view-collab .act-btn--danger{color:var(--danger);border-color:#f0c4c4}
+#view-collab .act-btn--danger:hover{background:var(--danger-bg)}
+
+/* ============ 项目详情：描述 / 代码仓库 / 关联任务 ============ */
+#view-collab .pj-desc{font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:12px}
+#view-collab .pj-repo{color:var(--brand);text-decoration:none;font-weight:500}
+#view-collab .pj-repo:hover{text-decoration:underline}
+#view-collab .pj-repo--none{color:var(--text-soft);font-weight:400}
+#view-collab .pj-detail-head--tasks{margin-top:20px}
+#view-collab .pj-detail-cnt{font-size:12px;color:var(--text-soft);font-weight:400;margin-left:6px}
+#view-collab .pj-task-list{display:flex;flex-direction:column;border:1px solid var(--border);border-radius:12px;background:#fff;overflow:hidden}
+#view-collab .pj-task{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--fill-1)}
+#view-collab .pj-task:last-child{border-bottom:0}
+#view-collab .pj-task-title{flex:1;min-width:0;font-size:13.5px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#view-collab .pj-task-meta{flex:none;font-size:11.5px;color:var(--text-soft)}
+
+/* ============ 项目详情：左侧基本信息 + 右侧成员/指引/任务 ============ */
+#view-collab .pj-side-av{width:64px;height:64px;border-radius:16px;background:var(--fill-1);color:var(--text-secondary);display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+#view-collab .pj-side-av svg{width:28px;height:28px}
+#view-collab #cv-proj-detail .sq-tabpane{overflow-y:auto}
+
+/* ============ 产物中心：左项目右清单 ============ */
+#view-collab .cv-art-layout{display:flex;flex:1;min-height:0}
+#view-collab .cv-art-side{width:240px;flex:none;border-right:1px solid var(--border);padding:16px 12px;overflow-y:auto;background:#fff}
+#view-collab .cv-art-side-title{font-size:12px;color:var(--text-soft);font-weight:600;margin:0 10px 10px}
+#view-collab .cv-art-proj-list{display:flex;flex-direction:column;gap:2px}
+#view-collab .cv-art-proj-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--text)}
+#view-collab .cv-art-proj-item:hover{background:var(--hover)}
+#view-collab .cv-art-proj-item.on{background:var(--brand-fill);color:var(--brand);font-weight:500}
+#view-collab .cv-art-proj-dot{width:8px;height:8px;border-radius:50%;flex:none}
+#view-collab .cv-art-proj-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#view-collab .cv-art-proj-cnt{font-size:11px;color:var(--text-soft);flex:none}
+#view-collab .cv-art-main{flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden;padding:20px 28px}
+#view-collab .art-list{border:1px solid var(--border);border-radius:12px;background:#fff;overflow-y:auto;margin-top:14px}
+#view-collab .art-list-head,#view-collab .art-list-row{display:grid;grid-template-columns:minmax(0,1fr) 90px 160px auto;gap:12px;padding:12px 16px;align-items:center}
+#view-collab .art-list-head{background:var(--fill-1);font-size:12px;color:var(--text-soft)}
+#view-collab .art-list-row{border-top:1px solid var(--fill-1);font-size:13px}
+#view-collab .art-c{min-width:0}
+#view-collab .art-c-name{display:flex;align-items:center;gap:8px;min-width:0}
+#view-collab .art-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)}
+#view-collab .art-c-ops{display:flex;gap:6px}
+
+/* ============ 项目详情：占满高度，左右各自滚动 ============ */
+#view-collab #cv-proj-detail{flex:1;min-height:0;display:flex;flex-direction:column}
+#view-collab #cv-proj-detail .pj-crumb{flex:none}
+#view-collab #cv-proj-detail .sq-layout{flex:1;min-height:0}
+#view-collab #cv-proj-detail .sq-side{overflow-y:auto}
+#view-collab #cv-proj-detail .sq-main{overflow:hidden}
+
+/* ============ 产物：后缀名 / 代码目录 / 文件列表弹窗 ============ */
+#view-collab .art-file-cnt{font-size:11px;color:var(--text-soft);margin-left:6px}
+#view-collab .art-file-row{display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;font-size:13px;color:var(--text)}
+#view-collab .art-file-ic{flex:none}
+#view-collab .art-file-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ============ 项目详情：任务规划（项目目标 / 里程碑 / 任务拆分） ============ */
+#view-collab .pj-plan-sec{padding:14px 0;border-bottom:1px solid var(--fill-1)}
+#view-collab .pj-plan-sec:first-child{padding-top:0}
+#view-collab .pj-plan-sec:last-child{border-bottom:0}
+#view-collab .pj-plan-k{font-size:13px;font-weight:600;color:var(--text);margin-bottom:8px}
+#view-collab .pj-plan-v{font-size:13px;color:var(--text-secondary);line-height:1.65}
+#view-collab .pj-plan-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+#view-collab .pj-plan-head .pj-plan-k{margin-bottom:0}
+#view-collab .pj-plan-hint{font-size:12.5px;color:var(--text-soft);line-height:1.6}
+#view-collab .pj-ms-list{display:flex;flex-direction:column;gap:9px}
+#view-collab .pj-ms-item{display:flex;align-items:center;gap:10px;font-size:13px}
+#view-collab .pj-ms-dot{width:8px;height:8px;border-radius:50%;background:var(--brand);flex:none}
+#view-collab .pj-ms-name{color:var(--text);flex:1;min-width:0}
+#view-collab .pj-ms-date{color:var(--text-soft);font-size:12px;flex:none}
+
+/* ============ 智能拆解：agent 对话 ============ */
+.split-modal{width:640px;max-width:calc(100vw - 40px);max-height:80vh;display:flex;flex-direction:column;background:#fff;border-radius:14px;overflow:hidden;box-shadow:var(--menu-shadow)}
+.split-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--border);flex:none}
+.split-head-l{display:flex;align-items:center;gap:10px}
+.split-agent-av{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#7c5cfc,#5b8def);color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;flex:none}
+.split-head-t{font-size:14px;font-weight:600;color:var(--text)}
+.split-head-s{font-size:11.5px;color:var(--text-soft);margin-top:2px}
+.split-body{flex:1;overflow-y:auto;padding:18px;background:var(--fill-2);display:flex;flex-direction:column;gap:12px}
+.split-msg{font-size:13px;line-height:1.6}
+.split-msg--user{align-self:flex-end;max-width:88%;background:var(--brand);color:#fff;padding:9px 13px;border-radius:12px 12px 2px 12px}
+.split-msg--agent{align-self:flex-start;width:100%;background:#fff;border:1px solid var(--border);border-radius:12px 12px 12px 2px;padding:13px 15px}
+.split-thinking{display:inline-flex;gap:4px;margin-right:7px;vertical-align:middle}
+.split-thinking i{width:5px;height:5px;border-radius:50%;background:var(--text-soft);animation:cvPulse 1.2s infinite}
+.split-thinking i:nth-child(2){animation-delay:.2s}
+.split-thinking i:nth-child(3){animation-delay:.4s}
+.split-thinking-t{color:var(--text-soft);font-size:12.5px}
+.split-agent-t{font-size:13px;color:var(--text);margin-bottom:10px}
+.split-list{display:flex;flex-direction:column;gap:8px}
+.split-item{display:flex;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:all .15s}
+.split-item:hover{border-color:var(--border-focus)}
+.split-item input{margin-top:2px;flex:none}
+.split-item-body{display:flex;flex-direction:column;gap:3px;min-width:0}
+.split-item-title{font-size:13px;font-weight:500;color:var(--text)}
+.split-item-desc{font-size:12px;color:var(--text-soft);line-height:1.5}
+.split-foot{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-top:1px solid var(--border);flex:none}
+.split-count{font-size:12.5px;color:var(--text-soft)}
+.split-count b{color:var(--brand)}
+.split-foot-right{display:flex;gap:8px}
+
+/* 项目信息：项目目标 */
+#view-collab .pj-side-goal{margin-top:14px;padding:12px 14px;background:var(--brand-fill);border-radius:10px}
+#view-collab .pj-side-goal-k{font-size:11px;color:var(--brand);font-weight:600;margin-bottom:5px}
+#view-collab .pj-side-goal-v{font-size:12.5px;color:var(--text);line-height:1.6}
+
+/* ============ 项目详情：左侧项目基本信息，右侧内容 ============ */
+#view-collab #cv-proj-detail .sq-layout{grid-template-columns:300px minmax(0,1fr)}
+#view-collab #cv-proj-detail .sq-side{order:1}
+#view-collab #cv-proj-detail .sq-main{order:2}
+
+/* ============ 任务详情：对话框（类似新会话） ============ */
+#view-collab .tb-chat-section{display:flex;flex-direction:column}
+#view-collab .tb-chat-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:10px}
+#view-collab .tb-chat-agent{font-size:11.5px;color:var(--text-soft)}
+#view-collab .tb-chat{display:flex;flex-direction:column;gap:12px;padding:14px;background:var(--fill-2);border-radius:10px}
+#view-collab .tb-chat-msg{display:flex;gap:8px;max-width:88%}
+#view-collab .tb-chat-msg--user{align-self:flex-end;flex-direction:row-reverse}
+#view-collab .tb-chat-av{width:26px;height:26px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;background:var(--fill-1);color:var(--text-secondary)}
+#view-collab .tb-chat-av--agent{background:linear-gradient(135deg,#7c5cfc,#5b8def);color:#fff}
+#view-collab .tb-chat-bubble{background:#fff;border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-size:13px;line-height:1.6;color:var(--text)}
+#view-collab .tb-chat-msg--user .tb-chat-bubble{background:var(--brand);color:#fff;border-color:var(--brand)}
+#view-collab .tb-chat-empty{color:var(--text-soft);font-size:12.5px}
+#view-collab .tb-chat-input{display:flex;gap:8px;align-items:flex-end;margin-top:10px}
+#view-collab .tb-chat-input textarea{flex:1;resize:none;padding:9px 12px;border:1px solid var(--border-hover);border-radius:10px;font-size:13px;font-family:inherit;color:var(--text);outline:none}
+#view-collab .tb-chat-input textarea:focus{border-color:var(--brand)}
+
+/* 任务对话：气泡保留换行 + 复用新会话的 ＋ 按钮 */
+#view-collab .tb-chat-bubble{white-space:pre-line}
+#view-collab .tb-chat-plus{width:34px;height:34px;flex:none;border:1px solid var(--border-hover);border-radius:10px;background:#fff;font-size:16px;color:var(--text-secondary);cursor:pointer;line-height:1}
+#view-collab .tb-chat-plus:hover{color:var(--brand);border-color:var(--brand)}
+
+/* 任务对话复用新会话 composer：去阴影、宽度自适应主区 */
+#view-collab .tb-chat-composer{max-width:none;box-shadow:none;margin-top:10px;padding:14px 16px 10px}
+#view-collab .tb-chat-composer .send-btn{background:var(--brand);color:#fff}
+#view-collab .tb-chat-composer .send-btn:hover{background:var(--brand-hover)}
+
+/* 任务对话：多会话标签栏 */
+#view-collab .tb-conv-tabs{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+#view-collab .tb-conv-tab{border:1px solid var(--border);background:#fff;border-radius:8px;padding:4px 10px;font-size:12px;color:var(--text-secondary);cursor:pointer;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#view-collab .tb-conv-tab:hover{border-color:var(--border-focus);color:var(--text)}
+#view-collab .tb-conv-tab.on{border-color:var(--brand);background:var(--brand-fill);color:var(--brand);font-weight:500}
+#view-collab .tb-conv-new{width:26px;height:26px;border:1px dashed var(--border-hover);background:#fff;border-radius:8px;color:var(--text-secondary);cursor:pointer;font-size:14px;line-height:1;flex:none}
+#view-collab .tb-conv-new:hover{border-color:var(--brand);color:var(--brand)}
+
+/* 任务详情：转交任务按钮 */
+#view-collab .tb-transfer-btn{width:100%;margin-top:2px;padding:8px 12px;border:1px solid var(--border-hover);border-radius:var(--tb-radius,10px);background:#fff;color:var(--text-secondary);font-size:var(--tb-small-size,13px);cursor:pointer;transition:all .15s}
+#view-collab .tb-transfer-btn:hover{color:var(--brand);border-color:var(--brand);background:var(--brand-fill)}
+
+/* 任务对话：会话列表（会话总结）+ 会话详情 */
+#view-collab .tb-conv-new-btn{border:1px solid var(--brand);background:var(--brand);border-radius:8px;padding:4px 12px;font-size:12px;color:#fff;font-weight:500;cursor:pointer;transition:all .15s}
+#view-collab .tb-conv-new-btn:hover{background:var(--brand-hover);border-color:var(--brand-hover)}
+#view-collab .tb-conv-list{display:flex;flex-direction:column;gap:8px}
+#view-collab .tb-conv-item{display:flex;align-items:center;gap:12px;text-align:left;padding:10px 14px;border:1px solid var(--border);border-radius:10px;background:#fff;cursor:pointer;transition:all .15s;font-family:inherit}
+#view-collab .tb-conv-item:hover{border-color:var(--brand);background:var(--brand-fill)}
+#view-collab .tb-conv-item-top{display:none}
+#view-collab .tb-conv-item-title{font-size:13px;font-weight:600;color:var(--text);flex:none;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#view-collab .tb-conv-item-meta{font-size:11.5px;color:var(--text-soft);flex:none}
+#view-collab .tb-conv-item-sum{flex:1;min-width:0;font-size:12.5px;color:var(--text-secondary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#view-collab .tb-conv-bar{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+#view-collab .tb-conv-back{border:none;background:none;color:var(--text-secondary);font-size:12.5px;cursor:pointer;padding:0}
+#view-collab .tb-conv-back:hover{color:var(--brand)}
+#view-collab .tb-conv-cur{font-size:13px;font-weight:600;color:var(--text)}
+
+/* 转交任务按钮：并入属性面板底部操作栏（与取消/保存并排） */
+
+/* ============ 新建任务弹窗：手动创建 / 通过智能体创建 ============ */
+#cv-tasks ~ * .nt-modal, .nt-modal{width:560px;max-width:calc(100vw - 40px);background:#fff;border-radius:16px;box-shadow:var(--menu-shadow);overflow:hidden;display:flex;flex-direction:column;max-height:86vh}
+.nt-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);flex:none}
+.nt-crumb{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-soft)}
+.nt-crumb .nt-user{color:var(--text);font-weight:600}
+.nt-crumb .nt-sep{color:var(--text-soft)}
+.nt-body{padding:18px 20px;display:flex;flex-direction:column;gap:12px;overflow-y:auto}
+.nt-title{width:100%;border:none;outline:none;font-size:16px;font-weight:600;color:var(--text);padding:4px 0;font-family:inherit;box-sizing:border-box}
+.nt-title::placeholder{color:var(--text-soft);font-weight:400}
+.nt-desc{width:100%;border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:13px;color:var(--text);font-family:inherit;resize:none;outline:none;box-sizing:border-box;line-height:1.6}
+.nt-desc:focus{border-color:var(--brand)}
+.nt-hint{font-size:12.5px;color:var(--text-soft)}
+.nt-hint b{color:var(--brand);font-weight:500}
+.nt-attrs{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.nt-chip{font-size:12px;color:var(--text-secondary);background:var(--fill-1);border-radius:6px;padding:4px 10px}
+.nt-chip--add{border:1px dashed var(--border-hover);background:#fff;cursor:pointer;font-family:inherit}
+.nt-chip--add:hover{border-color:var(--brand);color:var(--brand)}
+.nt-select{border:1px solid var(--border);border-radius:8px;padding:5px 8px;font-size:12.5px;color:var(--text);background:#fff;outline:none;cursor:pointer;font-family:inherit}
+.nt-select:focus{border-color:var(--brand)}
+.nt-chips{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.nt-proj{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--brand);background:var(--brand-fill);border-radius:6px;padding:4px 10px;cursor:pointer}
+.nt-agent-row{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text-secondary)}
+.nt-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 20px;border-top:1px solid var(--border);background:var(--fill-2);flex:none}
+.nt-foot-right{display:flex;gap:8px}
+.nt-link{border:none;background:none;color:var(--text-secondary);font-size:12.5px;cursor:pointer;padding:0;font-family:inherit}
+.nt-link:hover{color:var(--brand)}
+.nt-btn{border:1px solid var(--border-hover);background:#fff;border-radius:8px;padding:7px 14px;font-size:12.5px;color:var(--text);cursor:pointer;font-family:inherit;transition:all .15s}
+.nt-btn:hover{background:var(--hover)}
+.nt-btn--primary{background:var(--brand);border-color:var(--brand);color:#fff}
+.nt-btn--primary:hover{background:var(--brand-hover);border-color:var(--brand-hover)}
+
+/* 新建任务：附件 */
+.nt-files{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.nt-file-list{display:flex;flex-wrap:wrap;gap:8px}
+.nt-file{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text-secondary);background:var(--fill-1);border-radius:6px;padding:4px 6px 4px 10px}
+.nt-file-name{max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nt-file-x{border:none;background:none;color:var(--text-soft);cursor:pointer;font-size:13px;line-height:1;padding:0;font-family:inherit}
+.nt-file-x:hover{color:var(--danger)}
+
+/* 任务详情：附件字段 */
+#cv-tasks .tb-files{display:flex;flex-wrap:wrap;gap:8px}
+#cv-tasks .tb-file{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text-secondary);background:var(--fill-1);border-radius:6px;padding:5px 10px}
+#cv-tasks .tb-files-empty{font-size:12.5px;color:var(--text-soft)}
+#cv-tasks .tb-file-add{font-size:12.5px;color:var(--brand);background:var(--brand-fill);border:1px dashed var(--brand);border-radius:6px;padding:4px 10px;cursor:pointer;font-family:inherit}
+#cv-tasks .tb-file-add:hover{background:var(--brand);color:#fff}
+
+/* 任务详情：附件拖拽上传区 */
+#cv-tasks .tb-dropzone{display:flex;align-items:center;justify-content:center;gap:10px;padding:12px 16px;border:1.5px dashed var(--border-hover);border-radius:10px;background:var(--fill-2);cursor:pointer;transition:all .15s;text-align:center}
+#cv-tasks .tb-dropzone:hover{border-color:var(--brand);background:var(--brand-fill)}
+#cv-tasks .tb-dropzone--over{border-color:var(--brand);background:var(--brand-fill);border-style:solid}
+#cv-tasks .tb-dropzone svg{width:17px;height:17px;color:var(--text-soft);flex:none}
+#cv-tasks .tb-dropzone:hover svg,#cv-tasks .tb-dropzone--over svg{color:var(--brand)}
+#cv-tasks .tb-dropzone-t{font-size:13px;color:var(--text-secondary)}
+#cv-tasks .tb-dropzone-s{font-size:11.5px;color:var(--text-soft);padding-left:10px;border-left:1px solid var(--border-hover)}
+#cv-tasks .tb-files{margin-top:10px}
+
+/* 工作区：低调的下拉（文字 + 小箭头，无边框，hover 才显底） */
+#view-collab .cv-wsbar .cv-proj-btn{border:none;background:transparent;padding:4px 8px;font-size:13px;font-weight:500;color:var(--text-secondary);gap:4px}
+#view-collab .cv-wsbar .cv-proj-btn:hover{background:var(--hover);color:var(--text)}
+#view-collab .cv-wsbar .cv-ws .cv-proj-btn{font-weight:500}
+#view-collab .cv-wsbar .cv-proj--on .cv-proj-btn{background:transparent;border:none;color:var(--text)}
+#view-collab .cv-wsbar .cv-proj--on .cv-proj-btn:hover{background:var(--hover)}
+
+/* 转交任务弹窗：分组 + 搜索 */
+.cv-scope .tf-modal, .tf-modal{width:420px}
+.tf-search-wrap{display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--border-hover);border-radius:10px;margin-bottom:12px}
+.tf-search-wrap input{flex:1;min-width:0;border:none;outline:none;font-size:13px;color:var(--text);font-family:inherit;background:none}
+.tf-search-wrap svg{color:var(--text-soft);flex:none}
+.tf-list{max-height:340px;overflow-y:auto;display:flex;flex-direction:column;gap:14px}
+.tf-group{display:flex;flex-direction:column;gap:2px}
+.tf-group-t{font-size:11.5px;color:var(--text-soft);font-weight:600;padding:0 4px 6px}
+.tf-group-t span{font-weight:400;margin-left:4px}
+.tf-item-body{display:flex;flex-direction:column;min-width:0;gap:2px}
+.cv-scope .tf-modal .person-item{display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;border:none;background:none;border-radius:8px;cursor:pointer;text-align:left;font-family:inherit}
+.cv-scope .tf-modal .person-item:hover{background:var(--hover)}
+.cv-scope .tf-modal .person-item--selected{background:var(--brand-fill)}

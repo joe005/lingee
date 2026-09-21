@@ -1,21 +1,21 @@
 /* 协作人员：团队维度
    团队是跨项目的协作单元，与项目不挂钩；列表一行一个团队，点进去看成员与指引，
-   布局参考「团队 / 成员 / 指引」两段式详情。 */
-import { CV_MEMBERS } from './data.js';
+   布局参考「团队 / 成员 / 指引」两段式详情。团队成员通过 pid 引用人员基础资料。 */
+import { cvPersonById } from './data.js';
 import { xesc } from '../expert/data.js';
 
 var CV_SQUADS=[
    {id:'sq-crm',name:'CRM系统开发团队',desc:'负责 CRM 系统需求开发与交付',creator:'吴宏超',created:'23 小时前',updated:'23 小时前',archived:false,
     members:[
-      {kind:'person',idx:0,role:'leader',sub:'leader'},
-      {kind:'person',idx:3,role:'member',sub:'添加角色...'},
-      {kind:'person',idx:4,role:'member',sub:'添加角色...'}
+      {kind:'person',pid:'p01',role:'leader',sub:'leader'},
+      {kind:'person',pid:'p04',role:'member',sub:'添加角色...'},
+      {kind:'person',pid:'p05',role:'member',sub:'添加角色...'}
     ]},
    {id:'sq-zx',name:'振兴开发团队',desc:'负责需求开发',creator:'吴宏超',created:'2 天前',updated:'1 天前',archived:false,
     members:[
-      {kind:'person',idx:2,role:'leader',sub:'leader'},
-      {kind:'person',idx:1,role:'member',sub:'添加角色...'},
-      {kind:'person',idx:6,role:'member',sub:'添加角色...'}
+      {kind:'person',pid:'p03',role:'leader',sub:'leader'},
+      {kind:'person',pid:'p02',role:'member',sub:'添加角色...'},
+      {kind:'person',pid:'p07',role:'member',sub:'添加角色...'}
     ]}
 ];
 var CV_SQUAD_COLORS=['#7c5cfc','#ff8d42','#08a040','#4d89ff','#e04a3a','#c06010'];
@@ -26,12 +26,41 @@ function cvSquadById(id){
   for(var i=0;i<CV_SQUADS.length;i++){ if(CV_SQUADS[i].id===id) return CV_SQUADS[i]; }
   return null;
 }
+/* 团队与成员改动落 localStorage，刷新页面后关联的成员不丢 */
+var CV_SQUAD_STORE_KEY='lingee-collab-squads-v1';
+function cvPersistSquads(){
+  try{ localStorage.setItem(CV_SQUAD_STORE_KEY,JSON.stringify({squads:CV_SQUADS})); }catch(e){}
+}
+function cvRestoreSquads(){
+  try{
+    var raw=localStorage.getItem(CV_SQUAD_STORE_KEY); if(!raw) return;
+    var st=JSON.parse(raw);
+    if(Array.isArray(st.squads)){ CV_SQUADS.length=0; st.squads.forEach(function(s){CV_SQUADS.push(s);}); }
+  }catch(e){}
+}
+/* 人员被删除后，从所有团队里移除该 pid；团队失去队长时把第一个成员提为队长 */
+function cvSquadDetachMember(pid){
+  CV_SQUADS.forEach(function(sq){
+    var next=[];
+    sq.members.forEach(function(m){
+      if(m.pid===pid) return;
+      next.push(m);
+    });
+    sq.members=next;
+    if(sq.members.length && !sq.members.some(function(m){return m.role==='leader';})){
+      sq.members[0].role='leader'; sq.members[0].sub='leader';
+    }
+  });
+}
+function cvSquadPidNum(pid){ return parseInt(String(pid).replace(/\D/g,''))||0; }
 function cvSquadNameOf(it){
-  return (CV_MEMBERS[it.idx]||{}).name||'已移除';
+  var p=cvPersonById(it.pid);
+  return p?p.name:'已移除';
 }
 function cvSquadAvHtml(it,cls){
   var name=cvSquadNameOf(it);
-  var color=CV_MEMBERS[it.idx]&&CV_MEMBERS[it.idx].isMe?'#08a040':CV_SQUAD_COLORS[(it.idx||0)%CV_SQUAD_COLORS.length];
+  var p=cvPersonById(it.pid);
+  var color=p&&p.isMe?'#08a040':CV_SQUAD_COLORS[cvSquadPidNum(it.pid)%CV_SQUAD_COLORS.length];
   return '<span class="'+cls+'" style="background:'+color+'">'+xesc(name[0]||'?')+'</span>';
 }
 function cvSquadLeader(sq){
@@ -144,6 +173,7 @@ function cvArchiveSquad(){
   var sq=cvSquadById(cvSquadCur);if(!sq)return;
   sq.archived=true; sq.updated='刚刚';
   cvHideSquadDetail();
+  cvPersistSquads();
 }
 /* 设某成员为队长：一个团队只有一个队长，原队长降为成员 */
 function cvSetSquadLeader(i){
@@ -153,14 +183,16 @@ function cvSetSquadLeader(i){
   it.role='leader'; it.sub='leader';
   sq.updated='刚刚';
   cvRenderSquadDetail(); cvRenderSquadList();
+  cvPersistSquads();
   if(window.cvToast) window.cvToast(cvSquadNameOf(it)+' 已设为队长','success');
 }
 /* 添加成员弹窗确认后调用：把人挂进当前团队 */
-function cvSquadAddPerson(idx){
+function cvSquadAddPerson(pid){
   var sq=cvSquadById(cvSquadCur);if(!sq)return;
-  sq.members.push({kind:'person',idx:idx,role:'member',sub:'添加角色...'});
+  sq.members.push({kind:'person',pid:pid,role:'member',sub:'添加角色...'});
   sq.updated='刚刚';
   cvRenderSquadDetail(); cvRenderSquadList();
+  cvPersistSquads();
 }
 
 /* ---------- 新建团队 ---------- */
@@ -180,7 +212,8 @@ function cvConfirmNewSquad(){
   CV_SQUADS.push({id:'sq-'+Date.now(),name:n,desc:d,creator:'吴宏超',created:'刚刚',updated:'刚刚',archived:false,members:[]});
   cvCloseNewSquadModal();
   cvRenderSquadList();
+  cvPersistSquads();
   if(window.cvToast) window.cvToast('已创建团队：'+n,'success');
 }
 
-export { CV_SQUADS, cvArchiveSquad, cvCloseNewSquadModal, cvConfirmNewSquad, cvHideSquadDetail, cvOpenNewSquadModal, cvRenderSquadDetail, cvRenderSquadList, cvSetSquadLeader, cvShowSquadDetail, cvSquadAddPerson, cvSwitchSquadTab };
+export { CV_SQUADS, cvArchiveSquad, cvCloseNewSquadModal, cvConfirmNewSquad, cvHideSquadDetail, cvOpenNewSquadModal, cvPersistSquads, cvRenderSquadDetail, cvRenderSquadList, cvRestoreSquads, cvSetSquadLeader, cvShowSquadDetail, cvSquadAddPerson, cvSquadDetachMember, cvSwitchSquadTab };

@@ -1,11 +1,21 @@
   <!-- ===================== 协作开发 ===================== -->
   <div class="view hidden" id="view-collab">
+    <div class="cv-wsbar">
+      <div class="cv-proj cv-ws" id="cvWsSwitch">
+        <button type="button" class="cv-proj-btn" id="cvWsBtn" aria-haspopup="true" aria-expanded="false">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          <span id="cvWsLabel">全部工作区</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="cv-proj-menu" id="cvWsMenu"></div>
+      </div>
+    </div>
     <div class="tab-nav" id="cvTabNav">
       <button class="tab-nav-item tab-nav-item--active" data-cvview="tasks" onclick="cvSwitchView('tasks')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>任务管理<span class="tab-nav-count" id="cvTaskCount">0</span></button>
-      <button class="tab-nav-item" data-cvview="members" onclick="cvSwitchView('members')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>协作人员管理</button>
-      <button class="tab-nav-item" data-cvview="experts" onclick="cvSwitchView('experts')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>专家管理</button>
-      <button class="tab-nav-item" data-cvview="teams" onclick="cvSwitchView('teams')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>专家团管理</button>
-      <button class="tab-nav-item" data-cvview="config" onclick="cvSwitchView('config')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>设置</button>
+      <button class="tab-nav-item" data-cvview="members" onclick="cvSwitchView('members')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>项目管理</button>
+      <button class="tab-nav-item" data-cvview="experts" onclick="cvSwitchView('experts')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87l1.18 6.88L12 17.77l-6.18 3.25L7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>专家</button>
+      <button class="tab-nav-item" data-cvview="teams" onclick="cvSwitchView('teams')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>专家团</button>
+      <button class="tab-nav-item" data-cvview="config" data-perm="owner" onclick="cvSwitchView('config')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>设置</button>
       <div class="cv-proj" id="cvProjSwitch">
         <button type="button" class="cv-proj-btn" id="cvProjBtn" aria-haspopup="true" aria-expanded="false">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
@@ -15,6 +25,7 @@
         <div class="cv-proj-menu" id="cvProjMenu"></div>
       </div>
     </div>
+    <div class="cv-subnav hidden" id="cvSubNav"></div>
 
     <!-- 任务管理 -->
     <div class="cv-panel active" id="cv-tasks">
@@ -30,16 +41,16 @@
       <div class="tb-workspace" id="tb-workspace" hidden></div>
     </div>
 
-    <!-- 协作人员管理：团队（与项目不挂钩） -->
+    <!-- 项目管理：项目列表 + 项目详情（选协作人员） -->
     <div class="cv-panel" id="cv-members">
       <div class="filter-bar">
-        <div class="sq-bar-title">团队 <span id="cv-squad-count">0</span></div>
-        <div class="search-wrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input placeholder="搜索团队或成员" onkeyup="cvApplyFilters()"></div>
-        <button class="sync-btn" onclick="cvOpenNewSquadModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>新建团队</button>
+        <div class="sq-bar-title">项目 <span id="cv-proj-count">0</span></div>
+        <div class="search-wrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input placeholder="搜索项目" onkeyup="cvApplyFilters()"></div>
+        <button class="sync-btn" onclick="cvOpenProjNew()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>新建项目</button>
       </div>
       <div class="scroll">
-        <div id="cv-squad-list"></div>
-        <div id="cv-squad-detail" class="hidden"></div>
+        <div id="cv-proj-list"></div>
+        <div id="cv-proj-detail" class="hidden"></div>
       </div>
     </div>
 
@@ -48,12 +59,12 @@
       <div class="scroll">
         <div class="cv-head">
           <div>
-            <div class="scroll-title">专家管理<span class="cv-global-chip">全局</span></div>
+            <div class="scroll-title">专家库<span class="cv-global-chip">全局</span></div>
             <div class="scroll-desc">专家库为全局资产，所有项目共用，可直接对话，也可创建自己的专家</div>
           </div>
           <div class="cv-head-right">
             <div class="search-wrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input type="search" id="cvExpertSearch" placeholder="搜索专家、职业或能力" autocomplete="off" readonly></div>
-            <button class="sync-btn" id="cvNewExpertBtn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>创建专家</button>
+            <button class="sync-btn" id="cvNewExpertBtn" data-perm="dev"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>创建专家</button>
           </div>
         </div>
         <div id="cvExpertSections"></div>
@@ -65,7 +76,7 @@
       <div class="scroll cv-scroll-soft">
         <div class="cv-head">
           <div>
-            <div class="scroll-title">专家团管理<span class="cv-global-chip">全局</span></div>
+            <div class="scroll-title">专家团<span class="cv-global-chip">全局</span></div>
             <div class="scroll-desc">专家团为全局定义，项目内只绑定默认专家团，大任务按此路由</div>
           </div>
           <div class="cv-head-right">
@@ -73,7 +84,7 @@
               <input type="search" id="expertSearchInput" placeholder="搜索专家团" autocomplete="off" readonly>
               <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
             </div>
-            <button class="btn-new" id="newExpertEntryBtn"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg><span id="newExpertEntryLabel">新建专家团</span></button>
+            <button class="btn-new" id="newExpertEntryBtn" data-perm="dev"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg><span id="newExpertEntryLabel">新建专家团</span></button>
           </div>
         </div>
         <div class="cv-bind hidden" id="cvTeamBind">
@@ -92,10 +103,10 @@
       </div>
     </div>
 
-    <!-- 设置 -->
+    <!-- 设置 · 工作区设置 -->
     <div class="cv-panel" id="cv-config">
       <div class="scroll">
-        <div class="scroll-title">设置</div>
+        <div class="scroll-title">工作区设置</div>
         <div class="scroll-desc">统一配置任务路由规则、执行策略和协作模式</div>
         <div class="config-grid">
           <div class="config-card" data-cv-config="size" data-cv-level="global">
@@ -144,6 +155,22 @@
       </div>
     </div>
 
+    <!-- 设置 · 人员与权限 -->
+    <div class="cv-panel" id="cv-config-perm">
+      <div class="scroll">
+        <div class="cv-head">
+          <div>
+            <div class="scroll-title">人员与权限</div>
+            <div class="scroll-desc">管理工作区成员与角色，支持新增、修改</div>
+          </div>
+          <div class="cv-head-right">
+            <button class="sync-btn" data-perm="owner" onclick="cvOpenPersonNew()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>新增人员</button>
+          </div>
+        </div>
+        <div id="cv-perm-table"></div>
+      </div>
+    </div>
+
     <!-- 评审详情 -->
     <div class="cv-panel" id="cv-review-detail">
       <div class="rv-detail">
@@ -177,7 +204,7 @@
       <div class="chat-view">
         <div class="chat-header">
           <div class="chat-header-left">
-            <button class="rv-back" onclick="cvSwitchView('tasks')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>返回</button>
+            <button class="rv-back" onclick="tbBackConvList()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>返回会话列表</button>
             <span class="chat-title" id="cv-chat-task-title">任务执行中</span>
             <span class="chat-status-badge chat-status-badge--running" id="cv-chat-status-badge"></span>
           </div>

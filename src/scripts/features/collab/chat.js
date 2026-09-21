@@ -1,6 +1,6 @@
 import { input } from '../../core/view.js';
-import { CV_MEMBERS, CV_TASKS, CV_THIRD_PARTY_MEMBERS } from './data.js';
-import { cvRenderSquadDetail, cvRenderSquadList, cvSquadAddPerson } from './squads.js';
+import { CV_MEMBERS, CV_TASKS, CV_THIRD_PARTY_MEMBERS, cvPersistPersons } from './data.js';
+import { cvPersistSquads, cvRenderSquadDetail, cvRenderSquadList, cvSquadAddPerson } from './squads.js';
 import { cvNormalizeTask } from './tasks.js';
 import { cvShowPanel, cvToast } from './view.js';
 /* 协作开发：会话
@@ -150,19 +150,16 @@ function cvConfirmAddMembers(){
     var name=el.querySelector('.tp-name').textContent;
     var email=el.querySelector('.tp-email').textContent;
     var role=el.querySelector('.tp-role').textContent;
-    CV_MEMBERS.push({name:name,email:email,roles:[{tag:tagMap[role]||'member-tag--dev',text:role}],status:'available',source:'直接添加',projects:'*'});
-    cvSquadAddPerson(CV_MEMBERS.length-1);
+    var deptEl=el.querySelector('.tp-dept');
+    var pid='p'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+    CV_MEMBERS.push({id:pid,name:name,email:email,dept:deptEl?deptEl.textContent:'',roles:[{tag:tagMap[role]||'member-tag--dev',text:role}],status:'available',source:'直接添加'});
+    cvPersistPersons();
+    cvSquadAddPerson(pid);
     n++;
   });
+  cvPersistSquads();
   cvCloseAddMemberModal();
   cvToast('已添加 '+n+' 名协作人员到团队','success');
-}
-function cvDeleteMember(idx){
-  if(CV_MEMBERS[idx]&&CV_MEMBERS[idx].isMe){cvToast('不能移除自己','warning');return;}
-  if(!CV_MEMBERS[idx])return;
-  var name=CV_MEMBERS[idx].name;
-  CV_MEMBERS.splice(idx,1);cvRenderSquadDetail();cvRenderSquadList();
-  cvToast('已移除：'+name,'info');
 }
 function cvLoadSavedTasks(){
   try{
@@ -171,4 +168,4 @@ function cvLoadSavedTasks(){
   }catch(e){}
 }
 
-export { cvCloseAddMemberModal, cvConfirmAddMembers, cvDeleteMember, cvLoadSavedTasks, cvOpenAddMemberModal, cvOpenConversation, cvSearchThirdPartyMembers, cvSendChatMessage, cvSimulateExecution, cvSwitchToChat };
+export { cvCloseAddMemberModal, cvConfirmAddMembers, cvLoadSavedTasks, cvOpenAddMemberModal, cvOpenConversation, cvSearchThirdPartyMembers, cvSendChatMessage, cvSimulateExecution, cvSwitchToChat };

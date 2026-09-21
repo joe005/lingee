@@ -9,20 +9,44 @@ import { cvOpenConversation } from './chat.js';
    协作开发（任务管理 / 待评审 / 协作人员 / 专家 / 专家团 / 设置）
    任务、评审、协作人员数据与交互移植自协作开发原型稿
    ============================================================ */
-/* 项目维度：任务 / 评审 / 协作人员按项目分；专家与专家团为全局资产，项目内只绑定默认专家团 */
+/* 项目维度：任务 / 评审 / 协作人员按项目分；专家与专家团为全局资产，项目内只绑定默认专家团
+   协作人员为「引用」关系：项目通过 members 引用人员基础资料（CV_MEMBERS）的 id，不再由成员反向挂项目
+   项目归属工作区（workspace），工作区为顶层组织单元 */
 var CV_PROJECTS=[
-  {id:'expense',name:'费用报销应用',dot:'blue',defaultTeam:'kingdee-saas-implementation'},
-  {id:'purchase',name:'采购管理系统',dot:'orange',defaultTeam:'cosmic-app-dev'},
-  {id:'supply',name:'供应链协同平台',dot:'green',defaultTeam:null}
+  {id:'expense',name:'费用报销应用',desc:'报销、审批与支付集成全流程开发',goal:'实现费用报销全流程线上化，覆盖申请、审批、支付集成与预算控制',dot:'blue',defaultTeam:'kingdee-saas-implementation',priority:'高',owner:'吴宏超',repo:'https://github.com/kingdee/expense-app',start:'2026-08-01',end:'2026-11-30',milestones:[{name:'需求确认',date:'2026-08-15'},{name:'方案评审通过',date:'2026-09-10'},{name:'开发完成',date:'2026-10-31'},{name:'上线发布',date:'2026-11-30'}],members:['p01','p02','p03','p04','p05','p07','p08','p09','p10','p12','p15','p20','p21'],workspace:'ws-app'},
+  {id:'purchase',name:'采购管理系统',desc:'采购订单、入库与供应商协同重构',goal:'重构采购从下单到入库的协同流程，提升供应商协同效率与数据准确率',dot:'orange',defaultTeam:'cosmic-app-dev',priority:'中',owner:'李工',repo:'https://github.com/kingdee/purchase-ms',start:'2026-09-01',end:'2027-01-31',milestones:[{name:'需求定稿',date:'2026-09-20'},{name:'核心流程开发',date:'2026-11-30'},{name:'集成测试',date:'2026-12-31'},{name:'上线',date:'2027-01-31'}],members:['p01','p02','p06','p07','p11','p12','p14','p15','p17','p19','p20','p21'],workspace:'ws-app'},
+  {id:'supply',name:'供应链协同平台',desc:'供应商评级、订单协同与交付预测',goal:'搭建供应商协同与评级平台，支持订单协同、资质管理与交付预测',dot:'green',defaultTeam:null,priority:'低',owner:'赵琳',repo:'',start:'2026-10-15',end:'2027-03-31',milestones:[{name:'方案设计',date:'2026-11-15'},{name:'门户对接',date:'2027-01-31'},{name:'评级模型上线',date:'2027-03-31'}],members:['p01','p03','p04','p13','p14','p15','p16','p18','p20','p21'],workspace:'ws-build'}
+];
+
+/* 工作区：顶层的组织单元，项目归属工作区 */
+var CV_WORKSPACES=[
+  {id:'ws-build',name:'灵基Build'},
+  {id:'ws-app',name:'Build应用开发组'},
+  {id:'ws-quality',name:'Build质量与安全组'},
+  {id:'ws-skill',name:'Build智能体/Skills开发组'}
 ];
 var cvProject='';                    /* 空串 = 全部项目（个人视角的聚合视图） */
+var cvWorkspace='';                  /* 空串 = 全部工作区；工作区为项目上层组织单元 */
 var cvConfigOverride={};             /* {项目id:{配置卡 key:是否项目覆盖}} */
 function cvProjectById(id){
   for(var i=0;i<CV_PROJECTS.length;i++){ if(CV_PROJECTS[i].id===id) return CV_PROJECTS[i]; }
   return null;
 }
 function cvProjectName(id){ var p=cvProjectById(id); return p?p.name:'未归属项目'; }
+function cvWorkspaceById(id){
+  for(var i=0;i<CV_WORKSPACES.length;i++){ if(CV_WORKSPACES[i].id===id) return CV_WORKSPACES[i]; }
+  return null;
+}
+function cvWorkspaceName(id){ var w=cvWorkspaceById(id); return w?w.name:'未归属工作区'; }
+/* 项目是否属于当前工作区（cvWorkspace 为空 = 全部） */
+function cvProjectInWorkspace(projId){
+  if(!cvWorkspace) return true;
+  var p=cvProjectById(projId);
+  return !!p && p.workspace===cvWorkspace;
+}
 function cvInProject(row){
+  /* 工作区过滤：任务/评审所属项目须属于当前工作区 */
+  if(row.project && !cvProjectInWorkspace(row.project)) return false;
   if(!cvProject) return true;
   if(row.projects) return row.projects==='*'||row.projects.indexOf(cvProject)>=0;
   return row.project===cvProject;
@@ -117,29 +141,68 @@ var CV_REVIEWS = [
   {type:'需求',size:'大',source:'飞书',exec:'专家团',priority:'紧急',reviewType:'需求评审',title:'供应商协同门户对接需求规格',desc:'订单确认与交期回复的字段口径、异常处理与状态回写规则',reviewer:'张工',reviewerRole:'开发人员',deadline:'今日 20:00',deadlineColor:'var(--danger)',borderColor:'var(--danger)',from:'冯远',fromTime:'今日 08:50',artifacts:['需求规格','技术方案'],project:'supply'}
 ];
 
+/* 人员基础资料（全局主数据，独立维护）：项目/团队通过 id（pid）引用，不在人员身上挂项目 */
 var CV_MEMBERS = [
-  {name:'张工',email:'zhang***@kingdee.com',roles:[{tag:'member-tag--dev',text:'开发'},{tag:'member-tag--arch',text:'架构'}],status:'available',source:'直接成员',isMe:true,projects:['expense','purchase','supply']},
-  {name:'李工',email:'li***@kingdee.com',roles:[{tag:'member-tag--dev',text:'开发'}],status:'available',source:'直接成员',projects:['expense','purchase']},
-  {name:'王工',email:'wang***@kingdee.com',roles:[{tag:'member-tag--dev',text:'开发'},{tag:'member-tag--arch',text:'架构'}],status:'busy',source:'直接成员',projects:['expense','supply']},
-  {name:'赵琳',email:'zha***@kingdee.com',roles:[{tag:'member-tag--pm',text:'需求'},{tag:'member-tag--pm',text:'产品'}],status:'available',source:'继承自 灵基AIOS',projects:'*'},
-  {name:'陈晨',email:'chen***@kingdee.com',roles:[{tag:'member-tag--qa',text:'测试'}],status:'available',source:'直接成员',projects:['expense']},
-  {name:'刘洋',email:'liu***@kingdee.com',roles:[{tag:'member-tag--qa',text:'测试'}],status:'busy',source:'直接成员',projects:['purchase']},
-  {name:'周杰',email:'zhou***@kingdee.com',roles:[{tag:'member-tag--ops',text:'运维'}],status:'available',source:'直接成员',projects:['expense','purchase']},
-  {name:'孙明',email:'sun***@kingdee.com',roles:[{tag:'member-tag--ops',text:'运维'}],status:'available',source:'继承自 灵基AIOS',projects:'*'},
-  {name:'吴芳',email:'wu***@kingdee.com',roles:[{tag:'member-tag--pm',text:'需求'}],status:'available',source:'直接成员',projects:['expense']},
-  {name:'郑凯',email:'zheng***@kingdee.com',roles:[{tag:'member-tag--dev',text:'开发'}],status:'busy',source:'直接成员',projects:['expense']},
-  {name:'钱涛',email:'qian***@kingdee.com',roles:[{tag:'member-tag--dev',text:'开发'}],status:'available',source:'直接成员',projects:['purchase']},
-  {name:'宋宇',email:'song***@kingdee.com',roles:[{tag:'member-tag--pm',text:'产品'}],status:'available',source:'继承自 灵基AIOS',projects:'*'},
-  {name:'冯远',email:'feng***@kingdee.com',roles:[{tag:'member-tag--arch',text:'架构'}],status:'available',source:'直接成员',projects:['supply']},
-  {name:'许诺',email:'xu***@kingdee.com',roles:[{tag:'member-tag--dev',text:'开发'},{tag:'member-tag--arch',text:'架构'}],status:'busy',source:'直接成员',projects:['purchase','supply']},
-  {name:'蒋雯',email:'jiang***@kingdee.com',roles:[{tag:'member-tag--pm',text:'需求'},{tag:'member-tag--pm',text:'产品'}],status:'available',source:'继承自 灵基AIOS',projects:'*'},
-  {name:'何欣',email:'he***@kingdee.com',roles:[{tag:'member-tag--pm',text:'需求'}],status:'available',source:'直接成员',projects:['supply']},
-  {name:'韩梅',email:'han***@kingdee.com',roles:[{tag:'member-tag--qa',text:'测试'}],status:'available',source:'直接成员',projects:['purchase']},
-  {name:'罗静',email:'luo***@kingdee.com',roles:[{tag:'member-tag--qa',text:'测试'}],status:'busy',source:'直接成员',projects:['supply']},
-  {name:'杨帆',email:'yang***@kingdee.com',roles:[{tag:'member-tag--ops',text:'运维'}],status:'available',source:'直接成员',projects:['purchase']},
-  {name:'唐辉',email:'tang***@kingdee.com',roles:[{tag:'member-tag--ops',text:'运维'}],status:'available',source:'继承自 灵基AIOS',projects:'*'},
-  {name:'梁平',email:'liang***@kingdee.com',roles:[{tag:'member-tag--pm',text:'产品'},{tag:'member-tag--owner',text:'所有者'}],status:'available',source:'直接成员',projects:['expense','purchase','supply']}
+  {id:'p01',name:'张工',email:'zhang***@kingdee.com',dept:'研发部',roles:[{tag:'member-tag--dev',text:'开发'},{tag:'member-tag--arch',text:'架构'}],status:'available',source:'直接成员',isMe:true},
+  {id:'p02',name:'李工',email:'li***@kingdee.com',dept:'研发部',roles:[{tag:'member-tag--dev',text:'开发'}],status:'available',source:'直接成员'},
+  {id:'p03',name:'王工',email:'wang***@kingdee.com',dept:'研发部',roles:[{tag:'member-tag--dev',text:'开发'},{tag:'member-tag--arch',text:'架构'}],status:'busy',source:'直接成员'},
+  {id:'p04',name:'赵琳',email:'zha***@kingdee.com',dept:'产品部',roles:[{tag:'member-tag--pm',text:'需求'},{tag:'member-tag--pm',text:'产品'}],status:'available',source:'继承自 灵基AIOS'},
+  {id:'p05',name:'陈晨',email:'chen***@kingdee.com',dept:'测试部',roles:[{tag:'member-tag--qa',text:'测试'}],status:'available',source:'直接成员'},
+  {id:'p06',name:'刘洋',email:'liu***@kingdee.com',dept:'测试部',roles:[{tag:'member-tag--qa',text:'测试'}],status:'busy',source:'直接成员'},
+  {id:'p07',name:'周杰',email:'zhou***@kingdee.com',dept:'运维部',roles:[{tag:'member-tag--ops',text:'运维'}],status:'available',source:'直接成员'},
+  {id:'p08',name:'孙明',email:'sun***@kingdee.com',dept:'运维部',roles:[{tag:'member-tag--ops',text:'运维'}],status:'available',source:'继承自 灵基AIOS'},
+  {id:'p09',name:'吴芳',email:'wu***@kingdee.com',dept:'产品部',roles:[{tag:'member-tag--pm',text:'需求'}],status:'available',source:'直接成员'},
+  {id:'p10',name:'郑凯',email:'zheng***@kingdee.com',dept:'研发部',roles:[{tag:'member-tag--dev',text:'开发'}],status:'busy',source:'直接成员'},
+  {id:'p11',name:'钱涛',email:'qian***@kingdee.com',dept:'研发部',roles:[{tag:'member-tag--dev',text:'开发'}],status:'available',source:'直接成员'},
+  {id:'p12',name:'宋宇',email:'song***@kingdee.com',dept:'产品部',roles:[{tag:'member-tag--pm',text:'产品'}],status:'available',source:'继承自 灵基AIOS'},
+  {id:'p13',name:'冯远',email:'feng***@kingdee.com',dept:'架构部',roles:[{tag:'member-tag--arch',text:'架构'}],status:'available',source:'直接成员'},
+  {id:'p14',name:'许诺',email:'xu***@kingdee.com',dept:'研发部',roles:[{tag:'member-tag--dev',text:'开发'},{tag:'member-tag--arch',text:'架构'}],status:'busy',source:'直接成员'},
+  {id:'p15',name:'蒋雯',email:'jiang***@kingdee.com',dept:'产品部',roles:[{tag:'member-tag--pm',text:'需求'},{tag:'member-tag--pm',text:'产品'}],status:'available',source:'继承自 灵基AIOS'},
+  {id:'p16',name:'何欣',email:'he***@kingdee.com',dept:'产品部',roles:[{tag:'member-tag--pm',text:'需求'}],status:'available',source:'直接成员'},
+  {id:'p17',name:'韩梅',email:'han***@kingdee.com',dept:'测试部',roles:[{tag:'member-tag--qa',text:'测试'}],status:'available',source:'直接成员'},
+  {id:'p18',name:'罗静',email:'luo***@kingdee.com',dept:'测试部',roles:[{tag:'member-tag--qa',text:'测试'}],status:'busy',source:'直接成员'},
+  {id:'p19',name:'杨帆',email:'yang***@kingdee.com',dept:'运维部',roles:[{tag:'member-tag--ops',text:'运维'}],status:'available',source:'直接成员'},
+  {id:'p20',name:'唐辉',email:'tang***@kingdee.com',dept:'运维部',roles:[{tag:'member-tag--ops',text:'运维'}],status:'available',source:'继承自 灵基AIOS'},
+  {id:'p21',name:'梁平',email:'liang***@kingdee.com',dept:'产品部',roles:[{tag:'member-tag--pm',text:'产品'},{tag:'member-tag--owner',text:'所有者'}],status:'available',source:'直接成员'}
 ];
+
+/* ---------- 人员基础资料：引用与查询 ---------- */
+function cvPersonById(id){
+  for(var i=0;i<CV_MEMBERS.length;i++){ if(CV_MEMBERS[i].id===id) return CV_MEMBERS[i]; }
+  return null;
+}
+function cvPersonName(id){ var p=cvPersonById(id); return p?p.name:'已移除'; }
+/* 当前项目（或「全部项目」）引用的协作人员，人员管理跟着项目走 */
+function cvProjectPersons(){
+  if(!cvProject) return CV_MEMBERS.slice();
+  var proj=cvProjectById(cvProject);
+  var ids=proj?(proj.members||[]):[];
+  return CV_MEMBERS.filter(function(m){ return ids.indexOf(m.id)>=0; });
+}
+var CV_PERSON_STORE_KEY='lingee-collab-persons-v1';
+function cvPersistPersons(){
+  try{ localStorage.setItem(CV_PERSON_STORE_KEY,JSON.stringify(CV_MEMBERS)); }catch(e){}
+}
+function cvRestorePersons(){
+  try{
+    var raw=localStorage.getItem(CV_PERSON_STORE_KEY); if(!raw) return;
+    var arr=JSON.parse(raw);
+    if(Array.isArray(arr)&&arr.length){ CV_MEMBERS.length=0; arr.forEach(function(m){CV_MEMBERS.push(m);}); }
+  }catch(e){}
+}
+
+/* 项目增改落 localStorage，刷新页面不丢（持久化与数据同源，放这里避免模块循环依赖） */
+var CV_PROJ_STORE_KEY='lingee-collab-projects-v1';
+function cvPersistProjects(){
+  try{ localStorage.setItem(CV_PROJ_STORE_KEY,JSON.stringify(CV_PROJECTS)); }catch(e){}
+}
+function cvRestoreProjects(){
+  try{
+    var raw=localStorage.getItem(CV_PROJ_STORE_KEY); if(!raw) return;
+    var arr=JSON.parse(raw);
+    if(Array.isArray(arr)&&arr.length){ CV_PROJECTS.length=0; arr.forEach(function(p){CV_PROJECTS.push(p);}); }
+  }catch(e){}
+}
 
 var CV_WORKFLOW = ['需求分析','方案设计','开发实现','代码审查','测试验证','部署发布'];
 var CV_WORKFLOW_ROLES = {'需求分析':'需求人员','方案设计':'架构人员','开发实现':'开发人员','代码审查':'开发人员','测试验证':'测试人员','部署发布':'运维人员'};
@@ -264,5 +327,18 @@ function cvInjectCardActions(){
 
 /* cvProject 由其它模块写回；import 绑定只读，所以走这个 setter */
 export function set_cvProject(v){ cvProject=v; return v; }
+/* cvWorkspace 由其它模块写回；import 绑定只读，所以走这个 setter */
+export function set_cvWorkspace(v){ cvWorkspace=v; return v; }
 
-export { CV_MEMBERS, CV_PROJECTS, CV_REVIEWS, CV_REVIEW_ARTIFACTS, CV_REVIEW_COMMENTS, CV_TASKS, CV_THIRD_PARTY_MEMBERS, CV_WORKFLOW, CV_WORKFLOW_ROLES, cvConfigOverride, cvInProject, cvInjectCardActions, cvProject, cvProjectById, cvProjectName, cvRenderReviewStats, cvRenderReviews, cvRenderTaskStats, cvRenderTasks };
+/* ---------- 产物中心：交付物按项目沉淀（左项目右清单，跟着项目走）
+   单文件产物用 file（带后缀名）；代码类产物是目录，用 files 列多个文件 ---------- */
+var CV_ARTIFACTS=[
+  {name:'采购订单列表页',file:'采购订单列表页.html',typeCls:'art-type--doc',typeLabel:'网页',src:'采购订单批量导入',date:'2026-09-21 14:20',project:'purchase'},
+  {name:'审批流插件源代码',typeCls:'art-type--code',typeLabel:'代码',src:'审批流插件代码审查',date:'2026-09-21 10:05',project:'expense',files:['ApprovalFlowPlugin.java','ApprovalFlowService.java','ApprovalContext.java','ExpenseReport.java','ApprovalFlowPluginTest.java','plugin.xml','README.md']},
+  {name:'多币种报销需求规格',file:'多币种报销需求规格.md',typeCls:'art-type--doc',typeLabel:'文档',src:'多币种报销需求规格评审',date:'2026-09-20 16:30',project:'expense'},
+  {name:'费用明细测试用例集',file:'费用明细测试用例集.xlsx',typeCls:'art-type--test',typeLabel:'用例',src:'费用明细列表页测试用例评审',date:'2026-09-19 11:00',project:'expense'},
+  {name:'审批流插件部署方案',file:'审批流插件部署方案.md',typeCls:'art-type--plan',typeLabel:'方案',src:'审批流插件部署方案评审',date:'2026-09-19 09:40',project:'expense'},
+  {name:'采购订单开放接口定义',file:'采购订单开放接口定义.yaml',typeCls:'art-type--api',typeLabel:'接口',src:'供应商协同门户对接',date:'2026-09-18 15:12',project:'supply'}
+];
+
+export { CV_MEMBERS, CV_PROJECTS, CV_ARTIFACTS, CV_REVIEWS, CV_REVIEW_ARTIFACTS, CV_REVIEW_COMMENTS, CV_TASKS, CV_THIRD_PARTY_MEMBERS, CV_WORKFLOW, CV_WORKFLOW_ROLES, CV_WORKSPACES, cvConfigOverride, cvInProject, cvInjectCardActions, cvPersistPersons, cvPersistProjects, cvPersonById, cvPersonName, cvProject, cvProjectById, cvProjectInWorkspace, cvProjectName, cvProjectPersons, cvRenderReviewStats, cvRenderReviews, cvRenderTaskStats, cvRenderTasks, cvRestorePersons, cvRestoreProjects, cvWorkspace, cvWorkspaceById, cvWorkspaceName };
