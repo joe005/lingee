@@ -358,7 +358,7 @@
 #view-collab .artifact-meta{font-size:10.5px;color:var(--text-soft);margin-left:auto}
 
 /* ============ MODALS ============ */
-.cv-scope .sync-overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;z-index:100}
+.sync-overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;z-index:100}
 .cv-scope .sync-modal{width:560px;max-width:90vw;max-height:88vh;overflow-y:auto;background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.15)}
 .cv-scope .sync-modal__header{display:flex;align-items:center;justify-content:space-between;padding:20px 24px 0}
 .cv-scope .sync-modal__title{font-size:18px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px}
