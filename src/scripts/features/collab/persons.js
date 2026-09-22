@@ -15,7 +15,9 @@ import { TEAMS } from '../expert/store.js';
 
 var cvPersonEditId='';      /* 人员编辑弹窗：正在编辑的人员 id，空 = 新增 */
 var cvProjCur='';           /* 项目详情正在看的项目 id，空 = 项目列表 */
-var cvProjTab='plan';    /* 项目详情右栏页签：plan / members / tasks / artifacts */
+var cvProjTab='overview';  /* 项目详情页签：overview / plan / members / artifacts */
+var pjFoldState={props:true,progress:true,desc:true};  /* 右侧面板折叠状态 */
+var PJ_STATUS={planned:{c:'#6b7280',bg:'#f3f4f6',t:'规划中'},in_progress:{c:'#ff8d42',bg:'#fff4ed',t:'进行中'},paused:{c:'#6b7280',bg:'#f3f4f6',t:'已暂停'},completed:{c:'#4d89ff',bg:'#eef3ff',t:'已完成'},cancelled:{c:'#e04a3a',bg:'#fdeae8',t:'已取消'}};
 var CV_PROJ_DOT_COLORS={blue:'#4d89ff',orange:'#ff8d42',green:'#08cc50'};
 var PS_COLORS=['#7c5cfc','#4d89ff','#08a040','#ff8d42','#e04a3a','#c06010','#08cc50','#5b8def'];
 function cvPsNum(pid){ return parseInt(String(pid).replace(/\D/g,''))||0; }
@@ -55,13 +57,14 @@ function cvRenderProjectList(){
     var color=CV_PROJ_DOT_COLORS[p.dot]||'#b8b8b8';
     var team=TEAMS.find(function(t){return t.id===p.defaultTeam;});
     var taskCount=CV_TASKS.filter(function(t){return t.project===p.id;}).length;
+    var sc=PJ_STATUS[p.status||'planned']||PJ_STATUS.planned;
     var tags='<span class="ptag">'+xesc(p.priority||'中')+'优先级</span>';
     if(team) tags+='<span class="ptag">专家团 · '+xesc(team.name)+'</span>';
     if(taskCount) tags+='<span class="ptag">'+taskCount+' 个任务</span>';
     return '<div class="pj-card x-card" data-pj-open="'+p.id+'">'
       +'<button type="button" class="x-call" data-pj-set="'+p.id+'" data-perm="owner" title="编辑项目">编辑</button>'
       +'<div class="card-top"><span class="pj-av" style="background:'+color+'1a;color:'+color+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></span>'
-      +'<div class="card-titles"><div class="card-title-row"><span class="card-title">'+xesc(p.name)+'</span></div>'
+      +'<div class="card-titles"><div class="card-title-row"><span class="card-title">'+xesc(p.name)+'</span><span class="pj-status" style="color:'+sc.c+';background:'+sc.bg+'"><span class="pj-status-dot" style="background:'+sc.c+'"></span>'+sc.t+'</span></div>'
       +'<div class="x-sub">负责人 '+xesc(p.owner||'未设置')+' · '+members.length+' 位协作人员</div></div></div>'
       +'<div class="card-desc">'+xesc(p.desc||'添加项目描述')+'</div>'
       +'<div class="card-tags">'+tags+'</div>'
@@ -85,15 +88,12 @@ function cvRenderProjectDetail(){
       +'</div>'
       +'<button type="button" class="pj-remove" data-pj-remove="'+m.id+'">移除</button>'
       +'</div>';
-  }).join(''):'<div class="sq-empty">该项目还没有协作人员，点「添加协作人员」选人</div>';
+  }).join(''):'<div class="sq-empty">该项目还没有协作人员，点「添加」选人</div>';
   var epics=cvProjectEpics(p);
   var tasks=CV_TASKS.filter(function(t){return t.project===cvProjCur&&t.kind!=='epic';});
   var projectProgress=tasks.length?Math.round(tasks.reduce(function(sum,t){return sum+(t.status==='已完成'?100:(t.progress||0));},0)/tasks.length):0;
+  var doneCnt=tasks.filter(function(t){return t.status==='已完成';}).length;
   var unlinked=tasks.filter(function(t){ return !t.parentTaskId; });
-  var unlinkedHtml=unlinked.length
-    ? '<div class="pj-plan-sec"><div class="pj-plan-k">未分组任务</div><div class="pj-plan-hint">未归属任何父任务的子任务，同样可直接执行</div>'
-      +'<div class="pj-task-group-list">'+unlinked.map(cvTaskRowHtml).join('')+'</div></div>'
-    : '';
   var arts=CV_ARTIFACTS.filter(function(a){return a.project===cvProjCur;});
   var artHtml=arts.length?'<div class="art-list">'
     +'<div class="art-list-head"><span class="art-c art-c-name">文件</span><span class="art-c art-c-type">类型</span><span class="art-c art-c-date">生成日期</span><span class="art-c art-c-ops">操作</span></div>'
@@ -123,54 +123,70 @@ function cvRenderProjectDetail(){
     +'<span class="pj-crumb-sep">›</span>'
     +'<span class="pj-dot pj-dot--sm" style="background:'+(CV_PROJ_DOT_COLORS[p.dot]||'#b8b8b8')+'"></span>'
     +'<span class="pj-crumb-name">'+xesc(p.name)+'</span>'
-    +'<button type="button" class="pj-set pj-set--crumb" data-pj-set="'+p.id+'" data-perm="owner">编辑</button>'
     +'</div>'
-    +'<div class="sq-layout">'
-    +'<aside class="sq-side">'
-    +'<div class="pj-side-av"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div>'
-    +'<div class="sq-side-name">'+xesc(p.name)+'</div>'
-    +'<div class="sq-side-desc">'+(p.desc?xesc(p.desc):'添加描述')+'</div>'
-    +(p.goal?'<div class="pj-side-goal"><div class="pj-side-goal-k">项目目标</div><div class="pj-side-goal-v">'+xesc(p.goal)+'</div></div>':'')
-    +'<div class="sq-kv-wrap"><div class="sq-kv-t">详情</div>'
-    +'<div class="sq-kv"><span>优先级</span><b>'+xesc(p.priority||'未设置')+'</b></div>'
-    +'<div class="sq-kv"><span>负责人</span><b>'+xesc(p.owner||'未设置')+'</b></div>'
-    +'<div class="sq-kv"><span>里程碑</span><b>'+(p.start||'—')+' ~ '+(p.end||'—')+'</b></div>'
-    +'<div class="sq-kv"><span>代码仓库</span><b>'+repoHtml+'</b></div>'
-    +'<div class="sq-kv"><span>专家团</span><b>'+xesc(curTeam?curTeam.name:'未绑定')+'</b></div>'
-    +'<div class="sq-kv"><span>协作人员</span><b>'+members.length+'</b></div>'
-    +'<div class="sq-kv"><span>任务</span><b>'+tasks.length+'</b></div>'
-    +'<div class="sq-kv"><span>项目进度</span><b>'+projectProgress+'%</b></div>'
-    +'</div></aside>'
+    +'<div class="sq-layout sq-layout--detail">'
     +'<section class="sq-main">'
     +'<div class="sq-tabs">'
-    +'<button type="button" class="sq-tab'+(cvProjTab==='plan'?' on':'')+'" data-pjtab="plan">任务规划</button>'
+    +'<button type="button" class="sq-tab'+(cvProjTab==='overview'?' on':'')+'" data-pjtab="overview">概览</button>'
+    +'<button type="button" class="sq-tab'+(cvProjTab==='plan'?' on':'')+'" data-pjtab="plan">模块</button>'
     +'<button type="button" class="sq-tab'+(cvProjTab==='members'?' on':'')+'" data-pjtab="members">成员</button>'
     +'<button type="button" class="sq-tab'+(cvProjTab==='artifacts'?' on':'')+'" data-pjtab="artifacts">产物</button>'
     +'</div>'
-    +'<div class="sq-tabpane'+(cvProjTab==='plan'?'':' hidden')+'" data-pjpane="plan">'
-    +((p.milestones&&p.milestones.length)?'<div class="pj-plan-sec"><div class="pj-plan-k">里程碑</div><div class="pj-ms-list">'+p.milestones.map(function(m){return '<div class="pj-ms-item"><span class="pj-ms-dot"></span><span class="pj-ms-name">'+xesc(m.name)+'</span><span class="pj-ms-date">'+xesc(m.date)+'</span></div>';}).join('')+'</div></div>':'')
-    +'<div class="pj-plan-sec"><div class="pj-plan-head"><div class="pj-plan-k">任务规划</div>'
-    +'<div class="pj-plan-acts">'
-    +'<button type="button" class="sync-btn" data-pj-split><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z"/></svg>智能拆解父任务</button>'
-    +'<button type="button" class="sync-btn sync-btn--ghost" data-pj-split-manual>手动新增父任务</button>'
-    +'</div></div>'
-    +'<div class="pj-plan-hint">项目下先拆出若干<b>父任务</b>，父任务只用于规划目标与验收标准，<b>不能直接执行</b>；每个父任务再下推为一个或多个<b>子任务</b>，子任务才会进入任务看板由人和 Agent 协作执行。</div>'
-    +(epics.length?cvFeaturesHtml(epics):'<div class="sq-empty">还没有父任务，点右上「智能拆解父任务」或「手动新增父任务」</div>')
+    +'<div class="sq-tabpane'+(cvProjTab==='overview'?'':' hidden')+'" data-pjpane="overview">'
+    +'<div class="pj-overview">'
+    +(p.desc?'<div class="pj-overview-sec"><h3>项目描述</h3><p>'+xesc(p.desc)+'</p></div>':'')
+    +(p.goal?'<div class="pj-overview-sec"><h3>项目目标</h3><p>'+xesc(p.goal)+'</p></div>':'')
+    +((p.milestones&&p.milestones.length)?'<div class="pj-overview-sec"><h3>里程碑</h3><div class="pj-ms-list">'+p.milestones.map(function(m){return '<div class="pj-ms-item"><span class="pj-ms-dot"></span><span class="pj-ms-name">'+xesc(m.name)+'</span><span class="pj-ms-date">'+xesc(m.date)+'</span></div>';}).join('')+'</div></div>':'')
     +'</div>'
-    +unlinkedHtml
+    +'</div>'
+    +'<div class="sq-tabpane'+(cvProjTab==='plan'?'':' hidden')+'" data-pjpane="plan">'
+    +'<div class="pj-plan-sec"><div class="pj-plan-head"><div class="pj-plan-k">模块</div>'
+    +'<div class="pj-plan-acts">'
+    +'<button type="button" class="sync-btn sync-btn--ghost" data-pj-split-manual>手动新增</button>'
+    +'</div></div>'
+    +(epics.length?cvFeaturesHtml(epics):'<div class="sq-empty">还没有父任务，点右上「手动新增」</div>')
+    +'</div>'
     +'</div>'
     +'<div class="sq-tabpane'+(cvProjTab==='members'?'':' hidden')+'" data-pjpane="members">'
     +'<div class="sq-main-head"><div><div class="sq-main-t">成员</div><div class="sq-main-s">该项目有 '+members.length+' 名协作人员</div></div>'
-    +'<div class="sq-main-acts"><button type="button" class="sync-btn" data-pj-add><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>添加协作人员</button></div></div>'
+    +'<div class="sq-main-acts"><button type="button" class="sync-btn" data-pj-add><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>添加</button></div></div>'
     +'<div class="pj-member-list">'+memberHtml+'</div>'
     +'</div>'
     +'<div class="sq-tabpane'+(cvProjTab==='artifacts'?'':' hidden')+'" data-pjpane="artifacts">'
     +artHtml
     +'</div>'
-    +'</section></div>';
+    +'</section>'
+    +'<aside class="sq-side sq-side--right">'
+    +'<div class="pj-side-av"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div>'
+    +'<input class="sq-edit-name" data-pj-field="name" value="'+xesc(p.name)+'" placeholder="项目名称">'
+    +'<div class="pj-prop-section'+(pjFoldState.props?'':' collapsed')+'">'
+    +'<button type="button" class="pj-prop-header" data-pj-fold="props">属性<svg class="pj-prop-caret" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 7.5 5 5 5-5"/></svg></button>'
+    +'<div class="pj-prop-body">'
+    +'<div class="pj-prop-row"><span class="pj-prop-label">状态</span><div class="pj-prop-value"><select class="sq-edit-select" data-pj-field="status">'+Object.keys(PJ_STATUS).map(function(k){return '<option value="'+k+'"'+(k===(p.status||'planned')?' selected':'')+'>'+PJ_STATUS[k].t+'</option>';}).join('')+'</select></div></div>'
+    +'<div class="pj-prop-row"><span class="pj-prop-label">优先级</span><div class="pj-prop-value"><select class="sq-edit-select" data-pj-field="priority">'+['高','中','低'].map(function(v){return '<option'+(v===(p.priority||'中')?' selected':'')+'>'+v+'</option>';}).join('')+'</select></div></div>'
+    +'<div class="pj-prop-row"><span class="pj-prop-label">负责人</span><div class="pj-prop-value"><select class="sq-edit-select" data-pj-field="owner">'+CV_MEMBERS.map(function(m){return '<option'+(m.name===(p.owner||'')?' selected':'')+'>'+xesc(m.name)+'</option>';}).join('')+'</select></div></div>'
+    +'<div class="pj-prop-row"><span class="pj-prop-label">里程碑</span><div class="pj-prop-value"><div class="sq-edit-date"><input type="date" data-pj-field="start" value="'+(p.start||'')+'"><span>~</span><input type="date" data-pj-field="end" value="'+(p.end||'')+'"></div></div></div>'
+    +'<div class="pj-prop-row"><span class="pj-prop-label">代码仓库</span><div class="pj-prop-value"><input class="sq-edit-input" data-pj-field="repo" value="'+xesc(p.repo||'')+'" placeholder="仓库 URL"></div></div>'
+    +'<div class="pj-prop-row"><span class="pj-prop-label">专家团</span><div class="pj-prop-value"><select class="sq-edit-select" data-pj-field="defaultTeam">'+TEAMS.map(function(t){return '<option value="'+t.id+'"'+(t.id===p.defaultTeam?' selected':'')+'>'+xesc(t.name)+'</option>';}).join('')+'</select></div></div>'
+    +'</div></div>'
+    +'<div class="pj-prop-section'+(pjFoldState.progress?'':' collapsed')+'">'
+    +'<button type="button" class="pj-prop-header" data-pj-fold="progress">进度<svg class="pj-prop-caret" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 7.5 5 5 5-5"/></svg></button>'
+    +'<div class="pj-prop-body">'
+    +'<div class="pj-prop-row"><span class="pj-prop-label">协作人员</span><b class="pj-prop-num">'+members.length+'</b></div>'
+    +'<div class="pj-prop-row"><span class="pj-prop-label">任务</span><b class="pj-prop-num">'+tasks.length+'</b></div>'
+    +(tasks.length?'<div class="pj-prop-row"><span class="pj-prop-label">进度</span><div class="pj-prop-value"><div class="pj-progress-bar"><div style="width:'+projectProgress+'%"></div></div><span class="pj-progress-text">'+doneCnt+' / '+tasks.length+'</span></div></div>':'')
+    +'</div></div>'
+    +'<div class="pj-prop-section'+(pjFoldState.desc?'':' collapsed')+'">'
+    +'<button type="button" class="pj-prop-header" data-pj-fold="desc">描述<svg class="pj-prop-caret" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 7.5 5 5 5-5"/></svg></button>'
+    +'<div class="pj-prop-body">'
+    +'<textarea class="sq-edit-desc" data-pj-field="desc" rows="2" placeholder="添加描述">'+xesc(p.desc||'')+'</textarea>'
+    +'<textarea class="sq-edit-goal" data-pj-field="goal" rows="2" placeholder="项目目标">'+xesc(p.goal||'')+'</textarea>'
+    +'</div></div>'
+    +'</aside>'
+    +'</div>';
 }
 function cvSwitchProjectTab(tab){
-  cvProjTab=tab==='members'?'members':(tab==='artifacts'?'artifacts':'plan');
+  cvProjTab=tab==='members'?'members':(tab==='artifacts'?'artifacts':(tab==='plan'?'plan':'overview'));
   cvRenderProjectDetail();
 }
 
@@ -407,7 +423,7 @@ function cvOpenTaskById(taskId){
 }
 function cvOpenProjectDetail(id){
   cvProjCur=id;
-  cvProjTab='plan';
+  cvProjTab='overview';
   var list=$('#cv-proj-list'),detail=$('#cv-proj-detail');
   if(list) list.classList.add('hidden');
   if(detail){ detail.classList.remove('hidden'); cvRenderProjectDetail(); }
@@ -545,6 +561,8 @@ export function initCollabPersons(){
   var pdetail=$('#cv-proj-detail');
   if(pdetail) pdetail.addEventListener('click',function(e){
     if(e.target.closest('[data-pj-back]')){ cvHideProjectDetail(); return; }
+    var fold=e.target.closest('[data-pj-fold]');
+    if(fold){ var k=fold.getAttribute('data-pj-fold'); pjFoldState[k]=!pjFoldState[k]; cvRenderProjectDetail(); return; }
     var tab=e.target.closest('[data-pjtab]');
     if(tab){ cvSwitchProjectTab(tab.getAttribute('data-pjtab')); return; }
     if(e.target.closest('[data-pj-split]')){ cvOpenProjectSplit(); return; }
@@ -567,6 +585,14 @@ export function initCollabPersons(){
     if(rm){ cvRemoveFromProject(rm.getAttribute('data-pj-remove')); return; }
     var set=e.target.closest('[data-pj-set]');
     if(set){ window.cvOpenProjEdit && window.cvOpenProjEdit(set.getAttribute('data-pj-set')); return; }
+  });
+  if(pdetail) pdetail.addEventListener('change',function(e){
+    var field=e.target.getAttribute('data-pj-field');
+    if(!field) return;
+    var p=cvProjectById(cvProjCur); if(!p) return;
+    p[field]=e.target.value;
+    cvPersistProjects();
+    if(field==='name'){ var crumb=document.querySelector('.pj-crumb-name'); if(crumb) crumb.textContent=e.target.value; }
   });
   var permTable=$('#cv-perm-table');
   if(permTable) permTable.addEventListener('click',function(e){

@@ -8,6 +8,7 @@ import { openAppDropdown } from './attach-app.js';
 
 /* ---------- Changelog / 更新通知（与 Build_demo 完全一致） ---------- */
 var changelogData=[
+  {id:'29',date:'2026-09-22',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',team:'项目管理重构',body:'项目详情改为左侧标签页+右侧属性栏布局，属性栏参考 multica 采用可折叠分区与 PropRow 行布局；新增概览页签展示项目背景，任务规划改名为模块；项目新增状态标识（planned/in_progress/paused/completed/cancelled）；新建项目弹窗重构为上下布局，成员选择改为独立弹出层支持搜索多选；右侧属性栏支持内联编辑。'},
   {id:'28',date:'2026-09-22',iconBg:'#eef3ff',iconColor:'#3d63dd',team:'清理 Cloudflare 依赖',body:'移除未使用的 @cloudflare/vite-plugin 与 wrangler 依赖（40 个包），修复 dev 模式下 Cloudflare 插件注入拦截逻辑导致预览快照失败的问题；同步清理 vite.config.js、package.json 与 spa-fallback 插件中的 Cloudflare 引用。'},
   {id:'27',date:'2026-09-22',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',team:'任务详情、评审与运行期协作链路优化',body:'任务详情重设计为左侧任务内容、右侧紧凑属性栏，任务按环节推进：本人评审 AI 生成的产物，通过后提交 Git 并流转到下一个环节（最后环节通过即完成）；项目任务规划按特性组织，智能拆解与人工拆解生成特性，特性下推生成任务并挂到对应特性下；任务负责人只能指定人，不能选专家团；专家团在新建项目时选择，绑定结果自动继承到任务；专家团配置合并为基本信息、能力与流程、触发词三个页签；项目卡片与专家/专家团卡片风格统一，任务均明确负责人，卡片支持快速转交，详情按默认折叠的流程节点展示对应产物，交付产物统一汇总并支持预览；工作区设置改为左导航 + 右表单。'},
   {id:'26',date:'2026-09-21',iconBg:'#eaf1ff',iconColor:'#3d63dd',team:'协作开发重构：工作区与项目管理',body:'协作开发重构：工作区固定顶部、项目切换器在任务/项目管理右侧，专家团升为一级页签；项目管理按「项目目标+里程碑→任务拆分→关联任务」三层组织，智能拆解调用智能体在对话框输出、逐项确认后生成；新建任务支持手动/通过智能体两种方式；任务详情复用新会话对话框，任务对话改为会话列表（每行一条会话总结）并可进入会话、支持发起会话与转交任务；人员独立基础资料；产物带后缀名、代码类按目录弹文件列表；新增多角色登录演示。'},
@@ -33,6 +34,7 @@ var changelogData=[
 ];
 // 每个数据条目对应的 avatar SVG 图标（与 Build_demo 的 lucide 图标一致）
 var changelogIcons={
+  '29':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M3 6h18M3 12h18M3 18h18"/></svg>',
   '28':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>',
 '27':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
   '26':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>',

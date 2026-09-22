@@ -125,7 +125,7 @@
     <div class="sync-modal__body">
       <div class="sync-modal__field">
         <label class="sync-modal__label">从 Lingee 获取人员</label>
-        <div class="search-wrap" style="margin-bottom:12px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#b5b5ae" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input id="cv-tp-search" placeholder="搜索姓名、邮箱..." onkeyup="cvSearchThirdPartyMembers(this.value)" /></div>
+        <div class="search-wrap" style="margin-bottom:12px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#b5b5ae" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input id="cv-tp-search" type="search" autocomplete="off" data-1p-ignore data-lpignore="true" placeholder="搜索姓名、邮箱..." onkeyup="cvSearchThirdPartyMembers(this.value)" /></div>
       </div>
       <div class="sync-modal__field">
         <div id="cv-tp-list" style="max-height:360px;overflow-y:auto"></div>
@@ -164,55 +164,38 @@
 
 <!-- 设置 · 项目设置弹窗 -->
 <div class="sync-overlay" id="cv-projedit-overlay" style="display:none" onclick="if(event.target===this)cvCloseProjEdit()">
-  <div class="sync-modal" style="width:520px">
+  <div class="sync-modal" style="width:680px">
     <div class="sync-modal__header">
       <h3 class="sync-modal__title" id="cv-pe-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>项目设置</h3>
       <button class="sync-modal__close" onclick="cvCloseProjEdit()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
-    <div class="sync-modal__body">
-      <div class="sync-modal__field">
-        <label class="sync-modal__label">标题</label>
-        <input id="cv-pe-name" style="width:100%;padding:8px 10px;border:1px solid var(--border-hover);border-radius:8px;font-size:13px;color:var(--text);outline:none" />
+    <div class="sync-modal__body pe-body">
+      <div class="pe-body-main">
+        <input id="cv-pe-name" class="pe-title-input" placeholder="项目名称" />
+        <textarea id="cv-pe-desc" class="pe-desc-input" rows="6" placeholder="描述项目背景、目标与交付范围…"></textarea>
       </div>
-      <div class="sync-modal__field">
-        <label class="sync-modal__label">描述</label>
-        <textarea id="cv-pe-desc" rows="2" style="width:100%;padding:8px 10px;border:1px solid var(--border-hover);border-radius:8px;font-size:13px;color:var(--text);outline:none;resize:vertical"></textarea>
-      </div>
-      <div class="sync-modal__field">
-        <label class="sync-modal__label">专家团 <span style="color:var(--danger)">*</span></label>
-        <select id="cv-pe-team" style="width:100%;padding:8px 10px;border:1px solid var(--border-hover);border-radius:8px;font-size:13px;color:var(--text);outline:none;background:#fff"></select>
-      </div>
-      <div class="sync-modal__field" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-        <div>
-          <label class="sync-modal__label">优先级</label>
-          <select id="cv-pe-priority" style="width:100%;padding:8px 10px;border:1px solid var(--border-hover);border-radius:8px;font-size:13px;color:var(--text);outline:none;background:#fff"><option>高</option><option>中</option><option>低</option></select>
-        </div>
-        <div>
-          <label class="sync-modal__label">负责人</label>
-          <select id="cv-pe-owner" style="width:100%;padding:8px 10px;border:1px solid var(--border-hover);border-radius:8px;font-size:13px;color:var(--text);outline:none;background:#fff"></select>
-        </div>
-      </div>
-      <div class="sync-modal__field">
-        <label class="sync-modal__label">项目成员 <span class="pe-members-hint">可多选，负责人会自动加入</span></label>
-        <div class="pe-members" id="cv-pe-members"></div>
-      </div>
-      <div class="sync-modal__field">
-        <label class="sync-modal__label">关联代码仓库</label>
-        <input id="cv-pe-repo" placeholder="如 https://github.com/kingdee/expense-app" style="width:100%;padding:8px 10px;border:1px solid var(--border-hover);border-radius:8px;font-size:13px;color:var(--text);outline:none" />
-      </div>
-      <div class="sync-modal__field">
-        <label class="sync-modal__label">里程碑</label>
-        <div style="display:flex;align-items:center;gap:8px">
-          <input id="cv-pe-start" type="date" style="flex:1;padding:8px 10px;border:1px solid var(--border-hover);border-radius:8px;font-size:13px;color:var(--text);outline:none" />
-          <span style="color:var(--text-soft)">→</span>
-          <input id="cv-pe-end" type="date" style="flex:1;padding:8px 10px;border:1px solid var(--border-hover);border-radius:8px;font-size:13px;color:var(--text);outline:none" />
-        </div>
+      <div class="pe-body-props">
+        <div class="pe-prop-row"><span class="pe-prop-label">专家团</span><select id="cv-pe-team" class="pe-prop-field"></select></div>
+        <div class="pe-prop-row"><span class="pe-prop-label">状态</span><select id="cv-pe-status" class="pe-prop-field"><option value="planned">规划中</option><option value="in_progress">进行中</option><option value="paused">已暂停</option><option value="completed">已完成</option><option value="cancelled">已取消</option></select></div>
+        <div class="pe-prop-row"><span class="pe-prop-label">优先级</span><select id="cv-pe-priority" class="pe-prop-field"><option>高</option><option>中</option><option>低</option></select></div>
+        <div class="pe-prop-row"><span class="pe-prop-label">负责人</span><select id="cv-pe-owner" class="pe-prop-field"></select></div>
+        <div class="pe-prop-row"><span class="pe-prop-label">里程碑</span><div class="pe-prop-date"><input id="cv-pe-start" type="date" class="pe-prop-field"><span>→</span><input id="cv-pe-end" type="date" class="pe-prop-field"></div></div>
+        <div class="pe-prop-row"><span class="pe-prop-label">代码仓库</span><input id="cv-pe-repo" class="pe-prop-field" placeholder="仓库 URL"></div>
+        <div class="pe-prop-row pe-prop-row--members"><span class="pe-prop-label">项目成员</span><div class="pe-member-inline"><button type="button" class="pe-trigger pe-trigger--inline" onclick="cvToggleMemberPicker(true)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button><div class="pe-selected-tags pe-selected-tags--inline" id="cv-pe-selected-tags"></div></div></div>
       </div>
     </div>
     <div class="sync-modal__footer">
       <button class="sync-modal__btn sync-modal__btn--ghost" onclick="cvCloseProjEdit()">取消</button>
       <button class="sync-modal__btn sync-modal__btn--primary" onclick="cvSaveProjEdit()">保存</button>
     </div>
+  </div>
+</div>
+<div class="pe-picker-overlay" id="cv-pe-picker-overlay" style="display:none" onclick="if(event.target===this)cvToggleMemberPicker(false)">
+  <div class="pe-picker-panel">
+    <div class="pe-picker-head"><span>选择项目成员</span><button type="button" class="pe-picker-close" onclick="cvToggleMemberPicker(false)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+    <div class="pe-member-search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input id="cv-pe-member-search" type="search" autocomplete="off" data-1p-ignore data-lpignore="true" placeholder="搜索姓名、部门…" oninput="cvFilterProjectMembers(this.value)"></div>
+    <div class="pe-members" id="cv-pe-members"></div>
+    <div class="pe-picker-foot"><span id="cv-pe-selected-count">已选 0 人</span><button type="button" class="sync-modal__btn sync-modal__btn--primary" onclick="cvToggleMemberPicker(false)">确定</button></div>
   </div>
 </div>
 </div>

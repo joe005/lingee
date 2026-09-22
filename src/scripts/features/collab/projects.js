@@ -95,13 +95,53 @@ var cvProjEditId='';
 /* 项目增改落 localStorage（持久化函数已移入 data.js，这里只留新建项目的色板） */
 var CV_PROJ_NEW_DOTS=['blue','orange','green'];
 var CV_PROJ_DOT_COLORS={blue:'#4d89ff',orange:'#ff8d42',green:'#08cc50'};
+var peMemberQuery='';
+function cvToggleMemberPicker(open){
+  var ov=$('#cv-pe-picker-overlay');if(!ov)return;
+  ov.style.display=open?'flex':'none';
+  if(open){
+    var search=$('#cv-pe-member-search');if(search){search.value='';peMemberQuery='';}
+    var sel=Array.from(document.querySelectorAll('#cv-pe-members input:checked')).map(function(cb){return cb.value;});
+    cvRenderProjectMemberPicker(sel);
+    if(search)search.focus();
+  }else{
+    cvUpdateSelectedTags();
+  }
+}
+function cvUpdateSelectedTags(){
+  var el=$('#cv-pe-selected-tags');if(!el)return;
+  var sel=Array.from(document.querySelectorAll('#cv-pe-members input:checked')).map(function(cb){return cb.value;});
+  var countEl=$('#cv-pe-selected-count');if(countEl)countEl.textContent='已选 '+sel.length+' 人';
+  if(!sel.length){el.innerHTML='<span class="pe-tags-empty">未选择成员</span>';return;}
+  el.innerHTML=sel.map(function(id){
+    var m=CV_MEMBERS.find(function(x){return x.id===id;});if(!m)return'';
+    return '<span class="pe-tag"><span class="pe-tag-av">'+xesc((m.name||'?')[0])+'</span>'+xesc(m.name)+'<button type="button" class="pe-tag-x" onclick="cvRemoveMember(\''+id+'\')">×</button></span>';
+  }).join('');
+}
+function cvRemoveMember(id){
+  var cb=document.querySelector('#cv-pe-members input[value="'+id+'"]');
+  if(cb){cb.checked=false;cb.closest('.pe-member').classList.remove('is-selected');}
+  cvUpdateSelectedTags();
+}
 function cvRenderProjectMemberPicker(selectedIds){
   var el=$('#cv-pe-members');if(!el)return;
   selectedIds=selectedIds||[];
-  el.innerHTML=CV_MEMBERS.map(function(m){
+  var q=peMemberQuery.toLowerCase();
+  var list=CV_MEMBERS.filter(function(m){
+    if(!q) return true;
+    return m.name.toLowerCase().indexOf(q)>=0||(m.dept||'').toLowerCase().indexOf(q)>=0||(m.roles||[]).some(function(r){return r.text.toLowerCase().indexOf(q)>=0;});
+  });
+  if(!list.length){el.innerHTML='<div class="pe-member-empty">没有匹配的人员</div>';return;}
+  el.innerHTML=list.map(function(m){
     var checked=selectedIds.indexOf(m.id)>=0;
     return '<label class="pe-member'+(checked?' is-selected':'')+'"><input type="checkbox" value="'+xesc(m.id)+'"'+(checked?' checked':'')+'><span class="pe-member-av">'+xesc((m.name||'?')[0])+'</span><span class="pe-member-name">'+xesc(m.name)+'</span><small>'+xesc((m.roles&&m.roles[0]&&m.roles[0].text)||'成员')+'</small></label>';
   }).join('');
+  cvUpdateSelectedTags();
+}
+function cvFilterProjectMembers(q){
+  peMemberQuery=q||'';
+  var sel=Array.from(document.querySelectorAll('#cv-pe-members input:checked')).map(function(cb){return cb.value;});
+  cvRenderProjectMemberPicker(sel);
 }
 function cvSyncOwnerMember(){
   var owner=$('#cv-pe-owner');if(!owner)return;
@@ -109,6 +149,7 @@ function cvSyncOwnerMember(){
   if(!member)return;
   var cb=document.querySelector('#cv-pe-members input[value="'+member.id+'"]');
   if(cb){cb.checked=true;cb.closest('.pe-member').classList.add('is-selected');}
+  cvUpdateSelectedTags();
 }
 function cvRenderProjectSettings(){
   var el=$('#cv-proj-settings');if(!el)return;
@@ -130,7 +171,7 @@ function cvOpenProjEdit(id){
   var p=cvProjectById(id);if(!p)return;
   cvProjEditId=id;
   var set=function(k,val){var e=$('#cv-pe-'+k);if(e)e.value=val||'';};
-  set('name',p.name);set('desc',p.desc);set('priority',p.priority||'中');set('repo',p.repo);set('start',p.start);set('end',p.end);
+  set('name',p.name);set('desc',p.desc);set('status',p.status||'planned');set('priority',p.priority||'中');set('repo',p.repo);set('start',p.start);set('end',p.end);
   var sel=$('#cv-pe-owner');
   if(sel) sel.innerHTML=CV_MEMBERS.map(function(m){return '<option'+(m.name===(p.owner||'')?' selected':'')+'>'+xesc(m.name)+'</option>';}).join('');
   var tsel=$('#cv-pe-team');
@@ -143,7 +184,7 @@ function cvOpenProjEdit(id){
 function cvOpenProjNew(){
   cvProjEditId='';
   var set=function(k,val){var e=$('#cv-pe-'+k);if(e)e.value=val||'';};
-  set('name','');set('desc','');set('priority','中');set('repo','');set('start','');set('end','');
+  set('name','');set('desc','');set('status','planned');set('priority','中');set('repo','');set('start','');set('end','');
   var sel=$('#cv-pe-owner');
   if(sel) sel.innerHTML=CV_MEMBERS.map(function(m,i){return '<option'+(i===0?' selected':'')+'>'+xesc(m.name)+'</option>';}).join('');
   var tsel=$('#cv-pe-team');
@@ -165,9 +206,9 @@ function cvSaveProjEdit(){
   var owner=CV_MEMBERS.find(function(m){return m.name===g('owner');});
   if(owner&&members.indexOf(owner.id)<0) members.unshift(owner.id);
   if(p){
-    p.name=name;p.desc=g('desc');p.priority=g('priority');p.owner=g('owner');p.repo=g('repo');p.start=g('start');p.end=g('end');p.defaultTeam=teamId||null;p.members=members;
+    p.name=name;p.desc=g('desc');p.status=g('status');p.priority=g('priority');p.owner=g('owner');p.repo=g('repo');p.start=g('start');p.end=g('end');p.defaultTeam=teamId||null;p.members=members;
   }else{
-    p={id:'proj-'+Date.now(),name:name,desc:g('desc'),dot:CV_PROJ_NEW_DOTS[CV_PROJECTS.length%CV_PROJ_NEW_DOTS.length],defaultTeam:teamId||(TEAMS[0]&&TEAMS[0].id)||null,priority:g('priority'),owner:g('owner'),repo:g('repo'),start:g('start'),end:g('end'),members:members,workspace:cvWorkspace||'ws-build'};
+    p={id:'proj-'+Date.now(),name:name,desc:g('desc'),status:g('status'),dot:CV_PROJ_NEW_DOTS[CV_PROJECTS.length%CV_PROJ_NEW_DOTS.length],defaultTeam:teamId||(TEAMS[0]&&TEAMS[0].id)||null,priority:g('priority'),owner:g('owner'),repo:g('repo'),start:g('start'),end:g('end'),members:members,workspace:cvWorkspace||'ws-build'};
     CV_PROJECTS.push(p);
   }
   cvPersistProjects();
@@ -211,6 +252,9 @@ export function initCollabProjects() {
   window.cvOpenProjNew=cvOpenProjNew;
   window.cvCloseProjEdit=cvCloseProjEdit;
   window.cvSaveProjEdit=cvSaveProjEdit;
+  window.cvFilterProjectMembers=cvFilterProjectMembers;
+  window.cvToggleMemberPicker=cvToggleMemberPicker;
+  window.cvRemoveMember=cvRemoveMember;
 }
 
 export { cvRenderProjMenu, cvRenderProjectSettings, cvRenderWsMenu, cvRestoreProjects, cvSetProject, cvSetWorkspace, cvSyncUrl, cvUpdateCounts };
