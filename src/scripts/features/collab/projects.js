@@ -53,7 +53,7 @@ function cvRenderProjMenu(){
   var menu=$('#cvProjMenu'); if(!menu) return;
   var rows=[{id:'',name:'全部项目',desc:'跨项目聚合，看分配给我的任务与评审'}].concat(
     CV_PROJECTS.filter(function(p){return cvProjectInWorkspace(p.id);}).map(function(p){
-      var tasks=CV_TASKS.filter(function(t){return t.project===p.id}).length;
+      var tasks=CV_TASKS.filter(function(t){return t.project===p.id&&t.kind!=='epic'}).length;
       return {id:p.id,name:p.name,dot:p.dot,desc:tasks+' 个任务'};
     }));
   menu.innerHTML=rows.map(function(r){
@@ -73,11 +73,11 @@ function cvSetProject(id){
   cvRenderReviewStats(); cvRenderReviews();
   cvRenderSquadList();
   cvApplyFilters(); cvApplyReviewFilters();
-  cvRenderTeamBind(); cvApplyConfigScope(); cvUpdateCounts();
+  cvApplyConfigScope(); cvUpdateCounts();
   cvSyncUrl();
 }
 function cvUpdateCounts(){
-  var tc=$('#cvTaskCount'); if(tc) tc.textContent=CV_TASKS.filter(cvInProject).length;
+  var tc=$('#cvTaskCount'); if(tc) tc.textContent=CV_TASKS.filter(function(t){return t.kind!=='epic'}).filter(cvInProject).length;
   /* 待评审已合并到任务管理，不再单独计数 */
 }
 function cvSyncUrl(){
@@ -88,26 +88,7 @@ var cvProjMenu=$('#cvProjMenu');
 var cvWsBtn=$('#cvWsBtn');
 var cvWsMenu=$('#cvWsMenu');
 
-/* ---------- 专家团：项目默认路由绑定 ---------- */
-function cvRenderTeamBind(){
-  var bar=$('#cvTeamBind'); if(!bar) return;
-  bar.classList.toggle('hidden',!cvProject);
-  if(!cvProject) return;
-  var proj=cvProjectById(cvProject); if(!proj) return;
-  var nameEl=$('#cvBindProjName'); if(nameEl) nameEl.textContent=proj.name;
-  var team=proj.defaultTeam?TEAMS.filter(function(t){return t.id===proj.defaultTeam})[0]:null;
-  var lb=$('#cvBindTeamLabel'); if(lb) lb.textContent=team?team.name:'未指定';
-  var menu=$('#cvBindMenu');
-  if(menu) menu.innerHTML=[{id:'',name:'不绑定',desc:'大任务改为人工确认后路由'}]
-    .concat(TEAMS.map(function(t){return {id:t.id,name:t.name,desc:t.members.length+' 位专家'}}))
-    .map(function(t){
-      return '<div class="cv-proj-item'+(t.id===(proj.defaultTeam||'')?' checked':'')+'" data-cv-bind="'+t.id+'">'
-        +'<span class="cv-proj-n">'+xesc(t.name)+'<em>'+xesc(t.desc)+'</em></span>'
-        +'<svg class="ic ic-sm cv-proj-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>';
-    }).join('');
-}
-var cvBindBtn=$('#cvBindBtn');
-var cvBindMenu=$('#cvBindMenu');
+/* 专家团由项目详情维护；任务和运行期只消费项目绑定结果。 */
 
 /* ---------- 项目设置：标题 / 描述 / 优先级 / 负责人 / 代码仓库 / 里程碑 ---------- */
 var cvProjEditId='';
@@ -137,8 +118,10 @@ function cvOpenProjEdit(id){
   set('name',p.name);set('desc',p.desc);set('priority',p.priority||'中');set('repo',p.repo);set('start',p.start);set('end',p.end);
   var sel=$('#cv-pe-owner');
   if(sel) sel.innerHTML=CV_MEMBERS.map(function(m){return '<option'+(m.name===(p.owner||'')?' selected':'')+'>'+xesc(m.name)+'</option>';}).join('');
+  var tsel=$('#cv-pe-team');
+  if(tsel) tsel.innerHTML=TEAMS.map(function(t){return '<option value="'+xesc(t.id)+'"'+(t.id===p.defaultTeam?' selected':'')+'>'+xesc(t.name)+'</option>';}).join('');
   var ov=$('#cv-projedit-overlay');if(ov)ov.style.display='flex';
-  var tt=$('#cv-pe-title');if(tt)tt.lastChild.textContent='项目设置';
+  var tt=$('#cv-pe-title');if(tt)tt.lastChild.textContent='编辑项目';
 }
 function cvOpenProjNew(){
   cvProjEditId='';
@@ -146,6 +129,8 @@ function cvOpenProjNew(){
   set('name','');set('desc','');set('priority','中');set('repo','');set('start','');set('end','');
   var sel=$('#cv-pe-owner');
   if(sel) sel.innerHTML=CV_MEMBERS.map(function(m,i){return '<option'+(i===0?' selected':'')+'>'+xesc(m.name)+'</option>';}).join('');
+  var tsel=$('#cv-pe-team');
+  if(tsel) tsel.innerHTML=TEAMS.map(function(t,i){return '<option value="'+xesc(t.id)+'"'+(i===0?' selected':'')+'>'+xesc(t.name)+'</option>';}).join('');
   var ov=$('#cv-projedit-overlay');if(ov)ov.style.display='flex';
   var tt=$('#cv-pe-title');if(tt)tt.lastChild.textContent='新建项目';
 }
@@ -156,10 +141,11 @@ function cvSaveProjEdit(){
   if(!name){ toast('请填写项目标题','error'); return; }
   var isNew=!cvProjEditId;
   var p=isNew?null:cvProjectById(cvProjEditId);
+  var teamId=g('team');
   if(p){
-    p.name=name;p.desc=g('desc');p.priority=g('priority');p.owner=g('owner');p.repo=g('repo');p.start=g('start');p.end=g('end');
+    p.name=name;p.desc=g('desc');p.priority=g('priority');p.owner=g('owner');p.repo=g('repo');p.start=g('start');p.end=g('end');p.defaultTeam=teamId||null;
   }else{
-    p={id:'proj-'+Date.now(),name:name,desc:g('desc'),dot:CV_PROJ_NEW_DOTS[CV_PROJECTS.length%CV_PROJ_NEW_DOTS.length],defaultTeam:null,priority:g('priority'),owner:g('owner'),repo:g('repo'),start:g('start'),end:g('end'),members:[],workspace:cvWorkspace||'ws-build'};
+    p={id:'proj-'+Date.now(),name:name,desc:g('desc'),dot:CV_PROJ_NEW_DOTS[CV_PROJECTS.length%CV_PROJ_NEW_DOTS.length],defaultTeam:teamId||(TEAMS[0]&&TEAMS[0].id)||null,priority:g('priority'),owner:g('owner'),repo:g('repo'),start:g('start'),end:g('end'),members:[],workspace:cvWorkspace||'ws-build'};
     CV_PROJECTS.push(p);
   }
   cvPersistProjects();
@@ -190,18 +176,6 @@ export function initCollabProjects() {
     $('#cvProjSwitch').classList.remove('open');
     cvSetProject(it.getAttribute('data-cv-proj'));
   });
-  if(cvBindBtn) cvBindBtn.addEventListener('click',function(e){
-    e.stopPropagation();
-    $('#cvBindSwitch').classList.toggle('open');
-  });
-  if(cvBindMenu) cvBindMenu.addEventListener('click',function(e){
-    var it=e.target.closest('[data-cv-bind]'); if(!it) return;
-    var proj=cvProjectById(cvProject); if(!proj) return;
-    proj.defaultTeam=it.getAttribute('data-cv-bind')||null;
-    $('#cvBindSwitch').classList.remove('open');
-    cvRenderTeamBind();
-    toast(proj.defaultTeam?('已将「'+proj.name+'」的大任务默认路由到 '+$('#cvBindTeamLabel').textContent):'已取消默认路由，大任务改为人工确认');
-  });
   document.addEventListener('click',function(){
     $$('#view-collab .cv-proj.open').forEach(function(el){el.classList.remove('open')});
   });
@@ -211,4 +185,4 @@ export function initCollabProjects() {
   window.cvSaveProjEdit=cvSaveProjEdit;
 }
 
-export { cvRenderProjMenu, cvRenderProjectSettings, cvRenderTeamBind, cvRenderWsMenu, cvRestoreProjects, cvSetProject, cvSetWorkspace, cvSyncUrl, cvUpdateCounts };
+export { cvRenderProjMenu, cvRenderProjectSettings, cvRenderWsMenu, cvRestoreProjects, cvSetProject, cvSetWorkspace, cvSyncUrl, cvUpdateCounts };

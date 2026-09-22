@@ -29,7 +29,7 @@ function cvApplyFilters(){
     var msearch=(memberView.querySelector('input')||{}).value||'';
     msearch=msearch.toLowerCase();
     memberView.querySelectorAll('#cv-proj-list .pj-card').forEach(function(card){
-      var name=(card.querySelector('.pj-name')||{}).textContent||'';
+      var name=(card.querySelector('.card-title')||{}).textContent||'';
       card.style.display=(!msearch||name.toLowerCase().indexOf(msearch)>=0)?'':'none';
     });
   }
@@ -74,7 +74,6 @@ function cvShowPanel(name){
   /* 项目切换器只在「任务管理」「项目管理」两个项目维度的页签下显示；工作区栏始终在顶部 */
   var psw=document.getElementById('cvProjSwitch');
   if(psw) psw.classList.toggle('hidden', primary!=='tasks' && primary!=='members');
-  cvRenderSubNav(primary,name);
 }
 function cvSwitchSub(name){
   cvSubState[cvPrimaryOf(name)]=name;
@@ -82,13 +81,13 @@ function cvSwitchSub(name){
 }
 function cvSwitchView(name){
   if(name==='config-proj') name='config';   /* 旧链接兼容：项目设置已并入项目管理 */
-  if(name==='config') name=cvSubState.config;
-  if((name==='config'||name==='config-perm') && getRole()!=='owner') name='tasks';   /* 设置仅所有者可进 */
+  if(name==='config-perm') name='config';   /* 人员与权限已并入设置左导航 */
+  if(name==='config' && getRole()!=='owner') name='tasks';   /* 设置仅所有者可进 */
   cvLastTab=(name==='chat'||name==='review-detail')?cvLastTab:name;
   cvShowPanel(name);
   if(name==='teams') renderExpertGrid();
   if(name==='experts') cvRenderExperts();
-  if(name==='config-perm') cvRenderPermTable();
+  if(name==='config' && window.cvRenderPermTable) window.cvRenderPermTable();   /* 人员与权限是设置里默认打开的一项 */
   cvSyncUrl();
 }
 /* 执行中的任务在侧边栏项目下挂一条会话 */

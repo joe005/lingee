@@ -82,6 +82,14 @@ export function initCollabConfig() {
     cvApplyConfigScope();
     toast(on?('「'+cvProjectName(cvProject)+'」已改为项目覆盖，可单独调整'):'已恢复跟随全局设置');
   });
+  var cfgNav=$('#cv-config .config-nav');
+  if(cfgNav) cfgNav.addEventListener('click',function(e){
+    var item=e.target.closest('[data-config-nav]'); if(!item) return;
+    $$('#cv-config .config-nav-item').forEach(function(n){ n.classList.toggle('on', n===item); });
+    var which=item.getAttribute('data-config-nav');
+    $$('#cv-config .config-pane').forEach(function(p){ p.classList.toggle('hidden', p.getAttribute('data-config-pane')!==which); });
+    if(which==='perm' && window.cvRenderPermTable) window.cvRenderPermTable();
+  });
 }
 
 export { cvApplyConfigScope, cvCaptureConfigDefaults };

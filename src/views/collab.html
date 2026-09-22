@@ -32,7 +32,7 @@
       <div class="tb-board-view" id="tb-board-view">
         <div class="tb-heading"><div><h2>任务</h2><span>让成员与专家围绕同一个目标协作</span></div><span class="tb-demo">演示工作区</span></div>
         <div class="tb-toolbar">
-          <div class="tb-scopes" role="group" aria-label="任务范围"><button data-tb-scope="all" aria-pressed="true">全部任务</button><button data-tb-scope="mine" aria-pressed="false">我的任务</button><button data-tb-scope="attention" aria-pressed="false">待确认 <span id="tb-attention-count"></span></button></div>
+          <div class="tb-scopes" role="group" aria-label="任务范围"><button data-tb-scope="all" aria-pressed="true">全部任务</button><button data-tb-scope="mine" aria-pressed="false">我的任务 <span id="tb-mine-count"></span></button><button data-tb-scope="attention" aria-pressed="false">待处理 <span id="tb-attention-count"></span></button></div>
           <div class="tb-tools"><input id="tb-search" name="task-filter-query" type="search" autocomplete="off" data-1p-ignore data-lpignore="true" readonly placeholder="搜索任务或编号…" aria-label="搜索任务或编号"><select id="tb-mode" aria-label="执行模式"><option value="">全部执行模式</option><option>单人执行</option><option>多人协作</option></select><select id="tb-layout" aria-label="任务视图"><option value="board">看板</option><option value="list">列表</option></select><button id="tb-create" class="tb-primary">＋ 新建任务</button></div>
         </div>
         <div class="tb-summary" id="cv-task-stats"></div>
@@ -43,8 +43,11 @@
 
     <!-- 项目管理：项目列表 + 项目详情（选协作人员） -->
     <div class="cv-panel" id="cv-members">
+      <div class="cv-page-head">
+        <div class="scroll-title">项目<span class="cv-title-count" id="cv-proj-count">0</span></div>
+        <div class="scroll-desc">维护项目基本信息，并为项目挑选协作人员与专家团</div>
+      </div>
       <div class="filter-bar">
-        <div class="sq-bar-title">项目 <span id="cv-proj-count">0</span></div>
         <div class="search-wrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input placeholder="搜索项目" onkeyup="cvApplyFilters()"></div>
         <button class="sync-btn" onclick="cvOpenProjNew()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>新建项目</button>
       </div>
@@ -77,7 +80,7 @@
         <div class="cv-head">
           <div>
             <div class="scroll-title">专家团<span class="cv-global-chip">全局</span></div>
-            <div class="scroll-desc">专家团为全局定义，项目内只绑定默认专家团，大任务按此路由</div>
+            <div class="scroll-desc">统一维护专家团定义；项目在项目详情中选择要使用的专家团</div>
           </div>
           <div class="cv-head-right">
             <div class="apps-search">
@@ -87,18 +90,6 @@
             <button class="btn-new" id="newExpertEntryBtn" data-perm="dev"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg><span id="newExpertEntryLabel">新建专家团</span></button>
           </div>
         </div>
-        <div class="cv-bind hidden" id="cvTeamBind">
-          <span class="cv-bind-label">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
-            <b id="cvBindProjName">当前项目</b>的大任务默认路由到
-          </span>
-          <div class="cv-proj" id="cvBindSwitch">
-            <button type="button" class="cv-proj-btn" id="cvBindBtn"><span id="cvBindTeamLabel">未指定</span>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-            </button>
-            <div class="cv-proj-menu" id="cvBindMenu"></div>
-          </div>
-        </div>
         <div class="apps-grid" id="expertGrid"></div>
       </div>
     </div>
@@ -106,9 +97,30 @@
     <!-- 设置 · 工作区设置 -->
     <div class="cv-panel" id="cv-config">
       <div class="scroll">
-        <div class="scroll-title">工作区设置</div>
-        <div class="scroll-desc">统一配置任务路由规则、执行策略和协作模式</div>
-        <div class="config-grid">
+        <div id="cv-config-header">
+          <div class="scroll-title">系统设置</div>
+          <div class="scroll-desc">统一配置工作区人员权限、任务路由规则与执行策略</div>
+        </div>
+        <div class="config-layout">
+          <aside class="config-nav">
+            <button type="button" class="config-nav-item on" data-config-nav="perm">人员与权限</button>
+            <button type="button" class="config-nav-item" data-config-nav="rules">任务与路由</button>
+          </aside>
+          <div class="config-main">
+            <div class="config-pane" data-config-pane="perm">
+              <div class="cv-head">
+                <div>
+                  <div class="cv-sec-title">人员与权限</div>
+                  <div class="cv-sec-desc">管理工作区成员与角色，支持新增、修改</div>
+                </div>
+                <div class="cv-head-right">
+                  <button class="sync-btn" data-perm="owner" onclick="cvOpenPersonNew()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>新增人员</button>
+                </div>
+              </div>
+              <div id="cv-perm-table"></div>
+            </div>
+            <div class="config-pane hidden" data-config-pane="rules">
+              <div class="config-grid">
           <div class="config-card" data-cv-config="size" data-cv-level="global">
             <div class="config-card-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>任务大小规则<span class="cv-scope-chip" data-cv-scope-chip></span></div>
             <div class="config-card-desc">根据任务描述长度和影响范围自动判定任务大小，决定执行路由</div>
@@ -152,22 +164,9 @@
             <div class="config-row"><span class="config-label">自动执行风险阈值</span><span class="config-value">中等</span></div>
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- 设置 · 人员与权限 -->
-    <div class="cv-panel" id="cv-config-perm">
-      <div class="scroll">
-        <div class="cv-head">
-          <div>
-            <div class="scroll-title">人员与权限</div>
-            <div class="scroll-desc">管理工作区成员与角色，支持新增、修改</div>
-          </div>
-          <div class="cv-head-right">
-            <button class="sync-btn" data-perm="owner" onclick="cvOpenPersonNew()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>新增人员</button>
+            </div>
           </div>
         </div>
-        <div id="cv-perm-table"></div>
       </div>
     </div>
 

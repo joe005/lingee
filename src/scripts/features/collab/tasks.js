@@ -82,7 +82,7 @@ function cvCollectSyncTaskData(status){
   var size=document.getElementById('cv-sync-size-val');
   var sel=document.querySelector('#cv-sync-collab-options .sync-collab-option--selected .sync-collab-name');
   var mode=sel?sel.textContent:'Agent间协作';
-  return{title:title.value.trim(),desc:desc?desc.value.trim():'',type:type?type.textContent:'需求',priority:priority?priority.textContent:'中',source:source?source.textContent:'对话自建',size:size?size.textContent:'小任务',status:status||'未开始',collab:mode,assignee:status==='进行中'?'AI开发Agent':'待分配',progress:0};
+  return{title:title.value.trim(),desc:desc?desc.value.trim():'',type:type?type.textContent:'需求',priority:priority?priority.textContent:'中',source:source?source.textContent:'对话自建',size:size?size.textContent:'小任务',status:status||'未开始',collab:mode,assignee:(CV_PROJECTS.find(p=>p.id===(cvProject||CV_PROJECTS[0].id))||CV_PROJECTS[0]).owner,progress:0};
 }
 function cvSaveTaskToStorage(task){
   var tasks=[];try{tasks=JSON.parse(localStorage.getItem('build_tasks')||'[]');}catch(e){}

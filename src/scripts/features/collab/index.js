@@ -6,9 +6,9 @@ import { cvCloseAddMemberModal, cvConfirmAddMembers, cvLoadSavedTasks, cvOpenAdd
 import { cvApplyConfigScope, cvCaptureConfigDefaults } from './config.js';
 import { cvInjectCardActions, cvRenderReviewStats, cvRenderReviews, cvRenderTaskStats, cvRenderTasks, cvRestorePersons } from './data.js';
 import { cvArchiveSquad, cvCloseNewSquadModal, cvConfirmNewSquad, cvHideSquadDetail, cvOpenNewSquadModal, cvRenderSquadList, cvRestoreSquads, cvSetSquadLeader, cvShowSquadDetail, cvSwitchSquadTab } from './squads.js';
-import { cvCloseAddToProject, cvClosePersonEdit, cvCloseProjectSplit, cvConfirmAddToProject, cvConfirmProjectSplit, cvOpenAddToProject, cvOpenArtFiles, cvOpenPersonEdit, cvOpenPersonNew, cvRenderProjectDetail, cvRenderProjectList, cvSavePersonEdit, cvSearchProjectPersons, initCollabPersons } from './persons.js';
+import { cvCloseAddToProject, cvCloseArtFiles, cvCloseFeatureEdit, cvCloseManualSplit, cvClosePersonEdit, cvCloseProjectSplit, cvConfirmAddToProject, cvConfirmManualSplit, cvConfirmProjectSplit, cvFeatureEditAddFile, cvMsAddFile, cvOpenAddToProject, cvOpenArtFiles, cvOpenManualSplit, cvOpenPersonEdit, cvOpenPersonNew, cvRenderPermTable, cvRenderProjectDetail, cvRenderProjectList, cvSaveFeatureEdit, cvSavePersonEdit, cvSearchProjectPersons, initCollabPersons } from './persons.js';
 import { cvRenderExperts, set_cvExpertKw } from './experts.js';
-import { cvRenderProjMenu, cvRenderTeamBind, cvRenderWsMenu, cvRestoreProjects, cvSetProject, cvUpdateCounts } from './projects.js';
+import { cvRenderProjMenu, cvRenderWsMenu, cvRestoreProjects, cvSetProject, cvUpdateCounts } from './projects.js';
 import { cvOpenReviewDetail, cvReviewPass, cvReviewReject, cvSubmitReview, cvSwitchArtifact } from './reviews.js';
 import { cvApplyReviewFilters, cvClickReviewStat, cvClickStat, cvCloseSyncModal, cvCloseTaskModal, cvConfirmExec, cvConfirmReview, cvConfirmTransfer, cvConfirmTwist, cvOpenSyncModal, cvOpenTaskModal, cvSaveSyncTask, cvSelectCollabMode, cvSelectPersonItem, cvStartSyncTask, cvToggleSyncDropdown } from './tasks.js';
 import { cvApplyFilters, cvInited, cvPendingProj, cvPendingTab, cvSwitchFilter, cvSwitchView, set_cvInited, set_cvPendingProj, set_cvPendingTab } from './view.js';
@@ -35,7 +35,7 @@ function cvInit(){
   cvRenderProjectList();
   cvInjectCardActions();
   cvCaptureConfigDefaults();
-  cvRenderWsMenu(); cvRenderProjMenu(); cvRenderTeamBind(); cvApplyConfigScope(); cvUpdateCounts();
+  cvRenderWsMenu(); cvRenderProjMenu(); cvApplyConfigScope(); cvUpdateCounts();
 }
 var cvExpertSearch=$('#cvExpertSearch');
 var cvNewExpertBtn=$('#cvNewExpertBtn');
@@ -121,10 +121,19 @@ export function initCollab() {
   window.cvSearchProjectPersons=cvSearchProjectPersons;
   window.cvConfirmAddToProject=cvConfirmAddToProject;
   window.cvRenderProjectList=cvRenderProjectList;
+  window.cvRenderPermTable=cvRenderPermTable;
   window.cvRenderProjectDetail=cvRenderProjectDetail;
   window.cvOpenArtFiles=cvOpenArtFiles;
+  window.cvCloseArtFiles=cvCloseArtFiles;
   window.cvCloseProjectSplit=cvCloseProjectSplit;
   window.cvConfirmProjectSplit=cvConfirmProjectSplit;
+  window.cvOpenManualSplit=cvOpenManualSplit;
+  window.cvCloseManualSplit=cvCloseManualSplit;
+  window.cvConfirmManualSplit=cvConfirmManualSplit;
+  window.cvMsAddFile=cvMsAddFile;
+  window.cvCloseFeatureEdit=cvCloseFeatureEdit;
+  window.cvFeatureEditAddFile=cvFeatureEditAddFile;
+  window.cvSaveFeatureEdit=cvSaveFeatureEdit;
   window.cvOpenNewSquadModal=cvOpenNewSquadModal;
   window.cvCloseNewSquadModal=cvCloseNewSquadModal;
   window.cvConfirmNewSquad=cvConfirmNewSquad;

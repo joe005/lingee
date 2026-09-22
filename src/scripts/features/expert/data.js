@@ -175,6 +175,28 @@ function rebuildExperts(){
 var AV_KEYS=['lead','pm','arch','eng','qa','cr','sec','ana','fe','ux','form','flow','rpt','plug','api'];
 var WORK_MODES=['分析','设计','实现','集成','评审','验证','恢复'];
 
+/* ---------- 专家团流程阶段 ----------
+   专家团沿这条流程推进交付：requirements / design / planning /
+   implementation / verification / delivery，各阶段由对应工作模式的成员认领。 */
+var STAGES=[
+  {id:'requirements',name:'需求分析',desc:'明确目标、范围与验收条件'},
+  {id:'design',name:'方案设计',desc:'设计系统边界、接口与数据流'},
+  {id:'planning',name:'实现规划',desc:'拆解任务、排定依赖与分工'},
+  {id:'implementation',name:'编码实现',desc:'实现功能并完成针对性验证'},
+  {id:'verification',name:'测试验证',desc:'独立验证验收行为与回归影响'},
+  {id:'delivery',name:'部署交付',desc:'集成收口、上线发布与交付确认'}
+];
+/* 阶段 → 认领该阶段所需的工作模式（选人时按阶段过滤成员） */
+var STAGE_MODES={
+  requirements:['分析'],
+  design:['设计'],
+  planning:['设计'],
+  implementation:['实现'],
+  verification:['验证'],
+  delivery:['集成']
+};
+function stageById(id){ for(var i=0;i<STAGES.length;i++){ if(STAGES[i].id===id) return STAGES[i]; } return null; }
+
 /* 模型级别：智能体运行时用哪个推理档位 */
 var MODEL_TIERS=[
   {id:'auto',  label:'自动', desc:'按任务复杂度自动选择'},
@@ -307,4 +329,4 @@ export function initExpertData() {
 /* MY_EXPERTS 由其它模块写回；import 绑定只读，所以走这个 setter */
 export function set_MY_EXPERTS(v){ MY_EXPERTS=v; return v; }
 
-export { AV_KEYS, EX, EXPERTS, MODEL_TIERS, MY_EXPERTS, PRESET_TEAMS, WORK_MODES, askFor, compChip, parseComp, pendingInputs, phraseHtml, rebuildExperts, skillInfo, teamCoverage, tierInfo, xav, xesc };
+export { AV_KEYS, EX, EXPERTS, MODEL_TIERS, MY_EXPERTS, PRESET_TEAMS, STAGE_MODES, STAGES, WORK_MODES, askFor, compChip, parseComp, pendingInputs, phraseHtml, rebuildExperts, skillInfo, stageById, teamCoverage, tierInfo, xav, xesc };

@@ -1,7 +1,8 @@
 import { CV_TASKS, CV_MEMBERS, CV_PROJECTS } from './data.js';
-import { EX, xesc } from '../expert/data.js';
-import { tbLabel, tbOwner, tbGetSelected, tbSetSelected, tbTaskId, tbMatchedTeam, tbMatchExperts, tbSave, tbTeamName } from './tb-core.js';
-import { tbOpenTask } from './task-board.js';
+import { xesc } from '../expert/data.js';
+import { tbLabel, tbOwner, tbGetSelected, tbSetSelected, tbTaskId, tbMatchExperts, tbSave, tbTeamName } from './tb-core.js';
+import { tbOpenTask, renderTaskBoard } from './task-board.js';
+import { advanceTaskRuntime, failTaskRuntime, retryTaskRuntime, startTaskRuntime } from './runtime.js';
 /* 任务对话：多会话（列表/详情）、会话窗口跳转、转交任务、附件上传
    从 task-board.js 拆出，副作用集中在 initTaskChat()。 */
 
@@ -67,7 +68,10 @@ function tbCanSeeConv(t) {
   const role = document.body.getAttribute('data-role');
   if (role === 'owner') return true;
   const me = tbCurrentUserName();
-  return !!t.assignee && (t.assignee === me || tbOwner(t) === me);
+  if (t.assignee === me || tbOwner(t) === me) return true;
+  /* 阶段处理人（含已完成的阶段）保留只读可见，不因流转到下一人就看不到 */
+  if ((t.stagePlan || []).some(sp => sp.assignee === me)) return true;
+  return (t.reviews || []).some(r => r.reviewer === me || (r.decisions || []).some(d => d.by === me));
 }
 /* 从会话窗口返回：回到任务的会话列表 */
 function tbBackConvList() {
@@ -118,9 +122,16 @@ function tbBackConv() { const t = sel(); if (!t) return; t.activeConv = null; tb
 function tbNewConv() {
   const t = sel();
   if (!t || !tbCanSeeConv(t)) return;
+  /* 发起会话启动 Runtime；Task 只消费运行期回流，不保存内部阶段。 */
+  if (!t.runtime && !['审核中', '已完成'].includes(t.status)) {
+    t.activity ||= [];
+    t.activity.push({ author: tbCurrentUserName(), text: '发起会话，已生成执行计划' });
+    startTaskRuntime(t);
+  }
   const convs = taskConversations(t);
   convs.push({ id: 'c' + Date.now(), title: '会话 ' + (convs.length + 1), createdAt: Date.now(), messages: [{ role: 'agent', text: '新会话已开始，请告诉我要做什么。' }] });
   tbSave();
+  renderTaskBoard();
   tbOpenConvWin(convs[convs.length - 1].id);
 }
 function tbRenderChat() {
@@ -132,7 +143,13 @@ function tbRenderChat() {
   if (main) main.scrollTop = main.scrollHeight;
 }
 function tbAgentReply(text, t) {
-  if (/执行|开始|跑|启动/.test(text)) return '已记录执行请求。当前为本地原型，尚未接入执行引擎，不会实际生成代码或交付产物。';
+  if (/重试|恢复/.test(text)) { retryTaskRuntime(t); return '已从失败的 WorkItem 恢复执行。'; }
+  if (/失败|中断|报错/.test(text)) { failTaskRuntime(t, text); return '已记录本次 WorkItemRun 失败，任务进入“需处理”。'; }
+  if (/下一步|完成当前|继续执行/.test(text)) {
+    advanceTaskRuntime(t);
+    return t.runtime.status === 'completed' ? '全部 WorkItem 已完成，状态和交付产物已回流到任务，等待发起交付评审。' : '当前 WorkItem 已完成，Runtime 已按依赖关系启动下一项。';
+  }
+  if (/执行|开始|跑|启动/.test(text)) { startTaskRuntime(t); return 'Runtime 已启动，并按依赖关系执行第一个 WorkItem。'; }
   if (/进展|状态|怎么样了|如何/.test(text)) return '当前状态：' + tbLabel(t.status) + '，进度 ' + (t.progress || 0) + '%。';
   if (/转交|分配|谁来/.test(text)) return '收到，请在右侧属性栏选择负责人，或告诉我转交给谁。';
   if (/评审|审核/.test(text)) return '已记录评审请求。当前尚未接入审批流程，请先核对任务的验收标准与交付产物。';
@@ -190,24 +207,24 @@ function tbRenderFiles() {
   if (cnt) cnt.textContent = (t.files || []).length;
 }
 /* 转交任务：按「协作人员 / 智能体专家」分组，支持搜索后落地负责人 */
-function tbOpenTransfer() {
+function tbOpenTransfer(opts) {
   const t = sel();
   if (!t) return;
+  opts = opts || {};
+  const title = opts.title || '转交任务';
+  const action = opts.action || 'transfer';
+  const reopen = opts.reopen !== false;
   const proj = CV_PROJECTS.find(p => p.id === t.project);
   const memberIds = proj ? (proj.members || []) : [];
   const people = memberIds.map(id => CV_MEMBERS.find(m => m.id === id)).filter(Boolean)
     .map(m => ({ kind: 'person', name: m.name, role: (m.roles || []).map(r => r.text).join(' · ') }));
-  const team = tbMatchedTeam(t);
-  const experts = [];
-  if (team && team.members) team.members.forEach(id => { const e = EX[id]; if (e && !experts.some(x => x.name === e.name)) experts.push({ kind: 'expert', name: e.name, role: '专家 · ' + team.name }); });
   const old = document.getElementById('tb-transfer-overlay'); if (old) old.remove();
   const item = (p, i) => '<button type="button" class="person-item" data-tf-pick="' + i + '"><span class="person-avatar-sm">' + xesc(p.name[0]) + '</span><span class="tf-item-body"><span class="person-name-sm">' + xesc(p.name) + '</span><span class="person-role-sm">' + xesc(p.role) + '</span></span></button>';
-  const all = people.concat(experts);
+  const all = people;
   const el = document.createElement('div');
   el.className = 'sync-overlay'; el.id = 'tb-transfer-overlay';
-  el.innerHTML = '<div class="task-modal tf-modal"><div class="task-modal__header"><h3 class="task-modal__title">转交任务</h3><button type="button" class="task-modal__close" data-tf-close>×</button></div><div class="task-modal__body"><div class="tf-search-wrap"><svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input type="search" id="tf-search" placeholder="搜索人员或专家" autocomplete="off"></div><div class="tf-list" id="tf-list">'
+  el.innerHTML = '<div class="task-modal tf-modal"><div class="task-modal__header"><h3 class="task-modal__title">' + title + '</h3><button type="button" class="task-modal__close" data-tf-close>×</button></div><div class="task-modal__body"><div class="tf-search-wrap"><svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input type="search" id="tf-search" placeholder="搜索人员或专家" autocomplete="off"></div><div class="tf-list" id="tf-list">'
     + '<div class="tf-group" data-kind="person"><div class="tf-group-t">协作人员<span>' + people.length + '</span></div>' + people.map((p, i) => item(p, i)).join('') + '</div>'
-    + (experts.length ? '<div class="tf-group" data-kind="expert"><div class="tf-group-t">智能体专家<span>' + experts.length + '</span></div>' + experts.map((p, i) => item(p, people.length + i)).join('') + '</div>' : '')
     + '</div></div><div class="task-modal__footer"><button type="button" class="sync-modal__btn sync-modal__btn--ghost" data-tf-close>取消</button><button type="button" class="sync-modal__btn sync-modal__btn--primary" data-tf-confirm>确认转交</button></div></div>';
   (document.getElementById("cvModals") || document.body).appendChild(el);
   const search = el.querySelector('#tf-search');
@@ -230,14 +247,14 @@ function tbOpenTransfer() {
     if (pick) { el.querySelectorAll('.person-item').forEach(b => b.classList.remove('person-item--selected')); pick.classList.add('person-item--selected'); return; }
     if (e.target.closest('[data-tf-confirm]')) {
       const s = el.querySelector('.person-item--selected');
-      if (!s) { window.alert('请选择转交人员'); return; }
-      tbApplyTransfer(s.querySelector('.person-name-sm').textContent);
+      if (!s) { window.alert('请选择' + (action === 'assign' ? '负责人' : '转交人员')); return; }
+      tbApplyTransfer(s.querySelector('.person-name-sm').textContent, action, reopen);
       el.remove();
     }
   });
   setTimeout(() => search.focus(), 0);
 }
-function tbApplyTransfer(name) {
+function tbApplyTransfer(name, action, reopen) {
   const t = sel();
   if (!t) return;
   t.assignee = name;
@@ -249,8 +266,10 @@ function tbApplyTransfer(name) {
     s.value = name;
   }
   t.activity ||= [];
-  t.activity.push({ author: tbCurrentUserName(), text: '负责人变更为 ' + name });
-  tbSave(); tbOpenTask(CV_TASKS.indexOf(t));
+  t.activity.push({ author: tbCurrentUserName(), text: (action === 'assign' ? '分配负责人为 ' : '负责人变更为 ') + name, time: new Date().toLocaleString('zh-CN', { hour12: false }) });
+  tbSave();
+  if (reopen) tbOpenTask(CV_TASKS.indexOf(t));
+  else renderTaskBoard();
 }
 
 export function initTaskChat() {

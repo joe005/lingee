@@ -71,6 +71,8 @@
   --tb-running-bg: #fcfaef;
   --tb-review-bg: #f2f9f3;
   --tb-done-bg: #f0f5ff;
-  --tb-failed-bg: #fcf5f4;
+  --tb-blocked-bg: #fcf5f4;
+  --tb-backlog-bg: #f7f7f6;
+  --tb-canceled-bg: #f5f5f4;
   --tb-backdrop: rgba(20, 25, 40, .28);
 }

@@ -1,7 +1,7 @@
 /* 协作人员：团队维度
    团队是跨项目的协作单元，与项目不挂钩；列表一行一个团队，点进去看成员与指引，
    布局参考「团队 / 成员 / 指引」两段式详情。团队成员通过 pid 引用人员基础资料。 */
-import { cvPersonById } from './data.js';
+import { cvIsMe, cvPersonById } from './data.js';
 import { xesc } from '../expert/data.js';
 
 var CV_SQUADS=[
@@ -60,7 +60,7 @@ function cvSquadNameOf(it){
 function cvSquadAvHtml(it,cls){
   var name=cvSquadNameOf(it);
   var p=cvPersonById(it.pid);
-  var color=p&&p.isMe?'#08a040':CV_SQUAD_COLORS[cvSquadPidNum(it.pid)%CV_SQUAD_COLORS.length];
+  var color=p&&cvIsMe(p)?'#08a040':CV_SQUAD_COLORS[cvSquadPidNum(it.pid)%CV_SQUAD_COLORS.length];
   return '<span class="'+cls+'" style="background:'+color+'">'+xesc(name[0]||'?')+'</span>';
 }
 function cvSquadLeader(sq){
