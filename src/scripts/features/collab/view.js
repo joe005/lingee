@@ -26,7 +26,7 @@ function cvApplyFilters(){
   }
   var memberView=document.getElementById('cv-members');
   if(memberView&&memberView.classList.contains('active')){
-    var msearch=(memberView.querySelector('input')||{}).value||'';
+    var msearch=(document.getElementById('cv-project-search')||{}).value||'';
     msearch=msearch.toLowerCase();
     memberView.querySelectorAll('#cv-proj-list .pj-card').forEach(function(card){
       var name=(card.querySelector('.card-title')||{}).textContent||'';

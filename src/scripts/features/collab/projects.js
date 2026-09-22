@@ -95,6 +95,21 @@ var cvProjEditId='';
 /* 项目增改落 localStorage（持久化函数已移入 data.js，这里只留新建项目的色板） */
 var CV_PROJ_NEW_DOTS=['blue','orange','green'];
 var CV_PROJ_DOT_COLORS={blue:'#4d89ff',orange:'#ff8d42',green:'#08cc50'};
+function cvRenderProjectMemberPicker(selectedIds){
+  var el=$('#cv-pe-members');if(!el)return;
+  selectedIds=selectedIds||[];
+  el.innerHTML=CV_MEMBERS.map(function(m){
+    var checked=selectedIds.indexOf(m.id)>=0;
+    return '<label class="pe-member'+(checked?' is-selected':'')+'"><input type="checkbox" value="'+xesc(m.id)+'"'+(checked?' checked':'')+'><span class="pe-member-av">'+xesc((m.name||'?')[0])+'</span><span class="pe-member-name">'+xesc(m.name)+'</span><small>'+xesc((m.roles&&m.roles[0]&&m.roles[0].text)||'成员')+'</small></label>';
+  }).join('');
+}
+function cvSyncOwnerMember(){
+  var owner=$('#cv-pe-owner');if(!owner)return;
+  var member=CV_MEMBERS.find(function(m){return m.name===owner.value;});
+  if(!member)return;
+  var cb=document.querySelector('#cv-pe-members input[value="'+member.id+'"]');
+  if(cb){cb.checked=true;cb.closest('.pe-member').classList.add('is-selected');}
+}
 function cvRenderProjectSettings(){
   var el=$('#cv-proj-settings');if(!el)return;
   el.innerHTML='<div class="cfg-table">'
@@ -120,6 +135,8 @@ function cvOpenProjEdit(id){
   if(sel) sel.innerHTML=CV_MEMBERS.map(function(m){return '<option'+(m.name===(p.owner||'')?' selected':'')+'>'+xesc(m.name)+'</option>';}).join('');
   var tsel=$('#cv-pe-team');
   if(tsel) tsel.innerHTML=TEAMS.map(function(t){return '<option value="'+xesc(t.id)+'"'+(t.id===p.defaultTeam?' selected':'')+'>'+xesc(t.name)+'</option>';}).join('');
+  cvRenderProjectMemberPicker(p.members||[]);
+  cvSyncOwnerMember();
   var ov=$('#cv-projedit-overlay');if(ov)ov.style.display='flex';
   var tt=$('#cv-pe-title');if(tt)tt.lastChild.textContent='编辑项目';
 }
@@ -131,6 +148,8 @@ function cvOpenProjNew(){
   if(sel) sel.innerHTML=CV_MEMBERS.map(function(m,i){return '<option'+(i===0?' selected':'')+'>'+xesc(m.name)+'</option>';}).join('');
   var tsel=$('#cv-pe-team');
   if(tsel) tsel.innerHTML=TEAMS.map(function(t,i){return '<option value="'+xesc(t.id)+'"'+(i===0?' selected':'')+'>'+xesc(t.name)+'</option>';}).join('');
+  cvRenderProjectMemberPicker([]);
+  cvSyncOwnerMember();
   var ov=$('#cv-projedit-overlay');if(ov)ov.style.display='flex';
   var tt=$('#cv-pe-title');if(tt)tt.lastChild.textContent='新建项目';
 }
@@ -142,10 +161,13 @@ function cvSaveProjEdit(){
   var isNew=!cvProjEditId;
   var p=isNew?null:cvProjectById(cvProjEditId);
   var teamId=g('team');
+  var members=Array.from(document.querySelectorAll('#cv-pe-members input:checked')).map(function(cb){return cb.value;});
+  var owner=CV_MEMBERS.find(function(m){return m.name===g('owner');});
+  if(owner&&members.indexOf(owner.id)<0) members.unshift(owner.id);
   if(p){
-    p.name=name;p.desc=g('desc');p.priority=g('priority');p.owner=g('owner');p.repo=g('repo');p.start=g('start');p.end=g('end');p.defaultTeam=teamId||null;
+    p.name=name;p.desc=g('desc');p.priority=g('priority');p.owner=g('owner');p.repo=g('repo');p.start=g('start');p.end=g('end');p.defaultTeam=teamId||null;p.members=members;
   }else{
-    p={id:'proj-'+Date.now(),name:name,desc:g('desc'),dot:CV_PROJ_NEW_DOTS[CV_PROJECTS.length%CV_PROJ_NEW_DOTS.length],defaultTeam:teamId||(TEAMS[0]&&TEAMS[0].id)||null,priority:g('priority'),owner:g('owner'),repo:g('repo'),start:g('start'),end:g('end'),members:[],workspace:cvWorkspace||'ws-build'};
+    p={id:'proj-'+Date.now(),name:name,desc:g('desc'),dot:CV_PROJ_NEW_DOTS[CV_PROJECTS.length%CV_PROJ_NEW_DOTS.length],defaultTeam:teamId||(TEAMS[0]&&TEAMS[0].id)||null,priority:g('priority'),owner:g('owner'),repo:g('repo'),start:g('start'),end:g('end'),members:members,workspace:cvWorkspace||'ws-build'};
     CV_PROJECTS.push(p);
   }
   cvPersistProjects();
@@ -158,6 +180,12 @@ function cvSaveProjEdit(){
 }
 
 export function initCollabProjects() {
+  var peMembers=$('#cv-pe-members');
+  if(peMembers) peMembers.addEventListener('change',function(e){
+    var label=e.target.closest('.pe-member');if(label)label.classList.toggle('is-selected',e.target.checked);
+  });
+  var peOwner=$('#cv-pe-owner');
+  if(peOwner) peOwner.addEventListener('change',cvSyncOwnerMember);
   if(cvWsBtn) cvWsBtn.addEventListener('click',function(e){
     e.stopPropagation();
     var sw=$('#cvWsSwitch'); if(sw) sw.classList.toggle('open');

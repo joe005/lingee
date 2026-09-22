@@ -6,7 +6,7 @@ import { xesc } from '../expert/data.js';
 import { tbSave } from './tb-core.js';
 import { renderTaskBoard, tbOpenTask } from './task-board.js';
 import { cvSetProject, cvUpdateCounts } from './projects.js';
-import { cvSwitchView } from './view.js';
+import { cvSwitchView, cvSwitchSub } from './view.js';
 import { TEAMS } from '../expert/store.js';
 /* 项目管理：项目列表 + 项目详情（选协作人员）
    人员基础资料独立维护（CV_MEMBERS），项目通过 members 引用人员 id；本模块渲染项目卡片列表，
@@ -15,7 +15,7 @@ import { TEAMS } from '../expert/store.js';
 
 var cvPersonEditId='';      /* 人员编辑弹窗：正在编辑的人员 id，空 = 新增 */
 var cvProjCur='';           /* 项目详情正在看的项目 id，空 = 项目列表 */
-var cvProjTab='plan';    /* 项目详情右栏页签：plan / members / tasks / artifacts */
+var cvProjTab='modules';    /* 项目详情：modules / members / artifacts */
 var CV_PROJ_DOT_COLORS={blue:'#4d89ff',orange:'#ff8d42',green:'#08cc50'};
 var PS_COLORS=['#7c5cfc','#4d89ff','#08a040','#ff8d42','#e04a3a','#c06010','#08cc50','#5b8def'];
 function cvPsNum(pid){ return parseInt(String(pid).replace(/\D/g,''))||0; }
@@ -44,6 +44,9 @@ function cvProjectEpics(p){
   return CV_TASKS.filter(function(t){return t.project===p.id&&t.kind==='epic';});
 }
 
+/* 从项目列表卡片操作模块时，临时设定 cvProjCur 为目标项目 */
+function cvSetProjCurForSplit(pid){ cvProjCur=pid; }
+
 /* ---------- 项目列表 ---------- */
 function cvRenderProjectList(){
   var el=$('#cv-proj-list'); if(!el) return;
@@ -58,12 +61,59 @@ function cvRenderProjectList(){
     var tags='<span class="ptag">'+xesc(p.priority||'中')+'优先级</span>';
     if(team) tags+='<span class="ptag">专家团 · '+xesc(team.name)+'</span>';
     if(taskCount) tags+='<span class="ptag">'+taskCount+' 个任务</span>';
+    /* 模块列表：直接展示在卡片中，放在第一位 */
+    var epics=cvProjectEpics(p);
+    var tasks=CV_TASKS.filter(function(t){return t.project===p.id&&t.kind!=='epic';});
+    var projectProgress=tasks.length?Math.round(tasks.reduce(function(sum,t){return sum+(t.status==='已完成'?100:(t.progress||0));},0)/tasks.length):0;
+    var modulesHtml='<div class="pj-card-modules">'
+      +'<div class="pj-card-modules-head"><div><span class="pj-card-modules-k">模块</span><b>'+epics.length+'</b><span class="pj-card-modules-sep">·</span><span>任务 '+tasks.length+'</span><span class="pj-card-modules-sep">·</span><span>进度 '+projectProgress+'%</span></div>'
+      +'<div class="pj-card-modules-acts">'
+      +'<button type="button" class="ft-act ft-act--split" data-pj-split-standalone="'+p.id+'"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z"/></svg>智能拆解</button>'
+      +'<button type="button" class="ft-act" data-pj-split-manual-standalone="'+p.id+'">手动新增</button>'
+      +'</div></div>'
+      +(epics.length
+        ? '<div class="ft-list">'+epics.map(function(f){
+            var children=CV_TASKS.filter(function(t){return t.parentTaskId===f.boardId;});
+            var collapsed=!!cvCollapsedEpics[f.boardId];
+            var taskBtns=children.map(function(t){
+              var sc={'待规划':'pending','待办':'pending','进行中':'running','审核中':'review','已完成':'done','已阻塞':'fail','已取消':'fail'}[t.status]||'pending';
+              return '<button type="button" class="ft-task" data-pj-task="'+t.boardId+'"><span class="badge-status-dot"></span><span class="ft-task-title">'+xesc(t.title)+'</span><span class="ft-task-status ft-task-status--'+sc+'">'+xesc(t.status)+'</span></button>';
+            }).join('');
+            return '<div class="ft-item">'
+              +'<div class="ft-item-head"><b>'+xesc(f.title)+'</b>'
+              +'<span class="ft-parent-badge">模块</span>'
+              +'<div class="ft-item-acts">'
+              +'<button type="button" class="ft-act ft-act--split" data-ft-split="'+f.boardId+'" data-ft-split-proj="'+p.id+'"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z"/></svg>智能拆解</button>'
+              +'<button type="button" class="ft-act ft-act--push" data-ft-push="'+f.boardId+'" data-ft-push-proj="'+p.id+'">手动新增任务</button>'
+              +'<button type="button" class="ft-act" data-ft-edit="'+f.boardId+'" data-ft-edit-proj="'+p.id+'">编辑</button>'
+              +'<button type="button" class="ft-act ft-act--del" data-ft-del="'+f.boardId+'" data-ft-del-proj="'+p.id+'">删除</button>'
+              +'</div></div>'
+              +(f.desc?'<div class="ft-item-desc">'+xesc(f.desc)+'</div>':'')
+              +'<div class="ft-tasks'+(collapsed?' is-collapsed':'')+'">'
+              +'<button type="button" class="ft-tasks-toggle" data-ft-tasks-toggle="'+f.boardId+'" data-ft-tasks-toggle-proj="'+p.id+'"><svg class="ft-tasks-caret" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg><span class="ft-tasks-k">可执行任务 '+children.length+'</span></button>'
+              +'<div class="ft-tasks-body">'+(taskBtns||'<span class="ft-tasks-empty">还没有任务</span>')+'</div>'
+              +'</div>'
+              +'</div>';
+          }).join('')+'</div>'
+        : '<div class="pj-card-modules-empty">还没有模块，可使用智能拆解或手动新增</div>')
+      +'</div>';
+    /* 协作人员：头像列表，点击跳转到人员与权限 tab */
+    var memberAvHtml=members.length?members.slice(0,8).map(function(m){
+      return cvPersonAvHtml(m,'pj-collab-av');
+    }).join('')+(members.length>8?'<span class="pj-collab-more">+'+(members.length-8)+'</span>':''):'<span class="pj-collab-empty">未添加协作人员</span>';
+    var collabHtml='<div class="pj-card-collab" data-pj-collab="'+p.id+'">'
+      +'<span class="pj-card-collab-label">协作人员</span>'
+      +'<div class="pj-card-collab-avs">'+memberAvHtml+'</div>'
+      +'<span class="pj-card-collab-count">'+members.length+'</span>'
+      +'</div>';
     return '<div class="pj-card x-card" data-pj-open="'+p.id+'">'
       +'<button type="button" class="x-call" data-pj-set="'+p.id+'" data-perm="owner" title="编辑项目">编辑</button>'
       +'<div class="card-top"><span class="pj-av" style="background:'+color+'1a;color:'+color+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></span>'
       +'<div class="card-titles"><div class="card-title-row"><span class="card-title">'+xesc(p.name)+'</span></div>'
-      +'<div class="x-sub">负责人 '+xesc(p.owner||'未设置')+' · '+members.length+' 位协作人员</div></div></div>'
+      +'<div class="x-sub">负责人 '+xesc(p.owner||'未设置')+'</div></div></div>'
       +'<div class="card-desc">'+xesc(p.desc||'添加项目描述')+'</div>'
+      +modulesHtml
+      +collabHtml
       +'<div class="card-tags">'+tags+'</div>'
       +'</div>';
   }).join('');
@@ -91,7 +141,7 @@ function cvRenderProjectDetail(){
   var projectProgress=tasks.length?Math.round(tasks.reduce(function(sum,t){return sum+(t.status==='已完成'?100:(t.progress||0));},0)/tasks.length):0;
   var unlinked=tasks.filter(function(t){ return !t.parentTaskId; });
   var unlinkedHtml=unlinked.length
-    ? '<div class="pj-plan-sec"><div class="pj-plan-k">未分组任务</div><div class="pj-plan-hint">未归属任何父任务的子任务，同样可直接执行</div>'
+    ? '<div class="pj-plan-sec"><div class="pj-plan-k">未分组任务</div><div class="pj-plan-hint">未归属任何模块的任务，同样可直接执行</div>'
       +'<div class="pj-task-group-list">'+unlinked.map(cvTaskRowHtml).join('')+'</div></div>'
     : '';
   var arts=CV_ARTIFACTS.filter(function(a){return a.project===cvProjCur;});
@@ -118,6 +168,13 @@ function cvRenderProjectDetail(){
     ? '<a class="pj-repo" href="'+xesc(p.repo)+'" target="_blank" rel="noopener noreferrer">查看仓库</a>'
     : '<span class="pj-repo pj-repo--none">未关联</span>';
   var curTeam=TEAMS.find(function(t){return t.id===p.defaultTeam;});
+  var modulesHtml='<div class="pj-module-pane">'
+    +'<div class="pj-planning-head"><div><h2>模块</h2><p>围绕项目目标规划模块，并继续拆解为可执行任务。</p></div>'
+    +'<div class="pj-plan-acts"><button type="button" class="sync-btn" data-pj-split>智能拆解模块</button><button type="button" class="sync-btn sync-btn--ghost" data-pj-split-manual>手动新增模块</button></div></div>'
+    +'<div class="pj-planning-summary"><span>模块 <b>'+epics.length+'</b></span><span>可执行任务 <b>'+tasks.length+'</b></span><span>项目进度 <b>'+projectProgress+'%</b></span></div>'
+    +'<div class="pj-plan-hint">模块用于组织项目目标与验收标准；拆解后的任务进入任务看板，由成员与 Agent 协作执行。</div>'
+    +(epics.length?cvFeaturesHtml(epics):'<div class="sq-empty">还没有模块，可使用智能拆解或手动新增</div>')
+    +unlinkedHtml+'</div>';
   el.innerHTML='<div class="pj-crumb">'
     +'<button type="button" class="pj-back" data-pj-back>项目管理</button>'
     +'<span class="pj-crumb-sep">›</span>'
@@ -129,7 +186,7 @@ function cvRenderProjectDetail(){
     +'<aside class="sq-side">'
     +'<div class="pj-side-av"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div>'
     +'<div class="sq-side-name">'+xesc(p.name)+'</div>'
-    +'<div class="sq-side-desc">'+(p.desc?xesc(p.desc):'添加描述')+'</div>'
+    +'<div class="pj-overview"><div class="pj-overview-k">项目概述</div><div class="sq-side-desc">'+(p.desc?xesc(p.desc):'暂无项目概述')+'</div></div>'
     +(p.goal?'<div class="pj-side-goal"><div class="pj-side-goal-k">项目目标</div><div class="pj-side-goal-v">'+xesc(p.goal)+'</div></div>':'')
     +'<div class="sq-kv-wrap"><div class="sq-kv-t">详情</div>'
     +'<div class="sq-kv"><span>优先级</span><b>'+xesc(p.priority||'未设置')+'</b></div>'
@@ -138,26 +195,18 @@ function cvRenderProjectDetail(){
     +'<div class="sq-kv"><span>代码仓库</span><b>'+repoHtml+'</b></div>'
     +'<div class="sq-kv"><span>专家团</span><b>'+xesc(curTeam?curTeam.name:'未绑定')+'</b></div>'
     +'<div class="sq-kv"><span>协作人员</span><b>'+members.length+'</b></div>'
-    +'<div class="sq-kv"><span>任务</span><b>'+tasks.length+'</b></div>'
+    +'<div class="sq-kv sq-kv--link"><span>模块</span><button type="button" data-pj-plan-open>'+epics.length+' 个 <i>›</i></button></div>'
+    +'<div class="sq-kv"><span>可执行任务</span><b>'+tasks.length+'</b></div>'
     +'<div class="sq-kv"><span>项目进度</span><b>'+projectProgress+'%</b></div>'
     +'</div></aside>'
     +'<section class="sq-main">'
     +'<div class="sq-tabs">'
-    +'<button type="button" class="sq-tab'+(cvProjTab==='plan'?' on':'')+'" data-pjtab="plan">任务规划</button>'
+    +'<button type="button" class="sq-tab'+(cvProjTab==='modules'?' on':'')+'" data-pjtab="modules">模块</button>'
     +'<button type="button" class="sq-tab'+(cvProjTab==='members'?' on':'')+'" data-pjtab="members">成员</button>'
     +'<button type="button" class="sq-tab'+(cvProjTab==='artifacts'?' on':'')+'" data-pjtab="artifacts">产物</button>'
     +'</div>'
-    +'<div class="sq-tabpane'+(cvProjTab==='plan'?'':' hidden')+'" data-pjpane="plan">'
-    +((p.milestones&&p.milestones.length)?'<div class="pj-plan-sec"><div class="pj-plan-k">里程碑</div><div class="pj-ms-list">'+p.milestones.map(function(m){return '<div class="pj-ms-item"><span class="pj-ms-dot"></span><span class="pj-ms-name">'+xesc(m.name)+'</span><span class="pj-ms-date">'+xesc(m.date)+'</span></div>';}).join('')+'</div></div>':'')
-    +'<div class="pj-plan-sec"><div class="pj-plan-head"><div class="pj-plan-k">任务规划</div>'
-    +'<div class="pj-plan-acts">'
-    +'<button type="button" class="sync-btn" data-pj-split><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z"/></svg>智能拆解父任务</button>'
-    +'<button type="button" class="sync-btn sync-btn--ghost" data-pj-split-manual>手动新增父任务</button>'
-    +'</div></div>'
-    +'<div class="pj-plan-hint">项目下先拆出若干<b>父任务</b>，父任务只用于规划目标与验收标准，<b>不能直接执行</b>；每个父任务再下推为一个或多个<b>子任务</b>，子任务才会进入任务看板由人和 Agent 协作执行。</div>'
-    +(epics.length?cvFeaturesHtml(epics):'<div class="sq-empty">还没有父任务，点右上「智能拆解父任务」或「手动新增父任务」</div>')
-    +'</div>'
-    +unlinkedHtml
+    +'<div class="sq-tabpane'+(cvProjTab==='modules'?'':' hidden')+'" data-pjpane="modules">'
+    +modulesHtml
     +'</div>'
     +'<div class="sq-tabpane'+(cvProjTab==='members'?'':' hidden')+'" data-pjpane="members">'
     +'<div class="sq-main-head"><div><div class="sq-main-t">成员</div><div class="sq-main-s">该项目有 '+members.length+' 名协作人员</div></div>'
@@ -170,7 +219,7 @@ function cvRenderProjectDetail(){
     +'</section></div>';
 }
 function cvSwitchProjectTab(tab){
-  cvProjTab=tab==='members'?'members':(tab==='artifacts'?'artifacts':'plan');
+  cvProjTab=tab==='artifacts'?'artifacts':(tab==='modules'?'modules':'members');
   cvRenderProjectDetail();
 }
 
@@ -206,10 +255,10 @@ function cvOpenProjectSplit(){
   cvSplitMode='project'; cvSplitEpicId='';
   cvSplitItems=cvSplitCandidates(p);
   var head=cvSplitHeadEls();
-  if(head.agent) head.agent.textContent='产品经理 · 父任务规划';
-  if(head.confirm) head.confirm.textContent='确认生成父任务';
+  if(head.agent) head.agent.textContent='产品经理 · 模块规划';
+  if(head.confirm) head.confirm.textContent='确认生成模块';
   var body=document.getElementById('cv-split-body'); if(!body) return;
-  body.innerHTML='<div class="split-msg split-msg--user">基于项目目标「'+xesc(p.goal||p.name)+'」规划父任务</div>'
+  body.innerHTML='<div class="split-msg split-msg--user">基于项目目标「'+xesc(p.goal||p.name)+'」规划模块</div>'
     +'<div class="split-msg split-msg--agent" id="cv-split-agent-msg"><div class="split-thinking"><i></i><i></i><i></i></div><span class="split-thinking-t">正在思考…</span></div>';
   var ov=document.getElementById('cv-splittask-overlay'); if(ov) ov.style.display='flex';
   setTimeout(cvRenderSplitResult, 900);
@@ -219,17 +268,17 @@ function cvOpenEpicSplit(fid){
   cvSplitMode='epic'; cvSplitEpicId=fid;
   cvSplitItems=cvEpicSplitCandidates(f);
   var head=cvSplitHeadEls();
-  if(head.agent) head.agent.textContent='产品经理 · 子任务拆解';
-  if(head.confirm) head.confirm.textContent='确认生成子任务';
+  if(head.agent) head.agent.textContent='产品经理 · 任务拆解';
+  if(head.confirm) head.confirm.textContent='确认生成任务';
   var body=document.getElementById('cv-split-body'); if(!body) return;
-  body.innerHTML='<div class="split-msg split-msg--user">基于父任务「'+xesc(f.title)+'」拆解可执行的子任务</div>'
+  body.innerHTML='<div class="split-msg split-msg--user">基于模块「'+xesc(f.title)+'」拆解可执行任务</div>'
     +'<div class="split-msg split-msg--agent" id="cv-split-agent-msg"><div class="split-thinking"><i></i><i></i><i></i></div><span class="split-thinking-t">正在思考…</span></div>';
   var ov=document.getElementById('cv-splittask-overlay'); if(ov) ov.style.display='flex';
   setTimeout(cvRenderSplitResult, 900);
 }
 function cvRenderSplitResult(){
   var msg=document.getElementById('cv-split-agent-msg'); if(!msg) return;
-  var noun=cvSplitMode==='epic'?'子任务':'父任务';
+  var noun=cvSplitMode==='epic'?'任务':'模块';
   msg.innerHTML='<div class="split-agent-t">已拆解出 '+cvSplitItems.length+' 个'+noun+'，请逐项确认（不需要的取消勾选）：</div>'
     +'<div class="split-list">'+cvSplitItems.map(function(t,i){
       return '<label class="split-item"><input type="checkbox" checked data-split-idx="'+i+'">'
@@ -245,7 +294,7 @@ function cvCloseProjectSplit(){ var ov=document.getElementById('cv-splittask-ove
 function cvConfirmProjectSplit(){
   var p=cvProjectById(cvProjCur); if(!p) return;
   var checked=document.querySelectorAll('#cv-split-body input[data-split-idx]:checked');
-  var noun=cvSplitMode==='epic'?'子任务':'父任务';
+  var noun=cvSplitMode==='epic'?'任务':'模块';
   if(!checked.length){ toast('请至少确认一个'+noun,'warning'); return; }
   var n=0;
   if(cvSplitMode==='epic'){
@@ -254,14 +303,14 @@ function cvConfirmProjectSplit(){
     checked.forEach(function(cb){
       var t=cvSplitItems[+cb.getAttribute('data-split-idx')]; if(!t) return;
       var boardId=crypto.randomUUID();
-      CV_TASKS.unshift({boardId:boardId,kind:'task',parentTaskId:f.boardId,type:'需求',size:'小',source:'智能拆解',sourceId:'TASK-'+Date.now().toString().slice(-6)+'-'+(n+1),exec:'专家团',status:'待办',collab:'人Agent协作',mode:'多人协作',priority:p.priority||'中',title:t.title,desc:t.desc,acceptance:t.acceptance||'',assignee:'待分配',progress:0,project:p.id,files:[],artifacts:[],activity:[{author:'系统',text:'由父任务「'+f.title+'」智能拆解生成子任务'}],tags:[]});
+      CV_TASKS.unshift({boardId:boardId,kind:'task',parentTaskId:f.boardId,type:'需求',size:'小',source:'智能拆解',sourceId:'TASK-'+Date.now().toString().slice(-6)+'-'+(n+1),exec:'专家团',status:'待办',collab:'人Agent协作',mode:'多人协作',priority:p.priority||'中',title:t.title,desc:t.desc,acceptance:t.acceptance||'',assignee:p.owner,progress:0,project:p.id,files:[],artifacts:[],activity:[{author:'系统',text:'由模块「'+f.title+'」智能拆解生成任务并分配给项目负责人 '+p.owner}],tags:[]});
       n++;
     });
   }else{
     checked.forEach(function(cb){
       var t=cvSplitItems[+cb.getAttribute('data-split-idx')]; if(!t) return;
       var id='epic-'+Date.now().toString(36)+'-'+n;
-      CV_TASKS.push({boardId:id,kind:'epic',parentTaskId:null,type:'特性',source:'智能规划',sourceId:'FEAT-'+Date.now().toString().slice(-6)+'-'+(n+1),status:'待规划',title:t.title,desc:t.desc,acceptance:t.acceptance||'',files:[],assignee:p.owner||'待分配',priority:p.priority||'中',project:p.id,progress:0,artifacts:[],activity:[{author:'系统',text:'由项目目标智能规划生成父任务'}]});
+      CV_TASKS.push({boardId:id,kind:'epic',parentTaskId:null,type:'特性',source:'智能规划',sourceId:'FEAT-'+Date.now().toString().slice(-6)+'-'+(n+1),status:'待规划',title:t.title,desc:t.desc,acceptance:t.acceptance||'',files:[],assignee:p.owner||'待分配',priority:p.priority||'中',project:p.id,progress:0,artifacts:[],activity:[{author:'系统',text:'由项目目标智能规划生成模块'}]});
       n++;
     });
   }
@@ -293,10 +342,10 @@ function cvFeaturesHtml(epics){
     }).join('');
     return '<div class="ft-item">'
       +'<div class="ft-item-head"><b>'+xesc(f.title)+'</b>'
-      +'<span class="ft-parent-badge" title="父任务只用于规划目标与验收标准，不能直接执行；需下推为子任务后才能进入任务看板执行">父任务 · 不可执行</span>'
+      +'<span class="ft-parent-badge" title="模块用于规划目标与验收标准，拆解后的任务进入任务看板执行">模块</span>'
       +'<div class="ft-item-acts">'
       +'<button type="button" class="ft-act ft-act--split" data-ft-split="'+f.boardId+'"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z"/></svg>智能拆解</button>'
-      +'<button type="button" class="ft-act ft-act--push" data-ft-push="'+f.boardId+'">手动新增子任务</button>'
+      +'<button type="button" class="ft-act ft-act--push" data-ft-push="'+f.boardId+'">手动新增任务</button>'
       +'<button type="button" class="ft-act" data-ft-edit="'+f.boardId+'">编辑</button>'
       +'<button type="button" class="ft-act ft-act--del" data-ft-del="'+f.boardId+'">删除</button>'
       +'</div></div>'
@@ -304,8 +353,8 @@ function cvFeaturesHtml(epics){
       +(f.files&&f.files.length?'<div class="ft-item-files">附件：'+f.files.map(function(x){return xesc(x);}).join('、')+'</div>':'')
       +(f.acceptance?'<div class="ft-item-accept"><span>验收标准</span>'+xesc(f.acceptance)+'</div>':'')
       +'<div class="ft-tasks'+(collapsed?' is-collapsed':'')+'">'
-      +'<button type="button" class="ft-tasks-toggle" data-ft-tasks-toggle="'+f.boardId+'"><svg class="ft-tasks-caret" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg><span class="ft-tasks-k">子任务 · 可执行 '+children.length+'</span></button>'
-      +'<div class="ft-tasks-body">'+(taskBtns||'<span class="ft-tasks-empty">还没有子任务，点「智能拆解」或「手动新增子任务」</span>')+'</div>'
+      +'<button type="button" class="ft-tasks-toggle" data-ft-tasks-toggle="'+f.boardId+'"><svg class="ft-tasks-caret" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg><span class="ft-tasks-k">可执行任务 '+children.length+'</span></button>'
+      +'<div class="ft-tasks-body">'+(taskBtns||'<span class="ft-tasks-empty">还没有任务，点「智能拆解」或「手动新增任务」</span>')+'</div>'
       +'</div>'
       +'</div>';
   }).join('')+'</div>';
@@ -343,12 +392,12 @@ function cvCloseManualSplit(){ var ov=document.getElementById('cv-manualsplit-ov
 function cvConfirmManualSplit(){
   var p=cvProjectById(cvProjCur); if(!p) return;
   var title=(document.getElementById('cv-ms-title').value||'').trim();
-  if(!title){ toast('请填写父任务标题','warning'); return; }
-  CV_TASKS.push({boardId:'epic-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,5),kind:'epic',parentTaskId:null,type:'特性',source:'人工规划',sourceId:'FEAT-'+Date.now().toString().slice(-6),status:'待规划',title:title,desc:(document.getElementById('cv-ms-desc').value||'').trim(),files:cvMsFiles.slice(),acceptance:(document.getElementById('cv-ms-accept').value||'').trim(),assignee:p.owner||'待分配',priority:p.priority||'中',project:p.id,progress:0,artifacts:[],activity:[{author:'当前用户',text:'手动创建父任务'}]});
+  if(!title){ toast('请填写模块标题','warning'); return; }
+  CV_TASKS.push({boardId:'epic-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,5),kind:'epic',parentTaskId:null,type:'特性',source:'人工规划',sourceId:'FEAT-'+Date.now().toString().slice(-6),status:'待规划',title:title,desc:(document.getElementById('cv-ms-desc').value||'').trim(),files:cvMsFiles.slice(),acceptance:(document.getElementById('cv-ms-accept').value||'').trim(),assignee:p.owner||'待分配',priority:p.priority||'中',project:p.id,progress:0,artifacts:[],activity:[{author:'当前用户',text:'手动创建模块'}]});
   tbSave();
   cvCloseManualSplit();
   cvRenderProjectDetail();
-  toast('已生成父任务：'+title,'success');
+  toast('已生成模块：'+title,'success');
 }
 
 /* ---------- 父任务编辑 / 删除 / 下推子任务 ---------- */
@@ -378,7 +427,7 @@ function cvFeatureEditAddFile(){
 function cvSaveFeatureEdit(){
   var f=cvCurFeature(cvFeatureEditId); if(!f) return;
   var title=(document.getElementById('cv-fe-title').value||'').trim();
-  if(!title){ toast('请填写父任务标题','warning'); return; }
+  if(!title){ toast('请填写模块标题','warning'); return; }
   f.title=title;
   f.desc=(document.getElementById('cv-fe-desc').value||'').trim();
   f.acceptance=(document.getElementById('cv-fe-accept').value||'').trim();
@@ -386,18 +435,18 @@ function cvSaveFeatureEdit(){
   tbSave();
   cvCloseFeatureEdit();
   cvRenderProjectDetail();
-  toast('已保存父任务：'+title,'success');
+  toast('已保存模块：'+title,'success');
 }
 function cvDeleteFeature(fid){
   var p=cvProjectById(cvProjCur); if(!p) return;
   var f=cvCurFeature(fid); if(!f) return;
   var children=CV_TASKS.filter(function(t){return t.parentTaskId===fid;});
-  if(!window.confirm('删除父任务「'+f.title+'」？其 '+children.length+' 个子任务会保留为未分组任务。')) return;
+  if(!window.confirm('删除模块「'+f.title+'」？其中 '+children.length+' 个任务会保留为未分组任务。')) return;
   children.forEach(function(t){t.parentTaskId=null;});
   CV_TASKS.splice(CV_TASKS.indexOf(f),1);
   tbSave();
   cvRenderProjectDetail();
-  toast('已删除父任务：'+f.title,'info');
+  toast('已删除模块：'+f.title,'info');
 }
 /* 手动新增子任务：复用任务管理那边的「新建任务」弹窗（项目/专家团/执行模式/阶段一致），
    只是锁定项目为父任务所在项目，并把新任务挂到该父任务下；复杂的拆解交给「智能拆解」（cvOpenEpicSplit）。 */
@@ -416,7 +465,7 @@ function cvOpenTaskById(taskId){
 }
 function cvOpenProjectDetail(id){
   cvProjCur=id;
-  cvProjTab='plan';
+  cvProjTab='modules';
   var list=$('#cv-proj-list'),detail=$('#cv-proj-detail');
   if(list) list.classList.add('hidden');
   if(detail){ detail.classList.remove('hidden'); cvRenderProjectDetail(); }
@@ -546,14 +595,35 @@ function cvRenderPermTable(){
 export function initCollabPersons(){
   var plist=$('#cv-proj-list');
   if(plist) plist.addEventListener('click',function(e){
+    /* 协作人员区域：点击跳转到设置→人员与权限 */
+    var collab=e.target.closest('[data-pj-collab]');
+    if(collab){ e.stopPropagation(); cvSwitchSub('config-perm'); return; }
+    /* 模块相关操作按钮 */
+    var splitStandalone=e.target.closest('[data-pj-split-standalone]');
+    if(splitStandalone){ e.stopPropagation(); cvSetProjCurForSplit(splitStandalone.getAttribute('data-pj-split-standalone')); cvOpenProjectSplit(); return; }
+    var splitManualStandalone=e.target.closest('[data-pj-split-manual-standalone]');
+    if(splitManualStandalone){ e.stopPropagation(); cvSetProjCurForSplit(splitManualStandalone.getAttribute('data-pj-split-manual-standalone')); cvOpenManualSplit(); return; }
+    var esplit=e.target.closest('[data-ft-split]');
+    if(esplit){ e.stopPropagation(); cvSetProjCurForSplit(esplit.getAttribute('data-ft-split-proj')); cvOpenEpicSplit(esplit.getAttribute('data-ft-split')); return; }
+    var push=e.target.closest('[data-ft-push]');
+    if(push){ e.stopPropagation(); cvSetProjCurForSplit(push.getAttribute('data-ft-push-proj')); cvPushFeatureToTask(push.getAttribute('data-ft-push')); return; }
+    var fedit=e.target.closest('[data-ft-edit]');
+    if(fedit){ e.stopPropagation(); cvSetProjCurForSplit(fedit.getAttribute('data-ft-edit-proj')); cvOpenFeatureEdit(fedit.getAttribute('data-ft-edit')); return; }
+    var fdel=e.target.closest('[data-ft-del]');
+    if(fdel){ e.stopPropagation(); cvSetProjCurForSplit(fdel.getAttribute('data-ft-del-proj')); cvDeleteFeature(fdel.getAttribute('data-ft-del')); return; }
+    var ftoggle=e.target.closest('[data-ft-tasks-toggle]');
+    if(ftoggle){ e.stopPropagation(); var fid=ftoggle.getAttribute('data-ft-tasks-toggle'); cvCollapsedEpics[fid]=!cvCollapsedEpics[fid]; cvRenderProjectList(); return; }
+    var tv=e.target.closest('[data-pj-task]');
+    if(tv){ e.stopPropagation(); cvOpenTaskById(tv.getAttribute('data-pj-task')); return; }
     var set=e.target.closest('[data-pj-set]');
-    if(set){ window.cvOpenProjEdit && window.cvOpenProjEdit(set.getAttribute('data-pj-set')); return; }
+    if(set){ e.stopPropagation(); window.cvOpenProjEdit && window.cvOpenProjEdit(set.getAttribute('data-pj-set')); return; }
     var open=e.target.closest('[data-pj-open]');
     if(open){ cvOpenProjectDetail(open.getAttribute('data-pj-open')); return; }
   });
   var pdetail=$('#cv-proj-detail');
   if(pdetail) pdetail.addEventListener('click',function(e){
     if(e.target.closest('[data-pj-back]')){ cvHideProjectDetail(); return; }
+    if(e.target.closest('[data-pj-plan-open]')){ cvProjTab='modules'; cvRenderProjectDetail(); return; }
     var tab=e.target.closest('[data-pjtab]');
     if(tab){ cvSwitchProjectTab(tab.getAttribute('data-pjtab')); return; }
     if(e.target.closest('[data-pj-split]')){ cvOpenProjectSplit(); return; }
@@ -598,6 +668,13 @@ export function initCollabPersons(){
     var x=e.target.closest('[data-fe-file-x]');
     if(x){ cvFeatureFiles.splice(+x.getAttribute('data-fe-file-x'),1); cvRenderFeatureFiles(); }
   });
+  var projectSearch=$('#cv-project-search');
+  if(projectSearch){
+    var enableProjectSearch=function(){projectSearch.removeAttribute('readonly');};
+    projectSearch.addEventListener('pointerdown',enableProjectSearch,{once:true});
+    projectSearch.addEventListener('keydown',enableProjectSearch,{once:true});
+    projectSearch.addEventListener('input',function(){window.cvApplyFilters&&window.cvApplyFilters();});
+  }
 }
 
 /* ---------- 产物预览：代码类产物弹文件列表 ---------- */
