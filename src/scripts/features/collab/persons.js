@@ -3,6 +3,7 @@ import { toast } from '../../core/toast.js';
 import { CV_MEMBERS, CV_PROJECTS, CV_ARTIFACTS, CV_TASKS, cvPersistPersons, cvPersistProjects, cvPersonById, cvProjectById, cvProjectInWorkspace } from './data.js';
 import { cvPersistSquads, cvSquadDetachMember } from './squads.js';
 import { xesc } from '../expert/data.js';
+import { tbSave } from './tb-core.js';
 /* 项目管理：项目列表 + 项目详情（选协作人员）
    人员基础资料独立维护（CV_MEMBERS），项目通过 members 引用人员 id；本模块渲染项目卡片列表，
    点进项目后维护该项目的协作人员（从基础资料里选人加入 / 移除）。 */
@@ -184,9 +185,10 @@ function cvConfirmProjectSplit(){
   var n=0;
   checked.forEach(function(cb){
     var t=cvSplitItems[+cb.getAttribute('data-split-idx')]; if(!t) return;
-    CV_TASKS.unshift({type:'任务',size:'小',source:'智能拆解',sourceId:'TASK-'+Date.now().toString().slice(-6)+'-'+n,exec:'专家团',status:'未开始',collab:'人Agent协作',title:t.title,desc:t.desc,assignee:'待分配',progress:0,project:p.id,acceptance:t.desc});
+    CV_TASKS.unshift({boardId:crypto.randomUUID(),type:'任务',size:'小',source:'智能拆解',sourceId:'TASK-'+Date.now().toString().slice(-6)+'-'+n,exec:'专家团',status:'未开始',collab:'人Agent协作',mode:'多人协作',priority:p.priority||'中',title:t.title,desc:t.desc,assignee:'待分配',progress:0,project:p.id,teamId:p.defaultTeam||'',acceptance:t.desc,files:[],artifacts:[],activity:[{author:'智能拆解',text:'由项目目标生成任务'}]});
     n++;
   });
+  tbSave();
   cvCloseProjectSplit();
   cvRenderProjectDetail();
   toast('已确认生成 '+n+' 个任务','success');

@@ -1,6 +1,6 @@
 import { $, $$ } from '../../core/dom.js';
 import { summon } from './automatch.js';
-import { EX, EXPERTS, compChip, phraseHtml, skillInfo, xav, xesc } from './data.js';
+import { EX, EXPERTS, compChip, phraseHtml, skillInfo, tierInfo, xav, xesc } from './data.js';
 import { deleteMyExpert, openExpertEditor } from './editor.js';
 import { knSecHtml, resetKnDetail, saveKnDetail } from './knowledge.js';
 import { TEAMS, teamDomains } from './store.js';
@@ -16,6 +16,10 @@ var expertGrid=$('#expertGrid');
 function facesHtml(ids,n){
   return '<span class="x-faces">'+ids.slice(0,n||4).map(function(i){
     return '<img src="'+xav(EX[i].k)+'" alt="">'; }).join('')+'</span>';
+}
+function tierChip(tier){
+  var t=tierInfo(tier);
+  return '<span class="ptag ptag-tier" title="'+xesc(t.desc)+'">'+xesc(t.label)+'</span>';
 }
 function renderExpertGrid(){
   if(!expertGrid) return;
@@ -92,7 +96,8 @@ function openExpertModal(id){
       +'<svg class="x-cmd-go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H7l-4 3v-6.5A8 8 0 0 1 11 4h2a8 8 0 0 1 8 8z"/></svg>'
       +'</button>'}).join('')+'</div>':'')
     +'<div class="x-sec"><div class="x-sec-t">能力项</div><div class="x-chips">'+e.comp.map(compChip).join('')+'</div></div>'
-    +'<div class="x-sec"><div class="x-sec-t">可承担的工作</div><div class="x-chips">'+e.modes.map(function(m){return '<span class="ptag">'+xesc(m)+'</span>'}).join('')+'</div></div>';
+    +'<div class="x-sec"><div class="x-sec-t">可承担的工作</div><div class="x-chips">'+e.modes.map(function(m){return '<span class="ptag">'+xesc(m)+'</span>'}).join('')+'</div></div>'
+    +'<div class="x-sec"><div class="x-sec-t">模型级别</div><div class="x-chips">'+tierChip(e.tier)+'</div></div>';
 
   var skills=e.skills||[];
   var skillsHtml='<div class="x-skill-head"><strong>内置技能</strong><span>'+skills.length+'</span></div>'

@@ -69,7 +69,7 @@ function cvSubmitNewTask(keepOpen) {
     const pv = document.getElementById('cv-nt-priority').value;
     priority = pv === '无优先级' ? '中' : pv;
   }
-  const t = { boardId: crypto.randomUUID(), source: fromAgent ? '智能体创建' : '手动创建', sourceId: 'TASK-' + Date.now().toString().slice(-6), size: '小', exec: '专家团', collab: '人Agent协作', progress: 0, status: ntStatus, mode: '多人协作', type: '需求', project: proj.id, teamId: proj.defaultTeam || '', title, desc, assignee, priority, files: ntFiles.slice(), activity: [{ author: '张工', text: fromAgent ? ('由 ' + assignee + ' 创建任务') : '创建了任务' }], artifacts: [] };
+  const t = { boardId: crypto.randomUUID(), source: fromAgent ? '智能体创建' : '手动创建', sourceId: 'TASK-' + Date.now().toString().slice(-6), size: '小', exec: '专家团', collab: '人Agent协作', progress: 0, status: ntStatus, mode: '多人协作', type: '需求', project: proj.id, teamId: TEAMS.find(team => team.name === assignee)?.id || '', title, desc, assignee, priority, files: ntFiles.slice(), activity: [{ author: '张工', text: fromAgent ? ('由 ' + assignee + ' 创建任务') : '创建了任务' }], artifacts: [] };
   CV_TASKS.unshift(t);
   tbSave(); renderTaskBoard(); cvUpdateCounts();
   if (keepOpen) { cvOpenNewTask(ntStatus); } else { cvCloseNewTask(); }

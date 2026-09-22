@@ -5,6 +5,7 @@
 
 /* 能力项：中文名 + 等级徽标，等级用色阶区分 */
 .ptag-comp{display:inline-flex;align-items:center;gap:6px}
+.ptag-tier{background:#eef3ff;color:var(--brand);font-weight:500;cursor:default}
 .ptag-lv{font-style:normal;font-size:10.5px;line-height:1;padding:2px 5px;border-radius:4px;
   background:var(--hover);color:var(--text-secondary)}
 .ptag-lv.lv-principal{background:#eef3ff;color:var(--brand)}

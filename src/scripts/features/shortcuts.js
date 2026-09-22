@@ -23,7 +23,7 @@ export function initShortcuts() {
 
   document.addEventListener('keydown',function(e){
     var mod=e.metaKey||e.ctrlKey;
-    var key=e.key.toLowerCase();
+    var key=String(e.key||'').toLowerCase();
     var inEditable=(e.target.isContentEditable||e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA');
 
     /* ⌘/Ctrl+/ — 显示快捷键帮助 */

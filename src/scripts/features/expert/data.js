@@ -175,6 +175,15 @@ function rebuildExperts(){
 var AV_KEYS=['lead','pm','arch','eng','qa','cr','sec','ana','fe','ux','form','flow','rpt','plug','api'];
 var WORK_MODES=['分析','设计','实现','集成','评审','验证','恢复'];
 
+/* 模型级别：智能体运行时用哪个推理档位 */
+var MODEL_TIERS=[
+  {id:'auto',  label:'自动', desc:'按任务复杂度自动选择'},
+  {id:'fast',  label:'快速', desc:'响应最快，适合简单明确的任务'},
+  {id:'expert',label:'专家', desc:'更强推理，适合复杂任务'},
+  {id:'deep',  label:'深度', desc:'深度思考，适合高难度任务'}
+];
+function tierInfo(id){ for(var i=0;i<MODEL_TIERS.length;i++) if(MODEL_TIERS[i].id===id) return MODEL_TIERS[i]; return MODEL_TIERS[0]; }
+
 /* ---------- 能力项字典 ----------
    定义文件里能力项是机器标识（architecture.system-design · principal），
    直接摆到界面上没人看得懂。这里翻成中文名 + 等级，字典没覆盖的回退显示原串。 */
@@ -298,4 +307,4 @@ export function initExpertData() {
 /* MY_EXPERTS 由其它模块写回；import 绑定只读，所以走这个 setter */
 export function set_MY_EXPERTS(v){ MY_EXPERTS=v; return v; }
 
-export { AV_KEYS, EX, EXPERTS, MY_EXPERTS, PRESET_TEAMS, WORK_MODES, askFor, compChip, parseComp, pendingInputs, phraseHtml, rebuildExperts, skillInfo, teamCoverage, xav, xesc };
+export { AV_KEYS, EX, EXPERTS, MODEL_TIERS, MY_EXPERTS, PRESET_TEAMS, WORK_MODES, askFor, compChip, parseComp, pendingInputs, phraseHtml, rebuildExperts, skillInfo, teamCoverage, tierInfo, xav, xesc };

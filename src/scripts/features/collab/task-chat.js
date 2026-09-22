@@ -1,12 +1,13 @@
 import { CV_TASKS, CV_MEMBERS, CV_PROJECTS } from './data.js';
 import { EX, xesc } from '../expert/data.js';
-import { tbLabel, tbOwner, tbGetSelected, tbMatchedTeam, tbMatchExperts, tbSave, tbTeamName } from './tb-core.js';
+import { tbLabel, tbOwner, tbGetSelected, tbSetSelected, tbTaskId, tbMatchedTeam, tbMatchExperts, tbSave, tbTeamName } from './tb-core.js';
 import { tbOpenTask } from './task-board.js';
 /* 任务对话：多会话（列表/详情）、会话窗口跳转、转交任务、附件上传
    从 task-board.js 拆出，副作用集中在 initTaskChat()。 */
 
 
 function sel() { return tbGetSelected(); }
+let windowConversation = null;
 function chatMsg(m) {
   const isAgent = m.role === 'agent';
   return '<div class="tb-chat-msg tb-chat-msg--' + (isAgent ? 'agent' : 'user') + '"><div class="tb-chat-av' + (isAgent ? ' tb-chat-av--agent' : '') + '">' + (isAgent ? '✦' : '我') + '</div><div class="tb-chat-bubble">' + xesc(m.text) + '</div></div>';
@@ -57,14 +58,14 @@ function tbRenderConvArea() {
 }
 /* 会话记录仅任务处理人可见 */
 function tbCurrentUserName() {
-  const role = (document.body && document.body.getAttribute('data-role')) || 'tbOwner';
-  const map = { tbOwner: '吴宏超', dev: '张工', pm: '赵琳', qa: '陈晨', ops: '周杰' };
+  const role = document.body.getAttribute('data-role');
+  const map = { owner: '吴宏超', dev: '张工', pm: '赵琳', qa: '陈晨', ops: '周杰' };
   return map[role] || '吴宏超';
 }
 function tbCanSeeConv(t) {
   if (!t) return false;
-  const role = (document.body && document.body.getAttribute('data-role')) || 'tbOwner';
-  if (role === 'tbOwner') return true;
+  const role = document.body.getAttribute('data-role');
+  if (role === 'owner') return true;
   const me = tbCurrentUserName();
   return !!t.assignee && (t.assignee === me || tbOwner(t) === me);
 }
@@ -72,27 +73,32 @@ function tbCanSeeConv(t) {
 function tbBackConvList() {
   if (window.cvSwitchView) window.cvSwitchView('tasks');
   const t = sel();
-  if (t) { t.activeConv = null; tbSave(); tbOpenTask(CV_TASKS.indexOf(t)); }
+  if (t) { t.activeConv = null; tbSave(); tbOpenTask(CV_TASKS.indexOf(t)); document.querySelector('[data-detail-tab="conversations"]')?.click(); }
 }
 /* 打开会话窗口（新页签会话）：左侧挂会话 + 对话视图加载 */
 function tbOpenConvWin(id) {
   const t = sel();
-  if (!t) return;
+  if (!t || !tbCanSeeConv(t)) return;
   const conv = taskConversations(t).find(c => c.id === id);
   if (!conv) return;
   t.activeConv = id;
+  windowConversation = { task: t, conv };
   tbSave();
   const name = (t.title || '任务') + ' · ' + conv.title;
   const group = document.querySelector('.sb-scroll .project-group');
-  if (group) {
+  if (group && !Array.from(group.querySelectorAll('[data-task-conversation]')).some(item => item.dataset.taskConversation === tbTaskId(t) + ':' + id)) {
     const item = document.createElement('div');
     item.className = 'sub-item';
+    item.dataset.taskConversation = tbTaskId(t) + ':' + id;
     item.innerHTML = '<span class="dot blue"></span><span class="txt">' + xesc(name) + '</span>';
-    item.addEventListener('click', () => { if (window.cvSwitchView) window.cvSwitchView('chat'); });
+    item.addEventListener('click', () => { tbSetSelected(t); tbOpenConvWin(id); });
     const head = group.querySelector('.group-head');
     if (head && head.nextSibling) group.insertBefore(item, head.nextSibling); else group.appendChild(item);
   }
   const titleEl = document.getElementById('cv-chat-task-title'); if (titleEl) titleEl.textContent = name;
+  const badge = document.getElementById('cv-chat-status-badge');
+  if (badge) { badge.className = 'chat-status-badge'; badge.textContent = tbLabel(t.status) + ' · 本地演示'; }
+  const input = document.getElementById('cv-chat-input'); if (input) input.value = '';
   const body = document.getElementById('cv-chat-body');
   if (body) {
     body.innerHTML = '';
@@ -111,7 +117,7 @@ function tbBackConv() { const t = sel(); if (!t) return; t.activeConv = null; tb
 /* 新会话：直接进入新页签会话，不在任务详情页内联操作 */
 function tbNewConv() {
   const t = sel();
-  if (!t) return;
+  if (!t || !tbCanSeeConv(t)) return;
   const convs = taskConversations(t);
   convs.push({ id: 'c' + Date.now(), title: '会话 ' + (convs.length + 1), createdAt: Date.now(), messages: [{ role: 'agent', text: '新会话已开始，请告诉我要做什么。' }] });
   tbSave();
@@ -126,11 +132,25 @@ function tbRenderChat() {
   if (main) main.scrollTop = main.scrollHeight;
 }
 function tbAgentReply(text, t) {
-  if (/执行|开始|跑|启动/.test(text)) return '好的，开始执行「' + t.title + '」，产物会生成并自动关联。';
+  if (/执行|开始|跑|启动/.test(text)) return '已记录执行请求。当前为本地原型，尚未接入执行引擎，不会实际生成代码或交付产物。';
   if (/进展|状态|怎么样了|如何/.test(text)) return '当前状态：' + tbLabel(t.status) + '，进度 ' + (t.progress || 0) + '%。';
   if (/转交|分配|谁来/.test(text)) return '收到，请在右侧属性栏选择负责人，或告诉我转交给谁。';
-  if (/评审|审核/.test(text)) return '好的，我先把产物整理好并发起评审，评审人确认后继续。';
-  return '收到，正在处理：' + text;
+  if (/评审|审核/.test(text)) return '已记录评审请求。当前尚未接入审批流程，请先核对任务的验收标准与交付产物。';
+  return '已记录：' + text + '\n（本地演示回复，未调用专家执行。）';
+}
+/* 复用会话窗口时，消息仍归属于明确的任务与会话。 */
+function tbSendWindowMessage() {
+  const title = document.getElementById('cv-chat-task-title');
+  if (!windowConversation || title?.textContent !== windowConversation.task.title + ' · ' + windowConversation.conv.title) return false;
+  const { task, conv } = windowConversation;
+  if (!tbCanSeeConv(task)) return true;
+  const input = document.getElementById('cv-chat-input');
+  const text = input?.value.trim();
+  if (!text) return true;
+  conv.messages.push({ role: 'user', text }, { role: 'agent', text: tbAgentReply(text, task) });
+  tbSave(); tbSetSelected(task); tbOpenConvWin(conv.id);
+  input.focus();
+  return true;
 }
 function tbChatSend() {
   const t = sel();
@@ -222,14 +242,19 @@ function tbApplyTransfer(name) {
   if (!t) return;
   t.assignee = name;
   const conv = taskActiveConv(t);
-  if (conv) conv.messages.push({ role: 'agent', text: '已将任务转交给 ' + name + '，新负责人会重新匹配专家团继续执行。' });
+  if (conv) conv.messages.push({ role: 'agent', text: '任务负责人已变更为 ' + name + '。' });
   const s = document.querySelector('#cv-tasks .tb-detail-aside [name="assignee"]');
-  if (s) s.value = name;
-  tbSave(); tbRenderChat();
+  if (s) {
+    if (![...s.options].some(o => o.value === name)) s.add(new Option(name, name));
+    s.value = name;
+  }
+  t.activity ||= [];
+  t.activity.push({ author: tbCurrentUserName(), text: '负责人变更为 ' + name });
+  tbSave(); tbOpenTask(CV_TASKS.indexOf(t));
 }
 
 export function initTaskChat() {
-  Object.assign(window, { tbOpenConv, tbBackConv, tbNewConv, tbOpenTransfer, tbChatSend, tbAddFile, tbBackConvList, tbConvListHtml, tbCanSeeConv });
+  Object.assign(window, { tbOpenConv, tbBackConv, tbNewConv, tbOpenTransfer, tbChatSend, tbSendWindowMessage, tbAddFile, tbBackConvList, tbConvListHtml, tbCanSeeConv });
   const ws = document.getElementById('tb-workspace');
   ws.addEventListener('keydown', e => {
     if (e.target.id === 'tb-chat-input' && e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); tbChatSend(); }

@@ -2,7 +2,7 @@ import { $, $$ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
 import { input, setNavActive, showView } from '../../core/view.js';
 import { renderExpertChips, renderModeTag } from './chips.js';
-import { AV_KEYS, EX, MY_EXPERTS, WORK_MODES, rebuildExperts, set_MY_EXPERTS, xav, xesc } from './data.js';
+import { AV_KEYS, EX, MODEL_TIERS, MY_EXPERTS, WORK_MODES, rebuildExperts, set_MY_EXPERTS, xav, xesc } from './data.js';
 import { renderKnPane, resetKnPane } from './knowledge.js';
 import { expertModal, renderExpertGrid } from './library.js';
 import { TEAMS, activePick, clearPick, saveTeams } from './store.js';
@@ -66,7 +66,7 @@ function blankExpert(){
   /* mine:true——编辑器只处理「我创建的」专家，没有预置知识这一层，
      知识模块靠这个字段判断不用去查租户知识覆盖层 */
   return {k:'eng',name:'',role:'',desc:'',tags:[],modes:['分析','设计','实现'],mine:true,
-          comp:[],cmds:[['','']],kn:[],knOff:[],knDocOff:[],knUp:[]};
+          tier:'auto',comp:[],cmds:[['','']],kn:[],knOff:[],knDocOff:[],knUp:[]};
 }
 function openExpertEditor(id){
   if(!expertEditModal) return;
@@ -74,6 +74,7 @@ function openExpertEditor(id){
   xeEditingId=(e&&e.mine)?id:null;
   xeDraft = xeEditingId
     ? {k:e.k,name:e.name,role:e.role,desc:e.desc,tags:e.tags.slice(),modes:e.modes.slice(),mine:true,
+       tier:e.tier||'auto',
        comp:e.comp.slice(),cmds:e.cmds.length?e.cmds.map(function(c){return c.slice()}):[['','']],
        kn:(e.kn||[]).slice(),knOff:(e.knOff||[]).slice(),knDocOff:(e.knDocOff||[]).slice(),
        knUp:(e.knUp||[]).map(function(f){return {n:f.n,t:f.t,up:f.up,by:f.by}})}
@@ -96,6 +97,9 @@ function renderExpertEditor(){
   }).join('');
   $('#xeModes').innerHTML=WORK_MODES.map(function(m){
     return '<button type="button" class="x-mode-opt'+(d.modes.indexOf(m)>=0?' on':'')+'" data-xe-mode="'+m+'">'+m+'</button>';
+  }).join('');
+  $('#xeTiers').innerHTML=MODEL_TIERS.map(function(t){
+    return '<button type="button" class="x-mode-opt x-tier-opt'+(d.tier===t.id?' on':'')+'" data-xe-tier="'+t.id+'" title="'+xesc(t.desc)+'">'+t.label+'</button>';
   }).join('');
 
   $('#xeCmds').innerHTML=d.cmds.map(function(c,i){
@@ -132,6 +136,8 @@ export function initExpertEditor() {
         if(i<0) xeDraft.modes.push(v); else xeDraft.modes.splice(i,1);
         renderExpertEditor(); return;
       }
+      var t=ev.target.closest('[data-xe-tier]');
+      if(t){ xeDraft.tier=t.getAttribute('data-xe-tier'); renderExpertEditor(); return; }
       var r=ev.target.closest('[data-xe-rmcmd]');
       if(r){
         xeDraft.cmds.splice(+r.getAttribute('data-xe-rmcmd'),1);
@@ -156,7 +162,7 @@ export function initExpertEditor() {
       var cmds=d.cmds.map(function(c){ return [String(c[0]||'').trim(),String(c[1]||'').trim()]; })
                      .filter(function(c){ return c[0]; });
       var rec={id:xeEditingId||('my-'+Date.now()),mine:true,k:d.k,name:d.name,role:d.role,by:'我创建的',
-               desc:d.desc,tags:d.tags,modes:d.modes.slice(),comp:d.comp,cmds:cmds,
+               desc:d.desc,tags:d.tags,modes:d.modes.slice(),tier:d.tier||'auto',comp:d.comp,cmds:cmds,
                kn:(d.kn||[]).slice(),knOff:(d.knOff||[]).slice(),knDocOff:(d.knDocOff||[]).slice(),knUp:(d.knUp||[]).slice()
               };
       if(xeEditingId){

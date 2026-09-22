@@ -72,6 +72,7 @@ function cvSimulateExecution(taskTitle,card){
   cvAddChatTyping();i=1;next();
 }
 function cvSendChatMessage(){
+  if(window.tbSendWindowMessage && window.tbSendWindowMessage()) return;
   var input=document.getElementById('cv-chat-input');if(!input||!input.value.trim())return;
   cvAddChatMessage('user',input.value.trim());input.value='';cvAddChatTyping();
   setTimeout(function(){cvRemoveChatTyping();cvAddChatMessage('agent','收到，正在处理您的请求...');},1500);

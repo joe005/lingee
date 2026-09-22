@@ -1,4 +1,4 @@
-import { AV_KEYS, EX, MY_EXPERTS, PRESET_TEAMS, WORK_MODES, rebuildExperts, set_MY_EXPERTS } from './data.js';
+import { AV_KEYS, EX, MODEL_TIERS, MY_EXPERTS, PRESET_TEAMS, WORK_MODES, rebuildExperts, set_MY_EXPERTS } from './data.js';
 import { knDir } from './knowledge.js';
 /* 专家 / 专家团：持久化、能力自检
    拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
@@ -40,6 +40,7 @@ function loadTeams(){
       name:e.name,role:e.role||'自定义专家',by:'我创建的',desc:e.desc||'',
       tags:Array.isArray(e.tags)?e.tags:[],
       modes:e.modes.filter(function(m){return WORK_MODES.indexOf(m)>=0}),
+      tier:MODEL_TIERS.some(function(t){return t.id===e.tier})?e.tier:'auto',
       comp:Array.isArray(e.comp)?e.comp:[],
       cmds:(Array.isArray(e.cmds)?e.cmds:[]).filter(function(c){return Array.isArray(c)&&c[0]}),
       /* 知识：只认平台上还存在的目录，绑定失效就自然掉了 */
@@ -73,7 +74,7 @@ function saveTeams(){
       }),
       experts:MY_EXPERTS.map(function(e){
         return {id:e.id,k:e.k,name:e.name,role:e.role,desc:e.desc,tags:e.tags,
-                modes:e.modes,comp:e.comp,cmds:e.cmds,
+                modes:e.modes,comp:e.comp,cmds:e.cmds,tier:e.tier||'auto',
                 kn:e.kn||[],knOff:e.knOff||[],knUp:e.knUp||[]};
       })
     }));
