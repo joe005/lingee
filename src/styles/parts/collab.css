@@ -1404,7 +1404,6 @@
 .tb-preview-body iframe{width:100%;height:55vh;border:0}
 
 /* ============ 项目列表卡片：内嵌模块与协作人员 ============ */
-#view-collab #cv-proj-list{grid-template-columns:1fr}
 #view-collab .pj-card-modules{margin-top:14px;border-top:1px solid var(--border);padding-top:12px}
 #view-collab .pj-card-modules-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:4px}
 #view-collab .pj-card-modules-head>div{display:flex;align-items:center;gap:5px;font-size:12.5px;color:var(--text-secondary)}
@@ -1414,13 +1413,18 @@
 #view-collab .pj-card-modules-acts{display:flex;gap:6px;flex:none}
 #view-collab .pj-card-modules-empty{padding:14px 0;text-align:center;font-size:12.5px;color:var(--text-soft)}
 #view-collab .pj-card .ft-list{margin-top:8px}
-#view-collab .pj-card .ft-item-head b{font-size:12.5px}
+#view-collab .pj-ft-item--inline{padding:8px 10px}
+#view-collab .pj-ft-item--inline .ft-item-head{margin-bottom:0}
+#view-collab .pj-ft-item--inline .ft-item-head b{font-size:12.5px}
+#view-collab .pj-ft-toggle{border:0;background:transparent;color:var(--text-soft);cursor:pointer;padding:2px;display:flex;align-items:center;margin-left:auto}
+#view-collab .pj-ft-toggle:hover{color:var(--text)}
+#view-collab .pj-ft-item--inline .ft-tasks{margin-top:6px}
 #view-collab .pj-card-collab{display:flex;align-items:center;gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);cursor:pointer;border-radius:8px;transition:background .15s}
 #view-collab .pj-card-collab:hover{background:var(--fill-1)}
 #view-collab .pj-card-collab-label{font-size:12px;font-weight:600;color:var(--text-secondary);flex:none}
 #view-collab .pj-card-collab-avs{display:flex;align-items:center;gap:0;flex:1;min-width:0}
-#view-collab .pj-card-collab-av{width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:600;flex:none;margin-left:-4px;border:2px solid #fff}
-#view-collab .pj-card-collab-av:first-child{margin-left:0}
+#view-collab .pj-collab-av{width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:600;flex:none;margin-left:-4px;border:2px solid #fff}
+#view-collab .pj-collab-av:first-child{margin-left:0}
 #view-collab .pj-card-collab-more{font-size:11px;color:var(--text-secondary);margin-left:6px;flex:none}
 #view-collab .pj-card-collab-empty{font-size:12px;color:var(--text-soft)}
 #view-collab .pj-card-collab-count{flex:none;font-size:11.5px;color:var(--text-soft);background:var(--fill-1);border-radius:10px;padding:2px 8px}

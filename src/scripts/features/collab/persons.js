@@ -79,18 +79,12 @@ function cvRenderProjectList(){
               var sc={'待规划':'pending','待办':'pending','进行中':'running','审核中':'review','已完成':'done','已阻塞':'fail','已取消':'fail'}[t.status]||'pending';
               return '<button type="button" class="ft-task" data-pj-task="'+t.boardId+'"><span class="badge-status-dot"></span><span class="ft-task-title">'+xesc(t.title)+'</span><span class="ft-task-status ft-task-status--'+sc+'">'+xesc(t.status)+'</span></button>';
             }).join('');
-            return '<div class="ft-item">'
+            return '<div class="ft-item pj-ft-item--inline">'
               +'<div class="ft-item-head"><b>'+xesc(f.title)+'</b>'
-              +'<span class="ft-parent-badge">模块</span>'
-              +'<div class="ft-item-acts">'
-              +'<button type="button" class="ft-act ft-act--split" data-ft-split="'+f.boardId+'" data-ft-split-proj="'+p.id+'"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z"/></svg>智能拆解</button>'
-              +'<button type="button" class="ft-act ft-act--push" data-ft-push="'+f.boardId+'" data-ft-push-proj="'+p.id+'">手动新增任务</button>'
-              +'<button type="button" class="ft-act" data-ft-edit="'+f.boardId+'" data-ft-edit-proj="'+p.id+'">编辑</button>'
-              +'<button type="button" class="ft-act ft-act--del" data-ft-del="'+f.boardId+'" data-ft-del-proj="'+p.id+'">删除</button>'
-              +'</div></div>'
-              +(f.desc?'<div class="ft-item-desc">'+xesc(f.desc)+'</div>':'')
+              +'<span class="ft-parent-badge">'+children.length+' 任务</span>'
+              +'<button type="button" class="ft-tasks-toggle pj-ft-toggle" data-ft-tasks-toggle="'+f.boardId+'" data-ft-tasks-toggle-proj="'+p.id+'" title="展开/折叠任务"><svg class="ft-tasks-caret" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>'
+              +'</div>'
               +'<div class="ft-tasks'+(collapsed?' is-collapsed':'')+'">'
-              +'<button type="button" class="ft-tasks-toggle" data-ft-tasks-toggle="'+f.boardId+'" data-ft-tasks-toggle-proj="'+p.id+'"><svg class="ft-tasks-caret" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg><span class="ft-tasks-k">可执行任务 '+children.length+'</span></button>'
               +'<div class="ft-tasks-body">'+(taskBtns||'<span class="ft-tasks-empty">还没有任务</span>')+'</div>'
               +'</div>'
               +'</div>';
