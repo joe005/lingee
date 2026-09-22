@@ -97,6 +97,7 @@ export function initHoverDropdowns() {
        用变量会因 var 提升恒为 undefined，导致专用下拉被重复绑定 */
     if(dd.id==='appDropdown' || dd.id==='chatAppDropdown') return;
     if(dd.classList.contains('field-dd')) return; // 表单内下拉改为点击展开
+    if(dd.classList.contains('project-dd')) return; // 项目操作同为点击展开，与会话操作一致
     var t=null;
     dd.addEventListener('mouseenter',function(){
       clearTimeout(t);

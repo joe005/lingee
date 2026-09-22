@@ -42,8 +42,8 @@
     overflow:hidden;
     font-size:14px;
   }
-  /* Icons */
-  .ic{width:18px;height:18px;stroke:currentColor;stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round;flex:none}
+  /* Icons —— 仅布局；绘制属性(fill/stroke)由每个 svg 自带，避免填充图标被继承的 stroke 描粗 */
+  .ic{width:18px;height:18px;flex:none}
   .ic-sm{width:16px;height:16px}
 
 

@@ -45,7 +45,7 @@ function renderIcons(){
     +'<div class="ds-icon-grid">';
   dsIcons.forEach(function(ic){
     html+='<div class="ds-icon-cell" title="'+ic.name+' · '+ic.label+'">'
-      +'<svg class="ic" viewBox="0 0 24 24">'+ic.paths+'</svg>'
+      +'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+ic.paths+'</svg>'
       +'<span>'+ic.name+'</span>'
       +'</div>';
   });

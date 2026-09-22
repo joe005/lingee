@@ -80,14 +80,25 @@ var appsNewDd=$('#appsNewDropdown');
 /* ---------- 右键菜单 ---------- */
 var ctxMenu=$('#ctxMenu');
 var ctxTarget=null;
+/* 菜单打开期间给所属行加标记，让行内的“会话操作”按钮常驻（否则鼠标移到菜单上按钮就淡出了） */
+function markCtxTarget(el){
+  $$('.ctx-open').forEach(function(n){n.classList.remove('ctx-open');});
+  var row=el&&el.closest?el.closest('.sub-item'):null;
+  if(row) row.classList.add('ctx-open');
+}
 function showCtxMenu(e,el){
   e.preventDefault();
   ctxTarget=el;
+  markCtxTarget(el);
   ctxMenu.style.left=Math.min(e.clientX,document.documentElement.clientWidth-220)+'px';
   ctxMenu.style.top=Math.min(e.clientY,document.documentElement.clientHeight-260)+'px';
   ctxMenu.classList.add('show');
 }
-function hideCtxMenu(){ctxMenu.classList.remove('show');ctxTarget=null;}
+function hideCtxMenu(){
+  ctxMenu.classList.remove('show');
+  $$('.ctx-open').forEach(function(n){n.classList.remove('ctx-open');});
+  ctxTarget=null;
+}
 
 export function initApps() {
   /* ---------- 我的应用 (apps view) ---------- */
@@ -256,10 +267,22 @@ export function initAppsNewDropdown() {
     more.addEventListener('click',function(e){
       e.stopPropagation();
       var group=more.closest('.group-head');
-      var title=group.querySelector('.group-title');
-      var titleText=title?title.textContent.trim():'';
       ctxTarget=group;
       var rect=more.getBoundingClientRect();
+      ctxMenu.style.left=Math.min(rect.right+4,document.documentElement.clientWidth-220)+'px';
+      ctxMenu.style.top=Math.min(rect.bottom+4,document.documentElement.clientHeight-200)+'px';
+      ctxMenu.classList.add('show');
+    });
+  });
+  // 点击 sub-item 右侧三点按钮打开菜单
+  $$('.sub-more').forEach(function(btn){
+    btn.addEventListener('click',function(e){
+      e.stopPropagation();
+      e.preventDefault();
+      var item=btn.closest('.sub-item');
+      ctxTarget=item;
+      markCtxTarget(item);
+      var rect=btn.getBoundingClientRect();
       ctxMenu.style.left=Math.min(rect.right+4,document.documentElement.clientWidth-220)+'px';
       ctxMenu.style.top=Math.min(rect.bottom+4,document.documentElement.clientHeight-200)+'px';
       ctxMenu.classList.add('show');
@@ -288,7 +311,9 @@ export function initAppsNewDropdown() {
       hideCtxMenu();
       if(action==='delete') toast('已删除：'+name);
       else if(action==='rename') toast('重命名：'+name);
-      else if(action==='open') toast('打开文件夹：'+name);
+      else if(action==='pin') toast('已置顶：'+name);
+      else if(action==='move') toast('移动到项目：'+name);
+      else if(action==='archive') toast('已归档：'+name);
     });
   });
   // 点击其他地方关闭菜单

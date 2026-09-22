@@ -23,9 +23,6 @@ npm run format   # 格式化 src
 | `dist/` | 构建产物，单文件 |
 | `docs/` | 需求说明书，交付给开发实现 |
 
-设计稿、早期页面原型、历史版本等资料存放在 iCloud 归档目录
-`Lingee Build/原型/lingee_app buid`，不纳入本仓库。
-
 ## 源码结构
 
 改哪个界面，就改对应的那个文件——这是拆分的全部目的。
@@ -90,7 +87,16 @@ src/
 
 线上走 **GitHub Pages**（`.github/workflows/deploy.yml`，push main 自动构建），
 地址是 `https://joe005.github.io/lingee/`——**带 `/lingee/` 这层前缀**。
-`package.json` 里的 wrangler / Cloudflare 脚本目前没有实际使用。
+
+也可部署到 **腾讯云 CloudBase Hosting**：
+
+```bash
+npm run build
+tcb hosting deploy ./dist --env-id lingee-d8gwl813k240a7a68 --yes
+```
+
+访问地址 `https://lingee-d8gwl813k240a7a68-1256137603.tcloudbaseapp.com/`。
+CloudBase Hosting 自动用 `404.html` 处理 SPA 刷新，无需额外配置错误文档。
 
 两件相关的事：
 

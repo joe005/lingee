@@ -74,7 +74,7 @@ function renderExpertPicker(pfx,kw){
       return '<div class="app-item x-opt'+(on?' checked':'')+'" data-pick-team="'+t.id+'">'
         +facesHtml(t.members,3)
         +'<span class="x-opt-n">'+xesc(t.name)+'</span>'
-        +(on?'<svg class="ic ic-sm menu-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>':'')+'</div>';
+        +(on?'<svg class="ic ic-sm menu-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>':'')+'</div>';
     }).join('');
   }
   if(experts.length){
@@ -83,7 +83,7 @@ function renderExpertPicker(pfx,kw){
       return '<div class="app-item x-opt'+(on?' checked':'')+'" data-pick-expert="'+e.id+'">'
         +'<img class="x-opt-av" src="'+xav(e.k)+'" alt="">'
         +'<span class="x-opt-n">'+xesc(e.name)+'</span>'
-        +(on?'<svg class="ic ic-sm menu-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>':'')+'</div>';
+        +(on?'<svg class="ic ic-sm menu-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>':'')+'</div>';
     }).join('');
   }
   list.innerHTML = html || '<div class="x-empty-sm">没有匹配的专家或专家团</div>';

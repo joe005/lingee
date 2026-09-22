@@ -8,6 +8,7 @@ import { openAppDropdown } from './attach-app.js';
 
 /* ---------- Changelog / 更新通知（与 Build_demo 完全一致） ---------- */
 var changelogData=[
+  {id:'28',date:'2026-09-22',iconBg:'#eef3ff',iconColor:'#3d63dd',team:'清理 Cloudflare 依赖',body:'移除未使用的 @cloudflare/vite-plugin 与 wrangler 依赖（40 个包），修复 dev 模式下 Cloudflare 插件注入拦截逻辑导致预览快照失败的问题；同步清理 vite.config.js、package.json 与 spa-fallback 插件中的 Cloudflare 引用。'},
   {id:'27',date:'2026-09-22',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',team:'任务详情、评审与协作链路优化',body:'任务详情重设计为左侧任务内容、右侧紧凑属性栏，概览、任务对话、只读交付产物、任务内评审和动态分开展示；评审支持指定人员、冻结范围、通过或要求修改，并以交付评审作为完成门禁；同时修复属性、专家团绑定、转交、会话消息留存和智能拆解任务持久化；智能体新增「模型级别」设置（自动/快速/专家/深度），决定运行时推理档位，详情同步展示。'},
   {id:'26',date:'2026-09-21',iconBg:'#eaf1ff',iconColor:'#3d63dd',team:'协作开发重构：工作区与项目管理',body:'协作开发重构：工作区固定顶部、项目切换器在任务/项目管理右侧，专家团升为一级页签；项目管理按「项目目标+里程碑→任务拆分→关联任务」三层组织，智能拆解调用智能体在对话框输出、逐项确认后生成；新建任务支持手动/通过智能体两种方式；任务详情复用新会话对话框，任务对话改为会话列表（每行一条会话总结）并可进入会话、支持发起会话与转交任务；人员独立基础资料；产物带后缀名、代码类按目录弹文件列表；新增多角色登录演示。'},
   {id:'25',date:'2026-09-21',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',team:'协作开发体验升级',body:'任务管理升级为状态看板与列表，任务详情采用左侧任务主页、右侧属性栏的页内工作台；专家新增技能页签与技能用途说明，内置专家团聚焦苍穹应用开发、通用应用开发、金蝶 SaaS 实施和金蝶二次开发，同时修复交互弹窗居中规则。'},
@@ -32,7 +33,8 @@ var changelogData=[
 ];
 // 每个数据条目对应的 avatar SVG 图标（与 Build_demo 的 lucide 图标一致）
 var changelogIcons={
-  '27':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
+  '28':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>',
+'27':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
   '26':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>',
   '25':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 4v16"/></svg>',
   '24':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',

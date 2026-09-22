@@ -220,11 +220,87 @@ export function initSidebarIcons() {
       fi.click();
     });
   }
-  /* 显示设置：紧凑/详细 */
-  if(viewToggleIcon){
-    viewToggleIcon.addEventListener('click',function(){
-      sbScroll.classList.toggle('compact');
+  /* 显示设置：分组依据（对齐工程的 kcode.nav.groupBy：Project / Date / None） */
+  var displayDd=$('#displayDd');
+  if(viewToggleIcon && displayDd){
+    var groupByValue=$('#groupByValue');
+    var groupByItem=$('#groupByItem');
+    var groupByMenu=$('#groupByMenu');
+    var GROUP_LABELS={project:'Project',date:'Date',none:'None'};
+    var DATE_BUCKETS=[{key:'today',label:'今天'},{key:'thisWeek',label:'本周'},{key:'earlier',label:'更早'}];
+    var CHEVRON='<span class="group-chevron"><svg class="ic" viewBox="0 0 16 16" fill="none"><path d="M11.8619 5.5287C12.1223 5.26835 12.5443 5.26835 12.8046 5.5287C13.0649 5.78905 13.065 6.21109 12.8046 6.47141L9.03706 10.239C8.46432 10.8117 7.53562 10.8117 6.96284 10.239L3.19526 6.47141C2.93491 6.21106 2.93491 5.78905 3.19526 5.5287C3.45561 5.26835 3.87762 5.26835 4.13797 5.5287L7.90555 9.29628C7.95763 9.34825 8.04232 9.34831 8.09435 9.29628L11.8619 5.5287Z" fill="currentColor"/></svg></span>';
+
+    /* 可重排的行，以及每个父节点原本的子节点顺序——切回「按项目」时原样还原。
+       只移动节点、不重建，事件监听因此不会丢。 */
+    var rows=$$('.sub-item, .flat-item',sbScroll).filter(function(r){return !r.classList.contains('muted');});
+    var parents=[];
+    rows.forEach(function(r){ if(parents.indexOf(r.parentNode)<0) parents.push(r.parentNode); });
+    var snap=parents.map(function(p){ return [p, [].slice.call(p.children)]; });
+    function restoreHome(){ snap.forEach(function(s){ s[1].forEach(function(c){ s[0].appendChild(c); }); }); }
+
+    var flatHost=document.createElement('div'); flatHost.className='sb-flat';
+    var dateHost=document.createElement('div'); dateHost.className='sb-dates';
+    sbScroll.appendChild(flatHost); sbScroll.appendChild(dateHost);
+
+    function applyGrouping(mode){
+      restoreHome();
+      flatHost.textContent=''; dateHost.textContent='';
+      sbScroll.setAttribute('data-grouping',mode);
+      groupByValue.textContent=GROUP_LABELS[mode];
+      $$('.menu-item',groupByMenu).forEach(function(it){
+        it.classList.toggle('checked', it.getAttribute('data-group')===mode);
+      });
+      if(mode==='none'){
+        rows.forEach(function(r){ flatHost.appendChild(r); });
+      }else if(mode==='date'){
+        DATE_BUCKETS.forEach(function(b){
+          var bucket=rows.filter(function(r){ return r.getAttribute('data-date')===b.key; });
+          if(!bucket.length) return;
+          var g=document.createElement('div'); g.className='sb-date-group';
+          var h=document.createElement('div'); h.className='group-head sb-date-head';
+          h.innerHTML='<button class="group-toggle" type="button"><span class="group-label">'+b.label+'</span>'+CHEVRON+'</button>';
+          g.appendChild(h);
+          bucket.forEach(function(r){ g.appendChild(r); });
+          h.addEventListener('click',function(){ g.classList.toggle('collapsed'); });
+          dateHost.appendChild(g);
+        });
+      }
+    }
+
+    var displayMenu=$('#displayMenu');
+    viewToggleIcon.addEventListener('click',function(e){
+      e.stopPropagation();
+      displayDd.classList.remove('sub-open');
+      var willOpen=!displayDd.classList.contains('open');
+      displayDd.classList.toggle('open',willOpen);
+      if(willOpen){
+        var r=viewToggleIcon.getBoundingClientRect();
+        displayMenu.style.left=Math.max(8,r.right-displayMenu.offsetWidth)+'px';
+        displayMenu.style.top=(r.bottom+4)+'px';
+      }
     });
+    groupByItem.addEventListener('click',function(e){
+      e.stopPropagation();
+      var willOpen=!displayDd.classList.contains('sub-open');
+      displayDd.classList.toggle('sub-open',willOpen);
+      if(willOpen){
+        var r=groupByItem.getBoundingClientRect();
+        groupByMenu.style.left=(r.right+10)+'px';
+        groupByMenu.style.top=r.top+'px';
+      }
+    });
+    $$('.menu-item',groupByMenu).forEach(function(it){
+      it.addEventListener('click',function(e){
+        e.stopPropagation();
+        applyGrouping(it.getAttribute('data-group'));
+        displayDd.classList.remove('open','sub-open');
+      });
+    });
+    document.addEventListener('click',function(e){
+      if(!e.target.closest('#displayDd')) displayDd.classList.remove('open','sub-open');
+    });
+
+    applyGrouping('project');
   }
 }
 
@@ -255,5 +331,41 @@ export function initSegmentedTabs() {
 
 /* _prevWishW 由其它模块写回；import 绑定只读，所以走这个 setter */
 export function set__prevWishW(v){ _prevWishW=v; return v; }
+
+/* ---------- 项目操作下拉（打开文件夹 / 重命名 / 删除） ---------- */
+export function initProjectActions(){
+  $$('.project-dd').forEach(function(dd){
+    var trigger=$('[data-chip]',dd);
+    if(!trigger) return;
+    trigger.addEventListener('click',function(e){
+      e.stopPropagation();
+      e.preventDefault();
+      var willOpen=!dd.classList.contains('open');
+      $$('.project-dd.open').forEach(function(o){ if(o!==dd) o.classList.remove('open'); });
+      dd.classList.toggle('open',willOpen);
+    });
+    $$('.menu-item',dd).forEach(function(item){
+      item.addEventListener('click',function(e){
+        e.stopPropagation();
+        var action=item.getAttribute('data-action');
+        dd.classList.remove('open');
+        if(action==='open-folder') toast('已打开文件夹');
+        else if(action==='rename') toast('进入重命名模式');
+        else if(action==='delete') toast('确认删除项目？','warn');
+      });
+    });
+  });
+  document.addEventListener('click',function(e){
+    if(!e.target.closest('.project-dd'))
+      $$('.project-dd.open').forEach(function(dd){ dd.classList.remove('open'); });
+  });
+  $$('[data-action="workspace-new-session"]').forEach(function(btn){
+    btn.addEventListener('click',function(e){
+      e.stopPropagation();
+      e.preventDefault();
+      toast('新建会话');
+    });
+  });
+}
 
 export { _prevWishW, closeUserMenu, filterSidebar, sbCollapseIcon, sbSearch, sbSearchIcon, sbSearchInput };

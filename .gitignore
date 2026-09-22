@@ -27,6 +27,8 @@ deploy-bundle/
 # 临时与备份（历史存档另行保留）
 *.bak
 *.tmp
+serve-preview.mjs
+.workbuddy/
 
 # wrangler files
 .wrangler

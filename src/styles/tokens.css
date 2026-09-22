@@ -42,6 +42,14 @@
   --dot-orange: #ff8d42;
   --dot-green: #08cc50;
 
+  /* ---- 中性色（对齐参考工程 neutral 调色板） ---- */
+  --neutral-50: rgba(0, 0, 0, 0.03);
+  --neutral-100: rgba(0, 0, 0, 0.06);
+  --neutral-500: rgba(0, 0, 0, 0.46);
+  --neutral-600: rgba(0, 0, 0, 0.64);
+  --neutral-700: rgba(0, 0, 0, 0.82);
+  --neutral-900: rgba(0, 0, 0, 0.94);
+
   /* ---- 滚动条 ---- */
   --scroll-thumb: #c8c8c8;
   --scroll-thumb-hover: #a8a8a8;

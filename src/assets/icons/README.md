@@ -33,7 +33,7 @@ icons/
 
 ## 活跃分类
 
-### sidebar/ — 侧导航（26）
+### sidebar/ — 侧导航（28）
 
 | 文件名 | 用途 |
 |--------|------|
@@ -53,9 +53,11 @@ icons/
 | `ui-check-small.svg` | 选中标记 |
 | `ui-folder-plus-24.svg` | 新增项目 |
 | `ui-bullet-list.svg` | 切换视图 |
-| `ui-dot-grid-16.svg` | 更多操作 |
+| `ui-dot-grid-16.svg` | 会话操作 |
 | `ui-pencil-16.svg` | 重命名 / 编辑 |
+| `ui-pin.svg` | 置顶会话 |
 | `ui-trash-16.svg` | 删除 |
+| `ui-archive.svg` | 归档会话 |
 | `ui-empty-box.svg` | 空态占位 |
 | `ui-settings-gear.svg` | 设置 |
 | `ui-logout.svg` | 退出登录 |

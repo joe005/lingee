@@ -2,7 +2,7 @@ import billTemplate from '../artifacts/purchase-order.html?raw';
 import tokensCss from '../styles/tokens.css?raw';
 
 import { initLogin } from './features/login.js';
-import { initScrollbar, initUserMenu, initSidebarIcons, initSegmentedTabs } from './features/sidebar.js';
+import { initScrollbar, initUserMenu, initSidebarIcons, initSegmentedTabs, initProjectActions } from './features/sidebar.js';
 import { initToast } from './core/toast.js';
 import { initChangelog } from './features/changelog.js';
 import { initHoverDropdowns, initFormDropdowns } from './features/dropdown.js';
@@ -61,6 +61,7 @@ initSidebarIcons();               /* 2061  features/sidebar.js */
 initSidebarNav();                 /* 2180  core/view.js */
 initApps();                       /* 2208  features/apps.js */
 initSegmentedTabs();              /* 2289  features/sidebar.js */
+initProjectActions();             /* 项目操作下拉（打开文件夹/重命名/删除） */
 initComposer();                   /* 2312  features/composer.js */
 initPromptEnhance();              /* 提示词增强：idle/loading/applied 三态 */
 initHistoryPanel();               /* 2859  features/chat.js */
