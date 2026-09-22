@@ -1,10 +1,14 @@
+import { initTaskBoard } from './task-board.js';
+import { initNewTask } from './new-task.js';
+import { initTaskChat } from './task-chat.js';
 import { $ } from '../../core/dom.js';
-import { cvCloseAddMemberModal, cvConfirmAddMembers, cvDeleteMember, cvLoadSavedTasks, cvOpenAddMemberModal, cvOpenConversation, cvSearchThirdPartyMembers, cvSendChatMessage } from './chat.js';
+import { cvCloseAddMemberModal, cvConfirmAddMembers, cvLoadSavedTasks, cvOpenAddMemberModal, cvOpenConversation, cvSearchThirdPartyMembers, cvSendChatMessage } from './chat.js';
 import { cvApplyConfigScope, cvCaptureConfigDefaults } from './config.js';
-import { cvInjectCardActions, cvRenderReviewStats, cvRenderReviews, cvRenderTaskStats, cvRenderTasks } from './data.js';
-import { cvArchiveSquad, cvCloseNewSquadModal, cvConfirmNewSquad, cvHideSquadDetail, cvOpenNewSquadModal, cvRenderSquadList, cvSetSquadLeader, cvShowSquadDetail, cvSwitchSquadTab } from './squads.js';
+import { cvInjectCardActions, cvRenderReviewStats, cvRenderReviews, cvRenderTaskStats, cvRenderTasks, cvRestorePersons } from './data.js';
+import { cvArchiveSquad, cvCloseNewSquadModal, cvConfirmNewSquad, cvHideSquadDetail, cvOpenNewSquadModal, cvRenderSquadList, cvRestoreSquads, cvSetSquadLeader, cvShowSquadDetail, cvSwitchSquadTab } from './squads.js';
+import { cvCloseAddToProject, cvClosePersonEdit, cvCloseProjectSplit, cvConfirmAddToProject, cvConfirmProjectSplit, cvOpenAddToProject, cvOpenArtFiles, cvOpenPersonEdit, cvOpenPersonNew, cvRenderProjectDetail, cvRenderProjectList, cvSavePersonEdit, cvSearchProjectPersons, initCollabPersons } from './persons.js';
 import { cvRenderExperts, set_cvExpertKw } from './experts.js';
-import { cvRenderProjMenu, cvRenderTeamBind, cvSetProject, cvUpdateCounts } from './projects.js';
+import { cvRenderProjMenu, cvRenderTeamBind, cvRenderWsMenu, cvRestoreProjects, cvSetProject, cvUpdateCounts } from './projects.js';
 import { cvOpenReviewDetail, cvReviewPass, cvReviewReject, cvSubmitReview, cvSwitchArtifact } from './reviews.js';
 import { cvApplyReviewFilters, cvClickReviewStat, cvClickStat, cvCloseSyncModal, cvCloseTaskModal, cvConfirmExec, cvConfirmReview, cvConfirmTransfer, cvConfirmTwist, cvOpenSyncModal, cvOpenTaskModal, cvSaveSyncTask, cvSelectCollabMode, cvSelectPersonItem, cvStartSyncTask, cvToggleSyncDropdown } from './tasks.js';
 import { cvApplyFilters, cvInited, cvPendingProj, cvPendingTab, cvSwitchFilter, cvSwitchView, set_cvInited, set_cvPendingProj, set_cvPendingTab } from './view.js';
@@ -22,18 +26,26 @@ function cvInit(){
   if(cvInited) return;
   set_cvInited(true);
   cvLoadSavedTasks();
+  cvRestoreProjects();
+  cvRestoreSquads();
+  cvRestorePersons();
   cvRenderTaskStats(); cvRenderTasks();
   cvRenderReviewStats(); cvRenderReviews();
   cvRenderSquadList();
+  cvRenderProjectList();
   cvInjectCardActions();
   cvCaptureConfigDefaults();
-  cvRenderProjMenu(); cvRenderTeamBind(); cvApplyConfigScope(); cvUpdateCounts();
+  cvRenderWsMenu(); cvRenderProjMenu(); cvRenderTeamBind(); cvApplyConfigScope(); cvUpdateCounts();
 }
 var cvExpertSearch=$('#cvExpertSearch');
 var cvNewExpertBtn=$('#cvNewExpertBtn');
 var cvExpertSections=$('#cvExpertSections');
 
 export function initCollab() {
+  initTaskBoard();
+  initTaskChat();
+  initNewTask();
+  initCollabPersons();
   var cvMembersPanel=$('#cv-members');
   if(cvMembersPanel) cvMembersPanel.addEventListener('click',function(e){
     var row=e.target.closest('[data-cv-squad]');
@@ -100,7 +112,19 @@ export function initCollab() {
   window.cvCloseAddMemberModal=cvCloseAddMemberModal;
   window.cvSearchThirdPartyMembers=cvSearchThirdPartyMembers;
   window.cvConfirmAddMembers=cvConfirmAddMembers;
-  window.cvDeleteMember=cvDeleteMember;
+  window.cvOpenPersonNew=cvOpenPersonNew;
+  window.cvOpenPersonEdit=cvOpenPersonEdit;
+  window.cvClosePersonEdit=cvClosePersonEdit;
+  window.cvSavePersonEdit=cvSavePersonEdit;
+  window.cvOpenAddToProject=cvOpenAddToProject;
+  window.cvCloseAddToProject=cvCloseAddToProject;
+  window.cvSearchProjectPersons=cvSearchProjectPersons;
+  window.cvConfirmAddToProject=cvConfirmAddToProject;
+  window.cvRenderProjectList=cvRenderProjectList;
+  window.cvRenderProjectDetail=cvRenderProjectDetail;
+  window.cvOpenArtFiles=cvOpenArtFiles;
+  window.cvCloseProjectSplit=cvCloseProjectSplit;
+  window.cvConfirmProjectSplit=cvConfirmProjectSplit;
   window.cvOpenNewSquadModal=cvOpenNewSquadModal;
   window.cvCloseNewSquadModal=cvCloseNewSquadModal;
   window.cvConfirmNewSquad=cvConfirmNewSquad;

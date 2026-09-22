@@ -53,3 +53,16 @@
   /* ---- 圆角 ---- */
   --r-xl: 16px;
 }
+
+:root {
+  --tb-heading-size: 21px;
+  --tb-body-size: 14px;
+  --tb-small-size: 12px;
+  --tb-caption-size: 11px;
+  --tb-radius: 8px;
+  --tb-running-bg: #fcfaef;
+  --tb-review-bg: #f2f9f3;
+  --tb-done-bg: #f0f5ff;
+  --tb-failed-bg: #fcf5f4;
+  --tb-backdrop: rgba(20, 25, 40, .28);
+}

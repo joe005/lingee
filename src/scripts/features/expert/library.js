@@ -1,6 +1,6 @@
 import { $, $$ } from '../../core/dom.js';
 import { summon } from './automatch.js';
-import { EX, EXPERTS, compChip, phraseHtml, xav, xesc } from './data.js';
+import { EX, EXPERTS, compChip, phraseHtml, skillInfo, tierInfo, xav, xesc } from './data.js';
 import { deleteMyExpert, openExpertEditor } from './editor.js';
 import { knSecHtml, resetKnDetail, saveKnDetail } from './knowledge.js';
 import { TEAMS, teamDomains } from './store.js';
@@ -16,6 +16,10 @@ var expertGrid=$('#expertGrid');
 function facesHtml(ids,n){
   return '<span class="x-faces">'+ids.slice(0,n||4).map(function(i){
     return '<img src="'+xav(EX[i].k)+'" alt="">'; }).join('')+'</span>';
+}
+function tierChip(tier){
+  var t=tierInfo(tier);
+  return '<span class="ptag ptag-tier" title="'+xesc(t.desc)+'">'+xesc(t.label)+'</span>';
 }
 function renderExpertGrid(){
   if(!expertGrid) return;
@@ -41,7 +45,7 @@ function renderExpertGrid(){
   }else{
     var rows2=EXPERTS.filter(function(e){
       if(!kw) return true;
-      return (e.name+e.role+e.desc+e.tags.join()).indexOf(kw)>=0;
+      return (e.name+e.role+e.desc+e.tags.join()+(e.skills||[]).map(function(id){return skillInfo(id).name}).join()).indexOf(kw)>=0;
     });
     html=rows2.map(function(e){
       return '<div class="app-card x-card" data-expert="'+e.id+'">'
@@ -91,22 +95,27 @@ function openExpertModal(id){
       +(c[1]?'<span class="x-cmd-d">'+xesc(c[1])+'</span>':'')+'</span>'
       +'<svg class="x-cmd-go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H7l-4 3v-6.5A8 8 0 0 1 11 4h2a8 8 0 0 1 8 8z"/></svg>'
       +'</button>'}).join('')+'</div>':'')
-    +(e.skills?'<div class="x-sec"><div class="x-sec-t">挂载技能</div><div class="x-chips">'+e.skills.map(function(k){return '<span class="ptag">'+xesc(k)+'</span>'}).join('')+'</div></div>':'')
     +'<div class="x-sec"><div class="x-sec-t">能力项</div><div class="x-chips">'+e.comp.map(compChip).join('')+'</div></div>'
-    +'<div class="x-sec"><div class="x-sec-t">可承担的工作</div><div class="x-chips">'+e.modes.map(function(m){return '<span class="ptag">'+xesc(m)+'</span>'}).join('')+'</div></div>';
+    +'<div class="x-sec"><div class="x-sec-t">可承担的工作</div><div class="x-chips">'+e.modes.map(function(m){return '<span class="ptag">'+xesc(m)+'</span>'}).join('')+'</div></div>'
+    +'<div class="x-sec"><div class="x-sec-t">模型级别</div><div class="x-chips">'+tierChip(e.tier)+'</div></div>';
 
+  var skills=e.skills||[];
+  var skillsHtml='<div class="x-skill-head"><strong>内置技能</strong><span>'+skills.length+'</span></div>'
+    +(skills.length?'<div class="x-skill-list">'+skills.map(function(id){
+      var s=skillInfo(id);
+      return '<div class="x-skill-row"><span class="x-skill-icon tone-'+xesc(s.tone)+'" aria-hidden="true">✦</span>'
+        +'<span class="x-skill-copy"><strong>'+xesc(s.name)+'</strong><span>'+xesc(s.desc)+'</span></span></div>';
+    }).join('')+'</div>':'<div class="x-skill-empty">这位专家暂未挂载技能</div>');
   var knHtml=knSecHtml(e);
   /* 概览一项项堆下去本来就长，知识按能力项还能再分好几组——分成顶部页签，一次只看一块，
      跟智能体详情页顶部「概览／知识／…」的页签是同一个思路，不再全部堆在一屏里 */
-  if(knHtml){
-    $('#expertModalBody').innerHTML='<div class="modal-tabs" id="xdTabs">'
-      +'<button type="button" class="modal-tab active" data-xdtab="overview">概览</button>'
-      +'<button type="button" class="modal-tab" data-xdtab="kn">知识</button></div>'
-      +'<div class="x-detail-pane" data-xdpane="overview">'+overview+'</div>'
-      +'<div class="x-detail-pane hidden" data-xdpane="kn">'+knHtml+'</div>';
-  }else{
-    $('#expertModalBody').innerHTML=overview;
-  }
+  $('#expertModalBody').innerHTML='<div class="modal-tabs" id="xdTabs">'
+    +'<button type="button" class="modal-tab active" data-xdtab="overview">概览</button>'
+    +'<button type="button" class="modal-tab" data-xdtab="skills">技能</button>'
+    +(knHtml?'<button type="button" class="modal-tab" data-xdtab="kn">知识</button>':'')+'</div>'
+    +'<div class="x-detail-pane" data-xdpane="overview">'+overview+'</div>'
+    +'<div class="x-detail-pane hidden" data-xdpane="skills">'+skillsHtml+'</div>'
+    +(knHtml?'<div class="x-detail-pane hidden" data-xdpane="kn">'+knHtml+'</div>':'');
   $('#expertModalFoot').innerHTML=
     (e.mine?'<button type="button" class="btn-link team-delete-btn" data-x-del="'+e.id+'">删除该专家</button>':'')
     +'<div class="team-footer-spacer"></div>'

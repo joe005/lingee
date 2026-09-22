@@ -1,5 +1,5 @@
 import { $ } from '../../core/dom.js';
-import { EXPERTS, xav, xesc } from '../expert/data.js';
+import { EXPERTS, skillInfo, xav, xesc } from '../expert/data.js';
 /* 协作开发：专家管理分组卡片
    拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
    由 main.js 按拆分前的原始顺序调用。 */
@@ -11,7 +11,7 @@ function cvExpertGroups(){
   var kw=cvExpertKw.trim();
   var rows=EXPERTS.filter(function(e){
     if(!kw) return true;
-    return (e.name+e.role+e.desc+(e.tags||[]).join()).indexOf(kw)>=0;
+    return (e.name+e.role+e.desc+(e.tags||[]).join()+(e.skills||[]).map(function(id){return skillInfo(id).name}).join()).indexOf(kw)>=0;
   });
   return [
     {title:'Lingee 内置',desc:'随产品一起维护，覆盖交付全流程与苍穹、前端等领域',list:rows.filter(function(e){return e.by==='Lingee 内置'})},
@@ -19,22 +19,24 @@ function cvExpertGroups(){
   ];
 }
 function cvBuildExpertCard(e){
-  var tags=(e.tags||[]).map(function(t){return '<span class="expert-skill">'+xesc(t)+'</span>'}).join('');
-  /* 「能承担哪些工作」比「有几种工作模式」更能决定选不选他，直接摆出来 */
+  /* 与专家团卡片统一用 app-card x-card 结构，更清爽 */
+  var skills=(e.skills||[]).map(function(id){return skillInfo(id)});
+  var tags=skills.slice(0,3).map(function(s){return '<span class="ptag">'+xesc(s.name)+'</span>'}).join('')
+    +(skills.length>3?'<span class="ptag">+'+(skills.length-3)+'</span>':'');
   var mAll=e.modes||[], mShow=mAll.slice(0,3), mRest=mAll.length-mShow.length;
   var modeRow=mAll.length
-    ? '<div class="expert-modes" title="可承担 '+xesc(mAll.join(' / '))+'"><span class="expert-modes-k">可承担</span>'
-      +mShow.map(function(m){return '<span class="expert-mode">'+xesc(m)+'</span>'}).join('')
-      +(mRest>0?'<span class="expert-mode expert-mode-more">+'+mRest+'</span>':'')+'</div>'
+    ? '<div class="x-modes" title="可承担 '+xesc(mAll.join(' / '))+'"><span class="x-modes-k">可承担</span>'
+      +mShow.map(function(m){return '<span class="x-mode">'+xesc(m)+'</span>'}).join('')
+      +(mRest>0?'<span class="x-mode x-mode-more">+'+mRest+'</span>':'')+'</div>'
     : '';
-  return '<div class="expert-card" data-cv-expert="'+e.id+'">'
-    +'<button type="button" class="expert-chat-btn" data-cv-call="'+e.id+'" title="对话这位专家">对话</button>'
-    +'<div class="expert-head"><img class="expert-av" src="'+xav(e.k)+'" alt="">'
-    +'<div><div class="expert-name">'+xesc(e.name)
-    +(e.ro?'<span class="expert-flag">只读</span>':'')+'</div>'
-    +'<div class="expert-role">'+xesc(e.role)+'</div></div></div>'
-    +'<div class="expert-intro">'+xesc(e.desc)+'</div>'
-    +'<div class="expert-skills">'+tags+'</div>'
+  return '<div class="app-card x-card" data-cv-expert="'+e.id+'">'
+    +'<button type="button" class="x-call" data-cv-call="'+e.id+'" title="对话这位专家">对话</button>'
+    +'<div class="card-top"><img class="x-av" src="'+xav(e.k)+'" alt="">'
+    +'<div class="card-titles"><div class="card-title-row"><span class="card-title">'+xesc(e.name)+'</span>'
+    +(e.ro?'<span class="x-badge x-badge-ro">只读</span>':'')+'</div>'
+    +'<div class="x-sub">'+xesc(e.role)+' · '+xesc(e.by)+'</div></div></div>'
+    +'<div class="card-desc">'+xesc(e.desc)+'</div>'
+    +(tags?'<div class="card-tags">'+tags+'</div>':'')
     +modeRow
     +'</div>';
 }
@@ -53,13 +55,13 @@ function cvRenderExperts(){
     if(!g.list.length && g.title!=='我创建的') return '';
     var cards=g.list.map(cvBuildExpertCard).join('');
     if(g.title==='我创建的'){
-      cards+='<button type="button" class="expert-card expert-new" data-cv-new-expert>'
-        +'<span class="expert-new-ic">＋</span><span class="expert-new-t">创建专家</span>'
-        +'<span class="expert-new-s">手填表单，或一句话交给 expert-manager</span></button>';
+      cards+='<button type="button" class="app-card x-new-card" data-cv-new-expert>'
+        +'<span class="x-new-ic">＋</span><span>创建专家</span>'
+        +'<span class="x-new-sub">手填表单，或一句话交给 expert-manager</span></button>';
     }
     return '<div class="expert-section-title">'+g.title
       +'<span class="expert-section-desc">'+g.desc+'</span></div>'
-      +'<div class="expert-grid">'+cards+'</div>';
+      +'<div class="apps-grid">'+cards+'</div>';
   }).join('');
   box.innerHTML=html||'<div class="x-empty">没有匹配的专家</div>';
 }

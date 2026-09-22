@@ -27,17 +27,47 @@ var EXPERT_AV = {
 function xav(k){ return 'data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">'+EXPERT_AV[k]+'</svg>'); }
 function xesc(v){ return String(v==null?'':v).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]}); }
 
+/* 技能是专家可直接调用的工作方法；详情页用中文名与描述展示，机器 id 只用于内部绑定。 */
+var SKILL_META={
+  'delivery-planner':{name:'交付规划',desc:'拆解交付目标、范围、分工与验收门禁，形成可追踪的执行计划。',tone:'blue'},
+  'integration-review':{name:'集成收口',desc:'汇总各角色产物与验证证据，判断交付是否可关闭或需升级风险。',tone:'green'},
+  'requirements-design':{name:'需求设计',desc:'把用户目标整理成有边界、有优先级且可执行的需求清单。',tone:'orange'},
+  'acceptance-criteria':{name:'验收标准设计',desc:'为需求补齐可观察、可测量、可回归的验收条件。',tone:'green'},
+  'architecture-design':{name:'系统架构设计',desc:'设计系统边界、数据流、接口契约与失败处理方案。',tone:'purple'},
+  'implementation-planning':{name:'实现计划',desc:'把架构方案拆成可编码、可验证、有依赖关系的开发任务。',tone:'blue'},
+  'cosmic-app-builder':{name:'苍穹应用开发',desc:'围绕苍穹表单、流程、报表、插件与开放接口交付企业应用。',tone:'cyan'},
+  'general-app-builder':{name:'通用应用开发',desc:'从需求到实现和验证，交付可运行的 Web 或业务应用。',tone:'green'},
+  'site-builder':{name:'网站交付',desc:'构建完整网站、业务门户或内部工具，并完成响应式适配。',tone:'blue'},
+  'test-design':{name:'测试设计',desc:'按风险设计功能、异常、边界与端到端验收场景。',tone:'orange'},
+  'regression-verification':{name:'回归验证',desc:'执行构建、接口与用例验证，输出带证据的质量结论。',tone:'green'},
+  'code-review':{name:'代码评审',desc:'检查实现正确性、并发安全、契约落实与可维护性风险。',tone:'purple'},
+  'threat-modeling':{name:'威胁建模',desc:'识别信任边界，演练滥用、竞态与绕过路径，给出安全风险判定。',tone:'red'},
+  'codebase-analysis':{name:'代码库分析',desc:'在不修改工作区的前提下追踪实现路径，给出有边界的证据结论。',tone:'gray'},
+  'cosmic-kwc-builder':{name:'KWC 组件开发',desc:'按金蝶前端规范实现可复用组件、交互与响应式布局。',tone:'cyan'},
+  'frontend-design':{name:'前端设计实现',desc:'从信息层级、排版、间距与交互反馈出发，实现有意图的界面。',tone:'purple'},
+  'prototype-builder':{name:'交互原型设计',desc:'把产品需求转成可点击、可走查、可交付开发的高保真原型。',tone:'orange'},
+  'cosmic-requirements-spec':{name:'苍穹需求规格',desc:'将业务需求转成苍穹单据、字段、权限与配置规格。',tone:'cyan'},
+  'cosmic-form-builder':{name:'苍穹表单搭建',desc:'配置单据字段、校验、联动、布局和字段级权限。',tone:'green'},
+  'cosmic-workflow-builder':{name:'苍穹工作流',desc:'设计并调试审批链、条件流转、加签、会签与异常节点。',tone:'purple'},
+  'cosmic-report-builder':{name:'苍穹报表搭建',desc:'设计报表数据模型、取数口径、图表展示与查询性能优化。',tone:'orange'},
+  'cosmic-reverse-engineering':{name:'苍穹二开分析',desc:'定位扩展点、插件注册与生命周期，支持二开实现与排障。',tone:'purple'},
+  'cosmic-api-integration':{name:'苍穹接口集成',desc:'完成开放接口契约、鉴权、数据映射、幂等同步与异常重试。',tone:'cyan'}
+};
+function skillInfo(id){ return SKILL_META[id]||{name:id,desc:'该技能已挂载，暂无补充说明。',tone:'gray'}; }
+
 var EXPERTS=[
   {id:'software-team-lead',k:'lead',name:'软件团队负责人',role:'交付负责人',by:'Lingee 内置',
    desc:'协调范围、分工、集成、风险与交付闭环，是专家团里唯一能开 kickoff 与做最终集成确认的角色。',
    tags:['交付管理','团队协调'],modes:['分析','设计','集成','评审','验证','恢复'],
    comp:['delivery.orchestration · principal','delivery.integration · advanced'],
+   skills:['delivery-planner','integration-review'],
    cmds:[['帮我把[交付目标]拆成范围、非目标和验收门禁','闭合范围，明确谁负责、做到什么算完'],
          ['这次交付复盘一下，还有哪些残余风险','汇总各角色证据，给出关闭或升级建议']]},
   {id:'software-product-manager',k:'pm',name:'软件产品经理',role:'产品经理',by:'Lingee 内置',
    desc:'把用户目标翻译成有优先级、可观察的需求与验收条件。',
    tags:['需求分析','验收设计'],modes:['分析','设计','评审'],
    comp:['product.requirements · principal','product.acceptance-design · advanced'],
+   skills:['requirements-design','acceptance-criteria'],
    cmds:[['把[用户目标]拆成一份带验收条件的清单','把目标整理成有范围、可验收的需求'],
          ['帮我给这些需求补齐验收标准','补上可观察、可验证的验收条件'],
          ['这次哪些事不做？帮我列一下非目标','明确边界，防止范围蔓延']]},
@@ -45,6 +75,7 @@ var EXPERTS=[
    desc:'设计可演进的系统边界、合同、数据流与失败处理，产出架构文档与可执行的实现计划。',
    tags:['软件架构','可靠性'],modes:['分析','设计','集成','评审','恢复'],
    comp:['architecture.system-design · principal','architecture.reliability · advanced'],
+   skills:['architecture-design','implementation-planning'],
    cmds:[['按[需求]设计系统的边界、合同和失败处理','从需求产出可演进的架构方案与迁移路径'],
          ['这几个方案怎么选？帮我做技术选型','按质量属性评估备选方案并记录取舍'],
          ['把架构拆成可以直接开工的实现计划','产出带可执行验证命令的编码任务图']]},
@@ -60,6 +91,7 @@ var EXPERTS=[
    desc:'独立验证验收行为、回归影响与交付风险，给出基于证据的质量结论。',
    tags:['质量保障','独立验证'],modes:['分析','设计','评审','验证'],
    comp:['quality.verification · principal','quality.regression-analysis · advanced'],
+   skills:['test-design','regression-verification'],
    cmds:[['针对[变更说明]出一份验证计划','按风险模型设计验收与回归场景'],
          ['帮我端到端跑一遍，看看能不能过','实际跑 build、请求与用例并留存证据'],
          ['这个版本能发吗？给个质量结论','给出 pass / pass-with-risk / fail 与理由']]},
@@ -67,16 +99,19 @@ var EXPERTS=[
    desc:'独立评审实现代码的正确性、并发安全与合同落实情况，只读不改。',
    tags:['只读评审','正确性'],modes:['评审','验证'],
    comp:['implementation-correctness · principal','concurrent-commit-model · principal'],
+   skills:['code-review'],
    cmds:[['帮我评审这段代码有没有正确性问题','把合同义务追溯到代码路径，报告可复现的缺陷']]},
   {id:'security-reviewer',k:'sec',name:'安全评审专家',role:'应用安全评审',by:'Lingee 内置',ro:true,
    desc:'基于信任边界建立威胁模型，演练滥用、竞态与绕过场景并给出风险判定。',
    tags:['只读评审','威胁建模'],modes:['评审','验证'],
    comp:['application-security · principal','filesystem-safety · advanced'],
+   skills:['threat-modeling'],
    cmds:[['这个功能有安全风险吗？帮我做威胁建模','演练滥用与绕过场景，判断风险是否可接受']]},
   {id:'read-only-analyst',k:'ana',name:'只读分析专家',role:'软件分析',by:'Lingee 内置',ro:true,
    desc:'在不改动工作区的前提下做有边界的源码分析与结论交叉验证。',
    tags:['只读分析'],modes:['分析','评审','验证'],
    comp:['software.analysis · advanced'],
+   skills:['codebase-analysis'],
    cmds:[['帮我读一下这块代码是怎么跑的','有边界地读源码，给出结论与证据，不改文件']]},
   {id:'frontend-engineer',k:'fe',name:'前端工程专家',role:'前端工程师',by:'Lingee 内置',
    desc:'金蝶前端规范下的组件实现、响应式布局与交互调试。',
@@ -95,7 +130,7 @@ var EXPERTS=[
   {id:'cosmic-form',k:'form',name:'苍穹表单专家',role:'苍穹表单',by:'Lingee 内置',
    desc:'KDDP 表单引擎的字段、校验、联动与权限配置。',
    tags:['表单设计','字段校验'],modes:['分析','设计','实现'],
-   comp:['cosmic.form-design · advanced'],skills:['cosmic-requirements-spec'],
+   comp:['cosmic.form-design · advanced'],skills:['cosmic-requirements-spec','cosmic-form-builder'],
    cmds:[['按[已确认需求]建一张苍穹单据','设计表单结构与字段'],
          ['这几个字段要联动，帮我配一下','配置校验规则与字段联动逻辑'],
          ['这张单据的权限怎么配？','设置单据与字段级权限']]},
@@ -103,12 +138,14 @@ var EXPERTS=[
    desc:'审批链配置与流程调试，处理加签、会签、条件流转等复杂场景。',
    tags:['审批链','流程调试'],modes:['分析','设计','实现','验证'],
    comp:['cosmic.workflow · advanced'],
+   skills:['cosmic-workflow-builder'],
    cmds:[['按[已确认需求]设计一条苍穹审批流程','梳理审批场景并配置工作流'],
          ['我的审批流节点卡住了，帮我排查','定位节点为什么不流转']]},
   {id:'cosmic-report',k:'rpt',name:'苍穹报表专家',role:'苍穹报表',by:'Lingee 内置',
    desc:'报表建模、取数逻辑与图表配置，兼顾查询性能与交互式分析。',
    tags:['报表建模','取数逻辑'],modes:['分析','设计','实现'],
    comp:['cosmic.report · advanced'],
+   skills:['cosmic-report-builder'],
    cmds:[['按[已确认需求]做一张报表','设计报表数据模型与取数逻辑'],
          ['报表查得太慢了，帮我优化','优化取数与查询性能']]},
   {id:'cosmic-plugin',k:'plug',name:'苍穹二开插件专家',role:'苍穹二开',by:'Lingee 内置',
@@ -121,6 +158,7 @@ var EXPERTS=[
    desc:'开放接口对接、鉴权配置与数据同步，含异常重试与幂等设计。',
    tags:['接口对接','鉴权'],modes:['设计','实现','集成','验证'],
    comp:['cosmic.integration · advanced'],
+   skills:['cosmic-api-integration'],
    cmds:[['按[接口契约]对接苍穹开放接口','确认契约与鉴权方式并实现对接'],
          ['接口鉴权怎么配？','配置鉴权与安全策略'],
          ['两边数据要同步，帮我设计方案','设计幂等同步任务与异常重试']]}
@@ -136,6 +174,15 @@ function rebuildExperts(){
 /* 可选头像：复用内置的一套图形，创建专家时挑一个 */
 var AV_KEYS=['lead','pm','arch','eng','qa','cr','sec','ana','fe','ux','form','flow','rpt','plug','api'];
 var WORK_MODES=['分析','设计','实现','集成','评审','验证','恢复'];
+
+/* 模型级别：智能体运行时用哪个推理档位 */
+var MODEL_TIERS=[
+  {id:'auto',  label:'自动', desc:'按任务复杂度自动选择'},
+  {id:'fast',  label:'快速', desc:'响应最快，适合简单明确的任务'},
+  {id:'expert',label:'专家', desc:'更强推理，适合复杂任务'},
+  {id:'deep',  label:'深度', desc:'深度思考，适合高难度任务'}
+];
+function tierInfo(id){ for(var i=0;i<MODEL_TIERS.length;i++) if(MODEL_TIERS[i].id===id) return MODEL_TIERS[i]; return MODEL_TIERS[0]; }
 
 /* ---------- 能力项字典 ----------
    定义文件里能力项是机器标识（architecture.system-design · principal），
@@ -219,38 +266,38 @@ function teamCoverage(t){
 }
 
 var PRESET_TEAMS=[
-  {id:'software-company',preset:true,name:'软件开发团队',by:'Lingee 内置',
-   desc:'跨职能软件产品交付团队，覆盖需求、架构、实现、质量与集成的完整闭环。也是新建任务时的默认选择。',
-   domains:['通用软件','后端','前端','数据库'],
+  {id:'cosmic-app-dev',preset:true,name:'苍穹应用开发专家团',by:'Lingee 内置',
+   desc:'面向苍穹应用完整交付，覆盖需求、表单、流程、报表、二开插件、接口与质量验证。',
+   domains:['苍穹应用','表单','工作流','报表','集成'],
    leadId:'software-team-lead',
-   members:['software-team-lead','software-product-manager','software-architect','software-engineer','software-qa-engineer'],
-   cmds:[['帮我把"购物车支持优惠券"这个想法做成能上线的功能','从需求到验收走完整闭环'],
-         ['订单导出模块要重做，需求、架构、实现、测试、集成走一遍','逐环节推进，每一步都留下可核验的产出'],
-         ['登录鉴权这块需求还没理清，先帮我拆一版方案再动手','先出需求与实现计划，评审通过再编码']]},
-  {id:'fast-app',preset:true,name:'应用速成团队',by:'Lingee 内置',
-   desc:'工程师一次性写完全部代码，QA 端到端验证。适合单页应用、小游戏、原型页这类一次交付的活。',
-   domains:['单页应用','原型','小工具'],
-   leadId:'software-engineer',
-   members:['software-engineer','software-qa-engineer'],
-   cmds:[['做一个单页小工具，今天就要用','一次性写完代码并跑通 build'],
-         ['帮我快速搭个原型页看看效果','省掉评审环节，直接实现 + 自检'],
-         ['写个小游戏练手','小体量一次交付']]},
-  {id:'cosmic-team',preset:true,name:'苍穹交付团队',by:'Lingee 内置',
-   desc:'面向苍穹配置化交付：需求规格 → 表单与流程配置 → 报表 → 二开插件 → 接口集成。',
-   domains:['苍穹','表单','工作流','报表','集成'],
+   members:['software-team-lead','software-product-manager','cosmic-form','cosmic-workflow','cosmic-report','cosmic-plugin','cosmic-api','software-qa-engineer'],
+   cmds:[['帮我在苍穹上做一套请假申请，从单据到审批','表单、流程、报表、接口一体化交付'],
+         ['这个业务要在苍穹落地，帮我出方案并实现','先出需求规格，再按依赖拆分实现与验证'],
+         ['苍穹单据、流程和报表都要改，帮我排一下','按依赖顺序编排配置、二开与验证任务']]},
+  {id:'general-app-dev',preset:true,name:'通用应用开发专家团',by:'Lingee 内置',
+   desc:'面向 Web 与通用业务应用，覆盖产品、架构、体验、前后端实现、测试与集成交付。',
+   domains:['通用应用','Web','前端','产品设计'],
+   leadId:'software-team-lead',
+   members:['software-team-lead','software-product-manager','software-architect','software-engineer','frontend-engineer','ux-designer','software-qa-engineer'],
+   cmds:[['帮我把购物车支持优惠券做成能上线的功能','从需求、设计、实现到验收走完整闭环'],
+         ['做一个业务管理 Web 应用','产品、架构、体验与工程协同交付'],
+         ['按这份设计稿把页面实现出来并走查一遍','实现页面并完成设计与质量验证']]},
+  {id:'kingdee-saas-implementation',preset:true,name:'金蝶 SaaS 实施专家团',by:'Lingee 内置',
+   desc:'面向金蝶 SaaS 业务落地，梳理实施需求并完成表单、流程、报表和系统集成配置。',
+   domains:['金蝶 SaaS','实施','流程配置','业务集成'],
    leadId:'software-team-lead',
    members:['software-team-lead','software-product-manager','cosmic-form','cosmic-workflow','cosmic-report','cosmic-api'],
-   cmds:[['帮我在苍穹上做一套请假申请，从单据到审批','表单、流程、报表、接口一条龙配下来'],
-         ['这个业务要在苍穹落地，帮我出方案','先出需求规格，再分头配置'],
-         ['苍穹这块单据和流程都要改，帮我排一下','按依赖顺序编排配置任务']]},
-  {id:'web-team',preset:true,name:'网页交付团队',by:'Lingee 内置',
-   desc:'设计与前端配对交付：信息架构与视觉规范先行，前端按规范实现并做设计走查。',
-   domains:['Web','前端','视觉设计'],
-   leadId:'ux-designer',
-   members:['ux-designer','frontend-engineer','software-qa-engineer'],
-   cmds:[['帮我做一个官网首页，设计和前端都要','先出设计规范，再按规范实现'],
-         ['这几个页面要重新设计并实现','信息架构先行，前端跟进，最后走查'],
-         ['按这份设计稿把页面实现出来并走查一遍','实现 + 设计一致性检查']]}
+   cmds:[['帮我梳理费用报销的 SaaS 实施方案','从业务需求到配置清单形成实施方案'],
+         ['这套审批业务要在金蝶 SaaS 落地','完成表单、流程、报表与接口配置'],
+         ['帮我检查当前实施配置还缺什么','核对需求覆盖、配置结果和集成风险']]},
+  {id:'kingdee-secondary-dev',preset:true,name:'金蝶二次开发专家团',by:'Lingee 内置',
+   desc:'面向金蝶产品扩展开发，覆盖技术方案、插件与接口实现、前端扩展、测试和升级兼容。',
+   domains:['金蝶二开','插件','开放接口','前端扩展'],
+   leadId:'software-architect',
+   members:['software-architect','software-engineer','frontend-engineer','cosmic-plugin','cosmic-api','software-qa-engineer'],
+   cmds:[['现有金蝶应用要增加一个二开功能','定位扩展点，完成方案、实现与验证'],
+         ['帮我开发并联调这个苍穹插件','完成插件、接口和前端扩展的协同交付'],
+         ['这次升级会不会影响已有二开','检查扩展点、接口契约和回归风险']]}
 ];
 
 export function initExpertData() {
@@ -260,4 +307,4 @@ export function initExpertData() {
 /* MY_EXPERTS 由其它模块写回；import 绑定只读，所以走这个 setter */
 export function set_MY_EXPERTS(v){ MY_EXPERTS=v; return v; }
 
-export { AV_KEYS, EX, EXPERTS, MY_EXPERTS, PRESET_TEAMS, WORK_MODES, askFor, compChip, parseComp, pendingInputs, phraseHtml, rebuildExperts, teamCoverage, xav, xesc };
+export { AV_KEYS, EX, EXPERTS, MODEL_TIERS, MY_EXPERTS, PRESET_TEAMS, WORK_MODES, askFor, compChip, parseComp, pendingInputs, phraseHtml, rebuildExperts, skillInfo, teamCoverage, tierInfo, xav, xesc };

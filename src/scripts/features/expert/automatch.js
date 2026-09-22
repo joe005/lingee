@@ -13,9 +13,9 @@ import { activePick, pickName, pickValid, set_activePick, teamById } from './sto
 /* ---------- 没选专家时的自动匹配 ---------- */
 /* 专家团不是必选的：不选就由系统按开发模式 + 任务描述挑一个，并在会话里说明挑了谁 */
 var MODE_MATCH={
-  '苍穹应用':{kind:'team',id:'cosmic-team'},
+  '苍穹应用':{kind:'team',id:'cosmic-app-dev'},
   '原型探索':{kind:'expert',id:'ux-designer'},
-  '通用应用':{kind:'team',id:'fast-app'},
+  '通用应用':{kind:'team',id:'general-app-dev'},
   '业务组件':{kind:'expert',id:'software-engineer'},
   '技能开发':{kind:'expert',id:'software-engineer'},
   '智能体开发':{kind:'expert',id:'software-engineer'}
@@ -44,7 +44,7 @@ function autoMatch(text){
   /* 跨了两个以上领域，一个人扛不住，上专家团 */
   if(hits.length>=2){
     var cosmic=hits.filter(function(r){ return r.id.indexOf('cosmic-')===0; }).length;
-    var pick=cosmic>=2?'cosmic-team':'software-company';
+    var pick=cosmic>=2?'cosmic-app-dev':'general-app-dev';
     if(teamById(pick)) return {kind:'team',id:pick,auto:true};
   }
   if(hits.length===1) return {kind:'expert',id:hits[0].id,auto:true};
@@ -53,7 +53,7 @@ function autoMatch(text){
   if(m && ((m.kind==='team'&&teamById(m.id))||(m.kind==='expert'&&EX[m.id])))
     return {kind:m.kind,id:m.id,auto:true};
 
-  return teamById('software-company')?{kind:'team',id:'software-company',auto:true}:null;
+  return teamById('general-app-dev')?{kind:'team',id:'general-app-dev',auto:true}:null;
 }
 /* 对话 = 选中这个专家/专家团 + 把第一条触发词带进输入框 */
 function summon(kind,id,phrase){

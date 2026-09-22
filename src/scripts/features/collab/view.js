@@ -1,7 +1,10 @@
+import { renderTaskBoard } from './task-board.js';
 import { $, $$ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
 import { setNavActive, showView } from '../../core/view.js';
 import { cvRenderExperts } from './experts.js';
+import { cvRenderPermTable } from './persons.js';
+import { getRole } from '../login.js';
 import { cvSyncUrl } from './projects.js';
 import { xesc } from '../expert/data.js';
 import { renderExpertGrid } from '../expert/library.js';
@@ -19,42 +22,16 @@ function cvSwitchFilter(btn){
 function cvApplyFilters(){
   var taskView=document.getElementById('cv-tasks');
   if(taskView&&taskView.classList.contains('active')){
-    var typeF=cvGetFilterVal(taskView,'type');
-    var statusF=cvGetFilterVal(taskView,'status');
-    var collabF=cvGetFilterVal(taskView,'collab');
-    var sizeF=cvGetFilterVal(taskView,'size');
-    var search=(taskView.querySelector('input')||{}).value||'';
-    search=search.toLowerCase();
-    taskView.querySelectorAll('.card').forEach(function(card){
-      var match=true;
-      if(typeF&&typeF!=='全部'&&card.getAttribute('data-type')!==typeF)match=false;
-      if(match&&statusF&&statusF!=='全部状态'&&card.getAttribute('data-status')!==statusF)match=false;
-      if(match&&collabF&&collabF!=='全部协作'&&card.getAttribute('data-collab')!==collabF)match=false;
-      if(match&&sizeF&&sizeF!=='全部大小'){
-        var cs=card.getAttribute('data-size');if((sizeF==='小任务'&&cs!=='小')||(sizeF==='大任务'&&cs!=='大'))match=false;
-      }
-      if(match&&search){
-        var title=(card.querySelector('.card-title')||{}).textContent||'';if(title.toLowerCase().indexOf(search)<0)match=false;
-      }
-      card.style.display=match?'':'none';
-    });
+    renderTaskBoard();
   }
   var memberView=document.getElementById('cv-members');
   if(memberView&&memberView.classList.contains('active')){
     var msearch=(memberView.querySelector('input')||{}).value||'';
     msearch=msearch.toLowerCase();
-    var detail=memberView.querySelector('#cv-squad-detail');
-    if(detail&&!detail.classList.contains('hidden')){
-      detail.querySelectorAll('.sq-member').forEach(function(card){
-        var name=(card.querySelector('.sq-member-name')||{}).textContent||'';
-        card.style.display=(!msearch||name.toLowerCase().indexOf(msearch)>=0)?'':'none';
-      });
-    }else{
-      memberView.querySelectorAll('.sq-row').forEach(function(row){
-        var name=(row.querySelector('.sq-n')||{}).textContent||'';
-        row.style.display=(!msearch||name.toLowerCase().indexOf(msearch)>=0)?'':'none';
-      });
-    }
+    memberView.querySelectorAll('#cv-proj-list .pj-card').forEach(function(card){
+      var name=(card.querySelector('.pj-name')||{}).textContent||'';
+      card.style.display=(!msearch||name.toLowerCase().indexOf(msearch)>=0)?'':'none';
+    });
   }
 }
 function cvGetFilterVal(view,type){
@@ -69,18 +46,49 @@ function cvGetFilterVal(view,type){
 /* ---------- 面板切换 ---------- */
 var cvInited=false, cvLastTab='tasks';
 var cvPendingTab, cvPendingProj;   /* 由上面的 URL 恢复逻辑先行赋值，故此处不带初始值 */
+/* 一级页签「设置」带二级子页签；cvSubState 记录当前停留的子视图 */
+var cvSubState={config:'config'};
+var CV_SUBS={
+  config:[['config','工作区设置'],['config-perm','人员与权限']]
+};
+function cvPrimaryOf(name){
+  if(name==='config-perm') return 'config';
+  return name;
+}
+function cvRenderSubNav(primary,active){
+  var el=document.getElementById('cvSubNav');if(!el)return;
+  var subs=CV_SUBS[primary];
+  if(!subs){ el.classList.add('hidden'); el.innerHTML=''; return; }
+  el.classList.remove('hidden');
+  el.innerHTML=subs.map(function(s){
+    return '<button type="button" class="cv-subnav-item'+(s[0]===active?' on':'')+'" data-cvsub="'+s[0]+'">'+s[1]+'</button>';
+  }).join('');
+}
 function cvToast(msg,type){ toast(msg, type==='error'?'error':undefined); }
 function cvShowPanel(name){
+  var primary=cvPrimaryOf(name);
   $$('#view-collab .cv-panel').forEach(function(p){ p.classList.toggle('active', p.id==='cv-'+name); });
   $$('#cvTabNav .tab-nav-item').forEach(function(t){
-    t.classList.toggle('tab-nav-item--active', t.getAttribute('data-cvview')===name);
+    t.classList.toggle('tab-nav-item--active', t.getAttribute('data-cvview')===primary);
   });
+  /* 项目切换器只在「任务管理」「项目管理」两个项目维度的页签下显示；工作区栏始终在顶部 */
+  var psw=document.getElementById('cvProjSwitch');
+  if(psw) psw.classList.toggle('hidden', primary!=='tasks' && primary!=='members');
+  cvRenderSubNav(primary,name);
+}
+function cvSwitchSub(name){
+  cvSubState[cvPrimaryOf(name)]=name;
+  cvSwitchView(name);
 }
 function cvSwitchView(name){
+  if(name==='config-proj') name='config';   /* 旧链接兼容：项目设置已并入项目管理 */
+  if(name==='config') name=cvSubState.config;
+  if((name==='config'||name==='config-perm') && getRole()!=='owner') name='tasks';   /* 设置仅所有者可进 */
   cvLastTab=(name==='chat'||name==='review-detail')?cvLastTab:name;
   cvShowPanel(name);
   if(name==='teams') renderExpertGrid();
   if(name==='experts') cvRenderExperts();
+  if(name==='config-perm') cvRenderPermTable();
   cvSyncUrl();
 }
 /* 执行中的任务在侧边栏项目下挂一条会话 */
@@ -98,6 +106,17 @@ function cvAddSidebarConversation(title){
 export function initCollabView() {
   /* 下拉筛选器：按钮开合、选项选中后刷新列表、点空白处收起 */
   document.addEventListener('click',function(e){
+    var sub=e.target.closest('[data-cvsub]');
+    if(sub){ cvSwitchSub(sub.getAttribute('data-cvsub')); return; }
+    var art=e.target.closest('[data-cv-art]');
+    if(art){
+      var op=art.getAttribute('data-cv-art');
+      var nm=art.getAttribute('data-cv-art-name')||'';
+      if(op==='预览'){ if(window.cvOpenArtFiles) window.cvOpenArtFiles(nm); return; }
+      if(op==='回到对话'){ cvToast('已回到「'+nm+'」的对话','info'); return; }
+      cvToast('原型演示：'+op+'「'+nm+'」');
+      return;
+    }
     var tog=e.target.closest('[data-cvfdd-toggle]');
     if(tog){
       var dd=tog.closest('.cv-fdd');
@@ -123,7 +142,6 @@ export function initCollabView() {
 
 export function initCollabTabs() {
   window.cvCard=null; window.cvReviewIdx=0;
-
 }
 
 /* cvInited 由其它模块写回；import 绑定只读，所以走这个 setter */
@@ -133,4 +151,4 @@ export function set_cvPendingProj(v){ cvPendingProj=v; return v; }
 /* cvPendingTab 由其它模块写回；import 绑定只读，所以走这个 setter */
 export function set_cvPendingTab(v){ cvPendingTab=v; return v; }
 
-export { cvAddSidebarConversation, cvApplyFilters, cvGetFilterVal, cvInited, cvLastTab, cvPendingProj, cvPendingTab, cvShowPanel, cvSwitchFilter, cvSwitchView, cvToast };
+export { cvAddSidebarConversation, cvApplyFilters, cvGetFilterVal, cvInited, cvLastTab, cvPendingProj, cvPendingTab, cvShowPanel, cvSwitchFilter, cvSwitchSub, cvSwitchView, cvToast };
