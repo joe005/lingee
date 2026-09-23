@@ -265,6 +265,7 @@ function cvSubmitNewTask(keepOpen) {
   if (parentTaskId) window.cvRenderProjectDetail && window.cvRenderProjectDetail();
   const reopenCtx = parentTaskId ? { parentTaskId, projectId: proj.id, parentTitle: document.getElementById('cv-nt-parent-title')?.textContent } : undefined;
   if (keepOpen) { cvOpenNewTask(ntStatus, reopenCtx); } else { cvCloseNewTask(); }
+  if (parentTaskId && !keepOpen && window.tbReopenTask) window.tbReopenTask(parentTaskId);
 }
 
 export function initNewTask() {

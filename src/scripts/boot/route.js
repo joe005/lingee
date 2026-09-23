@@ -5,6 +5,7 @@ import { set_cvPendingProj, set_cvPendingTab } from '../features/collab/view.js'
 import { appendAssistantMessage, appendUserMessage, messagesList, simulateAIResponse } from '../features/composer.js';
 import { dsNavEl, renderOverview } from '../features/design/index.js';
 import { stripBase } from '../core/base-path.js';
+import { openChangelog } from '../features/changelog.js';
 /* 启动路由：从路径 / 旧链接 / localStorage 还原视图
    拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
    由 main.js 按拆分前的原始顺序调用。 */
@@ -17,7 +18,7 @@ var _pathParts=stripBase(location.pathname).replace(/^\/+|\/+$/g,'').split('/');
 var _origSearch=location.search;
 /* showView() 对认不出的名字会把九个视图全部隐藏（线上曾因此登录后一片空白），
    所以路径段必须先过白名单，认不出就按「没指定」处理，走默认/localStorage 恢复 */
-var VIEW_NAMES=['home','newtask','chat','apps','collab','skills','agents','settings','design','experts','tasks'];
+var VIEW_NAMES=['home','newtask','chat','apps','collab','skills','agents','settings','design','experts','tasks','changelog'];
 var _seg=_pathParts[0]||'';
 var dsViewParam=VIEW_NAMES.indexOf(_seg)>=0 ? _seg : '';
 var dsSearch;
@@ -55,6 +56,8 @@ export function initRoute() {
     simulateAIResponse(responseEl,true);
     selectChatApp('采购订单管理');
     if(chatAppDd) chatAppDd.classList.add('disabled');
+  }else if(dsViewParam==='changelog'){
+    openChangelog();
   }else if(dsViewParam && dsViewParam!=='newtask'){
     showView(dsViewParam);
     if(dsViewParam==='skills') setNavActive('技能开发');

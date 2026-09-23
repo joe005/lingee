@@ -28,7 +28,7 @@ function applyMode(mode,fromChip){
 }
 
 /* ---------- view switching ---------- */
-var viewHome=$('#view-home'), viewNew=$('#view-newtask'), viewChat=$('#view-chat'), viewApps=$('#view-apps'), viewSkills=$('#view-skills'), viewAgents=$('#view-agents'), viewCollab=$('#view-collab'), viewDesign=$('#view-design'), viewSettings=$('#view-settings'), viewAnalytics=$('#view-analytics'), viewTasks=$('#view-tasks');
+var viewHome=$('#view-home'), viewNew=$('#view-newtask'), viewChat=$('#view-chat'), viewApps=$('#view-apps'), viewSkills=$('#view-skills'), viewAgents=$('#view-agents'), viewCollab=$('#view-collab'), viewDesign=$('#view-design'), viewSettings=$('#view-settings'), viewAnalytics=$('#view-analytics'), viewTasks=$('#view-tasks'), viewChangelog=$('#view-changelog');
 function setUrlState(path){
   /* path 是应用内路径（/collab、/design?token=…）；写进地址栏要带上部署前缀，
      存进 localStorage 的仍是应用内路径，换部署路径后旧记录依然可用 */
@@ -46,6 +46,7 @@ function showView(which){
   viewSettings.classList.toggle('hidden', which!=='settings');
   viewAnalytics.classList.toggle('hidden', which!=='analytics');
   viewTasks.classList.toggle('hidden', which!=='tasks');
+  viewChangelog.classList.toggle('hidden', which!=='changelog');
   $('.sidebar').classList.toggle('hidden', which==='design');
   closeAll(null);
   if(which!=='design') setUrlState('/'+which);

@@ -3,11 +3,12 @@
    由 main.js 按拆分前的原始顺序调用。 */
 
 import { $, $$ } from '../../core/dom.js';
+import { showView, input, setNavActive } from '../../core/view.js';
 import { toast } from '../../core/toast.js';
-import { showView, input } from '../../core/view.js';
 import {
   TK_STATUSES, TK_PRIORITIES, TK_PEOPLE, TK_AGENTS, TK_PROJECTS, TK_LABELS,
   TK_VIEWS, TK_FILTER_FIELDS, TK_OPERATORS, TK_TASKS, TK_CURRENT_USER,
+  tkGetTaskArtifacts,
   tkGetTasks, tkSetTasks, tkAddTask, tkUpdateTask, tkDeleteTask,
   tkGetViews, tkAddView, tkDeleteView, tkRenameView,
   tkGetStatusName, tkGetPriorityName, tkGetPerson, tkGetProjectName,
@@ -16,25 +17,77 @@ import {
 
 /* ---------- 状态 ---------- */
 var state = {
-  layout: 'board', scope: 'all', groupBy: 'status', sortBy: 'priority', sortDir: 'desc',
+  layout: 'board', viewMode: 'slide', scope: 'all', groupBy: 'status', sortBy: 'createDate', sortDir: 'desc',
   search: '', filters: [], selectedIds: new Set(), activeViewId: 'all',
-  editingTaskId: null, drawerTaskId: null,
+  showSubtasks: true,
+  cardProperties: { priority:true, description:false, assignee:true, startDate:false, dueDate:true, project:true, labels:false, childProgress:true },
+  editingTaskId: null, drawerTaskId: null, editingParentId: null,
 };
 var els = {};
+var drawerPreferredWidth = null;
+var collapsedParents = new Set();
+var drawerCloseTimer = null;
+var drawerOpenFrame = null;
+var DRAWER_WIDTH_STORAGE_KEY = 'lingee_tasks_drawer_width';
+var VIEW_STATE_STORAGE_KEY = 'lingee_tasks_view_state';
+
+function persistViewState() {
+  try {
+    localStorage.setItem(VIEW_STATE_STORAGE_KEY, JSON.stringify({
+      activeViewId:state.activeViewId,
+      layout:state.layout,
+      viewMode:state.viewMode,
+      groupBy:state.groupBy,
+      sortBy:state.sortBy,
+      sortDir:state.sortDir,
+      filters:state.filters,
+      showSubtasks:state.showSubtasks,
+      cardProperties:state.cardProperties,
+    }));
+  } catch (e) { /* 本地存储不可用时仍可在当前页面切换视图 */ }
+}
+function restoreViewState() {
+  var saved;
+  try { saved = JSON.parse(localStorage.getItem(VIEW_STATE_STORAGE_KEY) || 'null'); }
+  catch (e) { return; }
+  if (!saved || typeof saved !== 'object' || Array.isArray(saved)) return;
+  var view = tkGetViews().find(function (v) { return v.id === saved.activeViewId; });
+  if (saved.activeViewId && !view) return;
+  state.activeViewId = view ? view.id : 'all';
+  state.scope = view && ['all','members','agents','my_assigned','my_created'].includes(view.scope) ? view.scope : 'all';
+  if (['board','list'].includes(saved.layout)) state.layout = saved.layout;
+  if (['slide','full','split'].includes(saved.viewMode)) state.viewMode = saved.viewMode;
+  if (['status','priority','assignee','project','none'].includes(saved.groupBy)) state.groupBy = saved.groupBy;
+  if (['status','priority','dueDate','createDate','title','code','assignee','project'].includes(saved.sortBy)) state.sortBy = saved.sortBy;
+  if (['asc','desc'].includes(saved.sortDir)) state.sortDir = saved.sortDir;
+  if (typeof saved.showSubtasks === 'boolean') state.showSubtasks = saved.showSubtasks;
+  if (saved.cardProperties && typeof saved.cardProperties === 'object') {
+    Object.keys(state.cardProperties).forEach(function (key) {
+      if (typeof saved.cardProperties[key] === 'boolean') state.cardProperties[key] = saved.cardProperties[key];
+    });
+  }
+  if (Array.isArray(saved.filters)) {
+    var fields = ['status','priority','dueDate','assignee','creator','project','projectStatus','label','keyword'];
+    var operators = ['eq','neq','contains','not_contains','today','overdue','before','after'];
+    state.filters = saved.filters.slice(0, 30).filter(function (f) {
+      return f && fields.includes(f.field) && operators.includes(f.op) && typeof f.value === 'string';
+    }).map(function (f) { return { field:f.field, op:f.op, value:f.value }; });
+  }
+}
 
 /* ---------- 元素缓存 ---------- */
 function cacheEls() {
   var ids = [
-    'tkViewTabs','tkViewAdd','tkViewManage','tkViewOverflow','tkViewOverflowBtn','tkOverflowMenu',
-    'tkSearch','tkFilterBtn','tkFilterPanel','tkFilterPanelBody','tkFilterAddRow','tkFilterApply',
-    'tkFilterClear','tkFilterClose','tkFilterChips',
-    'tkDisplayBtn','tkDisplayPopover','tkGroupSelect','tkSortSelect',
-    'tkLayoutToggle','tkBoard','tkBoardScroll','tkList','tkListBody','tkListHead',
+    'tkViewTabs','tkViewAdd','tkViewMenu','tkViewMenuNew','tkViewManage','tkViewOverflow','tkViewOverflowBtn','tkOverflowMenu',
+    'tkSearch','tkFilterBtn','tkFilterLabel','tkFilterPanel','tkFilterPanelBody','tkFilterSubmenu','tkFilterChips',
+    'tkDisplayBtn','tkDisplayPopover','tkGroupSelect','tkViewModeSelect','tkSortSelect','tkSortDirection','tkShowSubtasks','tkCardProperties',
+    'tkConnectBtn','tkConnectOverlay','tkConnectClose','tkConnectCancel',
+    'tkLayoutToggle','tkBody','tkBoard','tkBoardScroll','tkList','tkListBody','tkListHead','tkSplitEmpty',
     'tkCheckAll','tkEmpty','tkResetFilter','tkBulkBar','tkBulkCount','tkBulkClear',
-    'tkDrawerOverlay','tkDrawer','tkDrawerClose','tkDrawerCode','tkDrawerBody','tkDrawerMore','tkDrawerSidebarToggle','tkDrawerChat',
+    'tkDrawer','tkDrawerClickaway','tkDrawerResize','tkDrawerClose','tkDrawerCode','tkDrawerBody','tkDrawerMore','tkDrawerSidebarToggle','tkDrawerChat',
     'tkModalOverlay','tkModalClose','tkModalCancel','tkModalSave','tkModalTitle',
     'tkFormTitle','tkFormDesc','tkFormStatus','tkFormPriority','tkFormAssignee','tkFormProject','tkFormDue','tkFormLabels',
-    'tkSaveViewOverlay','tkSaveViewClose','tkSaveViewCancel','tkSaveViewConfirm','tkSaveViewName',
+    'tkSaveViewOverlay','tkSaveViewClose','tkSaveViewCancel','tkSaveViewConfirm','tkSaveViewName','tkSaveViewVisibility','tkSaveViewScope','tkSaveViewLayout','tkSaveViewSummary',
     'tkManageViewsOverlay','tkManageViewsClose','tkManageViewsCancel','tkManageList',
     'tkBulkStatusMenu','tkBulkAssigneeMenu',
   ];
@@ -44,6 +97,73 @@ function cacheEls() {
 /* ---------- 工具函数 ---------- */
 function escapeHtml(s) {
   return s ? String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;') : '';
+}
+function openTaskConversation() {
+  showView('newtask');
+  setNavActive('新会话');
+}
+function openTaskConversationWithTask(taskId) {
+  var t = tkGetTasks().find(function (x) { return x.id === taskId; });
+  closeDrawer();
+  openTaskConversation();
+  if (!t) return;
+  var tags = document.getElementById('ntTags');
+  if (tags) {
+    tags.innerHTML = '<span class="ctag"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span class="ctag-label">' + escapeHtml(t.code) + ' ' + escapeHtml(t.title) + '</span><button type="button" class="ctag-x" data-clear-task-ref data-tooltip="移除任务关联" aria-label="移除任务关联"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></span>';
+    tags.classList.remove('hidden');
+  }
+  input.focus();
+}
+function showCardMenu(taskId, anchorEl) {
+  document.querySelectorAll('.tk-card-menu').forEach(function(m){m.remove();});
+  var menu = document.createElement('div');
+  menu.className = 'tk-card-menu show';
+  var itemSvg = {
+    chat: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>',
+    subtask: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>',
+    copy: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
+    delete: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>'
+  };
+  menu.innerHTML = ''
+    + '<div class="tk-card-menu-item" data-card-task="' + taskId + '" data-card-action="chat">' + itemSvg.chat + '<span>发起会话</span></div>'
+    + '<div class="tk-card-menu-item" data-card-task="' + taskId + '" data-card-action="subtask">' + itemSvg.subtask + '<span>创建子任务</span></div>'
+    + '<div class="tk-card-menu-item" data-card-task="' + taskId + '" data-card-action="copy">' + itemSvg.copy + '<span>复制</span></div>'
+    + '<div class="tk-card-menu-item danger" data-card-task="' + taskId + '" data-card-action="delete">' + itemSvg.delete + '<span>删除</span></div>';
+  document.body.appendChild(menu);
+  menu.querySelectorAll('[data-card-action]').forEach(function(item) {
+    item.addEventListener('click', function() {
+      var act = item.getAttribute('data-card-action');
+      var aid = parseInt(item.getAttribute('data-card-task'), 10);
+      handleCardAction(act, aid);
+      document.querySelectorAll('.tk-card-menu').forEach(function(m){m.remove();});
+    });
+  });
+  var rect = anchorEl.getBoundingClientRect();
+  var top = rect.bottom + 4;
+  var left = rect.right - menu.offsetWidth;
+  if (left < 8) left = 8;
+  if (top + menu.offsetHeight > window.innerHeight) top = rect.top - menu.offsetHeight - 4;
+  menu.style.top = top + 'px';
+  menu.style.left = left + 'px';
+}
+function handleCardAction(act, aid) {
+  if (act === 'chat') { openTaskConversationWithTask(aid); }
+  else if (act === 'edit') { openDrawer(aid); }
+  else if (act === 'delete') { tkDeleteTask(aid); render(); }
+  else if (act === 'copy') {
+    var src = tkGetTasks().find(function(x){return x.id===aid;});
+    if (src) { tkAddTask(Object.assign({}, src, {labels:(src.labels||[]).slice(), createDate:new Date().toISOString().slice(0,10)})); render(); }
+  }
+  else if (act === 'subtask') {
+    var parent = tkGetTasks().find(function(x){return x.id===aid;});
+    if (parent) {
+      tkAddTask({ title: parent.title + ' - 子任务', desc:'', status:'backlog', priority: parent.priority || 'medium',
+        assignee: parent.assignee || TK_CURRENT_USER, project: parent.project || 'p1',
+        labels:(parent.labels||[]).slice(), dueDate:'', createDate:new Date().toISOString().slice(0,10),
+        parentId: parent.id });
+      render();
+    }
+  }
 }
 function priClass(p) { return 'tk-pri-' + (p || 'low'); }
 function stClass(s) {
@@ -78,21 +198,21 @@ function priWeight(p) {
 function getFilteredTasks() {
   var tasks = tkGetTasks();
   var scope = state.scope;
-  if (scope === 'mine') {
-    tasks = tasks.filter(function (t) { return t.assignee === TK_CURRENT_USER; });
-  } else if (scope === 'attention') {
-    tasks = tasks.filter(function (t) {
-      return t.status !== 'done' && (t.assignee === TK_CURRENT_USER || t.priority === 'urgent');
-    });
-  }
+  if (scope === 'members') tasks = tasks.filter(function (t) { return !t.assignee || t.assignee.charAt(0) === 'u'; });
+  else if (scope === 'agents') tasks = tasks.filter(function (t) { return t.assignee && t.assignee.charAt(0) === 'a'; });
+  else if (scope === 'my_assigned') tasks = tasks.filter(function (t) { return t.assignee === TK_CURRENT_USER; });
+  else if (scope === 'my_created') tasks = tasks.filter(function (t) { return t.createdBy === TK_CURRENT_USER; });
   if (state.search) {
     var q = state.search.toLowerCase();
     tasks = tasks.filter(function (t) {
       return t.title.toLowerCase().indexOf(q) >= 0 || t.code.toLowerCase().indexOf(q) >= 0 || (t.desc && t.desc.toLowerCase().indexOf(q) >= 0);
     });
   }
-  state.filters.forEach(function (f) {
-    tasks = tasks.filter(function (t) { return matchFilter(t, f); });
+  if (!state.showSubtasks) tasks = tasks.filter(function (t) { return !t.parentId; });
+  var fields = [...new Set(state.filters.map(function (f) { return f.field; }))];
+  fields.forEach(function (field) {
+    var choices = state.filters.filter(function (f) { return f.field === field; });
+    tasks = tasks.filter(function (t) { return choices.some(function (f) { return matchFilter(t, f); }); });
   });
   return tasks.slice().sort(function (a, b) {
     var va, vb;
@@ -100,17 +220,29 @@ function getFilteredTasks() {
       case 'priority': va = priWeight(a.priority); vb = priWeight(b.priority); break;
       case 'dueDate': va = a.dueDate || '9999'; vb = b.dueDate || '9999'; break;
       case 'createDate': va = a.createDate || ''; vb = b.createDate || ''; break;
+      case 'status': va = TK_STATUSES.findIndex(function (s) { return s.id === a.status; }); vb = TK_STATUSES.findIndex(function (s) { return s.id === b.status; }); break;
       case 'code': va = a.code; vb = b.code; break;
       case 'title': va = a.title; vb = b.title; break;
+      case 'assignee': va = tkGetPerson(a.assignee).name; vb = tkGetPerson(b.assignee).name; break;
+      case 'project': va = tkGetProjectName(a.project); vb = tkGetProjectName(b.project); break;
       default: va = 0; vb = 0;
     }
-    return va < vb ? (state.sortDir === 'asc' ? -1 : 1) : va > vb ? (state.sortDir === 'asc' ? 1 : -1) : 0;
+    /* 同一排序键值相等时，按 id 作为次级键，保证创建顺序稳定可预期 */
+    if (va === vb) {
+      var ia = typeof a.id === 'number' ? a.id : 0;
+      var ib = typeof b.id === 'number' ? b.id : 0;
+      return state.sortDir === 'asc' ? ia - ib : ib - ia;
+    }
+    return va < vb ? (state.sortDir === 'asc' ? -1 : 1) : (state.sortDir === 'asc' ? 1 : -1);
   });
 }
 
 function matchFilter(task, filter) {
   var field = filter.field, op = filter.op, val = filter.value;
   if (!val && op !== 'today' && op !== 'overdue') return true;
+  if (field === 'creator') return (task.createdBy || TK_CURRENT_USER) === val;
+  if (field === 'projectStatus') return val === 'active' && !!task.project;
+  if (field === 'label' && op === 'eq') return (task.labels || []).includes(val);
   if (field === 'keyword') {
     if (op === 'contains') return (task.title + task.desc + task.code).toLowerCase().indexOf(String(val).toLowerCase()) >= 0;
     if (op === 'not_contains') return (task.title + task.desc + task.code).toLowerCase().indexOf(String(val).toLowerCase()) < 0;
@@ -134,6 +266,43 @@ function matchFilter(task, filter) {
     return Array.isArray(arr2) ? arr2.indexOf(val) < 0 : String(arr2).toLowerCase().indexOf(String(val).toLowerCase()) < 0;
   }
   return true;
+}
+
+/* ---------- 父子树构建（参考 Multica sub-issues 按深度缩进） ---------- */
+function buildTaskTree(tasks) {
+  var taskMap = new Map();
+  tasks.forEach(function (t) { taskMap.set(t.id, t); });
+  var childrenMap = new Map();
+  var roots = [];
+  tasks.forEach(function (t) {
+    if (t.parentId && taskMap.has(t.parentId)) {
+      if (!childrenMap.has(t.parentId)) childrenMap.set(t.parentId, []);
+      childrenMap.get(t.parentId).push(t);
+    } else roots.push(t);
+  });
+  return { roots: roots, childrenMap: childrenMap };
+}
+function renderTreeNodes(tasks, childrenMap, depth) {
+  return tasks.map(function (t) {
+    var id = t.id;
+    var children = childrenMap.get(id) || [];
+    var hasChildren = children.length > 0;
+    var isCollapsed = collapsedParents.has(id);
+    var html = renderCard(t, { depth: depth, hasChildren: hasChildren, isCollapsed: isCollapsed, childCount: children.length });
+    if (hasChildren && !isCollapsed) html += renderTreeNodes(children, childrenMap, depth + 1);
+    return html;
+  }).join('');
+}
+function renderListTreeNodes(tasks, childrenMap, depth) {
+  return tasks.map(function (t) {
+    var id = t.id;
+    var children = childrenMap.get(id) || [];
+    var hasChildren = children.length > 0;
+    var isCollapsed = collapsedParents.has(id);
+    var html = renderListRow(t, { depth: depth, hasChildren: hasChildren, isCollapsed: isCollapsed, childCount: children.length });
+    if (hasChildren && !isCollapsed) html += renderListTreeNodes(children, childrenMap, depth + 1);
+    return html;
+  }).join('');
 }
 
 /* ---------- 分组 ---------- */
@@ -172,7 +341,7 @@ function renderViewBar() {
   var html = views.map(function (v) {
     return '<div class="tk-view-tab' + (v.id === state.activeViewId ? ' active' : '') + '" data-view-id="' + v.id + '">'
       + '<span class="tk-tab-name">' + escapeHtml(v.name) + '</span>'
-      + (v.builtin ? '' : '<span class="tk-tab-del" data-del-view="' + v.id + '"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>')
+      + (v.builtin ? '' : '<span class="tk-tab-del" data-del-view="' + v.id + '" data-tooltip="删除视图" aria-label="删除视图"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>')
       + '</div>';
   }).join('');
   els.tkViewTabs.innerHTML = html;
@@ -185,15 +354,16 @@ function renderBoard() {
   showBoardOrList();
   var groups = getGroupedTasks(tasks);
   var html = groups.map(function (g) {
-    var cards = g.tasks.map(function (t) { return renderCard(t); }).join('');
+    var tree = buildTaskTree(g.tasks);
+    var cards = renderTreeNodes(tree.roots, tree.childrenMap, 0);
     return '<div class="tk-board-col" data-group-key="' + g.key + '">'
       + '<div class="tk-board-col-head"><div class="tk-board-col-head-left">'
       + '<span class="tk-board-col-dot tk-st-' + (g.color || 'gray') + '"></span>'
       + '<span class="tk-board-col-name">' + escapeHtml(g.name) + '</span>'
       + '<span class="tk-board-col-count">' + g.tasks.length + '</span>'
       + '</div><div class="tk-board-col-head-right">'
-      + '<button class="tk-board-col-add" data-add-group="' + g.key + '" title="新建任务"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>'
-      + '<button class="tk-board-col-toggle" data-toggle-col><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>'
+      + '<button class="tk-board-col-toggle" data-toggle-col data-tooltip="折叠分组" aria-label="折叠分组"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>'
+      + '<button class="tk-board-col-add" data-add-group="' + g.key + '" data-tooltip="新建任务" aria-label="新建任务"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>'
       + '</div></div>'
       + '<div class="tk-board-col-body">' + cards + '</div>'
       + '</div>';
@@ -201,47 +371,78 @@ function renderBoard() {
   els.tkBoardScroll.innerHTML = html;
 }
 
-function renderCard(t) {
+function renderCard(t, opts) {
+  opts = opts || {};
+  var depth = opts.depth || 0;
+  var hasChildren = !!opts.hasChildren;
+  var isCollapsed = !!opts.isCollapsed;
+  var childCount = opts.childCount || 0;
   var pri = tkGetPriorityObj(t.priority);
-  tkGetPerson(t.assignee);
   var overdue = isOverdue(t.dueDate) && t.status !== 'done';
-  var labels = (t.labels || []).map(function (l) { return '<span class="tk-card-label">' + escapeHtml(l) + '</span>'; }).join('');
+  var props = state.cardProperties;
+  var labels = props.labels ? (t.labels || []).map(function (l) { return '<span class="tk-card-label">' + escapeHtml(l) + '</span>'; }).join('') : '';
   var sel = state.selectedIds.has(t.id) ? ' selected' : '';
-  return '<div class="tk-card' + sel + '" draggable="true" data-task-id="' + t.id + '">'
-    + '<button class="tk-card-more" data-card-menu="' + t.id + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button>'
-    + '<div class="tk-card-code">' + escapeHtml(t.code) + '</div>'
+  var toggle = hasChildren ? '<button class="tk-card-toggle' + (isCollapsed ? ' is-collapsed' : '') + '" data-tk-toggle="' + t.id + '" aria-expanded="' + !isCollapsed + '" aria-label="' + (isCollapsed ? '展开子任务' : '折叠子任务') + '"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 7.5 5 5 5-5"/></svg></button>' : '';
+  var spacer = (!hasChildren && depth > 0) ? '<span class="tk-card-spacer"></span>' : '';
+  var childBadge = hasChildren ? '<span class="tk-card-child-count"' + (isCollapsed ? '' : ' style="visibility:hidden"') + '>' + childCount + '</span>' : '';
+  var extraCls = (depth ? ' tk-card--child' : '') + (hasChildren ? ' tk-card--parent' : '');
+  return '<div class="tk-card' + sel + extraCls + '" draggable="true" data-task-id="' + t.id + '" style="margin-left:' + (depth * 22) + 'px">'
+    + '<button class="tk-card-more" data-card-more="' + t.id + '" data-tooltip="更多操作" aria-label="更多操作"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button>'
+    + '<div class="tk-card-top-row">' + toggle + spacer + '<div class="tk-card-code">' + escapeHtml(t.code) + '</div>' + childBadge + '</div>'
     + '<div class="tk-card-title">' + escapeHtml(t.title) + '</div>'
+    + (props.description && t.desc ? '<div class="tk-card-description">' + escapeHtml(t.desc) + '</div>' : '')
     + (labels ? '<div class="tk-card-labels">' + labels + '</div>' : '')
     + '<div class="tk-card-foot"><div class="tk-card-foot-left">'
-    + '<span class="tk-card-priority ' + priClass(t.priority) + '">' + escapeHtml(pri.name) + '</span>'
-    + (t.dueDate ? '<span class="tk-card-due' + (overdue ? ' overdue' : '') + '"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' + fmtDate(t.dueDate) + '</span>' : '')
-    + '</div>' + avatar(t.assignee) + '</div></div>';
+    + (props.priority ? '<span class="tk-card-priority ' + priClass(t.priority) + '">' + escapeHtml(pri.name) + '</span>' : '')
+    + (props.startDate && t.startDate ? '<span class="tk-card-due">' + fmtDate(t.startDate) + '</span>' : '')
+    + (props.dueDate && t.dueDate ? '<span class="tk-card-due' + (overdue ? ' overdue' : '') + '"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' + fmtDate(t.dueDate) + '</span>' : '')
+    + (props.project && t.project ? '<span class="tk-card-project">' + escapeHtml(tkGetProjectName(t.project)) + '</span>' : '')
+    + '</div>' + (props.assignee ? avatar(t.assignee) : '') + '</div></div>';
+}
+
+/* ---------- 渲染：列表行（支持父子嵌套缩进） ---------- */
+function renderListRow(t, opts) {
+  opts = opts || {};
+  var depth = opts.depth || 0;
+  var hasChildren = !!opts.hasChildren;
+  var isCollapsed = !!opts.isCollapsed;
+  var childCount = opts.childCount || 0;
+  var pri = tkGetPriorityObj(t.priority);
+  var st = tkGetStatusObj(t.status);
+  var person = tkGetPerson(t.assignee);
+  var overdue = isOverdue(t.dueDate) && t.status !== 'done';
+  var sel = state.selectedIds.has(t.id) ? ' selected' : '';
+  var toggle = hasChildren ? '<button class="tk-row-toggle' + (isCollapsed ? ' is-collapsed' : '') + '" data-tk-toggle="' + t.id + '" aria-expanded="' + !isCollapsed + '" aria-label="' + (isCollapsed ? '展开子任务' : '折叠子任务') + '"><svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 7.5 5 5 5-5"/></svg></button>' : '';
+  var spacer = (!hasChildren && depth > 0) ? '<span class="tk-row-spacer"></span>' : '';
+  var childBadge = hasChildren ? '<span class="tk-row-child-count"' + (isCollapsed ? '' : ' style="visibility:hidden"') + '>' + childCount + '</span>' : '';
+  var indentStyle = depth > 0 ? ' style="padding-left:' + (depth * 22 + 10) + 'px"' : '';
+  return '<tr class="tk-row' + sel + (state.drawerTaskId === t.id ? ' detail-active' : '') + (depth ? ' tk-row--child' : '') + (hasChildren ? ' tk-row--parent' : '') + '" data-task-id="' + t.id + '">'
+    + '<td class="tk-col-check"><input type="checkbox" class="tk-row-check" data-task-id="' + t.id + '"' + (state.selectedIds.has(t.id) ? ' checked' : '') + '></td>'
+    + '<td class="tk-col-code"><span class="tk-row-code">' + escapeHtml(t.code) + '</span></td>'
+    + '<td class="tk-col-title"' + indentStyle + '><div class="tk-row-title-wrap">' + toggle + spacer + '<span class="tk-row-title-text">' + escapeHtml(t.title) + '</span>' + childBadge + '</div></td>'
+    + '<td class="tk-col-status"><span class="tk-row-status"><span class="tk-st-dot ' + stClass(t.status) + '"></span>' + escapeHtml(st.name) + '</span></td>'
+    + '<td class="tk-col-priority"><span class="tk-row-priority ' + priClass(t.priority) + '">' + escapeHtml(pri.name) + '</span></td>'
+    + '<td class="tk-col-assignee"><div class="tk-row-assignee">' + avatarSm(t.assignee) + '<span>' + escapeHtml(person.name) + '</span></div></td>'
+    + '<td class="tk-col-project">' + escapeHtml(tkGetProjectName(t.project)) + '</td>'
+    + '<td class="tk-col-due"><span class="tk-row-due' + (overdue ? ' overdue' : '') + '">' + (t.dueDate ? fmtDate(t.dueDate) : '—') + '</span></td>'
+    + '<td class="tk-col-created">' + fmtDate(t.createDate) + '</td>'
+    + '<td class="tk-col-actions"><button class="tk-card-more" data-card-more="' + t.id + '" data-tooltip="更多操作" aria-label="更多操作"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button></td></tr>';
 }
 
 /* ---------- 渲染：列表 ---------- */
-function renderList() {
-  var tasks = getFilteredTasks();
+function renderList(tasks) {
+  tasks = tasks || getFilteredTasks();
+  if (tasks.length === 0 && state.viewMode === 'split') {
+    showBoardOrList();
+    els.tkListBody.innerHTML = '<tr class="tk-row-create"><td colspan="10">没有匹配的任务</td></tr>';
+    updateSortArrows();
+    return;
+  }
   if (tasks.length === 0) { showEmpty(); return; }
   showBoardOrList();
-  var html = tasks.map(function (t) {
-    var pri = tkGetPriorityObj(t.priority);
-    var st = tkGetStatusObj(t.status);
-    var person = tkGetPerson(t.assignee);
-    var overdue = isOverdue(t.dueDate) && t.status !== 'done';
-    var sel = state.selectedIds.has(t.id) ? ' selected' : '';
-    return '<tr class="tk-row' + sel + '" data-task-id="' + t.id + '">'
-      + '<td class="tk-col-check"><input type="checkbox" class="tk-row-check" data-task-id="' + t.id + '"' + (state.selectedIds.has(t.id) ? ' checked' : '') + '></td>'
-      + '<td class="tk-col-code"><span class="tk-row-code">' + escapeHtml(t.code) + '</span></td>'
-      + '<td class="tk-col-title">' + escapeHtml(t.title) + '</td>'
-      + '<td class="tk-col-status"><span class="tk-row-status"><span class="tk-st-dot ' + stClass(t.status) + '"></span>' + escapeHtml(st.name) + '</span></td>'
-      + '<td class="tk-col-priority"><span class="tk-row-priority ' + priClass(t.priority) + '">' + escapeHtml(pri.name) + '</span></td>'
-      + '<td class="tk-col-assignee"><div class="tk-row-assignee">' + avatarSm(t.assignee) + '<span>' + escapeHtml(person.name) + '</span></div></td>'
-      + '<td class="tk-col-project">' + escapeHtml(tkGetProjectName(t.project)) + '</td>'
-      + '<td class="tk-col-due"><span class="tk-row-due' + (overdue ? ' overdue' : '') + '">' + (t.dueDate ? fmtDate(t.dueDate) : '—') + '</span></td>'
-      + '<td class="tk-col-created">' + fmtDate(t.createDate) + '</td>'
-      + '<td class="tk-col-actions"><button class="tk-card-more" data-card-menu="' + t.id + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button></td></tr>';
-  }).join('');
-  els.tkListBody.innerHTML = '<tr class="tk-row-create" id="tkRowCreate"><td colspan="10"><button class="tk-inline-create-btn" id="tkInlineCreateBtn">+ 新建</button></td></tr>' + html;
+  var tree = buildTaskTree(tasks);
+  var html = renderListTreeNodes(tree.roots, tree.childrenMap, 0);
+  els.tkListBody.innerHTML = '<tr class="tk-row-create" id="tkRowCreate"><td colspan="10"><button class="tk-inline-create-btn" id="tkInlineCreateBtn">+ 快速新建</button></td></tr>' + html;
   updateSortArrows();
 }
 
@@ -250,6 +451,13 @@ function updateSortArrows() {
     th.classList.remove('sorted');
     var arrow = th.querySelector('.tk-sort-arrow');
     if (arrow) arrow.remove();
+    var hint = th.querySelector('.tk-sort-hint');
+    if (!hint) {
+      hint = document.createElement('span');
+      hint.className = 'tk-sort-hint';
+      hint.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 15l6-6 6 6"/></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>';
+      th.appendChild(hint);
+    }
     if (th.getAttribute('data-sort') === state.sortBy) {
       th.classList.add('sorted');
       var span = document.createElement('span');
@@ -266,16 +474,17 @@ function renderFilterChips() {
   els.tkFilterChips.classList.remove('hidden');
   var html = state.filters.map(function (f, i) {
     var fieldDef = TK_FILTER_FIELDS.find(function (fd) { return fd.id === f.field; });
-    var fieldName = fieldDef ? fieldDef.name : f.field;
+    var sectionDef = filterSections.find(function (section) { return section[0] === f.field; });
+    var fieldName = sectionDef ? sectionDef[1] : fieldDef ? fieldDef.name : f.field;
     var ops = TK_OPERATORS[fieldDef ? fieldDef.type : 'text'] || [];
     var opDef = ops.find(function (o) { return o.value === f.op; });
-    var opLabel = opDef ? opDef.label : f.op;
+    var opLabel = opDef ? opDef.label : f.op === 'eq' ? '是' : f.op;
     var val = f.value;
-    if (fieldDef && fieldDef.type === 'select') {
-      var opt = fieldDef.options.find(function (o) { return o.value === f.value; });
-      val = opt ? opt.label : f.value;
-    }
-    return '<span class="tk-chip"><span class="tk-chip-field">' + escapeHtml(fieldName) + '</span><span class="tk-chip-op">' + escapeHtml(opLabel) + '</span><span class="tk-chip-val">' + escapeHtml(val) + '</span><button class="tk-chip-remove" data-chip-idx="' + i + '"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></span>';
+    var menuOpt = filterOptionsFor(f.field).find(function (o) { return o.value === f.value; });
+    if (menuOpt) val = menuOpt.label;
+    if (f.op === 'today') val = '今天';
+    if (f.op === 'overdue') val = '已逾期';
+    return '<span class="tk-chip"><span class="tk-chip-field">' + escapeHtml(fieldName) + '</span><span class="tk-chip-op">' + escapeHtml(opLabel) + '</span><span class="tk-chip-val">' + escapeHtml(val) + '</span><button class="tk-chip-remove" data-chip-idx="' + i + '" data-tooltip="移除筛选" aria-label="移除筛选"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></span>';
   }).join('') + '<button class="tk-chip-clear-all" id="tkChipClearAll">清除全部</button>';
   els.tkFilterChips.innerHTML = html;
 }
@@ -295,9 +504,87 @@ function updateBulkBar() {
   els.tkBulkBar.classList.remove('hidden'); els.tkBulkCount.textContent = count;
 }
 function render() {
+  var split = state.viewMode === 'split';
+  if (split) state.layout = 'list';
+  els.tkBody.classList.toggle('is-split', split);
+  els.tkDrawer.classList.toggle('mode-full', state.viewMode === 'full');
+  $$('[data-layout]', els.tkLayoutToggle).forEach(function (btn) {
+    btn.classList.toggle('active', btn.getAttribute('data-layout') === state.layout);
+  });
+  renderDisplayControls();
+  updateFilterButton();
   renderViewBar();
-  if (state.layout === 'board') renderBoard(); else renderList();
+  if (split) {
+    var visibleTasks = getFilteredTasks();
+    if (!visibleTasks.some(function (t) { return t.id === state.drawerTaskId; })) {
+      state.drawerTaskId = visibleTasks.length ? visibleTasks[0].id : null;
+    }
+    renderList(visibleTasks);
+    if (state.drawerTaskId) {
+      els.tkSplitEmpty.classList.add('hidden');
+      if (els.tkDrawer.getAttribute('data-task-id') !== String(state.drawerTaskId) || els.tkDrawer.classList.contains('hidden') || !els.tkDrawer.classList.contains('show')) openDrawer(state.drawerTaskId);
+    } else {
+      closeDrawer();
+      els.tkSplitEmpty.classList.remove('hidden');
+    }
+  } else {
+    els.tkSplitEmpty.classList.add('hidden');
+    if (state.layout === 'board') renderBoard(); else renderList();
+  }
   renderFilterChips(); updateBulkBar(); updateCheckAll();
+  syncDrawerClickaway();
+  persistViewState();
+}
+var cardPropertyOptions = [
+  ['priority','优先级'],['description','描述'],['assignee','负责人'],['startDate','开始日期'],
+  ['dueDate','截止日期'],['project','项目'],['labels','标签'],['childProgress','子任务进度'],
+];
+function sortDirectionLabel() {
+  if (state.sortBy === 'createDate') return state.sortDir === 'desc' ? '最新优先' : '最早优先';
+  if (state.sortBy === 'priority') return state.sortDir === 'desc' ? '最高优先级优先' : '最低优先级优先';
+  if (state.sortBy === 'dueDate') return state.sortDir === 'asc' ? '最早日期优先' : '最晚日期优先';
+  if (state.sortBy === 'title') return state.sortDir === 'asc' ? 'A 到 Z' : 'Z 到 A';
+  return state.sortDir === 'asc' ? '正序' : '倒序';
+}
+function renderDisplayControls() {
+  els.tkGroupSelect.value = state.groupBy;
+  els.tkViewModeSelect.value = state.viewMode;
+  els.tkSortSelect.value = state.sortBy;
+  els.tkSortDirection.textContent = sortDirectionLabel();
+  els.tkShowSubtasks.checked = state.showSubtasks;
+  els.tkCardProperties.innerHTML = cardPropertyOptions.map(function (opt) {
+    return '<button type="button" class="tk-display-property" data-card-property="' + opt[0] + '" aria-pressed="' + !!state.cardProperties[opt[0]] + '">' + opt[1] + '</button>';
+  }).join('');
+}
+function positionPopover(popover, trigger, alignEnd) {
+  var rect = trigger.getBoundingClientRect();
+  var width = popover.offsetWidth;
+  var left = alignEnd ? rect.right - width : rect.left;
+  popover.style.left = Math.max(8, Math.min(left, window.innerWidth - width - 8)) + 'px';
+  popover.style.top = Math.min(rect.bottom + 4, window.innerHeight - popover.offsetHeight - 8) + 'px';
+}
+function saveInlineTask() {
+  var ti = els.tkListBody.querySelector('#tkInlineTitle');
+  var saveBtn = els.tkListBody.querySelector('#tkInlineSave');
+  if (!ti || !saveBtn || saveBtn.disabled) return;
+  var title = ti.value.trim();
+  if (!title) { ti.focus(); return; }
+  var aw = els.tkListBody.querySelector('#tkInlineAssigneeWrap');
+  var av = aw ? aw.getAttribute('data-value') : '';
+  saveBtn.disabled = true;
+  saveBtn.classList.add('is-loading');
+  saveBtn.setAttribute('aria-busy', 'true');
+  saveBtn.innerHTML = '<span class="tk-inline-save-spinner" aria-hidden="true"></span>确定中…';
+  ti.disabled = true;
+  var assigneeBtn = els.tkListBody.querySelector('#tkInlineAssigneeBtn');
+  var cancelBtn = els.tkListBody.querySelector('#tkInlineCancel');
+  if (assigneeBtn) assigneeBtn.disabled = true;
+  if (cancelBtn) cancelBtn.disabled = true;
+  setTimeout(function () {
+    var mx = Math.max.apply(null, tkGetTasks().map(function(x){return x.id;}));
+    tkAddTask({ id:mx+1, code:'TSK-'+String(mx+1).padStart(3,'0'), title:title, desc:'', status:'backlog', priority:'medium', assignee: av||'u1', project:'p1', labels:[], dueDate:'', createDate:new Date().toISOString().slice(0,10) });
+    render();
+  }, 400);
 }
 function updateCheckAll() {
   if (els.tkCheckAll) {
@@ -323,9 +610,10 @@ function fillSelects() {
 }
 
 /* ---------- 新建/编辑弹窗 ---------- */
-function openTaskModal(taskId) {
+function openTaskModal(taskId, parentId) {
   state.editingTaskId = null;
-  els.tkModalTitle.textContent = '新建任务';
+  state.editingParentId = parentId || null;
+  els.tkModalTitle.textContent = parentId ? '新增子任务' : '新建任务';
   els.tkFormTitle.value = '';
   els.tkFormDesc.value = '';
   els.tkFormStatus.value = 'backlog';
@@ -334,6 +622,14 @@ function openTaskModal(taskId) {
   els.tkFormProject.value = TK_PROJECTS[0].id;
   els.tkFormDue.value = '';
   els.tkFormLabels.value = '';
+  if (parentId) {
+    var parent = tkGetTasks().find(function (x) { return x.id === parentId; });
+    if (parent) {
+      els.tkFormProject.value = parent.project;
+      els.tkFormPriority.value = parent.priority;
+      els.tkFormAssignee.value = parent.assignee;
+    }
+  }
   els.tkModalOverlay.classList.remove('hidden');
   requestAnimationFrame(function () { els.tkModalOverlay.classList.add('show'); });
 }
@@ -352,7 +648,11 @@ function saveTask() {
     dueDate: els.tkFormDue.value, labels: labels,
   };
   if (state.editingTaskId) { tkUpdateTask(state.editingTaskId, data); }
-  else { data.createDate = '2026-09-23'; tkAddTask(data); }
+  else {
+    data.createDate = '2026-09-23';
+    if (state.editingParentId) data.parentId = state.editingParentId;
+    tkAddTask(data);
+  }
   closeTaskModal();
   render();
 }
@@ -426,19 +726,87 @@ function insertMention(ta, name) {
 }
 
 /* ---------- 任务详情面板 ---------- */
+var propPickerOptions = {};
 function propPicker(name, currentVal, options, isDate) {
   var display = isDate ? (currentVal || '—') : (options.find(function (o) { return o.value === currentVal; }) || {}).label || '—';
-  var opts = isDate
-    ? '<input type="date" class="tk-prop-edit" data-prop="' + name + '" value="' + escapeHtml(currentVal || '') + '">'
-    : '<div class="tk-prop-menu" data-prop="' + name + '">' + options.map(function (o) {
-      return '<div class="tk-prop-menu-item' + (o.value === currentVal ? ' active' : '') + '" data-value="' + escapeHtml(o.value) + '">' + escapeHtml(o.label) + '</div>';
-    }).join('') + '</div>';
-  return '<div class="tk-prop-row"><span>' + name + '</span><div class="tk-prop-display" data-prop-name="' + name + '">' + escapeHtml(display) + '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>' + opts + '</div>';
+  if (isDate) {
+    return '<div class="tk-prop-row"><span>' + name + '</span><input type="date" class="tk-prop-edit" data-prop="' + name + '" value="' + escapeHtml(currentVal || '') + '"></div>';
+  }
+  propPickerOptions[name] = { options: options, currentVal: currentVal };
+  return '<div class="tk-prop-row"><span>' + name + '</span><div class="tk-prop-display" data-prop-name="' + escapeHtml(name) + '">' + escapeHtml(display) + '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div></div>';
 }
+function renderTaskArtifacts(task) {
+  var artifacts = tkGetTaskArtifacts(task);
+  return '<div class="tk-artifacts-heading"><span>任务产物</span><span>' + artifacts.length + ' 项</span></div>' +
+    '<div class="tk-artifacts-list">' + artifacts.map(function (artifact) {
+      return '<details class="tk-artifact">' +
+        '<summary class="tk-artifact-summary">' +
+          '<span class="tk-artifact-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h6"/></svg></span>' +
+          '<span class="tk-artifact-info"><span class="tk-artifact-title">' + escapeHtml(task.title + ' · ' + artifact.type) + '</span><span class="tk-artifact-subtitle">' + escapeHtml(artifact.summary) + '</span></span>' +
+          '<span class="tk-artifact-type">' + escapeHtml(artifact.type) + '</span>' +
+          '<svg class="tk-artifact-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>' +
+        '</summary>' +
+        '<div class="tk-artifact-preview">' +
+          artifact.sections.map(function (section) {
+            return '<div class="tk-artifact-section"><strong>' + escapeHtml(section.heading) + '</strong><p>' + escapeHtml(section.text) + '</p></div>';
+          }).join('') +
+        '</div></details>';
+    }).join('') + '</div>';
+}
+function drawerWidthBounds() {
+  return { min:480, max:Math.max(480, window.innerWidth - 240) };
+}
+function setDrawerWidth(width, remember) {
+  var bounds = drawerWidthBounds();
+  var next = Math.round(Math.min(bounds.max, Math.max(bounds.min, width)));
+  els.tkDrawer.style.setProperty('--tk-drawer-width', next + 'px');
+  els.tkDrawerResize.setAttribute('aria-valuemin', String(bounds.min));
+  els.tkDrawerResize.setAttribute('aria-valuemax', String(bounds.max));
+  els.tkDrawerResize.setAttribute('aria-valuenow', String(next));
+  if (remember) {
+    drawerPreferredWidth = next;
+    try { localStorage.setItem(DRAWER_WIDTH_STORAGE_KEY, String(next)); }
+    catch (e) { /* 本地存储不可用时保留当前页面的偏好 */ }
+  }
+  return next;
+}
+function applyDrawerWidth() {
+  if (window.innerWidth <= 760) return;
+  setDrawerWidth(drawerPreferredWidth || Math.min(900, window.innerWidth * .75), false);
+}
+function syncDrawerClickaway() {
+  els.tkDrawerClickaway.classList.toggle('hidden', state.viewMode !== 'slide' || !els.tkDrawer.classList.contains('show'));
+}
+/* ---------- 子任务区域渲染（参考 Multica ProgressRing + ChevronDown） ---------- */
+function renderSubtasksSection(t) {
+  var children = tkGetTasks().filter(function (c) { return c.parentId === t.id; });
+  if (!children.length) {
+    return '<div class="tk-subtasks tk-subtasks--empty"><button type="button" class="tk-subtask-add-inline" data-drawer-subtask="' + t.id + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>添加子任务</span></button></div>';
+  }
+  var doneCount = children.filter(function (c) { return c.status === 'done'; }).length;
+  var prog = children.length ? Math.round(doneCount / children.length * 100) : 0;
+  var ringR = 7, ringC = 2 * Math.PI * ringR;
+  var ringOffset = ringC * (1 - prog / 100);
+  return '<div class="tk-subtasks">'
+    + '<div class="tk-subtask-head">'
+    + '<h3>子任务</h3>'
+    + '<svg class="tk-subtask-progress-ring" width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="' + ringR + '" fill="none" stroke="var(--fill-2)" stroke-width="2"/><circle cx="8" cy="8" r="' + ringR + '" fill="none" stroke="var(--brand)" stroke-width="2" stroke-dasharray="' + ringC.toFixed(1) + '" stroke-dashoffset="' + ringOffset.toFixed(1) + '" stroke-linecap="round" transform="rotate(-90 8 8)"/></svg>'
+    + '<span class="tk-subtask-badge">' + doneCount + '/' + children.length + '</span>'
+    + '<button type="button" class="tk-subtask-add-btn" data-drawer-subtask="' + t.id + '" title="添加子任务"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>'
+    + '</div>'
+    + '<div class="tk-subtask-list">'
+    + children.map(function (c) {
+        var st = tkGetStatusObj(c.status);
+        return '<button type="button" class="tk-subtask-row" data-subtask-open="' + c.id + '"><span class="tk-subtask-status" data-tone="' + stClass(c.status) + '">' + st.dot + '</span><span class="tk-subtask-title">' + escapeHtml(c.title) + '</span><span class="tk-subtask-meta">' + escapeHtml(tkGetPerson(c.assignee).name) + '</span></button>';
+      }).join('')
+    + '</div></div>';
+}
+
 function openDrawer(taskId) {
   var t = tkGetTasks().find(function (x) { return x.id === taskId; });
   if (!t) return;
   state.drawerTaskId = taskId;
+  els.tkDrawer.setAttribute('data-task-id', String(taskId));
   var person = tkGetPerson(t.assignee);
   var labelsHtml = (t.labels || []).map(function (l) {
     return '<span class="tk-drawer-label">' + escapeHtml(l) + '</span>';
@@ -450,7 +818,6 @@ function openDrawer(taskId) {
   els.tkDrawerCode.textContent = t.code;
   els.tkDrawerBody.innerHTML =
     '<div class="tk-drawer-main"><div class="tk-drawer-main-inner">' +
-      '<div class="tk-drawer-breadcrumb"><span>' + escapeHtml(tkGetProjectName(t.project)) + '</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg><span>' + escapeHtml(t.code) + '</span></div>' +
       '<h3 class="tk-drawer-title" contenteditable="true" data-field="title">' + escapeHtml(t.title) + '</h3>' +
       '<div class="tk-drawer-tabs">' +
         '<button type="button" class="tk-drawer-tab active" data-tab="info">基础信息</button>' +
@@ -459,8 +826,9 @@ function openDrawer(taskId) {
       '</div>' +
       '<div class="tk-drawer-tab-content active" data-tab-content="info">' +
         '<div class="tk-drawer-desc" contenteditable="true" data-field="desc">' + escapeHtml(t.desc || '点击添加描述…') + '</div>' +
+        renderSubtasksSection(t) +
         '<div class="tk-drawer-attachments">' +
-          '<div class="tk-attach-dropzone" id="tkAttachDropzone">' +
+          '<div class="tk-attach-dropzone" id="tkAttachDropzone" data-tooltip="添加附件" aria-label="添加附件">' +
             '<input type="file" id="tkAttachInput" multiple style="display:none">' +
             '<svg class="tk-attach-btn-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>' +
           '</div>' +
@@ -479,12 +847,12 @@ function openDrawer(taskId) {
         '</div>' +
       '</div>' +
       '<div class="tk-drawer-tab-content" data-tab-content="artifacts" hidden>' +
-        '<div class="tk-drawer-empty-tab">暂无产物</div>' +
+        renderTaskArtifacts(t) +
       '</div>' +
       '<div class="tk-drawer-tab-content" data-tab-content="changelog" hidden>' +
         '<div class="tk-drawer-changelog-list">' +
-          '<div class="tk-drawer-changelog-item"><span class="tk-drawer-changelog-time">2026-09-23</span><span class="tk-drawer-changelog-user">Alice</span>创建了任务</div>' +
-          '<div class="tk-drawer-changelog-item"><span class="tk-drawer-changelog-time">2026-09-23</span><span class="tk-drawer-changelog-user">Alice</span>状态变更为「待处理」</div>' +
+          '<div class="tk-drawer-changelog-item"><span class="tk-drawer-changelog-time">' + escapeHtml(t.createDate + ' 09:30:00') + '</span><span class="tk-drawer-changelog-user">Alice</span>创建了任务</div>' +
+          '<div class="tk-drawer-changelog-item"><span class="tk-drawer-changelog-time">' + escapeHtml(t.createDate + ' 10:15:30') + '</span><span class="tk-drawer-changelog-user">Alice</span>状态变更为「' + escapeHtml(tkGetStatusName(t.status)) + '」</div>' +
         '</div>' +
       '</div>' +
     '</div></div>' +
@@ -496,7 +864,6 @@ function openDrawer(taskId) {
         propPicker('优先级', t.priority, priOpts) +
         propPicker('截止日期', t.dueDate, null, true) +
         (labelsHtml ? '<div class="tk-prop-row"><span>标签</span><div class="tk-drawer-labels">' + labelsHtml + '</div></div>' : '') +
-        '<button class="tk-prop-add">+ 添加属性</button>' +
       '</div>' +
       '<div class="tk-prop-row"><span>创建者</span><span class="tk-prop-val">' + escapeHtml(person.name) + '</span></div>' +
       '<div class="tk-prop-row"><span>创建时间</span><span class="tk-prop-val">' + escapeHtml(t.createDate) + '</span></div>' +
@@ -513,7 +880,7 @@ function openDrawer(taskId) {
         var item = document.createElement('div');
         item.className = 'tk-attach-item';
         var sz = f.size < 1024 ? f.size + 'B' : f.size < 1048576 ? (f.size/1024).toFixed(1)+'KB' : (f.size/1048576).toFixed(1)+'MB';
-        item.innerHTML = '<span class="tk-attach-item-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span><span class="tk-attach-item-name">' + escapeHtml(f.name) + '</span>' + (sz ? '<span class="tk-attach-item-size">' + sz + '</span>' : '') + '<button class="tk-attach-item-btn" title="预览"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="tk-attach-item-btn" title="下载"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button><button class="tk-attach-item-btn tk-attach-item-remove" data-attach-remove title="删除"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>';
+        item.innerHTML = '<span class="tk-attach-item-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span><span class="tk-attach-item-name">' + escapeHtml(f.name) + '</span>' + (sz ? '<span class="tk-attach-item-size">' + sz + '</span>' : '') + '<button class="tk-attach-item-btn" data-tooltip="预览" aria-label="预览"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="tk-attach-item-btn" data-tooltip="下载" aria-label="下载"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button><button class="tk-attach-item-btn tk-attach-item-remove" data-attach-remove data-tooltip="删除" aria-label="删除"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>';
         al.appendChild(item);
       });
     }
@@ -522,91 +889,127 @@ function openDrawer(taskId) {
     dz.ondragleave = function() { dz.classList.remove('dragover'); };
     dz.ondrop = function(e) { e.preventDefault(); dz.classList.remove('dragover'); renderFiles(e.dataTransfer.files); };
   })();
-  els.tkDrawerOverlay.classList.remove('hidden');
+  clearTimeout(drawerCloseTimer);
+  cancelAnimationFrame(drawerOpenFrame);
   els.tkDrawer.classList.remove('hidden');
-  requestAnimationFrame(function () {
-    els.tkDrawerOverlay.classList.add('show');
+  if (state.viewMode === 'split') {
     els.tkDrawer.classList.add('show');
+    syncDrawerClickaway();
+    els.tkSplitEmpty.classList.add('hidden');
+    els.tkListBody.querySelectorAll('tr[data-task-id]').forEach(function (row) {
+      row.classList.toggle('detail-active', row.getAttribute('data-task-id') === String(taskId));
+    });
+    return;
+  }
+  drawerOpenFrame = requestAnimationFrame(function () {
+    els.tkDrawer.classList.add('show');
+    syncDrawerClickaway();
   });
 }
 function closeDrawer() {
-  els.tkDrawerOverlay.classList.remove('show');
+  cancelAnimationFrame(drawerOpenFrame);
   els.tkDrawer.classList.remove('show');
-  setTimeout(function () {
-    els.tkDrawerOverlay.classList.add('hidden');
+  syncDrawerClickaway();
+  clearTimeout(drawerCloseTimer);
+  if (state.viewMode === 'split') {
+    els.tkDrawer.classList.add('hidden');
+    els.tkSplitEmpty.classList.remove('hidden');
+    els.tkListBody.querySelectorAll('tr.detail-active').forEach(function (row) { row.classList.remove('detail-active'); });
+    state.drawerTaskId = null;
+    return;
+  }
+  drawerCloseTimer = setTimeout(function () {
     els.tkDrawer.classList.add('hidden');
   }, 250);
   state.drawerTaskId = null;
 }
 
-/* ---------- 筛选面板 ---------- */
+/* ---------- 筛选菜单 ---------- */
+var activeFilterSection = 'status';
+var filterSections = [
+  ['status','状态','<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/>'],
+  ['priority','优先级','<path d="M4 19v-2M9 19v-6M14 19V9M19 19V4"/>'],
+  ['dueDate','日期','<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/>'],
+  ['assignee','负责人','<circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/>'],
+  ['creator','创建者','<circle cx="10" cy="8" r="4"/><path d="M3 21v-2a7 7 0 0 1 12-5M16 20l5-5M18 13l3 3"/>'],
+  ['project','项目','<path d="M3 5h7l2 2h9v13H3z"/>'],
+  ['projectStatus','项目状态','<circle cx="12" cy="12" r="9" stroke-dasharray="3 3"/>'],
+  ['label','标签','<path d="M3 3h9l9 9-9 9-9-9z"/><circle cx="8" cy="8" r="1"/>'],
+];
+function filterOptionsFor(section) {
+  var tasks = tkGetTasks();
+  if (section === 'status') return [
+    ['planned','待规划'],['backlog','待办'],['in_progress','进行中'],['in_review','审核中'],
+    ['blocked','已阻塞'],['done','已完成'],['cancelled','已取消'],
+  ].map(function (o) { return { value:o[0], label:o[1], count:tasks.filter(function (t) { return t.status === o[0]; }).length }; });
+  if (section === 'priority') return TK_PRIORITIES.map(function (p) { return { value:p.id, label:p.name, count:tasks.filter(function (t) { return t.priority === p.id; }).length }; });
+  if (section === 'assignee') return TK_PEOPLE.map(function (p) { return { value:p.id, label:p.name, count:tasks.filter(function (t) { return t.assignee === p.id; }).length }; });
+  if (section === 'creator') return [{ value:TK_CURRENT_USER, label:tkGetPerson(TK_CURRENT_USER).name, count:tasks.filter(function (t) { return (t.createdBy || TK_CURRENT_USER) === TK_CURRENT_USER; }).length }];
+  if (section === 'project') return TK_PROJECTS.map(function (p) { return { value:p.id, label:p.name, count:tasks.filter(function (t) { return t.project === p.id; }).length }; });
+  if (section === 'projectStatus') return [{ value:'active', label:'进行中', count:tasks.filter(function (t) { return !!t.project; }).length }];
+  if (section === 'label') return TK_LABELS.map(function (l) { return { value:l, label:l, count:tasks.filter(function (t) { return (t.labels || []).includes(l); }).length }; });
+  return [];
+}
+function updateFilterButton() {
+  var count = state.filters.length;
+  els.tkFilterLabel.textContent = count ? count + ' 个筛选' : '筛选';
+  els.tkFilterBtn.classList.toggle('has-filters', count > 0);
+}
+function renderFilterMenu() {
+  els.tkFilterPanelBody.innerHTML = filterSections.map(function (section) {
+    var count = state.filters.filter(function (f) { return f.field === section[0]; }).length;
+    return '<button type="button" class="tk-filter-category' + (activeFilterSection === section[0] ? ' active' : '') + '" data-filter-section="' + section[0] + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + section[2] + '</svg><span>' + section[1] + '</span>' + (count ? '<span class="tk-filter-count">' + count + '</span>' : '') + '<svg class="tk-filter-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 4 8 8-8 8"/></svg></button>';
+  }).join('') + (state.filters.length ? '<button type="button" class="tk-filter-reset" id="tkFilterReset">重置全部筛选</button>' : '');
+  renderFilterSubmenu();
+}
+function renderFilterSubmenu() {
+  if (!activeFilterSection) { els.tkFilterSubmenu.classList.add('hidden'); return; }
+  els.tkFilterSubmenu.classList.remove('hidden');
+  if (activeFilterSection === 'dueDate') {
+    var exact = state.filters.find(function (f) { return f.field === 'dueDate' && f.op === 'eq'; });
+    els.tkFilterSubmenu.innerHTML = '<div class="tk-filter-date"><label for="tkFilterDate">截止日期</label><input type="date" id="tkFilterDate" value="' + (exact ? escapeHtml(exact.value) : '') + '"><button type="button" data-filter-date="today">今天</button><button type="button" data-filter-date="overdue">已逾期</button></div>';
+    return;
+  }
+  els.tkFilterSubmenu.innerHTML = filterOptionsFor(activeFilterSection).map(function (option) {
+    var checked = state.filters.some(function (f) { return f.field === activeFilterSection && f.value === option.value; });
+    return '<button type="button" class="tk-filter-option" data-filter-value="' + escapeHtml(option.value) + '" aria-pressed="' + checked + '"><span class="tk-filter-check">' + (checked ? '✓' : '') + '</span>' + (activeFilterSection === 'status' ? '<span class="tk-filter-status-icon ' + option.value + '"></span>' : '') + '<span>' + escapeHtml(option.label) + '</span>' + (option.count ? '<span class="tk-filter-count">' + option.count + ' 个任务</span>' : '') + '</button>';
+  }).join('');
+}
 function openFilterPanel() {
+  els.tkDisplayPopover.classList.add('hidden');
+  els.tkDisplayBtn.classList.remove('active');
+  els.tkDisplayBtn.setAttribute('aria-expanded', 'false');
   els.tkFilterPanel.classList.remove('hidden');
   els.tkFilterBtn.classList.add('active');
-  var rect = els.tkFilterBtn.getBoundingClientRect();
-  els.tkFilterPanel.style.top = (rect.bottom + window.scrollY + 4) + 'px';
-  els.tkFilterPanel.style.left = (rect.left + window.scrollX) + 'px';
-  if (state.filters.length === 0) addFilterRow();
-  else renderFilterRows();
+  els.tkFilterBtn.setAttribute('aria-expanded', 'true');
+  activeFilterSection = 'status';
+  renderFilterMenu();
+  positionPopover(els.tkFilterPanel, els.tkFilterBtn, true);
+  var rect = els.tkFilterPanel.getBoundingClientRect();
+  els.tkFilterSubmenu.classList.toggle('flip', rect.left < 200);
 }
 function closeFilterPanel() {
   els.tkFilterPanel.classList.add('hidden');
   els.tkFilterBtn.classList.remove('active');
+  els.tkFilterBtn.setAttribute('aria-expanded', 'false');
 }
-function addFilterRow() {
-  state.filters.push({ field: 'status', op: 'eq', value: '' });
-  renderFilterRows();
-}
-function renderFilterRows() {
-  els.tkFilterPanelBody.innerHTML = state.filters.map(function (f, i) {
-    var fieldDef = TK_FILTER_FIELDS.find(function (fd) { return fd.id === f.field; });
-    var ops = TK_OPERATORS[fieldDef ? fieldDef.type : 'text'] || [];
-    var valHtml = '';
-    if (fieldDef && fieldDef.type === 'select') {
-      valHtml = '<select class="tk-filter-val">' + fieldDef.options.map(function (o) {
-        return '<option value="' + o.value + '"' + (o.value === f.value ? ' selected' : '') + '>' + escapeHtml(o.label) + '</option>';
-      }).join('') + '</select>';
-    } else if (fieldDef && fieldDef.type === 'date') {
-      valHtml = '<input type="date" class="tk-filter-val" value="' + escapeHtml(f.value) + '">';
-    } else {
-      valHtml = '<input type="text" class="tk-filter-val" placeholder="输入关键词" value="' + escapeHtml(f.value) + '">';
-    }
-    if (f.op === 'today' || f.op === 'overdue') {
-      valHtml = '<input type="text" class="tk-filter-val" disabled placeholder="无需输入">';
-    }
-    return '<div class="tk-filter-row" data-row="' + i + '">'
-      + '<select class="tk-filter-field">' + TK_FILTER_FIELDS.map(function (fd) {
-        return '<option value="' + fd.id + '"' + (fd.id === f.field ? ' selected' : '') + '>' + escapeHtml(fd.name) + '</option>';
-      }).join('') + '</select>'
-      + '<select class="tk-filter-op">' + ops.map(function (o) {
-        return '<option value="' + o.value + '"' + (o.value === f.op ? ' selected' : '') + '>' + escapeHtml(o.label) + '</option>';
-      }).join('') + '</select>'
-      + valHtml
-      + '<button class="tk-filter-remove" data-remove-row="' + i + '"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
-      + '</div>';
-  }).join('');
-}
-function collectFilterRows() {
-  var rows = $$('.tk-filter-row', els.tkFilterPanelBody);
-  var filters = [];
-  rows.forEach(function (row) {
-    var fieldEl = row.querySelector('.tk-filter-field');
-    var opEl = row.querySelector('.tk-filter-op');
-    var valEl = row.querySelector('.tk-filter-val');
-    filters.push({
-      field: fieldEl ? fieldEl.value : 'status',
-      op: opEl ? opEl.value : 'eq',
-      value: valEl && !valEl.disabled ? valEl.value : '',
-    });
-  });
-  state.filters = filters;
+function toggleFilterValue(field, value) {
+  var index = state.filters.findIndex(function (f) { return f.field === field && f.value === value; });
+  if (index >= 0) state.filters.splice(index, 1);
+  else state.filters.push({ field:field, op:'eq', value:value });
+  updateFilterButton(); render(); renderFilterMenu();
 }
 
 /* ---------- 视图管理 ---------- */
 function openSaveView() {
   els.tkSaveViewName.value = '';
+  els.tkSaveViewScope.value = state.scope;
+  els.tkSaveViewLayout.value = state.layout;
+  els.tkSaveViewVisibility.value = 'private';
+  els.tkSaveViewSummary.textContent = state.filters.length ? '已包含 ' + state.filters.length + ' 个筛选条件和当前显示设置' : '已包含当前显示设置';
   els.tkSaveViewOverlay.classList.remove('hidden');
   requestAnimationFrame(function () { els.tkSaveViewOverlay.classList.add('show'); });
+  els.tkSaveViewName.focus();
 }
 function closeSaveView() {
   els.tkSaveViewOverlay.classList.remove('show');
@@ -615,17 +1018,30 @@ function closeSaveView() {
 function confirmSaveView() {
   var name = els.tkSaveViewName.value.trim();
   if (!name) { els.tkSaveViewName.focus(); return; }
-  var v = tkAddView(name);
+  var v = tkAddView(name, {
+    scope: els.tkSaveViewScope.value,
+    visibility: els.tkSaveViewVisibility.value,
+    layout: els.tkSaveViewLayout.value,
+    filters: state.filters.map(function (f) { return Object.assign({}, f); }),
+    groupBy: state.groupBy,
+    viewMode: state.viewMode,
+    sortBy: state.sortBy,
+    sortDir: state.sortDir,
+    showSubtasks: state.showSubtasks,
+    cardProperties: Object.assign({}, state.cardProperties),
+  });
   state.activeViewId = v.id;
+  state.scope = v.scope;
+  state.layout = v.layout;
   closeSaveView();
-  renderViewBar();
+  render();
 }
 function openManageViews() {
   var views = tkGetViews();
   els.tkManageList.innerHTML = views.map(function (v) {
     return '<div class="tk-manage-item" data-view-id="' + v.id + '"><div><span class="tk-manage-item-name">' + escapeHtml(v.name) + '</span>' + (v.builtin ? '<span class="tk-manage-item-builtin">内置</span>' : '') + '</div><div class="tk-manage-item-actions">'
-      + (v.builtin ? '' : '<button data-rename-view="' + v.id + '" title="重命名"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>')
-      + (v.builtin ? '' : '<button class="tk-manage-del" data-del-view="' + v.id + '" title="删除"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>')
+      + (v.builtin ? '' : '<button data-rename-view="' + v.id + '" data-tooltip="重命名" aria-label="重命名"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>')
+      + (v.builtin ? '' : '<button class="tk-manage-del" data-del-view="' + v.id + '" data-tooltip="删除" aria-label="删除"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>')
       + '</div></div>';
   }).join('');
   els.tkManageViewsOverlay.classList.remove('hidden');
@@ -704,32 +1120,77 @@ function bindEvents() {
       $$('.tk-layout-btn').forEach(function (b) { b.classList.remove('active'); });
       this.classList.add('active');
       state.layout = this.getAttribute('data-layout');
+      if (state.viewMode === 'split' && state.layout === 'board') state.viewMode = 'slide';
       render();
     });
+  });
+
+  /* 连接第三方工具 */
+  els.tkConnectBtn.addEventListener('click', function () {
+    els.tkConnectOverlay.classList.remove('hidden');
+    requestAnimationFrame(function () { els.tkConnectOverlay.classList.add('show'); });
+  });
+  function closeConnectOverlay() {
+    els.tkConnectOverlay.classList.remove('show');
+    setTimeout(function () { els.tkConnectOverlay.classList.add('hidden'); }, 200);
+  }
+  els.tkConnectClose.addEventListener('click', closeConnectOverlay);
+  els.tkConnectCancel.addEventListener('click', closeConnectOverlay);
+  els.tkConnectOverlay.addEventListener('click', function (e) {
+    if (e.target === this) closeConnectOverlay();
+    var btn = e.target.closest('.tk-connect-action');
+    if (btn) {
+      if (btn.textContent === '连接') { btn.textContent = '已连接'; btn.classList.add('connected'); }
+      else { btn.textContent = '连接'; btn.classList.remove('connected'); }
+    }
   });
 
   /* 显示设置 Popover */
   els.tkDisplayBtn.addEventListener('click', function (e) {
     e.stopPropagation();
     if (els.tkDisplayPopover.classList.contains('hidden')) {
+      closeFilterPanel();
       els.tkDisplayPopover.classList.remove('hidden');
       els.tkDisplayBtn.classList.add('active');
-      els.tkGroupSelect.value = state.groupBy;
-      els.tkSortSelect.value = state.sortBy;
-      var rect = els.tkDisplayBtn.getBoundingClientRect();
-      els.tkDisplayPopover.style.top = (rect.bottom + window.scrollY + 4) + 'px';
-      els.tkDisplayPopover.style.left = (rect.right + window.scrollX - 200) + 'px';
+      els.tkDisplayBtn.setAttribute('aria-expanded', 'true');
+      renderDisplayControls();
+      positionPopover(els.tkDisplayPopover, els.tkDisplayBtn, true);
     } else {
       els.tkDisplayPopover.classList.add('hidden');
       els.tkDisplayBtn.classList.remove('active');
+      els.tkDisplayBtn.setAttribute('aria-expanded', 'false');
     }
   });
   els.tkGroupSelect.addEventListener('change', function () {
     state.groupBy = this.value;
     render();
   });
+  els.tkViewModeSelect.addEventListener('change', function () {
+    state.viewMode = this.value;
+    if (state.viewMode === 'split') state.layout = 'list';
+    render();
+  });
   els.tkSortSelect.addEventListener('change', function () {
     state.sortBy = this.value;
+    state.sortDir = this.value === 'createDate' || this.value === 'priority' ? 'desc' : 'asc';
+    renderDisplayControls();
+    render();
+  });
+  els.tkSortDirection.addEventListener('click', function () {
+    state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
+    renderDisplayControls();
+    render();
+  });
+  els.tkShowSubtasks.addEventListener('change', function () {
+    state.showSubtasks = this.checked;
+    render();
+  });
+  els.tkCardProperties.addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-card-property]');
+    if (!btn) return;
+    var key = btn.getAttribute('data-card-property');
+    state.cardProperties[key] = !state.cardProperties[key];
+    renderDisplayControls();
     render();
   });
   els.tkDisplayPopover.addEventListener('click', function (e) { e.stopPropagation(); });
@@ -737,6 +1198,7 @@ function bindEvents() {
     if (!els.tkDisplayPopover.classList.contains('hidden')) {
       els.tkDisplayPopover.classList.add('hidden');
       els.tkDisplayBtn.classList.remove('active');
+      els.tkDisplayBtn.setAttribute('aria-expanded', 'false');
     }
   });
 
@@ -748,20 +1210,45 @@ function bindEvents() {
 
   /* 详情面板 */
   els.tkDrawerClose.addEventListener('click', closeDrawer);
-  els.tkDrawerOverlay.addEventListener('click', closeDrawer);
+  els.tkDrawerClickaway.addEventListener('click', closeDrawer);
+  els.tkDrawerResize.addEventListener('pointerdown', function (e) {
+    if (e.button !== 0 || window.innerWidth <= 760 || state.viewMode !== 'slide') return;
+    e.preventDefault();
+    var handle = this;
+    var pointerId = e.pointerId;
+    var startX = e.clientX;
+    var startWidth = els.tkDrawer.getBoundingClientRect().width;
+    handle.setPointerCapture(pointerId);
+    els.tkDrawer.classList.add('resizing');
+    document.body.classList.add('tk-drawer-resizing');
+    function move(ev) {
+      if (ev.pointerId !== pointerId) return;
+      setDrawerWidth(startWidth + startX - ev.clientX, false);
+    }
+    function end(ev) {
+      if (ev.pointerId !== pointerId) return;
+      handle.removeEventListener('pointermove', move);
+      handle.removeEventListener('pointerup', end);
+      handle.removeEventListener('pointercancel', end);
+      if (handle.hasPointerCapture(pointerId)) handle.releasePointerCapture(pointerId);
+      els.tkDrawer.classList.remove('resizing');
+      document.body.classList.remove('tk-drawer-resizing');
+      setDrawerWidth(els.tkDrawer.getBoundingClientRect().width, true);
+    }
+    handle.addEventListener('pointermove', move);
+    handle.addEventListener('pointerup', end);
+    handle.addEventListener('pointercancel', end);
+  });
+  els.tkDrawerResize.addEventListener('keydown', function (e) {
+    if (window.innerWidth <= 760 || state.viewMode !== 'slide' || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return;
+    e.preventDefault();
+    setDrawerWidth(els.tkDrawer.getBoundingClientRect().width + (e.key === 'ArrowLeft' ? 24 : -24), true);
+  });
+  window.addEventListener('resize', applyDrawerWidth);
   if (els.tkDrawerChat) {
     els.tkDrawerChat.addEventListener('click', function () {
       if (!state.drawerTaskId) return;
-      var t = tkGetTasks().find(function (x) { return x.id === state.drawerTaskId; });
-      if (!t) return;
-      closeDrawer();
-      showView('newtask');
-      var tags = document.getElementById('ntTags');
-      if (tags) {
-        tags.innerHTML = '<span class="ctag"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span class="ctag-label">' + escapeHtml(t.code) + ' ' + escapeHtml(t.title) + '</span><button type="button" class="ctag-x" data-clear-task-ref aria-label="移除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></span>';
-        tags.classList.remove('hidden');
-      }
-      input.focus();
+      openTaskConversationWithTask(state.drawerTaskId);
     });
   }
   if (els.tkDrawerSidebarToggle) {
@@ -813,50 +1300,51 @@ function bindEvents() {
       if (list) list.classList.toggle('collapsed');
       return;
     }
-    /* 属性 Popover Picker */
+    /* 属性 Popover Picker（菜单添加到 body，避免侧边栏 overflow 裁切） */
     var display = e.target.closest('.tk-prop-display');
     if (display) {
-      var row = display.closest('.tk-prop-row');
-      var menu = row.querySelector('.tk-prop-menu');
-      if (menu) {
-        els.tkDrawerBody.querySelectorAll('.tk-prop-menu.show').forEach(function (m) { if (m !== menu) m.classList.remove('show'); });
-        menu.classList.toggle('show');
-      }
+      var propName = display.getAttribute('data-prop-name');
+      var data = propPickerOptions[propName];
+      var existing = document.querySelector('.tk-prop-menu.show');
+      if (existing) { existing.remove(); return; }
+      if (!data) return;
+      var menu = document.createElement('div');
+      menu.className = 'tk-prop-menu show';
+      menu.setAttribute('data-prop', propName);
+      menu.innerHTML = data.options.map(function (o) {
+        return '<div class="tk-prop-menu-item' + (o.value === data.currentVal ? ' active' : '') + '" data-value="' + escapeHtml(o.value) + '">' + escapeHtml(o.label) + '</div>';
+      }).join('');
+      menu.addEventListener('click', function (ev) {
+        var item = ev.target.closest('.tk-prop-menu-item');
+        if (item) {
+          var prop = menu.getAttribute('data-prop');
+          var val = item.getAttribute('data-value');
+          if (state.drawerTaskId && prop && val) {
+            tkUpdateTask(state.drawerTaskId, (function (p) { var o = {}; o[p] = val; return o; })(prop));
+            render();
+            openDrawer(state.drawerTaskId);
+          }
+          menu.remove();
+        }
+      });
+      document.body.appendChild(menu);
+      var rect = display.getBoundingClientRect();
+      menu.style.top = (rect.bottom + 4) + 'px';
+      menu.style.left = rect.left + 'px';
       return;
     }
-    var item = e.target.closest('.tk-prop-menu-item');
-    if (item) {
-      var menu = item.closest('.tk-prop-menu');
-      var prop = menu.getAttribute('data-prop');
-      var val = item.getAttribute('data-value');
-      if (state.drawerTaskId && prop && val) {
-        tkUpdateTask(state.drawerTaskId, (function (p) { var o = {}; o[p] = val; return o; })(prop));
-        render();
-        openDrawer(state.drawerTaskId);
-      }
-      menu.classList.remove('show');
-      return;
-    }
-    /* 卡片三个点菜单 */
-    var cardMenuBtn = e.target.closest('[data-card-menu]');
-    if (cardMenuBtn) {
-      var exist = cardMenuBtn.parentElement.querySelector('.tk-card-menu');
-      if (exist) { exist.remove(); return; }
-      document.querySelectorAll('.tk-card-menu').forEach(function(m){m.remove();});
-      var cid = cardMenuBtn.getAttribute('data-card-menu');
-      var m = document.createElement('div');
-      m.className = 'tk-card-menu';
-      m.innerHTML = '<div class="tk-card-menu-item" data-card-action="edit" data-card-task="'+cid+'">编辑</div><div class="tk-card-menu-item" data-card-action="copy" data-card-task="'+cid+'">复制</div><div class="tk-card-menu-item danger" data-card-action="delete" data-card-task="'+cid+'">删除</div>';
-      cardMenuBtn.parentElement.appendChild(m);
-      return;
-    }
+    /* 三点菜单按钮 */
+    var moreBtn = e.target.closest('[data-card-more]');
+    if (moreBtn) { showCardMenu(moreBtn.getAttribute('data-card-more'), moreBtn); return; }
+    /* 下拉菜单项 */
     var cardAct = e.target.closest('[data-card-action]');
     if (cardAct) {
       var aid = cardAct.getAttribute('data-card-task');
       var act = cardAct.getAttribute('data-card-action');
-      if (act === 'edit') { openDrawer(aid); }
+      if (act === 'chat') { openTaskConversationWithTask(parseInt(aid, 10)); } else if (act === 'edit') { openDrawer(aid); }
       else if (act === 'delete') { tkDeleteTask(aid); render(); }
       else if (act === 'copy') { var src = tkGetTasks().find(function(x){return x.id==aid;}); if (src) { var c = Object.assign({}, src, {id: Date.now(), code: 'TSK-' + String(Date.now()).slice(-3)}); tkAddTask(c); render(); } }
+      else if (act === 'subtask') { openTaskModal(null, parseInt(aid, 10)); document.querySelectorAll('.tk-card-menu').forEach(function(m){m.remove();}); return; }
       document.querySelectorAll('.tk-card-menu').forEach(function(m){m.remove();});
       return;
     }
@@ -870,19 +1358,23 @@ function bindEvents() {
       }
       return;
     }
-    /* 处理人快捷选择 */
+    /* 处理人快捷选择：面板悬浮定位，不挤开内容 */
     var flowField = e.target.closest('[data-flow-prop]');
     if (flowField) {
-      var existingFieldMenu = flowField.parentElement.querySelector('.tk-flow-field-menu');
+      var existingFieldMenu = document.querySelector('.tk-flow-field-menu.show');
       if (existingFieldMenu) { existingFieldMenu.remove(); return; }
       var fprop = flowField.getAttribute('data-flow-prop');
       var fopts = fprop === 'status' ? TK_STATUSES : TK_PEOPLE;
       var fieldMenu = document.createElement('div');
-      fieldMenu.className = 'tk-flow-field-menu';
+      fieldMenu.className = 'tk-flow-field-menu show';
       fopts.forEach(function (o) {
         var fieldItem = document.createElement('div');
         fieldItem.className = 'tk-flow-field-menu-item';
-        fieldItem.textContent = o.name;
+        if (fprop === 'assignee' && o.avatar) {
+          fieldItem.innerHTML = '<span class="tk-avatar-sm" style="background:' + o.color + '">' + escapeHtml(o.avatar) + '</span><span>' + escapeHtml(o.name) + '</span>';
+        } else {
+          fieldItem.textContent = o.name;
+        }
         fieldItem.addEventListener('click', function () {
           if (state.drawerTaskId) {
             tkUpdateTask(state.drawerTaskId, (function (p) { var obj = {}; obj[p] = o.id; return obj; })(fprop));
@@ -893,7 +1385,10 @@ function bindEvents() {
         });
         fieldMenu.appendChild(fieldItem);
       });
-      flowField.parentElement.appendChild(fieldMenu);
+      document.body.appendChild(fieldMenu);
+      var fRect = flowField.getBoundingClientRect();
+      fieldMenu.style.top = (fRect.bottom + 4) + 'px';
+      fieldMenu.style.left = fRect.left + 'px';
       return;
     }
     /* 附件上传 */
@@ -934,10 +1429,14 @@ function bindEvents() {
       }
       return;
     }
-    /* 点击其他区域关闭属性菜单 */
-    var openMenu = els.tkDrawerBody.querySelector('.tk-prop-menu.show');
+    /* 点击其他区域关闭属性菜单和处理人下拉 */
+    var openMenu = document.querySelector('.tk-prop-menu.show');
     if (openMenu && !e.target.closest('.tk-prop-menu') && !e.target.closest('.tk-prop-display')) {
-      openMenu.classList.remove('show');
+      openMenu.remove();
+    }
+    var ffm = document.querySelector('.tk-flow-field-menu.show');
+    if (ffm && !e.target.closest('.tk-flow-field-menu') && !e.target.closest('[data-flow-prop]')) {
+      ffm.remove();
     }
   });
   els.tkDrawerBody.addEventListener('change', function (e) {
@@ -965,55 +1464,53 @@ function bindEvents() {
     if (els.tkFilterPanel.classList.contains('hidden')) openFilterPanel();
     else closeFilterPanel();
   });
-  els.tkFilterClose.addEventListener('click', closeFilterPanel);
-  els.tkFilterAddRow.addEventListener('click', addFilterRow);
-  els.tkFilterApply.addEventListener('click', function () { collectFilterRows(); render(); closeFilterPanel(); });
-  els.tkFilterClear.addEventListener('click', function () { state.filters = []; renderFilterRows(); render(); });
-  els.tkFilterPanelBody.addEventListener('change', function (e) {
-    var row = e.target.closest('.tk-filter-row');
-    if (row) {
-      var idx = parseInt(row.getAttribute('data-row'), 10);
-      if (e.target.classList.contains('tk-filter-field')) {
-        var newField = e.target.value;
-        var fieldDef = TK_FILTER_FIELDS.find(function (fd) { return fd.id === newField; });
-        var ops = TK_OPERATORS[fieldDef ? fieldDef.type : 'text'] || [];
-        state.filters[idx].field = newField;
-        state.filters[idx].op = ops[0] ? ops[0].value : 'eq';
-        state.filters[idx].value = '';
-        renderFilterRows();
-      } else if (e.target.classList.contains('tk-filter-op')) {
-        state.filters[idx].op = e.target.value;
-        renderFilterRows();
-      }
-    }
-  });
-  els.tkFilterPanelBody.addEventListener('input', function (e) {
-    if (e.target.classList.contains('tk-filter-val')) {
-      var row = e.target.closest('.tk-filter-row');
-      if (row) {
-        var idx = parseInt(row.getAttribute('data-row'), 10);
-        state.filters[idx].value = e.target.value;
-      }
+  els.tkFilterPanel.addEventListener('click', function (e) { e.stopPropagation(); });
+  els.tkFilterPanelBody.addEventListener('mouseover', function (e) {
+    var btn = e.target.closest('[data-filter-section]');
+    if (btn && btn.getAttribute('data-filter-section') !== activeFilterSection) {
+      activeFilterSection = btn.getAttribute('data-filter-section');
+      renderFilterMenu();
     }
   });
   els.tkFilterPanelBody.addEventListener('click', function (e) {
-    var removeBtn = e.target.closest('[data-remove-row]');
-    if (removeBtn) {
-      var idx = parseInt(removeBtn.getAttribute('data-remove-row'), 10);
-      state.filters.splice(idx, 1);
-      renderFilterRows();
+    var btn = e.target.closest('[data-filter-section]');
+    if (btn) { activeFilterSection = btn.getAttribute('data-filter-section'); renderFilterMenu(); return; }
+    if (e.target.closest('#tkFilterReset')) {
+      state.filters = []; updateFilterButton(); render(); renderFilterMenu();
     }
+  });
+  els.tkFilterSubmenu.addEventListener('click', function (e) {
+    var option = e.target.closest('[data-filter-value]');
+    if (option) { toggleFilterValue(activeFilterSection, option.getAttribute('data-filter-value')); return; }
+    var dateBtn = e.target.closest('[data-filter-date]');
+    if (dateBtn) {
+      var op = dateBtn.getAttribute('data-filter-date');
+      state.filters = state.filters.filter(function (f) { return f.field !== 'dueDate'; });
+      state.filters.push({ field:'dueDate', op:op, value:'' });
+      updateFilterButton(); render(); renderFilterMenu();
+    }
+  });
+  els.tkFilterSubmenu.addEventListener('change', function (e) {
+    if (e.target.id !== 'tkFilterDate') return;
+    state.filters = state.filters.filter(function (f) { return f.field !== 'dueDate'; });
+    if (e.target.value) state.filters.push({ field:'dueDate', op:'eq', value:e.target.value });
+    updateFilterButton(); render(); renderFilterMenu();
+  });
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest('#tkFilterPanel') && !e.target.closest('#tkFilterBtn')) closeFilterPanel();
   });
   els.tkFilterChips.addEventListener('click', function (e) {
     var chipBtn = e.target.closest('[data-chip-idx]');
     if (chipBtn) {
       var idx = parseInt(chipBtn.getAttribute('data-chip-idx'), 10);
       state.filters.splice(idx, 1);
+      updateFilterButton();
       render();
       return;
     }
     if (e.target.id === 'tkChipClearAll' || e.target.closest('#tkChipClearAll')) {
       state.filters = [];
+      updateFilterButton();
       render();
     }
   });
@@ -1038,16 +1535,32 @@ function bindEvents() {
   });
 
   /* 视图标签栏 */
-  els.tkViewAdd.addEventListener('click', openSaveView);
-  els.tkViewManage.addEventListener('click', openManageViews);
+  function closeViewMenu() {
+    els.tkViewMenu.classList.add('hidden');
+    els.tkViewAdd.setAttribute('aria-expanded', 'false');
+  }
+  els.tkViewAdd.addEventListener('click', function (e) {
+    e.stopPropagation();
+    var opening = els.tkViewMenu.classList.contains('hidden');
+    els.tkViewMenu.classList.toggle('hidden', !opening);
+    els.tkViewAdd.setAttribute('aria-expanded', String(opening));
+    closeFilterPanel();
+    els.tkDisplayPopover.classList.add('hidden');
+    els.tkDisplayBtn.classList.remove('active');
+    els.tkDisplayBtn.setAttribute('aria-expanded', 'false');
+  });
+  els.tkViewMenu.addEventListener('click', function (e) { e.stopPropagation(); });
+  els.tkViewMenuNew.addEventListener('click', function () { closeViewMenu(); openSaveView(); });
+  els.tkViewManage.addEventListener('click', function () { closeViewMenu(); openManageViews(); });
+  document.addEventListener('click', function (e) { if (!e.target.closest('.tk-view-action')) closeViewMenu(); });
   els.tkViewTabs.addEventListener('click', function (e) {
     var delBtn = e.target.closest('[data-del-view]');
     if (delBtn) {
       e.stopPropagation();
       var viewId = delBtn.getAttribute('data-del-view');
       tkDeleteView(viewId);
-      if (state.activeViewId === viewId) state.activeViewId = 'all';
-      renderViewBar();
+      if (state.activeViewId === viewId) { state.activeViewId = 'all'; state.scope = 'all'; }
+      render();
       return;
     }
     var tab = e.target.closest('.tk-view-tab');
@@ -1058,6 +1571,18 @@ function bindEvents() {
       if (view && view.scope) {
         state.scope = view.scope;
       }
+      if (view && !view.builtin) {
+        state.filters = (view.filters || []).map(function (f) { return Object.assign({}, f); });
+        state.groupBy = view.groupBy || 'status';
+        state.viewMode = ['slide','full','split'].includes(view.viewMode) ? view.viewMode : 'slide';
+        state.sortBy = view.sortBy || 'createDate';
+        state.sortDir = view.sortDir || 'desc';
+        state.layout = view.layout || 'board';
+        state.showSubtasks = view.showSubtasks !== false;
+        state.cardProperties = Object.assign({}, state.cardProperties, view.cardProperties || {});
+        $$('[data-layout]', els.tkLayoutToggle).forEach(function (b) { b.classList.toggle('active', b.getAttribute('data-layout') === state.layout); });
+      }
+      updateFilterButton();
       render();
     }
   });
@@ -1077,9 +1602,9 @@ function bindEvents() {
     if (delBtn) {
       var viewId = delBtn.getAttribute('data-del-view');
       tkDeleteView(viewId);
-      if (state.activeViewId === viewId) state.activeViewId = 'all';
+      if (state.activeViewId === viewId) { state.activeViewId = 'all'; state.scope = 'all'; }
       openManageViews();
-      renderViewBar();
+      render();
       return;
     }
     var renameBtn = e.target.closest('[data-rename-view]');
@@ -1131,13 +1656,37 @@ function bindEvents() {
     }
   });
 
-  /* 重置筛选 */
-  els.tkResetFilter.addEventListener('click', function () {
-    state.filters = []; state.search = ''; els.tkSearch.value = ''; render();
+  /* 详情面板内：添加子任务 / 打开子任务 */
+  els.tkDrawerBody.addEventListener('click', function (e) {
+    var addSubBtn = e.target.closest('[data-drawer-subtask]');
+    if (addSubBtn) {
+      var pid = parseInt(addSubBtn.getAttribute('data-drawer-subtask'), 10);
+      openTaskModal(null, pid);
+      return;
+    }
+    var openSub = e.target.closest('[data-subtask-open]');
+    if (openSub) {
+      var sid = parseInt(openSub.getAttribute('data-subtask-open'), 10);
+      openDrawer(sid);
+      return;
+    }
   });
 
-  /* 看板点击（列底新建 / 打开详情 / 多选） */
+  /* 重置筛选 */
+  els.tkResetFilter.addEventListener('click', function () {
+    state.filters = []; state.search = ''; els.tkSearch.value = ''; updateFilterButton(); render();
+  });
+
+  /* 看板点击（列底新建 / 打开详情 / 多选 / 折叠子任务） */
   els.tkBoardScroll.addEventListener('click', function (e) {
+    var toggleBtn = e.target.closest('[data-tk-toggle]');
+    if (toggleBtn) {
+      var tid = parseInt(toggleBtn.getAttribute('data-tk-toggle'), 10);
+      if (collapsedParents.has(tid)) collapsedParents.delete(tid);
+      else collapsedParents.add(tid);
+      render();
+      return;
+    }
     var addBtn = e.target.closest('[data-add-group]');
     if (addBtn) {
       var groupKey = addBtn.getAttribute('data-add-group');
@@ -1148,25 +1697,16 @@ function bindEvents() {
       else if (state.groupBy === 'project' && groupKey !== 'none') els.tkFormProject.value = groupKey;
       return;
     }
-    var cardMenuBtn = e.target.closest('[data-card-menu]');
-    if (cardMenuBtn) {
-      var exist = cardMenuBtn.parentElement.querySelector('.tk-card-menu');
-      if (exist) { exist.remove(); return; }
-      document.querySelectorAll('.tk-card-menu').forEach(function(m){m.remove();});
-      var cid = cardMenuBtn.getAttribute('data-card-menu');
-      var m = document.createElement('div');
-      m.className = 'tk-card-menu';
-      m.innerHTML = '<div class="tk-card-menu-item" data-card-action="edit" data-card-task="'+cid+'">编辑</div><div class="tk-card-menu-item" data-card-action="copy" data-card-task="'+cid+'">复制</div><div class="tk-card-menu-item danger" data-card-action="delete" data-card-task="'+cid+'">删除</div>';
-      cardMenuBtn.parentElement.appendChild(m);
-      return;
-    }
+    var moreBtnB = e.target.closest('[data-card-more]');
+    if (moreBtnB) { showCardMenu(moreBtnB.getAttribute('data-card-more'), moreBtnB); return; }
     var cardAct = e.target.closest('[data-card-action]');
     if (cardAct) {
       var aid = cardAct.getAttribute('data-card-task');
       var act = cardAct.getAttribute('data-card-action');
-      if (act === 'edit') { openDrawer(aid); }
+      if (act === 'chat') { openTaskConversationWithTask(parseInt(aid, 10)); } else if (act === 'edit') { openDrawer(aid); }
       else if (act === 'delete') { tkDeleteTask(aid); render(); }
       else if (act === 'copy') { var src = tkGetTasks().find(function(x){return x.id==aid;}); if (src) { var c = Object.assign({}, src, {id: Date.now(), code: 'TSK-' + String(Date.now()).slice(-3)}); tkAddTask(c); render(); } }
+      else if (act === 'subtask') { openTaskModal(null, parseInt(aid, 10)); document.querySelectorAll('.tk-card-menu').forEach(function(m){m.remove();}); return; }
       document.querySelectorAll('.tk-card-menu').forEach(function(m){m.remove();});
       return;
     }
@@ -1191,31 +1731,36 @@ function bindEvents() {
   els.tkBoardScroll.addEventListener('dragleave', handleDragLeave);
   els.tkBoardScroll.addEventListener('drop', handleDrop);
 
-  /* 列表点击（打开详情 / 多选） */
+  /* 列表点击（折叠子任务 / 打开详情 / 多选） */
   els.tkListBody.addEventListener('click', function (e) {
+    var toggleBtn = e.target.closest('[data-tk-toggle]');
+    if (toggleBtn) {
+      var tid = parseInt(toggleBtn.getAttribute('data-tk-toggle'), 10);
+      if (collapsedParents.has(tid)) collapsedParents.delete(tid);
+      else collapsedParents.add(tid);
+      render();
+      return;
+    }
     var inlineCreateBtn = e.target.closest('#tkInlineCreateBtn');
     if (inlineCreateBtn) {
+      if (state.viewMode === 'split') { openTaskModal(null); return; }
       var row = inlineCreateBtn.closest('tr');
-      row.innerHTML = '<td colspan="10"><div class="tk-inline-create-form"><input type="text" class="tk-inline-input" id="tkInlineTitle" placeholder="输入任务标题"><div class="tk-inline-dropdown" data-value="" id="tkInlineAssigneeWrap"><button type="button" class="tk-inline-select" id="tkInlineAssigneeBtn">选择处理人</button><div class="tk-inline-dropdown-menu" id="tkInlineAssigneeMenu" hidden>' + TK_PEOPLE.map(function(p){return '<div class="tk-inline-dropdown-item" data-assignee="'+p.id+'">'+p.name+'</div>';}).join('') + '</div></div><button class="tk-inline-save" id="tkInlineSave">保存</button><button class="tk-inline-cancel" id="tkInlineCancel">取消</button></div></td>';
+      row.innerHTML = '<td colspan="10"><div class="tk-inline-create-form"><input type="text" class="tk-inline-input" id="tkInlineTitle" placeholder="输入任务标题"><div class="tk-inline-dropdown" data-value="" id="tkInlineAssigneeWrap"><button type="button" class="tk-inline-select is-placeholder" id="tkInlineAssigneeBtn" aria-expanded="false"><span class="tk-inline-select-label">处理人</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><div class="tk-inline-dropdown-menu" id="tkInlineAssigneeMenu" hidden>' + TK_PEOPLE.map(function(p){return '<div class="tk-inline-dropdown-item" data-assignee="'+p.id+'">'+p.name+'</div>';}).join('') + '</div></div><button class="tk-inline-save" id="tkInlineSave">确定</button><button class="tk-inline-cancel" id="tkInlineCancel">取消</button></div></td>';
       setTimeout(function(){ var i=els.tkListBody.querySelector('#tkInlineTitle'); if(i) i.focus(); },0);
       return;
     }
     var inlineSave = e.target.closest('#tkInlineSave');
     if (inlineSave) {
-      var ti = els.tkListBody.querySelector('#tkInlineTitle');
-      var aw = els.tkListBody.querySelector('#tkInlineAssigneeWrap');
-      var av = aw ? aw.getAttribute('data-value') : '';
-      if (ti && ti.value.trim()) {
-        var mx = Math.max.apply(null, tkGetTasks().map(function(x){return x.id;}));
-        tkAddTask({ id:mx+1, code:'TSK-'+String(mx+1).padStart(3,'0'), title:ti.value.trim(), desc:'', status:'backlog', priority:'medium', assignee: av||'u1', project:'p1', labels:[], dueDate:'', createDate:new Date().toISOString().slice(0,10) });
-        render();
-      }
+      saveInlineTask();
       return;
     }
     var inlineAssigneeBtn = e.target.closest('#tkInlineAssigneeBtn');
     if (inlineAssigneeBtn) {
       var amenu = els.tkListBody.querySelector('#tkInlineAssigneeMenu');
-      if (amenu) amenu.hidden = !amenu.hidden;
+      if (amenu) {
+        amenu.hidden = !amenu.hidden;
+        inlineAssigneeBtn.setAttribute('aria-expanded', String(!amenu.hidden));
+      }
       return;
     }
     var inlineAssigneeItem = e.target.closest('[data-assignee]');
@@ -1224,7 +1769,11 @@ function bindEvents() {
       var abtn = els.tkListBody.querySelector('#tkInlineAssigneeBtn');
       var amnu = els.tkListBody.querySelector('#tkInlineAssigneeMenu');
       if (awrap) awrap.setAttribute('data-value', inlineAssigneeItem.getAttribute('data-assignee'));
-      if (abtn) abtn.textContent = inlineAssigneeItem.textContent;
+      if (abtn) {
+        abtn.querySelector('.tk-inline-select-label').textContent = inlineAssigneeItem.textContent;
+        abtn.classList.remove('is-placeholder');
+        abtn.setAttribute('aria-expanded', 'false');
+      }
       if (amnu) amnu.hidden = true;
       return;
     }
@@ -1237,25 +1786,16 @@ function bindEvents() {
       render();
       return;
     }
-    var cardMenuBtn2 = e.target.closest('[data-card-menu]');
-    if (cardMenuBtn2) {
-      var exist2 = cardMenuBtn2.parentElement.querySelector('.tk-card-menu');
-      if (exist2) { exist2.remove(); return; }
-      document.querySelectorAll('.tk-card-menu').forEach(function(m){m.remove();});
-      var cid2 = cardMenuBtn2.getAttribute('data-card-menu');
-      var m2 = document.createElement('div');
-      m2.className = 'tk-card-menu';
-      m2.innerHTML = '<div class="tk-card-menu-item" data-card-action="edit" data-card-task="'+cid2+'">编辑</div><div class="tk-card-menu-item" data-card-action="copy" data-card-task="'+cid2+'">复制</div><div class="tk-card-menu-item danger" data-card-action="delete" data-card-task="'+cid2+'">删除</div>';
-      cardMenuBtn2.parentElement.appendChild(m2);
-      return;
-    }
+    var moreBtn2 = e.target.closest('[data-card-more]');
+    if (moreBtn2) { showCardMenu(moreBtn2.getAttribute('data-card-more'), moreBtn2); return; }
     var cardAct2 = e.target.closest('[data-card-action]');
     if (cardAct2) {
       var aid2 = cardAct2.getAttribute('data-card-task');
       var act2 = cardAct2.getAttribute('data-card-action');
-      if (act2 === 'edit') { openDrawer(aid2); }
+      if (act2 === 'chat') { openTaskConversationWithTask(parseInt(aid2, 10)); } else if (act2 === 'edit') { openDrawer(aid2); }
       else if (act2 === 'delete') { tkDeleteTask(aid2); render(); }
       else if (act2 === 'copy') { var src2 = tkGetTasks().find(function(x){return x.id==aid2;}); if (src2) { var c2 = Object.assign({}, src2, {id: Date.now(), code: 'TSK-' + String(Date.now()).slice(-3)}); tkAddTask(c2); render(); } }
+      else if (act2 === 'subtask') { openTaskModal(null, parseInt(aid2, 10)); document.querySelectorAll('.tk-card-menu').forEach(function(m){m.remove();}); return; }
       document.querySelectorAll('.tk-card-menu').forEach(function(m){m.remove();});
       return;
     }
@@ -1272,6 +1812,12 @@ function bindEvents() {
       }
     }
   });
+  els.tkListBody.addEventListener('keydown', function (e) {
+    if (e.target.id === 'tkInlineTitle' && e.key === 'Enter' && !e.isComposing) {
+      e.preventDefault();
+      saveInlineTask();
+    }
+  });
 
   /* 看板列折叠 */
   els.tkBoardScroll.addEventListener('click', function (e) {
@@ -1279,6 +1825,9 @@ function bindEvents() {
     if (toggleBtn) {
       var body = toggleBtn.closest('.tk-board-col').querySelector('.tk-board-col-body');
       body.classList.toggle('collapsed');
+      var toggleLabel = body.classList.contains('collapsed') ? '展开分组' : '折叠分组';
+      toggleBtn.setAttribute('data-tooltip', toggleLabel);
+      toggleBtn.setAttribute('aria-label', toggleLabel);
       var svg = toggleBtn.querySelector('svg');
       if (body.classList.contains('collapsed')) svg.innerHTML = '<polyline points="18 15 12 9 6 15"/>';
       else svg.innerHTML = '<polyline points="6 9 12 15 18 9"/>';
@@ -1292,12 +1841,103 @@ function bindEvents() {
     }
   });
   /* 点击外部关闭弹出菜单 */
-  document.addEventListener('click', function () { hidePopover(); });
+  document.addEventListener('click', function (e) {
+    hidePopover();
+    var ffm = document.querySelector('.tk-flow-field-menu.show');
+    if (ffm && !e.target.closest('.tk-flow-field-menu') && !e.target.closest('[data-flow-prop]')) {
+      ffm.remove();
+    }
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    closeFilterPanel();
+    closeViewMenu();
+    els.tkDisplayPopover.classList.add('hidden');
+    els.tkDisplayBtn.classList.remove('active');
+    els.tkDisplayBtn.setAttribute('aria-expanded', 'false');
+    var ffm = document.querySelector('.tk-flow-field-menu.show');
+    if (ffm) ffm.remove();
+  });
+  /* 滚动与缩放时关闭悬浮菜单，避免定位错位 */
+  window.addEventListener('scroll', function () {
+    var ffm = document.querySelector('.tk-flow-field-menu.show');
+    if (ffm) ffm.remove();
+  }, true);
+  window.addEventListener('resize', function () {
+    var ffm = document.querySelector('.tk-flow-field-menu.show');
+    if (ffm) ffm.remove();
+  });
+}
+
+/* ---------- 列宽拖拽 ---------- */
+var COL_WIDTHS_KEY = 'lingee_tasks_col_widths';
+function loadColumnWidths() {
+  try { return JSON.parse(localStorage.getItem(COL_WIDTHS_KEY) || '{}'); }
+  catch (e) { return {}; }
+}
+function saveColumnWidths(widths) {
+  try { localStorage.setItem(COL_WIDTHS_KEY, JSON.stringify(widths)); }
+  catch (e) { /* 本地存储不可用时保留当前页面宽度 */ }
+}
+function initColumnResize() {
+  if (!els.tkListHead) return;
+  var saved = loadColumnWidths();
+  els.tkListHead.querySelectorAll('th').forEach(function (th) {
+    if (th.classList.contains('tk-col-check') || th.classList.contains('tk-col-actions')) return;
+    if (th.querySelector('.tk-col-resize')) return; /* 已初始化 */
+    var colKey = (th.className.match(/tk-col-(\w+)/) || [])[1];
+    if (!colKey) return;
+    if (saved[colKey]) th.style.width = saved[colKey] + 'px';
+    var handle = document.createElement('div');
+    handle.className = 'tk-col-resize';
+    handle.setAttribute('role', 'separator');
+    handle.setAttribute('aria-orientation', 'vertical');
+    handle.addEventListener('pointerdown', function (e) {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      e.stopPropagation();
+      var startX = e.clientX;
+      var startWidth = th.getBoundingClientRect().width;
+      var pointerId = e.pointerId;
+      handle.setPointerCapture(pointerId);
+      handle.classList.add('dragging');
+      th.classList.add('resizing');
+      document.body.classList.add('tk-col-resizing');
+      function move(ev) {
+        if (ev.pointerId !== pointerId) return;
+        th.style.width = Math.max(50, Math.round(startWidth + (ev.clientX - startX))) + 'px';
+      }
+      function end(ev) {
+        if (ev.pointerId !== pointerId) return;
+        handle.removeEventListener('pointermove', move);
+        handle.removeEventListener('pointerup', end);
+        handle.removeEventListener('pointercancel', end);
+        if (handle.hasPointerCapture(pointerId)) handle.releasePointerCapture(pointerId);
+        handle.classList.remove('dragging');
+        th.classList.remove('resizing');
+        document.body.classList.remove('tk-col-resizing');
+        var w = loadColumnWidths();
+        w[colKey] = Math.round(th.getBoundingClientRect().width);
+        saveColumnWidths(w);
+      }
+      handle.addEventListener('pointermove', move);
+      handle.addEventListener('pointerup', end);
+      handle.addEventListener('pointercancel', end);
+    });
+    th.appendChild(handle);
+  });
 }
 
 /* ---------- 初始化 ---------- */
 export function initTasksV2() {
   cacheEls();
+  restoreViewState();
+  initColumnResize();
+  try {
+    var storedWidth = Number(localStorage.getItem(DRAWER_WIDTH_STORAGE_KEY));
+    if (Number.isFinite(storedWidth) && storedWidth >= 480) drawerPreferredWidth = storedWidth;
+  } catch (e) { /* 本地存储不可用时使用默认宽度 */ }
+  applyDrawerWidth();
   fillSelects();
   bindEvents();
   render();
