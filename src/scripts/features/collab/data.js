@@ -194,6 +194,10 @@ function cvProjectPersons(){
   var ids=proj?(proj.members||[]):[];
   return CV_MEMBERS.filter(function(m){ return ids.indexOf(m.id)>=0; });
 }
+function cvPeopleInProject(project){
+  var ids=project&&Array.isArray(project.members)?project.members:[];
+  return CV_MEMBERS.filter(function(person){return ids.includes(person.id);});
+}
 var CV_PERSON_STORE_KEY='lingee-collab-persons-v1';
 function cvPersistPersons(){
   try{ localStorage.setItem(CV_PERSON_STORE_KEY,JSON.stringify(CV_MEMBERS)); }catch(e){}
@@ -446,4 +450,4 @@ function cvSeedTaskDetails(){
   });
 }
 
-export { CV_MEMBERS, CV_PROJECTS, CV_ARTIFACTS, CV_REVIEWS, CV_REVIEW_ARTIFACTS, CV_REVIEW_COMMENTS, CV_TASKS, CV_THIRD_PARTY_MEMBERS, CV_WORKFLOW, CV_WORKFLOW_ROLES, CV_WORKSPACES, cvConfigOverride, cvCurrentUserName, cvInProject, cvInjectCardActions, cvIsMe, cvPersistPersons, cvPersistProjects, cvPersonById, cvPersonName, cvProject, cvProjectById, cvProjectInWorkspace, cvProjectName, cvProjectPersons, cvRenderReviewStats, cvRenderReviews, cvRenderTaskStats, cvRenderTasks, cvRestorePersons, cvRestoreProjects, cvSeedTaskDetails, cvWorkspace, cvWorkspaceById, cvWorkspaceName };
+export { CV_MEMBERS, CV_PROJECTS, CV_ARTIFACTS, CV_REVIEWS, CV_REVIEW_ARTIFACTS, CV_REVIEW_COMMENTS, CV_TASKS, CV_THIRD_PARTY_MEMBERS, CV_WORKFLOW, CV_WORKFLOW_ROLES, CV_WORKSPACES, cvConfigOverride, cvCurrentUserName, cvInProject, cvInjectCardActions, cvIsMe, cvPeopleInProject, cvPersistPersons, cvPersistProjects, cvPersonById, cvPersonName, cvProject, cvProjectById, cvProjectInWorkspace, cvProjectName, cvProjectPersons, cvRenderReviewStats, cvRenderReviews, cvRenderTaskStats, cvRenderTasks, cvRestorePersons, cvRestoreProjects, cvSeedTaskDetails, cvWorkspace, cvWorkspaceById, cvWorkspaceName };

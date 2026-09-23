@@ -1,13 +1,12 @@
 import { $, $$ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
 import { setUrlState } from '../../core/view.js';
-import { CV_MEMBERS, CV_PROJECTS, CV_REVIEWS, CV_TASKS, CV_WORKSPACES, cvInProject, cvInjectCardActions, cvPersistProjects, cvProject, cvProjectById, cvProjectInWorkspace, cvProjectName, cvRenderReviewStats, cvRenderReviews, cvRenderTaskStats, cvRenderTasks, cvRestoreProjects, cvWorkspace, cvWorkspaceName, set_cvProject, set_cvWorkspace } from './data.js';
-import { CV_SQUADS, cvRenderSquadList } from './squads.js';
+import { CV_MEMBERS, CV_PROJECTS, CV_TASKS, CV_WORKSPACES, cvCurrentUserName, cvInProject, cvInjectCardActions, cvPersistPersons, cvPersistProjects, cvProject, cvProjectById, cvProjectInWorkspace, cvRenderReviewStats, cvRenderReviews, cvRenderTaskStats, cvRenderTasks, cvRestoreProjects, cvWorkspace, cvWorkspaceName, set_cvProject, set_cvWorkspace } from './data.js';
 import { cvApplyReviewFilters } from './tasks.js';
 import { cvApplyFilters, cvLastTab } from './view.js';
 import { xesc } from '../expert/data.js';
 import { TEAMS } from '../expert/store.js';
-/* 协作开发：项目切换与专家团默认绑定
+/* 协作开发：工作区切换、工作台项目筛选与专家团默认绑定
    拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
    由 main.js 按拆分前的原始顺序调用。 */
 
@@ -37,8 +36,6 @@ function cvSetWorkspace(id){
   /* 切工作区后，若当前项目不属于该工作区，重置回「全部项目」 */
   if(cvProject && !cvProjectInWorkspace(cvProject)){
     set_cvProject('');
-    var plabel=$('#cvProjLabel'); if(plabel) plabel.textContent='全部项目';
-    var psw=$('#cvProjSwitch'); if(psw) psw.classList.toggle('cv-proj--on',false);
   }
   cvRenderProjMenu();
   if(window.cvRenderProjectList) window.cvRenderProjectList();
@@ -46,33 +43,22 @@ function cvSetWorkspace(id){
   cvRenderReviewStats(); cvRenderReviews();
   cvApplyFilters(); cvApplyReviewFilters();
   cvUpdateCounts();
+  cvSyncUrl();
 }
 
-/* ---------- 项目切换 ---------- */
+/* ---------- 工作台项目筛选 ---------- */
 function cvRenderProjMenu(){
-  var menu=$('#cvProjMenu'); if(!menu) return;
-  var rows=[{id:'',name:'全部项目',desc:'跨项目聚合，看分配给我的任务与评审'}].concat(
-    CV_PROJECTS.filter(function(p){return cvProjectInWorkspace(p.id);}).map(function(p){
-      var tasks=CV_TASKS.filter(function(t){return t.project===p.id&&t.kind!=='epic'}).length;
-      return {id:p.id,name:p.name,dot:p.dot,desc:tasks+' 个任务'};
-    }));
-  menu.innerHTML=rows.map(function(r){
-    return '<div class="cv-proj-item'+(r.id===cvProject?' checked':'')+'" data-cv-proj="'+r.id+'">'
-      +(r.dot?'<span class="dot '+r.dot+'"></span>':'<span class="cv-proj-all"></span>')
-      +'<span class="cv-proj-n">'+xesc(r.name)+'<em>'+xesc(r.desc)+'</em></span>'
-      +'<svg class="ic ic-sm cv-proj-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>';
+  var select=$('#tb-project'); if(!select) return;
+  select.innerHTML='<option value="">全部项目</option>'+CV_PROJECTS.filter(function(p){return cvProjectInWorkspace(p.id);}).map(function(p){
+    return '<option value="'+xesc(p.id)+'">'+xesc(p.name)+'</option>';
   }).join('');
+  select.value=cvProject;
 }
 function cvSetProject(id){
-  cvClearWorkbenchTaskFilter();
-  set_cvProject(id||'');
-  var label=$('#cvProjLabel');
-  if(label) label.textContent=cvProject?cvProjectName(cvProject):'全部项目';
-  var sw=$('#cvProjSwitch'); if(sw) sw.classList.toggle('cv-proj--on',!!cvProject);
-  cvRenderProjMenu();
+  set_cvProject(id&&cvProjectById(id)&&cvProjectInWorkspace(id)?id:'');
+  var select=$('#tb-project'); if(select) select.value=cvProject;
   cvRenderTaskStats(); cvRenderTasks(); cvInjectCardActions();
   cvRenderReviewStats(); cvRenderReviews();
-  cvRenderSquadList();
   cvApplyFilters(); cvApplyReviewFilters();
   cvUpdateCounts();
   cvSyncUrl();
@@ -86,10 +72,8 @@ function cvUpdateCounts(){
   /* 待评审已合并到任务管理，不再单独计数 */
 }
 function cvSyncUrl(){
-  setUrlState('/collab?tab='+cvLastTab+(cvProject?'&proj='+cvProject:''));
+  setUrlState('/collab?tab='+cvLastTab+(cvLastTab==='tasks'&&cvProject?'&proj='+cvProject:''));
 }
-var cvProjBtn=$('#cvProjBtn');
-var cvProjMenu=$('#cvProjMenu');
 var cvWsBtn=$('#cvWsBtn');
 var cvWsMenu=$('#cvWsMenu');
 
@@ -125,7 +109,8 @@ function cvOpenProjEdit(id){
   if(sel) sel.innerHTML=CV_MEMBERS.map(function(m){return '<option'+(m.name===(p.owner||'')?' selected':'')+'>'+xesc(m.name)+'</option>';}).join('');
   var tsel=$('#cv-pe-team');
   if(tsel) tsel.innerHTML='<option value="">请选择专家团</option>'+TEAMS.map(function(t){return '<option value="'+xesc(t.id)+'"'+(t.id===p.defaultTeam?' selected':'')+'>'+xesc(t.name)+'</option>';}).join('');
-  cvFillSquadSelect(p.squadId);
+  cvFillProjectMembers(p.members||[]);
+  var memberPicker=$('#cv-pe-members');if(memberPicker){memberPicker.open=false;memberPicker.classList.remove('pe-members--invalid');}
   var more=$('#cv-pe-more');if(more)more.open=false;
   var ov=$('#cv-projedit-overlay');if(ov)ov.style.display='flex';
   var toolbar=$('#cv-project-toolbar');if(toolbar)toolbar.classList.add('hidden');
@@ -135,13 +120,21 @@ function cvOpenProjEdit(id){
 }
 function cvOpenProjNew(){
   cvProjEditId='';
+  var currentName=cvCurrentUserName();
+  var currentPerson=CV_MEMBERS.find(function(m){return m.name===currentName;});
+  if(currentName&&!currentPerson){
+    currentPerson={id:'p-login-'+Date.now(),name:currentName,email:'',dept:'',roles:[],status:'available',source:'登录账号'};
+    CV_MEMBERS.push(currentPerson);
+    cvPersistPersons();
+  }
   var set=function(k,val){var e=$('#cv-pe-'+k);if(e)e.value=val||'';};
   set('name','');set('desc','');set('status','planned');set('priority','中');set('repo','');set('start','');set('end','');
   var sel=$('#cv-pe-owner');
-  if(sel) sel.innerHTML=CV_MEMBERS.map(function(m,i){return '<option'+(i===0?' selected':'')+'>'+xesc(m.name)+'</option>';}).join('');
+  if(sel) sel.innerHTML=CV_MEMBERS.map(function(m,i){return '<option'+(m===(currentPerson||CV_MEMBERS[0])?' selected':'')+'>'+xesc(m.name)+'</option>';}).join('');
   var tsel=$('#cv-pe-team');
   if(tsel) tsel.innerHTML='<option value="">请选择专家团</option>'+TEAMS.map(function(t){return '<option value="'+xesc(t.id)+'">'+xesc(t.name)+'</option>';}).join('');
-  cvFillSquadSelect('');
+  cvFillProjectMembers(currentPerson?[currentPerson.id]:[]);
+  var memberPicker=$('#cv-pe-members');if(memberPicker){memberPicker.open=false;memberPicker.classList.remove('pe-members--invalid');}
   var more=$('#cv-pe-more');if(more)more.open=false;
   var ov=$('#cv-projedit-overlay');if(ov)ov.style.display='flex';
   var toolbar=$('#cv-project-toolbar');if(toolbar)toolbar.classList.add('hidden');
@@ -154,25 +147,32 @@ function cvCloseProjEdit(){
   var detail=$('#cv-proj-detail'),toolbar=$('#cv-project-toolbar');
   if(toolbar && detail?.classList.contains('hidden'))toolbar.classList.remove('hidden');
 }
-function cvFillSquadSelect(selected){
-  var sel=$('#cv-pe-squad');if(!sel)return;
-  sel.innerHTML='<option value="">请选择交付团队</option>'+CV_SQUADS.filter(function(s){return !s.archived;}).map(function(s){return '<option value="'+xesc(s.id)+'"'+(s.id===selected?' selected':'')+'>'+xesc(s.name)+'</option>';}).join('');
+function cvFillProjectMembers(selected){
+  var list=$('#cv-pe-members-list'); if(!list)return;
+  list.innerHTML=CV_MEMBERS.map(function(m){return '<label data-pe-member-search="'+xesc((m.name+' '+(m.email||'')).toLocaleLowerCase())+'"><input type="checkbox" value="'+xesc(m.id)+'"'+(selected.includes(m.id)?' checked':'')+'><span>'+xesc(m.name)+'</span><small>'+xesc(m.email||m.dept||'')+'</small></label>';}).join('');
+  var count=$('#cv-pe-members-count');if(count)count.textContent=selected.length?'项目成员 · '+selected.length+' 人':'请选择项目成员';
+  var selectedLabel=$('#cv-pe-members-selected');if(selectedLabel)selectedLabel.textContent='已选 '+selected.length+' 人';
+  var search=$('#cv-pe-members-search');if(search)search.value='';
 }
 function cvSaveProjEdit(){
   var g=function(k){var e=$('#cv-pe-'+k);return e?e.value.trim():'';};
   var name=g('name');
   if(!name){ toast('请填写项目标题','error'); return; }
-  var squadId=g('squad');
-  var squad=CV_SQUADS.find(function(s){return s.id===squadId&&!s.archived;});
-  if(!squad){ toast(CV_SQUADS.some(function(s){return !s.archived;})?'请选择交付团队':'请先在设置中创建团队','error'); $('#cv-pe-squad').focus(); return; }
+  var members=$$('#cv-pe-members-list input:checked').map(function(input){return input.value;});
+  if(!members.length){
+    toast('请至少选择 1 名项目成员','error');
+    var picker=$('#cv-pe-members');if(picker){picker.open=true;picker.classList.add('pe-members--invalid');}
+    var first=$('#cv-pe-members-list input');if(first)first.focus();
+    return;
+  }
   var teamId=g('team');
   if(!TEAMS.some(function(t){return t.id===teamId;})){ toast('请选择专家团','error'); $('#cv-pe-team').focus(); return; }
   var isNew=!cvProjEditId;
   var p=isNew?null:cvProjectById(cvProjEditId);
   if(p){
-    p.name=name;p.desc=g('desc');p.status=g('status');p.priority=g('priority');p.owner=g('owner');p.repo=g('repo');p.start=g('start');p.end=g('end');p.defaultTeam=teamId;p.squadId=squadId;
+    p.name=name;p.desc=g('desc');p.status=g('status');p.priority=g('priority');p.owner=g('owner');p.repo=g('repo');p.start=g('start');p.end=g('end');p.defaultTeam=teamId;p.members=members;
   }else{
-    p={id:'proj-'+Date.now(),name:name,desc:g('desc'),status:g('status'),dot:CV_PROJ_NEW_DOTS[CV_PROJECTS.length%CV_PROJ_NEW_DOTS.length],defaultTeam:teamId,squadId:squadId,priority:g('priority'),owner:g('owner'),repo:g('repo'),start:g('start'),end:g('end'),workspace:cvWorkspace||'ws-build'};
+    p={id:'proj-'+Date.now(),name:name,desc:g('desc'),status:g('status'),dot:CV_PROJ_NEW_DOTS[CV_PROJECTS.length%CV_PROJ_NEW_DOTS.length],defaultTeam:teamId,members:members,priority:g('priority'),owner:g('owner'),repo:g('repo'),start:g('start'),end:g('end'),workspace:cvWorkspace||'ws-build'};
     CV_PROJECTS.push(p);
   }
   cvPersistProjects();
@@ -180,7 +180,6 @@ function cvSaveProjEdit(){
   cvRenderProjectSettings();cvRenderProjMenu();
   if(window.cvRenderProjectList) window.cvRenderProjectList();
   if(window.cvRenderProjectDetail) window.cvRenderProjectDetail();
-  var label=$('#cvProjLabel');if(label&&cvProject===p.id)label.textContent=p.name;
   toast(isNew?'已创建项目：'+name:'已保存项目设置：'+name);
 }
 
@@ -194,15 +193,8 @@ export function initCollabProjects() {
     $('#cvWsSwitch').classList.remove('open');
     cvSetWorkspace(it.getAttribute('data-cv-ws'));
   });
-  if(cvProjBtn) cvProjBtn.addEventListener('click',function(e){
-    e.stopPropagation();
-    var sw=$('#cvProjSwitch'); if(sw) sw.classList.toggle('open');
-  });
-  if(cvProjMenu) cvProjMenu.addEventListener('click',function(e){
-    var it=e.target.closest('[data-cv-proj]'); if(!it) return;
-    $('#cvProjSwitch').classList.remove('open');
-    cvSetProject(it.getAttribute('data-cv-proj'));
-  });
+  var projectFilter=$('#tb-project');
+  if(projectFilter) projectFilter.addEventListener('change',function(){ cvSetProject(this.value); });
   document.addEventListener('click',function(){
     $$('#view-collab .cv-proj.open').forEach(function(el){el.classList.remove('open')});
   });
@@ -210,6 +202,17 @@ export function initCollabProjects() {
   window.cvOpenProjNew=cvOpenProjNew;
   window.cvCloseProjEdit=cvCloseProjEdit;
   window.cvSaveProjEdit=cvSaveProjEdit;
+  var memberList=$('#cv-pe-members-list');if(memberList)memberList.addEventListener('change',function(){
+    var selected=$$('#cv-pe-members-list input:checked').length;
+    var count=$('#cv-pe-members-count');if(count)count.textContent=selected?'项目成员 · '+selected+' 人':'请选择项目成员';
+    var selectedLabel=$('#cv-pe-members-selected');if(selectedLabel)selectedLabel.textContent='已选 '+selected+' 人';
+    var picker=$('#cv-pe-members');if(picker)picker.classList.toggle('pe-members--invalid',!selected);
+  });
+  var memberSearch=$('#cv-pe-members-search');if(memberSearch)memberSearch.addEventListener('input',function(){
+    var query=this.value.trim().toLocaleLowerCase();
+    $$('#cv-pe-members-list [data-pe-member-search]').forEach(function(row){row.classList.toggle('hidden',!row.getAttribute('data-pe-member-search').includes(query));});
+  });
+  var memberDone=$('#cv-pe-members-done');if(memberDone)memberDone.addEventListener('click',function(){var picker=$('#cv-pe-members');if(picker)picker.open=false;});
 }
 
 export { cvRenderProjMenu, cvRenderProjectSettings, cvRenderWsMenu, cvRestoreProjects, cvSetProject, cvSetWorkspace, cvSyncUrl, cvUpdateCounts };

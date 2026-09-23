@@ -1,5 +1,4 @@
-import { CV_TASKS, CV_PROJECTS } from './data.js';
-import { cvSquadPeople } from './squads.js';
+import { CV_TASKS, CV_PROJECTS, cvPeopleInProject } from './data.js';
 import { xesc } from '../expert/data.js';
 import { tbLabel, tbOwner, tbGetSelected, tbSetSelected, tbTaskId, tbMatchExperts, tbSave, tbTeamName } from './tb-core.js';
 import { tbOpenTask, renderTaskBoard } from './task-board.js';
@@ -207,7 +206,7 @@ function tbRenderFiles() {
   const cnt = sec && sec.querySelector('h3 small');
   if (cnt) cnt.textContent = (t.files || []).length;
 }
-/* 转交任务：从项目交付团队中选人。 */
+/* 转交任务：从项目成员中选人。 */
 function tbOpenTransfer(opts) {
   const t = sel();
   if (!t) return;
@@ -216,7 +215,7 @@ function tbOpenTransfer(opts) {
   const action = opts.action || 'transfer';
   const reopen = opts.reopen !== false;
   const proj = CV_PROJECTS.find(p => p.id === t.project);
-  const people = (proj ? cvSquadPeople(proj.squadId) : [])
+  const people = (proj ? cvPeopleInProject(proj) : [])
     .map(m => ({ kind: 'person', name: m.name, role: (m.roles || []).map(r => r.text).join(' · ') }));
   const old = document.getElementById('tb-transfer-overlay'); if (old) old.remove();
   const item = (p, i) => '<button type="button" class="person-item" data-tf-pick="' + i + '"><span class="person-avatar-sm">' + xesc(p.name[0]) + '</span><span class="tf-item-body"><span class="person-name-sm">' + xesc(p.name) + '</span><span class="person-role-sm">' + xesc(p.role) + '</span></span></button>';
@@ -224,7 +223,7 @@ function tbOpenTransfer(opts) {
   const el = document.createElement('div');
   el.className = 'sync-overlay'; el.id = 'tb-transfer-overlay';
   el.innerHTML = '<div class="task-modal tf-modal"><div class="task-modal__header"><h3 class="task-modal__title">' + title + '</h3><button type="button" class="task-modal__close" data-tf-close>×</button></div><div class="task-modal__body"><div class="tf-search-wrap"><svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input type="search" id="tf-search" placeholder="搜索人员或专家" autocomplete="off"></div><div class="tf-list" id="tf-list">'
-    + '<div class="tf-group" data-kind="person"><div class="tf-group-t">交付团队成员<span>' + people.length + '</span></div>' + people.map((p, i) => item(p, i)).join('') + '</div>'
+    + '<div class="tf-group" data-kind="person"><div class="tf-group-t">项目成员<span>' + people.length + '</span></div>' + people.map((p, i) => item(p, i)).join('') + '</div>'
     + '</div></div><div class="task-modal__footer"><button type="button" class="sync-modal__btn sync-modal__btn--ghost" data-tf-close>取消</button><button type="button" class="sync-modal__btn sync-modal__btn--primary" data-tf-confirm>确认转交</button></div></div>';
   (document.getElementById("cvModals") || document.body).appendChild(el);
   const search = el.querySelector('#tf-search');

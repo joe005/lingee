@@ -113,8 +113,9 @@ var memberModal=$('#memberModal'), memberKw='';
 function openMemberModal(){ memberKw=''; $('#memberSearchInput').value=''; renderMemberList(); memberModal.classList.add('show');
   setTimeout(function(){ $('#memberSearchInput').focus() },40); }
 function renderMemberList(){
-  var kw=memberKw.trim();
-  var rows=EXPERTS.filter(function(e){ return !kw || (e.name+e.role+e.desc+e.tags.join()).indexOf(kw)>=0; });
+  $('#memberSelectedCount').textContent='已选 '+teamDraft.members.length+' 人';
+  var kw=memberKw.trim().toLocaleLowerCase();
+  var rows=EXPERTS.filter(function(e){ return !kw || (e.name+e.role+e.desc+e.tags.join()).toLocaleLowerCase().includes(kw); });
   $('#memberList').innerHTML = rows.length ? rows.map(function(e){
     var on=teamDraft.members.indexOf(e.id)>=0;
     return '<button type="button" class="x-mrow'+(on?' on':'')+'" data-toggle-member="'+e.id+'">'

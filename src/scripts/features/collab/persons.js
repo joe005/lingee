@@ -1,7 +1,6 @@
 import { $ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
 import { CV_MEMBERS, CV_PROJECTS, cvIsMe, cvPersistPersons, cvPersistProjects, cvPersonById } from './data.js';
-import { cvPersistSquads, cvSquadDetachMember } from './squads.js';
 import { cvRenderProjectDetail, cvRenderProjectList } from './project-view.js';
 import { xesc } from '../expert/data.js';
 /* 设置：人员资料与人员管理。 */
@@ -52,10 +51,12 @@ function cvSavePersonEdit(){
 function cvDeletePerson(pid){
   var p=cvPersonById(pid); if(!p) return;
   if(cvIsMe(p)){ toast('不能删除自己','warning'); return; }
+  if(CV_PROJECTS.some(function(project){return (project.members||[]).length===1&&project.members[0]===pid;})){
+    toast('该人员是某项目的唯一成员，请先为项目添加其他成员','warning');return;
+  }
   CV_PROJECTS.forEach(function(pr){ pr.members=(pr.members||[]).filter(function(id){return id!==pid;}); });
-  cvSquadDetachMember(pid);
   CV_MEMBERS.splice(CV_MEMBERS.indexOf(p),1);
-  cvPersistPersons(); cvPersistProjects(); cvPersistSquads();
+  cvPersistPersons(); cvPersistProjects();
   cvRenderProjectDetail(); cvRenderProjectList(); cvRenderPermTable();
   toast('已删除人员：'+p.name,'info');
 }

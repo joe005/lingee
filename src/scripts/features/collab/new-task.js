@@ -1,5 +1,4 @@
-import { CV_TASKS, CV_PROJECTS, cvProject } from './data.js';
-import { cvSquadPeople } from './squads.js';
+import { CV_TASKS, CV_PROJECTS, cvProject, cvPeopleInProject } from './data.js';
 import { TEAMS } from '../expert/store.js';
 import { xesc } from '../expert/data.js';
 import { cvUpdateCounts } from './projects.js';
@@ -86,7 +85,7 @@ function ntTeamOfProject(pid) {
 /* Task 只选业务负责人（实际的人）。 */
 function ntPeopleOfProject(pid) {
   const proj = CV_PROJECTS.find(p => p.id === pid);
-  return proj ? cvSquadPeople(proj.squadId) : [];
+  return proj ? cvPeopleInProject(proj) : [];
 }
 function ntRenderTeam() {
   const team = ntProjectId ? ntTeamOfProject(ntProjectId) : null;
@@ -94,7 +93,7 @@ function ntRenderTeam() {
   const el = document.getElementById('cv-nt-team');
   if (el) el.textContent = team ? team.name : '先选择项目';
 }
-/* 负责人：从项目引用的交付团队中选人。 */
+/* 负责人：从项目成员中选人。 */
 function ntRenderPeople() {
   const members = ntPeopleOfProject(ntProjectId);
   const el = document.getElementById('cv-nt-people');
@@ -102,7 +101,7 @@ function ntRenderPeople() {
   el.disabled = !ntProjectId || !members.length;
   if (el.disabled) {
     ntAssignee = '';
-    el.innerHTML = '<option value="">' + (ntProjectId ? '请先为项目选择有成员的交付团队' : '请先选择项目') + '</option>';
+    el.innerHTML = '<option value="">' + (ntProjectId ? '请先为项目添加成员' : '请先选择项目') + '</option>';
     return;
   }
   if (!members.some(m => m.name === ntAssignee)) ntAssignee = members[0].name;
@@ -134,7 +133,7 @@ function ntRenderStages() {
   const members = ntPeopleOfProject(ntProjectId);
   const count = document.getElementById('cv-nt-stage-count');
   if (count) count.textContent = '';
-  if (!ntProjectId || !members.length) { el.innerHTML = '<span class="nt-people-empty">' + (ntProjectId ? '请先为项目选择有成员的交付团队' : '请先选择项目') + '</span>'; ntStagePlan = []; return; }
+  if (!ntProjectId || !members.length) { el.innerHTML = '<span class="nt-people-empty">' + (ntProjectId ? '请先为项目添加成员' : '请先选择项目') + '</span>'; ntStagePlan = []; return; }
   if (!ntStagePlan.length || ntStagePlan[0].teamId !== ntTeamId) {
     ntStagePlan = stages.map((s, i) => ({ id: s.id, name: s.name, teamId: ntTeamId, checked: true, assignee: members[i % members.length].name }));
   }
@@ -146,7 +145,7 @@ function ntRenderStages() {
       + '<span class="nt-flow-name">' + xesc(sp.name) + '</span>'
       + '</button>'
       + (sp.checked
-        ? '<select class="nt-flow-person" data-nt-stage-assignee="' + sp.id + '" aria-label="' + xesc(sp.name) + ' 执行人">' + members.map(m => '<option' + (m.name === sp.assignee ? ' selected' : '') + '>' + xesc(m.name) + '</option>').join('') + '</select>'
+        ? '<select class="nt-flow-person" data-person-select data-nt-stage-assignee="' + sp.id + '" aria-label="' + xesc(sp.name) + ' 执行人">' + members.map(m => '<option' + (m.name === sp.assignee ? ' selected' : '') + '>' + xesc(m.name) + '</option>').join('') + '</select>'
         : '<span class="nt-flow-person nt-flow-person--off">未启用</span>')
       + '</div>';
     return i === 0 ? node : '<span class="nt-flow-line"></span>' + node;
