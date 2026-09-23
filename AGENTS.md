@@ -95,7 +95,7 @@ Consult the wiki when working on features, debugging, or onboarding to a new are
   `src/styles/parts/collab/*experts*.css`，专家团列表复用 `apps` 样式及
   `src/scripts/features/expert/` 模块。
 - 设置：`src/views/collab/settings.html`、`src/modals/collab/settings.html`、
-  `src/styles/parts/collab/*settings*.css`、`persons.js`、`squads.js`、`config.js`。
+  `src/styles/parts/collab/*settings*.css`、`persons.js`、`config.js`。历史团队数据迁移保留在 `squads.js`。
 - 共享导航与容器留在 `src/views/collab.html`；共享 CSS 文件名带 `shared`，
   `src/styles/parts/collab.css` 的导入顺序保留原有层叠关系。`data.js`、
   `view.js`、`index.js` 是跨页模块，修改前先确认接口影响。

@@ -7,8 +7,6 @@
 #view-collab .cv-ws{margin-left:0;padding-left:0}
 #view-collab .cv-ws .cv-proj-btn{padding:6px 12px;font-size:13px;font-weight:600;color:var(--text)}
 #view-collab .cv-ws .cv-proj-menu{left:0;right:auto}
-/* 项目切换器：页签行右侧，仅任务管理/项目管理下显示 */
-#view-collab #cvProjSwitch.hidden{display:none}
 #view-collab .cv-proj-btn{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border:1px solid var(--border-hover);
   border-radius:8px;background:#fff;font-family:inherit;font-size:12.5px;color:var(--text-secondary);cursor:pointer;transition:all .15s;white-space:nowrap}
 #view-collab .cv-proj-btn:hover{border-color:var(--border-focus);color:var(--text)}

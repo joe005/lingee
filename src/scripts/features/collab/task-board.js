@@ -1,8 +1,7 @@
-import { CV_TASKS, CV_PROJECTS, CV_ARTIFACTS, cvInProject, cvProject, cvProjectName, cvSeedTaskDetails } from './data.js';
-import { cvSquadPeople } from './squads.js';
+import { CV_TASKS, CV_PROJECTS, CV_ARTIFACTS, cvInProject, cvProject, cvProjectName, cvSeedTaskDetails, cvPeopleInProject } from './data.js';
 import { TEAMS } from '../expert/store.js';
 import { STAGES, xesc } from '../expert/data.js';
-import { cvUpdateCounts } from './projects.js';
+import { cvSetProject, cvUpdateCounts } from './projects.js';
 import { tbBoardColumns, tbColumns, tbCurrentTeamId, tbLabel, tbMode, tbOwner, tbPriority, tbTaskId, tbGetSelected, tbSave, tbSetSelected, tbTeamName, tbTeamStages, tbMatchedTeam } from './tb-core.js';
 import { retryTaskRuntime, runtimeArtifacts, syncTaskFromRuntime } from './runtime.js';
 /* 任务看板：列渲染、任务详情（打开/保存）、筛选与初始化
@@ -295,8 +294,8 @@ export function openTask(index, status = '待办') {
   const selected = index === null ? null : CV_TASKS[index];
   tbSetSelected(selected);
   const project = CV_PROJECTS.find(p => p.id === (cvProject || CV_PROJECTS[0].id));
-  const t = selected || { title: '', desc: '', status, assignee: cvSquadPeople(project?.squadId)[0]?.name || '', priority: '中', project: project.id, type: '需求', mode: '多人协作' };
-  const assigneeOptions = [...new Set([...cvSquadPeople(CV_PROJECTS.find(p => p.id === t.project)?.squadId).map(person => person.name), t.assignee].filter(Boolean))];
+  const t = selected || { title: '', desc: '', status, assignee: cvPeopleInProject(project)[0]?.name || '', priority: '中', project: project.id, type: '需求', mode: '多人协作' };
+  const assigneeOptions = [...new Set([...cvPeopleInProject(CV_PROJECTS.find(p => p.id === t.project)).map(person => person.name), t.assignee].filter(Boolean))];
   const selectedTeamId = tbCurrentTeamId(CV_PROJECTS.find(p => p.id === t.project)?.defaultTeam);
   const selectedTeam = TEAMS.find(team => team.id === selectedTeamId);
   const canSee = selected && window.tbCanSeeConv ? window.tbCanSeeConv(selected) : false;
@@ -495,6 +494,7 @@ export function initTaskBoard() {
       else if (button.id === 'tb-chat-send') window.tbChatSend && window.tbChatSend();
       else if (button.id === 'tb-reset') {
         document.getElementById('tb-search').value = ''; delete document.getElementById('tb-search').dataset.focusTaskId; document.getElementById('tb-mode').value = '';
+        cvSetProject('');
         panel.querySelector('[data-tb-scope="all"]').click();
       }
       return;

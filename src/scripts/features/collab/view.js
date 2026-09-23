@@ -65,9 +65,6 @@ function cvShowPanel(name){
   $$('#cvTabNav .tab-nav-item').forEach(function(t){
     t.classList.toggle('tab-nav-item--active', t.getAttribute('data-cvview')===primary);
   });
-  /* 项目切换器只在「任务管理」「项目管理」两个项目维度的页签下显示；工作区栏始终在顶部 */
-  var psw=document.getElementById('cvProjSwitch');
-  if(psw) psw.classList.toggle('hidden', primary!=='tasks' && primary!=='members');
 }
 function cvSwitchSub(name){
   cvSubState[cvPrimaryOf(name)]=name;

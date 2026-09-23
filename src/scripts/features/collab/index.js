@@ -2,9 +2,9 @@ import { initTaskBoard } from './task-board.js';
 import { initNewTask } from './new-task.js';
 import { initTaskChat } from './task-chat.js';
 import { $ } from '../../core/dom.js';
-import { cvCloseAddMemberModal, cvConfirmAddMembers, cvLoadSavedTasks, cvOpenAddMemberModal, cvOpenConversation, cvSearchThirdPartyMembers, cvSendChatMessage } from './chat.js';
+import { cvLoadSavedTasks, cvOpenConversation, cvSendChatMessage } from './chat.js';
 import { cvInjectCardActions, cvRenderReviewStats, cvRenderReviews, cvRenderTaskStats, cvRenderTasks, cvRestorePersons } from './data.js';
-import { cvArchiveSquad, cvCloseNewSquadModal, cvConfirmNewSquad, cvHideSquadDetail, cvMigrateProjectSquads, cvOpenNewSquadModal, cvRenderSquadList, cvRestoreSquads, cvSetSquadLeader, cvShowSquadDetail, cvSwitchSquadTab } from './squads.js';
+import { cvMigrateProjectSquads, cvRestoreSquads } from './squads.js';
 import { cvClosePersonEdit, cvOpenPersonEdit, cvOpenPersonNew, cvRenderPermTable, cvSavePersonEdit, initCollabPersons } from './persons.js';
 import { cvCloseFeatureEdit, cvCloseManualSplit, cvCloseProjectSplit, cvConfirmManualSplit, cvConfirmProjectSplit, cvOpenManualSplit, cvRenderProjectDetail, cvRenderProjectList, cvSaveFeatureEdit, initCollabProjectView } from './project-view.js';
 import { cvCloseArtFiles, cvOpenArtFiles } from './art-files.js';
@@ -33,7 +33,6 @@ function cvInit(){
   cvMigrateProjectSquads();
   cvRenderTaskStats(); cvRenderTasks();
   cvRenderReviewStats(); cvRenderReviews();
-  cvRenderSquadList();
   cvRenderProjectList();
   cvInjectCardActions();
   cvRenderWsMenu(); cvRenderProjMenu(); cvUpdateCounts();
@@ -48,18 +47,6 @@ export function initCollab() {
   initNewTask();
   initCollabProjectView();
   initCollabPersons();
-  var cvConfigPanel=$('#cv-config');
-  if(cvConfigPanel) cvConfigPanel.addEventListener('click',function(e){
-    var row=e.target.closest('[data-cv-squad]');
-    if(row){ cvShowSquadDetail(row.getAttribute('data-cv-squad')); return; }
-    if(e.target.closest('[data-cv-sqback]')){ cvHideSquadDetail(); return; }
-    if(e.target.closest('[data-cv-sq-archive]')){ cvArchiveSquad(); return; }
-    var tab=e.target.closest('[data-cv-sq-tab]');
-    if(tab){ cvSwitchSquadTab(tab.getAttribute('data-cv-sq-tab')); return; }
-    if(e.target.closest('[data-cv-sq-addmember]')){ cvOpenAddMemberModal(); return; }
-    var setL=e.target.closest('[data-cv-sq-setleader]');
-    if(setL){ cvSetSquadLeader(+setL.getAttribute('data-cv-sq-setleader')); return; }
-  });
   if(cvExpertSearch) cvExpertSearch.addEventListener('input',function(){ set_cvExpertKw(this.value); cvRenderExperts(); });
   if(cvNewExpertBtn) cvNewExpertBtn.addEventListener('click',function(){ openExpertEditor(null) });
   if(cvExpertSections) cvExpertSections.addEventListener('click',function(e){
@@ -110,10 +97,6 @@ export function initCollab() {
   window.cvSubmitReview=cvSubmitReview;
   window.cvSendChatMessage=cvSendChatMessage;
   window.cvOpenConversation=cvOpenConversation;
-  window.cvOpenAddMemberModal=cvOpenAddMemberModal;
-  window.cvCloseAddMemberModal=cvCloseAddMemberModal;
-  window.cvSearchThirdPartyMembers=cvSearchThirdPartyMembers;
-  window.cvConfirmAddMembers=cvConfirmAddMembers;
   window.cvOpenPersonNew=cvOpenPersonNew;
   window.cvOpenPersonEdit=cvOpenPersonEdit;
   window.cvClosePersonEdit=cvClosePersonEdit;
@@ -130,9 +113,6 @@ export function initCollab() {
   window.cvConfirmManualSplit=cvConfirmManualSplit;
   window.cvCloseFeatureEdit=cvCloseFeatureEdit;
   window.cvSaveFeatureEdit=cvSaveFeatureEdit;
-  window.cvOpenNewSquadModal=cvOpenNewSquadModal;
-  window.cvCloseNewSquadModal=cvCloseNewSquadModal;
-  window.cvConfirmNewSquad=cvConfirmNewSquad;
 }
 
 export { cvInit };
