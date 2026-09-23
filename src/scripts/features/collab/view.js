@@ -26,12 +26,7 @@ function cvApplyFilters(){
   }
   var memberView=document.getElementById('cv-members');
   if(memberView&&memberView.classList.contains('active')){
-    var msearch=(document.getElementById('cv-project-search')||{}).value||'';
-    msearch=msearch.toLowerCase();
-    memberView.querySelectorAll('#cv-proj-list .pj-card').forEach(function(card){
-      var name=(card.querySelector('.card-title')||{}).textContent||'';
-      card.style.display=(!msearch||name.toLowerCase().indexOf(msearch)>=0)?'':'none';
-    });
+    if(window.cvRenderProjectList) window.cvRenderProjectList();
   }
 }
 function cvGetFilterVal(view,type){
@@ -49,7 +44,7 @@ var cvPendingTab, cvPendingProj;   /* 由上面的 URL 恢复逻辑先行赋值�
 /* 一级页签「设置」带二级子页签；cvSubState 记录当前停留的子视图 */
 var cvSubState={config:'config'};
 var CV_SUBS={
-  config:[['config','工作区设置'],['config-perm','人员与权限']]
+  config:[['config','工作区设置'],['config-perm','人员管理']]
 };
 function cvPrimaryOf(name){
   if(name==='config-perm') return 'config';
@@ -81,13 +76,13 @@ function cvSwitchSub(name){
 }
 function cvSwitchView(name){
   if(name==='config-proj') name='config';   /* 旧链接兼容：项目设置已并入项目管理 */
-  if(name==='config-perm') name='config';   /* 人员与权限已并入设置左导航 */
+  if(name==='config-perm') name='config';   /* 人员管理已并入设置左导航 */
   if(name==='config' && getRole()!=='owner') name='tasks';   /* 设置仅所有者可进 */
   cvLastTab=(name==='chat'||name==='review-detail')?cvLastTab:name;
   cvShowPanel(name);
   if(name==='teams') renderExpertGrid();
   if(name==='experts') cvRenderExperts();
-  if(name==='config' && window.cvRenderPermTable) window.cvRenderPermTable();   /* 人员与权限是设置里默认打开的一项 */
+  if(name==='config' && window.cvRenderPermTable) window.cvRenderPermTable();   /* 人员管理是设置里默认打开的一项 */
   cvSyncUrl();
 }
 /* 执行中的任务在侧边栏项目下挂一条会话 */
@@ -112,7 +107,6 @@ export function initCollabView() {
       var op=art.getAttribute('data-cv-art');
       var nm=art.getAttribute('data-cv-art-name')||'';
       if(op==='预览'){ if(window.cvOpenArtFiles) window.cvOpenArtFiles(nm); return; }
-      if(op==='回到对话'){ cvToast('已回到「'+nm+'」的对话','info'); return; }
       cvToast('原型演示：'+op+'「'+nm+'」');
       return;
     }

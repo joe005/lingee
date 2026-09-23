@@ -1,4 +1,5 @@
-import { CV_TASKS, CV_PROJECTS, CV_MEMBERS, CV_ARTIFACTS, cvInProject, cvProject, cvProjectName, cvSeedTaskDetails } from './data.js';
+import { CV_TASKS, CV_PROJECTS, CV_ARTIFACTS, cvInProject, cvProject, cvProjectName, cvSeedTaskDetails } from './data.js';
+import { cvSquadPeople } from './squads.js';
 import { TEAMS } from '../expert/store.js';
 import { STAGES, xesc } from '../expert/data.js';
 import { cvUpdateCounts } from './projects.js';
@@ -12,12 +13,15 @@ let scope = 'all';
 let returnFocus = null;
 
 function filtered() {
-  const search = (document.getElementById('tb-search')?.value || '').trim().toLowerCase();
+  const searchInput = document.getElementById('tb-search');
+  const search = (searchInput?.value || '').trim().toLowerCase();
+  const focusedTaskId = searchInput?.dataset.focusTaskId;
   const execution = document.getElementById('tb-mode')?.value;
   return CV_TASKS.filter(t => t.kind !== 'epic').filter(cvInProject).filter(t =>
     (scope !== 'mine' || t.assignee === currentUserName()) &&
     (scope !== 'attention' || ['审核中', '已阻塞'].includes(t.status)) &&
     (!execution || tbMode(t) === execution) &&
+    (!focusedTaskId || t.boardId === focusedTaskId) &&
     (!search || (t.title + ' ' + t.sourceId).toLowerCase().includes(search)));
 }
 export function renderTaskSummary() {
@@ -290,7 +294,9 @@ function decideTaskReview(action) {
 export function openTask(index, status = '待办') {
   const selected = index === null ? null : CV_TASKS[index];
   tbSetSelected(selected);
-  const t = selected || { title: '', desc: '', status, assignee: CV_MEMBERS.find(m => CV_PROJECTS.find(p => p.id === (cvProject || CV_PROJECTS[0].id))?.members?.includes(m.id))?.name || CV_PROJECTS[0].owner, priority: '中', project: cvProject || CV_PROJECTS[0].id, type: '需求', mode: '多人协作' };
+  const project = CV_PROJECTS.find(p => p.id === (cvProject || CV_PROJECTS[0].id));
+  const t = selected || { title: '', desc: '', status, assignee: cvSquadPeople(project?.squadId)[0]?.name || '', priority: '中', project: project.id, type: '需求', mode: '多人协作' };
+  const assigneeOptions = [...new Set([...cvSquadPeople(CV_PROJECTS.find(p => p.id === t.project)?.squadId).map(person => person.name), t.assignee].filter(Boolean))];
   const selectedTeamId = tbCurrentTeamId(CV_PROJECTS.find(p => p.id === t.project)?.defaultTeam);
   const selectedTeam = TEAMS.find(team => team.id === selectedTeamId);
   const canSee = selected && window.tbCanSeeConv ? window.tbCanSeeConv(selected) : false;
@@ -359,7 +365,7 @@ export function openTask(index, status = '待办') {
           <h3>任务属性</h3>
           <div class="tb-aside-group-k">可编辑</div>
           ${t.runtime ? '<div class="tb-inherited-field"><span>状态</span><b>' + xesc(tbLabel(t.status)) + '</b><small>由 Runtime 与评审结论汇总</small></div>' : (pendingReview ? '<label>状态<select name="status" disabled><option selected>' + xesc(tbLabel(t.status)) + '</option></select><small class="tb-field-lock">评审中 · 将按评审结论自动流转，暂不可手动修改</small></label>' : '<label>状态<select name="status">' + tbBoardColumns.map(c => '<option value="' + c[0] + '" ' + (t.status === c[0] ? 'selected' : '') + (c[0] === '已完成' && !canComplete ? ' disabled' : '') + '>' + c[1] + (c[0] === '已完成' && !canComplete ? '（需交付评审）' : '') + '</option>').join('') + '</select></label>')}
-          ${tbMode(t) === '多人协作' && t.stagePlan?.length ? '' : '<label>负责人<select name="assignee">' + options([...new Set([...CV_MEMBERS.map(m => m.name),t.assignee].filter(Boolean))],t.assignee) + '</select></label>'}
+          ${tbMode(t) === '多人协作' && t.stagePlan?.length ? '' : '<label>负责人<select name="assignee">' + options(assigneeOptions,t.assignee) + '</select></label>'}
           <label>优先级<select name="priority">${options([...new Set(['高','中','低',tbPriority(t)])],tbPriority(t))}</select></label>
           <label>任务类型<select name="type">${options(['需求','Bug','任务','改进'],t.type)}</select></label>
           <div class="tb-aside-group-k tb-aside-group-k--ro">只读 · 系统维护</div>
@@ -383,11 +389,28 @@ export function openTask(index, status = '待办') {
   workspace.querySelector('[data-tb-close]').focus({ preventScroll: true });
 }
 function closeTask() {
-  if (!confirmLeave()) return;
+  if (!tbShowBoard()) return;
+}
+export function tbShowBoard() {
+  if (!confirmLeave()) return false;
   document.getElementById('tb-workspace').hidden = true;
   document.getElementById('tb-board-view').hidden = false;
   document.getElementById('cv-tasks').classList.remove('tb-detail-open');
   if (returnFocus?.isConnected) returnFocus.focus(); else document.getElementById('tb-create').focus();
+  return true;
+}
+export function tbFilterToTask(taskId) {
+  const task = CV_TASKS.find(t => t.boardId === taskId && t.kind !== 'epic');
+  if (!task) return false;
+  const search = document.getElementById('tb-search');
+  search.value = task.sourceId || task.title;
+  search.dataset.focusTaskId = taskId;
+  document.getElementById('tb-mode').value = '';
+  document.getElementById('tb-layout').value = 'list';
+  scope = 'all';
+  document.querySelectorAll('#cv-tasks [data-tb-scope]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tbScope === 'all')));
+  renderTaskBoard();
+  return true;
 }
 function submitTask(event) {
   event.preventDefault();
@@ -471,7 +494,7 @@ export function initTaskBoard() {
       }
       else if (button.id === 'tb-chat-send') window.tbChatSend && window.tbChatSend();
       else if (button.id === 'tb-reset') {
-        document.getElementById('tb-search').value = ''; document.getElementById('tb-mode').value = '';
+        document.getElementById('tb-search').value = ''; delete document.getElementById('tb-search').dataset.focusTaskId; document.getElementById('tb-mode').value = '';
         panel.querySelector('[data-tb-scope="all"]').click();
       }
       return;
@@ -483,7 +506,7 @@ export function initTaskBoard() {
   const enableSearch = () => search.removeAttribute('readonly');
   search.addEventListener('pointerdown', enableSearch, { once: true });
   search.addEventListener('keydown', enableSearch, { once: true });
-  search.addEventListener('input', renderTaskBoard);
+  search.addEventListener('input', () => { delete search.dataset.focusTaskId; renderTaskBoard(); });
   ['tb-mode', 'tb-layout'].forEach(id => document.getElementById(id).addEventListener('change', renderTaskBoard));
   const ws = document.getElementById('tb-workspace');
   ws.addEventListener('submit', submitTask);

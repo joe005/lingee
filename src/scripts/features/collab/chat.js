@@ -1,6 +1,7 @@
 import { input } from '../../core/view.js';
-import { CV_MEMBERS, CV_TASKS, CV_THIRD_PARTY_MEMBERS, cvPersistPersons } from './data.js';
-import { cvPersistSquads, cvRenderSquadDetail, cvRenderSquadList, cvSquadAddPerson } from './squads.js';
+import { CV_MEMBERS, CV_TASKS } from './data.js';
+import { cvPersistSquads, cvRenderSquadDetail, cvRenderSquadList, cvSquadAddPerson, cvSquadCurrentMembers } from './squads.js';
+import { xesc } from '../expert/data.js';
 import { cvNormalizeTask } from './tasks.js';
 import { cvShowPanel, cvToast } from './view.js';
 /* 协作开发：会话
@@ -128,16 +129,14 @@ function cvCloseAddMemberModal(){
 function cvSearchThirdPartyMembers(q){
   var list=document.getElementById('cv-tp-list');if(!list)return;
   q=(q||'').toLowerCase();
-  var existing=CV_MEMBERS.map(function(m){return m.name;});
-  var filtered=CV_THIRD_PARTY_MEMBERS.filter(function(m){
-    return(m.name.toLowerCase().indexOf(q)>=0||m.email.toLowerCase().indexOf(q)>=0)&&existing.indexOf(m.name)<0;
-  });
+  var squadIds=(cvSquadCurrentMembers()||[]);
+  var filtered=CV_MEMBERS.filter(function(m){return squadIds.indexOf(m.id)<0 && (m.name.toLowerCase().indexOf(q)>=0||(m.email||'').toLowerCase().indexOf(q)>=0);});
   if(filtered.length===0){list.innerHTML='<div style="padding:24px;text-align:center;color:var(--text-soft);font-size:13px">未找到可添加的人员</div>';return;}
   list.innerHTML=filtered.map(function(m){
-    return '<div class="tp-item" onclick="this.classList.toggle(\'tp-item--selected\')">'
-      +'<div class="tp-avatar">'+m.name[0]+'</div>'
-      +'<div class="tp-info"><div class="tp-name">'+m.name+'</div><div class="tp-email">'+m.email+'</div></div>'
-      +'<div class="tp-meta"><span class="tp-role">'+m.role+'</span><span class="tp-dept">'+m.dept+'</span></div>'
+    return '<div class="tp-item" data-person-id="'+xesc(m.id)+'" onclick="this.classList.toggle(\'tp-item--selected\')">'
+      +'<div class="tp-avatar">'+xesc(m.name[0])+'</div>'
+      +'<div class="tp-info"><div class="tp-name">'+xesc(m.name)+'</div><div class="tp-email">'+xesc(m.email||'')+'</div></div>'
+      +'<div class="tp-meta"><span class="tp-role">'+xesc((m.roles[0]||{}).text||'')+'</span><span class="tp-dept">'+xesc(m.dept||'')+'</span></div>'
       +'<div class="tp-check"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>'
       +'</div>';
   }).join('');
@@ -145,17 +144,9 @@ function cvSearchThirdPartyMembers(q){
 function cvConfirmAddMembers(){
   var selected=document.querySelectorAll('#cv-tp-list .tp-item--selected');
   if(selected.length===0){cvToast('请选择要添加的人员','warning');return;}
-  var tagMap={'开发':'member-tag--dev','架构':'member-tag--arch','测试':'member-tag--qa','运维':'member-tag--ops','需求':'member-tag--pm','产品':'member-tag--pm'};
   var n=0;
   selected.forEach(function(el){
-    var name=el.querySelector('.tp-name').textContent;
-    var email=el.querySelector('.tp-email').textContent;
-    var role=el.querySelector('.tp-role').textContent;
-    var deptEl=el.querySelector('.tp-dept');
-    var pid='p'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
-    CV_MEMBERS.push({id:pid,name:name,email:email,dept:deptEl?deptEl.textContent:'',roles:[{tag:tagMap[role]||'member-tag--dev',text:role}],status:'available',source:'直接添加'});
-    cvPersistPersons();
-    cvSquadAddPerson(pid);
+    cvSquadAddPerson(el.getAttribute('data-person-id'));
     n++;
   });
   cvPersistSquads();

@@ -11,8 +11,8 @@
       </div>
     </div>
     <div class="tab-nav" id="cvTabNav">
-      <button class="tab-nav-item tab-nav-item--active" data-cvview="tasks" onclick="cvSwitchView('tasks')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>任务管理<span class="tab-nav-count" id="cvTaskCount">0</span></button>
-      <button class="tab-nav-item" data-cvview="members" onclick="cvSwitchView('members')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>项目管理</button>
+      <button class="tab-nav-item tab-nav-item--active" data-cvview="tasks" onclick="cvSwitchView('tasks')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>工作台<span class="tab-nav-count" id="cvTaskCount">0</span></button>
+      <button class="tab-nav-item" data-cvview="members" onclick="cvSwitchView('members')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>项目</button>
       <button class="tab-nav-item" data-cvview="experts" onclick="cvSwitchView('experts')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87l1.18 6.88L12 17.77l-6.18 3.25L7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>专家</button>
       <button class="tab-nav-item" data-cvview="teams" onclick="cvSwitchView('teams')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>专家团</button>
       <button class="tab-nav-item" data-cvview="config" data-perm="owner" onclick="cvSwitchView('config')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>设置</button>
@@ -27,10 +27,10 @@
     </div>
     <div class="cv-subnav hidden" id="cvSubNav"></div>
 
-    <!-- 任务管理 -->
+    <!-- 工作台 -->
     <div class="cv-panel active" id="cv-tasks">
       <div class="tb-board-view" id="tb-board-view">
-        <div class="tb-heading"><div><h2>任务</h2><span>让成员与专家围绕同一个目标协作</span></div><span class="tb-demo">演示工作区</span></div>
+        <div class="tb-heading"><div><h2>工作台</h2><span>让成员与专家围绕同一个目标协作</span></div><span class="tb-demo">演示工作区</span></div>
         <div class="tb-toolbar">
           <div class="tb-scopes" role="group" aria-label="任务范围"><button data-tb-scope="all" aria-pressed="true">全部任务</button><button data-tb-scope="mine" aria-pressed="false">我的任务 <span id="tb-mine-count"></span></button><button data-tb-scope="attention" aria-pressed="false">待处理 <span id="tb-attention-count"></span></button></div>
           <div class="tb-tools"><input id="tb-search" name="task-filter-query" type="search" autocomplete="off" data-1p-ignore data-lpignore="true" readonly placeholder="搜索任务或编号…" aria-label="搜索任务或编号"><select id="tb-mode" aria-label="执行模式"><option value="">全部执行模式</option><option>单人执行</option><option>多人协作</option></select><select id="tb-layout" aria-label="任务视图"><option value="board">看板</option><option value="list">列表</option></select><button id="tb-create" class="tb-primary">＋ 新建任务</button></div>
@@ -41,18 +41,26 @@
       <div class="tb-workspace" id="tb-workspace" hidden></div>
     </div>
 
-    <!-- 项目管理：项目列表 + 项目详情（选协作人员） -->
+    <!-- 项目管理：项目列表 + 项目详情（引用交付团队） -->
     <div class="cv-panel" id="cv-members">
       <div class="scroll">
-        <div class="cv-head">
+        <div class="cv-head" id="cv-project-head">
           <div>
             <div class="scroll-title">项目<span class="cv-title-count" id="cv-proj-count">0</span></div>
-            <div class="scroll-desc">维护项目基本信息，并为项目挑选协作人员与专家团</div>
+            <div class="scroll-desc">维护项目基本信息，引用交付团队与专家团</div>
           </div>
           <div class="cv-head-right">
-            <div class="search-wrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input id="cvProjectSearch" type="search" autocomplete="off" data-1p-ignore data-lpignore="true" placeholder="搜索项目" onkeyup="cvApplyFilters()"></div>
             <button class="sync-btn" onclick="cvOpenProjNew()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>新建项目</button>
           </div>
+        </div>
+        <div class="pj-list-toolbar" id="cv-project-toolbar">
+          <div class="search-wrap pj-project-search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input id="cvProjectSearch" name="project-search" type="search" autocomplete="new-password" data-1p-ignore data-lpignore="true" placeholder="搜索项目" /></div>
+          <div class="pj-filter-selects" aria-label="项目过滤条件">
+            <select id="cvProjectStatusFilter" aria-label="按状态筛选项目"><option value="">全部状态</option><option value="planned">规划中</option><option value="in_progress">进行中</option><option value="paused">已暂停</option><option value="completed">已完成</option><option value="cancelled">已取消</option></select>
+            <select id="cvProjectSquadFilter" aria-label="按交付团队筛选项目"><option value="">全部团队</option></select>
+            <select id="cvProjectOwnerFilter" aria-label="按负责人筛选项目"><option value="">全部负责人</option></select>
+          </div>
+          <div class="pj-view-switch" id="cv-project-view-switch" role="group" aria-label="项目显示形式"></div>
         </div>
         <div id="cv-proj-list"></div>
         <div id="cv-proj-detail" class="hidden"></div>
@@ -101,19 +109,20 @@
       <div class="scroll">
         <div id="cv-config-header">
           <div class="scroll-title">系统设置</div>
-          <div class="scroll-desc">统一配置工作区人员权限、任务路由规则与执行策略</div>
+          <div class="scroll-desc">统一维护工作区人员、团队与系统集成</div>
         </div>
         <div class="config-layout">
           <aside class="config-nav">
-            <button type="button" class="config-nav-item on" data-config-nav="perm">人员与权限</button>
-            <button type="button" class="config-nav-item" data-config-nav="rules">任务与路由</button>
+            <button type="button" class="config-nav-item on" data-config-nav="perm">人员管理</button>
+            <button type="button" class="config-nav-item" data-config-nav="teams">团队</button>
+            <button type="button" class="config-nav-item" data-config-nav="integration">系统集成</button>
           </aside>
           <div class="config-main">
             <div class="config-pane" data-config-pane="perm">
               <div class="cv-head">
                 <div>
-                  <div class="cv-sec-title">人员与权限</div>
-                  <div class="cv-sec-desc">管理工作区成员与角色，支持新增、修改</div>
+                  <div class="cv-sec-title">人员管理</div>
+                  <div class="cv-sec-desc">管理工作区人员资料，支持新增、修改</div>
                 </div>
                 <div class="cv-head-right">
                   <button class="sync-btn" data-perm="owner" onclick="cvOpenPersonNew()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>新增人员</button>
@@ -121,51 +130,35 @@
               </div>
               <div id="cv-perm-table"></div>
             </div>
-            <div class="config-pane hidden" data-config-pane="rules">
-              <div class="config-grid">
-          <div class="config-card" data-cv-config="size" data-cv-level="global">
-            <div class="config-card-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>任务大小规则<span class="cv-scope-chip" data-cv-scope-chip></span></div>
-            <div class="config-card-desc">根据任务描述长度和影响范围自动判定任务大小，决定执行路由</div>
-            <div class="config-row"><span class="config-label">小任务判定标准</span><span class="config-value">描述 &lt; 200 字 且 影响范围 &lt; 3 模块</span></div>
-            <div class="config-row"><span class="config-label">大任务判定标准</span><span class="config-value">描述 &gt; 500 字 或 影响范围 &gt; 5 模块</span></div>
-            <div class="config-row"><span class="config-label">中间地带</span><span class="config-value">人工确认后路由</span></div>
-          </div>
-          <div class="config-card" data-cv-config="route" data-cv-level="global">
-            <div class="config-card-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>执行路由<span class="cv-scope-chip" data-cv-scope-chip></span></div>
-            <div class="config-card-desc">小任务自动执行，大任务分配专家团，中间地带需人工确认</div>
-            <div class="config-row"><span class="config-label">小任务</span><span class="config-value">自动执行（Agent 独立完成）</span></div>
-            <div class="config-row"><span class="config-label">大任务</span><span class="config-value">分配给专家团</span></div>
-            <div class="config-row"><span class="config-label">中间地带</span><span class="config-value">人工确认后路由</span></div>
-          </div>
-          <div class="config-card" data-cv-config="collab" data-cv-level="project">
-            <div class="config-card-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>协作模式<span class="cv-scope-chip" data-cv-scope-chip></span></div>
-            <div class="config-card-desc">控制任务执行过程中的协作行为，可按任务大小和类型自动开启</div>
-            <div class="config-row"><span class="config-label">默认开启协作</span><div class="toggle on" data-cv-toggle="collab.0"></div></div>
-            <div class="config-row"><span class="config-label">大任务强制协作</span><div class="toggle" data-cv-toggle="collab.1"></div></div>
-            <div class="config-row"><span class="config-label">评审任务自动协作</span><div class="toggle on" data-cv-toggle="collab.2"></div></div>
-          </div>
-          <div class="config-card" data-cv-config="integration" data-cv-level="global">
-            <div class="config-card-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--dot-blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>第三方集成<span class="cv-scope-chip" data-cv-scope-chip></span></div>
-            <div class="config-card-desc">配置第三方系统连接，任务可自动从这些系统同步到灵基</div>
-            <div class="config-row"><span class="config-label">Jira</span><span class="config-value">已连接 · PROJ-001</span></div>
-            <div class="config-row"><span class="config-label">TAPD</span><span class="config-value">已连接 · tapd_kingdee</span></div>
-            <div class="config-row"><span class="config-label">飞书项目</span><span class="config-value">未配置</span></div>
-          </div>
-          <div class="config-card" data-cv-config="selfbuild" data-cv-level="project">
-            <div class="config-card-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7858f9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>对话自建<span class="cv-scope-chip" data-cv-scope-chip></span></div>
-            <div class="config-card-desc">用户可在对话中直接创建任务，自动入库到任务管理列表</div>
-            <div class="config-row"><span class="config-label">开启对话自建</span><div class="toggle on" data-cv-toggle="selfbuild.0"></div></div>
-            <div class="config-row"><span class="config-label">默认任务类型</span><span class="config-value">需求</span></div>
-            <div class="config-row"><span class="config-label">默认大小</span><span class="config-value">小任务</span></div>
-          </div>
-          <div class="config-card" data-cv-config="security" data-cv-level="project">
-            <div class="config-card-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>安全策略<span class="cv-scope-chip" data-cv-scope-chip></span></div>
-            <div class="config-card-desc">任务执行安全策略，控制自动执行的风险等级和审批要求</div>
-            <div class="config-row"><span class="config-label">自动执行前确认</span><div class="toggle" data-cv-toggle="security.0"></div></div>
-            <div class="config-row"><span class="config-label">高危操作二次确认</span><div class="toggle on" data-cv-toggle="security.1"></div></div>
-            <div class="config-row"><span class="config-label">自动执行风险阈值</span><span class="config-value">中等</span></div>
-          </div>
-        </div>
+            <div class="config-pane hidden" data-config-pane="teams">
+              <div class="cv-head" id="cv-squad-head">
+                <div><div class="cv-sec-title">团队<span class="cv-title-count" id="cv-squad-count">0</span></div><div class="cv-sec-desc">统一维护团队成员，项目可交付给其中一个团队</div></div>
+                <div class="cv-head-right"><button class="sync-btn" type="button" onclick="cvOpenNewSquadModal()">＋ 新建团队</button></div>
+              </div>
+              <div id="cv-squad-list"></div>
+              <div id="cv-squad-detail" class="hidden"></div>
+            </div>
+            <div class="config-pane hidden" data-config-pane="integration">
+              <div class="cv-head">
+                <div><div class="cv-sec-title">系统集成</div><div class="cv-sec-desc">将 DevOps、禅道的任务清单映射到灵基项目</div></div>
+              </div>
+              <div class="cv-integration-note">当前是单文件原型：可维护系统与项目映射，真实连接、鉴权和任务同步需要服务端接入。这里不会向第三方发送请求。</div>
+              <div class="cv-integration-providers">
+                <button type="button" class="cv-integration-provider" data-cv-integration-provider="devops"><span class="cv-integration-mark">D</span><span><b>DevOps</b><small>用户故事、缺陷与任务</small></span><span class="cv-integration-action">配置映射 →</span></button>
+                <button type="button" class="cv-integration-provider" data-cv-integration-provider="zentao"><span class="cv-integration-mark">禅</span><span><b>禅道</b><small>需求、Bug 与执行任务</small></span><span class="cv-integration-action">配置映射 →</span></button>
+              </div>
+              <form id="cv-integration-form" class="cv-integration-form hidden">
+                <div class="cv-integration-form-head"><strong id="cv-integration-form-title">配置任务来源</strong><button type="button" id="cv-integration-cancel">取消</button></div>
+                <input id="cv-integration-id" type="hidden">
+                <input id="cv-integration-type" type="hidden">
+                <label>系统地址<input id="cv-integration-url" type="url" placeholder="https://devops.example.com" required></label>
+                <label>外部项目标识<input id="cv-integration-project" type="text" placeholder="项目编码或项目 ID" required></label>
+                <label>同步到灵基项目<select id="cv-integration-target" required></select></label>
+                <div class="cv-integration-fields">接入后同步外部编号、标题、描述、类型、状态、负责人，并按系统与外部编号去重。</div>
+                <button type="submit" class="sync-btn">保存映射</button>
+              </form>
+              <div class="cv-integration-list-head">已保存的映射</div>
+              <div id="cv-integration-list"></div>
             </div>
           </div>
         </div>

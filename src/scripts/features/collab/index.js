@@ -3,10 +3,9 @@ import { initNewTask } from './new-task.js';
 import { initTaskChat } from './task-chat.js';
 import { $ } from '../../core/dom.js';
 import { cvCloseAddMemberModal, cvConfirmAddMembers, cvLoadSavedTasks, cvOpenAddMemberModal, cvOpenConversation, cvSearchThirdPartyMembers, cvSendChatMessage } from './chat.js';
-import { cvApplyConfigScope, cvCaptureConfigDefaults } from './config.js';
 import { cvInjectCardActions, cvRenderReviewStats, cvRenderReviews, cvRenderTaskStats, cvRenderTasks, cvRestorePersons } from './data.js';
-import { cvArchiveSquad, cvCloseNewSquadModal, cvConfirmNewSquad, cvHideSquadDetail, cvOpenNewSquadModal, cvRenderSquadList, cvRestoreSquads, cvSetSquadLeader, cvShowSquadDetail, cvSwitchSquadTab } from './squads.js';
-import { cvCloseAddToProject, cvCloseArtFiles, cvCloseFeatureEdit, cvCloseManualSplit, cvClosePersonEdit, cvCloseProjectSplit, cvConfirmAddToProject, cvConfirmManualSplit, cvConfirmProjectSplit, cvFeatureEditAddFile, cvMsAddFile, cvOpenAddToProject, cvOpenArtFiles, cvOpenManualSplit, cvOpenPersonEdit, cvOpenPersonNew, cvRenderPermTable, cvRenderProjectDetail, cvRenderProjectList, cvSaveFeatureEdit, cvSavePersonEdit, cvSearchProjectPersons, initCollabPersons } from './persons.js';
+import { cvArchiveSquad, cvCloseNewSquadModal, cvConfirmNewSquad, cvHideSquadDetail, cvMigrateProjectSquads, cvOpenNewSquadModal, cvRenderSquadList, cvRestoreSquads, cvSetSquadLeader, cvShowSquadDetail, cvSwitchSquadTab } from './squads.js';
+import { cvCloseArtFiles, cvCloseFeatureEdit, cvCloseManualSplit, cvClosePersonEdit, cvCloseProjectSplit, cvConfirmManualSplit, cvConfirmProjectSplit, cvOpenArtFiles, cvOpenManualSplit, cvOpenPersonEdit, cvOpenPersonNew, cvRenderPermTable, cvRenderProjectDetail, cvRenderProjectList, cvSaveFeatureEdit, cvSavePersonEdit, initCollabPersons } from './persons.js';
 import { cvRenderExperts, set_cvExpertKw } from './experts.js';
 import { cvRenderProjMenu, cvRenderWsMenu, cvRestoreProjects, cvSetProject, cvUpdateCounts } from './projects.js';
 import { cvOpenReviewDetail, cvReviewPass, cvReviewReject, cvSubmitReview, cvSwitchArtifact } from './reviews.js';
@@ -29,13 +28,13 @@ function cvInit(){
   cvRestoreProjects();
   cvRestoreSquads();
   cvRestorePersons();
+  cvMigrateProjectSquads();
   cvRenderTaskStats(); cvRenderTasks();
   cvRenderReviewStats(); cvRenderReviews();
   cvRenderSquadList();
   cvRenderProjectList();
   cvInjectCardActions();
-  cvCaptureConfigDefaults();
-  cvRenderWsMenu(); cvRenderProjMenu(); cvApplyConfigScope(); cvUpdateCounts();
+  cvRenderWsMenu(); cvRenderProjMenu(); cvUpdateCounts();
 }
 var cvExpertSearch=$('#cvExpertSearch');
 var cvNewExpertBtn=$('#cvNewExpertBtn');
@@ -46,8 +45,8 @@ export function initCollab() {
   initTaskChat();
   initNewTask();
   initCollabPersons();
-  var cvMembersPanel=$('#cv-members');
-  if(cvMembersPanel) cvMembersPanel.addEventListener('click',function(e){
+  var cvConfigPanel=$('#cv-config');
+  if(cvConfigPanel) cvConfigPanel.addEventListener('click',function(e){
     var row=e.target.closest('[data-cv-squad]');
     if(row){ cvShowSquadDetail(row.getAttribute('data-cv-squad')); return; }
     if(e.target.closest('[data-cv-sqback]')){ cvHideSquadDetail(); return; }
@@ -116,10 +115,6 @@ export function initCollab() {
   window.cvOpenPersonEdit=cvOpenPersonEdit;
   window.cvClosePersonEdit=cvClosePersonEdit;
   window.cvSavePersonEdit=cvSavePersonEdit;
-  window.cvOpenAddToProject=cvOpenAddToProject;
-  window.cvCloseAddToProject=cvCloseAddToProject;
-  window.cvSearchProjectPersons=cvSearchProjectPersons;
-  window.cvConfirmAddToProject=cvConfirmAddToProject;
   window.cvRenderProjectList=cvRenderProjectList;
   window.cvRenderPermTable=cvRenderPermTable;
   window.cvRenderProjectDetail=cvRenderProjectDetail;
@@ -130,9 +125,7 @@ export function initCollab() {
   window.cvOpenManualSplit=cvOpenManualSplit;
   window.cvCloseManualSplit=cvCloseManualSplit;
   window.cvConfirmManualSplit=cvConfirmManualSplit;
-  window.cvMsAddFile=cvMsAddFile;
   window.cvCloseFeatureEdit=cvCloseFeatureEdit;
-  window.cvFeatureEditAddFile=cvFeatureEditAddFile;
   window.cvSaveFeatureEdit=cvSaveFeatureEdit;
   window.cvOpenNewSquadModal=cvOpenNewSquadModal;
   window.cvCloseNewSquadModal=cvCloseNewSquadModal;

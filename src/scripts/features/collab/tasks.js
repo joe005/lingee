@@ -132,7 +132,7 @@ function cvRenderReviewPersonList(){
   var card=window.cvCard;var node='开发实现';
   if(card){var na=card.querySelector('.card-node');if(na)node=na.textContent.replace(/^[\s\u200b]+/,'').trim();}
   var role=CV_WORKFLOW_ROLES[node]||'开发人员';
-  el.innerHTML=CV_MEMBERS.filter(function(m){return m.roles.some(function(r){return r.text.indexOf(role)>=0||role.indexOf(r.text)>=0;});}).map(function(m){
+  el.innerHTML=CV_MEMBERS.filter(function(m){return !m.roles.length||m.roles.some(function(r){return r.text.indexOf(role)>=0||role.indexOf(r.text)>=0;});}).map(function(m){
     return '<button class="person-item" onclick="cvSelectPersonItem(this)"><div class="person-avatar-sm">'+m.name[0]+'</div><div><div class="person-name-sm">'+m.name+'</div><div class="person-role-sm">'+m.roles.map(function(r){return r.text;}).join(' · ')+'</div></div></button>';
   }).join('');
   if(!el.innerHTML){el.innerHTML='<div style="padding:20px;text-align:center;color:var(--text-soft);font-size:12.5px">当前节点无匹配人员</div>';}

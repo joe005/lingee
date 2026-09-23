@@ -325,6 +325,32 @@
 #view-collab .config-nav-item:hover{background:var(--fill-1);color:var(--text)}
 #view-collab .config-nav-item.on{background:var(--brand-fill);color:var(--brand);font-weight:600}
 #view-collab .config-main{min-width:0;min-height:0;overflow-y:auto}
+#view-collab #cv-config .hidden{display:none}
+#view-collab #cv-config #cv-squad-detail .sq-layout{grid-template-columns:minmax(190px,260px) minmax(0,1fr)}
+@media(max-width:900px){#view-collab #cv-config #cv-squad-detail .sq-layout{grid-template-columns:1fr}}
+#view-collab .cv-integration-note{padding:12px 14px;border:1px solid var(--border);border-radius:10px;background:var(--fill-1);color:var(--text-secondary);font-size:12.5px;line-height:1.6;margin:14px 0 18px}
+#view-collab .cv-integration-providers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#view-collab .cv-integration-provider{display:flex;align-items:center;gap:12px;width:100%;padding:16px;border:1px solid var(--border);border-radius:12px;background:#fff;text-align:left;cursor:pointer;font:inherit;color:var(--text)}
+#view-collab .cv-integration-provider:hover{border-color:var(--brand)}
+#view-collab .cv-integration-mark{display:inline-flex;align-items:center;justify-content:center;flex:none;width:36px;height:36px;border-radius:9px;background:var(--brand-fill);color:var(--brand);font-size:15px;font-weight:700}
+#view-collab .cv-integration-provider span:nth-child(2){display:flex;flex-direction:column;gap:3px}
+#view-collab .cv-integration-provider small,#view-collab .cv-integration-row-main small{font-size:11.5px;color:var(--text-soft)}
+#view-collab .cv-integration-action{margin-left:auto;color:var(--brand);font-size:12px;white-space:nowrap}
+#view-collab .cv-integration-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px;padding:18px;border:1px solid var(--border);border-radius:12px;background:#fff}
+#view-collab .cv-integration-form.hidden{display:none}
+#view-collab .cv-integration-form-head{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between}
+#view-collab .cv-integration-form-head button,#view-collab .cv-integration-row button{border:0;background:none;color:var(--brand);cursor:pointer;font:inherit;font-size:12px}
+#view-collab .cv-integration-form label{display:flex;flex-direction:column;gap:6px;color:var(--text-secondary);font-size:12px}
+#view-collab .cv-integration-form input,#view-collab .cv-integration-form select{width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid var(--border-hover);border-radius:8px;background:#fff;color:var(--text);font:inherit;font-size:13px}
+#view-collab .cv-integration-fields{grid-column:1/-1;color:var(--text-soft);font-size:12px}
+#view-collab .cv-integration-form>.sync-btn{justify-self:start}
+#view-collab .cv-integration-list-head{margin:22px 0 10px;color:var(--text);font-size:13px;font-weight:600}
+#view-collab .cv-integration-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--border);border-radius:10px;background:#fff;margin-bottom:8px}
+#view-collab .cv-integration-row-main{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1;font-size:13px}
+#view-collab .cv-integration-row-main small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#view-collab .cv-integration-status{font-size:11px;color:var(--text-soft);white-space:nowrap}
+#view-collab .cv-integration-empty{padding:22px;border:1px dashed var(--border);border-radius:10px;color:var(--text-soft);font-size:12px;text-align:center}
+@media(max-width:800px){#view-collab .cv-integration-providers,#view-collab .cv-integration-form{grid-template-columns:1fr}}
 
 /* ============ CHAT VIEW ============ */
 #view-collab .chat-view{display:flex;flex-direction:column;height:100%;background:#fff}
@@ -474,6 +500,11 @@
 #view-collab .expert-card{position:relative;cursor:pointer;text-align:left}
 #view-collab .expert-section-title{justify-content:flex-start}
 #view-collab .expert-section-desc{font-size:12px;font-weight:400;color:var(--text-secondary)}
+#view-collab #cv-experts .apps-grid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+#view-collab #cv-experts .x-card{padding:14px 16px;border-radius:12px}
+#view-collab #cv-experts .x-card .card-desc{margin:10px 0 8px;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;line-height:1.5}
+#view-collab #cv-experts .x-card .card-tags{flex-wrap:nowrap;gap:5px;overflow:hidden}
+#view-collab #cv-experts .x-card .ptag{font-size:11px;padding:3px 7px}
 #view-collab .expert-av{width:32px;height:32px;border-radius:50%;flex-shrink:0}
 #view-collab .expert-flag{margin-left:6px;font-size:10px;font-weight:500;color:var(--text-secondary);
   background:var(--fill-1);border-radius:4px;padding:1px 5px;vertical-align:middle}
@@ -824,7 +855,7 @@
 #view-collab .art-card-name{font-size:14px;font-weight:600;color:var(--text)}
 #view-collab .art-card-meta{font-size:11px;color:var(--text-soft)}
 #view-collab .art-card-acts{display:flex;gap:6px;margin-top:auto}
-/* ============ 设置表格（项目设置 / 人员与权限） ============ */
+/* ============ 设置表格（项目设置 / 人员管理） ============ */
 #view-collab .cfg-table{border:1px solid var(--border);border-radius:12px;background:#fff;overflow:hidden;margin-top:14px}
 #view-collab .cfg-table-head,#view-collab .cfg-table-row{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) minmax(0,1fr) minmax(0,.8fr);gap:12px;padding:12px 16px;align-items:center}
 #view-collab .cfg-table-head{background:var(--fill-1);font-size:12px;color:var(--text-soft)}
@@ -837,16 +868,71 @@
 #view-collab .cv-proj-desc{display:block;font-style:normal;font-size:11px;color:var(--text-soft);margin-top:2px}
 #view-collab .cv-proj-repo{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-secondary)}
 
-/* ============ 项目管理：项目卡片列表 + 项目详情（选协作人员） ============ */
+/* ============ 项目：卡片 / 列表视图 ============ */
 #view-collab #cv-members .scroll{display:flex;flex-direction:column}
-#view-collab #cv-proj-list{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
-#view-collab .pj-card{border:1px solid var(--border);border-radius:16px;background:#fff;padding:20px 22px;cursor:pointer;transition:all .15s;position:relative}
-#view-collab .pj-card:hover{border-color:var(--border-focus);box-shadow:0 6px 20px rgba(0,0,0,.06)}
+#view-collab .pj-view-switch{display:flex;gap:2px;width:max-content;padding:3px;margin:0 0 16px auto;border:1px solid var(--border);border-radius:8px;background:var(--fill-1)}
+#view-collab .pj-view-switch button{border:0;border-radius:5px;padding:5px 12px;background:transparent;color:var(--text-secondary);font:inherit;font-size:12px;cursor:pointer}
+#view-collab .pj-view-switch button.on{background:#fff;color:var(--brand);box-shadow:0 1px 4px rgba(0,0,0,.08)}
+#view-collab .pj-list-toolbar{display:flex;align-items:center;justify-content:flex-start;gap:10px;padding:0 0 16px;flex-wrap:wrap}
+#view-collab .pj-list-toolbar>.pj-project-search{min-width:220px}
+#view-collab .pj-list-toolbar>.pj-filter-selects{flex:none;margin-left:auto}
+#view-collab .pj-list-toolbar>.pj-view-switch{margin:0}
+#view-collab .pj-filter-selects{display:flex;align-items:center;gap:6px}
+#view-collab .pj-filter-selects select{height:31px;max-width:130px;padding:0 26px 0 9px;border:1px solid var(--border-hover);border-radius:8px;background:#fff;color:var(--text-secondary);font:inherit;font-size:12px;outline:none;cursor:pointer}
+#view-collab .pj-filter-selects select:focus{border-color:var(--brand)}
+#view-collab .pj-projects-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;width:100%}
+#view-collab .pj-card{min-width:0;border:1px solid var(--border);border-radius:8px;background:#fff;transition:border-color .15s,box-shadow .15s}
+#view-collab .pj-card:hover{border-color:var(--border-focus);box-shadow:0 3px 12px rgba(0,0,0,.04)}
+#view-collab .pj-card-main{padding:12px 14px 10px}
+#view-collab .pj-card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:0}
+#view-collab .pj-card-identity{display:flex;align-items:center;gap:9px;min-width:0}
+#view-collab .pj-card-mark{width:9px;height:9px;border-radius:2px;flex:none}
+#view-collab .pj-card-title-button{min-width:0;padding:0;border:0;background:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:inherit;font-size:13px;font-weight:600;color:var(--text);text-align:left;cursor:pointer}
+#view-collab .pj-card-title-button:hover{color:var(--brand)}
+#view-collab .pj-card-title-button:focus-visible{outline:2px solid var(--border-focus);outline-offset:3px;border-radius:3px}
+#view-collab .pj-card-actions{display:flex;align-items:center;gap:8px;flex:none;margin-left:auto}
+#view-collab .pj-card-status{width:auto;max-width:100px;padding:2px 7px}
+#view-collab .pj-card-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px 10px;margin-top:10px}
+#view-collab .pj-card-field{display:flex;align-items:center;gap:4px;min-width:0;color:var(--text-soft);font-size:11px}
+#view-collab .pj-card-field>span{flex:none}
+#view-collab .pj-card-field>b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-secondary);font-weight:400}
+#view-collab .pj-card-field .pj-list-edit{flex:1;width:auto;font-size:11px}
+#view-collab .pj-card-progress{display:flex;align-items:center;justify-content:flex-end;gap:5px;min-height:18px;margin-top:10px;color:var(--text-secondary);font-size:11px;font-variant-numeric:tabular-nums}
+#view-collab .pj-card-progress svg{width:16px;height:16px;flex:none;fill:none;stroke-width:2}
+#view-collab .pj-card-ring-base{stroke:var(--border-hover)}
+#view-collab .pj-card-ring-value{stroke:var(--success);transform:rotate(-90deg);transform-origin:center;stroke-linecap:round}
+#view-collab .pj-card-bottom{display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:0;padding:9px 14px;border-top:1px solid var(--border);font-size:11px;color:var(--text-secondary)}
+#view-collab .pj-card-bottom>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+#view-collab .pj-card-bottom .pj-card-progress{margin-top:0;flex:none;overflow:visible}
+#view-collab .pj-card-team{text-align:right}
+#view-collab .pj-projects-list{border:1px solid var(--border);border-radius:10px;overflow-x:auto}
+#view-collab .pj-list-head,#view-collab .pj-list-row{display:grid;grid-template-columns:minmax(180px,2fr) 110px 72px minmax(120px,1.3fr) 104px 128px 128px 96px;align-items:center;gap:12px;min-width:1070px;padding:11px 16px}
+#view-collab .pj-list-head{background:var(--fill-1);font-size:12px;color:var(--text-soft)}
+#view-collab .pj-list-row{border-top:1px solid var(--border);background:#fff;font-size:12px;color:var(--text-secondary)}
+#view-collab .pj-list-row:hover{background:var(--fill-1)}
+#view-collab .pj-list-edit{width:100%;min-width:0;height:26px;padding:2px 5px;border:1px solid transparent;border-radius:5px;background:transparent;color:var(--text-secondary);font:inherit;font-size:12px;cursor:pointer;appearance:none}
+#view-collab .pj-list-edit:hover{background:var(--hover);border-color:var(--border)}
+#view-collab .pj-list-edit:focus-visible{outline:2px solid var(--border-focus);outline-offset:1px}
+#view-collab .pj-list-edit--status{font-weight:500}
+#view-collab .pj-list-edit--date{padding:2px 0;font-size:11px}
+#view-collab .pj-list-edit--date::-webkit-calendar-picker-indicator{opacity:0;cursor:pointer}
+#view-collab .pj-list-edit--date:hover::-webkit-calendar-picker-indicator,#view-collab .pj-list-edit--date:focus-visible::-webkit-calendar-picker-indicator{opacity:.65}
+#view-collab .pj-list-name{display:flex;align-items:center;gap:9px;min-width:0;width:100%;padding:0;border:0;background:none;text-align:left;font:inherit;cursor:pointer}
+#view-collab .pj-list-name:hover b{color:var(--brand)}
+#view-collab .pj-list-name:focus-visible{outline:2px solid var(--border-focus);outline-offset:3px;border-radius:3px}
+#view-collab .pj-list-name>span{min-width:0}
+#view-collab .pj-list-name b,#view-collab .pj-list-name small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#view-collab .pj-list-name b{color:var(--text);font-weight:600}
+#view-collab .pj-list-name small{margin-top:3px;color:var(--text-soft)}
+#view-collab .pj-list-progress{display:flex;align-items:center;gap:6px;min-width:0}
+#view-collab .pj-list-progress-track{height:6px;flex:1;min-width:24px;border-radius:3px;background:var(--fill-2);overflow:hidden}
+#view-collab .pj-list-progress-track i{display:block;height:100%;border-radius:3px;background:var(--success)}
+#view-collab .pj-list-progress small{flex:none;font-size:11px;color:var(--text-soft);font-variant-numeric:tabular-nums}
 #view-collab .pj-av{width:34px;height:34px;border-radius:9px;flex:none;display:flex;align-items:center;justify-content:center}
 #view-collab .pj-av svg{width:18px;height:18px}
 #view-collab .pj-dot{width:9px;height:9px;border-radius:50%;flex:none;display:inline-block}
 #view-collab .pj-dot--sm{width:8px;height:8px}
-@media(max-width:1160px){#view-collab #cv-proj-list{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:700px){#view-collab .pj-projects-cards{grid-template-columns:1fr}}
 #view-collab .pj-set{flex:none;border:1px solid var(--border-hover);background:#fff;color:var(--text-secondary);font-size:12px;cursor:pointer;padding:4px 12px;border-radius:6px;transition:all .15s}
 #view-collab .pj-set:hover{color:var(--brand);border-color:var(--brand);background:var(--brand-fill)}
 #view-collab .pj-crumb{display:flex;align-items:center;gap:8px;padding:2px 0 14px}
@@ -867,13 +953,11 @@
 #view-collab .pj-remove:hover{background:var(--danger-bg);border-color:var(--danger)}
 #view-collab .ps-me{font-size:10px;color:#fff;background:#08a040;border-radius:4px;padding:1px 5px;margin-left:6px;vertical-align:2px}
 
-/* ============ 人员与权限：成员 + 角色表格 ============ */
-#view-collab .cv-perm-head,#view-collab .cv-perm-row{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr) auto}
+/* ============ 人员管理表格 ============ */
+#view-collab .cv-perm-head,#view-collab .cv-perm-row{grid-template-columns:minmax(0,1fr) auto}
 #view-collab .ps-av{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:600;flex:none;margin-right:10px}
 #view-collab .cv-proj-desc-wrap{display:flex;flex-direction:column;min-width:0}
 #view-collab .cv-proj-desc-wrap b{font-weight:500;color:var(--text)}
-#view-collab .ps-roles{display:flex;gap:6px;flex-wrap:wrap}
-#view-collab .ps-role{font-size:11px;color:var(--text-secondary);background:var(--fill-1);border-radius:5px;padding:2px 8px;white-space:nowrap}
 #view-collab .cv-perm-acts{display:flex;gap:6px}
 #view-collab .act-btn--danger{color:var(--danger);border-color:#f0c4c4}
 #view-collab .act-btn--danger:hover{background:var(--danger-bg)}
@@ -896,9 +980,7 @@
 #view-collab .pj-task-title{flex:1;min-width:0;font-size:13.5px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:inherit}
 #view-collab .pj-task-meta{flex:none;font-size:11.5px;color:var(--text-soft)}
 
-/* ============ 项目详情：左侧基本信息 + 右侧成员/指引/任务 ============ */
-#view-collab .pj-side-av{width:64px;height:64px;border-radius:16px;background:var(--fill-1);color:var(--text-secondary);display:flex;align-items:center;justify-content:center;margin-bottom:16px}
-#view-collab .pj-side-av svg{width:28px;height:28px}
+/* ============ 项目详情 ============ */
 #view-collab #cv-proj-detail .sq-tabpane{overflow-y:auto}
 
 /* ============ 产物中心：左项目右清单 ============ */
@@ -935,13 +1017,50 @@
 #view-collab .art-file-ic{flex:none}
 #view-collab .art-file-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
-/* ============ 项目详情：任务规划（项目目标 / 里程碑 / 任务拆分） ============ */
+/* ============ 项目详情：模块规划与任务拆分 ============ */
 #view-collab .pj-plan-sec{padding:14px 0;border-bottom:1px solid var(--fill-1)}
 #view-collab .pj-plan-sec:first-child{padding-top:0}
 #view-collab .pj-plan-sec:last-child{border-bottom:0}
 #view-collab .pj-plan-k{font-size:13px;font-weight:600;color:var(--text);margin-bottom:8px}
 #view-collab .pj-plan-v{font-size:13px;color:var(--text-secondary);line-height:1.65}
 #view-collab .pj-plan-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+#view-collab .pj-module-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+#view-collab .pj-module-heading{display:flex;align-items:center;gap:7px;font-size:14px;color:var(--text)}
+#view-collab .pj-module-heading span{font-size:12px;color:var(--text-soft);font-variant-numeric:tabular-nums}
+#view-collab .pj-module-controls{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+#view-collab .pj-module-search{display:flex;align-items:center;gap:6px;min-width:175px;padding:7px 9px;border:1px solid var(--border);border-radius:7px;color:var(--text-soft);background:#fff}
+#view-collab .pj-module-search:focus-within{border-color:var(--brand)}
+#view-collab .pj-module-search input{width:100%;min-width:0;border:0;outline:0;background:transparent;font:inherit;font-size:12px;color:var(--text)}
+#view-collab .pj-module-filter{padding:7px 9px;border:1px solid var(--border);border-radius:7px;background:#fff;color:var(--text-secondary);font:inherit;font-size:12px}
+#view-collab .pj-module-views{display:flex;border:1px solid var(--border);border-radius:7px;overflow:hidden}
+#view-collab .pj-module-views button{border:0;background:#fff;color:var(--text-soft);padding:7px 9px;font:inherit;font-size:12px;cursor:pointer}
+#view-collab .pj-module-views button+button{border-left:1px solid var(--border)}
+#view-collab .pj-module-views button.on{background:var(--brand-fill);color:var(--brand);font-weight:600}
+#view-collab .pj-module-empty{padding:28px 12px;text-align:center;color:var(--text-soft);font-size:12.5px;border:1px dashed var(--border);border-radius:9px}
+#view-collab .pj-module-table{border:1px solid var(--border);border-radius:9px;overflow-x:auto;background:#fff}
+#view-collab .pj-module-tr{display:grid;grid-template-columns:minmax(180px,1fr) 120px 102px 128px;min-width:580px;align-items:center;gap:10px;padding:10px 12px;border-top:1px solid var(--border)}
+#view-collab .pj-module-th{border-top:0;background:var(--fill-1);color:var(--text-soft);font-size:11.5px}
+#view-collab .pj-module-name{min-width:0;display:flex;flex-direction:column;gap:3px}
+#view-collab .pj-module-open,#view-collab .ft-item-open{display:flex;flex-direction:column;gap:3px;min-width:0;width:100%;padding:0;border:0;background:none;text-align:left;font:inherit;cursor:pointer}
+#view-collab .pj-module-open:hover b,#view-collab .ft-item-open:hover b{color:var(--brand)}
+#view-collab .pj-module-open:focus-visible,#view-collab .ft-item-open:focus-visible{outline:2px solid var(--border-focus);outline-offset:3px;border-radius:3px}
+#view-collab .pj-module-name b{font-size:12.5px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#view-collab .pj-module-name small{font-size:11px;color:var(--text-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#view-collab .pj-module-count,#view-collab .pj-module-progress{font-size:11.5px;color:var(--text-secondary);white-space:nowrap}
+#view-collab button.pj-module-count{padding:0;border:0;background:none;font:inherit;font-size:11.5px;color:var(--brand);cursor:pointer;text-align:left}
+#view-collab .pj-module-children{display:flex;flex-direction:column;border-top:1px solid var(--border);padding:6px 12px 8px 28px;gap:4px;background:var(--fill-2)}
+#view-collab .pj-module-children-empty{padding:10px 0;color:var(--text-soft);font-size:12px}
+#view-collab .pj-module-children .pj-task{border:1px solid var(--border);border-radius:7px;padding:8px 10px;background:#fff}
+#view-collab .pj-module-children .pj-task:hover{border-color:var(--brand);background:var(--brand-fill)}
+#view-collab .pj-module-progress{display:flex;align-items:center;gap:6px;font-variant-numeric:tabular-nums}
+#view-collab .pj-module-progress i{width:45px;height:5px;border-radius:4px;background:var(--fill-1);overflow:hidden}
+#view-collab .pj-module-progress em{display:block;height:100%;background:var(--brand);border-radius:4px}
+#view-collab .pj-module-actions{display:flex;gap:4px}
+#view-collab .pj-module-actions button{width:26px;height:26px;border:1px solid var(--border);border-radius:6px;background:#fff;color:var(--text-secondary);cursor:pointer;font:inherit;font-size:15px}
+#view-collab .pj-module-actions button:hover{border-color:var(--brand);color:var(--brand)}
+#view-collab .pj-module-actions button:nth-child(2){background:var(--brand);border-color:var(--brand);color:#fff}
+#view-collab .pj-module-actions button:last-child:hover{border-color:var(--danger);color:var(--danger)}
+@media(max-width:900px){#view-collab .pj-module-toolbar{align-items:flex-start}#view-collab .pj-module-controls{width:100%}#view-collab .pj-module-search{flex:1}}
 #view-collab .pj-plan-head .pj-plan-k{margin-bottom:0}
 #view-collab .pj-plan-hint{font-size:12.5px;color:var(--text-soft);line-height:1.6}
 #view-collab .pj-plan-hint b{color:var(--text);font-weight:600}
@@ -1003,13 +1122,6 @@
 .ms-title{padding:8px 10px;font-weight:500}
 .ms-desc,.ms-accept{resize:vertical;padding:8px 10px;line-height:1.5}
 .ms-title:focus,.ms-desc:focus,.ms-accept:focus{border-color:var(--brand)}
-.ms-files{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
-.ms-file-add{border:1px dashed var(--border-hover);border-radius:6px;background:none;color:var(--text-secondary);font-size:12px;padding:4px 10px;cursor:pointer;font-family:inherit}
-.ms-file-add:hover{border-color:var(--brand);color:var(--brand)}
-.ms-file-list{display:flex;flex-wrap:wrap;gap:6px}
-.ms-file{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--text-secondary);background:var(--fill-1);border-radius:6px;padding:3px 6px 3px 8px}
-.ms-file-x{border:none;background:none;color:var(--text-soft);cursor:pointer;font-size:12px;line-height:1;padding:0}
-.ms-file-x:hover{color:var(--danger)}
 .ms-add{width:100%;padding:10px;border:1px dashed var(--border-hover);border-radius:10px;background:none;color:var(--text-secondary);font-size:13px;font-family:inherit;cursor:pointer}
 .ms-add:hover{border-color:var(--brand);color:var(--brand)}
 .ms-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 18px;border-top:1px solid var(--border);flex:none}
@@ -1055,11 +1167,13 @@
 #view-collab .ft-task-status--fail{color:var(--danger)}
 
 /* 父任务行列表（简洁模式） */
-#view-collab .ft-item--row{display:flex;align-items:center;gap:10px;padding:10px 12px}
+#view-collab .ft-item--row{display:flex;align-items:center;flex-wrap:wrap;gap:10px;padding:10px 12px}
 #view-collab .ft-item--row .ft-item-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 #view-collab .ft-item--row .ft-item-main b{font-size:13px;font-weight:600;color:var(--text)}
 #view-collab .ft-item--row .ft-item-main small{font-size:11.5px;color:var(--text-secondary);line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #view-collab .ft-item-meta{font-size:11px;color:var(--text-soft)}
+#view-collab .ft-item-task-toggle{width:max-content;padding:0;border:0;background:none;text-align:left;cursor:pointer;color:var(--brand);font:inherit;font-size:11px}
+#view-collab .ft-item--row .pj-module-children{flex-basis:100%;padding:8px 0 0;border-top:1px dashed var(--border);background:transparent}
 #view-collab .ft-item--row .ft-item-acts{flex:none;display:flex;gap:4px}
 #view-collab .ft-item--row .ft-item-acts .ft-act{padding:4px 5px}
 
@@ -1387,13 +1501,10 @@
 .tb-preview-body pre{white-space:pre-wrap;overflow-wrap:anywhere;margin:0;font-size:var(--tb-body-size);line-height:1.8}
 .tb-preview-body iframe{width:100%;height:55vh;border:0}
 
-/* 项目详情概览页签 */
-#view-collab .pj-overview{display:flex;flex-direction:column;gap:16px}
-#view-collab .pj-overview-sec h3{font-size:13px;font-weight:600;color:var(--text);margin:0 0 6px}
-#view-collab .pj-overview-sec p{font-size:13px;color:var(--text-secondary);line-height:1.7;margin:0}
-
 /* 右侧属性栏可编辑字段 */
 #view-collab .sq-edit-name{width:100%;border:1px solid transparent;border-radius:6px;font-size:17px;font-weight:700;color:var(--text);padding:4px 6px;background:var(--fill-1);outline:none;font-family:inherit}
+#view-collab .pj-detail-name-label{display:block;margin-bottom:8px;font-size:12px;color:var(--text-soft)}
+#view-collab .pj-detail-name-label .sq-edit-name{display:block;margin-top:4px}
 #view-collab .sq-edit-name:focus{border-color:var(--brand);background:#fff}
 #view-collab .sq-edit-desc,#view-collab .sq-edit-goal{width:100%;border:1px solid transparent;border-radius:6px;font-size:12.5px;color:var(--text-soft);padding:4px 6px;background:var(--fill-1);outline:none;resize:vertical;font-family:inherit;margin-top:6px}
 #view-collab .sq-edit-desc:focus,#view-collab .sq-edit-goal:focus{border-color:var(--brand);background:#fff;color:var(--text)}
@@ -1403,6 +1514,8 @@
 #view-collab .sq-edit-date input{border:1px solid transparent;border-radius:4px;font-size:11px;padding:2px 4px;background:var(--fill-1);outline:none;width:110px}
 #view-collab .sq-edit-date input:focus{border-color:var(--brand);background:#fff}
 #view-collab .sq-edit-date span{font-size:11px;color:var(--text-soft)}
+#view-collab .sq-edit-date-field{border:1px solid transparent;border-radius:4px;font-size:11px;padding:2px 4px;background:var(--fill-1);outline:none;width:135px;max-width:100%}
+#view-collab .sq-edit-date-field:focus{border-color:var(--brand);background:#fff}
 
 /* 项目成员选择器（搜索 + 多选列表） */
 .cv-scope .pe-member-search{display:flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--border-hover);border-radius:8px;margin-bottom:8px;color:var(--text-soft)}
@@ -1419,14 +1532,10 @@
 .cv-scope .pe-member.is-selected small{color:var(--brand)}
 .cv-scope .pe-member-empty{padding:16px;text-align:center;color:var(--text-soft);font-size:13px}
 
-/* 右侧面板：可折叠分区 + PropRow（参考 multica） */
+/* 右侧面板：固定分区 + 属性行 */
 #view-collab .pj-prop-section{margin-top:16px}
 #view-collab .pj-prop-section:first-of-type{margin-top:0}
-#view-collab .pj-prop-header{display:flex;align-items:center;gap:4px;width:100%;border:0;background:none;font-size:12px;font-weight:600;color:var(--text);cursor:pointer;padding:4px 0;margin-bottom:6px;transition:color .1s}
-#view-collab .pj-prop-header:hover{color:var(--brand)}
-#view-collab .pj-prop-caret{width:14px;height:14px;color:var(--text-soft);transition:transform .15s;flex:none}
-#view-collab .pj-prop-section:not(.collapsed) .pj-prop-caret{transform:rotate(90deg)}
-#view-collab .pj-prop-section.collapsed .pj-prop-body{display:none}
+#view-collab .pj-prop-header{font-size:12px;font-weight:600;color:var(--text);padding:4px 0;margin-bottom:6px}
 #view-collab .pj-prop-row{display:flex;align-items:center;gap:8px;min-height:30px;padding:3px 6px;border-radius:6px;transition:background .1s}
 #view-collab .pj-prop-row:hover{background:var(--fill-1)}
 #view-collab .pj-prop-label{width:60px;flex:none;font-size:12px;color:var(--text-soft)}
@@ -1435,6 +1544,10 @@
 #view-collab .pj-progress-bar{flex:1;height:6px;border-radius:3px;background:var(--fill-1);overflow:hidden}
 #view-collab .pj-progress-bar>div{height:100%;border-radius:3px;background:#10b981;transition:width .3s}
 #view-collab .pj-progress-text{font-size:11px;color:var(--text-soft);flex:none;white-space:nowrap;font-variant-numeric:tabular-nums}
+#view-collab .pj-side-field-label{display:block;margin:10px 6px 0;font-size:12px;font-weight:500;color:var(--text-secondary)}
+#view-collab .pj-ms-list--side{margin:8px 6px 0;gap:8px}
+#view-collab .pj-ms-list--side .pj-ms-item{gap:6px;font-size:12px}
+#view-collab .pj-ms-list--side .pj-ms-date{font-size:11px}
 
 /* 成员选择触发按钮 + 已选标签 + 独立弹出层 */
 .cv-scope .pe-trigger{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border:1px dashed var(--border-hover);border-radius:8px;background:#fff;color:var(--text-secondary);font-size:13px;cursor:pointer;transition:all .15s}
@@ -1455,26 +1568,42 @@
 .cv-scope .pe-picker-panel .pe-member-search{margin:0 20px 8px}
 .cv-scope .pe-picker-panel .pe-members{margin:0 20px 12px;flex:1}
 
-/* 新建项目弹窗：参考 multica 布局（顶部标题+描述，底部属性行） */
-.cv-scope .pe-body{display:flex;flex-direction:column;padding:0;gap:0}
-.cv-scope .pe-body-main{padding:20px 24px 16px;display:flex;flex-direction:column;gap:14px}
-.cv-scope .pe-title-input{width:100%;border:0;border-bottom:1px solid var(--border);font-size:18px;font-weight:600;color:var(--text);padding:4px 0 8px;outline:none;background:none;font-family:inherit}
-.cv-scope .pe-title-input:focus{border-color:var(--brand)}
-.cv-scope .pe-title-input::placeholder{color:var(--text-soft)}
-.cv-scope .pe-desc-input{width:100%;font-size:14px;color:var(--text-secondary);outline:none;resize:vertical;font-family:inherit;line-height:1.7;min-height:120px;background:var(--fill-1);border:1px solid transparent;border-radius:8px;padding:12px 14px}
-.cv-scope .pe-desc-input:focus{background:#fff;border-color:var(--brand)}
+/* 项目创建与编辑：主编辑区、交付属性区、操作栏 */
+.cv-scope .pe-modal{width:780px;max-width:calc(100vw - 32px);height:min(620px,88vh);max-height:88vh}
+.cv-scope .pe-header{padding:18px 28px 0}
+.cv-scope .pe-breadcrumb{display:flex;align-items:center;gap:9px;min-width:0;font-size:12px;color:var(--text-soft)}
+.cv-scope .pe-breadcrumb span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cv-scope .pe-breadcrumb span:last-child{color:var(--text-secondary);font-weight:600;white-space:nowrap}
+.cv-scope .pe-sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.cv-scope .pe-body{display:flex;flex-direction:column;min-height:0;padding:0}
+.cv-scope .pe-body-main{display:flex;flex-direction:column;flex:1;min-height:0;padding:38px 28px 12px}
+.cv-scope .pe-title-label{margin-bottom:4px;font-size:12px;color:var(--text-soft)}
+.cv-scope .pe-required-mark{color:var(--danger);font-weight:700}
+#view-collab .pe-required-mark{color:var(--danger);font-weight:700}
+.cv-scope .pe-title-input{width:100%;border:0;font-size:26px;font-weight:600;line-height:1.5;color:var(--text);padding:0;outline:none;background:none;font-family:inherit}
+.cv-scope .pe-title-input::placeholder{color:var(--text-soft);font-weight:600}
+.cv-scope .pe-desc-input{width:100%;flex:1;min-height:120px;margin-top:18px;font-size:15px;color:var(--text-secondary);outline:none;resize:none;font-family:inherit;line-height:1.7;background:none;border:0;padding:0}
 .cv-scope .pe-desc-input::placeholder{color:var(--text-soft)}
-.cv-scope .pe-body-props{border-top:1px solid var(--border);padding:14px 24px;display:flex;flex-direction:column}
-.cv-scope .pe-prop-row{display:flex;align-items:center;gap:10px;min-height:36px;padding:3px 0}
-.cv-scope .pe-prop-label{width:70px;flex:none;font-size:13px;color:var(--text-soft)}
-.cv-scope .pe-prop-field{flex:1;max-width:320px;border:1px solid var(--border-hover);border-radius:6px;padding:6px 10px;font-size:13px;color:var(--text);outline:none;background:#fff;font-family:inherit}
-.cv-scope .pe-prop-field:focus{border-color:var(--brand)}
-.cv-scope .pe-prop-date{display:flex;align-items:center;gap:6px;flex:1;max-width:320px}
-.cv-scope .pe-prop-date input{flex:1;border:1px solid var(--border-hover);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--text);outline:none;font-family:inherit}
-.cv-scope .pe-prop-date input:focus{border-color:var(--brand)}
-.cv-scope .pe-prop-date span{color:var(--text-soft)}
-.cv-scope .pe-body-props .pe-trigger{margin:0;flex:none}
-.cv-scope .pe-body-props .pe-selected-tags{margin-top:4px;width:100%}
+.cv-scope .pe-property-bar{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:10px 28px 16px;flex:none}
+.cv-scope .pe-pill,.cv-scope .pe-more summary{display:inline-flex;align-items:center;gap:6px;min-height:34px;border:1px solid var(--border-hover);border-radius:18px;background:var(--bg);color:var(--text-secondary);padding:0 11px;font-size:12px;white-space:nowrap}
+.cv-scope .pe-pill:focus-within,.cv-scope .pe-more summary:focus-visible{border-color:var(--brand);outline:0}
+.cv-scope .pe-pill select,.cv-scope .pe-pill input{min-width:0;max-width:150px;border:0;outline:0;background:none;color:var(--text);font:inherit;font-size:12px}
+.cv-scope .pe-pill select{cursor:pointer}
+.cv-scope .pe-pill--status .pe-pill-mark{color:var(--text-secondary);font-size:10px}
+.cv-scope .pe-pill--required{border-color:var(--border-focus)}
+.cv-scope .pe-pill--required select{max-width:145px}
+.cv-scope .pe-pill--repo input{width:130px}
+.cv-scope .pe-repo-icon{width:14px;height:14px;flex:none;color:var(--text-secondary)}
+.cv-scope .pe-more{position:relative}
+.cv-scope .pe-more summary{display:flex;cursor:pointer;list-style:none;font-weight:700;letter-spacing:2px;padding:0 12px}
+.cv-scope .pe-more summary::-webkit-details-marker{display:none}
+.cv-scope .pe-more[open] summary{border-color:var(--brand);color:var(--brand)}
+.cv-scope .pe-more-panel{position:absolute;right:0;bottom:calc(100% + 8px);z-index:120;width:280px;max-width:calc(100vw - 48px);padding:14px;display:flex;flex-direction:column;gap:12px;border:1px solid var(--border);border-radius:12px;background:var(--bg);box-shadow:0 10px 32px rgba(0,0,0,.12)}
+.cv-scope .pe-more-panel label{display:flex;flex-direction:column;gap:6px;color:var(--text-secondary);font-size:12px}
+.cv-scope .pe-more-panel select,.cv-scope .pe-more-panel input{width:100%;height:36px;padding:6px 9px;border:1px solid var(--border-hover);border-radius:7px;background:var(--bg);color:var(--text);font:inherit;font-size:12px}
+.cv-scope .pe-more-panel select:focus,.cv-scope .pe-more-panel input:focus{outline:0;border-color:var(--brand)}
+.cv-scope .pe-footer{padding:14px 28px}
+@media(max-width:600px){.cv-scope .pe-header{padding:12px 18px 0}.cv-scope .pe-body-main{padding:24px 18px 12px}.cv-scope .pe-property-bar{padding:10px 18px 14px}.cv-scope .pe-footer{padding:12px 18px}.cv-scope .pe-title-input{font-size:21px}.cv-scope .pe-desc-input{font-size:13px}}
 
 /* 成员行内布局：+ 按钮紧接着人员标签，不换行 */
 .cv-scope .pe-member-inline{display:flex;align-items:center;gap:6px;flex:1;min-width:0;flex-wrap:wrap}

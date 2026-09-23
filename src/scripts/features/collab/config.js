@@ -1,95 +1,86 @@
 import { $, $$ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
-import { cvConfigOverride, cvProject, cvProjectName } from './data.js';
-/* 协作开发：设置（全局默认 / 项目覆盖）
-   拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
-   由 main.js 按拆分前的原始顺序调用。 */
+import { CV_PROJECTS } from './data.js';
+import { cvHideSquadDetail } from './squads.js';
+import { xesc } from '../expert/data.js';
 
+/* 设置：人员、团队与第三方任务来源映射。单文件原型仅保存连接元数据，不处理凭据。 */
+const INTEGRATION_KEY='lingee-collab-integrations-v1';
+const PROVIDERS={devops:'DevOps',zentao:'禅道'};
+let mappings=[];
 
-/* ---------- 设置：全局默认 / 项目覆盖 ---------- */
-var cvConfigValues={};               /* {'global'|项目id:{开关 key:是否开启}} */
-function cvConfigScopeKey(card){
-  /* 全局设置项永远读写全局；项目可覆盖项在「项目覆盖」时读写本项目 */
-  if(card.getAttribute('data-cv-level')==='global') return 'global';
-  return (cvProject && cvConfigOverridden(card.getAttribute('data-cv-config'))) ? cvProject : 'global';
+function restoreMappings(){
+  try{
+    const rows=JSON.parse(localStorage.getItem(INTEGRATION_KEY)||'[]');
+    if(Array.isArray(rows)) mappings=rows.filter(row=>PROVIDERS[row.type] && row.url && row.externalProject && row.targetProject);
+  }catch(e){ mappings=[]; }
 }
-function cvCaptureConfigDefaults(){
-  if(cvConfigValues.global) return;
-  var g={};
-  $$('#cv-config [data-cv-toggle]').forEach(function(t){ g[t.getAttribute('data-cv-toggle')]=t.classList.contains('on'); });
-  cvConfigValues.global=g;
+function saveMappings(){
+  try{localStorage.setItem(INTEGRATION_KEY,JSON.stringify(mappings));}
+  catch(e){toast('浏览器无法保存集成映射','error');}
 }
-function cvApplyConfigValues(){
-  $$('#cv-config .config-card').forEach(function(card){
-    var scope=cvConfigScopeKey(card), store=cvConfigValues[scope]||{};
-    $$('[data-cv-toggle]',card).forEach(function(t){
-      var k=t.getAttribute('data-cv-toggle');
-      var v=(k in store)?store[k]:cvConfigValues.global[k];
-      t.classList.toggle('on',!!v);
-    });
-  });
+function renderMappings(){
+  const list=$('#cv-integration-list');if(!list)return;
+  list.innerHTML=mappings.length?mappings.map(row=>{
+    const target=CV_PROJECTS.find(project=>project.id===row.targetProject);
+    return '<div class="cv-integration-row"><span class="cv-integration-mark">'+(row.type==='devops'?'D':'禅')+'</span><span class="cv-integration-row-main"><b>'+PROVIDERS[row.type]+' · '+xesc(row.externalProject)+'</b><small>'+xesc(row.url)+' → '+xesc(target?target.name:'项目已移除')+'</small></span><span class="cv-integration-status">待接入</span><button type="button" data-cv-integration-edit="'+xesc(row.id)+'">编辑映射</button><button type="button" data-cv-integration-remove="'+xesc(row.id)+'">移除</button></div>';
+  }).join(''):'<div class="cv-integration-empty">还没有任务来源映射。选择上方系统开始配置。</div>';
 }
-function cvConfigOverridden(key){
-  return !!(cvProject && cvConfigOverride[cvProject] && cvConfigOverride[cvProject][key]);
+function openMapping(type,id){
+  const row=id?mappings.find(item=>item.id===id):null;
+  if(!PROVIDERS[type])return;
+  const form=$('#cv-integration-form');if(!form)return;
+  $('#cv-integration-form-title').textContent=(row?'编辑':'配置')+PROVIDERS[type]+'任务来源';
+  $('#cv-integration-id').value=row?.id||'';
+  $('#cv-integration-type').value=type;
+  $('#cv-integration-url').value=row?.url||'';
+  $('#cv-integration-project').value=row?.externalProject||'';
+  $('#cv-integration-target').innerHTML='<option value="">请选择灵基项目</option>'+CV_PROJECTS.map(project=>'<option value="'+xesc(project.id)+'"'+(row?.targetProject===project.id?' selected':'')+'>'+xesc(project.name)+'</option>').join('');
+  form.classList.remove('hidden');
+  $('#cv-integration-url').focus();
 }
-function cvApplyConfigScope(){
-  $$('#cv-config .config-card').forEach(function(card){
-    var key=card.getAttribute('data-cv-config');
-    var level=card.getAttribute('data-cv-level');
-    var chip=card.querySelector('[data-cv-scope-chip]');
-    var locked;
-    if(!cvProject){
-      locked=false;
-      if(chip){ chip.textContent=level==='global'?'全局设置':'全局默认'; chip.className='cv-scope-chip'; }
-    }else if(level==='global'){
-      locked=true;
-      if(chip){ chip.textContent='全局设置 · 项目不可改'; chip.className='cv-scope-chip'; }
-    }else{
-      locked=!cvConfigOverridden(key);
-      if(chip){
-        chip.textContent=locked?'跟随全局':'项目覆盖';
-        chip.className='cv-scope-chip cv-scope-chip--btn'+(locked?'':' cv-scope-chip--on');
-        chip.setAttribute('role','button');
-      }
-    }
-    card.classList.toggle('cv-card-locked',locked);
-  });
-  cvApplyConfigValues();
-}
-var cvConfigPanel=$('#cv-config');
-
-export function initCollabConfig() {
-  if(cvConfigPanel) cvConfigPanel.addEventListener('click',function(e){
-    var tg=e.target.closest('[data-cv-toggle]');
-    if(tg){
-      var tcard=tg.closest('.config-card');
-      if(tcard.classList.contains('cv-card-locked')) return;
-      var scope=cvConfigScopeKey(tcard);
-      if(!cvConfigValues[scope]) cvConfigValues[scope]={};
-      cvConfigValues[scope][tg.getAttribute('data-cv-toggle')]=!tg.classList.contains('on');
-      cvApplyConfigValues();
-      return;
-    }
-    var chip=e.target.closest('.cv-scope-chip--btn'); if(!chip||!cvProject) return;
-    var card=chip.closest('.config-card'), key=card.getAttribute('data-cv-config');
-    if(!cvConfigOverride[cvProject]) cvConfigOverride[cvProject]={};
-    var on=!cvConfigOverridden(key);
-    cvConfigOverride[cvProject][key]=on;
-    if(on && !cvConfigValues[cvProject]){
-      cvConfigValues[cvProject]={};      /* 首次覆盖时继承一份全局值再改 */
-      Object.keys(cvConfigValues.global).forEach(function(k){ cvConfigValues[cvProject][k]=cvConfigValues.global[k]; });
-    }
-    cvApplyConfigScope();
-    toast(on?('「'+cvProjectName(cvProject)+'」已改为项目覆盖，可单独调整'):'已恢复跟随全局设置');
-  });
-  var cfgNav=$('#cv-config .config-nav');
-  if(cfgNav) cfgNav.addEventListener('click',function(e){
-    var item=e.target.closest('[data-config-nav]'); if(!item) return;
-    $$('#cv-config .config-nav-item').forEach(function(n){ n.classList.toggle('on', n===item); });
-    var which=item.getAttribute('data-config-nav');
-    $$('#cv-config .config-pane').forEach(function(p){ p.classList.toggle('hidden', p.getAttribute('data-config-pane')!==which); });
-    if(which==='perm' && window.cvRenderPermTable) window.cvRenderPermTable();
-  });
+function submitMapping(event){
+  event.preventDefault();
+  const type=$('#cv-integration-type').value;
+  const externalProject=$('#cv-integration-project').value.trim();
+  const targetProject=$('#cv-integration-target').value;
+  let parsed;
+  try{parsed=new URL($('#cv-integration-url').value.trim());}catch(e){toast('请输入有效的系统地址','warning');return;}
+  if(!['http:','https:'].includes(parsed.protocol)||parsed.username||parsed.password||parsed.search||parsed.hash){toast('系统地址只填写站点 URL，不要包含账号、令牌或参数','warning');return;}
+  if(!externalProject||!CV_PROJECTS.some(project=>project.id===targetProject)){toast('请填写外部项目标识并选择灵基项目','warning');return;}
+  const url=parsed.origin+parsed.pathname.replace(/\/$/,'');
+  const id=$('#cv-integration-id').value;
+  const duplicate=mappings.find(row=>row.type===type&&row.url===url&&row.externalProject===externalProject&&row.id!==id);
+  if(duplicate){toast('这个任务来源已配置，请编辑现有映射','warning');return;}
+  const row={id:id||('mapping-'+Date.now()),type,url,externalProject,targetProject};
+  const index=mappings.findIndex(item=>item.id===id);
+  if(index>=0)mappings[index]=row;else mappings.push(row);
+  saveMappings();renderMappings();
+  $('#cv-integration-form').classList.add('hidden');
+  toast('映射已保存；真实任务同步需服务端接入');
 }
 
-export { cvApplyConfigScope, cvCaptureConfigDefaults };
+export function initCollabConfig(){
+  restoreMappings();renderMappings();
+  const nav=$('#cv-config .config-nav');
+  if(nav)nav.addEventListener('click',event=>{
+    const item=event.target.closest('[data-config-nav]');if(!item)return;
+    $$('#cv-config .config-nav-item').forEach(button=>button.classList.toggle('on',button===item));
+    const which=item.getAttribute('data-config-nav');
+    $$('#cv-config .config-pane').forEach(pane=>pane.classList.toggle('hidden',pane.getAttribute('data-config-pane')!==which));
+    if(which==='perm'&&window.cvRenderPermTable)window.cvRenderPermTable();
+    if(which==='teams')cvHideSquadDetail();
+    if(which==='integration')renderMappings();
+  });
+  const panel=$('#cv-config');
+  if(panel)panel.addEventListener('click',event=>{
+    const provider=event.target.closest('[data-cv-integration-provider]');
+    if(provider){openMapping(provider.getAttribute('data-cv-integration-provider'));return;}
+    const edit=event.target.closest('[data-cv-integration-edit]');
+    if(edit){const row=mappings.find(item=>item.id===edit.getAttribute('data-cv-integration-edit'));if(row)openMapping(row.type,row.id);return;}
+    const remove=event.target.closest('[data-cv-integration-remove]');
+    if(remove){mappings=mappings.filter(item=>item.id!==remove.getAttribute('data-cv-integration-remove'));saveMappings();renderMappings();toast('已移除任务来源映射');return;}
+    if(event.target.closest('#cv-integration-cancel'))$('#cv-integration-form').classList.add('hidden');
+  });
+  const form=$('#cv-integration-form');if(form)form.addEventListener('submit',submitMapping);
+}

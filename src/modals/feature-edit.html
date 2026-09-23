@@ -2,7 +2,7 @@
   <div class="ms-modal">
     <div class="ms-head">
       <div class="ms-head-t">编辑模块</div>
-      <div class="ms-head-s">修改模块的标题、描述、附件与验收标准</div>
+      <div class="ms-head-s">修改模块的标题与描述</div>
       <button class="sync-modal__close" onclick="cvCloseFeatureEdit()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="ms-body">
@@ -13,17 +13,6 @@
       <div class="ms-field">
         <label>描述</label>
         <textarea id="cv-fe-desc" rows="3" placeholder="描述"></textarea>
-      </div>
-      <div class="ms-field">
-        <label>附件</label>
-        <div class="ms-files">
-          <button type="button" class="ms-file-add" onclick="cvFeatureEditAddFile()">＋ 附件</button>
-          <span class="ms-file-list" id="cv-fe-files"></span>
-        </div>
-      </div>
-      <div class="ms-field">
-        <label>验收标准</label>
-        <textarea id="cv-fe-accept" rows="3" placeholder="验收标准，每行一条"></textarea>
       </div>
     </div>
     <div class="ms-foot">

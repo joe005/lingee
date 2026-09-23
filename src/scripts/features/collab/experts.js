@@ -23,21 +23,14 @@ function cvBuildExpertCard(e){
   var skills=(e.skills||[]).map(function(id){return skillInfo(id)});
   var tags=skills.slice(0,3).map(function(s){return '<span class="ptag">'+xesc(s.name)+'</span>'}).join('')
     +(skills.length>3?'<span class="ptag">+'+(skills.length-3)+'</span>':'');
-  var mAll=e.modes||[], mShow=mAll.slice(0,3), mRest=mAll.length-mShow.length;
-  var modeRow=mAll.length
-    ? '<div class="x-modes" title="可承担 '+xesc(mAll.join(' / '))+'"><span class="x-modes-k">可承担</span>'
-      +mShow.map(function(m){return '<span class="x-mode">'+xesc(m)+'</span>'}).join('')
-      +(mRest>0?'<span class="x-mode x-mode-more">+'+mRest+'</span>':'')+'</div>'
-    : '';
   return '<div class="app-card x-card" data-cv-expert="'+e.id+'">'
     +'<button type="button" class="x-call" data-cv-call="'+e.id+'" title="对话这位专家">对话</button>'
     +'<div class="card-top"><img class="x-av" src="'+xav(e.k)+'" alt="">'
     +'<div class="card-titles"><div class="card-title-row"><span class="card-title">'+xesc(e.name)+'</span>'
     +(e.ro?'<span class="x-badge x-badge-ro">只读</span>':'')+'</div>'
     +'<div class="x-sub">'+xesc(e.role)+' · '+xesc(e.by)+'</div></div></div>'
-    +'<div class="card-desc">'+xesc(e.desc)+'</div>'
+    +'<div class="card-desc" title="'+xesc(e.desc)+'">'+xesc(e.desc)+'</div>'
     +(tags?'<div class="card-tags">'+tags+'</div>':'')
-    +modeRow
     +'</div>';
 }
 function cvRenderExperts(){

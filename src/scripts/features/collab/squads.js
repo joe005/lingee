@@ -1,7 +1,7 @@
 /* 协作人员：团队维度
-   团队是跨项目的协作单元，与项目不挂钩；列表一行一个团队，点进去看成员与指引，
+   团队是跨项目的协作单元，项目可引用团队；列表一行一个团队，点进去看成员与指引，
    布局参考「团队 / 成员 / 指引」两段式详情。团队成员通过 pid 引用人员基础资料。 */
-import { cvIsMe, cvPersonById } from './data.js';
+import { CV_MEMBERS, CV_PROJECTS, cvCurrentUserName, cvIsMe, cvPersistProjects, cvPersonById } from './data.js';
 import { xesc } from '../expert/data.js';
 
 var CV_SQUADS=[
@@ -26,6 +26,14 @@ function cvSquadById(id){
   for(var i=0;i<CV_SQUADS.length;i++){ if(CV_SQUADS[i].id===id) return CV_SQUADS[i]; }
   return null;
 }
+function cvSquadCurrentMembers(){
+  var sq=cvSquadById(cvSquadCur);
+  return sq?sq.members.map(function(m){return m.pid;}):[];
+}
+function cvSquadPeople(id){
+  var sq=cvSquadById(id);
+  return sq&&!sq.archived?sq.members.map(function(m){return cvPersonById(m.pid);}).filter(Boolean):[];
+}
 /* 团队与成员改动落 localStorage，刷新页面后关联的成员不丢 */
 var CV_SQUAD_STORE_KEY='lingee-collab-squads-v1';
 function cvPersistSquads(){
@@ -37,6 +45,32 @@ function cvRestoreSquads(){
     var st=JSON.parse(raw);
     if(Array.isArray(st.squads)){ CV_SQUADS.length=0; st.squads.forEach(function(s){CV_SQUADS.push(s);}); }
   }catch(e){}
+}
+/* 旧项目直接保存 members；迁移为团队引用，保留原字段与所有其他项目数据。 */
+function cvMigrateProjectSquads(){
+  var changed=false;
+  CV_PROJECTS.forEach(function(p){
+    var current=cvSquadById(p.squadId);
+    if(current&&!current.archived) return;
+    var baseId='sq-project-'+p.id;
+    var squad=cvSquadById(baseId);
+    if(squad&&(squad.archived||squad.migratedFromProjectId!==p.id)) squad=null;
+    if(!squad){
+      var id=baseId, suffix=2;
+      while(cvSquadById(id)) id=baseId+'-'+suffix++;
+      var ids=Array.isArray(p.members)?p.members.filter(function(pid,i,arr){return !!cvPersonById(pid)&&arr.indexOf(pid)===i;}):[];
+      if(!ids.length){
+        var owner=CV_MEMBERS.find(function(m){return m.name===p.owner;});
+        if(owner) ids.push(owner.id);
+      }
+      squad={id:id,name:p.name+'交付团队',desc:'由已有项目「'+p.name+'」的协作成员迁入',creator:cvCurrentUserName()||'我',created:'历史数据迁入',updated:'历史数据迁入',archived:false,migratedFromProjectId:p.id,
+        members:ids.map(function(pid,i){return {kind:'person',pid:pid,role:i===0?'leader':'member',sub:i===0?'leader':'添加角色...'};})};
+      CV_SQUADS.push(squad);
+    }
+    p.squadId=squad.id;
+    changed=true;
+  });
+  if(changed){ cvPersistSquads(); cvPersistProjects(); }
 }
 /* 人员被删除后，从所有团队里移除该 pid；团队失去队长时把第一个成员提为队长 */
 function cvSquadDetachMember(pid){
@@ -131,6 +165,7 @@ function cvRenderSquadDetail(){
     +'<div class="sq-kv-wrap"><div class="sq-kv-t">详情</div>'
     +'<div class="sq-kv"><span>队长</span><b>'+(lead?xesc(cvSquadNameOf(lead)):'未设置')+'</b></div>'
     +'<div class="sq-kv"><span>成员</span><b>'+sq.members.length+'</b></div>'
+    +'<div class="sq-kv"><span>项目</span><b>'+CV_PROJECTS.filter(function(p){return p.squadId===sq.id;}).length+'</b></div>'
     +'<div class="sq-kv"><span>创建者</span><b>'+xesc(sq.creator)+'</b></div>'
     +'<div class="sq-kv"><span>创建时间</span><b>'+xesc(sq.created)+'</b></div>'
     +'<div class="sq-kv"><span>更新时间</span><b>'+xesc(sq.updated)+'</b></div>'
@@ -154,12 +189,14 @@ function cvRenderSquadDetail(){
 }
 function cvShowSquadDetail(id){
   cvSquadCur=id; cvSquadTab='members';
+  var head=document.getElementById('cv-squad-head');if(head)head.classList.add('hidden');
   var list=document.getElementById('cv-squad-list'),detail=document.getElementById('cv-squad-detail');
   if(list)list.classList.add('hidden');
   if(detail){detail.classList.remove('hidden');cvRenderSquadDetail();}
 }
 function cvHideSquadDetail(){
   cvSquadCur='';
+  var head=document.getElementById('cv-squad-head');if(head)head.classList.remove('hidden');
   var list=document.getElementById('cv-squad-list'),detail=document.getElementById('cv-squad-detail');
   if(detail)detail.classList.add('hidden');
   if(list)list.classList.remove('hidden');
@@ -171,6 +208,8 @@ function cvSwitchSquadTab(tab){
 }
 function cvArchiveSquad(){
   var sq=cvSquadById(cvSquadCur);if(!sq)return;
+  var assigned=CV_PROJECTS.filter(function(p){return p.squadId===sq.id;});
+  if(assigned.length){ if(window.cvToast) window.cvToast('请先将 '+assigned.length+' 个项目交付给其他团队，再归档','warning'); return; }
   sq.archived=true; sq.updated='刚刚';
   cvHideSquadDetail();
   cvPersistSquads();
@@ -208,12 +247,13 @@ function cvConfirmNewSquad(){
   var n=(document.getElementById('cv-ns-name')||{}).value||'';
   n=n.trim();
   if(!n){ if(window.cvToast) window.cvToast('请先填写团队名称','warning'); return; }
+  if(CV_SQUADS.some(function(s){return s.name===n&&!s.archived;})){ if(window.cvToast) window.cvToast('已有同名团队，请换一个名称','warning'); return; }
   var d=((document.getElementById('cv-ns-desc')||{}).value||'').trim();
-  CV_SQUADS.push({id:'sq-'+Date.now(),name:n,desc:d,creator:'吴宏超',created:'刚刚',updated:'刚刚',archived:false,members:[]});
+  CV_SQUADS.push({id:'sq-'+Date.now(),name:n,desc:d,creator:cvCurrentUserName()||'我',created:'刚刚',updated:'刚刚',archived:false,members:[]});
   cvCloseNewSquadModal();
   cvRenderSquadList();
   cvPersistSquads();
   if(window.cvToast) window.cvToast('已创建团队：'+n,'success');
 }
 
-export { CV_SQUADS, cvArchiveSquad, cvCloseNewSquadModal, cvConfirmNewSquad, cvHideSquadDetail, cvOpenNewSquadModal, cvPersistSquads, cvRenderSquadDetail, cvRenderSquadList, cvRestoreSquads, cvSetSquadLeader, cvShowSquadDetail, cvSquadAddPerson, cvSquadDetachMember, cvSwitchSquadTab };
+export { CV_SQUADS, cvArchiveSquad, cvCloseNewSquadModal, cvConfirmNewSquad, cvHideSquadDetail, cvMigrateProjectSquads, cvOpenNewSquadModal, cvPersistSquads, cvRenderSquadDetail, cvRenderSquadList, cvRestoreSquads, cvSetSquadLeader, cvShowSquadDetail, cvSquadAddPerson, cvSquadById, cvSquadCurrentMembers, cvSquadDetachMember, cvSquadPeople, cvSwitchSquadTab };
