@@ -1,6 +1,6 @@
 import { $, $$ } from '../core/dom.js';
 import { toast } from '../core/toast.js';
-/* 会话页：产物预览、预览展开、历史记录面板
+/* 会话页：产物预览、预览展开、历史版本面板
    拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
    由 main.js 按拆分前的原始顺序调用。 */
 
@@ -43,13 +43,14 @@ function syncTogglePreviewBtn(){
   togglePreviewBtn.setAttribute('aria-pressed',open?'true':'false');
   togglePreviewBtn.setAttribute('data-tooltip',open?'收起预览':'显示预览');
 }
-/* ---------- 历史记录面板 ---------- */
+/* ---------- 历史版本面板 ---------- */
 var historyBtn=$('#historyBtn');
 var historyPanel=$('#historyPanel');
 var historyOverlay=$('#historyOverlay');
 function closeHistory(){
   historyPanel.classList.remove('show');
   historyOverlay.classList.remove('show');
+  historyBtn.classList.remove('on');
 }
 
 /* ---------- 预览导航历史 ---------- */
@@ -124,18 +125,40 @@ export function initPreview() {
 export function initHistoryPanel() {
   if(historyBtn){
     historyBtn.addEventListener('click',function(){
-      historyPanel.classList.add('show');
-      historyOverlay.classList.add('show');
+      var isShow=historyPanel.classList.contains('show');
+      if(isShow){ closeHistory(); }
+      else{ historyPanel.classList.add('show'); historyOverlay.classList.add('show'); historyBtn.classList.add('on'); }
     });
     $('#historyPanelClose').addEventListener('click',closeHistory);
     historyOverlay.addEventListener('click',closeHistory);
+    $$('.history-item-time').forEach(function(el){
+      var t=el.dataset.time; if(!t) return;
+      var d=new Date(t),now=new Date(),diff=(now-d)/60000;
+      if(diff<1) el.textContent='刚刚';
+      else if(diff<60) el.textContent=Math.floor(diff)+' 分钟前';
+      else if(diff<1440) el.textContent=Math.floor(diff/60)+' 小时前';
+      else if(diff<2880) el.textContent='昨天';
+      else if(diff<10080) el.textContent=Math.floor(diff/1440)+' 天前';
+    });
+    var restoreModal=$('#historyRestoreModal');
     $$('.history-item-restore').forEach(function(btn){
       btn.addEventListener('click',function(e){
         e.stopPropagation();
         var item=btn.closest('.history-item');
-        var ver=item.querySelector('.history-item-time').textContent.trim();
-        toast('已恢复 '+ver);
-        closeHistory();
+        var ver=item.querySelector('.history-item-version').textContent.trim();
+        restoreModal.classList.add('show');
+        $('#historyRestoreText').textContent='确定回退到 '+ver+'？回退后当前版本将被覆盖。';
+        var close=function(){restoreModal.classList.remove('show')};
+        $('#historyRestoreClose').onclick=close;
+        $('#historyRestoreCancel').onclick=close;
+        restoreModal.onclick=function(ev){if(ev.target===restoreModal)close()};
+        $('#historyRestoreConfirm').onclick=function(){
+          close();
+          closeHistory();
+          var pl=$('#previewLoading');
+          if(pl){pl.classList.add('show');setTimeout(function(){pl.classList.remove('show');toast('已恢复 '+ver);},1200);}
+          else toast('已恢复 '+ver);
+        };
       });
     });
   }

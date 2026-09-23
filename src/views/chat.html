@@ -5,7 +5,7 @@
         <div class="chat-header-info">
           <div class="chat-header-title" id="chatTitle">新会话</div>
         </div>
-        <button class="header-btn" id="historyBtn" data-tooltip="历史记录" aria-label="历史记录" tabindex="0" aria-keyshortcuts="Meta+Shift+H Control+Shift+H">
+        <button class="header-btn" id="historyBtn" data-tooltip="历史版本" aria-label="历史版本" tabindex="0" aria-keyshortcuts="Meta+Shift+H Control+Shift+H">
           <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-6.36 2.64L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg>
         </button>
         <button class="header-btn" id="togglePreviewBtn" data-tooltip="显示预览" aria-label="切换预览" aria-pressed="false" tabindex="0">
@@ -216,9 +216,65 @@
           </div>
         </div>
       </div>
+      <div class="history-overlay" id="historyOverlay"></div>
+      <div class="history-panel" id="historyPanel">
+        <div class="history-panel-head">
+          <div class="history-panel-title">历史版本</div>
+          <button class="history-panel-close" id="historyPanelClose">
+            <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+        <div class="history-list">
+          <div class="history-item">
+            <div class="history-item-head">
+              <div class="history-item-version">v3.0<span class="history-item-current">当前版本</span></div>
+              <div class="history-item-right">
+                <span class="history-item-time" data-time="2026-09-22T11:00:00">3 小时前</span>
+              </div>
+            </div>
+            <div class="history-item-desc">添加审批流程节点，支持三级审核与驳回退回</div>
+          </div>
+          <div class="history-item">
+            <div class="history-item-head">
+              <div class="history-item-version">v2.0</div>
+              <div class="history-item-right">
+                <span class="history-item-time" data-time="2026-09-22T08:00:00">6 小时前</span>
+                <span class="history-item-restore"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 5 5v0a5 5 0 0 1-5 5H9"/></svg>回退</span>
+              </div>
+            </div>
+            <div class="history-item-desc">调整数据模型字段，新增含税单价与折扣金额</div>
+          </div>
+          <div class="history-item">
+            <div class="history-item-head">
+              <div class="history-item-version">v1.0</div>
+              <div class="history-item-right">
+                <span class="history-item-time" data-time="2026-09-21T15:00:00">昨天</span>
+                <span class="history-item-restore"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 5 5v0a5 5 0 0 1-5 5H9"/></svg>回退</span>
+              </div>
+            </div>
+            <div class="history-item-desc">初始版本：采购订单主表 + 明细表基础结构</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-overlay" id="historyRestoreModal">
+        <div class="modal-card" role="alertdialog" aria-modal="true" style="width:360px">
+          <div class="modal-header">
+            <div class="modal-title">确认回退</div>
+            <button class="modal-close" id="historyRestoreClose" type="button" aria-label="关闭">×</button>
+          </div>
+          <div class="modal-body" style="padding:16px 20px">
+            <p id="historyRestoreText" style="font-size:14px;color:var(--text);line-height:1.5;margin:0">确定回退到此版本？回退后当前版本将被覆盖。</p>
+          </div>
+          <div class="modal-footer">
+            <button class="modal-btn cancel" id="historyRestoreCancel" type="button">取消</button>
+            <button class="modal-btn confirm" id="historyRestoreConfirm" type="button">回退</button>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="chat-resizer" id="chatResizer"></div>
     <div class="chat-preview-side" id="chatPreviewSide">
+      <div class="preview-loading" id="previewLoading"></div>
       <div class="preview-header">
         <div class="preview-tabs">
           <div class="preview-tab active" data-tab="preview" tabindex="0">表单</div>
@@ -506,32 +562,6 @@
       </div>
       <div class="preview-body hidden" id="previewBodyMcp">
         <div class="mcp-list" id="mcpList"></div>
-      </div>
-    </div>
-    <div class="history-overlay" id="historyOverlay"></div>
-    <div class="history-panel" id="historyPanel">
-      <div class="history-panel-head">
-        <div class="history-panel-title">历史记录</div>
-        <button class="history-panel-close" id="historyPanelClose">
-          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-        </button>
-      </div>
-      <div class="history-list">
-        <div class="history-item">
-          <div class="history-item-time">2024-01-15 14:30 · 版本 3</div>
-          <div class="history-item-desc">添加审批流程节点，支持三级审核与驳回退回</div>
-          <div class="history-item-actions"><span class="history-item-current">当前版本</span></div>
-        </div>
-        <div class="history-item">
-          <div class="history-item-time">2024-01-15 11:20 · 版本 2</div>
-          <div class="history-item-desc">调整数据模型字段，新增含税单价与折扣金额</div>
-          <div class="history-item-actions"><span class="history-item-restore"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 5 5v0a5 5 0 0 1-5 5H9"/></svg>回退</span></div>
-        </div>
-        <div class="history-item">
-          <div class="history-item-time">2024-01-15 09:00 · 版本 1</div>
-          <div class="history-item-desc">初始版本：采购订单主表 + 明细表基础结构</div>
-          <div class="history-item-actions"><span class="history-item-restore"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 5 5v0a5 5 0 0 1-5 5H9"/></svg>回退</span></div>
-        </div>
       </div>
     </div>
   </div>

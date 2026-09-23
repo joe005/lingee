@@ -54,7 +54,7 @@ export function initShortcuts() {
       if(modeItems) modeItems.forEach(function(m){m.classList.remove('checked')});
       return;
     }
-    /* ⌘/Ctrl+Shift+H — 历史记录 */
+    /* ⌘/Ctrl+Shift+H — 历史版本 */
     if(mod && e.shiftKey && key==='h'){
       e.preventDefault();
       if(historyBtn) historyBtn.click();

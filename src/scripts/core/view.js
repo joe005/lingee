@@ -28,7 +28,7 @@ function applyMode(mode,fromChip){
 }
 
 /* ---------- view switching ---------- */
-var viewHome=$('#view-home'), viewNew=$('#view-newtask'), viewChat=$('#view-chat'), viewApps=$('#view-apps'), viewSkills=$('#view-skills'), viewAgents=$('#view-agents'), viewCollab=$('#view-collab'), viewDesign=$('#view-design'), viewSettings=$('#view-settings'), viewAnalytics=$('#view-analytics');
+var viewHome=$('#view-home'), viewNew=$('#view-newtask'), viewChat=$('#view-chat'), viewApps=$('#view-apps'), viewSkills=$('#view-skills'), viewAgents=$('#view-agents'), viewCollab=$('#view-collab'), viewDesign=$('#view-design'), viewSettings=$('#view-settings'), viewAnalytics=$('#view-analytics'), viewTasks=$('#view-tasks');
 function setUrlState(path){
   /* path 是应用内路径（/collab、/design?token=…）；写进地址栏要带上部署前缀，
      存进 localStorage 的仍是应用内路径，换部署路径后旧记录依然可用 */
@@ -45,6 +45,7 @@ function showView(which){
   viewDesign.classList.toggle('hidden', which!=='design');
   viewSettings.classList.toggle('hidden', which!=='settings');
   viewAnalytics.classList.toggle('hidden', which!=='analytics');
+  viewTasks.classList.toggle('hidden', which!=='tasks');
   $('.sidebar').classList.toggle('hidden', which==='design');
   closeAll(null);
   if(which!=='design') setUrlState('/'+which);
@@ -87,6 +88,8 @@ export function initSidebarNav() {
         showView('collab');
         cvInit();
         cvSwitchView(cvLastTab);
+      }else if(name==='任务'){
+        showView('tasks');
       }else if(name==='新会话'){
         showView('newtask');
         input.setAttribute('data-placeholder','布置任务');
@@ -135,4 +138,4 @@ export function initHomeCards() {
   }
 }
 
-export { applyMode, brandEl, input, modeItems, navItems, setNavActive, setUrlState, showView, viewChat, viewDesign };
+export { applyMode, brandEl, input, modeItems, navItems, setNavActive, setUrlState, showView, viewChat, viewDesign, viewTasks };

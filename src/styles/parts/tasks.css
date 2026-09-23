@@ -1,0 +1,439 @@
+/* ============================================================
+   任务管理 v2 样式
+   追加到 app.css 末尾，不影响已有样式顺序
+   ============================================================ */
+
+/* ---------- 页面骨架 ---------- */
+#view-tasks{display:flex;flex-direction:column;flex:1;min-height:0;min-width:0}
+#view-tasks.hidden{display:none}
+
+/* ---------- 页头 ---------- */
+.tk-header{display:flex;align-items:center;justify-content:space-between;padding:16px 24px 12px;flex-shrink:0}
+.tk-header-left{display:flex;align-items:baseline;gap:12px}
+.tk-header-left h2{font-size:18px;font-weight:600;color:var(--text);margin:0}
+.tk-header-desc{font-size:13px;color:var(--text-secondary)}
+.tk-demo-tag{font-size:11px;color:var(--text-secondary);background:var(--fill-1);border:1px solid var(--border);padding:2px 8px;border-radius:4px}
+
+/* ---------- 视图标签栏 ---------- */
+.tk-view-bar{display:flex;align-items:center;gap:4px;padding:0 24px;border-bottom:1px solid var(--divider);flex-shrink:0;height:38px}
+.tk-view-tabs{display:flex;align-items:center;gap:2px;overflow:hidden;flex:1}
+.tk-view-tab{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:6px;font-size:13px;color:var(--text-secondary);cursor:pointer;white-space:nowrap;border:1px solid transparent;transition:all .15s}
+.tk-view-tab:hover{background:var(--hover);color:var(--text)}
+.tk-view-tab.active{background:var(--brand-fill);color:var(--brand);border-color:var(--border-focus)}
+.tk-view-tab .tk-tab-name{max-width:120px;overflow:hidden;text-overflow:ellipsis}
+.tk-view-tab .tk-tab-del{display:flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:3px;opacity:0;transition:opacity .15s}
+.tk-view-tab:hover .tk-tab-del{opacity:.5}
+.tk-view-tab .tk-tab-del:hover{opacity:1;background:var(--active)}
+.tk-view-add,.tk-view-manage,.tk-view-overflow-btn{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;border:none;background:transparent;color:var(--text-secondary);cursor:pointer;flex-shrink:0}
+.tk-view-add:hover,.tk-view-manage:hover,.tk-view-overflow-btn:hover{background:var(--hover);color:var(--text)}
+.tk-view-overflow.hidden{display:none}
+.tk-overflow-menu{position:absolute;background:var(--bg);border:1px solid var(--border);border-radius:8px;box-shadow:var(--menu-shadow);padding:4px;z-index:50;min-width:140px;display:none}
+.tk-overflow-menu.show{display:block}
+.tk-overflow-item{padding:6px 10px;border-radius:4px;font-size:13px;cursor:pointer;color:var(--text)}
+.tk-overflow-item:hover{background:var(--hover)}
+.tk-overflow-item.active{color:var(--brand);background:var(--brand-fill)}
+
+/* ---------- 工具栏 ---------- */
+.tk-toolbar{display:flex;align-items:center;justify-content:space-between;padding:8px 24px;border-bottom:1px solid var(--divider);flex-shrink:0;gap:12px;flex-wrap:wrap}
+.tk-tools-left{display:flex;align-items:center;gap:8px}
+.tk-tools-right{display:flex;align-items:center;gap:8px}
+
+/* 搜索框 */
+.tk-search-wrap{display:flex;align-items:center;gap:6px;background:var(--fill-1);border:1px solid var(--border);border-radius:6px;padding:5px 10px;transition:border-color .15s}
+.tk-search-wrap:focus-within{border-color:var(--border-focus);background:var(--bg)}
+.tk-search-wrap input{border:none;background:transparent;outline:none;font-size:13px;width:180px;color:var(--text)}
+.tk-search-wrap input::placeholder{color:var(--text-soft)}
+
+/* 筛选按钮 */
+.tk-filter-btn{display:flex;align-items:center;gap:5px;padding:5px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);font-size:13px;color:var(--text-secondary);cursor:pointer;transition:all .15s}
+.tk-filter-btn:hover{border-color:var(--border-hover);color:var(--text)}
+.tk-filter-btn.active{border-color:var(--border-focus);color:var(--brand);background:var(--brand-fill)}
+
+/* 显示设置按钮 */
+.tk-display-btn{display:flex;align-items:center;gap:5px;padding:5px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);font-size:13px;color:var(--text-secondary);cursor:pointer;transition:all .15s}
+.tk-display-btn:hover{border-color:var(--border-hover);color:var(--text)}
+.tk-display-btn.active{border-color:var(--border-focus);color:var(--brand);background:var(--brand-fill)}
+.tk-display-popover{position:absolute;background:var(--bg);border:1px solid var(--border);border-radius:8px;box-shadow:var(--menu-shadow);z-index:40;padding:12px;min-width:200px}
+.tk-display-popover.hidden{display:none}
+.tk-display-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.tk-display-row:last-child{margin-bottom:0}
+.tk-display-row span{font-size:12px;color:var(--text-secondary);font-weight:500}
+.tk-display-row select{border:1px solid var(--border);border-radius:5px;padding:4px 8px;font-size:13px;outline:none;background:var(--bg);color:var(--text)}
+
+/* 布局切换 */
+.tk-layout-toggle{display:flex;align-items:center;border:1px solid var(--border);border-radius:6px;overflow:hidden}
+.tk-layout-btn{display:flex;align-items:center;justify-content:center;width:30px;height:28px;border:none;background:transparent;color:var(--text-secondary);cursor:pointer;transition:all .15s}
+.tk-layout-btn:hover{background:var(--hover)}
+.tk-layout-btn.active{background:var(--brand-fill);color:var(--brand)}
+
+/* ---------- 筛选面板 ---------- */
+.tk-filter-panel{position:absolute;background:var(--bg);border:1px solid var(--border);border-radius:8px;box-shadow:var(--menu-shadow);z-index:40;min-width:480px;max-width:600px}
+.tk-filter-panel.hidden{display:none}
+.tk-filter-panel-head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--divider)}
+.tk-filter-panel-head span{font-size:14px;font-weight:600;color:var(--text)}
+.tk-filter-close{display:flex;align-items:center;justify-content:center;width:24px;height:24px;border:none;background:transparent;color:var(--text-secondary);cursor:pointer;border-radius:4px}
+.tk-filter-close:hover{background:var(--hover)}
+.tk-filter-panel-body{padding:10px 14px;max-height:320px;overflow-y:auto}
+.tk-filter-row{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.tk-filter-row select,.tk-filter-row input{border:1px solid var(--border);border-radius:4px;padding:4px 8px;font-size:13px;background:var(--bg);color:var(--text);outline:none}
+.tk-filter-row select:focus,.tk-filter-row input:focus{border-color:var(--border-focus)}
+.tk-filter-row .tk-filter-field{min-width:90px}
+.tk-filter-row .tk-filter-op{min-width:70px}
+.tk-filter-row .tk-filter-val{flex:1;min-width:120px}
+.tk-filter-row .tk-filter-remove{display:flex;align-items:center;justify-content:center;width:24px;height:24px;border:none;background:transparent;color:var(--text-soft);cursor:pointer;border-radius:4px;flex-shrink:0}
+.tk-filter-row .tk-filter-remove:hover{background:var(--hover);color:var(--danger)}
+.tk-filter-panel-foot{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-top:1px solid var(--divider)}
+.tk-filter-add-row{display:flex;align-items:center;gap:4px;border:none;background:transparent;font-size:13px;color:var(--brand);cursor:pointer;padding:4px 6px;border-radius:4px}
+.tk-filter-add-row:hover{background:var(--brand-fill)}
+.tk-filter-actions{display:flex;align-items:center;gap:8px}
+
+/* ---------- 按钮 ---------- */
+.tk-btn-ghost{padding:5px 14px;border:1px solid var(--border);border-radius:6px;background:var(--bg);font-size:13px;color:var(--text-secondary);cursor:pointer;transition:all .15s}
+.tk-btn-ghost:hover{border-color:var(--border-hover);color:var(--text)}
+.tk-btn-primary{padding:5px 14px;border:none;border-radius:6px;background:var(--brand);font-size:13px;color:#fff;font-weight:500;cursor:pointer;transition:background .15s}
+.tk-btn-primary:hover{background:var(--brand-hover)}
+
+/* ---------- 筛选标签栏 ---------- */
+.tk-filter-chips{display:flex;align-items:center;gap:6px;padding:6px 24px;border-bottom:1px solid var(--divider);flex-shrink:0;flex-wrap:wrap}
+.tk-filter-chips.hidden{display:none}
+.tk-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:4px;font-size:12px;background:var(--fill-1);border:1px solid var(--border);color:var(--text-secondary);cursor:default}
+.tk-chip:hover{border-color:var(--border-hover)}
+.tk-chip .tk-chip-field{color:var(--text);font-weight:500}
+.tk-chip .tk-chip-op{color:var(--text-soft)}
+.tk-chip .tk-chip-val{color:var(--text-secondary)}
+.tk-chip .tk-chip-remove{display:flex;align-items:center;justify-content:center;width:14px;height:14px;border:none;background:transparent;color:var(--text-soft);cursor:pointer;border-radius:3px;margin-left:2px}
+.tk-chip .tk-chip-remove:hover{color:var(--danger);background:var(--danger-bg)}
+.tk-chip-clear-all{font-size:12px;color:var(--brand);cursor:pointer;border:none;background:transparent;padding:3px 6px;border-radius:4px}
+.tk-chip-clear-all:hover{background:var(--brand-fill)}
+
+/* ---------- 批量操作条 ---------- */
+.tk-bulk-bar{display:flex;align-items:center;justify-content:space-between;padding:6px 24px;background:var(--brand-fill);border-bottom:1px solid var(--border-focus);flex-shrink:0}
+.tk-bulk-bar.hidden{display:none}
+.tk-bulk-info{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text)}
+.tk-bulk-count{font-weight:600;color:var(--brand)}
+.tk-bulk-clear{border:none;background:transparent;font-size:12px;color:var(--text-secondary);cursor:pointer;text-decoration:underline}
+.tk-bulk-clear:hover{color:var(--text)}
+.tk-bulk-actions{display:flex;align-items:center;gap:6px}
+.tk-bulk-btn{padding:4px 10px;border:1px solid var(--border);border-radius:5px;background:var(--bg);font-size:12px;color:var(--text);cursor:pointer;transition:all .15s}
+.tk-bulk-btn:hover{border-color:var(--border-hover)}
+.tk-bulk-danger:hover{border-color:var(--danger);color:var(--danger)}
+
+/* ---------- 视图主体 ---------- */
+.tk-body{flex:1;min-height:0;overflow:hidden;position:relative;display:flex;flex-direction:column}
+
+/* ---------- 看板视图 ---------- */
+.tk-board{flex:1;min-height:0;overflow:hidden}
+.tk-board.hidden{display:none}
+.tk-board-scroll{display:flex;gap:12px;padding:12px 24px;overflow-x:auto;height:100%;align-items:flex-start}
+.tk-board-scroll::-webkit-scrollbar{height:6px}
+.tk-board-scroll::-webkit-scrollbar-thumb{background:var(--scroll-thumb);border-radius:3px}
+.tk-board-scroll::-webkit-scrollbar-thumb:hover{background:var(--scroll-thumb-hover)}
+
+.tk-board-col{flex-shrink:0;width:260px;background:var(--fill-1);border:1px solid var(--border);border-radius:8px;display:flex;flex-direction:column;max-height:calc(100% - 0px)}
+.tk-board-col-head{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-bottom:1px solid var(--divider);flex-shrink:0}
+.tk-board-col-head-left{display:flex;align-items:center;gap:6px}
+.tk-board-col-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.tk-board-col-name{font-size:13px;font-weight:600;color:var(--text)}
+.tk-board-col-count{font-size:11px;color:var(--text-secondary);background:var(--bg);padding:1px 6px;border-radius:10px;border:1px solid var(--border)}
+.tk-board-col-head-right{display:flex;align-items:center;gap:2px}
+.tk-board-col-add{display:flex;align-items:center;justify-content:center;width:24px;height:24px;border:none;background:transparent;color:var(--text-soft);cursor:pointer;border-radius:4px;transition:all .15s}
+.tk-board-col-add:hover{background:var(--hover);color:var(--brand)}
+.tk-board-col-toggle{display:flex;align-items:center;justify-content:center;width:20px;height:20px;border:none;background:transparent;color:var(--text-secondary);cursor:pointer;border-radius:4px}
+.tk-board-col-toggle:hover{background:var(--hover)}
+.tk-board-col-body{flex:1;overflow-y:auto;padding:6px;display:flex;flex-direction:column;gap:6px;min-height:40px}
+.tk-board-col-body.collapsed{display:none}
+.tk-board-col-body.drag-over{background:var(--brand-fill);border:2px dashed var(--border-focus)}
+
+/* 任务卡片 */
+.tk-card{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px;cursor:pointer;transition:all .15s;position:relative}
+.tk-card:hover{border-color:var(--border-hover);box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.tk-card.dragging{opacity:.5}
+.tk-card.selected{border-color:var(--brand);box-shadow:0 0 0 1px var(--brand)}
+.tk-card-code{font-size:11px;color:var(--text-soft);font-weight:500;margin-bottom:4px}
+.tk-card-title{font-size:13px;color:var(--text);line-height:1.4;margin-bottom:6px;word-break:break-word}
+.tk-card-labels{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:6px}
+.tk-card-label{font-size:10px;padding:1px 6px;border-radius:3px;background:var(--fill-1);color:var(--text-secondary);border:1px solid var(--border)}
+.tk-card-foot{display:flex;align-items:center;justify-content:space-between}
+.tk-card-foot-left{display:flex;align-items:center;gap:6px}
+.tk-card-priority{font-size:10px;padding:1px 6px;border-radius:3px;font-weight:500}
+.tk-card-due{font-size:11px;color:var(--text-secondary);display:flex;align-items:center;gap:3px}
+.tk-card-due.overdue{color:var(--danger)}
+.tk-card-assignee{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:600;flex-shrink:0}
+.tk-card-more{position:absolute;top:6px;right:6px;border:none;background:transparent;color:var(--text-soft);cursor:pointer;padding:4px;border-radius:4px;display:flex;opacity:0;transition:opacity .15s,background .15s,color .15s}
+.tk-card:hover .tk-card-more{opacity:1}
+.tk-card-more:hover{background:var(--hover);color:var(--text)}
+.tk-card-menu{position:absolute;top:28px;right:6px;background:var(--bg);border:1px solid var(--border);border-radius:8px;box-shadow:var(--menu-shadow);padding:4px;min-width:140px;z-index:20}
+.tk-card-menu-item{display:flex;align-items:center;gap:8px;padding:7px 12px;font-size:13px;color:var(--text);border-radius:6px;cursor:pointer;white-space:nowrap}
+.tk-card-menu-item:hover{background:var(--hover)}
+.tk-card-menu-item.danger{color:var(--danger)}
+.tk-card-menu-item.danger:hover{background:var(--danger-bg)}
+.tk-col-actions{width:40px;text-align:center;position:relative}
+.tk-col-actions .tk-card-more{position:static;opacity:1}
+.tk-row-create td{padding:8px 10px}
+.tk-inline-create-btn{border:none;background:transparent;color:var(--brand);font-size:13px;cursor:pointer;padding:4px 8px;border-radius:4px}
+.tk-inline-create-btn:hover{background:var(--brand-fill)}
+.tk-inline-create-form{display:flex;align-items:center;gap:8px;padding:4px 0}
+.tk-inline-input{flex:1;border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:13px;outline:none;font-family:inherit}
+.tk-inline-input:focus{border-color:var(--border-focus)}
+.tk-inline-select{border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:13px;background:var(--bg);outline:none;min-width:100px;cursor:pointer;white-space:nowrap}
+.tk-inline-select:focus{border-color:var(--border-focus)}
+.tk-inline-dropdown{position:relative}
+.tk-inline-dropdown-menu{position:absolute;top:calc(100% + 4px);left:0;background:var(--bg);border:1px solid var(--border);border-radius:8px;box-shadow:var(--menu-shadow);padding:4px;min-width:120px;z-index:20;max-height:200px;overflow-y:auto}
+.tk-inline-dropdown-item{padding:7px 12px;font-size:13px;color:var(--text);border-radius:6px;cursor:pointer;white-space:nowrap}
+.tk-inline-dropdown-item:hover{background:var(--hover)}
+.tk-inline-save{padding:6px 14px;border:1px solid var(--brand);border-radius:6px;background:var(--brand);color:#fff;font-size:13px;cursor:pointer;white-space:nowrap}
+.tk-inline-save:hover{background:var(--brand-hover)}
+.tk-inline-cancel{padding:6px 14px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text-secondary);font-size:13px;cursor:pointer;white-space:nowrap}
+.tk-inline-cancel:hover{background:var(--hover)}
+
+/* 优先级颜色 */
+.tk-pri-urgent{background:var(--danger-bg);color:var(--danger)}
+.tk-pri-high{background:var(--warning-bg);color:var(--warning)}
+.tk-pri-medium{background:var(--brand-fill);color:var(--brand)}
+.tk-pri-low{background:var(--fill-1);color:var(--text-secondary)}
+
+/* 状态颜色 */
+.tk-st-gray{background:var(--text-soft)}
+.tk-st-blue{background:var(--dot-blue)}
+.tk-st-orange{background:var(--dot-orange)}
+.tk-st-green{background:var(--success)}
+.tk-st-red{background:var(--danger)}
+
+/* ---------- 列表视图 ---------- */
+.tk-list{flex:1;min-height:0;overflow:hidden}
+.tk-list.hidden{display:none}
+.tk-list-scroll{height:100%;overflow:auto}
+.tk-list-scroll::-webkit-scrollbar{width:6px;height:6px}
+.tk-list-scroll::-webkit-scrollbar-thumb{background:var(--scroll-thumb);border-radius:3px}
+.tk-list-scroll::-webkit-scrollbar-thumb:hover{background:var(--scroll-thumb-hover)}
+
+.tk-table{width:100%;border-collapse:collapse;font-size:13px}
+.tk-table thead{position:sticky;top:0;z-index:5}
+.tk-table th{position:sticky;top:0;background:var(--fill-1);border-bottom:1px solid var(--border);padding:8px 10px;text-align:left;font-weight:500;color:var(--text-secondary);font-size:12px;white-space:nowrap;z-index:5}
+.tk-table th[data-sort]{cursor:pointer;user-select:none}
+.tk-table th[data-sort]:hover{color:var(--text)}
+.tk-table th[data-sort].sorted{color:var(--brand)}
+.tk-table th .tk-sort-arrow{font-size:10px;margin-left:2px}
+.tk-table td{padding:8px 10px;border-bottom:1px solid var(--divider);color:var(--text);vertical-align:middle}
+.tk-table tbody tr{cursor:pointer;transition:background .1s}
+.tk-table tbody tr:hover{background:var(--hover)}
+.tk-table tbody tr.selected{background:var(--brand-fill)}
+.tk-table tbody tr.expanded{background:var(--fill-1)}
+
+.tk-col-check{width:36px;text-align:center}
+.tk-col-code{width:90px}
+.tk-col-title{min-width:200px}
+.tk-col-status{width:90px}
+.tk-col-priority{width:80px}
+.tk-col-assignee{width:100px}
+.tk-col-project{width:140px}
+.tk-col-due{width:100px}
+.tk-col-created{width:100px}
+
+.tk-row-code{font-size:12px;color:var(--text-soft);font-weight:500}
+.tk-row-status{display:inline-flex;align-items:center;gap:4px;font-size:12px}
+.tk-row-status .tk-st-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.tk-row-priority{display:inline-block;font-size:11px;padding:1px 6px;border-radius:3px;font-weight:500}
+.tk-row-assignee{display:flex;align-items:center;gap:6px}
+.tk-row-assignee .tk-avatar-sm{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:600;flex-shrink:0}
+.tk-row-due{font-size:12px;color:var(--text-secondary)}
+.tk-row-due.overdue{color:var(--danger);font-weight:500}
+
+/* 行展开 */
+.tk-row-expand-cell{padding:0 10px 12px;background:var(--fill-1)}
+.tk-row-expand-content{padding:10px;border:1px solid var(--border);border-radius:6px;background:var(--bg)}
+.tk-row-expand-desc{font-size:13px;color:var(--text);line-height:1.6;margin-bottom:8px}
+.tk-row-expand-meta{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--text-secondary)}
+.tk-row-expand-meta span b{color:var(--text)}
+
+/* ---------- 空状态 ---------- */
+.tk-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--text-secondary)}
+.tk-empty.hidden{display:none}
+.tk-empty p{font-size:14px;margin:0}
+
+/* ---------- 任务详情面板 ---------- */
+.tk-drawer-overlay{position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(0,0,0,.25);z-index:200;opacity:0;transition:opacity .2s}
+.tk-drawer-overlay.show{opacity:1}
+.tk-drawer-overlay.hidden{display:none}
+.tk-drawer{position:fixed;top:0;right:0;bottom:0;left:0;background:var(--bg);z-index:201;display:flex;flex-direction:column;transform:translateY(8px);opacity:0;pointer-events:none;transition:transform .25s ease,opacity .25s ease}
+.tk-drawer.show{transform:translateY(0);opacity:1;pointer-events:auto}
+.tk-drawer.hidden{display:none}
+.tk-drawer-head{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--divider);flex-shrink:0}
+.tk-drawer-code{font-size:13px;font-weight:600;color:var(--brand)}
+.tk-drawer-head-actions{display:flex;align-items:center;gap:2px}
+.tk-drawer-head-btn{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border:none;background:transparent;color:var(--text-secondary);cursor:pointer;border-radius:6px}
+.tk-drawer-head-btn:hover{background:var(--hover);color:var(--text)}
+.tk-drawer-close{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border:none;background:transparent;color:var(--text-secondary);cursor:pointer;border-radius:6px}
+.tk-drawer-close:hover{background:var(--hover)}
+.tk-drawer-body{flex:1;overflow:hidden;display:flex}
+.tk-drawer-main{flex:1;min-width:0;overflow-y:auto;padding:24px 32px}
+.tk-drawer-main-inner{max-width:720px;margin:0 auto}
+.tk-drawer-sidebar{width:300px;flex-shrink:0;border-left:1px solid var(--divider);overflow-y:auto;padding:20px}
+.tk-drawer-breadcrumb{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text-secondary);margin-bottom:12px}
+.tk-drawer-breadcrumb svg{opacity:.5}
+.tk-drawer-title{font-size:18px;font-weight:600;color:var(--text);margin:0 0 12px;line-height:1.4;outline:none;border-radius:4px;padding:2px 4px;margin-left:-4px}
+.tk-drawer-title:focus{background:var(--hover);outline:1px solid var(--border-focus)}
+.tk-drawer-desc{font-size:13px;color:var(--text);line-height:1.6;outline:none;border-radius:4px;padding:4px;margin-left:-4px;min-height:40px;margin-bottom:16px}
+.tk-drawer-desc:focus{background:var(--hover);outline:1px solid var(--border-focus)}
+.tk-drawer-activity{margin-bottom:16px}
+.tk-activity-item{display:flex;align-items:flex-start;gap:8px;padding:4px 0}
+.tk-activity-dot{width:6px;height:6px;border-radius:50%;background:var(--border-focus);margin-top:6px;flex-shrink:0}
+.tk-activity-content{display:flex;flex-direction:column;gap:1px}
+.tk-activity-author{font-size:12px;font-weight:500;color:var(--text)}
+.tk-activity-text{font-size:12px;color:var(--text-secondary)}
+.tk-activity-time{font-size:11px;color:var(--text-soft)}
+.tk-prop-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:5px 0;font-size:12px;position:relative}
+.tk-prop-row>span:first-child{color:var(--text-secondary);flex-shrink:0}
+.tk-prop-display{display:flex;align-items:center;gap:4px;color:var(--text);cursor:pointer;padding:3px 8px;border-radius:5px;border:1px solid transparent;font-size:12px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tk-prop-display:hover{background:var(--hover);border-color:var(--border)}
+.tk-prop-display svg{opacity:.4;flex-shrink:0}
+.tk-prop-menu{position:absolute;right:0;top:100%;margin-top:2px;background:var(--bg);border:1px solid var(--border);border-radius:8px;box-shadow:var(--menu-shadow);padding:4px;z-index:30;min-width:120px;display:none;max-height:200px;overflow-y:auto}
+.tk-prop-menu.show{display:block}
+.tk-prop-menu-item{padding:5px 8px;border-radius:4px;font-size:12px;cursor:pointer;color:var(--text)}
+.tk-prop-menu-item:hover{background:var(--hover)}
+.tk-prop-menu-item.active{color:var(--brand);background:var(--brand-fill)}
+.tk-prop-edit{border:1px solid var(--border-focus);border-radius:5px;padding:3px 6px;font-size:12px;outline:none;background:var(--bg);color:var(--text)}
+.tk-prop-add{border:none;background:transparent;color:var(--text-soft);font-size:12px;cursor:pointer;padding:5px 0;width:100%;text-align:left}
+.tk-prop-add:hover{color:var(--brand)}
+.tk-drawer-prop-toggle{display:flex;align-items:center;gap:4px;border:none;background:transparent;color:var(--text-secondary);font-size:12px;font-weight:500;cursor:pointer;padding:4px 0;margin-bottom:4px}
+.tk-drawer-prop-toggle svg{transition:transform .15s}
+.tk-drawer-prop-toggle.collapsed svg{transform:rotate(0deg)}
+.tk-drawer-prop-toggle:not(.collapsed) svg{transform:rotate(90deg)}
+.tk-drawer-prop-list.collapsed{display:none}
+.tk-quick-actions{display:flex;flex-direction:column;gap:2px}
+.tk-quick-btn{border:none;background:transparent;color:var(--text-secondary);font-size:12px;cursor:pointer;padding:5px 8px;border-radius:5px;text-align:left}
+.tk-quick-btn:hover{background:var(--hover);color:var(--text)}
+.tk-quick-btn.danger:hover{color:var(--danger)}
+.tk-drawer-sidebar.hidden{display:none}
+.tk-drawer-assignee-row{display:flex;align-items:center;gap:8px;margin-top:12px}
+.tk-drawer-tabs{display:flex;gap:0;border-bottom:1px solid var(--divider);margin-top:16px}
+.tk-drawer-tab{padding:8px 16px;border:none;background:transparent;font-size:13px;color:var(--text-secondary);cursor:pointer;position:relative;transition:color .15s}
+.tk-drawer-tab:hover{color:var(--text)}
+.tk-drawer-tab.active{color:var(--brand);font-weight:500}
+.tk-drawer-tab.active::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--brand)}
+.tk-drawer-tab-content{display:none;padding-top:12px}
+.tk-drawer-tab-content.active{display:block}
+.tk-drawer-tab-content[hidden]{display:none}
+.tk-drawer-empty-tab{padding:32px 0;text-align:center;color:var(--text-soft);font-size:13px}
+.tk-drawer-changelog-list{display:flex;flex-direction:column;gap:0}
+.tk-drawer-changelog-item{display:flex;align-items:baseline;gap:8px;padding:8px 0;border-bottom:1px solid var(--divider);font-size:13px;color:var(--text)}
+.tk-drawer-changelog-time{color:var(--text-soft);font-size:12px;white-space:nowrap;min-width:88px}
+.tk-drawer-changelog-user{font-weight:500;color:var(--brand)}
+.tk-drawer-attachments{margin-top:12px}
+.tk-attach-dropzone{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;cursor:pointer;color:var(--text-secondary);transition:background .15s,color .15s}
+.tk-attach-dropzone:hover{background:var(--hover);color:var(--text)}
+.tk-attach-dropzone.dragover{background:var(--brand-fill);color:var(--brand)}
+.tk-attach-btn-icon{width:16px;height:16px}
+.tk-attach-list{display:flex;flex-direction:column;gap:4px;margin-top:8px}
+.tk-attach-item{display:flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--fill-1);font-size:13px;transition:background .15s}
+.tk-attach-item:hover{background:var(--hover)}
+.tk-attach-item-icon{flex-shrink:0;width:16px;height:16px;display:flex;align-items:center;justify-content:center;color:var(--text-secondary)}
+.tk-attach-item-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)}
+.tk-attach-item-size{color:var(--text-soft);font-size:12px;white-space:nowrap}
+.tk-attach-item-btn{flex-shrink:0;border:none;background:transparent;color:var(--text-soft);cursor:pointer;padding:2px;border-radius:4px;display:flex;transition:color .15s,background .15s}
+.tk-attach-item-btn:hover{color:var(--text);background:var(--active)}
+.tk-attach-item-remove:hover{color:var(--danger);background:var(--danger-bg)}
+/* 评论 @ mention 面板 */
+.tk-mention-panel{position:absolute;z-index:50;background:var(--bg);border:1px solid var(--border);border-radius:8px;box-shadow:var(--menu-shadow);min-width:220px;max-height:280px;overflow-y:auto;display:none;padding:4px}
+.tk-mention-panel.show{display:block}
+.tk-mention-group{margin-bottom:4px}
+.tk-mention-group-label{font-size:11px;color:var(--text-soft);padding:4px 8px;font-weight:500}
+.tk-mention-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:13px;color:var(--text)}
+.tk-mention-item:hover,.tk-mention-item.active{background:var(--brand-fill)}
+.tk-mention-avatar{display:flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;color:#fff;font-size:11px;font-weight:600;flex-shrink:0}
+.tk-mention-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tk-mention-type{font-size:11px;color:var(--text-soft);flex-shrink:0}
+.tk-mention-empty{padding:12px 8px;text-align:center;font-size:13px;color:var(--text-soft)}
+.tk-prop-val{color:var(--text);font-weight:500}
+.tk-drawer-section{margin-bottom:16px}
+.tk-drawer-section-label{font-size:12px;color:var(--text-secondary);margin-bottom:4px;font-weight:500}
+.tk-drawer-desc{font-size:13px;color:var(--text);line-height:1.6}
+.tk-drawer-meta{display:flex;flex-wrap:wrap;gap:12px}
+.tk-drawer-meta-item{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text-secondary)}
+.tk-drawer-meta-item b{color:var(--text)}
+.tk-drawer-labels{display:flex;flex-wrap:wrap;gap:4px}
+.tk-drawer-label{font-size:11px;padding:2px 8px;border-radius:3px;background:var(--fill-1);border:1px solid var(--border);color:var(--text-secondary)}
+.tk-drawer-comments{margin-top:16px;padding-top:16px;border-top:1px solid var(--divider)}
+.tk-drawer-comments-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:8px}
+.tk-drawer-comment{padding:8px 0;border-bottom:1px solid var(--divider)}
+.tk-drawer-comment-head{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.tk-drawer-comment-author{font-size:12px;font-weight:500;color:var(--text)}
+.tk-drawer-comment-time{font-size:11px;color:var(--text-soft)}
+.tk-drawer-comment-text{font-size:13px;color:var(--text);line-height:1.5}
+.tk-drawer-flow-fields{display:flex;flex-wrap:wrap;gap:12px;margin-top:12px;margin-bottom:8px}
+.tk-flow-field{display:flex;align-items:center;gap:6px}
+.tk-drawer-flow-fields .tk-flow-field:nth-child(2){flex-basis:100%}
+.tk-flow-field-label{font-size:12px;color:var(--text-secondary);white-space:nowrap}
+.tk-flow-field-value{font-size:13px;color:var(--text);padding:4px 10px;border:1px solid var(--border);border-radius:6px;cursor:pointer;min-width:80px}
+.tk-flow-field-value:hover{border-color:var(--border-hover);background:var(--hover)}
+.tk-flow-field-lg{min-width:120px;padding:8px 14px;font-size:14px}
+.tk-flow-pills{display:flex;flex-wrap:wrap;gap:6px}
+.tk-flow-pill{padding:4px 12px;border:1px solid var(--border);border-radius:16px;background:transparent;color:var(--text-secondary);font-size:12px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.tk-flow-pill:hover{border-color:var(--border-hover);background:var(--hover)}
+.tk-flow-pill.active{border-color:var(--brand);color:var(--brand);background:var(--brand-fill)}
+.tk-drawer-comment-input{margin-top:8px}
+.tk-drawer-comment-input textarea{width:100%;border:1px solid var(--border);border-radius:6px;padding:8px;font-size:13px;resize:vertical;min-height:120px;outline:none;font-family:inherit}
+.tk-drawer-comment-input textarea:focus{border-color:var(--border-focus)}
+.tk-drawer-flow-btn{margin-top:12px;padding:7px 16px;border:1px solid var(--brand);border-radius:6px;background:var(--brand);color:#fff;font-size:13px;font-weight:500;cursor:pointer;transition:background .15s;display:inline-flex;align-items:center;gap:6px}
+.tk-drawer-flow-btn:hover{background:var(--brand-hover)}
+.tk-drawer-flow-btn svg{width:14px;height:14px}
+.tk-flow-menu{margin-top:4px;background:var(--bg);border:1px solid var(--border);border-radius:8px;box-shadow:var(--menu-shadow);padding:4px;min-width:140px}
+.tk-flow-menu-item{padding:7px 12px;font-size:13px;color:var(--text);border-radius:6px;cursor:pointer}
+.tk-flow-menu-item:hover{background:var(--hover)}
+.tk-flow-field-menu{margin-top:4px;background:var(--bg);border:1px solid var(--border);border-radius:8px;box-shadow:var(--menu-shadow);padding:4px;min-width:120px}
+.tk-flow-field-menu-item{padding:6px 12px;font-size:13px;color:var(--text);border-radius:6px;cursor:pointer}
+.tk-flow-field-menu-item:hover{background:var(--hover)}
+.tk-drawer-foot{display:flex;gap:12px;padding:12px 18px;border-top:1px solid var(--divider);flex-shrink:0}
+.tk-drawer-foot>div{flex:1}
+.tk-drawer-foot label{display:block;font-size:11px;color:var(--text-secondary);margin-bottom:4px}
+.tk-drawer-foot select{width:100%;border:1px solid var(--border);border-radius:5px;padding:5px 8px;font-size:13px;outline:none;background:var(--bg)}
+
+/* ---------- 弹窗 ---------- */
+.tk-modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:var(--tb-backdrop);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s}
+.tk-modal-overlay.show{opacity:1}
+.tk-modal-overlay.hidden{display:none}
+.tk-modal{background:var(--bg);border-radius:12px;box-shadow:var(--menu-shadow);width:560px;max-width:90vw;max-height:85vh;display:flex;flex-direction:column;transform:scale(.96);transition:transform .2s}
+.tk-modal-overlay.show .tk-modal{transform:scale(1)}
+.tk-modal-sm{width:400px}
+.tk-modal-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--divider);flex-shrink:0}
+.tk-modal-head h3{font-size:15px;font-weight:600;color:var(--text);margin:0}
+.tk-modal-close{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border:none;background:transparent;color:var(--text-secondary);cursor:pointer;border-radius:6px}
+.tk-modal-close:hover{background:var(--hover)}
+.tk-modal-body{padding:18px;overflow-y:auto;flex:1}
+.tk-modal-foot{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:12px 18px;border-top:1px solid var(--divider);flex-shrink:0}
+
+/* 表单 */
+.tk-form-row{margin-bottom:14px}
+.tk-form-row>label{display:block;font-size:13px;color:var(--text-secondary);margin-bottom:5px}
+.tk-form-row input[type=text],.tk-form-row input[type=date],.tk-form-row textarea,.tk-form-row select{width:100%;border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:13px;outline:none;background:var(--bg);color:var(--text);font-family:inherit}
+.tk-form-row input:focus,.tk-form-row textarea:focus,.tk-form-row select:focus{border-color:var(--border-focus)}
+.tk-form-row textarea{resize:vertical}
+.tk-req{color:var(--danger)}
+.tk-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.tk-form-field label{display:block;font-size:13px;color:var(--text-secondary);margin-bottom:5px}
+.tk-form-field input,.tk-form-field select{width:100%;border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:13px;outline:none;background:var(--bg);color:var(--text)}
+.tk-form-field input:focus,.tk-form-field select:focus{border-color:var(--border-focus)}
+.tk-check-label{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text);cursor:pointer}
+.tk-check-label input{width:auto}
+
+/* ---------- 管理视图列表 ---------- */
+.tk-manage-list{display:flex;flex-direction:column;gap:4px}
+.tk-manage-item{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--fill-1)}
+.tk-manage-item-name{font-size:13px;color:var(--text);font-weight:500}
+.tk-manage-item-builtin{font-size:11px;color:var(--text-soft);margin-left:6px}
+.tk-manage-item-actions{display:flex;align-items:center;gap:4px}
+.tk-manage-item-actions button{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border:none;background:transparent;color:var(--text-secondary);cursor:pointer;border-radius:5px}
+.tk-manage-item-actions button:hover{background:var(--hover);color:var(--text)}
+.tk-manage-item-actions .tk-manage-del:hover{color:var(--danger)}
+
+/* ---------- 弹出菜单 ---------- */
+.tk-popover{position:absolute;background:var(--bg);border:1px solid var(--border);border-radius:8px;box-shadow:var(--menu-shadow);padding:4px;z-index:50;min-width:140px;display:none}
+.tk-popover.show{display:block}
+.tk-popover-item{padding:6px 10px;border-radius:4px;font-size:13px;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:space-between}
+.tk-popover-item:hover{background:var(--hover)}
+.tk-popover-item.active{color:var(--brand);background:var(--brand-fill)}
+.tk-popover-item .tk-popover-check{opacity:0}
+.tk-popover-item.active .tk-popover-check{opacity:1}
+
+/* ---------- 头像 ---------- */
+.tk-avatar{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:600;flex-shrink:0}

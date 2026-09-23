@@ -8,8 +8,7 @@ import { openAppDropdown } from './attach-app.js';
 
 /* ---------- Changelog / 更新通知（与 Build_demo 完全一致） ---------- */
 var changelogData=[
-  {id:'30',date:'2026-09-23',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',team:'团队、项目交付与系统集成',body:'设置中独立维护团队、人员资料及 DevOps、禅道任务来源映射；项目创建时必须选择交付团队和专家团，列表与卡片支持状态、优先级、负责人快速编辑，起止时间仅在列表编辑，其他信息只读；模块支持展示切换、过滤、搜索、创建，点击名称或任务数量可展开任务列表，任务可直接进入详情，移除模块附件和验收标准。'},
-  {id:'29',date:'2026-09-22',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',team:'项目管理重构',body:'项目详情改为左侧标签页+右侧属性栏布局，属性栏参考 multica 采用可折叠分区与 PropRow 行布局；新增概览页签展示项目背景，任务规划改名为模块；项目新增状态标识（planned/in_progress/paused/completed/cancelled）；新建项目弹窗重构为上下布局，成员选择改为独立弹出层支持搜索多选；右侧属性栏支持内联编辑。'},
+  {id:'29',date:'2026-09-23',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',team:'新增任务管理 v2 页面',body:'参考 Multica Issues 界面 1:1 复刻任务管理 v2：支持看板/列表双视图、视图标签栏管理（新建/切换/重命名/删除）、多条件筛选（Chip 标签展示）、分组与排序、任务拖拽流转、批量操作、新建/编辑弹窗、任务详情侧滑面板，预置 32 条演示数据。'},
   {id:'28',date:'2026-09-22',iconBg:'#eef3ff',iconColor:'#3d63dd',team:'清理 Cloudflare 依赖',body:'移除未使用的 @cloudflare/vite-plugin 与 wrangler 依赖（40 个包），修复 dev 模式下 Cloudflare 插件注入拦截逻辑导致预览快照失败的问题；同步清理 vite.config.js、package.json 与 spa-fallback 插件中的 Cloudflare 引用。'},
   {id:'27',date:'2026-09-22',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',team:'任务详情、评审与运行期协作链路优化',body:'任务详情重设计为左侧任务内容、右侧紧凑属性栏，任务按环节推进：本人评审 AI 生成的产物，通过后提交 Git 并流转到下一个环节（最后环节通过即完成）；项目任务规划按特性组织，智能拆解与人工拆解生成特性，特性下推生成任务并挂到对应特性下；任务负责人只能指定人，不能选专家团；专家团在新建项目时选择，绑定结果自动继承到任务；专家团配置合并为基本信息、能力与流程、触发词三个页签；项目卡片与专家/专家团卡片风格统一，任务均明确负责人，卡片支持快速转交，详情按默认折叠的流程节点展示对应产物，交付产物统一汇总并支持预览；工作区设置改为左导航 + 右表单。'},
   {id:'26',date:'2026-09-21',iconBg:'#eaf1ff',iconColor:'#3d63dd',team:'协作开发重构：工作区与项目管理',body:'协作开发重构：工作区固定顶部、项目切换器在任务/项目管理右侧，专家团升为一级页签；项目管理按「项目目标+里程碑→任务拆分→关联任务」三层组织，智能拆解调用智能体在对话框输出、逐项确认后生成；新建任务支持手动/通过智能体两种方式；任务详情复用新会话对话框，任务对话改为会话列表（每行一条会话总结）并可进入会话、支持发起会话与转交任务；人员独立基础资料；产物带后缀名、代码类按目录弹文件列表；新增多角色登录演示。'},
@@ -29,14 +28,13 @@ var changelogData=[
   {id:'12',date:'2026-09-09',iconBg:'#e0f7fa',iconColor:'#00838f',team:'新增协作开发模块',body:'左侧「专家」菜单改为「协作开发」，下设任务管理、待评审、协作人员管理、专家管理、专家团管理与设置六个页签；新增项目维度，任务、评审、协作人员按项目划分，专家与专家团为全局资产、项目内只绑定默认专家团。'},
   {id:'11',date:'2026-09-08',iconBg:'#eef3ff',iconColor:'#495dff',team:'原型新增登录页',body:'新增登录页，需账号密码登录后才能查看原型。'},
   {id:'10',date:'2026-08-27',iconBg:'#eef3ff',iconColor:'#495dff',team:'苍穹应用开发 · 预览区新增列表页签',body:'预览面板页签新增「列表」选项，支持列表视图展示。'},
-  {id:'9',date:'2026-08-27',iconBg:'#e8faef',iconColor:'#08a040',team:'苍穹应用开发 · 历史版本',body:'新增历史记录面板，支持查看版本时间线与版本描述，可回退到历史版本。'},
+  {id:'9',date:'2026-08-27',iconBg:'#e8faef',iconColor:'#08a040',team:'苍穹应用开发 · 历史版本',body:'新增历史版本面板，支持查看版本时间线与版本描述，可回退到历史版本。'},
   {id:'8',date:'2026-07-30',iconBg:'#fff1e8',iconColor:'#ff8d42',team:'新增 Design System 模块',body:'涵盖基础、布局、导航、数据录入、数据展示、反馈 6 大类共 67 个组件，提供组件预览、设计令牌展示、图标库等能力，作为 Lingee 统一的设计规范与组件文档平台。'},
   {id:'7',date:'2026-07-28',iconBg:'#eef3ff',iconColor:'#495dff',team:'应用开发关联应用交互优化',body:'1、会话框：项目选择与应用选择分开展示\n2、下拉面板去除创建应用流程，调整为关联选择全量应用\n3、苍穹应用：选择关联苍穹应用，发起会话时应用开发列表自动创建展示苍穹应用卡片\n4、通用应用：无需关联应用，自动生成产物应用卡片\n5、未选择开发模式，意图识别苍穹应用开发时，会话过程收集苍穹应用编码\n6、选择应用时，下次新会话按项目记忆用户选项\n\n[视觉稿](https://www.figma.com/design/F8s5P9Y8f1Bq2GkXKCkC7L/%E5%BC%80%E5%8F%91?node-id=0-1&t=DHlFenPtUNP6C7Z5-1)'},
 ];
 // 每个数据条目对应的 avatar SVG 图标（与 Build_demo 的 lucide 图标一致）
 var changelogIcons={
-  '30':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
-  '29':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M3 6h18M3 12h18M3 18h18"/></svg>',
+  '29':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
   '28':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>',
 '27':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
   '26':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>',

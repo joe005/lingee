@@ -1,6 +1,6 @@
   /* ============ 会话详情（参考 Build_demo） ============ */
   #view-chat{background:#fff;overflow:hidden;min-width:0}
-  .chat-container{display:flex;flex-direction:column;height:100vh}
+  .chat-container{display:flex;flex-direction:column;height:100vh;position:relative}
   .chat-header{display:flex;align-items:center;padding:0 12px 0 20px;height:40px;/* 收起时左右图标距边一致 */box-sizing:border-box;flex:none;border-bottom:1px solid var(--border)}
   .chat-header-info{flex:1;min-width:0}
   .chat-header-title{font-size:15px;font-weight:600;color:var(--text)}
@@ -9,26 +9,35 @@
   .dropdown.disabled .chip{cursor:default}
   .header-btn{width:32px;height:32px;border-radius:8px;border:none;background:transparent;color:var(--text-muted);display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none}
   .header-btn:hover{background:var(--hover);color:var(--text)}
+  #historyBtn{margin-right:4px}
   .header-btn .ic{width:18px;height:18px}
-  /* 历史记录面板 */
-  .history-overlay{position:fixed;inset:0;background:rgba(0,0,0,.12);z-index:199;opacity:0;pointer-events:none;transition:opacity .25s}
+  /* 历史版本面板 */
+  .history-overlay{position:absolute;top:40px;left:0;right:0;bottom:0;background:rgba(0,0,0,.12);z-index:199;opacity:0;pointer-events:none;transition:opacity .25s}
   .history-overlay.show{opacity:1;pointer-events:auto}
-  .history-panel{position:fixed;top:0;right:0;width:360px;height:100vh;background:#fff;box-shadow:-4px 0 24px rgba(0,0,0,.08);z-index:200;transform:translateX(100%);transition:transform .25s;display:flex;flex-direction:column}
-  .history-panel.show{transform:translateX(0)}
+  .history-panel{position:absolute;top:40px;left:0;right:0;bottom:0;background:#fff;box-shadow:0 4px 24px rgba(0,0,0,.08);z-index:200;transform:translateY(-8px);opacity:0;pointer-events:none;transition:transform .25s,opacity .25s;display:flex;flex-direction:column}
+  .history-panel.show{transform:translateY(0);opacity:1;pointer-events:auto}
   .history-panel-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);flex:none}
   .history-panel-title{font-size:15px;font-weight:600;color:var(--text)}
   .history-panel-close{width:28px;height:28px;border-radius:6px;border:none;background:transparent;color:var(--text-muted);cursor:pointer;display:flex;align-items:center;justify-content:center}
   .history-panel-close:hover{background:var(--hover)}
   .history-panel-close .ic{width:16px;height:16px}
-  .history-list{flex:1;overflow-y:auto;padding:8px 0}
-  .history-item{padding:12px 20px;transition:background .1s}
-  .history-item:hover{background:var(--hover)}
-  .history-item-time{font-size:12px;color:var(--text-muted);margin-bottom:4px}
-  .history-item-desc{font-size:13px;color:var(--text);line-height:1.5}
-  .history-item-actions{margin-top:8px}
-  .history-item-restore{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#495dff;cursor:pointer;font-weight:500}
-  .history-item-restore .ic{width:14px;height:14px}
-  .history-item-current{font-size:12px;color:var(--text-muted);font-weight:400}
+  .history-list{flex:1;overflow-y:auto;padding:8px 20px}
+  .history-item{position:relative;padding:8px 0;transition:background .1s;border-bottom:1px solid rgba(0,0,0,.06)}
+  .history-item:last-child{border-bottom:none}
+  .history-item:hover{background:none}
+  .history-item-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+  .history-item-version{font-size:13px;font-weight:600;color:var(--text);display:inline-flex;align-items:center;gap:6px}
+  .history-item-right{display:flex;align-items:center}
+  .history-item-time{font-size:12px;color:var(--text-muted)}
+  .history-item-desc{font-size:13px;color:var(--text);line-height:1.4}
+  .history-item-restore{position:absolute;right:0;top:50%;transform:translateY(-50%);display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#495dff;cursor:pointer;font-weight:500;opacity:0;transition:opacity .15s;white-space:nowrap;background:#fff;padding:6px 10px;border-radius:6px}
+  .history-item:hover .history-item-restore{opacity:1}
+  .history-item-restore:hover{background:#f5f5f6}
+.history-item-restore .ic{width:14px;height:14px}
+  .history-item-current{display:inline-flex;align-items:center;font-size:12px;color:#08a040;background:#e8faef;border-radius:4px;padding:2px 8px;font-weight:500}
+  .preview-loading{position:absolute;inset:0;background:rgba(255,255,255,.85);z-index:50;display:none;align-items:center;justify-content:center}
+  .preview-loading.show{display:flex}
+  .preview-loading::after{content:'';width:24px;height:24px;border:2.5px solid var(--border-hover);border-top-color:#495dff;border-radius:50%;animation:env-spin .6s linear infinite}
   .chat-messages{flex:1;overflow-y:auto;padding:40px 20px;display:flex;flex-direction:column;position:relative}
   .messages-list{display:flex;flex-direction:column;gap:20px;max-width:900px;margin:0 auto;width:100%}
   .message{display:flex;gap:12px}
@@ -82,7 +91,7 @@
   #view-chat .chat-container{flex:1;min-width:0}
   /* 预览打开时会话区的真实下限，拖拽上限与之对齐 */
   #view-chat.preview-open .chat-container{min-width:360px}
-  #view-chat .chat-preview-side{width:0;overflow:hidden;flex:none;display:flex;flex-direction:column;background:#fff;will-change:width;min-width:0}
+  #view-chat .chat-preview-side{width:0;overflow:hidden;flex:none;display:flex;flex-direction:column;background:#fff;will-change:width;min-width:0;position:relative}
   /* 关闭预览时 #view-chat 还是 column 方向，只收 width 挡不住纵向占位，
      预览侧栏会按内容高度在会话区下面顶出一段空隙（约 48px） */
   #view-chat:not(.preview-open) .chat-preview-side{height:0}

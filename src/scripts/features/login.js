@@ -159,6 +159,25 @@ export function initLogin() {
     if(e.key==='Enter'&&loginOverlay&&!loginOverlay.classList.contains('hidden')&&loginBtn&&!loginBtn.disabled)
       loginForm.dispatchEvent(new Event('submit',{cancelable:true,bubbles:true}));
   });
+  /* Ctrl+Alt+Enter 一键登录（演示用，免账号密码） */
+  document.addEventListener('keydown',function(e){
+    if(e.ctrlKey&&e.altKey&&e.key==='Enter'&&loginOverlay&&!loginOverlay.classList.contains('hidden')){
+      var demoUser='66866';
+      loginBtn.classList.add('loading');
+      loginBtn.disabled=true;
+      loginBtn.textContent='登录中';
+      setTimeout(function(){
+        setAuthed(demoUser);
+        setRole('owner');
+        applyUserInfo(demoUser);
+        applyRole();
+        hideLogin();
+        loginBtn.classList.remove('loading');
+        loginBtn.disabled=false;
+        loginBtn.textContent='登录';
+      },300);
+    }
+  });
   }
   if(!_authedUser){
     showLogin();
