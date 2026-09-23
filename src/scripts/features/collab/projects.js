@@ -1,7 +1,7 @@
 import { $, $$ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
 import { setUrlState } from '../../core/view.js';
-import { CV_MEMBERS, CV_PROJECTS, CV_TASKS, CV_WORKSPACES, cvInProject, cvInjectCardActions, cvPersistProjects, cvProject, cvProjectById, cvProjectInWorkspace, cvRenderReviewStats, cvRenderReviews, cvRenderTaskStats, cvRenderTasks, cvRestoreProjects, cvWorkspace, cvWorkspaceName, set_cvProject, set_cvWorkspace } from './data.js';
+import { CV_MEMBERS, CV_PROJECTS, CV_TASKS, CV_WORKSPACES, cvCurrentUserName, cvInProject, cvInjectCardActions, cvPersistPersons, cvPersistProjects, cvProject, cvProjectById, cvProjectInWorkspace, cvRenderReviewStats, cvRenderReviews, cvRenderTaskStats, cvRenderTasks, cvRestoreProjects, cvWorkspace, cvWorkspaceName, set_cvProject, set_cvWorkspace } from './data.js';
 import { cvApplyReviewFilters } from './tasks.js';
 import { cvApplyFilters, cvLastTab } from './view.js';
 import { xesc } from '../expert/data.js';
@@ -110,7 +110,7 @@ function cvOpenProjEdit(id){
   var tsel=$('#cv-pe-team');
   if(tsel) tsel.innerHTML='<option value="">请选择专家团</option>'+TEAMS.map(function(t){return '<option value="'+xesc(t.id)+'"'+(t.id===p.defaultTeam?' selected':'')+'>'+xesc(t.name)+'</option>';}).join('');
   cvFillProjectMembers(p.members||[]);
-  var memberPicker=$('#cv-pe-members');if(memberPicker)memberPicker.open=false;
+  var memberPicker=$('#cv-pe-members');if(memberPicker){memberPicker.open=false;memberPicker.classList.remove('pe-members--invalid');}
   var more=$('#cv-pe-more');if(more)more.open=false;
   var ov=$('#cv-projedit-overlay');if(ov)ov.style.display='flex';
   var toolbar=$('#cv-project-toolbar');if(toolbar)toolbar.classList.add('hidden');
@@ -120,14 +120,21 @@ function cvOpenProjEdit(id){
 }
 function cvOpenProjNew(){
   cvProjEditId='';
+  var currentName=cvCurrentUserName();
+  var currentPerson=CV_MEMBERS.find(function(m){return m.name===currentName;});
+  if(currentName&&!currentPerson){
+    currentPerson={id:'p-login-'+Date.now(),name:currentName,email:'',dept:'',roles:[],status:'available',source:'登录账号'};
+    CV_MEMBERS.push(currentPerson);
+    cvPersistPersons();
+  }
   var set=function(k,val){var e=$('#cv-pe-'+k);if(e)e.value=val||'';};
   set('name','');set('desc','');set('status','planned');set('priority','中');set('repo','');set('start','');set('end','');
   var sel=$('#cv-pe-owner');
-  if(sel) sel.innerHTML=CV_MEMBERS.map(function(m,i){return '<option'+(i===0?' selected':'')+'>'+xesc(m.name)+'</option>';}).join('');
+  if(sel) sel.innerHTML=CV_MEMBERS.map(function(m,i){return '<option'+(m===(currentPerson||CV_MEMBERS[0])?' selected':'')+'>'+xesc(m.name)+'</option>';}).join('');
   var tsel=$('#cv-pe-team');
   if(tsel) tsel.innerHTML='<option value="">请选择专家团</option>'+TEAMS.map(function(t){return '<option value="'+xesc(t.id)+'">'+xesc(t.name)+'</option>';}).join('');
-  cvFillProjectMembers([]);
-  var memberPicker=$('#cv-pe-members');if(memberPicker)memberPicker.open=false;
+  cvFillProjectMembers(currentPerson?[currentPerson.id]:[]);
+  var memberPicker=$('#cv-pe-members');if(memberPicker){memberPicker.open=false;memberPicker.classList.remove('pe-members--invalid');}
   var more=$('#cv-pe-more');if(more)more.open=false;
   var ov=$('#cv-projedit-overlay');if(ov)ov.style.display='flex';
   var toolbar=$('#cv-project-toolbar');if(toolbar)toolbar.classList.add('hidden');
@@ -142,16 +149,24 @@ function cvCloseProjEdit(){
 }
 function cvFillProjectMembers(selected){
   var list=$('#cv-pe-members-list'); if(!list)return;
-  list.innerHTML=CV_MEMBERS.map(function(m){return '<label><input type="checkbox" value="'+xesc(m.id)+'"'+(selected.includes(m.id)?' checked':'')+'>'+xesc(m.name)+'</label>';}).join('');
-  var count=$('#cv-pe-members-count');if(count)count.textContent=selected.length?'项目成员 · '+selected.length:'项目成员 · 可选';
+  list.innerHTML=CV_MEMBERS.map(function(m){return '<label data-pe-member-search="'+xesc((m.name+' '+(m.email||'')).toLocaleLowerCase())+'"><input type="checkbox" value="'+xesc(m.id)+'"'+(selected.includes(m.id)?' checked':'')+'><span>'+xesc(m.name)+'</span><small>'+xesc(m.email||m.dept||'')+'</small></label>';}).join('');
+  var count=$('#cv-pe-members-count');if(count)count.textContent=selected.length?'项目成员 · '+selected.length+' 人':'请选择项目成员';
+  var selectedLabel=$('#cv-pe-members-selected');if(selectedLabel)selectedLabel.textContent='已选 '+selected.length+' 人';
+  var search=$('#cv-pe-members-search');if(search)search.value='';
 }
 function cvSaveProjEdit(){
   var g=function(k){var e=$('#cv-pe-'+k);return e?e.value.trim():'';};
   var name=g('name');
   if(!name){ toast('请填写项目标题','error'); return; }
+  var members=$$('#cv-pe-members-list input:checked').map(function(input){return input.value;});
+  if(!members.length){
+    toast('请至少选择 1 名项目成员','error');
+    var picker=$('#cv-pe-members');if(picker){picker.open=true;picker.classList.add('pe-members--invalid');}
+    var first=$('#cv-pe-members-list input');if(first)first.focus();
+    return;
+  }
   var teamId=g('team');
   if(!TEAMS.some(function(t){return t.id===teamId;})){ toast('请选择专家团','error'); $('#cv-pe-team').focus(); return; }
-  var members=$$('#cv-pe-members-list input:checked').map(function(input){return input.value;});
   var isNew=!cvProjEditId;
   var p=isNew?null:cvProjectById(cvProjEditId);
   if(p){
@@ -187,7 +202,17 @@ export function initCollabProjects() {
   window.cvOpenProjNew=cvOpenProjNew;
   window.cvCloseProjEdit=cvCloseProjEdit;
   window.cvSaveProjEdit=cvSaveProjEdit;
-  var memberList=$('#cv-pe-members-list');if(memberList)memberList.addEventListener('change',function(){var count=$('#cv-pe-members-count');if(count)count.textContent='项目成员 · '+$$('#cv-pe-members-list input:checked').length;});
+  var memberList=$('#cv-pe-members-list');if(memberList)memberList.addEventListener('change',function(){
+    var selected=$$('#cv-pe-members-list input:checked').length;
+    var count=$('#cv-pe-members-count');if(count)count.textContent=selected?'项目成员 · '+selected+' 人':'请选择项目成员';
+    var selectedLabel=$('#cv-pe-members-selected');if(selectedLabel)selectedLabel.textContent='已选 '+selected+' 人';
+    var picker=$('#cv-pe-members');if(picker)picker.classList.toggle('pe-members--invalid',!selected);
+  });
+  var memberSearch=$('#cv-pe-members-search');if(memberSearch)memberSearch.addEventListener('input',function(){
+    var query=this.value.trim().toLocaleLowerCase();
+    $$('#cv-pe-members-list [data-pe-member-search]').forEach(function(row){row.classList.toggle('hidden',!row.getAttribute('data-pe-member-search').includes(query));});
+  });
+  var memberDone=$('#cv-pe-members-done');if(memberDone)memberDone.addEventListener('click',function(){var picker=$('#cv-pe-members');if(picker)picker.open=false;});
 }
 
 export { cvRenderProjMenu, cvRenderProjectSettings, cvRenderWsMenu, cvRestoreProjects, cvSetProject, cvSetWorkspace, cvSyncUrl, cvUpdateCounts };

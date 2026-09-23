@@ -29,6 +29,7 @@ import { initExpertChips } from './features/expert/chips.js';
 import { initCollabView, initCollabTabs } from './features/collab/view.js';
 import { initCollabTasks } from './features/collab/tasks.js';
 import { initCollabProjects } from './features/collab/projects.js';
+import { initPersonPicker } from './features/collab/person-picker.js';
 import { initCollabConfig } from './features/collab/config.js';
 import { initCollab } from './features/collab/index.js';
 import { _authedUser } from './features/login.js';
@@ -87,6 +88,7 @@ initCollabView();                 /* 5714  features/collab/view.js */
 initCollabTasks();                /* 5767  features/collab/tasks.js */
 initCollabTabs();                 /* 6189  features/collab/view.js */
 initCollabProjects();             /* 6287  features/collab/projects.js */
+initPersonPicker();
 initCollabConfig();               /* 6370  features/collab/config.js */
 initCollab();                     /* 6445  features/collab/index.js */
 initAnalytics();                  /* 用户行为分析看板 */

@@ -145,7 +145,7 @@ function ntRenderStages() {
       + '<span class="nt-flow-name">' + xesc(sp.name) + '</span>'
       + '</button>'
       + (sp.checked
-        ? '<select class="nt-flow-person" data-nt-stage-assignee="' + sp.id + '" aria-label="' + xesc(sp.name) + ' 执行人">' + members.map(m => '<option' + (m.name === sp.assignee ? ' selected' : '') + '>' + xesc(m.name) + '</option>').join('') + '</select>'
+        ? '<select class="nt-flow-person" data-person-select data-nt-stage-assignee="' + sp.id + '" aria-label="' + xesc(sp.name) + ' 执行人">' + members.map(m => '<option' + (m.name === sp.assignee ? ' selected' : '') + '>' + xesc(m.name) + '</option>').join('') + '</select>'
         : '<span class="nt-flow-person nt-flow-person--off">未启用</span>')
       + '</div>';
     return i === 0 ? node : '<span class="nt-flow-line"></span>' + node;

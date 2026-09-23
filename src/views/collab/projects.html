@@ -14,8 +14,8 @@
       <div class="search-wrap pj-project-search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input id="cvProjectSearch" name="project-search" type="search" autocomplete="new-password" data-1p-ignore data-lpignore="true" placeholder="搜索项目" /></div>
       <div class="pj-filter-selects" aria-label="项目过滤条件">
         <select id="cvProjectStatusFilter" aria-label="按状态筛选项目"><option value="">全部状态</option><option value="planned">规划中</option><option value="in_progress">进行中</option><option value="paused">已暂停</option><option value="completed">已完成</option><option value="cancelled">已取消</option></select>
-        <select id="cvProjectMemberFilter" aria-label="按项目成员筛选项目"><option value="">全部成员</option></select>
-        <select id="cvProjectOwnerFilter" aria-label="按负责人筛选项目"><option value="">全部负责人</option></select>
+        <select id="cvProjectMemberFilter" data-person-select aria-label="按项目成员筛选项目"><option value="">全部成员</option></select>
+        <select id="cvProjectOwnerFilter" data-person-select aria-label="按负责人筛选项目"><option value="">全部负责人</option></select>
       </div>
       <div class="pj-view-switch" id="cv-project-view-switch" role="group" aria-label="项目显示形式"></div>
     </div>

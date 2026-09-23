@@ -364,7 +364,7 @@ export function openTask(index, status = '待办') {
           <h3>任务属性</h3>
           <div class="tb-aside-group-k">可编辑</div>
           ${t.runtime ? '<div class="tb-inherited-field"><span>状态</span><b>' + xesc(tbLabel(t.status)) + '</b><small>由 Runtime 与评审结论汇总</small></div>' : (pendingReview ? '<label>状态<select name="status" disabled><option selected>' + xesc(tbLabel(t.status)) + '</option></select><small class="tb-field-lock">评审中 · 将按评审结论自动流转，暂不可手动修改</small></label>' : '<label>状态<select name="status">' + tbBoardColumns.map(c => '<option value="' + c[0] + '" ' + (t.status === c[0] ? 'selected' : '') + (c[0] === '已完成' && !canComplete ? ' disabled' : '') + '>' + c[1] + (c[0] === '已完成' && !canComplete ? '（需交付评审）' : '') + '</option>').join('') + '</select></label>')}
-          ${tbMode(t) === '多人协作' && t.stagePlan?.length ? '' : '<label>负责人<select name="assignee">' + options(assigneeOptions,t.assignee) + '</select></label>'}
+          ${tbMode(t) === '多人协作' && t.stagePlan?.length ? '' : '<label>负责人<select name="assignee" data-person-select aria-label="任务负责人">' + options(assigneeOptions,t.assignee) + '</select></label>'}
           <label>优先级<select name="priority">${options([...new Set(['高','中','低',tbPriority(t)])],tbPriority(t))}</select></label>
           <label>任务类型<select name="type">${options(['需求','Bug','任务','改进'],t.type)}</select></label>
           <div class="tb-aside-group-k tb-aside-group-k--ro">只读 · 系统维护</div>

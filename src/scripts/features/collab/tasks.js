@@ -2,6 +2,7 @@ import { cvSimulateExecution, cvSwitchToChat } from './chat.js';
 import { CV_MEMBERS, CV_PROJECTS, CV_REVIEWS, CV_TASKS, CV_WORKFLOW, CV_WORKFLOW_ROLES, cvInjectCardActions, cvProject, cvProjectName, cvRenderTaskStats, cvRenderTasks } from './data.js';
 import { cvUpdateCounts } from './projects.js';
 import { cvAddSidebarConversation, cvApplyFilters, cvGetFilterVal, cvToast } from './view.js';
+import { xesc } from '../expert/data.js';
 /* 协作开发：任务统计、同步、执行 / 转交 / 流转
    拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
    由 main.js 按拆分前的原始顺序调用。 */
@@ -116,6 +117,7 @@ function cvStartSyncTask(){
 /* ============ TASK MODALS ============ */
 function cvOpenTaskModal(id){
   var el=document.getElementById(id);if(el)el.style.display='flex';
+  var search=el&&el.querySelector('[data-person-list-search]');if(search)search.value='';
   if(id==='cv-transfer-overlay'){cvRenderPersonList('cv-transfer-person-list');}
   if(id==='cv-twist-overlay'){cvRenderWorkflow();cvRenderTwistArtifacts();}
   if(id==='cv-review-overlay'){cvRenderReviewPersonList();cvRenderReviewArtifacts();}
@@ -124,7 +126,7 @@ function cvCloseTaskModal(id){var el=document.getElementById(id);if(el)el.style.
 function cvRenderPersonList(listId){
   var el=document.getElementById(listId);if(!el)return;
   el.innerHTML=CV_MEMBERS.map(function(m,i){
-    return '<button class="person-item" onclick="cvSelectPersonItem(this)"><div class="person-avatar-sm">'+m.name[0]+'</div><div><div class="person-name-sm">'+m.name+'</div><div class="person-role-sm">'+m.roles.map(function(r){return r.text;}).join(' · ')+'</div></div></button>';
+    return '<button class="person-item" data-person-search="'+xesc((m.name+' '+(m.email||'')).toLocaleLowerCase())+'" onclick="cvSelectPersonItem(this)"><div class="person-avatar-sm">'+m.name[0]+'</div><div><div class="person-name-sm">'+m.name+'</div><div class="person-role-sm">'+m.roles.map(function(r){return r.text;}).join(' · ')+'</div></div></button>';
   }).join('');
 }
 function cvRenderReviewPersonList(){
@@ -133,7 +135,7 @@ function cvRenderReviewPersonList(){
   if(card){var na=card.querySelector('.card-node');if(na)node=na.textContent.replace(/^[\s\u200b]+/,'').trim();}
   var role=CV_WORKFLOW_ROLES[node]||'开发人员';
   el.innerHTML=CV_MEMBERS.filter(function(m){return !m.roles.length||m.roles.some(function(r){return r.text.indexOf(role)>=0||role.indexOf(r.text)>=0;});}).map(function(m){
-    return '<button class="person-item" onclick="cvSelectPersonItem(this)"><div class="person-avatar-sm">'+m.name[0]+'</div><div><div class="person-name-sm">'+m.name+'</div><div class="person-role-sm">'+m.roles.map(function(r){return r.text;}).join(' · ')+'</div></div></button>';
+    return '<button class="person-item" data-person-search="'+xesc((m.name+' '+(m.email||'')).toLocaleLowerCase())+'" onclick="cvSelectPersonItem(this)"><div class="person-avatar-sm">'+m.name[0]+'</div><div><div class="person-name-sm">'+m.name+'</div><div class="person-role-sm">'+m.roles.map(function(r){return r.text;}).join(' · ')+'</div></div></button>';
   }).join('');
   if(!el.innerHTML){el.innerHTML='<div style="padding:20px;text-align:center;color:var(--text-soft);font-size:12.5px">当前节点无匹配人员</div>';}
 }
@@ -201,6 +203,11 @@ function cvConfirmReview(){
 
 export function initCollabTasks() {
   document.addEventListener('click',function(){document.querySelectorAll('.sync-dropdown').forEach(function(d){d.remove();});});
+  document.querySelectorAll('[data-person-list-search]').forEach(function(input){input.addEventListener('input',function(){
+    var list=document.getElementById(this.getAttribute('data-person-list-search'));
+    var query=this.value.trim().toLocaleLowerCase();
+    if(list)list.querySelectorAll('[data-person-search]').forEach(function(row){row.hidden=!row.getAttribute('data-person-search').includes(query);});
+  });});
 }
 
 export { cvApplyReviewFilters, cvClickReviewStat, cvClickStat, cvCloseSyncModal, cvCloseTaskModal, cvConfirmExec, cvConfirmReview, cvConfirmTransfer, cvConfirmTwist, cvNormalizeTask, cvOpenSyncModal, cvOpenTaskModal, cvSaveSyncTask, cvSelectCollabMode, cvSelectPersonItem, cvStartSyncTask, cvToggleSyncDropdown };

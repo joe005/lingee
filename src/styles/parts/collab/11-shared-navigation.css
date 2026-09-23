@@ -1,5 +1,14 @@
 
 /* ============ 协作开发 · 项目维度 ============ */
+.cv-person-picker{position:fixed;z-index:10000;box-sizing:border-box;padding:8px;background:#fff;border:1px solid var(--border-hover);border-radius:10px;box-shadow:var(--menu-shadow)}
+.cv-person-picker input{box-sizing:border-box;width:100%;padding:8px 10px;border:1px solid var(--border-hover);border-radius:7px;font:inherit;font-size:12px;outline:none}
+.cv-person-picker input:focus{border-color:var(--brand)}
+.cv-person-picker-options{max-height:235px;overflow:auto;margin-top:6px;font-size:12px;color:var(--text-soft)}
+.cv-person-picker-option{display:block;width:100%;padding:8px 10px;border:0;border-radius:6px;background:#fff;color:var(--text);font:inherit;text-align:left;cursor:pointer}
+.cv-person-picker-option:hover,.cv-person-picker-option[aria-selected="true"]{background:var(--brand-fill);color:var(--brand)}
+.cv-person-list-search{box-sizing:border-box;width:100%;margin:8px 0;padding:9px 11px;border:1px solid var(--border-hover);border-radius:8px;font:inherit;font-size:13px}
+.cv-scope .person-list .person-item[hidden]{display:none}
+.member-selected-count{padding:8px 0 0;color:var(--text-secondary);font-size:12px}
 #view-collab .tab-nav{position:relative}
 #view-collab .cv-proj{position:relative;margin-left:auto;padding-left:12px}
 /* 工作区栏：顶部全局，始终显示 */

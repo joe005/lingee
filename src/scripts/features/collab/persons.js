@@ -51,6 +51,9 @@ function cvSavePersonEdit(){
 function cvDeletePerson(pid){
   var p=cvPersonById(pid); if(!p) return;
   if(cvIsMe(p)){ toast('不能删除自己','warning'); return; }
+  if(CV_PROJECTS.some(function(project){return (project.members||[]).length===1&&project.members[0]===pid;})){
+    toast('该人员是某项目的唯一成员，请先为项目添加其他成员','warning');return;
+  }
   CV_PROJECTS.forEach(function(pr){ pr.members=(pr.members||[]).filter(function(id){return id!==pid;}); });
   CV_MEMBERS.splice(CV_MEMBERS.indexOf(p),1);
   cvPersistPersons(); cvPersistProjects();
