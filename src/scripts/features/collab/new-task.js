@@ -27,6 +27,8 @@ const NT_STATUS_LABELS = { '待规划': '待规划', '待办': '待办', '进行
 function ntRenderFiles() {
   const el = document.getElementById('cv-nt-file-list');
   if (!el) return;
+  const count = document.getElementById('cv-nt-attach-count');
+  if (count) count.textContent = ntFiles.length ? String(ntFiles.length) : '';
   if (!ntFiles.length) {
     el.innerHTML = '<button type="button" class="nt-attach-empty" data-nt-attach-trigger><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>点击或拖拽上传文件</span><small>支持 Ctrl+V 粘贴截图</small></button>';
     return;
@@ -90,8 +92,6 @@ function ntPeopleOfProject(pid) {
 function ntRenderTeam() {
   const team = ntProjectId ? ntTeamOfProject(ntProjectId) : null;
   ntTeamId = team ? team.id : '';
-  const el = document.getElementById('cv-nt-team');
-  if (el) el.textContent = team ? team.name : '先选择项目';
 }
 /* 负责人：从项目成员中选人。 */
 function ntRenderPeople() {
@@ -116,15 +116,19 @@ function ntSetExecMode(m) {
   document.querySelectorAll('#cv-nt-exec-mode .nt-seg-btn').forEach(b => {
     const selected = b.getAttribute('data-nt-exec') === ntExecMode;
     b.classList.toggle('on', selected);
-    b.setAttribute('aria-pressed', String(selected));
+    b.setAttribute('aria-checked', String(selected));
+    b.tabIndex = selected ? 0 : -1;
   });
   const single = document.getElementById('cv-nt-single-field');
   const stagesField = document.getElementById('cv-nt-stages-field');
   if (single) single.classList.toggle('hidden', ntExecMode !== '单人执行');
   if (stagesField) stagesField.classList.toggle('hidden', !ntStagesFieldVisible());
-  if (ntExecMode === '多人协作') ntRenderStages();
+  if (ntExecMode === '多人协作') {
+    ntRenderStages();
+    stagesField?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
 }
-/* 阶段流程图：节点本身是开关（点击切换是否经过该阶段），选中的节点下面挂一个执行人选择器。 */
+/* 阶段流程节点：节点本身是开关，节点下方选择执行人。 */
 function ntRenderStages() {
   const el = document.getElementById('cv-nt-stage-list');
   if (!el) return;
@@ -148,7 +152,7 @@ function ntRenderStages() {
         ? '<select class="nt-flow-person" data-person-select data-nt-stage-assignee="' + sp.id + '" aria-label="' + xesc(sp.name) + ' 执行人">' + members.map(m => '<option' + (m.name === sp.assignee ? ' selected' : '') + '>' + xesc(m.name) + '</option>').join('') + '</select>'
         : '<span class="nt-flow-person nt-flow-person--off">未启用</span>')
       + '</div>';
-    return i === 0 ? node : '<span class="nt-flow-line"></span>' + node;
+    return node;
   }).join('');
 }
 function ntOnProjectChange() {
@@ -182,11 +186,22 @@ export function cvOpenNewTask(status, ctx) {
   document.getElementById('cv-nt-title').value = '';
   document.getElementById('cv-nt-desc').value = '';
   document.getElementById('cv-nt-prompt').value = '';
-  document.getElementById('cv-nt-priority').selectedIndex = 0;
+  document.getElementById('cv-nt-priority').value = '中';
+  document.getElementById('cv-nt-more').open = false;
+  const tagInput = document.querySelector('#cv-nt-tags .nt-tag-input');
+  if (tagInput) tagInput.remove();
+  ntTagEditing = false;
+  document.getElementById('cv-nt-addtag').style.display = '';
   const chip = document.getElementById('cv-nt-status-chip');
   if (chip) chip.textContent = NT_STATUS_LABELS[ntStatus] || '待开始';
+  const statusProperty = document.getElementById('cv-nt-status-property');
+  if (statusProperty) statusProperty.textContent = NT_STATUS_LABELS[ntStatus] || '待开始';
   const modes = document.getElementById('cv-nt-modes');
   if (modes) modes.classList.toggle('hidden', !!ntParentTaskId);
+  ['cv-nt-agent-trigger', 'cv-nt-manual-trigger'].forEach(id => {
+    const trigger = document.getElementById(id);
+    if (trigger) trigger.classList.toggle('hidden', !!ntParentTaskId || id === 'cv-nt-manual-trigger');
+  });
   const parentBanner = document.getElementById('cv-nt-parent-banner');
   if (parentBanner) {
     parentBanner.classList.toggle('hidden', !ntParentTaskId);
@@ -199,7 +214,7 @@ export function cvOpenNewTask(status, ctx) {
   ntSetExecMode('单人执行');
   cvSetNewTaskMode('manual');
   document.getElementById('cv-newtask-overlay').style.display = 'flex';
-  setTimeout(() => document.getElementById('cv-nt-title').focus(), 0);
+  setTimeout(() => document.getElementById(ntMode === 'agent' ? 'cv-nt-prompt' : 'cv-nt-title').focus(), 0);
 }
 export function cvCloseNewTask() { document.getElementById('cv-newtask-overlay').style.display = 'none'; }
 function cvSetNewTaskMode(m) {
@@ -207,16 +222,20 @@ function cvSetNewTaskMode(m) {
   document.getElementById('cv-nt-manual').classList.toggle('hidden', m !== 'manual');
   document.getElementById('cv-nt-agent').classList.toggle('hidden', m !== 'agent');
   document.getElementById('cv-nt-execution').classList.toggle('hidden', m !== 'manual');
-  const side = document.getElementById('cv-nt-side');
-  if (side) side.classList.toggle('hidden', m !== 'manual');
-  const layout = document.querySelector('#cv-newtask-overlay .nt-layout');
-  if (layout) layout.classList.toggle('nt-layout--agent', m !== 'manual');
+  const properties = document.getElementById('cv-nt-properties');
+  if (properties) properties.classList.toggle('hidden', m !== 'manual');
   const stagesField = document.getElementById('cv-nt-stages-field');
   if (stagesField) stagesField.classList.toggle('hidden', !ntStagesFieldVisible());
-  document.getElementById('cv-nt-mode-label').textContent = ntParentTaskId ? '新增子任务' : (m === 'agent' ? '智能体创建' : '手动创建');
-  const hint = document.getElementById('cv-nt-foot-hint');
-  if (hint) hint.textContent = m === 'agent' ? '智能体将识别项目与负责人，运行计划在启动后生成' : '创建后自动进入任务看板';
-  document.querySelectorAll('#cv-nt-modes .nt-mode').forEach(b => b.classList.toggle('on', b.getAttribute('data-nt-mode') === m));
+  document.getElementById('cv-nt-mode-label').textContent = ntParentTaskId ? '新增子任务' : (m === 'agent' ? 'Agent 创建' : '手动创建');
+  const agentTrigger = document.getElementById('cv-nt-agent-trigger');
+  const manualTrigger = document.getElementById('cv-nt-manual-trigger');
+  if (agentTrigger) agentTrigger.classList.toggle('hidden', m === 'agent' || !!ntParentTaskId);
+  if (manualTrigger) manualTrigger.classList.toggle('hidden', m !== 'agent' || !!ntParentTaskId);
+  if (agentTrigger) agentTrigger.setAttribute('aria-pressed', String(m === 'agent'));
+  if (manualTrigger) manualTrigger.setAttribute('aria-pressed', String(m === 'manual'));
+  if (document.getElementById('cv-newtask-overlay').style.display !== 'none') {
+    document.getElementById(m === 'agent' ? 'cv-nt-prompt' : 'cv-nt-title').focus();
+  }
 }
 function cvSubmitNewTask(keepOpen) {
   const fromAgent = ntMode === 'agent';
@@ -244,6 +263,8 @@ function cvSubmitNewTask(keepOpen) {
     const pv = document.getElementById('cv-nt-priority').value;
     priority = pv === '无优先级' ? '中' : pv;
     mode = ntExecMode;
+    if (!['单人执行', '多人协作'].includes(mode)) { window.alert('请选择执行方式'); return; }
+    if (!ntPeopleOfProject(projectId).length) { window.alert('请先为项目添加成员，再选择执行人'); return; }
     if (ntExecMode === '多人协作') {
       const checked = ntStagePlan.filter(s => s.checked);
       if (!checked.length) { window.alert('请至少选择一个阶段'); return; }
@@ -264,7 +285,10 @@ function cvSubmitNewTask(keepOpen) {
   tbSave(); renderTaskBoard(); cvUpdateCounts();
   if (parentTaskId) window.cvRenderProjectDetail && window.cvRenderProjectDetail();
   const reopenCtx = parentTaskId ? { parentTaskId, projectId: proj.id, parentTitle: document.getElementById('cv-nt-parent-title')?.textContent } : undefined;
-  if (keepOpen) { cvOpenNewTask(ntStatus, reopenCtx); } else { cvCloseNewTask(); }
+  if (keepOpen) {
+    cvOpenNewTask(ntStatus, reopenCtx);
+    if (fromAgent) cvSetNewTaskMode('agent');
+  } else { cvCloseNewTask(); }
   if (parentTaskId && !keepOpen && window.tbReopenTask) window.tbReopenTask(parentTaskId);
 }
 
@@ -272,10 +296,8 @@ export function initNewTask() {
   window.cvOpenNewTask = cvOpenNewTask;
   window.cvCloseNewTask = cvCloseNewTask;
   if (!document.getElementById('cv-newtask-overlay')) return;
-  const modes = document.getElementById('cv-nt-modes');
-  if (modes) modes.addEventListener('click', e => {
-    const b = e.target.closest('[data-nt-mode]');
-    if (b) cvSetNewTaskMode(b.getAttribute('data-nt-mode'));
+  document.querySelectorAll('#cv-newtask-overlay [data-nt-mode]').forEach(button => {
+    button.addEventListener('click', () => cvSetNewTaskMode(button.getAttribute('data-nt-mode')));
   });
   document.getElementById('cv-nt-submit').addEventListener('click', () => cvSubmitNewTask(false));
   document.getElementById('cv-nt-continue').addEventListener('click', () => cvSubmitNewTask(true));
@@ -284,6 +306,15 @@ export function initNewTask() {
   if (execMode) execMode.addEventListener('click', e => {
     const b = e.target.closest('[data-nt-exec]');
     if (b) ntSetExecMode(b.getAttribute('data-nt-exec'));
+  });
+  if (execMode) execMode.addEventListener('keydown', e => {
+    if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(e.key)) return;
+    const options = Array.from(execMode.querySelectorAll('[data-nt-exec]'));
+    const current = options.indexOf(document.activeElement);
+    const next = e.key === 'Home' ? 0 : e.key === 'End' ? options.length - 1 : (current + (['ArrowRight', 'ArrowDown'].includes(e.key) ? 1 : options.length - 1)) % options.length;
+    e.preventDefault();
+    options[next].focus();
+    ntSetExecMode(options[next].getAttribute('data-nt-exec'));
   });
   const stageList = document.getElementById('cv-nt-stage-list');
   if (stageList) {
@@ -309,6 +340,11 @@ export function initNewTask() {
   }
   const addtag = document.getElementById('cv-nt-addtag');
   if (addtag) addtag.addEventListener('click', ntStartAddTag);
+  document.getElementById('cv-nt-tags-trigger')?.addEventListener('click', () => {
+    document.getElementById('cv-nt-more').open = true;
+    ntStartAddTag();
+  });
+  document.getElementById('cv-nt-attach-trigger')?.addEventListener('click', ntAddFile);
   const tagList = document.getElementById('cv-nt-tag-list');
   if (tagList) tagList.addEventListener('click', e => {
     const x = e.target.closest('[data-nt-tag-x]');

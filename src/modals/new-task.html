@@ -1,88 +1,53 @@
 <div class="sync-overlay" id="cv-newtask-overlay" style="display:none" onclick="if(event.target===this)cvCloseNewTask()">
   <div class="nt-modal" role="dialog" aria-modal="true" aria-labelledby="cv-nt-dialog-title">
     <div class="nt-head">
-      <div class="nt-crumb"><strong id="cv-nt-dialog-title">新增任务</strong><span class="nt-sep">›</span><span id="cv-nt-mode-label">手动创建</span></div>
-      <button class="sync-modal__close" aria-label="关闭新增任务" onclick="cvCloseNewTask()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-    </div>
-    <!-- 创建方式切换 -->
-    <div class="nt-modes" id="cv-nt-modes">
-      <button type="button" class="nt-mode on" data-nt-mode="manual"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>手动创建</button>
-      <button type="button" class="nt-mode nt-mode--agent" data-nt-mode="agent"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z"/><path d="M19 15l.7 1.8 1.8.7-1.8.7L19 20.5l-.7-1.8-1.8-.7 1.8-.7L19 15z"/></svg>智能体创建</button>
+      <div class="nt-crumb"><span>任务</span><span class="nt-crumb-arrow" aria-hidden="true">›</span><strong id="cv-nt-dialog-title"><span id="cv-nt-mode-label">手动创建</span></strong></div>
+      <button type="button" class="sync-modal__close" aria-label="关闭新增任务" onclick="cvCloseNewTask()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="nt-parent-banner hidden" id="cv-nt-parent-banner">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5h10a5 5 0 0 1 5 5v2M13 21l4-4 4 4M17 21V13"/></svg>
-      <span>正在为父任务「<b id="cv-nt-parent-title"></b>」新增子任务</span>
+      <span>正在为「<b id="cv-nt-parent-title"></b>」新增子任务</span>
     </div>
     <div class="nt-body">
-    <div class="nt-layout">
-      <!-- 左侧：任务内容 -->
-      <div class="nt-main">
-        <!-- 手动创建 -->
-        <div id="cv-nt-manual">
-          <input class="nt-title" id="cv-nt-title" aria-label="任务标题" placeholder="任务标题，例如：完善采购审批流程" maxlength="120">
-          <textarea class="nt-desc" id="cv-nt-desc" rows="2" aria-label="任务描述" placeholder="描述任务目标、交付内容和验收要求…"></textarea>
-
-          <div class="nt-chips" id="cv-nt-tags">
-            <span class="nt-chip nt-chip--static" id="cv-nt-status-chip">待开始</span>
-            <span id="cv-nt-tag-list"></span>
-            <button type="button" class="nt-chip nt-chip--add" id="cv-nt-addtag">＋ 添加标签</button>
-          </div>
-          <div class="nt-attach" id="cv-nt-attach">
-            <div class="nt-attach-drop" id="cv-nt-file-list"></div>
-          </div>
-        </div>
-        <!-- 通过智能体创建：只描述，其余全部推断 -->
-        <div class="hidden" id="cv-nt-agent">
-          <div class="nt-agent-note">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z"/><path d="M19 15l.7 1.8 1.8.7-1.8.7L19 20.5l-.7-1.8-1.8-.7 1.8-.7L19 15z"/></svg>
-            <div><b>智能体辅助建任务</b><span>只需描述业务目标，系统会推断所属项目与负责人；执行计划将在任务启动后生成</span></div>
-          </div>
-          <textarea class="nt-desc" id="cv-nt-prompt" rows="8" placeholder="告诉智能体要做什么，例如：“报销模块的审批流报错，帮我修复并补上回归测试”"></textarea>
+      <div class="nt-main" id="cv-nt-manual">
+        <label class="nt-field nt-field--title" for="cv-nt-title"><span class="sr-only">任务标题</span><input class="nt-title" id="cv-nt-title" placeholder="任务标题" maxlength="120"></label>
+        <label class="nt-field nt-field--desc" for="cv-nt-desc"><span class="sr-only">任务描述</span><textarea class="nt-desc" id="cv-nt-desc" rows="3" placeholder="添加描述..."></textarea></label>
+        <div class="nt-context">创建后任务将进入 <strong id="cv-nt-status-chip">待办</strong>，由所选执行人推进。</div>
+        <div class="nt-flow-field hidden" id="cv-nt-stages-field">
+          <div class="nt-section-head"><h3>阶段分工 <span id="cv-nt-stage-count"></span></h3><span>点击节点选择阶段，在节点下方指定执行人</span></div>
+          <div class="nt-flow" id="cv-nt-stage-list"></div>
         </div>
       </div>
-      <!-- 右侧：任务属性（仅手动创建时选择） -->
-      <aside class="nt-side" id="cv-nt-side">
-        <h3>任务属性</h3>
-        <div class="nt-field">
-          <span class="nt-label">项目<i class="nt-req">*</i></span>
-          <select id="cv-nt-project"></select>
-        </div>
-        <div class="nt-field">
-          <span class="nt-label">专家团<i class="nt-auto">继承项目 · 只读</i></span>
-          <div class="nt-team" id="cv-nt-team">—</div>
-        </div>
-        <div class="nt-field">
-          <span class="nt-label">优先级</span>
-          <select id="cv-nt-priority"><option>无优先级</option><option>高</option><option>中</option><option>低</option></select>
-        </div>
-      </aside>
+      <div class="nt-agent hidden" id="cv-nt-agent">
+        <div class="nt-agent-intro"><span class="nt-agent-mark" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3Z"/><path d="m19 15 .7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7L19 15Z"/></svg></span><div><strong>把任务交给 Agent</strong><p>描述目标、背景和期望结果；创建的任务默认设为多人协作，Agent 会尝试识别项目与负责人。</p></div></div>
+        <label class="nt-agent-prompt" for="cv-nt-prompt"><textarea class="nt-desc" id="cv-nt-prompt" aria-label="任务描述" rows="8" placeholder="例如：完善采购审批流程，补上异常处理和回归测试。期望审批记录能追溯到申请人、审批人和处理时间。"></textarea><span class="nt-prompt-hint">写清楚要解决的问题，以及怎样算完成</span></label>
+      </div>
     </div>
-    <section class="nt-execution" id="cv-nt-execution" aria-label="执行方式">
-      <div class="nt-section-head"><h3>执行方式</h3><span>选择任务如何分工</span></div>
-      <div class="nt-seg" id="cv-nt-exec-mode" role="group" aria-label="执行方式">
-        <button type="button" class="nt-seg-btn on" data-nt-exec="单人执行" aria-pressed="true">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="7" r="3.5"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/></svg>
-          <span><b>单人执行</b><small>一位负责人推进整个任务</small></span><i class="nt-mode-check" aria-hidden="true"></i>
-        </button>
-        <button type="button" class="nt-seg-btn" data-nt-exec="多人协作" aria-pressed="false">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="9" cy="7" r="3.5"/><path d="M2 21v-2a7 7 0 0 1 14 0v2M17 4a3.5 3.5 0 0 1 0 7M22 21v-2a7 7 0 0 0-4-6"/></svg>
-          <span><b>多人协作</b><small>按阶段分工，各自推进负责的部分</small></span><i class="nt-mode-check" aria-hidden="true"></i>
-        </button>
-      </div>
-      <div class="nt-field nt-assignment" id="cv-nt-single-field">
-        <div class="nt-section-head"><h3>任务负责人</h3><span>从项目成员中选择</span></div>
-        <select class="nt-assignee-select" id="cv-nt-people" data-person-select aria-label="任务负责人"></select>
-      </div>
-      <div class="nt-flow-field hidden" id="cv-nt-stages-field">
-        <div class="nt-section-head"><h3>阶段分工 <span id="cv-nt-stage-count"></span></h3><span>勾选需要的阶段，并指定执行人</span></div>
-        <div class="nt-flow" id="cv-nt-stage-list"></div>
-        <p class="nt-execution-note">阶段来自项目专家团，每位成员负责并启动自己的阶段。</p>
-      </div>
-    </section>
+    <div class="nt-property-bar" id="cv-nt-properties">
+      <span class="nt-property nt-property--status" aria-label="任务状态"><span class="nt-status-ring" aria-hidden="true"></span><span id="cv-nt-status-property">待办</span></span>
+      <label class="nt-property nt-property--priority" for="cv-nt-priority"><span class="sr-only">优先级</span><select id="cv-nt-priority"><option>无优先级</option><option>高</option><option>中</option><option>低</option></select></label>
+      <label class="nt-property nt-property--project" for="cv-nt-project"><span class="sr-only">项目</span><select id="cv-nt-project"></select></label>
+      <label class="nt-property nt-property--assignee" id="cv-nt-single-field" for="cv-nt-people"><span class="sr-only">负责人</span><select class="nt-assignee-select" id="cv-nt-people" data-person-select></select></label>
+      <button type="button" class="nt-property nt-property--tags" id="cv-nt-tags-trigger">添加标签</button>
+      <section class="nt-execution" id="cv-nt-execution" aria-labelledby="cv-nt-exec-title">
+        <div class="nt-section-head"><h3 id="cv-nt-exec-title" class="sr-only">执行方式（必填）</h3></div>
+        <div class="nt-seg" id="cv-nt-exec-mode" role="radiogroup" aria-labelledby="cv-nt-exec-title" aria-required="true">
+          <button type="button" class="nt-seg-btn on" data-nt-exec="单人执行" role="radio" aria-checked="true" tabindex="0"><b>单人执行</b></button>
+          <button type="button" class="nt-seg-btn" data-nt-exec="多人协作" role="radio" aria-checked="false" tabindex="-1"><b>多人协作</b></button>
+        </div>
+      </section>
+      <details class="nt-more" id="cv-nt-more">
+        <summary aria-label="更多设置">···</summary>
+        <div class="nt-more-body">
+          <div class="nt-field"><span class="nt-label">标签</span><div class="nt-chips" id="cv-nt-tags"><span id="cv-nt-tag-list"></span><button type="button" class="nt-chip nt-chip--add" id="cv-nt-addtag">＋ 添加标签</button></div></div>
+          <div class="nt-field"><span class="nt-label">附件</span><div class="nt-attach" id="cv-nt-attach"><div class="nt-attach-drop" id="cv-nt-file-list"></div></div></div>
+        </div>
+      </details>
     </div>
     <div class="nt-foot">
-      <span class="nt-foot-hint" id="cv-nt-foot-hint">创建后自动进入任务看板</span>
+      <button type="button" class="nt-attach-trigger" id="cv-nt-attach-trigger" aria-label="添加附件" title="添加附件"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m21.4 11.6-8.5 8.5a6 6 0 0 1-8.5-8.5l9-9a4 4 0 0 1 5.7 5.7l-9 9a2 2 0 0 1-2.8-2.8l8.5-8.5"/></svg><span id="cv-nt-attach-count"></span></button>
       <div class="nt-foot-right">
+        <button type="button" class="nt-agent-trigger" id="cv-nt-agent-trigger" data-nt-mode="agent" aria-pressed="false">↔ 切换到 Agent 创建</button>
+        <button type="button" class="nt-agent-trigger nt-agent-trigger--back hidden" id="cv-nt-manual-trigger" data-nt-mode="manual" aria-pressed="true">↔ 切换到手动创建</button>
         <button type="button" class="nt-btn" id="cv-nt-continue">继续创建</button>
         <button type="button" class="nt-btn nt-btn--primary" id="cv-nt-submit">创建任务</button>
       </div>
