@@ -1,0 +1,50 @@
+/* ============ CONFIG ============ */
+#view-collab .config-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+#view-collab .config-card{border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:0;transition:all .15s}
+#view-collab .config-card:hover{border-color:var(--border-focus);box-shadow:0 4px 16px rgba(73,93,255,.06)}
+#view-collab .config-card-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+#view-collab .config-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--fill-1)}
+#view-collab .config-row:last-child{border-bottom:none;padding-bottom:0}
+#view-collab .config-label{font-size:13px;color:var(--text)}
+#view-collab .config-value{font-size:13px;color:var(--text-secondary)}
+#view-collab .config-card-desc{font-size:11.5px;color:var(--text-secondary);line-height:1.5;margin-bottom:10px}
+#view-collab .toggle{width:36px;height:20px;border-radius:10px;background:var(--border-hover);position:relative;cursor:pointer;transition:background .2s;flex-shrink:0}
+#view-collab .toggle.on{background:var(--success)}
+#view-collab .toggle::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .2s}
+#view-collab .toggle.on::after{left:18px}
+
+/* ============ 设置：左导航 + 右表单 ============ */
+/* 左导航铺满整个面板高度，滚动只发生在右侧内容区 */
+#view-collab #cv-config .scroll{display:flex;flex-direction:column;overflow:hidden}
+#view-collab .config-layout{display:grid;grid-template-columns:200px 1fr;gap:20px;align-items:stretch;flex:1;min-height:0}
+#view-collab .config-nav{display:flex;flex-direction:column;align-content:flex-start;gap:2px;background:#fff;border:1px solid var(--border);border-radius:12px;padding:10px}
+#view-collab .config-nav-item{display:block;width:100%;text-align:left;border:0;background:none;padding:9px 10px;border-radius:8px;font:inherit;font-size:13px;color:var(--text-secondary);cursor:pointer}
+#view-collab .config-nav-item:hover{background:var(--fill-1);color:var(--text)}
+#view-collab .config-nav-item.on{background:var(--brand-fill);color:var(--brand);font-weight:600}
+#view-collab .config-main{min-width:0;min-height:0;overflow-y:auto}
+#view-collab #cv-config .hidden{display:none}
+#view-collab #cv-config #cv-squad-detail .sq-layout{grid-template-columns:minmax(190px,260px) minmax(0,1fr)}
+@media(max-width:900px){#view-collab #cv-config #cv-squad-detail .sq-layout{grid-template-columns:1fr}}
+#view-collab .cv-integration-note{padding:12px 14px;border:1px solid var(--border);border-radius:10px;background:var(--fill-1);color:var(--text-secondary);font-size:12.5px;line-height:1.6;margin:14px 0 18px}
+#view-collab .cv-integration-providers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#view-collab .cv-integration-provider{display:flex;align-items:center;gap:12px;width:100%;padding:16px;border:1px solid var(--border);border-radius:12px;background:#fff;text-align:left;cursor:pointer;font:inherit;color:var(--text)}
+#view-collab .cv-integration-provider:hover{border-color:var(--brand)}
+#view-collab .cv-integration-mark{display:inline-flex;align-items:center;justify-content:center;flex:none;width:36px;height:36px;border-radius:9px;background:var(--brand-fill);color:var(--brand);font-size:15px;font-weight:700}
+#view-collab .cv-integration-provider span:nth-child(2){display:flex;flex-direction:column;gap:3px}
+#view-collab .cv-integration-provider small,#view-collab .cv-integration-row-main small{font-size:11.5px;color:var(--text-soft)}
+#view-collab .cv-integration-action{margin-left:auto;color:var(--brand);font-size:12px;white-space:nowrap}
+#view-collab .cv-integration-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px;padding:18px;border:1px solid var(--border);border-radius:12px;background:#fff}
+#view-collab .cv-integration-form.hidden{display:none}
+#view-collab .cv-integration-form-head{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between}
+#view-collab .cv-integration-form-head button,#view-collab .cv-integration-row button{border:0;background:none;color:var(--brand);cursor:pointer;font:inherit;font-size:12px}
+#view-collab .cv-integration-form label{display:flex;flex-direction:column;gap:6px;color:var(--text-secondary);font-size:12px}
+#view-collab .cv-integration-form input,#view-collab .cv-integration-form select{width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid var(--border-hover);border-radius:8px;background:#fff;color:var(--text);font:inherit;font-size:13px}
+#view-collab .cv-integration-fields{grid-column:1/-1;color:var(--text-soft);font-size:12px}
+#view-collab .cv-integration-form>.sync-btn{justify-self:start}
+#view-collab .cv-integration-list-head{margin:22px 0 10px;color:var(--text);font-size:13px;font-weight:600}
+#view-collab .cv-integration-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--border);border-radius:10px;background:#fff;margin-bottom:8px}
+#view-collab .cv-integration-row-main{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1;font-size:13px}
+#view-collab .cv-integration-row-main small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#view-collab .cv-integration-status{font-size:11px;color:var(--text-soft);white-space:nowrap}
+#view-collab .cv-integration-empty{padding:22px;border:1px dashed var(--border);border-radius:10px;color:var(--text-soft);font-size:12px;text-align:center}
+@media(max-width:800px){#view-collab .cv-integration-providers,#view-collab .cv-integration-form{grid-template-columns:1fr}}

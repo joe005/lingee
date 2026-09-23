@@ -5,7 +5,9 @@ import { $ } from '../../core/dom.js';
 import { cvCloseAddMemberModal, cvConfirmAddMembers, cvLoadSavedTasks, cvOpenAddMemberModal, cvOpenConversation, cvSearchThirdPartyMembers, cvSendChatMessage } from './chat.js';
 import { cvInjectCardActions, cvRenderReviewStats, cvRenderReviews, cvRenderTaskStats, cvRenderTasks, cvRestorePersons } from './data.js';
 import { cvArchiveSquad, cvCloseNewSquadModal, cvConfirmNewSquad, cvHideSquadDetail, cvMigrateProjectSquads, cvOpenNewSquadModal, cvRenderSquadList, cvRestoreSquads, cvSetSquadLeader, cvShowSquadDetail, cvSwitchSquadTab } from './squads.js';
-import { cvCloseArtFiles, cvCloseFeatureEdit, cvCloseManualSplit, cvClosePersonEdit, cvCloseProjectSplit, cvConfirmManualSplit, cvConfirmProjectSplit, cvOpenArtFiles, cvOpenManualSplit, cvOpenPersonEdit, cvOpenPersonNew, cvRenderPermTable, cvRenderProjectDetail, cvRenderProjectList, cvSaveFeatureEdit, cvSavePersonEdit, initCollabPersons } from './persons.js';
+import { cvClosePersonEdit, cvOpenPersonEdit, cvOpenPersonNew, cvRenderPermTable, cvSavePersonEdit, initCollabPersons } from './persons.js';
+import { cvCloseFeatureEdit, cvCloseManualSplit, cvCloseProjectSplit, cvConfirmManualSplit, cvConfirmProjectSplit, cvOpenManualSplit, cvRenderProjectDetail, cvRenderProjectList, cvSaveFeatureEdit, initCollabProjectView } from './project-view.js';
+import { cvCloseArtFiles, cvOpenArtFiles } from './art-files.js';
 import { cvRenderExperts, set_cvExpertKw } from './experts.js';
 import { cvRenderProjMenu, cvRenderWsMenu, cvRestoreProjects, cvSetProject, cvUpdateCounts } from './projects.js';
 import { cvOpenReviewDetail, cvReviewPass, cvReviewReject, cvSubmitReview, cvSwitchArtifact } from './reviews.js';
@@ -44,6 +46,7 @@ export function initCollab() {
   initTaskBoard();
   initTaskChat();
   initNewTask();
+  initCollabProjectView();
   initCollabPersons();
   var cvConfigPanel=$('#cv-config');
   if(cvConfigPanel) cvConfigPanel.addEventListener('click',function(e){

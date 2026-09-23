@@ -1,0 +1,60 @@
+<!-- 设置 · 工作区设置 -->
+<div class="cv-panel" id="cv-config">
+  <div class="scroll">
+    <div id="cv-config-header">
+      <div class="scroll-title">系统设置</div>
+      <div class="scroll-desc">统一维护工作区人员、团队与系统集成</div>
+    </div>
+    <div class="config-layout">
+      <aside class="config-nav">
+        <button type="button" class="config-nav-item on" data-config-nav="perm">人员管理</button>
+        <button type="button" class="config-nav-item" data-config-nav="teams">团队</button>
+        <button type="button" class="config-nav-item" data-config-nav="integration">系统集成</button>
+      </aside>
+      <div class="config-main">
+        <div class="config-pane" data-config-pane="perm">
+          <div class="cv-head">
+            <div>
+              <div class="cv-sec-title">人员管理</div>
+              <div class="cv-sec-desc">管理工作区人员资料，支持新增、修改</div>
+            </div>
+            <div class="cv-head-right">
+              <button class="sync-btn" data-perm="owner" onclick="cvOpenPersonNew()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>新增人员</button>
+            </div>
+          </div>
+          <div id="cv-perm-table"></div>
+        </div>
+        <div class="config-pane hidden" data-config-pane="teams">
+          <div class="cv-head" id="cv-squad-head">
+            <div><div class="cv-sec-title">团队<span class="cv-title-count" id="cv-squad-count">0</span></div><div class="cv-sec-desc">统一维护团队成员，项目可交付给其中一个团队</div></div>
+            <div class="cv-head-right"><button class="sync-btn" type="button" onclick="cvOpenNewSquadModal()">＋ 新建团队</button></div>
+          </div>
+          <div id="cv-squad-list"></div>
+          <div id="cv-squad-detail" class="hidden"></div>
+        </div>
+        <div class="config-pane hidden" data-config-pane="integration">
+          <div class="cv-head">
+            <div><div class="cv-sec-title">系统集成</div><div class="cv-sec-desc">将 DevOps、禅道的任务清单映射到灵基项目</div></div>
+          </div>
+          <div class="cv-integration-note">当前是单文件原型：可维护系统与项目映射，真实连接、鉴权和任务同步需要服务端接入。这里不会向第三方发送请求。</div>
+          <div class="cv-integration-providers">
+            <button type="button" class="cv-integration-provider" data-cv-integration-provider="devops"><span class="cv-integration-mark">D</span><span><b>DevOps</b><small>用户故事、缺陷与任务</small></span><span class="cv-integration-action">配置映射 →</span></button>
+            <button type="button" class="cv-integration-provider" data-cv-integration-provider="zentao"><span class="cv-integration-mark">禅</span><span><b>禅道</b><small>需求、Bug 与执行任务</small></span><span class="cv-integration-action">配置映射 →</span></button>
+          </div>
+          <form id="cv-integration-form" class="cv-integration-form hidden">
+            <div class="cv-integration-form-head"><strong id="cv-integration-form-title">配置任务来源</strong><button type="button" id="cv-integration-cancel">取消</button></div>
+            <input id="cv-integration-id" type="hidden">
+            <input id="cv-integration-type" type="hidden">
+            <label>系统地址<input id="cv-integration-url" type="url" placeholder="https://devops.example.com" required></label>
+            <label>外部项目标识<input id="cv-integration-project" type="text" placeholder="项目编码或项目 ID" required></label>
+            <label>同步到灵基项目<select id="cv-integration-target" required></select></label>
+            <div class="cv-integration-fields">接入后同步外部编号、标题、描述、类型、状态、负责人，并按系统与外部编号去重。</div>
+            <button type="submit" class="sync-btn">保存映射</button>
+          </form>
+          <div class="cv-integration-list-head">已保存的映射</div>
+          <div id="cv-integration-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

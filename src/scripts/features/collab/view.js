@@ -3,7 +3,6 @@ import { $, $$ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
 import { setNavActive, showView } from '../../core/view.js';
 import { cvRenderExperts } from './experts.js';
-import { cvRenderPermTable } from './persons.js';
 import { getRole } from '../login.js';
 import { cvSyncUrl } from './projects.js';
 import { xesc } from '../expert/data.js';

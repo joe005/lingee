@@ -27,6 +27,12 @@ npm run format   # 格式化 src
 
 改哪个界面，就改对应的那个文件——这是拆分的全部目的。
 
+协作开发的五个页签在 `src/views/collab/` 各有 HTML 片段，导航容器保留在
+`src/views/collab.html`；相关弹窗在 `src/modals/collab/`。样式按原层叠顺序
+拆到 `src/styles/parts/collab/`，由 `src/styles/parts/collab.css` 引入。
+项目列表与详情的交互在 `src/scripts/features/collab/project-view.js`，人员设置
+在同目录的 `persons.js`。这些片段构建后仍合为一个 `dist/index.html`。
+
 ```
 index.html                    只有 47 行：外壳 + <!--#include --> 清单
 

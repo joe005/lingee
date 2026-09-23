@@ -1,0 +1,17 @@
+<!-- 任务对话 -->
+<div class="cv-panel" id="cv-chat">
+  <div class="chat-view">
+    <div class="chat-header">
+      <div class="chat-header-left">
+        <button class="rv-back" onclick="tbBackConvList()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>返回会话列表</button>
+        <span class="chat-title" id="cv-chat-task-title">任务执行中</span>
+        <span class="chat-status-badge chat-status-badge--running" id="cv-chat-status-badge"></span>
+      </div>
+    </div>
+    <div class="chat-body" id="cv-chat-body"></div>
+    <div class="chat-input-bar">
+      <input class="chat-input" id="cv-chat-input" placeholder="输入消息" onkeydown="if(event.key==='Enter')cvSendChatMessage()">
+      <button class="chat-send" onclick="cvSendChatMessage()">发送</button>
+    </div>
+  </div>
+</div>

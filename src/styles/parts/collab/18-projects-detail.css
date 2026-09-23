@@ -1,0 +1,224 @@
+/* ============ 项目详情：描述 / 代码仓库 / 关联任务 ============ */
+#view-collab .pj-desc{font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:12px}
+#view-collab .pj-repo{color:var(--brand);text-decoration:none;font-weight:500}
+#view-collab .pj-repo:hover{text-decoration:underline}
+#view-collab .pj-repo--none{color:var(--text-soft);font-weight:400}
+#view-collab .pj-detail-head--tasks{margin-top:20px}
+#view-collab .pj-detail-cnt{font-size:12px;color:var(--text-soft);font-weight:400;margin-left:6px}
+#view-collab .pj-task-list{display:flex;flex-direction:column;gap:14px}
+#view-collab .pj-task-group{display:flex;flex-direction:column;gap:6px}
+#view-collab .pj-task-group-head{font-size:12px;font-weight:600;color:var(--brand);padding:0 2px}
+#view-collab .pj-task-group-head span{font-weight:400;color:var(--text-soft);font-size:11px;margin-left:4px}
+#view-collab .pj-task-group-list{display:flex;flex-direction:column;border:1px solid var(--border);border-radius:12px;background:#fff;overflow:hidden}
+#view-collab .pj-task{display:flex;align-items:center;gap:12px;padding:12px 16px;border:none;border-bottom:1px solid var(--fill-1);background:none;text-align:left;cursor:pointer;font-family:inherit;width:100%;box-sizing:border-box}
+#view-collab .pj-task:last-child{border-bottom:0}
+#view-collab .pj-task:hover{background:var(--fill-1)}
+#view-collab .pj-task-title{flex:1;min-width:0;font-size:13.5px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:inherit}
+#view-collab .pj-task-meta{flex:none;font-size:11.5px;color:var(--text-soft)}
+
+/* ============ 项目详情 ============ */
+#view-collab #cv-proj-detail .sq-tabpane{overflow-y:auto}
+
+/* ============ 产物中心：左项目右清单 ============ */
+#view-collab .cv-art-layout{display:flex;flex:1;min-height:0}
+#view-collab .cv-art-side{width:240px;flex:none;border-right:1px solid var(--border);padding:16px 12px;overflow-y:auto;background:#fff}
+#view-collab .cv-art-side-title{font-size:12px;color:var(--text-soft);font-weight:600;margin:0 10px 10px}
+#view-collab .cv-art-proj-list{display:flex;flex-direction:column;gap:2px}
+#view-collab .cv-art-proj-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--text)}
+#view-collab .cv-art-proj-item:hover{background:var(--hover)}
+#view-collab .cv-art-proj-item.on{background:var(--brand-fill);color:var(--brand);font-weight:500}
+#view-collab .cv-art-proj-dot{width:8px;height:8px;border-radius:50%;flex:none}
+#view-collab .cv-art-proj-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#view-collab .cv-art-proj-cnt{font-size:11px;color:var(--text-soft);flex:none}
+#view-collab .cv-art-main{flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden;padding:20px 28px}
+#view-collab .art-list{border:1px solid var(--border);border-radius:12px;background:#fff;overflow-y:auto;margin-top:14px}
+#view-collab .art-list-head,#view-collab .art-list-row{display:grid;grid-template-columns:minmax(0,1fr) 90px 160px auto;gap:12px;padding:12px 16px;align-items:center}
+#view-collab .art-list-head{background:var(--fill-1);font-size:12px;color:var(--text-soft)}
+#view-collab .art-list-row{border-top:1px solid var(--fill-1);font-size:13px}
+#view-collab .art-c{min-width:0}
+#view-collab .art-c-name{display:flex;align-items:center;gap:8px;min-width:0}
+#view-collab .art-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)}
+#view-collab .art-c-ops{display:flex;gap:6px}
+
+/* ============ 项目详情：占满高度，左右各自滚动 ============ */
+#view-collab #cv-proj-detail{flex:1;min-height:0;display:flex;flex-direction:column}
+#view-collab #cv-proj-detail .pj-crumb{flex:none}
+#view-collab #cv-proj-detail .sq-layout{flex:1;min-height:0}
+#view-collab #cv-proj-detail .sq-side{overflow-y:auto}
+#view-collab #cv-proj-detail .sq-main{overflow:hidden}
+
+/* ============ 产物：后缀名 / 代码目录 / 文件列表弹窗 ============ */
+#view-collab .art-file-cnt{font-size:11px;color:var(--text-soft);margin-left:6px}
+#view-collab .art-file-row{display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;font-size:13px;color:var(--text)}
+#view-collab .art-file-ic{flex:none}
+#view-collab .art-file-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ============ 项目详情：模块规划与任务拆分 ============ */
+#view-collab .pj-plan-sec{padding:14px 0;border-bottom:1px solid var(--fill-1)}
+#view-collab .pj-plan-sec:first-child{padding-top:0}
+#view-collab .pj-plan-sec:last-child{border-bottom:0}
+#view-collab .pj-plan-k{font-size:13px;font-weight:600;color:var(--text);margin-bottom:8px}
+#view-collab .pj-plan-v{font-size:13px;color:var(--text-secondary);line-height:1.65}
+#view-collab .pj-plan-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+#view-collab .pj-module-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+#view-collab .pj-module-heading{display:flex;align-items:center;gap:7px;font-size:14px;color:var(--text)}
+#view-collab .pj-module-heading span{font-size:12px;color:var(--text-soft);font-variant-numeric:tabular-nums}
+#view-collab .pj-module-controls{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+#view-collab .pj-module-search{display:flex;align-items:center;gap:6px;min-width:175px;padding:7px 9px;border:1px solid var(--border);border-radius:7px;color:var(--text-soft);background:#fff}
+#view-collab .pj-module-search:focus-within{border-color:var(--brand)}
+#view-collab .pj-module-search input{width:100%;min-width:0;border:0;outline:0;background:transparent;font:inherit;font-size:12px;color:var(--text)}
+#view-collab .pj-module-filter{padding:7px 9px;border:1px solid var(--border);border-radius:7px;background:#fff;color:var(--text-secondary);font:inherit;font-size:12px}
+#view-collab .pj-module-views{display:flex;border:1px solid var(--border);border-radius:7px;overflow:hidden}
+#view-collab .pj-module-views button{border:0;background:#fff;color:var(--text-soft);padding:7px 9px;font:inherit;font-size:12px;cursor:pointer}
+#view-collab .pj-module-views button+button{border-left:1px solid var(--border)}
+#view-collab .pj-module-views button.on{background:var(--brand-fill);color:var(--brand);font-weight:600}
+#view-collab .pj-module-empty{padding:28px 12px;text-align:center;color:var(--text-soft);font-size:12.5px;border:1px dashed var(--border);border-radius:9px}
+#view-collab .pj-module-table{border:1px solid var(--border);border-radius:9px;overflow-x:auto;background:#fff}
+#view-collab .pj-module-tr{display:grid;grid-template-columns:minmax(180px,1fr) 120px 102px 128px;min-width:580px;align-items:center;gap:10px;padding:10px 12px;border-top:1px solid var(--border)}
+#view-collab .pj-module-th{border-top:0;background:var(--fill-1);color:var(--text-soft);font-size:11.5px}
+#view-collab .pj-module-name{min-width:0;display:flex;flex-direction:column;gap:3px}
+#view-collab .pj-module-open,#view-collab .ft-item-open{display:flex;flex-direction:column;gap:3px;min-width:0;width:100%;padding:0;border:0;background:none;text-align:left;font:inherit;cursor:pointer}
+#view-collab .pj-module-open:hover b,#view-collab .ft-item-open:hover b{color:var(--brand)}
+#view-collab .pj-module-open:focus-visible,#view-collab .ft-item-open:focus-visible{outline:2px solid var(--border-focus);outline-offset:3px;border-radius:3px}
+#view-collab .pj-module-name b{font-size:12.5px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#view-collab .pj-module-name small{font-size:11px;color:var(--text-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#view-collab .pj-module-count,#view-collab .pj-module-progress{font-size:11.5px;color:var(--text-secondary);white-space:nowrap}
+#view-collab button.pj-module-count{padding:0;border:0;background:none;font:inherit;font-size:11.5px;color:var(--brand);cursor:pointer;text-align:left}
+#view-collab .pj-module-children{display:flex;flex-direction:column;border-top:1px solid var(--border);padding:6px 12px 8px 28px;gap:4px;background:var(--fill-2)}
+#view-collab .pj-module-children-empty{padding:10px 0;color:var(--text-soft);font-size:12px}
+#view-collab .pj-module-children .pj-task{border:1px solid var(--border);border-radius:7px;padding:8px 10px;background:#fff}
+#view-collab .pj-module-children .pj-task:hover{border-color:var(--brand);background:var(--brand-fill)}
+#view-collab .pj-module-progress{display:flex;align-items:center;gap:6px;font-variant-numeric:tabular-nums}
+#view-collab .pj-module-progress i{width:45px;height:5px;border-radius:4px;background:var(--fill-1);overflow:hidden}
+#view-collab .pj-module-progress em{display:block;height:100%;background:var(--brand);border-radius:4px}
+#view-collab .pj-module-actions{display:flex;gap:4px}
+#view-collab .pj-module-actions button{width:26px;height:26px;border:1px solid var(--border);border-radius:6px;background:#fff;color:var(--text-secondary);cursor:pointer;font:inherit;font-size:15px}
+#view-collab .pj-module-actions button:hover{border-color:var(--brand);color:var(--brand)}
+#view-collab .pj-module-actions button:nth-child(2){background:var(--brand);border-color:var(--brand);color:#fff}
+#view-collab .pj-module-actions button:last-child:hover{border-color:var(--danger);color:var(--danger)}
+@media(max-width:900px){#view-collab .pj-module-toolbar{align-items:flex-start}#view-collab .pj-module-controls{width:100%}#view-collab .pj-module-search{flex:1}}
+#view-collab .pj-plan-head .pj-plan-k{margin-bottom:0}
+#view-collab .pj-plan-hint{font-size:12.5px;color:var(--text-soft);line-height:1.6}
+#view-collab .pj-plan-hint b{color:var(--text);font-weight:600}
+#view-collab .pj-ms-list{display:flex;flex-direction:column;gap:9px}
+#view-collab .pj-ms-item{display:flex;align-items:center;gap:10px;font-size:13px}
+#view-collab .pj-ms-dot{width:8px;height:8px;border-radius:50%;background:var(--brand);flex:none}
+#view-collab .pj-ms-name{color:var(--text);flex:1;min-width:0}
+#view-collab .pj-ms-date{color:var(--text-soft);font-size:12px;flex:none}
+
+/* ============ 智能拆解：agent 对话 ============ */
+.split-modal{width:640px;max-width:calc(100vw - 40px);max-height:80vh;display:flex;flex-direction:column;background:#fff;border-radius:14px;overflow:hidden;box-shadow:var(--menu-shadow)}
+.split-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--border);flex:none}
+.split-head-l{display:flex;align-items:center;gap:10px}
+.split-agent-av{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#7c5cfc,#5b8def);color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;flex:none}
+.split-head-t{font-size:14px;font-weight:600;color:var(--text)}
+.split-head-s{font-size:11.5px;color:var(--text-soft);margin-top:2px}
+.split-body{flex:1;overflow-y:auto;padding:18px;background:var(--fill-2);display:flex;flex-direction:column;gap:12px}
+.split-msg{font-size:13px;line-height:1.6}
+.split-msg--user{align-self:flex-end;max-width:88%;background:var(--brand);color:#fff;padding:9px 13px;border-radius:12px 12px 2px 12px}
+.split-msg--agent{align-self:flex-start;width:100%;background:#fff;border:1px solid var(--border);border-radius:12px 12px 12px 2px;padding:13px 15px}
+.split-thinking{display:inline-flex;gap:4px;margin-right:7px;vertical-align:middle}
+.split-thinking i{width:5px;height:5px;border-radius:50%;background:var(--text-soft);animation:cvPulse 1.2s infinite}
+.split-thinking i:nth-child(2){animation-delay:.2s}
+.split-thinking i:nth-child(3){animation-delay:.4s}
+.split-thinking-t{color:var(--text-soft);font-size:12.5px}
+.split-agent-t{font-size:13px;color:var(--text);margin-bottom:10px}
+.split-list{display:flex;flex-direction:column;gap:8px}
+.split-item{display:flex;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:all .15s}
+.split-item:hover{border-color:var(--border-focus)}
+.split-item input{margin-top:2px;flex:none}
+.split-item-body{display:flex;flex-direction:column;gap:3px;min-width:0}
+.split-item-title{font-size:13px;font-weight:500;color:var(--text)}
+.split-item-desc{font-size:12px;color:var(--text-soft);line-height:1.5}
+.split-foot{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-top:1px solid var(--border);flex:none}
+.split-count{font-size:12.5px;color:var(--text-soft)}
+.split-count b{color:var(--brand)}
+.split-foot-right{display:flex;gap:8px}
+
+/* ============ 特性/模块拆解：人工拆解弹窗 + 特性列表 ============ */
+.ms-modal{width:640px;max-width:calc(100vw - 40px);max-height:82vh;display:flex;flex-direction:column;background:#fff;border-radius:14px;overflow:hidden;box-shadow:var(--menu-shadow)}
+.ms-head{display:flex;flex-direction:column;gap:3px;padding:16px 18px;border-bottom:1px solid var(--border);flex:none;position:relative}
+.ms-head-t{font-size:14px;font-weight:600;color:var(--text)}
+.ms-head-s{font-size:11.5px;color:var(--text-soft)}
+.ms-head .sync-modal__close{position:absolute;top:14px;right:14px}
+.ms-body{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:14px}
+.ms-field{display:flex;flex-direction:column;gap:6px}
+.ms-field label{font-size:12px;color:var(--text-secondary)}
+.ms-field input,.ms-field textarea{width:100%;box-sizing:border-box;border:1px solid var(--border-hover);border-radius:8px;padding:8px 10px;font-size:12.5px;color:var(--text);font-family:inherit;outline:none;background:#fff}
+.ms-field textarea{resize:vertical;line-height:1.5}
+.ms-field input:focus,.ms-field textarea:focus{border-color:var(--brand)}
+.ms-items{display:flex;flex-direction:column;gap:12px}
+.ms-empty{color:var(--text-soft);font-size:12.5px;text-align:center;padding:16px;border:1px dashed var(--border);border-radius:10px}
+.ms-item{display:flex;flex-direction:column;gap:8px;border:1px solid var(--border);border-radius:10px;padding:12px;background:var(--fill-2)}
+.ms-item-head{display:flex;align-items:center;justify-content:space-between}
+.ms-item-idx{font-size:12px;font-weight:600;color:var(--brand)}
+.ms-item-x{border:none;background:none;color:var(--text-soft);cursor:pointer;font-size:15px;line-height:1;padding:2px 4px}
+.ms-item-x:hover{color:var(--danger)}
+.ms-title,.ms-desc,.ms-accept{width:100%;box-sizing:border-box;border:1px solid var(--border-hover);border-radius:8px;font-size:12.5px;color:var(--text);font-family:inherit;outline:none;background:#fff}
+.ms-title{padding:8px 10px;font-weight:500}
+.ms-desc,.ms-accept{resize:vertical;padding:8px 10px;line-height:1.5}
+.ms-title:focus,.ms-desc:focus,.ms-accept:focus{border-color:var(--brand)}
+.ms-add{width:100%;padding:10px;border:1px dashed var(--border-hover);border-radius:10px;background:none;color:var(--text-secondary);font-size:13px;font-family:inherit;cursor:pointer}
+.ms-add:hover{border-color:var(--brand);color:var(--brand)}
+.ms-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 18px;border-top:1px solid var(--border);flex:none}
+.ms-foot-hint{font-size:12px;color:var(--text-soft)}
+.ms-foot-right{display:flex;gap:8px}
+
+/* 任务规划：特性列表 */
+#view-collab .pj-plan-acts{display:flex;gap:8px;flex-wrap:wrap}
+#view-collab .ft-list{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+#view-collab .ft-item{border:1px solid var(--border);border-radius:10px;padding:10px 12px;background:var(--fill-2)}
+#view-collab .ft-item-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:4px;flex-wrap:wrap}
+#view-collab .ft-item-head b{font-size:13px;font-weight:600;color:var(--text);min-width:0}
+#view-collab .ft-parent-badge{flex:none;display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;background:var(--fill-1);color:var(--text-soft);font-size:10.5px;font-weight:600;cursor:help}
+#view-collab .ft-item-acts{display:flex;gap:6px;flex:none;margin-left:auto}
+#view-collab .ft-act{border:1px solid var(--border-hover);background:#fff;border-radius:6px;padding:3px 10px;font-size:11.5px;color:var(--text-secondary);cursor:pointer;font-family:inherit;white-space:nowrap;display:inline-flex;align-items:center;gap:4px}
+#view-collab .ft-act:hover{border-color:var(--brand);color:var(--brand)}
+#view-collab .ft-act--split{background:var(--brand-fill);border-color:transparent;color:var(--brand)}
+#view-collab .ft-act--split:hover{background:var(--brand);color:#fff}
+#view-collab .ft-act--push{background:var(--brand);border-color:var(--brand);color:#fff}
+#view-collab .ft-act--push:hover{background:var(--brand-hover);color:#fff}
+#view-collab .ft-act--del:hover{border-color:var(--danger);color:var(--danger)}
+#view-collab .ft-files{font-size:11px;color:var(--brand);background:var(--brand-fill);border-radius:4px;padding:1px 6px;flex:none}
+#view-collab .ft-item-desc{font-size:12.5px;color:var(--text-secondary);line-height:1.55}
+#view-collab .ft-item-files{font-size:12px;color:var(--text-soft)}
+#view-collab .ft-item-accept{display:flex;gap:8px;margin-top:6px;font-size:12px;color:var(--text-soft);line-height:1.55}
+#view-collab .ft-item-accept span{flex:none;color:var(--warning);font-weight:500}
+#view-collab .ft-item-pushed{display:inline-block;margin-top:6px;font-size:11px;color:var(--success)}
+#view-collab .ft-tasks{display:flex;flex-direction:column;gap:6px;margin-top:8px;padding-top:8px;border-top:1px dashed var(--border)}
+#view-collab .ft-tasks-toggle{display:flex;align-items:center;gap:5px;border:0;background:none;padding:2px 0;cursor:pointer;font-family:inherit}
+#view-collab .ft-tasks-caret{flex:none;color:var(--text-soft);transition:transform .15s}
+#view-collab .ft-tasks.is-collapsed .ft-tasks-caret{transform:rotate(-90deg)}
+#view-collab .ft-tasks-body{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+#view-collab .ft-tasks.is-collapsed .ft-tasks-body{display:none}
+#view-collab .ft-tasks-k{font-size:11.5px;font-weight:600;color:var(--success)}
+#view-collab .ft-tasks-empty{font-size:11.5px;color:var(--text-soft)}
+#view-collab .ft-task{display:flex;align-items:center;gap:8px;width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:8px;background:#fff;cursor:pointer;text-align:left;font-family:inherit}
+#view-collab .ft-task:hover{border-color:var(--brand)}
+#view-collab .ft-task .badge-status-dot{flex:none}
+#view-collab .ft-task-title{flex:1;min-width:0;font-size:12.5px;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#view-collab .ft-task-status{flex:none;font-size:11px;color:var(--text-soft)}
+#view-collab .ft-task-status--running{color:var(--brand)}
+#view-collab .ft-task-status--done{color:var(--success)}
+#view-collab .ft-task-status--fail{color:var(--danger)}
+
+/* 父任务行列表（简洁模式） */
+#view-collab .ft-item--row{display:flex;align-items:center;flex-wrap:wrap;gap:10px;padding:10px 12px}
+#view-collab .ft-item--row .ft-item-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+#view-collab .ft-item--row .ft-item-main b{font-size:13px;font-weight:600;color:var(--text)}
+#view-collab .ft-item--row .ft-item-main small{font-size:11.5px;color:var(--text-secondary);line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#view-collab .ft-item-meta{font-size:11px;color:var(--text-soft)}
+#view-collab .ft-item-task-toggle{width:max-content;padding:0;border:0;background:none;text-align:left;cursor:pointer;color:var(--brand);font:inherit;font-size:11px}
+#view-collab .ft-item--row .pj-module-children{flex-basis:100%;padding:8px 0 0;border-top:1px dashed var(--border);background:transparent}
+#view-collab .ft-item--row .ft-item-acts{flex:none;display:flex;gap:4px}
+#view-collab .ft-item--row .ft-item-acts .ft-act{padding:4px 5px}
+
+/* 项目信息：项目目标 */
+#view-collab .pj-side-goal{margin-top:14px;padding:12px 14px;background:var(--brand-fill);border-radius:10px}
+#view-collab .pj-side-goal-k{font-size:11px;color:var(--brand);font-weight:600;margin-bottom:5px}
+#view-collab .pj-side-goal-v{font-size:12.5px;color:var(--text);line-height:1.6}
+
+/* ============ 项目详情：左侧项目基本信息，右侧内容 ============ */
+#view-collab #cv-proj-detail .sq-layout--detail{grid-template-columns:minmax(0,1fr) 300px}
+#view-collab #cv-proj-detail .sq-side--right{order:2;overflow-y:auto}
+#view-collab #cv-proj-detail .sq-main{order:2}

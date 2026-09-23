@@ -1,0 +1,27 @@
+<!-- 评审详情 -->
+<div class="cv-panel" id="cv-review-detail">
+  <div class="rv-detail">
+    <div class="rv-detail-left">
+      <div class="rv-header">
+        <div class="rv-header-left">
+          <button class="rv-back" onclick="cvSwitchView('review')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>返回</button>
+          <span class="rv-title" id="cv-rv-title">评审详情</span>
+        </div>
+      </div>
+      <div class="rv-art-tabs" id="cv-rv-art-tabs"></div>
+      <div class="rv-art-body" id="cv-rv-art-body"></div>
+    </div>
+    <div class="rv-detail-right">
+      <div class="rv-panel-header" id="cv-rv-panel-header"></div>
+      <div class="rv-comments" id="cv-rv-comments"></div>
+      <div class="rv-input-area">
+        <textarea class="rv-input" id="cv-rv-input" placeholder="输入评审意见"></textarea>
+        <div class="rv-actions">
+          <button class="rv-btn rv-btn--pass" onclick="cvSubmitReview('pass')">通过</button>
+          <button class="rv-btn rv-btn--reject" onclick="cvSubmitReview('reject')">驳回</button>
+          <button class="rv-btn rv-btn--comment" onclick="cvSubmitReview('comment')">评论</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

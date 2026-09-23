@@ -1,0 +1,131 @@
+/* ============ CHAT VIEW ============ */
+#view-collab .chat-view{display:flex;flex-direction:column;height:100%;background:#fff}
+#view-collab .chat-header{display:flex;align-items:center;justify-content:space-between;padding:12px 24px;border-bottom:1px solid var(--border);flex-shrink:0}
+#view-collab .chat-header-left{display:flex;align-items:center;gap:8px}
+#view-collab .chat-title{font-size:14px;font-weight:600;color:var(--text)}
+#view-collab .chat-status-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:600}
+#view-collab .chat-status-badge--running{background:#e8f0fe;color:var(--dot-blue)}
+#view-collab .chat-status-badge--done{background:var(--success-bg);color:var(--success)}
+#view-collab .chat-status-badge--review{background:var(--warning-bg);color:var(--warning)}
+#view-collab .chat-status-badge--fail{background:var(--danger-bg);color:var(--danger)}
+#view-collab .chat-body{flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:16px}
+#view-collab .chat-msg{display:flex;gap:10px;max-width:80%}
+#view-collab .chat-msg--agent{align-self:flex-start}
+#view-collab .chat-msg--user{align-self:flex-end;flex-direction:row-reverse}
+#view-collab .chat-msg-avatar{width:28px;height:28px;min-width:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:#fff;flex-shrink:0}
+#view-collab .chat-msg--agent .chat-msg-avatar{background:linear-gradient(135deg,#7c5cfc,#5b8def)}
+#view-collab .chat-msg--user .chat-msg-avatar{background:linear-gradient(135deg,#34c07a,var(--success))}
+#view-collab .chat-msg-bubble{padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.6}
+#view-collab .chat-msg--agent .chat-msg-bubble{background:var(--fill-1);color:var(--text);border-top-left-radius:4px}
+#view-collab .chat-msg--user .chat-msg-bubble{background:var(--brand);color:#fff;border-top-right-radius:4px}
+#view-collab .chat-msg-time{font-size:10px;color:var(--text-soft);margin-top:4px}
+#view-collab .chat-typing{display:flex;align-items:center;gap:4px;padding:8px 14px;background:var(--fill-1);border-radius:12px;border-top-left-radius:4px}
+#view-collab .chat-typing-dot{width:6px;height:6px;border-radius:50%;background:var(--text-secondary);animation:typingBounce 1.4s infinite}
+#view-collab .chat-typing-dot:nth-child(2){animation-delay:.2s}
+#view-collab .chat-typing-dot:nth-child(3){animation-delay:.4s}
+@keyframes typingBounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
+#view-collab .chat-input-bar{display:flex;align-items:center;gap:8px;padding:12px 24px;border-top:1px solid var(--border);flex-shrink:0}
+#view-collab .chat-input{flex:1;padding:10px 14px;border:1px solid var(--border-hover);border-radius:10px;font-size:13px;background:#fff;outline:none;transition:border-color .15s}
+#view-collab .chat-input:focus{border-color:var(--border-focus)}
+#view-collab .chat-send{padding:8px 16px;border:none;border-radius:10px;background:var(--brand);color:#fff;font-size:13px;font-weight:500;cursor:pointer;transition:background .15s}
+#view-collab .chat-send:hover{background:var(--brand-hover)}
+
+/* chat artifacts */
+#view-collab .chat-artifacts{margin-top:16px;padding:14px;border:1px solid var(--border);border-radius:10px;background:var(--fill-2)}
+#view-collab .chat-artifacts-title{font-size:12.5px;font-weight:600;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+#view-collab .artifact-item{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#fff;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;font-size:12.5px;color:var(--text);cursor:pointer;transition:all .15s}
+#view-collab .artifact-item:hover{border-color:var(--border-focus);box-shadow:0 1px 6px rgba(73,93,255,.06)}
+#view-collab .artifact-icon,
+.cv-scope .artifact-icon{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0}
+#view-collab .artifact-icon--code,
+.cv-scope .artifact-icon--code{background:var(--success)}
+#view-collab .artifact-icon--doc,
+.cv-scope .artifact-icon--doc{background:var(--dot-blue)}
+#view-collab .artifact-icon--test,
+.cv-scope .artifact-icon--test{background:var(--brand)}
+#view-collab .artifact-icon--spec,
+.cv-scope .artifact-icon--spec{background:var(--warning)}
+#view-collab .artifact-meta{font-size:10.5px;color:var(--text-soft);margin-left:auto}
+
+/* ============ MODALS ============ */
+.sync-overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;z-index:100;overflow:hidden}
+.cv-scope .sync-modal{width:560px;max-width:90vw;max-height:88vh;display:flex;flex-direction:column;background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.15)}
+.cv-scope .sync-modal__header{display:flex;align-items:center;justify-content:space-between;padding:20px 24px 0;flex-shrink:0}
+.cv-scope .sync-modal__body{flex:1;overflow-y:auto;padding:16px 24px}
+.cv-scope .sync-modal__title{font-size:18px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px}
+.cv-scope .sync-modal__close{display:flex;align-items:center;padding:6px;border:none;background:none;border-radius:8px;color:var(--text-secondary);cursor:pointer;transition:all .15s}
+.cv-scope .sync-modal__close:hover{background:var(--fill-1);color:var(--text-secondary)}
+.cv-scope .sync-modal__form{padding:16px 24px}
+.cv-scope .sync-modal__field{margin-bottom:16px;position:relative}
+.cv-scope .sync-modal__label{display:block;margin-bottom:6px;font-size:12.5px;font-weight:500;color:var(--text-secondary)}
+.cv-scope .sync-modal__input{width:100%;padding:10px 12px;border:1px solid var(--border-hover);border-radius:9px;font-size:14px;color:var(--text);background:#fff;outline:none;transition:border-color .15s,box-shadow .15s}
+.cv-scope .sync-modal__input:focus{border-color:var(--border-focus);box-shadow:0 0 0 3px rgba(73,93,255,.08)}
+.cv-scope .sync-modal__input::placeholder{color:var(--text-soft)}
+.cv-scope .sync-modal__textarea{width:100%;padding:10px 12px;border:1px solid var(--border-hover);border-radius:9px;font-size:13.5px;color:var(--text);background:#fff;outline:none;resize:vertical;line-height:1.6;transition:border-color .15s,box-shadow .15s}
+.cv-scope .sync-modal__textarea:focus{border-color:var(--border-focus);box-shadow:0 0 0 3px rgba(73,93,255,.08)}
+.cv-scope .sync-modal__row{display:flex;gap:12px}
+.cv-scope .sync-modal__row .sync-modal__field{flex:1}
+.cv-scope .sync-modal__select{display:flex;align-items:center;justify-content:space-between;gap:6px;width:100%;padding:10px 12px;border:1px solid var(--border-hover);border-radius:9px;background:#fff;font-size:13px;color:var(--text);cursor:pointer;transition:all .15s}
+.cv-scope .sync-modal__select:hover{border-color:var(--border-focus)}
+.cv-scope .sync-modal__select-placeholder{flex:1}
+.cv-scope .sync-modal__field{position:relative}
+.cv-scope .sync-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:60;background:#fff;border:1px solid #e8e8e5;border-radius:10px;box-shadow:0 8px 28px rgba(0,0,0,.12);overflow:hidden;max-height:240px;overflow-y:auto;display:none}
+.cv-scope .sync-dropdown--open{display:block}
+.cv-scope .sync-dropdown-item{padding:9px 12px;font-size:13px;color:var(--text);cursor:pointer;transition:background .1s}
+.cv-scope .sync-dropdown-item:hover{background:var(--hover)}
+.cv-scope .sync-dropdown-item--active{background:var(--brand-fill);color:var(--brand);font-weight:600}
+
+/* collab options */
+.cv-scope .sync-collab-options{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cv-scope .sync-collab-option{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px;border:2px solid var(--border);border-radius:10px;background:#fff;cursor:pointer;transition:all .15s}
+.cv-scope .sync-collab-option:hover{border-color:var(--border-focus)}
+.cv-scope .sync-collab-option--selected{border-color:var(--brand);background:var(--brand-fill);box-shadow:0 2px 12px rgba(73,93,255,.1)}
+.cv-scope .sync-collab-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff}
+.cv-scope .sync-collab-name{font-size:12.5px;font-weight:600;color:var(--text)}
+
+.cv-scope .sync-modal__footer{display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:12px 24px;border-top:1px solid var(--border);flex-shrink:0;background:#fff;border-radius:0 0 16px 16px}
+.cv-scope .sync-modal__btn{padding:9px 20px;border-radius:9px;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s}
+.cv-scope .sync-modal__btn--ghost{border:1px solid var(--border-hover);background:#fff;color:var(--text-secondary)}
+.cv-scope .sync-modal__btn--ghost:hover{background:var(--hover)}
+.cv-scope .sync-modal__btn--primary{border:1px solid var(--brand);background:var(--brand);color:#fff}
+.cv-scope .sync-modal__btn--primary:hover{background:var(--brand-hover)}
+.cv-scope .sync-modal__btn--start{border:1px solid var(--success);background:var(--success);color:#fff}
+.cv-scope .sync-modal__btn--start:hover{background:#1b8a5a}
+.cv-scope .sync-modal__btn--amber{border:1px solid var(--warning);background:var(--warning);color:#fff}
+.cv-scope .sync-modal__btn--amber:hover{background:#a8752a}
+.cv-scope .sync-modal__btn--purple{border:1px solid #7858f9;background:#7858f9;color:#fff}
+.cv-scope .sync-modal__btn--purple:hover{background:#6543e8}
+
+/* task modal (exec/transfer/twist/review) */
+.cv-scope .task-modal{width:520px;max-width:90vw;max-height:85vh;overflow-y:auto;background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.15)}
+.cv-scope .task-modal__header{display:flex;align-items:center;justify-content:space-between;padding:20px 24px 0}
+.cv-scope .task-modal__title{font-size:18px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px}
+.cv-scope .task-modal__close{display:flex;align-items:center;padding:6px;border:none;background:none;border-radius:8px;color:var(--text-secondary);cursor:pointer;transition:all .15s}
+.cv-scope .task-modal__close:hover{background:var(--fill-1);color:var(--text-secondary)}
+.cv-scope .task-modal__body{padding:16px 24px}
+.cv-scope .task-modal__label{font-size:12.5px;font-weight:500;color:var(--text-secondary);margin-bottom:8px}
+.cv-scope .task-modal__footer{display:flex;align-items:center;justify-content:flex-end;gap:10px;padding:0 24px 20px}
+
+/* person list */
+.cv-scope .person-list{max-height:280px;overflow-y:auto;border:1px solid var(--border-hover);border-radius:10px}
+.cv-scope .person-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border:none;background:none;cursor:pointer;width:100%;text-align:left;transition:background .1s;font-family:inherit}
+.cv-scope .person-item:hover{background:var(--hover)}
+.cv-scope .person-item--selected{background:var(--brand-fill)}
+.cv-scope .person-avatar-sm{width:30px;height:30px;min-width:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;color:#fff;flex-shrink:0;background:linear-gradient(135deg,#7c5cfc,#5b8def)}
+.cv-scope .person-name-sm{font-size:13px;font-weight:500;color:var(--text)}
+.cv-scope .person-role-sm{font-size:11px;color:var(--text-soft)}
+
+/* workflow steps */
+.cv-scope .workflow-step{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px}
+.cv-scope .workflow-step--current{border-color:var(--dot-blue);background:#f0f7ff}
+.cv-scope .workflow-step--done{opacity:.6}
+.cv-scope .workflow-step-num{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0;background:var(--border-hover)}
+.cv-scope .workflow-step--current .workflow-step-num{background:var(--dot-blue)}
+.cv-scope .workflow-step--done .workflow-step-num{background:var(--success)}
+.cv-scope .workflow-step-name{font-size:13px;font-weight:500;color:var(--text)}
+.cv-scope .workflow-step-status{font-size:11px;color:var(--text-soft);margin-left:auto}
+.cv-scope .workflow-step--current .workflow-step-status{color:var(--dot-blue);font-weight:600}
+
+/* artifact list in modals */
+.cv-scope .artifact-list{display:flex;flex-direction:column;gap:6px}
+.cv-scope .artifact-row{display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:12.5px;color:var(--text)}

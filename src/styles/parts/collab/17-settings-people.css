@@ -1,0 +1,8 @@
+/* ============ 人员管理表格 ============ */
+#view-collab .cv-perm-head,#view-collab .cv-perm-row{grid-template-columns:minmax(0,1fr) auto}
+#view-collab .ps-av{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:600;flex:none;margin-right:10px}
+#view-collab .cv-proj-desc-wrap{display:flex;flex-direction:column;min-width:0}
+#view-collab .cv-proj-desc-wrap b{font-weight:500;color:var(--text)}
+#view-collab .cv-perm-acts{display:flex;gap:6px}
+#view-collab .act-btn--danger{color:var(--danger);border-color:#f0c4c4}
+#view-collab .act-btn--danger:hover{background:var(--danger-bg)}

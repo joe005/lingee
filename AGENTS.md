@@ -65,3 +65,37 @@ Consult the wiki when working on features, debugging, or onboarding to a new are
 
 改完跑 `npm run check`（模块自检）再跑 `npm run build`。
 
+### 全工程的页面隔离与多人协作
+
+整个工程按页面划分源码归属。每个页面的主体 HTML、专属 CSS 和交互 JS
+分别放在独立文件中；页面内可独立开发的子页面或功能区也按同一原则拆分。
+弹窗归属到对应页面或功能，避免多个页面长期共用一份可频繁修改的文件。
+只有确实跨页面复用的导航、状态、组件和样式才放在共享模块中。
+
+1. 页面容器只负责导航、布局和按现有 DOM 顺序引入页面片段；页面内容放在
+   `src/views/` 的对应片段中，弹窗放在 `src/modals/` 的对应片段中。
+2. 页面样式放在 `src/styles/parts/` 的对应文件中，选择器限定作用范围，
+   避免影响其他页面；公共样式集中维护。新增样式遵守现有 `@import` 层叠顺序。
+3. 页面行为放在 `src/scripts/features/` 的对应模块中；共享数据、导航和跨页
+   跳转通过明确的公共接口协作，不让页面模块直接修改其他页面的内部状态或 DOM。
+4. 并行开发前先确认 HTML、CSS、JS 和弹窗的文件归属及共享接口。现有页面
+   如仍混在共享文件中，先按归属拆分再分配给不同同事；合并后运行
+   `npm run check`、`npm run build`，并核对受影响页面与跨页流程。
+
+源码按页面隔离，构建产物 `dist/index.html` 仍保持可独立打开的单文件；
+拆分时保留现有 DOM id、URL 和初始化顺序。
+
+### 协作开发页面文件归属
+
+- 工作台：`src/views/collab/workbench*.html`、`src/modals/collab/workbench.html`、
+  `src/styles/parts/collab/*workbench*.css`、`src/scripts/features/collab/` 的任务模块。
+- 项目：`src/views/collab/projects.html`、`src/modals/collab/projects.html`、
+  `src/styles/parts/collab/*projects*.css`、`project-view.js` 与 `projects.js`。
+- 专家与专家团：各自的 `src/views/collab/` 片段；专家卡片样式在
+  `src/styles/parts/collab/*experts*.css`，专家团列表复用 `apps` 样式及
+  `src/scripts/features/expert/` 模块。
+- 设置：`src/views/collab/settings.html`、`src/modals/collab/settings.html`、
+  `src/styles/parts/collab/*settings*.css`、`persons.js`、`squads.js`、`config.js`。
+- 共享导航与容器留在 `src/views/collab.html`；共享 CSS 文件名带 `shared`，
+  `src/styles/parts/collab.css` 的导入顺序保留原有层叠关系。`data.js`、
+  `view.js`、`index.js` 是跨页模块，修改前先确认接口影响。

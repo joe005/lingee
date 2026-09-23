@@ -1,0 +1,3 @@
+#view-collab .chat-header .rv-back{margin-right:2px}
+.cv-scope .sync-modal__body{padding:16px 24px}
+@keyframes cvPulse{0%,100%{opacity:1}50%{opacity:.35}}

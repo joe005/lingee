@@ -1,0 +1,12 @@
+/* ============ 设置表格（项目设置 / 人员管理） ============ */
+#view-collab .cfg-table{border:1px solid var(--border);border-radius:12px;background:#fff;overflow:hidden;margin-top:14px}
+#view-collab .cfg-table-head,#view-collab .cfg-table-row{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) minmax(0,1fr) minmax(0,.8fr);gap:12px;padding:12px 16px;align-items:center}
+#view-collab .cfg-table-head{background:var(--fill-1);font-size:12px;color:var(--text-soft)}
+#view-collab .cfg-table-row{border-top:1px solid var(--fill-1);font-size:13px;color:var(--text)}
+#view-collab .cfg-t-name{display:flex;align-items:center;gap:8px;min-width:0}
+#view-collab .cfg-dot{width:8px;height:8px;border-radius:50%;flex:none;display:inline-block}
+#view-collab .cfg-t-on{color:var(--success)}
+#view-collab .cfg-t-off{color:var(--text-soft)}
+#view-collab .cv-proj-head,#view-collab .cv-proj-row{grid-template-columns:minmax(0,1.8fr) .5fr .7fr minmax(0,1.4fr) minmax(0,1.1fr) .5fr}
+#view-collab .cv-proj-desc{display:block;font-style:normal;font-size:11px;color:var(--text-soft);margin-top:2px}
+#view-collab .cv-proj-repo{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-secondary)}
