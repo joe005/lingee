@@ -6,6 +6,43 @@
 <title>金蝶灵基</title>
 <link rel="stylesheet" href="./src/styles/tokens.css">
 <link rel="stylesheet" href="./src/styles/app.css">
+<!-- 防闪烁：在 JS 模块加载前就根据 URL/localStorage 确定初始视图，
+     避免页面先渲染默认视图再跳转造成的闪烁。
+     逻辑与 boot/route.js 的路径解析一致（精简版），
+     initRoute() 执行后会移除 data-initial-view 属性，交还给 hidden class 控制。 -->
+<script>
+(function(){
+  var p=location.pathname;
+  var b=p.replace(/[^/]*$/,'').replace(/\/+$/,'');
+  if(b){if(p===b)p='/';else if(p.indexOf(b+'/')===0)p=p.slice(b.length)||'/';}
+  var seg=p.replace(/^\/+|\/+$/g,'').split('/')[0]||'';
+  var VN=['home','newtask','chat','apps','collab','skills','agents','settings','design','experts','tasks','changelog'];
+  var v='';
+  if(VN.indexOf(seg)>=0)v=seg;
+  else{var ov=new URLSearchParams(location.search).get('view');
+    if(ov&&VN.indexOf(ov)>=0)v=ov;
+    else{var s=localStorage.getItem('lingeeUrlState')||'';
+      if(s){var m=s.match(/\/([^\/?]+)/);if(m&&VN.indexOf(m[1])>=0)v=m[1];}}}
+  if(v==='experts')v='collab';
+  if(!v)v='newtask';
+  document.documentElement.setAttribute('data-initial-view',v);
+})();
+</script>
+<style>
+  html[data-initial-view] .view{display:none!important}
+  html[data-initial-view="home"] #view-home,
+  html[data-initial-view="newtask"] #view-newtask,
+  html[data-initial-view="chat"] #view-chat,
+  html[data-initial-view="apps"] #view-apps,
+  html[data-initial-view="collab"] #view-collab,
+  html[data-initial-view="skills"] #view-skills,
+  html[data-initial-view="agents"] #view-agents,
+  html[data-initial-view="settings"] #view-settings,
+  html[data-initial-view="design"] #view-design,
+  html[data-initial-view="analytics"] #view-analytics,
+  html[data-initial-view="tasks"] #view-tasks,
+  html[data-initial-view="changelog"] #view-changelog{display:flex!important}
+</style>
 </head>
 <body>
 

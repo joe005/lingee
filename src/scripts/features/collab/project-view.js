@@ -6,15 +6,18 @@ import { tbSave } from './tb-core.js';
 import { renderTaskBoard, tbOpenTask, tbShowBoard } from './task-board.js';
 import { cvSetProject, cvUpdateCounts } from './projects.js';
 import { cvSwitchView } from './view.js';
+import { setTasksEmbedded } from '../../core/view.js';
+import { tkSetProjectListMode } from '../tasks-v2/index.js';
 import { TEAMS } from '../expert/store.js';
-/* 项目列表与详情；详情嵌入按项目筛选的任务管理面板，并直接维护项目成员。 */
+/* 项目列表与详情；详情复用同一个任务管理页面，并直接维护项目成员。 */
 
 var cvProjCur='';           /* 项目详情正在看的项目 id，空 = 项目列表 */
 var cvProjectListView='list';
 var cvProjectScope='all';
 var cvModuleView='table', cvModuleFilter='all', cvSummaryCollapsed=false;
 var cvProjectTaskBoardPlaceholder=null, cvProjectTaskBoardPriorProject='', cvProjectTaskBoardEmbedded=false;
-var cvMemberPickerSelected=new Set(),cvMemberPickerPopup=null;
+var cvMembersPageOpen=false;
+var cvMemberPickerSelected=new Set(),cvMemberPickerProject='',cvMemberPickerPopup=null;
 function cvCanManageProject(project){
   if(!project)return false;
   var name=cvCurrentUserName();
@@ -124,6 +127,7 @@ function cvRenderProjectDetail(){
   var el=$('#cv-proj-detail'); if(!el) return;
   var p=cvProjectById(cvProjCur);
   if(!p){cvRestoreProjectTaskBoard();cvResetProjectListState();return;}
+  var membersScroll=el.querySelector('.pj-members-page')?.scrollTop||0;
   var embeddedTaskBoard=cvProjectTaskBoardEmbedded?$('#cv-tasks'):null;
   var members=cvPeopleInProject(p);
   var tasks=CV_TASKS.filter(function(t){return t.project===cvProjCur&&t.kind!=='epic';});
@@ -172,36 +176,25 @@ function cvRenderProjectDetail(){
   cvRenderProjectMembersModal();
   if(embeddedTaskBoard){
     var main=el.querySelector('.sq-main');
-    if(main){ main.appendChild(embeddedTaskBoard); embeddedTaskBoard.classList.add('active','pj-embedded-task-board'); renderTaskBoard(); }
+    if(main){ main.appendChild(embeddedTaskBoard); embeddedTaskBoard.classList.remove('hidden'); embeddedTaskBoard.classList.add('pj-embedded-task-view'); }
   }
   if(!cvCanManageProject(p))el.querySelectorAll('[data-pj-field]').forEach(function(field){field.disabled=true;});
 }
 function cvMountProjectTaskBoard(){
-  var board=$('#cv-tasks'), detail=$('#cv-proj-detail'), main=detail&&detail.querySelector('.sq-main');
+  var board=$('#view-tasks'), detail=$('#cv-proj-detail'), main=detail&&detail.querySelector('.sq-main');
   if(!board||!main)return;
-  if(!cvProjectTaskBoardEmbedded){
-    cvProjectTaskBoardPriorProject=$('#tb-project')?.value||'';
-    cvProjectTaskBoardPlaceholder=document.createComment('project-task-board-home');
-    board.parentNode.insertBefore(cvProjectTaskBoardPlaceholder,board);
-    cvProjectTaskBoardEmbedded=true;
-  }
-  main.appendChild(board);
-  board.classList.add('active','pj-embedded-task-board');
-  cvSetProject(cvProjCur);
-  renderTaskBoard();
+  cvProjectTaskBoardEmbedded=true;
+  setTasksEmbedded(true,main);
+  board.classList.add('pj-embedded-task-view');
+  tkSetProjectListMode(true);
 }
 function cvRestoreProjectTaskBoard(){
   if(!cvProjectTaskBoardEmbedded)return;
-  var board=$('#cv-tasks');
-  if(board){
-    board.classList.remove('active','pj-embedded-task-board');
-    if(cvProjectTaskBoardPlaceholder&&cvProjectTaskBoardPlaceholder.parentNode)cvProjectTaskBoardPlaceholder.parentNode.insertBefore(board,cvProjectTaskBoardPlaceholder);
-  }
-  if(cvProjectTaskBoardPlaceholder&&cvProjectTaskBoardPlaceholder.parentNode)cvProjectTaskBoardPlaceholder.remove();
-  cvProjectTaskBoardPlaceholder=null;
+  var board=$('#view-tasks');
+  if(board)board.classList.remove('pj-embedded-task-view');
+  setTasksEmbedded(true);
   cvProjectTaskBoardEmbedded=false;
-  cvSetProject(cvProjectTaskBoardPriorProject);
-  cvProjectTaskBoardPriorProject='';
+  tkSetProjectListMode(false);
 }
 
 /* ---------- 项目规划：智能拆解 ----------
@@ -448,7 +441,8 @@ function cvHideProjectDetail(){
 }
 function cvResetProjectListState(){
   cvCloseProjectMembersModal(false);
-  cvCloseMemberPicker();
+  if(cvProjectTaskBoardEmbedded)cvRestoreProjectTaskBoard();
+  cvCloseMemberPicker();cvMemberPickerSelected.clear();cvMemberPickerProject='';
   cvProjCur='';
   var list=$('#cv-proj-list'),detail=$('#cv-proj-detail');
   var head=$('#cv-project-head'),toolbar=$('#cv-project-toolbar');

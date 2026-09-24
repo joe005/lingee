@@ -3,11 +3,13 @@
 
 /* ---------- 常量定义 ---------- */
 export const TK_STATUSES = [
-  { id: 'backlog',     name: '待处理', color: 'gray'   },
-  { id: 'in_progress', name: '进行中', color: 'blue'   },
-  { id: 'in_review',  name: '评审中', color: 'orange' },
-  { id: 'done',       name: '已完成', color: 'green'  },
+  { id: 'planned',     name: '待规划', color: 'gray'   },
+  { id: 'backlog',     name: '待办',   color: 'gray'   },
+  { id: 'in_progress', name: '进行中', color: 'orange' },
+  { id: 'in_review',  name: '审核中', color: 'green'  },
   { id: 'blocked',   name: '已阻塞', color: 'red'    },
+  { id: 'done',       name: '已完成', color: 'blue'   },
+  { id: 'cancelled',  name: '已取消', color: 'gray'   },
 ];
 
 export const TK_PRIORITIES = [

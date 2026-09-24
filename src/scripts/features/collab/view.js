@@ -61,7 +61,7 @@ function cvRenderSubNav(primary,active){
 function cvToast(msg,type){ toast(msg, type==='error'?'error':undefined); }
 function cvShowPanel(name){
   var primary=cvPrimaryOf(name);
-  $$('#view-collab .cv-panel').forEach(function(p){ if(p.classList.contains('pj-embedded-task-board'))return; p.classList.toggle('active', p.id===(name==='tasks'?'cv-tasks-current':'cv-'+name)); });
+  $$('#view-collab .cv-panel').forEach(function(p){ p.classList.toggle('active', p.id===(name==='tasks'?'cv-tasks-current':'cv-'+name)); });
   $$('#cvTabNav .tab-nav-item').forEach(function(t){
     t.classList.toggle('tab-nav-item--active', t.getAttribute('data-cvview')===primary);
   });

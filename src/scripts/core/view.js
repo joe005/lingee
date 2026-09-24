@@ -30,8 +30,8 @@ function applyMode(mode,fromChip){
 /* ---------- view switching ---------- */
 var viewHome=$('#view-home'), viewNew=$('#view-newtask'), viewChat=$('#view-chat'), viewApps=$('#view-apps'), viewSkills=$('#view-skills'), viewAgents=$('#view-agents'), viewCollab=$('#view-collab'), viewDesign=$('#view-design'), viewSettings=$('#view-settings'), viewAnalytics=$('#view-analytics'), viewTasks=$('#view-tasks'), viewChangelog=$('#view-changelog');
 var tasksStandaloneParent=viewTasks.parentNode, tasksStandaloneNext=viewTasks.nextSibling;
-function setTasksEmbedded(embedded){
-  var target=embedded ? $('#cv-tasks-current') : tasksStandaloneParent;
+function setTasksEmbedded(embedded, container){
+  var target=embedded ? (container||$('#cv-tasks-current')) : tasksStandaloneParent;
   if(embedded){
     if(viewTasks.parentNode!==target) target.appendChild(viewTasks);
     viewTasks.classList.remove('hidden');
@@ -45,7 +45,10 @@ function setUrlState(path){
   try{history.replaceState(null,'',withBase(path));localStorage.setItem('lingeeUrlState',path)}catch(e){}
 }
 function showView(which){
-  if(which==='tasks') setTasksEmbedded(false);
+  if(which==='tasks'){
+    if(window.cvRestoreProjectTaskBoard)window.cvRestoreProjectTaskBoard();
+    setTasksEmbedded(false);
+  }
   viewHome.classList.toggle('hidden', which!=='home');
   viewNew.classList.toggle('hidden', which!=='newtask');
   viewChat.classList.toggle('hidden', which!=='chat');
@@ -56,7 +59,7 @@ function showView(which){
   viewDesign.classList.toggle('hidden', which!=='design');
   viewSettings.classList.toggle('hidden', which!=='settings');
   viewAnalytics.classList.toggle('hidden', which!=='analytics');
-  viewTasks.classList.toggle('hidden', which!=='tasks');
+  viewTasks.classList.toggle('hidden', which!=='tasks' && !(which==='collab' && viewTasks.classList.contains('pj-embedded-task-view')));
   viewChangelog.classList.toggle('hidden', which!=='changelog');
   $('.sidebar').classList.toggle('hidden', which==='design');
   closeAll(null);

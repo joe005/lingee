@@ -10,3 +10,20 @@
 #view-collab .cv-proj-head,#view-collab .cv-proj-row{grid-template-columns:minmax(0,1.8fr) .5fr .7fr minmax(0,1.4fr) minmax(0,1.1fr) .5fr}
 #view-collab .cv-proj-desc{display:block;font-style:normal;font-size:11px;color:var(--text-soft);margin-top:2px}
 #view-collab .cv-proj-repo{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-secondary)}
+
+/* ============ 协作列表通用视觉规范 ============
+   任务列表（tk-table）和项目列表（pj-projects-list）共用这套
+   外壳参数，各自 DOM 和交互保持独立，后续新列表页直接引用即可。 */
+:root{
+  --cv-list-border:1px solid var(--border);
+  --cv-list-radius:10px;
+  --cv-list-head-pad:10px 14px;
+  --cv-list-head-fg:var(--text-secondary);
+  --cv-list-head-fw:500;
+  --cv-list-head-size:12px;
+  --cv-list-row-pad:10px 14px;
+  --cv-list-row-size:13px;
+  --cv-list-row-border:1px solid var(--divider);
+  --cv-list-hover:var(--hover);
+  --cv-list-selected:var(--brand-fill);
+}

@@ -5,6 +5,7 @@
 import { $, $$ } from '../../core/dom.js';
 import { showView, input, setNavActive } from '../../core/view.js';
 import { toast } from '../../core/toast.js';
+import { applyTaskListFieldSettings, renderTaskListTreeNodes, taskListVisibleColumnCount } from './list-template.js';
 import {
   TK_STATUSES, TK_PRIORITIES, TK_PEOPLE, TK_AGENTS, TK_PROJECTS, TK_LABELS,
   TK_VIEWS, TK_FILTER_FIELDS, TK_OPERATORS, TK_TASKS, TK_CURRENT_USER,
@@ -16,13 +17,24 @@ import {
 } from './data.js';
 
 /* ---------- 状态 ---------- */
+var LIST_FIELDS = [
+  { id:'code', name:'编号' }, { id:'title', name:'标题', required:true },
+  { id:'module', name:'模块' }, { id:'status', name:'状态' },
+  { id:'priority', name:'优先级' }, { id:'assignee', name:'处理人' },
+  { id:'project', name:'项目' }, { id:'due', name:'截止日期' },
+  { id:'created', name:'创建时间' }, { id:'labels', name:'标签' },
+];
+var DEFAULT_LIST_FIELD_ORDER = LIST_FIELDS.map(function(field) { return field.id; });
 var state = {
-  layout: 'board', viewMode: 'slide', scope: 'all', groupBy: 'status', sortBy: 'createDate', sortDir: 'desc',
+  layout: 'list', viewMode: 'slide', scope: 'all', groupBy: 'status', sortBy: 'createDate', sortDir: 'desc',
   search: '', filters: [], selectedIds: new Set(), activeViewId: 'all',
   showSubtasks: true,
   cardProperties: { priority:true, description:false, assignee:true, startDate:false, dueDate:true, project:true, labels:false, childProgress:true },
+  listFieldOrder: DEFAULT_LIST_FIELD_ORDER.slice(), listFieldVisibility: { labels:false },
   editingTaskId: null, drawerTaskId: null, editingParentId: null,
 };
+var projectListMode = false;
+var layoutBeforeProjectList = null;
 var els = {};
 var drawerPreferredWidth = null;
 var collapsedParents = new Set();
@@ -32,12 +44,24 @@ var drawerCloseTimer = null;
 var drawerOpenFrame = null;
 var DRAWER_WIDTH_STORAGE_KEY = 'lingee_tasks_drawer_width';
 var VIEW_STATE_STORAGE_KEY = 'lingee_tasks_view_state';
+var TASK_START_LEGACY_KEY = 'lingee_tasks_start_action_legacy';
+var TASK_START_PLAY_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4.7a1 1 0 0 1 1.52-.85l11 7.3a1 1 0 0 1 0 1.7l-11 7.3A1 1 0 0 1 7 19.3V4.7Z"/></svg>';
+var TASK_START_CHAT_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>';
+var taskStartLegacy = false;
+
+function renderTaskStartAction() {
+  var button = els.tkDrawerChat;
+  if (!button) return;
+  var label = taskStartLegacy ? '发起会话' : '开始任务';
+  button.innerHTML = (taskStartLegacy ? TASK_START_CHAT_ICON : TASK_START_PLAY_ICON) + '<span>' + label + '</span>';
+  button.setAttribute('aria-label', label);
+}
 
 function persistViewState() {
   try {
     localStorage.setItem(VIEW_STATE_STORAGE_KEY, JSON.stringify({
       activeViewId:state.activeViewId,
-      layout:state.layout,
+      layout:projectListMode ? layoutBeforeProjectList : state.layout,
       viewMode:state.viewMode,
       groupBy:state.groupBy,
       sortBy:state.sortBy,
@@ -46,6 +70,8 @@ function persistViewState() {
       showSubtasks:state.showSubtasks,
       collapsedTaskIds:Array.from(collapsedParents),
       cardProperties:state.cardProperties,
+      listFieldOrder:state.listFieldOrder,
+      listFieldVisibility:state.listFieldVisibility,
     }));
   } catch (e) { /* 本地存储不可用时仍可在当前页面切换视图 */ }
 }
@@ -75,6 +101,14 @@ function restoreViewState() {
       if (typeof saved.cardProperties[key] === 'boolean') state.cardProperties[key] = saved.cardProperties[key];
     });
   }
+  if (Array.isArray(saved.listFieldOrder)) {
+    state.listFieldOrder = Array.from(new Set(saved.listFieldOrder.filter(function(id) { return DEFAULT_LIST_FIELD_ORDER.includes(id); }))).concat(DEFAULT_LIST_FIELD_ORDER.filter(function(id) { return !saved.listFieldOrder.includes(id); }));
+  }
+  if (saved.listFieldVisibility && typeof saved.listFieldVisibility === 'object') {
+    LIST_FIELDS.forEach(function(field) {
+      if (!field.required && typeof saved.listFieldVisibility[field.id] === 'boolean') state.listFieldVisibility[field.id] = saved.listFieldVisibility[field.id];
+    });
+  }
   if (Array.isArray(saved.filters)) {
     var fields = ['status','priority','dueDate','assignee','creator','project','projectStatus','label','keyword'];
     var operators = ['eq','neq','contains','not_contains','today','overdue','before','after'];
@@ -89,7 +123,7 @@ function cacheEls() {
   var ids = [
     'tkViewTabs','tkViewAdd','tkViewMenu','tkViewMenuNew','tkViewManage','tkViewOverflow','tkViewOverflowBtn','tkOverflowMenu',
     'tkSearch','tkFilterBtn','tkFilterLabel','tkFilterPanel','tkFilterPanelBody','tkFilterSubmenu','tkFilterChips','tkToolbarNew',
-    'tkDisplayBtn','tkDisplayPopover','tkGroupSelect','tkViewModeSelect','tkSortSelect','tkSortDirection','tkShowSubtasks','tkCardProperties',
+    'tkDisplayBtn','tkDisplayPopover','tkFieldsBtn','tkFieldsPopover','tkFieldsClose','tkFieldsSearch','tkFieldsList','tkFieldsSummary','tkGroupSelect','tkViewModeSelect','tkSortSelect','tkSortDirection','tkShowSubtasks','tkCardProperties','tkCardPropsSection',
     'tkLayoutToggle','tkBody','tkBoard','tkBoardScroll','tkList','tkListBody','tkListHead','tkSplitEmpty',
     'tkCheckAll','tkEmpty','tkResetFilter','tkBulkBar','tkBulkCount','tkBulkClear',
     'tkDrawer','tkDrawerClickaway','tkDrawerResize','tkDrawerClose','tkDrawerTitle','tkDrawerCode','tkDrawerBody','tkDrawerMore','tkDrawerSidebarToggle','tkDrawerChat',
@@ -133,7 +167,7 @@ function showCardMenu(taskId, anchorEl, detailOnly) {
     delete: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>'
   };
   menu.innerHTML = ''
-    + (detailOnly ? '' : '<div class="tk-card-menu-item" data-card-task="' + taskId + '" data-card-action="chat">' + itemSvg.chat + '<span>发起会话</span></div>')
+    + (detailOnly ? '' : '<div class="tk-card-menu-item" data-card-task="' + taskId + '" data-card-action="chat">' + (taskStartLegacy ? TASK_START_CHAT_ICON : TASK_START_PLAY_ICON) + '<span>' + (taskStartLegacy ? '发起会话' : '开始任务') + '</span></div>')
     + (detailOnly ? '' : '<div class="tk-card-menu-item" data-card-task="' + taskId + '" data-card-action="subtask">' + itemSvg.subtask + '<span>创建子任务</span></div>')
     + '<div class="tk-card-menu-item" data-card-task="' + taskId + '" data-card-action="copy">' + itemSvg.copy + '<span>复制</span></div>'
     + '<div class="tk-card-menu-item danger" data-card-task="' + taskId + '" data-card-action="delete">' + itemSvg.delete + '<span>删除</span></div>';
@@ -328,15 +362,11 @@ function renderTreeNodes(tasks, childrenMap, depth) {
   }).join('');
 }
 function renderListTreeNodes(tasks, childrenMap, depth) {
-  return tasks.map(function (t) {
-    var id = t.id;
-    var children = childrenMap.get(id) || [];
-    var hasChildren = children.length > 0;
-    var isCollapsed = collapsedParents.has(id);
-    var html = renderListRow(t, { depth: depth, hasChildren: hasChildren, isCollapsed: isCollapsed, childCount: children.length });
-    if (hasChildren && !isCollapsed) html += renderListTreeNodes(children, childrenMap, depth + 1);
-    return html;
-  }).join('');
+  return renderTaskListTreeNodes(tasks, childrenMap, depth, {
+    collapsedParents:collapsedParents, selectedIds:state.selectedIds, drawerTaskId:state.drawerTaskId,
+    escapeHtml:escapeHtml, isOverdue:isOverdue, stClass:stClass, priClass:priClass,
+    avatarSm:avatarSm, fmtDate:fmtDate,
+  });
 }
 
 /* ---------- 分组 ---------- */
@@ -434,42 +464,18 @@ function renderCard(t, opts) {
     + '</div>' + (props.assignee ? avatar(t.assignee) : '') + '</div></div>';
 }
 
-/* ---------- 渲染：列表行（支持父子嵌套缩进） ---------- */
-function renderListRow(t, opts) {
-  opts = opts || {};
-  var depth = opts.depth || 0;
-  var hasChildren = !!opts.hasChildren;
-  var isCollapsed = !!opts.isCollapsed;
-  var childCount = opts.childCount || 0;
-  var pri = tkGetPriorityObj(t.priority);
-  var st = tkGetStatusObj(t.status);
-  var person = tkGetPerson(t.assignee);
-  var overdue = isOverdue(t.dueDate) && t.status !== 'done';
-  var sel = state.selectedIds.has(t.id) ? ' selected' : '';
-  var toggle = hasChildren ? '<button class="tk-row-toggle' + (isCollapsed ? ' is-collapsed' : '') + '" data-tk-toggle="' + t.id + '" aria-expanded="' + !isCollapsed + '" aria-label="' + (isCollapsed ? '展开子任务' : '折叠子任务') + '"><svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 7.5 5 5 5-5"/></svg></button>' : '';
-  var spacer = !hasChildren ? '<span class="tk-row-spacer"></span>' : '';
-  var childBadge = hasChildren ? '<span class="tk-row-child-count"' + (isCollapsed ? '' : ' style="visibility:hidden"') + '>' + childCount + '</span>' : '';
-  var indentStyle = depth > 0 ? ' style="padding-left:calc(10px + ' + depth + 'em)"' : '';
-  return '<tr class="tk-row' + sel + (state.drawerTaskId === t.id ? ' detail-active' : '') + (depth ? ' tk-row--child' : '') + (hasChildren ? ' tk-row--parent' : '') + '" data-task-id="' + t.id + '" data-depth="' + depth + '">'
-    + '<td class="tk-col-check"><input type="checkbox" class="tk-row-check" data-task-id="' + t.id + '"' + (state.selectedIds.has(t.id) ? ' checked' : '') + '></td>'
-    + '<td class="tk-col-code"><span class="tk-row-code">' + escapeHtml(t.code) + '</span></td>'
-    + '<td class="tk-col-title"' + indentStyle + '><div class="tk-row-title-wrap">' + toggle + spacer + '<span class="tk-row-title-text">' + escapeHtml(t.title) + '</span>' + childBadge + '</div></td>'
-    + '<td class="tk-col-module">' + escapeHtml(t.module || '—') + '</td>'
-    + '<td class="tk-col-status"><span class="tk-row-status"><span class="tk-st-dot ' + stClass(t.status) + '"></span>' + escapeHtml(st.name) + '</span></td>'
-    + '<td class="tk-col-priority"><span class="tk-row-priority ' + priClass(t.priority) + '">' + escapeHtml(pri.name) + '</span></td>'
-    + '<td class="tk-col-assignee"><div class="tk-row-assignee">' + avatarSm(t.assignee) + '<span>' + escapeHtml(person.name) + '</span></div></td>'
-    + '<td class="tk-col-project">' + escapeHtml(tkGetProjectName(t.project)) + '</td>'
-    + '<td class="tk-col-due"><span class="tk-row-due' + (overdue ? ' overdue' : '') + '">' + (t.dueDate ? fmtDate(t.dueDate) : '—') + '</span></td>'
-    + '<td class="tk-col-created">' + fmtDate(t.createDate) + '</td>'
-    + '<td class="tk-col-actions"><button class="tk-card-more" data-card-more="' + t.id + '" data-tooltip="更多操作" aria-label="更多操作"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button></td></tr>';
-}
-
 /* ---------- 渲染：列表 ---------- */
+function visibleListColumnCount() {
+  return taskListVisibleColumnCount(state.listFieldOrder, state.listFieldVisibility);
+}
+function applyListFieldSettings() {
+  applyTaskListFieldSettings(els.tkListHead, els.tkListBody, state.listFieldOrder, state.listFieldVisibility);
+}
 function renderList(tasks) {
   tasks = tasks || getFilteredTasks();
   if (tasks.length === 0 && state.viewMode === 'split') {
     showBoardOrList();
-    els.tkListBody.innerHTML = '<tr class="tk-row-create"><td colspan="11">没有匹配的任务</td></tr>';
+    els.tkListBody.innerHTML = '<tr class="tk-row-create"><td colspan="' + visibleListColumnCount() + '">没有匹配的任务</td></tr>';
     updateSortArrows();
     return;
   }
@@ -477,7 +483,7 @@ function renderList(tasks) {
   showBoardOrList();
   var tree = buildTaskTree(tasks);
   var html = renderListTreeNodes(tree.roots, tree.childrenMap, 0);
-  els.tkListBody.innerHTML = '<tr class="tk-row-create" id="tkRowCreate"><td colspan="11"><button class="tk-inline-create-btn" id="tkInlineCreateBtn">+ 快速新建</button></td></tr>' + html;
+  els.tkListBody.innerHTML = '<tr class="tk-row-create" id="tkRowCreate"><td colspan="' + visibleListColumnCount() + '"><button class="tk-inline-create-btn" id="tkInlineCreateBtn">+ 快速新建</button></td></tr>' + html;
   updateSortArrows();
 }
 
@@ -637,9 +643,10 @@ function updateBulkBar() {
   els.tkBulkBar.classList.remove('hidden'); els.tkBulkCount.textContent = count;
 }
 function render() {
+  if (projectListMode) state.layout = 'list';
   var split = state.viewMode === 'split';
   if (split) state.layout = 'list';
-  els.tkToolbarNew.classList.toggle('hidden', state.layout !== 'list');
+  els.tkToolbarNew.classList.remove('hidden');
   els.tkBody.classList.toggle('is-split', split);
   els.tkDrawer.classList.toggle('mode-full', state.viewMode === 'full');
   $$('[data-layout]', els.tkLayoutToggle).forEach(function (btn) {
@@ -667,30 +674,126 @@ function render() {
     els.tkSplitEmpty.classList.add('hidden');
     if (state.layout === 'board') renderBoard(); else renderList();
   }
+  applyListFieldSettings();
   renderFilterChips(); updateBulkBar(); updateCheckAll();
   syncDrawerClickaway();
   persistViewState();
+}
+
+/* 项目详情挂载同一个列表模板和事件控制器，离开后恢复任务页布局。 */
+export function tkSetProjectListMode(active) {
+  if (active === projectListMode) return;
+  if (active) {
+    layoutBeforeProjectList = state.layout;
+    projectListMode = true;
+    state.layout = 'list';
+  } else {
+    projectListMode = false;
+    state.layout = layoutBeforeProjectList || state.layout;
+    layoutBeforeProjectList = null;
+  }
+  if (els.tkBody) render();
 }
 var cardPropertyOptions = [
   ['priority','优先级'],['description','描述'],['assignee','负责人'],['startDate','开始日期'],
   ['dueDate','截止日期'],['project','项目'],['labels','标签'],['childProgress','子任务进度'],
 ];
-function sortDirectionLabel() {
-  if (state.sortBy === 'createDate') return state.sortDir === 'desc' ? '最新优先' : '最早优先';
-  if (state.sortBy === 'priority') return state.sortDir === 'desc' ? '最高优先级优先' : '最低优先级优先';
-  if (state.sortBy === 'dueDate') return state.sortDir === 'asc' ? '最早日期优先' : '最晚日期优先';
-  if (state.sortBy === 'title') return state.sortDir === 'asc' ? 'A 到 Z' : 'Z 到 A';
-  return state.sortDir === 'asc' ? '正序' : '倒序';
+var displayGroupOptions = [
+  ['status','状态'],['priority','优先级'],['assignee','处理人'],['project','项目'],['none','不分组'],
+];
+var displaySortOptions = [
+  ['status','状态'],['priority','优先级'],['dueDate','截止日期'],['createDate','创建时间'],
+  ['code','编号'],['title','标题'],['module','模块'],['assignee','处理人'],['project','项目'],
+];
+var displayChoiceMenu = null;
+var displayChoiceTrigger = null;
+function closeDisplayChoiceMenu(restoreFocus) {
+  if (displayChoiceMenu) displayChoiceMenu.remove();
+  displayChoiceMenu = null;
+  if (displayChoiceTrigger) {
+    displayChoiceTrigger.setAttribute('aria-expanded', 'false');
+    if (restoreFocus) displayChoiceTrigger.focus({ preventScroll:true });
+  }
+  displayChoiceTrigger = null;
+}
+function openDisplayChoiceMenu(trigger, kind, focusEdge) {
+  if (displayChoiceMenu && displayChoiceTrigger === trigger) { closeDisplayChoiceMenu(true); return; }
+  closeDisplayChoiceMenu();
+  var options = kind === 'group' ? displayGroupOptions : displaySortOptions;
+  var selected = kind === 'group' ? state.groupBy : state.sortBy;
+  var menu = document.createElement('div');
+  menu.className = 'tk-flow-field-menu tk-display-choice-menu show';
+  menu.setAttribute('role', 'listbox');
+  menu.setAttribute('aria-label', kind === 'group' ? '分组字段' : '排序字段');
+  menu.innerHTML = options.map(function(option) {
+    var active = option[0] === selected;
+    return '<button type="button" class="tk-flow-field-menu-item tk-display-choice-option' + (active ? ' active' : '') + '" role="option" aria-selected="' + active + '" data-value="' + option[0] + '"><span>' + option[1] + '</span><span class="tk-display-choice-check" aria-hidden="true">' + (active ? '✓' : '') + '</span></button>';
+  }).join('');
+  document.body.appendChild(menu);
+  displayChoiceMenu = menu;
+  displayChoiceTrigger = trigger;
+  trigger.setAttribute('aria-expanded', 'true');
+  var rect = trigger.getBoundingClientRect();
+  menu.style.minWidth = rect.width + 'px';
+  menu.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - menu.offsetWidth - 8)) + 'px';
+  menu.style.top = Math.max(8, Math.min(rect.bottom + 4, window.innerHeight - menu.offsetHeight - 8)) + 'px';
+  menu.addEventListener('click', function(e) {
+    e.stopPropagation();
+    var option = e.target.closest('[data-value]');
+    if (!option) return;
+    if (kind === 'group') state.groupBy = option.getAttribute('data-value');
+    else {
+      state.sortBy = option.getAttribute('data-value');
+      state.sortDir = state.sortBy === 'createDate' || state.sortBy === 'priority' ? 'desc' : 'asc';
+    }
+    closeDisplayChoiceMenu(true);
+    render();
+  });
+  menu.addEventListener('keydown', function(e) {
+    var items = Array.from(menu.querySelectorAll('.tk-display-choice-option'));
+    var index = items.indexOf(document.activeElement);
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeDisplayChoiceMenu(true); return; }
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Home' || e.key === 'End') {
+      e.preventDefault();
+      var next = e.key === 'Home' ? 0 : e.key === 'End' ? items.length - 1 : (index + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
+      items[next].focus();
+    }
+  });
+  var items = menu.querySelectorAll('.tk-display-choice-option');
+  var activeOption = menu.querySelector('.tk-display-choice-option.active');
+  (focusEdge === 'first' ? items[0] : focusEdge === 'last' ? items[items.length - 1] : activeOption || items[0]).focus({ preventScroll:true });
 }
 function renderDisplayControls() {
-  els.tkGroupSelect.value = state.groupBy;
+  els.tkGroupSelect.querySelector('.tk-display-choice-text').textContent = (displayGroupOptions.find(function(option) { return option[0] === state.groupBy; }) || displayGroupOptions[0])[1];
   els.tkViewModeSelect.value = state.viewMode;
-  els.tkSortSelect.value = state.sortBy;
-  els.tkSortDirection.textContent = sortDirectionLabel();
+  els.tkSortSelect.querySelector('.tk-display-choice-text').textContent = (displaySortOptions.find(function(option) { return option[0] === state.sortBy; }) || displaySortOptions[0])[1];
+  els.tkSortDirection.dataset.direction = state.sortDir;
+  var directionHint = state.sortDir === 'none' ? '未排序，点击切换为升序' : '当前' + (state.sortDir === 'asc' ? '升序，点击切换为降序' : '降序，点击切换为升序');
+  els.tkSortDirection.setAttribute('aria-label', directionHint);
+  els.tkSortDirection.setAttribute('data-tooltip', directionHint);
   els.tkShowSubtasks.checked = state.showSubtasks;
+  els.tkCardPropsSection.classList.toggle('hidden', state.layout !== 'board');
   els.tkCardProperties.innerHTML = cardPropertyOptions.map(function (opt) {
     return '<button type="button" class="tk-display-property" data-card-property="' + opt[0] + '" aria-pressed="' + !!state.cardProperties[opt[0]] + '">' + opt[1] + '</button>';
   }).join('');
+  els.tkFieldsSummary.textContent = state.listFieldOrder.filter(function(id) { return id === 'title' || state.listFieldVisibility[id] !== false; }).length + ' 个字段';
+}
+function renderFieldSettings() {
+  var query = els.tkFieldsSearch.value.trim().toLocaleLowerCase();
+  var fields = state.listFieldOrder.map(function(id) { return LIST_FIELDS.find(function(field) { return field.id === id; }); }).filter(function(field) {
+    return field && field.name.toLocaleLowerCase().includes(query);
+  });
+  els.tkFieldsList.innerHTML = fields.length ? fields.map(function(field) {
+    var checked = field.required || state.listFieldVisibility[field.id] !== false;
+    return '<div class="tk-fields-item" data-field-id="' + field.id + '" draggable="true">' +
+      '<span class="tk-fields-grip" role="button" tabindex="0" aria-label="调整' + field.name + '顺序">⋮⋮</span>' +
+      '<label><input type="checkbox" data-field-visible="' + field.id + '"' + (checked ? ' checked' : '') + (field.required ? ' disabled' : '') + '><span>' + field.name + '</span></label>' +
+      '</div>';
+  }).join('') : '<div class="tk-fields-empty">没有匹配的字段</div>';
+}
+function closeFieldSettings() {
+  els.tkFieldsPopover.classList.add('hidden');
+  els.tkFieldsBtn.setAttribute('aria-expanded', 'false');
 }
 function positionPopover(popover, trigger, alignEnd) {
   var rect = trigger.getBoundingClientRect();
@@ -1360,6 +1463,8 @@ function renderFilterSubmenu() {
   }).join('');
 }
 function openFilterPanel() {
+  closeDisplayChoiceMenu();
+  closeFieldSettings();
   els.tkDisplayPopover.classList.add('hidden');
   els.tkDisplayBtn.classList.remove('active');
   els.tkDisplayBtn.setAttribute('aria-expanded', 'false');
@@ -1413,6 +1518,8 @@ function confirmSaveView() {
     sortDir: state.sortDir,
     showSubtasks: state.showSubtasks,
     cardProperties: Object.assign({}, state.cardProperties),
+    listFieldOrder: state.listFieldOrder.slice(),
+    listFieldVisibility: Object.assign({}, state.listFieldVisibility),
   });
   state.activeViewId = v.id;
   state.scope = v.scope;
@@ -1496,6 +1603,9 @@ function handleDrop(e) {
 /* ---------- 事件绑定 ---------- */
 function bindEvents() {
   /* 搜索 */
+  var enableTaskSearch = function () { els.tkSearch.removeAttribute('readonly'); };
+  els.tkSearch.addEventListener('pointerdown', enableTaskSearch, { once:true });
+  els.tkSearch.addEventListener('keydown', enableTaskSearch, { once:true });
   els.tkSearch.addEventListener('input', function () { state.search = this.value; render(); });
 
   /* 布局切换 */
@@ -1512,33 +1622,105 @@ function bindEvents() {
     e.stopPropagation();
     if (els.tkDisplayPopover.classList.contains('hidden')) {
       closeFilterPanel();
+      closeDisplayChoiceMenu();
+      closeFieldSettings();
       els.tkDisplayPopover.classList.remove('hidden');
       els.tkDisplayBtn.classList.add('active');
       els.tkDisplayBtn.setAttribute('aria-expanded', 'true');
       renderDisplayControls();
       positionPopover(els.tkDisplayPopover, els.tkDisplayBtn, true);
     } else {
+      closeDisplayChoiceMenu();
+      closeFieldSettings();
       els.tkDisplayPopover.classList.add('hidden');
       els.tkDisplayBtn.classList.remove('active');
       els.tkDisplayBtn.setAttribute('aria-expanded', 'false');
     }
   });
-  els.tkGroupSelect.addEventListener('change', function () {
-    state.groupBy = this.value;
+  els.tkFieldsBtn.addEventListener('click', function () {
+    closeDisplayChoiceMenu();
+    var opening = els.tkFieldsPopover.classList.contains('hidden');
+    if (!opening) { closeFieldSettings(); return; }
+    els.tkFieldsPopover.classList.remove('hidden');
+    els.tkFieldsPopover.classList.toggle('flip', els.tkDisplayPopover.getBoundingClientRect().left < 320);
+    els.tkFieldsPopover.style.maxHeight = Math.max(240, window.innerHeight - els.tkDisplayPopover.getBoundingClientRect().top - 12) + 'px';
+    els.tkFieldsBtn.setAttribute('aria-expanded', 'true');
+    els.tkFieldsSearch.value = '';
+    renderFieldSettings();
+    els.tkFieldsSearch.focus({ preventScroll:true });
+  });
+  els.tkFieldsClose.addEventListener('click', closeFieldSettings);
+  var enableFieldsSearch = function() { els.tkFieldsSearch.removeAttribute('readonly'); };
+  els.tkFieldsSearch.addEventListener('pointerdown', enableFieldsSearch, { once:true });
+  els.tkFieldsSearch.addEventListener('keydown', enableFieldsSearch, { once:true });
+  els.tkFieldsSearch.addEventListener('input', renderFieldSettings);
+  els.tkFieldsList.addEventListener('change', function(e) {
+    var id = e.target.getAttribute('data-field-visible');
+    if (!id || id === 'title') return;
+    state.listFieldVisibility[id] = e.target.checked;
     render();
   });
+  var draggedFieldId = null;
+  els.tkFieldsList.addEventListener('dragstart', function(e) {
+    var item = e.target.closest('.tk-fields-item');
+    if (!item) return;
+    draggedFieldId = item.getAttribute('data-field-id');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', draggedFieldId);
+    item.classList.add('dragging');
+  });
+  els.tkFieldsList.addEventListener('dragover', function(e) {
+    var item = e.target.closest('.tk-fields-item');
+    if (!draggedFieldId || !item || item.getAttribute('data-field-id') === draggedFieldId) return;
+    e.preventDefault();
+    els.tkFieldsList.querySelectorAll('.drop-before,.drop-after').forEach(function(row) { row.classList.remove('drop-before','drop-after'); });
+    item.classList.add(e.clientY < item.getBoundingClientRect().top + item.offsetHeight / 2 ? 'drop-before' : 'drop-after');
+  });
+  els.tkFieldsList.addEventListener('drop', function(e) {
+    var item = e.target.closest('.tk-fields-item');
+    if (!draggedFieldId || !item) return;
+    e.preventDefault();
+    var targetId = item.getAttribute('data-field-id');
+    if (targetId !== draggedFieldId) {
+      var after = item.classList.contains('drop-after');
+      state.listFieldOrder = state.listFieldOrder.filter(function(id) { return id !== draggedFieldId; });
+      state.listFieldOrder.splice(state.listFieldOrder.indexOf(targetId) + (after ? 1 : 0), 0, draggedFieldId);
+      renderFieldSettings();
+      render();
+    }
+    draggedFieldId = null;
+  });
+  els.tkFieldsList.addEventListener('dragend', function() {
+    draggedFieldId = null;
+    els.tkFieldsList.querySelectorAll('.dragging,.drop-before,.drop-after').forEach(function(row) { row.classList.remove('dragging','drop-before','drop-after'); });
+  });
+  els.tkFieldsList.addEventListener('keydown', function(e) {
+    var grip = e.target.closest('.tk-fields-grip');
+    if (!grip || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return;
+    e.preventDefault();
+    var item = grip.closest('.tk-fields-item');
+    var id = item.getAttribute('data-field-id');
+    var next = e.key === 'ArrowUp' ? item.previousElementSibling : item.nextElementSibling;
+    if (!next || !next.classList.contains('tk-fields-item')) return;
+    var targetId = next.getAttribute('data-field-id');
+    state.listFieldOrder = state.listFieldOrder.filter(function(key) { return key !== id; });
+    state.listFieldOrder.splice(state.listFieldOrder.indexOf(targetId) + (e.key === 'ArrowDown' ? 1 : 0), 0, id);
+    renderFieldSettings();
+    render();
+    var moved = els.tkFieldsList.querySelector('[data-field-id="' + id + '"] .tk-fields-grip');
+    if (moved) moved.focus();
+  });
+  els.tkGroupSelect.addEventListener('click', function () { openDisplayChoiceMenu(this, 'group'); });
+  els.tkGroupSelect.addEventListener('keydown', function(e) { if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); openDisplayChoiceMenu(this, 'group', e.key === 'ArrowDown' ? 'first' : 'last'); } });
   els.tkViewModeSelect.addEventListener('change', function () {
     state.viewMode = this.value;
     if (state.viewMode === 'split') state.layout = 'list';
     render();
   });
-  els.tkSortSelect.addEventListener('change', function () {
-    state.sortBy = this.value;
-    state.sortDir = this.value === 'createDate' || this.value === 'priority' ? 'desc' : 'asc';
-    renderDisplayControls();
-    render();
-  });
+  els.tkSortSelect.addEventListener('click', function () { openDisplayChoiceMenu(this, 'sort'); });
+  els.tkSortSelect.addEventListener('keydown', function(e) { if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); openDisplayChoiceMenu(this, 'sort', e.key === 'ArrowDown' ? 'first' : 'last'); } });
   els.tkSortDirection.addEventListener('click', function () {
+    closeDisplayChoiceMenu();
     state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
     renderDisplayControls();
     render();
@@ -1555,13 +1737,21 @@ function bindEvents() {
     renderDisplayControls();
     render();
   });
-  els.tkDisplayPopover.addEventListener('click', function (e) { e.stopPropagation(); });
+  els.tkDisplayPopover.addEventListener('click', function (e) {
+    if (!e.target.closest('#tkGroupSelect,#tkSortSelect')) closeDisplayChoiceMenu();
+    e.stopPropagation();
+  });
   document.addEventListener('click', function () {
+    closeDisplayChoiceMenu();
     if (!els.tkDisplayPopover.classList.contains('hidden')) {
+      closeFieldSettings();
       els.tkDisplayPopover.classList.add('hidden');
       els.tkDisplayBtn.classList.remove('active');
       els.tkDisplayBtn.setAttribute('aria-expanded', 'false');
     }
+  });
+  document.addEventListener('focusin', function(e) {
+    if (displayChoiceMenu && !displayChoiceMenu.contains(e.target) && e.target !== displayChoiceTrigger) closeDisplayChoiceMenu();
   });
 
   /* 新建任务（列头 + 模态弹窗） */
@@ -1628,6 +1818,22 @@ function bindEvents() {
     els.tkDrawerChat.addEventListener('click', function () {
       if (!state.drawerTaskId) return;
       openTaskConversationWithTask(state.drawerTaskId);
+    });
+    var lastRightClickToggle = 0;
+    function toggleTaskStartAction() {
+      taskStartLegacy = !taskStartLegacy;
+      try { localStorage.setItem(TASK_START_LEGACY_KEY, taskStartLegacy ? '1' : '0'); } catch (err) { /* 本地存储不可用时仅在当前页面生效 */ }
+      renderTaskStartAction();
+      lastRightClickToggle = Date.now();
+    }
+    els.tkDrawerChat.addEventListener('pointerdown', function (e) {
+      if (e.button !== 2) return;
+      e.preventDefault();
+      toggleTaskStartAction();
+    });
+    els.tkDrawerChat.addEventListener('contextmenu', function (e) {
+      e.preventDefault();
+      if (Date.now() - lastRightClickToggle > 500) toggleTaskStartAction();
     });
   }
   if (els.tkDrawerSidebarToggle) {
@@ -2013,6 +2219,8 @@ function bindEvents() {
     els.tkViewMenu.classList.toggle('hidden', !opening);
     els.tkViewAdd.setAttribute('aria-expanded', String(opening));
     closeFilterPanel();
+    closeDisplayChoiceMenu();
+    closeFieldSettings();
     els.tkDisplayPopover.classList.add('hidden');
     els.tkDisplayBtn.classList.remove('active');
     els.tkDisplayBtn.setAttribute('aria-expanded', 'false');
@@ -2045,9 +2253,11 @@ function bindEvents() {
         state.viewMode = ['slide','full','split'].includes(view.viewMode) ? view.viewMode : 'slide';
         state.sortBy = view.sortBy || 'createDate';
         state.sortDir = view.sortDir || 'desc';
-        state.layout = view.layout || 'board';
+        state.layout = view.layout || 'list';
         state.showSubtasks = view.showSubtasks !== false;
         state.cardProperties = Object.assign({}, state.cardProperties, view.cardProperties || {});
+        if (Array.isArray(view.listFieldOrder)) state.listFieldOrder = Array.from(new Set(view.listFieldOrder.filter(function(id) { return DEFAULT_LIST_FIELD_ORDER.includes(id); }))).concat(DEFAULT_LIST_FIELD_ORDER.filter(function(id) { return !view.listFieldOrder.includes(id); }));
+        if (view.listFieldVisibility) state.listFieldVisibility = Object.assign({ labels:false }, view.listFieldVisibility);
         $$('[data-layout]', els.tkLayoutToggle).forEach(function (b) { b.classList.toggle('active', b.getAttribute('data-layout') === state.layout); });
       }
       updateFilterButton();
@@ -2236,7 +2446,7 @@ function bindEvents() {
     if (inlineCreateRow && inlineCreateRow.querySelector('#tkInlineCreateBtn')) {
       if (state.viewMode === 'split') { openTaskModal(null); return; }
       inlineCreateRow.classList.add('is-editing');
-      inlineCreateRow.innerHTML = '<td colspan="11"><div class="tk-inline-create-form"><input type="text" class="tk-inline-input" id="tkInlineTitle" placeholder="输入任务标题"><div class="tk-inline-dropdown" data-value="" id="tkInlineAssigneeWrap"><div class="tk-inline-select is-placeholder" id="tkInlineAssigneeBtn"><input type="text" id="tkInlineAssigneeInput" placeholder="处理人" aria-label="处理人" role="combobox" aria-expanded="false" autocomplete="off"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div><div class="tk-inline-dropdown-menu" id="tkInlineAssigneeMenu" hidden>' + TK_PEOPLE.map(function(p){return '<div class="tk-inline-dropdown-item" data-assignee="'+p.id+'">'+p.name+'</div>';}).join('') + '</div></div><button class="tk-inline-save" id="tkInlineSave">确定</button><button class="tk-inline-cancel" id="tkInlineCancel">取消</button></div></td>';
+      inlineCreateRow.innerHTML = '<td colspan="' + visibleListColumnCount() + '"><div class="tk-inline-create-form"><input type="text" class="tk-inline-input" id="tkInlineTitle" placeholder="输入任务标题"><div class="tk-inline-dropdown" data-value="" id="tkInlineAssigneeWrap"><div class="tk-inline-select is-placeholder" id="tkInlineAssigneeBtn"><input type="text" id="tkInlineAssigneeInput" placeholder="处理人" aria-label="处理人" role="combobox" aria-expanded="false" autocomplete="off"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div><div class="tk-inline-dropdown-menu" id="tkInlineAssigneeMenu" hidden>' + TK_PEOPLE.map(function(p){return '<div class="tk-inline-dropdown-item" data-assignee="'+p.id+'">'+p.name+'</div>';}).join('') + '</div></div><button class="tk-inline-save" id="tkInlineSave">确定</button><button class="tk-inline-cancel" id="tkInlineCancel">取消</button></div></td>';
       setTimeout(function(){ var i=els.tkListBody.querySelector('#tkInlineTitle'); if(i) i.focus(); },0);
       return;
     }
@@ -2361,8 +2571,10 @@ function bindEvents() {
   document.addEventListener('keydown', function (e) {
     if (e.key !== 'Escape') return;
     var hadOpen = false;
+    if (displayChoiceMenu) { closeDisplayChoiceMenu(true); e.preventDefault(); return; }
     if (!els.tkFilterPanel.classList.contains('hidden')) { closeFilterPanel(); hadOpen = true; }
     if (els.tkViewMenu && !els.tkViewMenu.classList.contains('hidden')) { closeViewMenu(); hadOpen = true; }
+    if (!els.tkFieldsPopover.classList.contains('hidden')) { closeFieldSettings(); e.preventDefault(); return; }
     if (!els.tkDisplayPopover.classList.contains('hidden')) {
       els.tkDisplayPopover.classList.add('hidden');
       els.tkDisplayBtn.classList.remove('active');
@@ -2378,10 +2590,12 @@ function bindEvents() {
   });
   /* 滚动与缩放时关闭悬浮菜单，避免定位错位 */
   window.addEventListener('scroll', function () {
+    if (displayChoiceMenu) closeDisplayChoiceMenu();
     var ffm = document.querySelector('.tk-flow-field-menu.show');
     if (ffm) ffm.remove();
   }, true);
   window.addEventListener('resize', function () {
+    if (displayChoiceMenu) closeDisplayChoiceMenu();
     var ffm = document.querySelector('.tk-flow-field-menu.show');
     if (ffm) ffm.remove();
   });
@@ -2450,6 +2664,8 @@ function initColumnResize() {
 export function initTasksV2() {
   restoreTaskLabelCatalog();
   cacheEls();
+  try { taskStartLegacy = localStorage.getItem(TASK_START_LEGACY_KEY) === '1'; } catch (e) { taskStartLegacy = false; }
+  renderTaskStartAction();
   restoreViewState();
   initColumnResize();
   try {

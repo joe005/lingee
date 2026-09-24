@@ -19,11 +19,16 @@ export default function spaFallback() {
     enforce: 'pre',
 
     configureServer(server) {
+      // base 非根时，带 base 前缀的路径交给 Vite baseMiddleware 先 strip，
+      // 再由 htmlFallbackMiddleware 做 SPA 回退——这里放行即可。
+      const base = server.config.base;
+
       server.middlewares.use((req, res, next) => {
         if (req.method !== 'GET' && req.method !== 'HEAD') return next();
 
         const [path] = (req.url || '/').split('?');
         if (path === '/' || PASS.some((re) => re.test(path))) return next();
+        if (base !== '/' && path.startsWith(base)) return next();
         // 带扩展名的当成真实文件（.js / .css / .png / .html …）
         if (/\.[a-zA-Z0-9]+$/.test(path)) return next();
         if (!String(req.headers.accept || '').includes('text/html')) return next();

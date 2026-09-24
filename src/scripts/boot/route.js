@@ -78,4 +78,7 @@ export function initRoute() {
     showView('newtask');
     setNavActive('新会话');
   }
+  /* 清除防闪烁标记：showView() 已设置好各视图的 hidden class，
+     后续视图切换完全由 class 控制，不再需要内联 CSS 介入 */
+  document.documentElement.removeAttribute('data-initial-view');
 }
