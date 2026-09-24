@@ -8,6 +8,7 @@ import { openAppDropdown } from './attach-app.js';
 
 /* ---------- Changelog / 更新日志 ---------- */
 var changelogData=[
+  {id:'41',date:'2026-09-24',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'优化',module:'任务',author:'吴晓锋',team:'任务列表与详情交互优化',body:'任务列表展开箭头独占一列，父级与单级任务标题左对齐，表头标题与父级标题对齐；子任务缩进调整为两个字符宽度；展开/收起改为 mac 文件夹风格高度动效；全局 ESC 键关闭所有表单弹窗。'},
   {id:'40',date:'2026-09-24',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'优化',module:'协作开发',author:'吴宏超',team:'项目任务与详情布局优化',body:'项目定义项统一称为任务，新建时可选上级任务，独立任务也会显示在项目详情；项目详情移除搜索，右侧项目摘要可收起以展开内容区。'},
   {id:'39',date:'2026-09-23',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'优化',module:'协作开发',author:'吴宏超',team:'新建任务体验优化',body:'新建任务采用宽幅写作区，单人执行与多人协作分别配置负责人和执行阶段。'},
   {id:'38',date:'2026-09-23 21:15',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务',author:'吴晓锋',team:'子任务创建与父子嵌套展示',body:'任务支持创建子任务并自动继承父任务信息；看板和列表按父子关系分组展示，可折叠展开；任务详情可查看子任务完成进度。'},
@@ -38,6 +39,7 @@ var changelogData=[
 ];
 // 每个数据条目对应的 avatar SVG 图标（与 Build_demo 的 lucide 图标一致）
 var changelogIcons={
+  '41':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M3 6h18M3 12h12M3 18h6"/></svg>',
   '40':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M4 7h16M4 12h16M4 17h16"/><circle cx="8" cy="7" r="1" fill="currentColor"/><circle cx="8" cy="12" r="1" fill="currentColor"/><circle cx="8" cy="17" r="1" fill="currentColor"/></svg>',
   '39':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/><path d="M7 12h3m4 0h3"/></svg>',
   '38':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>',

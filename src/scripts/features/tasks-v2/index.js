@@ -26,6 +26,8 @@ var state = {
 var els = {};
 var drawerPreferredWidth = null;
 var collapsedParents = new Set();
+var subtaskSectionExpanded = new Map();
+var flowAssigneeDraft = { taskId: null, assigneeId: '' };
 var drawerCloseTimer = null;
 var drawerOpenFrame = null;
 var DRAWER_WIDTH_STORAGE_KEY = 'lingee_tasks_drawer_width';
@@ -383,10 +385,10 @@ function renderCard(t, opts) {
   var labels = props.labels ? (t.labels || []).map(function (l) { return '<span class="tk-card-label">' + escapeHtml(l) + '</span>'; }).join('') : '';
   var sel = state.selectedIds.has(t.id) ? ' selected' : '';
   var toggle = hasChildren ? '<button class="tk-card-toggle' + (isCollapsed ? ' is-collapsed' : '') + '" data-tk-toggle="' + t.id + '" aria-expanded="' + !isCollapsed + '" aria-label="' + (isCollapsed ? '展开子任务' : '折叠子任务') + '"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 7.5 5 5 5-5"/></svg></button>' : '';
-  var spacer = (!hasChildren && depth > 0) ? '<span class="tk-card-spacer"></span>' : '';
+  var spacer = !hasChildren ? '<span class="tk-card-spacer"></span>' : '';
   var childBadge = hasChildren ? '<span class="tk-card-child-count"' + (isCollapsed ? '' : ' style="visibility:hidden"') + '>' + childCount + '</span>' : '';
   var extraCls = (depth ? ' tk-card--child' : '') + (hasChildren ? ' tk-card--parent' : '');
-  return '<div class="tk-card' + sel + extraCls + '" draggable="true" data-task-id="' + t.id + '" style="margin-left:' + (depth * 22) + 'px">'
+  return '<div class="tk-card' + sel + extraCls + '" draggable="true" data-task-id="' + t.id + '" style="margin-left:' + depth + 'em">'
     + '<button class="tk-card-more" data-card-more="' + t.id + '" data-tooltip="更多操作" aria-label="更多操作"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button>'
     + '<div class="tk-card-top-row">' + toggle + spacer + '<div class="tk-card-code">' + escapeHtml(t.code) + '</div>' + childBadge + '</div>'
     + '<div class="tk-card-title">' + escapeHtml(t.title) + '</div>'
@@ -413,10 +415,10 @@ function renderListRow(t, opts) {
   var overdue = isOverdue(t.dueDate) && t.status !== 'done';
   var sel = state.selectedIds.has(t.id) ? ' selected' : '';
   var toggle = hasChildren ? '<button class="tk-row-toggle' + (isCollapsed ? ' is-collapsed' : '') + '" data-tk-toggle="' + t.id + '" aria-expanded="' + !isCollapsed + '" aria-label="' + (isCollapsed ? '展开子任务' : '折叠子任务') + '"><svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 7.5 5 5 5-5"/></svg></button>' : '';
-  var spacer = (!hasChildren && depth > 0) ? '<span class="tk-row-spacer"></span>' : '';
+  var spacer = !hasChildren ? '<span class="tk-row-spacer"></span>' : '';
   var childBadge = hasChildren ? '<span class="tk-row-child-count"' + (isCollapsed ? '' : ' style="visibility:hidden"') + '>' + childCount + '</span>' : '';
-  var indentStyle = depth > 0 ? ' style="padding-left:' + (depth * 22 + 10) + 'px"' : '';
-  return '<tr class="tk-row' + sel + (state.drawerTaskId === t.id ? ' detail-active' : '') + (depth ? ' tk-row--child' : '') + (hasChildren ? ' tk-row--parent' : '') + '" data-task-id="' + t.id + '">'
+  var indentStyle = depth > 0 ? ' style="padding-left:calc(10px + ' + depth + 'em)"' : '';
+  return '<tr class="tk-row' + sel + (state.drawerTaskId === t.id ? ' detail-active' : '') + (depth ? ' tk-row--child' : '') + (hasChildren ? ' tk-row--parent' : '') + '" data-task-id="' + t.id + '" data-depth="' + depth + '">'
     + '<td class="tk-col-check"><input type="checkbox" class="tk-row-check" data-task-id="' + t.id + '"' + (state.selectedIds.has(t.id) ? ' checked' : '') + '></td>'
     + '<td class="tk-col-code"><span class="tk-row-code">' + escapeHtml(t.code) + '</span></td>'
     + '<td class="tk-col-title"' + indentStyle + '><div class="tk-row-title-wrap">' + toggle + spacer + '<span class="tk-row-title-text">' + escapeHtml(t.title) + '</span>' + childBadge + '</div></td>'
@@ -444,6 +446,75 @@ function renderList(tasks) {
   var html = renderListTreeNodes(tree.roots, tree.childrenMap, 0);
   els.tkListBody.innerHTML = '<tr class="tk-row-create" id="tkRowCreate"><td colspan="10"><button class="tk-inline-create-btn" id="tkInlineCreateBtn">+ 快速新建</button></td></tr>' + html;
   updateSortArrows();
+}
+
+function animateListSubtasks(toggleBtn) {
+  var taskId = Number(toggleBtn.getAttribute('data-tk-toggle'));
+  var opening = collapsedParents.has(taskId);
+  var before = new Map();
+  els.tkListBody.querySelectorAll('tr.tk-row[data-task-id]').forEach(function (row) {
+    before.set(row.getAttribute('data-task-id'), row.getBoundingClientRect().top);
+  });
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!opening && !reduceMotion) {
+    var parentRow = toggleBtn.closest('tr.tk-row');
+    var parentDepth = Number(parentRow.getAttribute('data-depth'));
+    var next = parentRow.nextElementSibling;
+    var listRect = els.tkList.getBoundingClientRect();
+    while (next && next.classList.contains('tk-row') && Number(next.getAttribute('data-depth')) > parentDepth) {
+      var rowRect = next.getBoundingClientRect();
+      if (rowRect.top >= listRect.top && rowRect.bottom <= listRect.bottom) {
+        var ghost = document.createElement('table');
+        ghost.className = 'tk-table tk-row-collapse-ghost';
+        ghost.setAttribute('aria-hidden', 'true');
+        ghost.style.left = rowRect.left + 'px';
+        ghost.style.top = rowRect.top + 'px';
+        ghost.style.width = rowRect.width + 'px';
+        var columns = document.createElement('colgroup');
+        next.querySelectorAll('td').forEach(function (cell) {
+          var col = document.createElement('col');
+          col.style.width = cell.getBoundingClientRect().width + 'px';
+          columns.appendChild(col);
+        });
+        ghost.appendChild(columns);
+        var body = document.createElement('tbody');
+        body.appendChild(next.cloneNode(true));
+        ghost.appendChild(body);
+        document.body.appendChild(ghost);
+        var fade = ghost.animate([
+          { opacity: 1, transform: 'translateY(0) scaleY(1)' },
+          { opacity: 0, transform: 'translateY(-10px) scaleY(.92)' },
+        ], { duration: 220, easing: 'cubic-bezier(.32,0,.67,0)', fill: 'forwards' });
+        fade.onfinish = function () { this.effect.target.remove(); };
+      }
+      next = next.nextElementSibling;
+    }
+  }
+  if (opening) collapsedParents.delete(taskId);
+  else collapsedParents.add(taskId);
+  render();
+  if (reduceMotion) return;
+  var inserted = 0;
+  els.tkListBody.querySelectorAll('tr.tk-row[data-task-id]').forEach(function (row) {
+    var previousTop = before.get(row.getAttribute('data-task-id'));
+    if (previousTop === undefined) {
+      row.animate([
+        { opacity: 0, transform: 'translateY(-8px)' },
+        { opacity: 1, transform: 'translateY(0)' },
+      ], { duration: 280, delay: Math.min(inserted++ * 18, 72), easing: 'cubic-bezier(.22,1,.36,1)', fill: 'backwards' });
+    } else {
+      var shift = previousTop - row.getBoundingClientRect().top;
+      if (Math.abs(shift) > 1) row.animate([
+        { transform: 'translateY(' + shift + 'px)' },
+        { transform: 'translateY(0)' },
+      ], { duration: 300, easing: 'cubic-bezier(.22,1,.36,1)' });
+    }
+  });
+  var newToggle = els.tkListBody.querySelector('[data-tk-toggle="' + taskId + '"] svg');
+  if (newToggle) newToggle.animate([
+    { transform: opening ? 'rotate(-90deg)' : 'rotate(0deg)' },
+    { transform: opening ? 'rotate(0deg)' : 'rotate(-90deg)' },
+  ], { duration: 260, easing: 'cubic-bezier(.22,1,.36,1)' });
 }
 
 function updateSortArrows() {
@@ -780,31 +851,29 @@ function syncDrawerClickaway() {
 /* ---------- 子任务区域渲染（参考 Multica ProgressRing + ChevronDown） ---------- */
 function renderSubtasksSection(t) {
   var children = tkGetTasks().filter(function (c) { return c.parentId === t.id; });
-  if (!children.length) {
-    return '<div class="tk-subtasks tk-subtasks--empty"><button type="button" class="tk-subtask-add-inline" data-drawer-subtask="' + t.id + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>添加子任务</span></button></div>';
-  }
+  var expanded = subtaskSectionExpanded.has(t.id) ? subtaskSectionExpanded.get(t.id) : children.length > 0;
   var doneCount = children.filter(function (c) { return c.status === 'done'; }).length;
   var prog = children.length ? Math.round(doneCount / children.length * 100) : 0;
   var ringR = 7, ringC = 2 * Math.PI * ringR;
   var ringOffset = ringC * (1 - prog / 100);
-  return '<div class="tk-subtasks">'
+  return '<div class="tk-subtasks' + (expanded ? '' : ' is-collapsed') + '">'
     + '<div class="tk-subtask-head">'
-    + '<h3>子任务</h3>'
-    + '<svg class="tk-subtask-progress-ring" width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="' + ringR + '" fill="none" stroke="var(--fill-2)" stroke-width="2"/><circle cx="8" cy="8" r="' + ringR + '" fill="none" stroke="var(--brand)" stroke-width="2" stroke-dasharray="' + ringC.toFixed(1) + '" stroke-dashoffset="' + ringOffset.toFixed(1) + '" stroke-linecap="round" transform="rotate(-90 8 8)"/></svg>'
-    + '<span class="tk-subtask-badge">' + doneCount + '/' + children.length + '</span>'
-    + '<button type="button" class="tk-subtask-add-btn" data-drawer-subtask="' + t.id + '" title="添加子任务"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>'
+    + '<button type="button" class="tk-subtask-toggle" data-subtask-toggle="' + t.id + '" aria-expanded="' + expanded + '" aria-controls="tkSubtaskList"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg><span>子任务</span></button>'
+    + (children.length ? '<svg class="tk-subtask-progress-ring" width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="' + ringR + '" fill="none" stroke="var(--fill-2)" stroke-width="2"/><circle cx="8" cy="8" r="' + ringR + '" fill="none" stroke="var(--brand)" stroke-width="2" stroke-dasharray="' + ringC.toFixed(1) + '" stroke-dashoffset="' + ringOffset.toFixed(1) + '" stroke-linecap="round" transform="rotate(-90 8 8)"/></svg><span class="tk-subtask-badge">' + doneCount + '/' + children.length + '</span>' : '')
+    + '<button type="button" class="tk-subtask-add-btn" data-drawer-subtask="' + t.id + '" data-tooltip="添加子任务" aria-label="添加子任务"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>'
     + '</div>'
-    + '<div class="tk-subtask-list">'
-    + children.map(function (c) {
+    + '<div class="tk-subtask-list" id="tkSubtaskList"' + (expanded ? '' : ' hidden') + '>'
+    + (children.length ? children.map(function (c) {
         var st = tkGetStatusObj(c.status);
-        return '<button type="button" class="tk-subtask-row" data-subtask-open="' + c.id + '"><span class="tk-subtask-status" data-tone="' + stClass(c.status) + '">' + st.dot + '</span><span class="tk-subtask-title">' + escapeHtml(c.title) + '</span><span class="tk-subtask-meta">' + escapeHtml(tkGetPerson(c.assignee).name) + '</span></button>';
-      }).join('')
+        return '<button type="button" class="tk-subtask-row" data-subtask-open="' + c.id + '"><span class="tk-subtask-status" data-tooltip="' + escapeHtml(st.name || '待处理') + '" role="img" aria-label="' + escapeHtml(st.name || '待处理') + '"><span class="tk-subtask-status-dot ' + stClass(c.status) + '"></span></span><span class="tk-subtask-title">' + escapeHtml(c.title) + '</span><span class="tk-subtask-meta">' + escapeHtml(tkGetPerson(c.assignee).name) + '</span></button>';
+      }).join('') : '<div class="tk-subtask-empty">暂无子任务</div>')
     + '</div></div>';
 }
 
 function openDrawer(taskId) {
   var t = tkGetTasks().find(function (x) { return x.id === taskId; });
   if (!t) return;
+  if (flowAssigneeDraft.taskId !== taskId) flowAssigneeDraft = { taskId: taskId, assigneeId: '' };
   state.drawerTaskId = taskId;
   els.tkDrawer.setAttribute('data-task-id', String(taskId));
   var person = tkGetPerson(t.assignee);
@@ -826,7 +895,6 @@ function openDrawer(taskId) {
       '</div>' +
       '<div class="tk-drawer-tab-content active" data-tab-content="info">' +
         '<div class="tk-drawer-desc" contenteditable="true" data-field="desc">' + escapeHtml(t.desc || '点击添加描述…') + '</div>' +
-        renderSubtasksSection(t) +
         '<div class="tk-drawer-attachments">' +
           '<div class="tk-attach-dropzone" id="tkAttachDropzone" data-tooltip="添加附件" aria-label="添加附件">' +
             '<input type="file" id="tkAttachInput" multiple style="display:none">' +
@@ -834,13 +902,14 @@ function openDrawer(taskId) {
           '</div>' +
           '<div class="tk-attach-list" id="tkAttachList"></div>' +
         '</div>' +
+        renderSubtasksSection(t) +
         '<div class="tk-drawer-comments"><div class="tk-drawer-comments-title">评论</div>' +
           '<div class="tk-drawer-comment"><div class="tk-drawer-comment-head"><span class="tk-drawer-comment-author">Alice</span><span class="tk-drawer-comment-time">2 天前</span></div><div class="tk-drawer-comment-text">接口定义已确认，可以开始联调。</div></div>' +
           '<div class="tk-drawer-flow-fields">' +
             '<div class="tk-flow-field"><span class="tk-flow-field-label">状态</span><div class="tk-flow-pills">' +
               TK_STATUSES.map(function(s) { return '<button type="button" class="tk-flow-pill' + (s.id === t.status ? ' active' : '') + '" data-flow-status="' + s.id + '">' + s.name + '</button>'; }).join('') +
             '</div></div>' +
-            '<div class="tk-flow-field"><span class="tk-flow-field-label">处理人</span><div class="tk-flow-field-value tk-flow-field-lg" data-flow-prop="assignee">' + escapeHtml(person.name) + '</div></div>' +
+            '<div class="tk-flow-field"><span class="tk-flow-field-label">处理人</span><button type="button" class="tk-flow-field-value tk-flow-field-lg' + (flowAssigneeDraft.assigneeId ? '' : ' is-placeholder') + '" data-flow-prop="assignee" aria-haspopup="listbox"><span class="tk-flow-field-text">' + (flowAssigneeDraft.assigneeId ? escapeHtml(tkGetPerson(flowAssigneeDraft.assigneeId).name) : '请选择') + '</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button></div>' +
           '</div>' +
           '<div class="tk-drawer-comment-input"><textarea placeholder="输入评论… 使用 @ 提及人员"></textarea></div>' +
           '<button class="tk-drawer-flow-btn" data-action="flow">流转</button>' +
@@ -907,6 +976,7 @@ function openDrawer(taskId) {
   });
 }
 function closeDrawer() {
+  flowAssigneeDraft = { taskId: null, assigneeId: '' };
   cancelAnimationFrame(drawerOpenFrame);
   els.tkDrawer.classList.remove('show');
   syncDrawerClickaway();
@@ -1377,9 +1447,15 @@ function bindEvents() {
         }
         fieldItem.addEventListener('click', function () {
           if (state.drawerTaskId) {
-            tkUpdateTask(state.drawerTaskId, (function (p) { var obj = {}; obj[p] = o.id; return obj; })(fprop));
-            render();
-            openDrawer(state.drawerTaskId);
+            if (fprop === 'assignee') {
+              flowAssigneeDraft = { taskId: state.drawerTaskId, assigneeId: o.id };
+              flowField.querySelector('.tk-flow-field-text').textContent = o.name;
+              flowField.classList.remove('is-placeholder');
+            } else {
+              tkUpdateTask(state.drawerTaskId, (function (p) { var obj = {}; obj[p] = o.id; return obj; })(fprop));
+              render();
+              openDrawer(state.drawerTaskId);
+            }
           }
           fieldMenu.remove();
         });
@@ -1422,8 +1498,17 @@ function bindEvents() {
       if (state.drawerTaskId) {
         var flowTask = tkGetTasks().find(function (x) { return x.id === state.drawerTaskId; });
         if (flowTask) {
+          if (!flowAssigneeDraft.assigneeId) {
+            toast('请选择处理人', 'error');
+            els.tkDrawerBody.querySelector('[data-flow-prop="assignee"]').focus();
+            return;
+          }
+          tkUpdateTask(state.drawerTaskId, { assignee: flowAssigneeDraft.assigneeId });
           var flowStatusName = tkGetStatusObj(flowTask.status).name;
-          var flowAssigneeName = tkGetPerson(flowTask.assignee).name;
+          var flowAssigneeName = tkGetPerson(flowAssigneeDraft.assigneeId).name;
+          flowAssigneeDraft = { taskId: state.drawerTaskId, assigneeId: '' };
+          render();
+          openDrawer(state.drawerTaskId);
           toast('流转成功：状态「' + flowStatusName + '」，处理人「' + flowAssigneeName + '」', 'success');
         }
       }
@@ -1658,6 +1743,17 @@ function bindEvents() {
 
   /* 详情面板内：添加子任务 / 打开子任务 */
   els.tkDrawerBody.addEventListener('click', function (e) {
+    var subToggle = e.target.closest('[data-subtask-toggle]');
+    if (subToggle) {
+      var subSection = subToggle.closest('.tk-subtasks');
+      var subList = subSection.querySelector('.tk-subtask-list');
+      var expanded = subToggle.getAttribute('aria-expanded') !== 'true';
+      subtaskSectionExpanded.set(parseInt(subToggle.getAttribute('data-subtask-toggle'), 10), expanded);
+      subToggle.setAttribute('aria-expanded', String(expanded));
+      subSection.classList.toggle('is-collapsed', !expanded);
+      subList.hidden = !expanded;
+      return;
+    }
     var addSubBtn = e.target.closest('[data-drawer-subtask]');
     if (addSubBtn) {
       var pid = parseInt(addSubBtn.getAttribute('data-drawer-subtask'), 10);
@@ -1682,9 +1778,24 @@ function bindEvents() {
     var toggleBtn = e.target.closest('[data-tk-toggle]');
     if (toggleBtn) {
       var tid = parseInt(toggleBtn.getAttribute('data-tk-toggle'), 10);
-      if (collapsedParents.has(tid)) collapsedParents.delete(tid);
-      else collapsedParents.add(tid);
-      render();
+      var wasCollapsed = collapsedParents.has(tid);
+      if (wasCollapsed) {
+        collapsedParents.delete(tid);
+        render();
+        els.tkBoardScroll.classList.add('tk-just-expanded');
+        setTimeout(function () { els.tkBoardScroll.classList.remove('tk-just-expanded'); }, 320);
+      } else {
+        var parentCard = toggleBtn.closest('.tk-card');
+        if (parentCard) {
+          var next = parentCard.nextElementSibling;
+          while (next && next.classList.contains('tk-card--child')) {
+            next.classList.add('tk-leaving');
+            next = next.nextElementSibling;
+          }
+        }
+        collapsedParents.add(tid);
+        setTimeout(function () { render(); }, 260);
+      }
       return;
     }
     var addBtn = e.target.closest('[data-add-group]');
@@ -1735,10 +1846,7 @@ function bindEvents() {
   els.tkListBody.addEventListener('click', function (e) {
     var toggleBtn = e.target.closest('[data-tk-toggle]');
     if (toggleBtn) {
-      var tid = parseInt(toggleBtn.getAttribute('data-tk-toggle'), 10);
-      if (collapsedParents.has(tid)) collapsedParents.delete(tid);
-      else collapsedParents.add(tid);
-      render();
+      animateListSubtasks(toggleBtn);
       return;
     }
     var inlineCreateBtn = e.target.closest('#tkInlineCreateBtn');

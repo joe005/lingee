@@ -95,5 +95,25 @@ initCollab();                     /* 6445  features/collab/index.js */
 initTasksV2();                    /* 任务管理 v2 */
 initAnalytics();                  /* 用户行为分析看板 */
 
+/* 全局 ESC 关闭弹窗：找到最上层的可见 overlay，触发其关闭按钮点击 */
+document.addEventListener('keydown', function (e) {
+  if (e.key !== 'Escape' || e.defaultPrevented) return;
+  if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target.isContentEditable) return;
+  var sel = '.modal-overlay:not(.hidden), .tk-modal-overlay:not(.hidden), .sync-overlay[style*="display:flex"], .sync-overlay[style*="display: flex"]';
+  var visible = [];
+  document.querySelectorAll(sel).forEach(function (el) {
+    if (getComputedStyle(el).display !== 'none') visible.push(el);
+  });
+  if (!visible.length) return;
+  var modal = visible[visible.length - 1];
+  var closeBtn = modal.querySelector('.modal-close, .sync-modal__close, .task-modal__close, [data-modal-close]');
+  if (closeBtn) { closeBtn.click(); e.preventDefault(); return; }
+  var cancelBtn = modal.querySelector('.modal-btn.cancel, .modal-btn--cancel, .sync-modal__btn--ghost');
+  if (cancelBtn) { cancelBtn.click(); e.preventDefault(); return; }
+  modal.classList.add('hidden');
+  modal.style.display = 'none';
+  e.preventDefault();
+});
+
 /* 未登录时清理 URL，确保页面仅显示登录页 */
 if (!_authedUser) history.replaceState(null, '', withBase('/'));
