@@ -171,3 +171,14 @@
   .menu-divider{height:1px;background:var(--border);margin:4px 6px}
   .menu-item-new{display:flex;align-items:center;gap:6px;color:var(--text);font-size:13px;justify-content:flex-start}
 
+  /* ============ # 唤起任务选择 ============ */
+  .tk-mention-picker{position:fixed;z-index:300;background:#fff;border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);max-height:280px;overflow-y:auto;min-width:280px;padding:4px}
+  .tk-mention-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:6px;cursor:pointer;font-size:13px}
+  .tk-mention-item.selected,.tk-mention-item:hover{background:var(--hover)}
+  .tk-mention-code{font-size:11px;color:var(--brand);font-weight:600;flex:none;width:64px}
+  .tk-mention-title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)}
+  .tk-mention-status{font-size:11px;color:var(--text-soft);flex:none}
+  .tk-mention-empty{padding:18px 12px;text-align:center;color:var(--text-soft);font-size:13px}
+  .mention-chip{display:inline-flex;align-items:center;padding:1px 7px;border-radius:4px;background:var(--brand-fill);color:var(--brand);font-size:12px;font-weight:500;cursor:pointer}
+  .mention-chip:hover{background:var(--brand);color:#fff}
+
