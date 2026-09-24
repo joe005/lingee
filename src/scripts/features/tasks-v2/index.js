@@ -92,7 +92,7 @@ function cacheEls() {
     'tkDisplayBtn','tkDisplayPopover','tkGroupSelect','tkViewModeSelect','tkSortSelect','tkSortDirection','tkShowSubtasks','tkCardProperties',
     'tkLayoutToggle','tkBody','tkBoard','tkBoardScroll','tkList','tkListBody','tkListHead','tkSplitEmpty',
     'tkCheckAll','tkEmpty','tkResetFilter','tkBulkBar','tkBulkCount','tkBulkClear',
-    'tkDrawer','tkDrawerClickaway','tkDrawerResize','tkDrawerClose','tkDrawerCode','tkDrawerBody','tkDrawerMore','tkDrawerSidebarToggle','tkDrawerChat',
+    'tkDrawer','tkDrawerClickaway','tkDrawerResize','tkDrawerClose','tkDrawerTitle','tkDrawerCode','tkDrawerBody','tkDrawerMore','tkDrawerSidebarToggle','tkDrawerChat',
     'tkModalOverlay','tkModalClose','tkModalCancel','tkModalSave','tkModalTitle',
     'tkFormTitle','tkFormDesc','tkFormStatus','tkFormPriority','tkFormAssignee','tkFormProject','tkFormDue','tkFormLabels',
     'tkSaveViewOverlay','tkSaveViewClose','tkSaveViewCancel','tkSaveViewConfirm','tkSaveViewName','tkSaveViewVisibility','tkSaveViewScope','tkSaveViewLayout','tkSaveViewSummary',
@@ -643,7 +643,9 @@ function render() {
   els.tkBody.classList.toggle('is-split', split);
   els.tkDrawer.classList.toggle('mode-full', state.viewMode === 'full');
   $$('[data-layout]', els.tkLayoutToggle).forEach(function (btn) {
-    btn.classList.toggle('active', btn.getAttribute('data-layout') === state.layout);
+    var active = btn.getAttribute('data-layout') === state.layout;
+    btn.classList.toggle('active', active);
+    btn.setAttribute('aria-pressed', String(active));
   });
   renderDisplayControls();
   updateFilterButton();
@@ -868,6 +870,213 @@ function insertMention(ta, name) {
 /* ---------- 任务详情面板 ---------- */
 var propPickerOptions = {};
 var propFieldKeys = { '状态':'status', '处理人':'assignee', '项目':'project', '模块':'module', '优先级':'priority', '截止日期':'dueDate' };
+var taskLabelColors = Object.create(null);
+var labelPickerMenu = null;
+var labelPickerTaskId = null;
+var labelPickerMode = 'pick';
+var LABEL_PALETTE = ['#ef4444','#f97316','#eab308','#22c55e','#14b8a6','#3b82f6','#6366f1','#a855f7','#ec4899','#64748b'];
+function persistTaskLabelCatalog() {
+  try { localStorage.setItem('lingee_task_label_catalog', JSON.stringify({ labels:TK_LABELS, colors:taskLabelColors })); }
+  catch (e) { /* 本地存储不可用时仍可在当前页面编辑 */ }
+}
+function restoreTaskLabelCatalog() {
+  try {
+    var saved = JSON.parse(localStorage.getItem('lingee_task_label_catalog') || 'null');
+    if (!saved || !Array.isArray(saved.labels)) return;
+    TK_LABELS.splice(0, TK_LABELS.length, ...saved.labels.filter(function(name) { return typeof name === 'string' && name.trim(); }));
+    if (saved.colors && typeof saved.colors === 'object') Object.keys(saved.colors).forEach(function(name) {
+      if (/^#[0-9a-f]{6}$/i.test(saved.colors[name])) taskLabelColors[name] = saved.colors[name];
+    });
+  } catch (e) { /* 忽略损坏的本地缓存 */ }
+}
+function taskLabelColor(name) {
+  if (taskLabelColors[name]) return taskLabelColors[name];
+  var hash = 0;
+  for (var i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
+  return LABEL_PALETTE[hash % LABEL_PALETTE.length];
+}
+function taskLabelTextColor(color) {
+  var r = parseInt(color.slice(1, 3), 16), g = parseInt(color.slice(3, 5), 16), b = parseInt(color.slice(5, 7), 16);
+  return (r * .299 + g * .587 + b * .114) / 255 > .55 ? '#111827' : '#f9fafb';
+}
+function taskLabelCatalog() {
+  return Array.from(new Set(TK_LABELS.concat(tkGetTasks().flatMap(function(t) { return t.labels || []; }))));
+}
+function renderTaskLabelTrigger(task) {
+  var labels = task.labels || [];
+  return '<div class="tk-label-picker" role="button" tabindex="0" aria-haspopup="listbox" aria-expanded="false" aria-label="编辑标签">' +
+    (labels.length ? labels.map(function(name) {
+      var color = taskLabelColor(name);
+      return '<span class="tk-drawer-label" style="background:' + color + ';color:' + taskLabelTextColor(color) + '"><span>' + escapeHtml(name) + '</span><button type="button" class="tk-drawer-label-remove" data-label-remove="' + escapeHtml(name) + '" aria-label="移除标签 ' + escapeHtml(name) + '">×</button></span>';
+    }).join('') : '<span class="tk-label-placeholder"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3h9l9 9-9 9-9-9z"/><circle cx="8" cy="8" r="1"/></svg>添加标签</span>') +
+    '</div>';
+}
+function closeTaskLabelPicker() {
+  if (labelPickerMenu) labelPickerMenu.remove();
+  labelPickerMenu = null;
+  labelPickerTaskId = null;
+  labelPickerMode = 'pick';
+  var trigger = els.tkDrawerBody && els.tkDrawerBody.querySelector('.tk-label-picker');
+  if (trigger) trigger.setAttribute('aria-expanded', 'false');
+}
+function updateTaskLabels(task, labels) {
+  tkUpdateTask(task.id, { labels: labels });
+  var row = els.tkDrawerBody.querySelector('.tk-label-picker');
+  if (row) row.outerHTML = renderTaskLabelTrigger(task);
+  if (labelPickerMenu) els.tkDrawerBody.querySelector('.tk-label-picker').setAttribute('aria-expanded', 'true');
+  render();
+}
+function renderTaskLabelChoices(query) {
+  if (!labelPickerMenu || labelPickerMode !== 'pick') return;
+  var task = tkGetTasks().find(function(t) { return t.id === labelPickerTaskId; });
+  if (!task) return;
+  var normalized = query.trim().toLocaleLowerCase();
+  var labels = taskLabelCatalog().filter(function(name) { return name.toLocaleLowerCase().includes(normalized); });
+  var list = labelPickerMenu.querySelector('.tk-label-picker-options');
+  list.innerHTML = labels.map(function(name) {
+    var selected = (task.labels || []).includes(name);
+    return '<button type="button" class="tk-label-option' + (selected ? ' selected' : '') + '" data-label-option="' + escapeHtml(name) + '" role="option" aria-selected="' + selected + '"><span class="tk-label-color" style="background:' + taskLabelColor(name) + '"></span><span class="tk-label-option-name">' + escapeHtml(name) + '</span><span class="tk-label-check">' + (selected ? '✓' : '') + '</span></button>';
+  }).join('');
+  var exact = taskLabelCatalog().some(function(name) { return name.toLocaleLowerCase() === normalized; });
+  if (normalized && !exact) list.innerHTML += '<button type="button" class="tk-label-option tk-label-create" data-label-create="' + escapeHtml(query.trim()) + '"><span class="tk-label-create-plus">＋</span><span class="tk-label-option-name">创建“' + escapeHtml(query.trim()) + '”</span><span class="tk-label-color" style="background:' + taskLabelColor(query.trim()) + '"></span></button>';
+  if (!list.innerHTML) list.innerHTML = '<div class="tk-label-picker-empty">没有匹配的标签</div>';
+}
+function renderTaskLabelPickerBody() {
+  labelPickerMode = 'pick';
+  labelPickerMenu.innerHTML = '<div class="tk-label-search-wrap"><input type="search" class="tk-label-search" placeholder="搜索标签…" aria-label="搜索标签" autocomplete="off"></div><div class="tk-label-picker-options" role="listbox" aria-multiselectable="true"></div><div class="tk-label-popover-footer"><button type="button" data-label-manage>⚙ 管理标签</button></div>';
+  renderTaskLabelChoices('');
+  labelPickerMenu.querySelector('input').focus({ preventScroll:true });
+}
+function renderTaskLabelManager() {
+  labelPickerMode = 'manage';
+  labelPickerMenu.innerHTML = '<div class="tk-label-manager-head"><button type="button" data-label-back aria-label="返回标签选择">‹</button><strong>管理标签</strong></div>' +
+    '<div class="tk-label-manager-list">' + taskLabelCatalog().map(function(name) {
+      return '<div class="tk-label-manager-row"><input type="color" data-label-color="' + escapeHtml(name) + '" value="' + taskLabelColor(name) + '" aria-label="标签颜色 ' + escapeHtml(name) + '"><input type="text" data-label-rename="' + escapeHtml(name) + '" value="' + escapeHtml(name) + '" aria-label="标签名称"><button type="button" data-label-delete="' + escapeHtml(name) + '" aria-label="删除标签 ' + escapeHtml(name) + '">×</button></div>';
+    }).join('') + '</div><div class="tk-label-manager-add"><input type="text" class="tk-label-manager-new" placeholder="新标签名称" aria-label="新标签名称"><button type="button" data-label-add>添加</button></div>';
+}
+function refreshTaskLabelDisplay() {
+  var task = tkGetTasks().find(function(t) { return t.id === state.drawerTaskId; });
+  var row = els.tkDrawerBody.querySelector('.tk-label-picker');
+  if (task && row) {
+    row.outerHTML = renderTaskLabelTrigger(task);
+    els.tkDrawerBody.querySelector('.tk-label-picker').setAttribute('aria-expanded', 'true');
+  }
+  render();
+}
+function openTaskLabelPicker(trigger) {
+  closeTaskLabelPicker();
+  labelPickerTaskId = state.drawerTaskId;
+  labelPickerMenu = document.createElement('div');
+  labelPickerMenu.className = 'tk-label-popover';
+  renderTaskLabelPickerBody();
+  labelPickerMenu.addEventListener('input', function(e) {
+    if (e.target.classList.contains('tk-label-search')) renderTaskLabelChoices(e.target.value);
+  });
+  labelPickerMenu.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeTaskLabelPicker(); return; }
+    if (e.isComposing) return;
+    if (e.key === 'Enter' && e.target.classList.contains('tk-label-manager-new')) {
+      e.preventDefault();
+      labelPickerMenu.querySelector('[data-label-add]').click();
+      return;
+    }
+    if (e.key === 'Enter' && e.target.classList.contains('tk-label-search')) {
+      var first = labelPickerMenu.querySelector('.tk-label-option');
+      if (first) { e.preventDefault(); first.click(); }
+    }
+    if (e.key === 'ArrowDown' && e.target.classList.contains('tk-label-search')) {
+      var option = labelPickerMenu.querySelector('.tk-label-option');
+      if (option) { e.preventDefault(); option.focus(); }
+    }
+    var focusedOption = e.target.closest('.tk-label-option');
+    if (focusedOption) {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        var options = Array.from(labelPickerMenu.querySelectorAll('.tk-label-option'));
+        var index = options.indexOf(focusedOption) + (e.key === 'ArrowDown' ? 1 : -1);
+        if (options[index]) options[index].focus();
+        else labelPickerMenu.querySelector('.tk-label-search').focus();
+      }
+    }
+  });
+  labelPickerMenu.addEventListener('click', function(e) {
+    if (e.target.closest('[data-label-manage]')) { renderTaskLabelManager(); return; }
+    if (e.target.closest('[data-label-back]')) { renderTaskLabelPickerBody(); return; }
+    var add = e.target.closest('[data-label-add]');
+    if (add) {
+      var newName = labelPickerMenu.querySelector('.tk-label-manager-new').value.trim();
+      if (newName && !taskLabelCatalog().some(function(name) { return name.toLocaleLowerCase() === newName.toLocaleLowerCase(); })) {
+        TK_LABELS.push(newName);
+        persistTaskLabelCatalog();
+        renderTaskLabelManager();
+      }
+      return;
+    }
+    var removeCatalog = e.target.closest('[data-label-delete]');
+    if (removeCatalog) {
+      var oldName = removeCatalog.getAttribute('data-label-delete');
+      var index = TK_LABELS.indexOf(oldName);
+      if (index >= 0) TK_LABELS.splice(index, 1);
+      tkGetTasks().forEach(function(task) {
+        if ((task.labels || []).includes(oldName)) tkUpdateTask(task.id, { labels: task.labels.filter(function(name) { return name !== oldName; }) });
+      });
+      delete taskLabelColors[oldName];
+      persistTaskLabelCatalog();
+      refreshTaskLabelDisplay();
+      if (labelPickerMenu) renderTaskLabelManager();
+      return;
+    }
+    var option = e.target.closest('[data-label-option]');
+    var create = e.target.closest('[data-label-create]');
+    if (!option && !create) return;
+    var task = tkGetTasks().find(function(t) { return t.id === labelPickerTaskId; });
+    if (!task) return;
+    var name = option ? option.getAttribute('data-label-option') : create.getAttribute('data-label-create');
+    var selected = task.labels || [];
+    if (create && !TK_LABELS.includes(name)) { TK_LABELS.push(name); persistTaskLabelCatalog(); }
+    updateTaskLabels(task, selected.includes(name) ? selected.filter(function(label) { return label !== name; }) : selected.concat(name));
+    var search = labelPickerMenu && labelPickerMenu.querySelector('.tk-label-search');
+    if (search) {
+      if (create) search.value = '';
+      renderTaskLabelChoices(search.value);
+      search.focus({ preventScroll:true });
+    }
+  });
+  labelPickerMenu.addEventListener('change', function(e) {
+    var colorName = e.target.getAttribute('data-label-color');
+    if (colorName) {
+      taskLabelColors[colorName] = e.target.value;
+      persistTaskLabelCatalog();
+      refreshTaskLabelDisplay();
+      return;
+    }
+    var oldName = e.target.getAttribute('data-label-rename');
+    if (!oldName) return;
+    var nextName = e.target.value.trim();
+    if (!nextName || nextName === oldName || taskLabelCatalog().some(function(name) { return name.toLocaleLowerCase() === nextName.toLocaleLowerCase(); })) {
+      e.target.value = oldName;
+      return;
+    }
+    var index = TK_LABELS.indexOf(oldName);
+    if (index >= 0) TK_LABELS[index] = nextName;
+    else TK_LABELS.push(nextName);
+    tkGetTasks().forEach(function(task) {
+      if ((task.labels || []).includes(oldName)) tkUpdateTask(task.id, { labels: task.labels.map(function(name) { return name === oldName ? nextName : name; }) });
+    });
+    taskLabelColors[nextName] = taskLabelColors[oldName] || taskLabelColor(oldName);
+    delete taskLabelColors[oldName];
+    persistTaskLabelCatalog();
+    refreshTaskLabelDisplay();
+    if (labelPickerMenu) renderTaskLabelManager();
+  });
+  document.body.appendChild(labelPickerMenu);
+  renderTaskLabelChoices('');
+  var rect = trigger.getBoundingClientRect();
+  labelPickerMenu.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - labelPickerMenu.offsetWidth - 8)) + 'px';
+  labelPickerMenu.style.top = Math.max(8, Math.min(rect.bottom + 4, window.innerHeight - labelPickerMenu.offsetHeight - 8)) + 'px';
+  trigger.setAttribute('aria-expanded', 'true');
+  labelPickerMenu.querySelector('input').focus({ preventScroll:true });
+}
 function propPicker(name, currentVal, options, isDate) {
   var display = isDate ? (currentVal || '—') : (options.find(function (o) { return o.value === currentVal; }) || {}).label || '—';
   if (isDate) {
@@ -966,24 +1175,22 @@ function taskCommentTimestamp() {
 }
 
 function openDrawer(taskId) {
+  closeTaskLabelPicker();
   var t = tkGetTasks().find(function (x) { return x.id === taskId; });
   if (!t) return;
   if (flowAssigneeDraft.taskId !== taskId) flowAssigneeDraft = { taskId: taskId, assigneeId: '' };
   state.drawerTaskId = taskId;
   els.tkDrawer.setAttribute('data-task-id', String(taskId));
   var person = tkGetPerson(t.assignee);
-  var labelsHtml = (t.labels || []).map(function (l) {
-    return '<span class="tk-drawer-label">' + escapeHtml(l) + '</span>';
-  }).join('');
   var statusOpts = TK_STATUSES.map(function (s) { return { value: s.id, label: s.name }; });
   var priOpts = TK_PRIORITIES.map(function (p) { return { value: p.id, label: p.name }; });
   var peopleOpts = TK_PEOPLE.map(function (p) { return { value: p.id, label: p.name }; });
   var projOpts = TK_PROJECTS.map(function (p) { return { value: p.id, label: p.name }; });
   var moduleOpts = Array.from(new Set(tkGetTasks().filter(function (task) { return task.project === t.project && task.module; }).map(function (task) { return task.module; }))).sort().map(function (name) { return { value:name, label:name }; });
-  els.tkDrawerCode.textContent = t.code;
+  els.tkDrawerTitle.textContent = t.title;
+  els.tkDrawerCode.textContent = '#' + t.code;
   els.tkDrawerBody.innerHTML =
     '<div class="tk-drawer-main"><div class="tk-drawer-main-inner">' +
-      '<h3 class="tk-drawer-title" contenteditable="true" data-field="title">' + escapeHtml(t.title) + '</h3>' +
       '<div class="tk-drawer-tabs">' +
         '<button type="button" class="tk-drawer-tab active" data-tab="info">基础信息</button>' +
         '<button type="button" class="tk-drawer-tab" data-tab="changelog">变更日志</button>' +
@@ -991,7 +1198,7 @@ function openDrawer(taskId) {
       '<div class="tk-drawer-tab-content active" data-tab-content="info">' +
         '<div class="tk-drawer-desc" contenteditable="true" data-field="desc">' + escapeHtml(t.desc || '点击添加描述…') + '</div>' +
         '<div class="tk-drawer-attachments">' +
-          '<div class="tk-attach-dropzone" id="tkAttachDropzone" data-tooltip="添加附件" aria-label="添加附件">' +
+          '<div class="tk-attach-dropzone" id="tkAttachDropzone" role="button" tabindex="0" data-tooltip="添加附件（支持粘贴、拖拽）" aria-label="添加附件（支持粘贴、拖拽）">' +
             '<input type="file" id="tkAttachInput" multiple style="display:none">' +
             '<svg class="tk-attach-btn-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>' +
           '</div>' +
@@ -1026,7 +1233,7 @@ function openDrawer(taskId) {
         propPicker('模块', t.module, moduleOpts) +
         propPicker('优先级', t.priority, priOpts) +
         propPicker('截止日期', t.dueDate, null, true) +
-        (labelsHtml ? '<div class="tk-prop-row"><span>标签</span><div class="tk-drawer-labels">' + labelsHtml + '</div></div>' : '') +
+        '<div class="tk-prop-row"><span>标签</span>' + renderTaskLabelTrigger(t) + '</div>' +
       '</div>' +
       '<div class="tk-prop-row"><span>创建者</span><span class="tk-prop-val">' + escapeHtml(person.name) + '</span></div>' +
       '<div class="tk-prop-row"><span>创建时间</span><span class="tk-prop-val">' + escapeHtml(t.createdAt || t.createDate) + '</span></div>' +
@@ -1048,9 +1255,19 @@ function openDrawer(taskId) {
       });
     }
     fi.onchange = function() { renderFiles(fi.files); fi.value=''; };
+    dz.onkeydown = function(e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fi.click(); }
+    };
     dz.ondragover = function(e) { e.preventDefault(); dz.classList.add('dragover'); };
     dz.ondragleave = function() { dz.classList.remove('dragover'); };
     dz.ondrop = function(e) { e.preventDefault(); dz.classList.remove('dragover'); renderFiles(e.dataTransfer.files); };
+    els.tkDrawer.onpaste = function(e) {
+      if (e.target.closest('input, textarea, [contenteditable="true"]')) return;
+      var files = Array.from((e.clipboardData && e.clipboardData.items) || []).map(function(item) {
+        return item.kind === 'file' ? item.getAsFile() : null;
+      }).filter(Boolean);
+      if (files.length) { e.preventDefault(); renderFiles(files); }
+    };
   })();
   clearTimeout(drawerCloseTimer);
   cancelAnimationFrame(drawerOpenFrame);
@@ -1070,6 +1287,7 @@ function openDrawer(taskId) {
   });
 }
 function closeDrawer() {
+  closeTaskLabelPicker();
   document.querySelectorAll('.tk-drawer-more-menu').forEach(function (m) { m.remove(); });
   els.tkDrawerMore.setAttribute('aria-expanded', 'false');
   flowAssigneeDraft = { taskId: null, assigneeId: '' };
@@ -1283,8 +1501,6 @@ function bindEvents() {
   /* 布局切换 */
   $$('.tk-layout-btn').forEach(function (btn) {
     btn.addEventListener('click', function () {
-      $$('.tk-layout-btn').forEach(function (b) { b.classList.remove('active'); });
-      this.classList.add('active');
       state.layout = this.getAttribute('data-layout');
       if (state.viewMode === 'split' && state.layout === 'board') state.viewMode = 'slide';
       render();
@@ -1456,6 +1672,19 @@ function bindEvents() {
 
   /* 属性区折叠 */
   els.tkDrawerBody.addEventListener('click', function (e) {
+    var labelRemove = e.target.closest('[data-label-remove]');
+    if (labelRemove && state.drawerTaskId) {
+      var taskForRemove = tkGetTasks().find(function(t) { return t.id === state.drawerTaskId; });
+      if (taskForRemove) updateTaskLabels(taskForRemove, (taskForRemove.labels || []).filter(function(name) { return name !== labelRemove.getAttribute('data-label-remove'); }));
+      if (labelPickerMenu && labelPickerMode === 'pick') renderTaskLabelChoices(labelPickerMenu.querySelector('.tk-label-search').value);
+      return;
+    }
+    var labelTrigger = e.target.closest('.tk-label-picker');
+    if (labelTrigger) {
+      if (labelPickerMenu) closeTaskLabelPicker();
+      else openTaskLabelPicker(labelTrigger);
+      return;
+    }
     var toggle = e.target.closest('#tkDrawerPropToggle');
     if (toggle) {
       toggle.classList.toggle('collapsed');
@@ -1665,6 +1894,10 @@ function bindEvents() {
     }
   });
   els.tkDrawerBody.addEventListener('keydown', function (e) {
+    if (e.target.matches('.tk-label-picker') && (e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault();
+      if (labelPickerMenu) closeTaskLabelPicker(); else openTaskLabelPicker(e.target);
+    }
     if (e.target.matches('.tk-prop-assignee-input')) chooseFirstAssignee(document.querySelector('.tk-prop-menu.show'), '.tk-prop-menu-item', e);
     if (e.target.matches('.tk-flow-field-text')) chooseFirstAssignee(document.querySelector('.tk-flow-field-menu.show'), '.tk-flow-field-menu-item', e);
   });
@@ -1678,7 +1911,7 @@ function bindEvents() {
     render();
     openDrawer(state.drawerTaskId);
   });
-  els.tkDrawerBody.addEventListener('blur', function (e) {
+  els.tkDrawer.addEventListener('blur', function (e) {
     if (!state.drawerTaskId) return;
     var el = e.target.closest('[data-field]');
     if (!el) return;
@@ -2119,6 +2352,7 @@ function bindEvents() {
   /* 点击外部关闭弹出菜单 */
   document.addEventListener('click', function (e) {
     hidePopover();
+    if (labelPickerMenu && !e.target.closest('.tk-label-popover') && !e.target.closest('.tk-label-picker')) closeTaskLabelPicker();
     var ffm = document.querySelector('.tk-flow-field-menu.show');
     if (ffm && !e.target.closest('.tk-flow-field-menu') && !e.target.closest('[data-flow-prop]')) {
       ffm.remove();
@@ -2214,6 +2448,7 @@ function initColumnResize() {
 
 /* ---------- 初始化 ---------- */
 export function initTasksV2() {
+  restoreTaskLabelCatalog();
   cacheEls();
   restoreViewState();
   initColumnResize();

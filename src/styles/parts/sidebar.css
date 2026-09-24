@@ -101,6 +101,7 @@
     padding:9px 12px;border-radius:10px;cursor:pointer;
     color:var(--text);margin-bottom:2px;
   }
+  .nav-item[hidden]{display:none}
   .nav-item:hover{background:var(--hover)}
   .nav-item.active{background:var(--active)}
   .nav-item .ic{color:#3a3a3d}

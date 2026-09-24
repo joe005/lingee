@@ -516,7 +516,6 @@ function showTaskPicker(anchorEl, query) {
       return '<div class="tk-mention-item' + sel + '" data-idx="' + i + '">'
         + '<span class="tk-mention-code">' + escapeHtml(t.code || '') + '</span>'
         + '<span class="tk-mention-title">' + escapeHtml(t.title || '') + '</span>'
-        + '<span class="tk-mention-status">' + escapeHtml(t.status || '') + '</span>'
         + '</div>';
     }).join('');
   }

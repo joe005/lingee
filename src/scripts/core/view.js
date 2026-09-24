@@ -110,6 +110,34 @@ export function initSidebarNav() {
       }
     });
   });
+
+  /* ---------- 右键"协作开发"：平铺任务菜单 ---------- */
+  var navCtxMenu=$('#navCtxMenu');
+  var collabNav=Array.prototype.find.call(navItems,function(n){return n.textContent.trim()==='协作开发';});
+  if(collabNav && navCtxMenu){
+    collabNav.addEventListener('contextmenu',function(e){
+      e.preventDefault();
+      var tasksNav=$('.sb-scroll .nav-item[data-nav="tasks"]');
+      var item=navCtxMenu.querySelector('[data-nav-ctx]');
+      if(item) item.textContent=tasksNav&&!tasksNav.hidden?'隐藏菜单':'显示菜单';
+      navCtxMenu.style.left=Math.min(e.clientX,document.documentElement.clientWidth-220)+'px';
+      navCtxMenu.style.top=Math.min(e.clientY,document.documentElement.clientHeight-60)+'px';
+      navCtxMenu.classList.add('show');
+    });
+    navCtxMenu.addEventListener('click',function(e){
+      var item=e.target.closest('[data-nav-ctx]');
+      if(!item) return;
+      if(item.getAttribute('data-nav-ctx')==='pin-tasks'){
+        var tasksNav=$('.sb-scroll .nav-item[data-nav="tasks"]');
+        if(tasksNav) tasksNav.hidden=!tasksNav.hidden;
+      }
+      navCtxMenu.classList.remove('show');
+    });
+    document.addEventListener('click',function(e){
+      if(e.target.closest('#navCtxMenu')||e.target.closest('[data-nav="tasks"]')) return;
+      if(navCtxMenu.classList.contains('show')) navCtxMenu.classList.remove('show');
+    });
+  }
 }
 
 export function initHomeCards() {

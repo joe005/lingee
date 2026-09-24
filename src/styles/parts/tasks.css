@@ -65,6 +65,8 @@
 .tk-display-btn.active{border-color:var(--border-focus);color:var(--brand);background:var(--brand-fill)}
 .tk-display-popover{position:fixed;background:var(--bg);border:1px solid var(--border);border-radius:9px;box-shadow:var(--menu-shadow);z-index:60;padding:12px;width:288px;box-sizing:border-box}
 .tk-display-popover.hidden{display:none}
+.tk-display-layout-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.tk-display-layout-row>span{font-size:12px;font-weight:500;color:var(--text-secondary)}
 .tk-display-group-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .tk-display-view-mode-row{margin-top:12px}
 .tk-display-group-row label,.tk-display-section label,.tk-display-section-label,.tk-display-switch-row>span:first-child{font-size:12px;font-weight:500;color:var(--text-secondary)}
@@ -90,9 +92,10 @@
 
 /* 布局切换 */
 .tk-layout-toggle{display:flex;align-items:center;border:1px solid var(--border);border-radius:6px;overflow:hidden}
-.tk-layout-btn{display:flex;align-items:center;justify-content:center;width:30px;height:28px;border:none;background:transparent;color:var(--text-secondary);cursor:pointer;transition:all .15s}
+.tk-layout-btn{display:flex;align-items:center;justify-content:center;gap:5px;min-width:64px;height:28px;padding:0 8px;border:none;background:transparent;color:var(--text);font-size:12px;cursor:pointer;transition:all .15s}
 .tk-layout-btn:hover{background:var(--hover)}
 .tk-layout-btn.active{background:var(--brand-fill);color:var(--brand)}
+.tk-layout-btn+.tk-layout-btn{border-left:1px solid var(--border)}
 
 /* ---------- 筛选面板 ---------- */
 .tk-filter-panel{position:fixed;background:var(--bg);border:1px solid var(--border);border-radius:9px;box-shadow:var(--menu-shadow);z-index:60;width:128px;box-sizing:border-box;padding:4px}
@@ -357,8 +360,9 @@ body.tk-col-resizing{user-select:none;cursor:col-resize}
 .tk-drawer-resize:hover:after,.tk-drawer-resize:focus-visible:after,.tk-drawer.resizing .tk-drawer-resize:after{opacity:1}
 body.tk-drawer-resizing{user-select:none;cursor:col-resize}
 .tk-drawer-head{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--divider);flex-shrink:0}
-.tk-drawer-code{font-size:13px;font-weight:600;color:var(--brand)}
-.tk-drawer-head-actions{display:flex;align-items:center;gap:2px}
+.tk-drawer-head-title{display:flex;align-items:center;gap:8px;min-width:0;flex:1}
+.tk-drawer-code{flex:none;font-size:18px;font-weight:400;color:var(--text-soft);white-space:nowrap}
+.tk-drawer-head-actions{display:flex;align-items:center;gap:2px;flex:none;margin-left:auto}
 .tk-drawer-head-btn{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border:none;background:transparent;color:var(--text-secondary);cursor:pointer;border-radius:6px}
 .tk-drawer-head-btn:hover{background:var(--hover);color:var(--text)}
 #tkDrawerChat{width:auto;gap:6px;padding:0 10px;border:1px solid transparent;background:var(--brand-fill);color:var(--brand);font-size:12px;font-weight:600;white-space:nowrap}
@@ -366,14 +370,14 @@ body.tk-drawer-resizing{user-select:none;cursor:col-resize}
 .tk-drawer-close{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border:none;background:transparent;color:var(--text-secondary);cursor:pointer;border-radius:6px}
 .tk-drawer-close:hover{background:var(--hover)}
 .tk-drawer-body{flex:1;overflow:hidden;display:flex}
-.tk-drawer-main{flex:1;min-width:0;overflow-y:auto;padding:24px 32px}
+.tk-drawer-main{flex:1;min-width:0;overflow-y:auto;padding:8px 32px 24px}
 .tk-drawer-main-inner{max-width:720px;margin:0 auto}
 .tk-drawer-sidebar{width:300px;flex-shrink:0;border-left:1px solid var(--divider);overflow-y:auto;padding:20px}
 @media(max-width:760px){
   .tk-drawer{width:100vw}
   .tk-drawer-resize{display:none}
   .tk-drawer-body{display:block;overflow-y:auto}
-  .tk-drawer-main{overflow:visible;padding:20px}
+  .tk-drawer-main{overflow:visible;padding:8px 20px 20px}
   .tk-drawer-sidebar{width:auto;overflow:visible;border-left:0;border-top:1px solid var(--divider)}
   .tk-body.is-split{flex-direction:column}
   .tk-body.is-split .tk-list{flex:0 0 35%;width:100%;border-right:0;border-bottom:1px solid var(--divider)}
@@ -381,13 +385,14 @@ body.tk-drawer-resizing{user-select:none;cursor:col-resize}
 }
 @media(max-width:1100px){
   .tk-body.is-split .tk-drawer-body{display:block;overflow-y:auto}
-  .tk-body.is-split .tk-drawer-main{overflow:visible;padding:20px}
+  .tk-body.is-split .tk-drawer-main{overflow:visible;padding:8px 20px 20px}
   .tk-body.is-split .tk-drawer-sidebar{width:auto;overflow:visible;border-left:0;border-top:1px solid var(--divider)}
 }
-.tk-drawer-title{font-size:18px;font-weight:600;color:var(--text);margin:0 0 12px;line-height:1.4;outline:none;border-radius:4px;padding:2px 4px;margin-left:-4px}
-.tk-drawer-title:focus{background:var(--hover);outline:1px solid var(--border-focus)}
+.tk-drawer-title{font-size:18px;font-weight:600;color:var(--text);margin:0;line-height:1.4;outline:none;border-radius:4px;padding:2px 4px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tk-drawer-title:focus{outline:1px solid var(--border-focus)}
+.tk-drawer-main-inner>.tk-drawer-tabs{margin-top:0}
 .tk-drawer-desc{font-size:13px;color:var(--text);line-height:1.6;outline:none;border-radius:4px;padding:4px;margin-left:-4px;min-height:40px;margin-bottom:16px}
-.tk-drawer-desc:focus{background:var(--hover);outline:1px solid var(--border-focus)}
+.tk-drawer-desc:focus{outline:1px solid var(--border-focus)}
 .tk-drawer-activity{margin-bottom:16px}
 .tk-activity-item{display:flex;align-items:flex-start;gap:8px;padding:4px 0}
 .tk-activity-dot{width:6px;height:6px;border-radius:50%;background:var(--border-focus);margin-top:6px;flex-shrink:0}
@@ -420,10 +425,12 @@ body.tk-drawer-resizing{user-select:none;cursor:col-resize}
 .tk-quick-btn.danger:hover{color:var(--danger)}
 .tk-drawer-sidebar.hidden{display:none}
 .tk-drawer-tabs{display:flex;gap:0;border-bottom:1px solid var(--divider);margin-top:16px}
-.tk-drawer-tab{padding:8px 16px;border:none;background:transparent;font-size:13px;color:var(--text-secondary);cursor:pointer;position:relative;transition:color .15s}
+.tk-drawer-tab{padding:8px 16px;border:none;background:transparent;font-size:13px;color:var(--text);cursor:pointer;position:relative;transition:color .15s}
+.tk-drawer-tab:first-child{padding-left:0}
 .tk-drawer-tab:hover{color:var(--text)}
 .tk-drawer-tab.active{color:var(--brand);font-weight:500}
-.tk-drawer-tab.active::after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--brand)}
+.tk-drawer-tab.active::after{content:'';position:absolute;left:16px;right:16px;bottom:-1px;height:2px;background:var(--brand)}
+.tk-drawer-tab:first-child.active::after{left:0}
 .tk-drawer-tab-content{display:none;padding-top:12px}
 .tk-drawer-tab-content.active{display:block}
 .tk-drawer-tab-content[hidden]{display:none}
@@ -486,8 +493,41 @@ body.tk-drawer-resizing{user-select:none;cursor:col-resize}
 .tk-drawer-meta{display:flex;flex-wrap:wrap;gap:12px}
 .tk-drawer-meta-item{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text-secondary)}
 .tk-drawer-meta-item b{color:var(--text)}
-.tk-drawer-labels{display:flex;flex-wrap:wrap;gap:4px}
-.tk-drawer-label{font-size:11px;padding:2px 8px;border-radius:3px;background:var(--fill-1);border:1px solid var(--border);color:var(--text-secondary)}
+.tk-label-picker{display:flex;align-items:center;flex-wrap:wrap;gap:4px;min-width:0;padding:3px 4px;margin-left:-4px;border-radius:5px;cursor:pointer;outline:none}
+.tk-label-picker:hover{background:var(--hover)}
+.tk-label-picker:focus-visible{outline:1px solid var(--border-focus)}
+.tk-label-placeholder{display:inline-flex;align-items:center;gap:5px;color:var(--text-soft);font-size:12px;white-space:nowrap}
+.tk-drawer-label{display:inline-flex;align-items:center;gap:4px;min-width:0;max-width:100%;padding:2px 7px;border-radius:20px;font-size:11px;font-weight:500;line-height:1.4}
+.tk-drawer-label>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tk-drawer-label-remove{display:grid;place-items:center;flex:none;width:14px;height:14px;padding:0;border:0;border-radius:50%;background:transparent;color:inherit;font-size:13px;line-height:1;cursor:pointer}
+.tk-drawer-label-remove:hover{background:rgba(0,0,0,.14)}
+.tk-label-popover{position:fixed;z-index:205;width:320px;max-width:calc(100vw - 16px);background:var(--bg);border:1px solid var(--border);border-radius:9px;box-shadow:var(--menu-shadow);overflow:hidden}
+.tk-label-search-wrap{padding:7px 9px;border-bottom:1px solid var(--divider)}
+.tk-label-search{box-sizing:border-box;width:100%;padding:2px 0;border:0;outline:0;background:transparent;color:var(--text);font:inherit;font-size:12px}
+.tk-label-search::placeholder{color:var(--text-soft);opacity:1}
+.tk-label-picker-options{max-height:288px;overflow-y:auto;padding:4px}
+.tk-label-option{display:flex;align-items:center;gap:9px;width:100%;min-height:32px;padding:5px 8px;border:0;border-radius:5px;background:transparent;color:var(--text);font:inherit;font-size:12px;text-align:left;cursor:pointer}
+.tk-label-option:hover,.tk-label-option:focus-visible{background:var(--hover);outline:none}
+.tk-label-option.selected{background:var(--fill-1)}
+.tk-label-color{display:inline-block;flex:none;width:12px;height:12px;border-radius:50%}
+.tk-label-option-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tk-label-check{min-width:14px;color:var(--brand);font-weight:600;text-align:center}
+.tk-label-create-plus{display:grid;place-items:center;flex:none;width:12px;color:var(--text-secondary);font-size:15px}
+.tk-label-picker-empty{padding:10px;color:var(--text-soft);font-size:12px;text-align:center}
+.tk-label-popover-footer{padding:4px;border-top:1px solid var(--divider)}
+.tk-label-popover-footer button{display:flex;align-items:center;gap:6px;width:100%;padding:6px 8px;border:0;border-radius:5px;background:transparent;color:var(--text-secondary);font:inherit;font-size:12px;text-align:left;cursor:pointer}
+.tk-label-popover-footer button:hover{background:var(--hover)}
+.tk-label-manager-head{display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid var(--divider);font-size:13px}
+.tk-label-manager-head button{border:0;background:transparent;color:var(--text-secondary);font-size:20px;line-height:1;cursor:pointer}
+.tk-label-manager-list{max-height:260px;overflow-y:auto;padding:4px}
+.tk-label-manager-row{display:flex;align-items:center;gap:6px;padding:4px}
+.tk-label-manager-row input[type=color]{width:22px;height:22px;padding:0;border:0;background:transparent;cursor:pointer}
+.tk-label-manager-row input[type=text],.tk-label-manager-new{flex:1;min-width:0;padding:5px 7px;border:1px solid var(--border);border-radius:5px;background:var(--bg);color:var(--text);font:inherit;font-size:12px;outline:none}
+.tk-label-manager-row input[type=text]:focus,.tk-label-manager-new:focus{border-color:var(--border-focus)}
+.tk-label-manager-row button{width:24px;height:24px;border:0;border-radius:4px;background:transparent;color:var(--text-soft);font-size:17px;cursor:pointer}
+.tk-label-manager-row button:hover{background:var(--hover);color:var(--danger)}
+.tk-label-manager-add{display:flex;gap:6px;padding:8px;border-top:1px solid var(--divider)}
+.tk-label-manager-add button{padding:4px 9px;border:0;border-radius:5px;background:var(--brand-fill);color:var(--brand);font:inherit;font-size:12px;cursor:pointer}
 .tk-drawer-comments{margin-top:16px;padding-top:16px;border-top:1px solid var(--divider)}
 .tk-drawer-comments-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:8px}
 .tk-drawer-comment{padding:8px 0;border-bottom:1px solid var(--divider)}
@@ -509,7 +549,7 @@ body.tk-drawer-resizing{user-select:none;cursor:col-resize}
 .tk-flow-field-value svg{flex:none;color:var(--text-secondary)}
 .tk-flow-field-lg{box-sizing:border-box;height:30px;min-width:120px;padding:0 10px;font-size:13px}
 .tk-flow-pills{display:flex;flex-wrap:wrap;gap:6px}
-.tk-flow-pill{padding:4px 12px;border:1px solid var(--border);border-radius:16px;background:transparent;color:var(--text-secondary);font-size:12px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.tk-flow-pill{padding:4px 12px;border:1px solid var(--border);border-radius:16px;background:transparent;color:var(--text);font-size:12px;cursor:pointer;transition:all .15s;white-space:nowrap}
 .tk-flow-pill:hover{border-color:var(--border-hover);background:var(--hover)}
 .tk-flow-pill.active{border-color:var(--brand);color:var(--brand);background:var(--brand-fill)}
 .tk-drawer-comment-input{margin-top:8px}
