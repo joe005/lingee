@@ -180,6 +180,7 @@ function cvSaveProjEdit(){
   if(isNew&&!CV_MEMBERS.some(function(person){return person.name===g('owner')&&['system_admin','project_manager'].includes(person.workspaceRole);})){toast('项目负责人需是系统管理员或项目经理','warning');return;}
   var p=isNew?null:cvProjectById(cvProjEditId);
   if(!isNew&&!cvMayEditProject(p)){toast('只有项目经理或项目负责人可以编辑项目','warning');return;}
+  if(p&&g('owner')!==p.owner&&!window.confirm('确定将「'+p.name+'」的负责人由「'+(p.owner||'未设置')+'」变更为「'+g('owner')+'」吗？'))return;
   if(p){
     p.name=name;p.desc=g('desc');p.status=g('status');p.priority=g('priority');p.owner=g('owner');p.repo=g('repo');p.start=g('start');p.end=g('end');p.defaultTeam=teamId;p.members=members;
   }else{
