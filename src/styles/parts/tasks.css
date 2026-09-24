@@ -15,7 +15,7 @@
 .tk-demo-tag{font-size:11px;color:var(--text-secondary);background:var(--fill-1);border:1px solid var(--border);padding:2px 8px;border-radius:4px}
 
 /* ---------- 视图标签栏 ---------- */
-.tk-view-bar{display:flex;align-items:center;gap:4px;padding:8px 24px 0;flex-shrink:0;height:38px}
+.tk-view-bar{display:flex;align-items:center;gap:4px;padding:0 24px;flex-shrink:0;height:38px}
 .tk-view-tabs{display:flex;align-items:center;gap:4px;overflow:hidden;flex:0 1 auto}
 .tk-view-tab{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:6px;font-size:13px;color:var(--text);cursor:pointer;white-space:nowrap;border:1px solid transparent;transition:all .15s}
 .tk-view-tab:hover{background:var(--hover);color:var(--text)}
