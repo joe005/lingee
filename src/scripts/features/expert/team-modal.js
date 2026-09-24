@@ -2,7 +2,7 @@ import { $, $$ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
 import { summon } from './automatch.js';
 import { renderExpertChips } from './chips.js';
-import { EX, EXPERTS, STAGES, compChip, teamCoverage, xav, xesc } from './data.js';
+import { EX, EXPERTS, STAGES, xav, xesc } from './data.js';
 import { openExpertEditor } from './editor.js';
 import { expertTab, openExpertModal, renderExpertGrid } from './library.js';
 import { TEAMS, activePick, clearPick, saveTeams, set_TEAMS, teamById, teamLint } from './store.js';
@@ -85,23 +85,18 @@ function renderTeamModal(){
     ? '点任意一条就会带着这个团开一个新会话。'
     : '用户平时会怎么找这个团做事。点「发起对话」会带上第一条。';
 
-  var cov=teamCoverage(d);
-  $('#teamCoverageChips').innerHTML = cov.length
-    ? cov.map(function(c){ return compChip(c); }).join('')
-    : '<div class="x-empty-sm">还没有成员，能力覆盖为空</div>';
-
   var warns=teamLint(d);
   $('#teamWarnings').innerHTML = warns.map(function(w){
     return '<div class="x-warn"><span>⚠</span><span>'+xesc(w)+'</span></div>'; }).join('');
 
   var stagesEl=$('#teamStages');
   if(stagesEl) stagesEl.innerHTML = STAGES.map(function(s,i){
-    return '<span class="team-stage">'
+    return '<div class="team-stage" role="listitem">'
       +'<span class="team-stage-item"><span class="team-stage-idx">'+(i+1)+'</span>'
       +'<span class="team-stage-t"><span class="team-stage-n">'+xesc(s.name)+'</span>'
       +'<span class="team-stage-d">'+xesc(s.desc)+'</span></span></span>'
-      +(i<STAGES.length-1?'<span class="team-stage-arrow">›</span>':'')
-      +'</span>';
+      +(i<STAGES.length-1?'<span class="team-stage-arrow" aria-hidden="true">›</span>':'')
+      +'</div>';
   }).join('');
 
   $$('#teamMembers .x-member-a').forEach(function(a){ a.classList.toggle('hidden', !!d.preset); });

@@ -7,14 +7,14 @@
     </div>
     <div class="modal-tabs team-modal-tabs" role="tablist" aria-label="专家团配置">
       <button type="button" class="modal-tab team-modal-tab active" role="tab" aria-selected="true" data-team-tab="info">基本信息</button>
-      <button type="button" class="modal-tab team-modal-tab" role="tab" aria-selected="false" data-team-tab="capability">能力与流程</button>
+      <button type="button" class="modal-tab team-modal-tab" role="tab" aria-selected="false" data-team-tab="stages">交付阶段</button>
       <button type="button" class="modal-tab team-modal-tab" role="tab" aria-selected="false" data-team-tab="commands">触发词</button>
     </div>
     <div class="modal-body env-config-body">
       <div class="team-pane" data-team-pane="info" role="tabpanel">
         <div class="team-view-desc hidden" id="teamViewDesc"></div>
         <div id="teamEditFields">
-          <div class="team-hint">专家团定义成员、能力边界和使用方式；执行任务时由 Runtime 动态生成 WorkItem 并路由给合适的专家。</div>
+          <div class="team-hint">专家团定义成员和使用方式；执行任务时由 Runtime 动态生成 WorkItem 并路由给合适的专家。</div>
           <section class="env-form-section">
             <div class="env-form-grid">
               <label class="env-field env-field-wide"><span>名称<span class="env-required">*</span></span>
@@ -31,16 +31,11 @@
           <button type="button" class="team-add" id="teamAddBtn">＋ 添加成员</button>
         </section>
       </div>
-      <div class="team-pane hidden" data-team-pane="capability" role="tabpanel">
-        <section class="env-form-section">
-          <div class="env-form-section-title">能力覆盖
-            <span class="team-hint-inline">成员能力合并后，同一能力保留最高等级</span></div>
-          <div class="x-chips" id="teamCoverageChips"></div>
-        </section>
+      <div class="team-pane hidden" data-team-pane="stages" role="tabpanel">
         <section class="env-form-section">
           <div class="env-form-section-title">交付阶段
             <span class="team-hint-inline">阶段描述交付范围，具体 WorkItem 由 Runtime 动态生成</span></div>
-          <div class="team-stages" id="teamStages"></div>
+          <div class="team-stages" id="teamStages" role="list" aria-label="交付阶段，从左到右"></div>
         </section>
         <div id="teamWarnings"></div>
       </div>

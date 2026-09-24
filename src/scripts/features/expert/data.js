@@ -279,20 +279,6 @@ function compChip(v){
   return '<span class="ptag ptag-comp" title="'+xesc(c.id)+'">'+xesc(c.name)
     +(c.level?'<i class="ptag-lv lv-'+xesc(c.lv)+'">'+xesc(c.level)+'</i>':'')+'</span>';
 }
-/* 一个团覆盖到的能力项：同一能力取成员里的最高等级 */
-function teamCoverage(t){
-  var best={};
-  (t.members||[]).forEach(function(id){
-    var e=EX[id]; if(!e) return;
-    (e.comp||[]).forEach(function(v){
-      var c=parseComp(v);
-      if(!best[c.id]||c.rank>best[c.id].rank) best[c.id]=c;
-    });
-  });
-  return Object.keys(best).map(function(k){return best[k]})
-    .sort(function(a,b){return b.rank-a.rank||a.name.localeCompare(b.name)});
-}
-
 var PRESET_TEAMS=[
   {id:'cosmic-app-dev',preset:true,name:'苍穹应用开发专家团',by:'Lingee 内置',
    desc:'面向苍穹应用完整交付，覆盖需求、表单、流程、报表、二开插件、接口与质量验证。',
@@ -335,4 +321,4 @@ export function initExpertData() {
 /* MY_EXPERTS 由其它模块写回；import 绑定只读，所以走这个 setter */
 export function set_MY_EXPERTS(v){ MY_EXPERTS=v; return v; }
 
-export { AV_KEYS, EX, EXPERTS, MODEL_TIERS, MY_EXPERTS, PRESET_TEAMS, STAGE_MODES, STAGES, WORK_MODES, askFor, compChip, parseComp, pendingInputs, phraseHtml, rebuildExperts, skillCatalog, skillInfo, stageById, teamCoverage, tierInfo, xav, xesc };
+export { AV_KEYS, EX, EXPERTS, MODEL_TIERS, MY_EXPERTS, PRESET_TEAMS, STAGE_MODES, STAGES, WORK_MODES, askFor, compChip, parseComp, pendingInputs, phraseHtml, rebuildExperts, skillCatalog, skillInfo, stageById, tierInfo, xav, xesc };
