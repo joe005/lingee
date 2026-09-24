@@ -84,7 +84,7 @@ var CV_TASKS = [
   {type:'任务',size:'小',source:'API',sourceId:'API-31',exec:'自动执行',status:'未开始',collab:'人Agent协作',title:'交期变更消息推送',desc:'交期变更时向采购员推送企业微信消息，推送失败进入重试队列',assignee:'待分配',progress:0,project:'supply',parentTaskId:'epic-supply-collab'},
   {type:'Bug',size:'小',source:'Jira',sourceId:'BUG-8155',exec:'自动执行',status:'已失败',collab:'Agent间协作',title:'供应商评级定时任务超时',desc:'评级任务在供应商超 2 万条时超时中断，需要改为分片执行',assignee:'罗静',progress:0,project:'supply',parentTaskId:'epic-supply-rating'},
   {type:'需求',size:'小',source:'对话自建',sourceId:'CNV-014',exec:'自动执行',status:'已完成',collab:'无需协作',title:'供应商档案资质到期提醒',desc:'资质到期前 30 天在档案列表标红，并向对接采购员推送提醒',assignee:'何欣',progress:100,project:'supply',parentTaskId:'epic-supply-rating'},
-  /* 历史任务的父任务：把种子数据里原本「未分组」的子任务按业务主题挂到父任务下 */
+  /* 历史任务的父任务：把种子数据里原本独立的任务按业务主题挂到父任务下 */
   {boardId:'epic-expense-approval',kind:'epic',parentTaskId:null,type:'特性',source:'项目规划',sourceId:'FEAT-EXPAPR',status:'进行中',title:'审批流引擎',desc:'费用报销的多级审批流转、性能与移动端审批能力',acceptance:'支持串行/并行/会签，大并发下响应达标，移动端可正常审批',files:[],assignee:'吴宏超',priority:'高',project:'expense',progress:0,artifacts:[],activity:[]},
   {boardId:'epic-expense-core',kind:'epic',parentTaskId:null,type:'特性',source:'项目规划',sourceId:'FEAT-EXPCORE',status:'进行中',title:'报销单基础功能',desc:'报销单录入、打印、查询与数据字典等基础能力',acceptance:'核心录入与查询链路无阻断缺陷，打印与格式展示一致',files:[],assignee:'吴宏超',priority:'高',project:'expense',progress:0,artifacts:[],activity:[]},
   {boardId:'epic-expense-perm',kind:'epic',parentTaskId:null,type:'特性',source:'项目规划',sourceId:'FEAT-EXPPERM',status:'未开始',title:'权限与预算管控',desc:'基于 RBAC 的权限体系重构与部门/项目预算控制',acceptance:'权限变更实时生效，预算超标可自动拦截',files:[],assignee:'吴宏超',priority:'高',project:'expense',progress:0,artifacts:[],activity:[]},

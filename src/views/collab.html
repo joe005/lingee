@@ -33,21 +33,7 @@
       <div class="tb-workspace" id="tb-workspace" hidden></div>
     </div>
 
-    <!-- 项目管理：项目列表 + 项目详情（选协作人员） -->
-    <div class="cv-panel" id="cv-members">
-      <div class="cv-page-head">
-        <div class="scroll-title">项目<span class="cv-title-count" id="cv-proj-count">0</span></div>
-        <div class="scroll-desc">维护项目基本信息，并为项目挑选协作人员与专家团</div>
-      </div>
-      <div class="filter-bar">
-        <div class="search-wrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input placeholder="搜索项目" onkeyup="cvApplyFilters()"></div>
-        <button class="sync-btn" onclick="cvOpenProjNew()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>新建项目</button>
-      </div>
-      <div class="scroll">
-        <div id="cv-proj-list"></div>
-        <div id="cv-proj-detail" class="hidden"></div>
-      </div>
-    </div>
+    <!--#include "src/views/collab/projects.html" -->
 
     <!-- 专家管理 -->
     <div class="cv-panel" id="cv-experts">

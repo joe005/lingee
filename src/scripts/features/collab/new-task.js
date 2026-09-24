@@ -21,6 +21,7 @@ let ntTagEditing = false;
 let ntExecMode = '单人执行';
 let ntStagePlan = [];
 let ntParentTaskId = '';
+let ntParentIsGroup = false;
 
 const NT_STATUS_LABELS = { '待规划': '待规划', '待办': '待办', '进行中': '进行中', '审核中': '审核中', '已完成': '已完成', '已阻塞': '已阻塞', '已取消': '已取消' };
 
@@ -93,6 +94,14 @@ function ntRenderTeam() {
   const team = ntProjectId ? ntTeamOfProject(ntProjectId) : null;
   ntTeamId = team ? team.id : '';
 }
+function ntRenderGroups() {
+  const field = document.getElementById('cv-nt-group-field');
+  const select = document.getElementById('cv-nt-group');
+  if (!field || !select) return;
+  field.classList.toggle('hidden', !!ntParentTaskId);
+  select.innerHTML = '<option value="">无上级任务</option>' + CV_TASKS.filter(t => t.project === ntProjectId && t.kind === 'epic').map(t => '<option value="' + xesc(t.boardId) + '">' + xesc(t.title) + '</option>').join('');
+  select.disabled = !ntProjectId;
+}
 /* 负责人：从项目成员中选人。 */
 function ntRenderPeople() {
   const members = ntPeopleOfProject(ntProjectId);
@@ -160,7 +169,7 @@ function ntOnProjectChange() {
   ntProjectId = sel ? sel.value : '';
   ntAssignee = '';
   ntStagePlan = [];
-  ntRenderTeam(); ntRenderPeople();
+  ntRenderTeam(); ntRenderPeople(); ntRenderGroups();
   if (ntExecMode === '多人协作') ntRenderStages();
 }
 /* 智能体只推断业务归属，运行阶段由 Runtime Harness 管理。 */
@@ -173,7 +182,8 @@ export function cvOpenNewTask(status, ctx) {
   ntMode = 'manual';
   ntStatus = status || '待办';
   ntParentTaskId = ctx?.parentTaskId || '';
-  ntProjectId = (ntParentTaskId ? ctx.projectId : cvProject) || '';
+  ntParentIsGroup = !!ntParentTaskId && CV_TASKS.some(t => t.boardId === ntParentTaskId && t.kind === 'epic');
+  ntProjectId = ctx?.projectId || cvProject || '';
   ntAssignee = '';
   ntFiles = [];
   ntTags = [];
@@ -207,9 +217,15 @@ export function cvOpenNewTask(status, ctx) {
     parentBanner.classList.toggle('hidden', !ntParentTaskId);
     const t = document.getElementById('cv-nt-parent-title');
     if (t) t.textContent = ctx?.parentTitle || '';
+    const label = document.getElementById('cv-nt-parent-label');
+    if (label) label.textContent = ntParentIsGroup ? '正在' : '正在为';
+    const suffix = document.getElementById('cv-nt-parent-suffix');
+    if (suffix) suffix.textContent = ntParentIsGroup ? '下创建子任务' : '新增子任务';
   }
   ntRenderTagList();
-  ntRenderTeam(); ntRenderPeople();
+  ntRenderTeam(); ntRenderPeople(); ntRenderGroups();
+  const groupSelect = document.getElementById('cv-nt-group');
+  if (groupSelect && ctx?.groupId && Array.from(groupSelect.options).some(option => option.value === ctx.groupId)) groupSelect.value = ctx.groupId;
   ntRenderFiles();
   ntSetExecMode('单人执行');
   cvSetNewTaskMode('manual');
@@ -226,7 +242,7 @@ function cvSetNewTaskMode(m) {
   if (properties) properties.classList.toggle('hidden', m !== 'manual');
   const stagesField = document.getElementById('cv-nt-stages-field');
   if (stagesField) stagesField.classList.toggle('hidden', !ntStagesFieldVisible());
-  document.getElementById('cv-nt-mode-label').textContent = ntParentTaskId ? '新增子任务' : (m === 'agent' ? 'Agent 创建' : '手动创建');
+  document.getElementById('cv-nt-mode-label').textContent = ntParentTaskId ? (ntParentIsGroup ? '新建任务' : '新增子任务') : (m === 'agent' ? 'Agent 创建' : '手动创建');
   const agentTrigger = document.getElementById('cv-nt-agent-trigger');
   const manualTrigger = document.getElementById('cv-nt-manual-trigger');
   if (agentTrigger) agentTrigger.classList.toggle('hidden', m === 'agent' || !!ntParentTaskId);
@@ -279,17 +295,20 @@ function cvSubmitNewTask(keepOpen) {
   if (!stagePlan) stagePlan = tbTeamStages(team).map(s => ({ id: s.id, name: s.name, assignee }));
   const proj = CV_PROJECTS.find(p => p.id === projectId) || CV_PROJECTS[0];
   const stageActivity = stagePlan ? ('各阶段执行人：' + stagePlan.map(s => s.name + '·' + s.assignee).join('、')) : null;
-  const parentTaskId = !fromAgent && ntParentTaskId ? ntParentTaskId : undefined;
-  const t = { boardId: crypto.randomUUID(), kind: 'task', parentTaskId, source: fromAgent ? '智能体创建' : (parentTaskId ? '父任务下推' : '手动创建'), sourceId: 'TASK-' + Date.now().toString().slice(-6), size: '小', exec: '专家团', collab: mode === '单人执行' ? '无需协作' : '人Agent协作', progress: 0, status: ntStatus, mode, stage: stagePlan ? stagePlan[0].id : undefined, stagePlan, type: '需求', project: proj.id, title, desc, assignee, priority, tags: ntTags.slice(), files: ntFiles.slice(), activity: [{ author: '张工', text: fromAgent ? ('智能体推断，由 ' + assignee + ' 负责业务验收') : '创建了任务', time: new Date().toLocaleString('zh-CN', { hour12: false }) }].concat(stageActivity ? [{ author: '张工', text: stageActivity, time: new Date().toLocaleString('zh-CN', { hour12: false }) }] : []), artifacts: [] };
+  const parentTaskId = !fromAgent ? (ntParentTaskId || document.getElementById('cv-nt-group')?.value || undefined) : undefined;
+  const parentIsGroup = !!parentTaskId && CV_TASKS.some(t => t.boardId === parentTaskId && t.project === proj.id && t.kind === 'epic');
+  const t = { boardId: crypto.randomUUID(), kind: 'task', parentTaskId, source: fromAgent ? '智能体创建' : (parentTaskId ? (parentIsGroup ? '父任务下创建' : '父任务下推') : '手动创建'), sourceId: 'TASK-' + Date.now().toString().slice(-6), size: '小', exec: '专家团', collab: mode === '单人执行' ? '无需协作' : '人Agent协作', progress: 0, status: ntStatus, mode, stage: stagePlan ? stagePlan[0].id : undefined, stagePlan, type: '需求', project: proj.id, title, desc, assignee, priority, tags: ntTags.slice(), files: ntFiles.slice(), activity: [{ author: '张工', text: fromAgent ? ('智能体推断，由 ' + assignee + ' 负责业务验收') : '创建了任务', time: new Date().toLocaleString('zh-CN', { hour12: false }) }].concat(stageActivity ? [{ author: '张工', text: stageActivity, time: new Date().toLocaleString('zh-CN', { hour12: false }) }] : []), artifacts: [] };
   CV_TASKS.unshift(t);
   tbSave(); renderTaskBoard(); cvUpdateCounts();
   if (parentTaskId) window.cvRenderProjectDetail && window.cvRenderProjectDetail();
-  const reopenCtx = parentTaskId ? { parentTaskId, projectId: proj.id, parentTitle: document.getElementById('cv-nt-parent-title')?.textContent } : undefined;
+  const reopenCtx = ntParentTaskId
+    ? { parentTaskId: ntParentTaskId, projectId: proj.id, parentTitle: document.getElementById('cv-nt-parent-title')?.textContent }
+    : { projectId: proj.id, groupId: parentIsGroup ? parentTaskId : '' };
   if (keepOpen) {
     cvOpenNewTask(ntStatus, reopenCtx);
     if (fromAgent) cvSetNewTaskMode('agent');
   } else { cvCloseNewTask(); }
-  if (parentTaskId && !keepOpen && window.tbReopenTask) window.tbReopenTask(parentTaskId);
+  if (parentTaskId && !parentIsGroup && !keepOpen && window.tbReopenTask) window.tbReopenTask(parentTaskId);
 }
 
 export function initNewTask() {

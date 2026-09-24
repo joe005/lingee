@@ -1,14 +1,14 @@
 <div class="sync-overlay" id="cv-manualsplit-overlay" style="display:none" onclick="if(event.target===this)cvCloseManualSplit()">
   <div class="ms-modal">
     <div class="ms-head">
-      <div class="ms-head-t">手动新增模块</div>
-      <div class="ms-head-s">模块用于组织项目目标，创建后可继续拆解为可执行任务</div>
+      <div class="ms-head-t">新建任务</div>
+      <div class="ms-head-s">用于定义项目目标，可继续拆解为可执行任务</div>
       <button class="sync-modal__close" onclick="cvCloseManualSplit()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="ms-body">
       <div class="ms-field">
-        <label>标题</label>
-        <input id="cv-ms-title" placeholder="模块标题，如：客户管理">
+        <label>名称</label>
+        <input id="cv-ms-title" placeholder="任务名称，如：客户管理">
       </div>
       <div class="ms-field">
         <label>描述</label>
@@ -16,10 +16,10 @@
       </div>
     </div>
     <div class="ms-foot">
-      <span class="ms-foot-hint">生成后进入模块页签，可继续拆解任务</span>
+      <span class="ms-foot-hint">创建后可继续拆解为可执行任务</span>
       <div class="ms-foot-right">
         <button class="sync-modal__btn sync-modal__btn--ghost" onclick="cvCloseManualSplit()">取消</button>
-        <button class="sync-modal__btn sync-modal__btn--primary" onclick="cvConfirmManualSplit()">创建模块</button>
+        <button class="sync-modal__btn sync-modal__btn--primary" onclick="cvConfirmManualSplit()">创建任务</button>
       </div>
     </div>
   </div>
