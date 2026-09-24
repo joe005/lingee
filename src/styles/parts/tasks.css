@@ -6,7 +6,6 @@
 /* ---------- 页面骨架 ---------- */
 #view-tasks{display:flex;flex-direction:column;flex:1;min-height:0;min-width:0}
 #view-tasks.hidden{display:none}
-#cv-tasks-current #view-tasks .tk-header{display:none}
 
 /* ---------- 页头 ---------- */
 .tk-header{display:flex;align-items:center;justify-content:space-between;padding:16px 24px 12px;flex-shrink:0}
