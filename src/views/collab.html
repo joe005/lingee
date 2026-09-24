@@ -11,7 +11,7 @@
       </div>
     </div>
     <div class="tab-nav" id="cvTabNav">
-      <button class="tab-nav-item tab-nav-item--active" data-cvview="tasks" onclick="cvSwitchView('tasks')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>任务管理<span class="tab-nav-count" id="cvTaskCount">0</span></button>
+      <button class="tab-nav-item tab-nav-item--active" data-cvview="tasks" onclick="cvSwitchView('tasks')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>任务管理</button>
       <button class="tab-nav-item" data-cvview="members" onclick="cvSwitchView('members')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>项目</button>
       <button class="tab-nav-item" data-cvview="experts" onclick="cvSwitchView('experts')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87l1.18 6.88L12 17.77l-6.18 3.25L7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>专家</button>
       <button class="tab-nav-item" data-cvview="teams" onclick="cvSwitchView('teams')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>专家团</button>
@@ -19,19 +19,8 @@
     </div>
     <div class="cv-subnav hidden" id="cvSubNav"></div>
 
-    <!-- 任务管理 -->
-    <div class="cv-panel active" id="cv-tasks">
-      <div class="tb-board-view" id="tb-board-view">
-        <div class="tb-heading"><div><h2>任务</h2><span>让成员与专家围绕同一个目标协作</span></div></div>
-        <div class="tb-toolbar">
-          <div class="tb-scopes" role="group" aria-label="任务范围"><button data-tb-scope="all" aria-pressed="true">全部任务</button><button data-tb-scope="mine" aria-pressed="false">我的任务 <span id="tb-mine-count"></span></button><button data-tb-scope="attention" aria-pressed="false">待处理 <span id="tb-attention-count"></span></button></div>
-          <div class="tb-tools"><input id="tb-search" name="task-filter-query" type="search" autocomplete="off" data-1p-ignore data-lpignore="true" readonly placeholder="搜索任务或编号…" aria-label="搜索任务或编号"><select id="tb-mode" aria-label="执行模式"><option value="">全部执行模式</option><option>单人执行</option><option>多人协作</option></select><select id="tb-layout" aria-label="任务视图"><option value="board">看板</option><option value="list">列表</option></select><button id="tb-create" class="tb-primary">＋ 新建任务</button></div>
-        </div>
-        <div class="tb-summary" id="cv-task-stats"></div>
-        <div class="scroll tb-scroll"><div id="cv-task-grid"></div><div id="tb-empty" hidden>没有匹配的任务<button id="tb-reset">清除筛选</button></div></div>
-      </div>
-      <div class="tb-workspace" id="tb-workspace" hidden></div>
-    </div>
+    <div class="cv-panel active" id="cv-tasks-current"></div>
+    <!--#include "src/views/collab/tasks-legacy.html" -->
 
     <!--#include "src/views/collab/projects.html" -->
 

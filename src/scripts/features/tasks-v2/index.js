@@ -90,7 +90,6 @@ function cacheEls() {
     'tkViewTabs','tkViewAdd','tkViewMenu','tkViewMenuNew','tkViewManage','tkViewOverflow','tkViewOverflowBtn','tkOverflowMenu',
     'tkSearch','tkFilterBtn','tkFilterLabel','tkFilterPanel','tkFilterPanelBody','tkFilterSubmenu','tkFilterChips','tkToolbarNew',
     'tkDisplayBtn','tkDisplayPopover','tkGroupSelect','tkViewModeSelect','tkSortSelect','tkSortDirection','tkShowSubtasks','tkCardProperties',
-    'tkConnectBtn','tkConnectOverlay','tkConnectClose','tkConnectCancel',
     'tkLayoutToggle','tkBody','tkBoard','tkBoardScroll','tkList','tkListBody','tkListHead','tkSplitEmpty',
     'tkCheckAll','tkEmpty','tkResetFilter','tkBulkBar','tkBulkCount','tkBulkClear',
     'tkDrawer','tkDrawerClickaway','tkDrawerResize','tkDrawerClose','tkDrawerCode','tkDrawerBody','tkDrawerMore','tkDrawerSidebarToggle','tkDrawerChat',
@@ -421,7 +420,7 @@ function renderCard(t, opts) {
   var spacer = !hasChildren ? '<span class="tk-card-spacer"></span>' : '';
   var childBadge = hasChildren ? '<span class="tk-card-child-count"' + (isCollapsed ? '' : ' style="visibility:hidden"') + '>' + childCount + '</span>' : '';
   var extraCls = (depth ? ' tk-card--child' : '') + (hasChildren ? ' tk-card--parent' : '');
-  return '<div class="tk-card' + sel + extraCls + '" draggable="true" data-task-id="' + t.id + '" style="margin-left:' + depth + 'em">'
+  return '<div class="tk-card' + sel + extraCls + '" draggable="true" data-task-id="' + t.id + '">'
     + '<button class="tk-card-more" data-card-more="' + t.id + '" data-tooltip="更多操作" aria-label="更多操作"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button>'
     + '<div class="tk-card-top-row">' + toggle + spacer + '<div class="tk-card-code">' + escapeHtml(t.code) + '</div>' + childBadge + '</div>'
     + '<div class="tk-card-title">' + escapeHtml(t.title) + '</div>'
@@ -485,70 +484,99 @@ function renderList(tasks) {
 function animateListSubtasks(toggleBtn) {
   var taskId = Number(toggleBtn.getAttribute('data-tk-toggle'));
   var opening = collapsedParents.has(taskId);
-  var before = new Map();
-  els.tkListBody.querySelectorAll('tr.tk-row[data-task-id]').forEach(function (row) {
-    before.set(row.getAttribute('data-task-id'), row.getBoundingClientRect().top);
-  });
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (!opening && !reduceMotion) {
-    var parentRow = toggleBtn.closest('tr.tk-row');
-    var parentDepth = Number(parentRow.getAttribute('data-depth'));
-    var next = parentRow.nextElementSibling;
-    var listRect = els.tkList.getBoundingClientRect();
+
+  /* 折叠箭头旋转 */
+  function animateArrow() {
+    var svg = els.tkListBody.querySelector('[data-tk-toggle="' + taskId + '"] svg');
+    if (svg) svg.animate([
+      { transform: opening ? 'rotate(-90deg)' : 'rotate(0deg)' },
+      { transform: opening ? 'rotate(0deg)' : 'rotate(-90deg)' },
+    ], { duration: 200, easing: 'cubic-bezier(.4,0,.2,0)' });
+  }
+
+  if (reduceMotion) {
+    if (opening) collapsedParents.delete(taskId);
+    else collapsedParents.add(taskId);
+    render();
+    return;
+  }
+
+  var parentRow = toggleBtn.closest('tr.tk-row');
+  var parentDepth = Number(parentRow.getAttribute('data-depth'));
+
+  function getChildRows(row) {
+    var rows = [];
+    var next = row.nextElementSibling;
     while (next && next.classList.contains('tk-row') && Number(next.getAttribute('data-depth')) > parentDepth) {
-      var rowRect = next.getBoundingClientRect();
-      if (rowRect.top >= listRect.top && rowRect.bottom <= listRect.bottom) {
-        var ghost = document.createElement('table');
-        ghost.className = 'tk-table tk-row-collapse-ghost';
-        ghost.setAttribute('aria-hidden', 'true');
-        ghost.style.left = rowRect.left + 'px';
-        ghost.style.top = rowRect.top + 'px';
-        ghost.style.width = rowRect.width + 'px';
-        var columns = document.createElement('colgroup');
-        next.querySelectorAll('td').forEach(function (cell) {
-          var col = document.createElement('col');
-          col.style.width = cell.getBoundingClientRect().width + 'px';
-          columns.appendChild(col);
-        });
-        ghost.appendChild(columns);
-        var body = document.createElement('tbody');
-        body.appendChild(next.cloneNode(true));
-        ghost.appendChild(body);
-        document.body.appendChild(ghost);
-        var fade = ghost.animate([
-          { opacity: 1, transform: 'translateY(0) scaleY(1)' },
-          { opacity: 0, transform: 'translateY(-10px) scaleY(.92)' },
-        ], { duration: 220, easing: 'cubic-bezier(.32,0,.67,0)', fill: 'forwards' });
-        fade.onfinish = function () { this.effect.target.remove(); };
-      }
+      rows.push(next);
       next = next.nextElementSibling;
     }
+    return rows;
   }
-  if (opening) collapsedParents.delete(taskId);
-  else collapsedParents.add(taskId);
+
+  /* 设置 / 清除行内动画辅助样式（overflow + padding + border 归零） */
+  function prepRow(row, height) {
+    row.style.overflow = 'hidden';
+    row.style.height = height + 'px';
+    row.querySelectorAll('td').forEach(function (td) {
+      td.style.overflow = 'hidden';
+      td.style.paddingTop = '0px';
+      td.style.paddingBottom = '0px';
+      td.style.borderBottomWidth = '0px';
+    });
+  }
+  function cleanupRow(row) {
+    row.style.overflow = '';
+    row.style.height = '';
+    row.querySelectorAll('td').forEach(function (td) {
+      td.style.overflow = '';
+      td.style.paddingTop = '';
+      td.style.paddingBottom = '';
+      td.style.borderBottomWidth = '';
+    });
+  }
+
+  if (!opening) {
+    /* 折叠：子行从自然高度收缩到 0，下方行随高度减小自然上移 */
+    var childRows = getChildRows(parentRow);
+    var heights = childRows.map(function (r) { return r.getBoundingClientRect().height; });
+    childRows.forEach(function (r, i) { prepRow(r, heights[i]); });
+    var anims = childRows.map(function (r) {
+      return r.animate([
+        { opacity: 1 },
+        { height: '0px', opacity: 0 },
+      ], { duration: 200, easing: 'cubic-bezier(.4,0,.2,0)', fill: 'forwards' });
+    });
+    animateArrow();
+    Promise.all(anims.map(function (a) { return a.finished; })).then(function () {
+      collapsedParents.add(taskId);
+      render();
+    });
+    return;
+  }
+
+  /* 展开：先渲染子行，再从高度 0 平滑展开到自然高度 */
+  collapsedParents.delete(taskId);
   render();
-  if (reduceMotion) return;
-  var inserted = 0;
-  els.tkListBody.querySelectorAll('tr.tk-row[data-task-id]').forEach(function (row) {
-    var previousTop = before.get(row.getAttribute('data-task-id'));
-    if (previousTop === undefined) {
-      row.animate([
-        { opacity: 0, transform: 'translateY(-8px)' },
-        { opacity: 1, transform: 'translateY(0)' },
-      ], { duration: 280, delay: Math.min(inserted++ * 18, 72), easing: 'cubic-bezier(.22,1,.36,1)', fill: 'backwards' });
-    } else {
-      var shift = previousTop - row.getBoundingClientRect().top;
-      if (Math.abs(shift) > 1) row.animate([
-        { transform: 'translateY(' + shift + 'px)' },
-        { transform: 'translateY(0)' },
-      ], { duration: 300, easing: 'cubic-bezier(.22,1,.36,1)' });
-    }
+  var newParentRow = els.tkListBody.querySelector('[data-tk-toggle="' + taskId + '"]');
+  if (newParentRow) newParentRow = newParentRow.closest('tr.tk-row');
+  if (!newParentRow) { animateArrow(); return; }
+  parentDepth = Number(newParentRow.getAttribute('data-depth'));
+  var newChildRows = getChildRows(newParentRow);
+  var naturalHeights = newChildRows.map(function (r) { return r.getBoundingClientRect().height; });
+  newChildRows.forEach(function (r) { prepRow(r, 0); });
+  els.tkListBody.offsetHeight; /* 强制 reflow，确保 height:0 生效 */
+  newChildRows.forEach(function (r, i) {
+    r.animate([
+      { opacity: 0 },
+      { height: naturalHeights[i] + 'px', opacity: 1 },
+    ], { duration: 240, easing: 'cubic-bezier(.4,0,.2,0)', fill: 'forwards' });
   });
-  var newToggle = els.tkListBody.querySelector('[data-tk-toggle="' + taskId + '"] svg');
-  if (newToggle) newToggle.animate([
-    { transform: opening ? 'rotate(-90deg)' : 'rotate(0deg)' },
-    { transform: opening ? 'rotate(0deg)' : 'rotate(-90deg)' },
-  ], { duration: 260, easing: 'cubic-bezier(.22,1,.36,1)' });
+  setTimeout(function () {
+    newChildRows.forEach(cleanupRow);
+  }, 280);
+  animateArrow();
 }
 
 function updateSortArrows() {
@@ -850,21 +878,22 @@ function propPicker(name, currentVal, options, isDate) {
 }
 function renderTaskArtifacts(task) {
   var artifacts = tkGetTaskArtifacts(task);
-  return '<div class="tk-artifacts-heading"><span>任务产物</span><span>' + artifacts.length + ' 项</span></div>' +
+  return '<section class="tk-drawer-artifacts"><div class="tk-artifacts-heading"><span>产物</span><span>' + artifacts.length + ' 项</span></div>' +
     '<div class="tk-artifacts-list">' + artifacts.map(function (artifact) {
       return '<details class="tk-artifact">' +
         '<summary class="tk-artifact-summary">' +
-          '<span class="tk-artifact-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h6"/></svg></span>' +
-          '<span class="tk-artifact-info"><span class="tk-artifact-title">' + escapeHtml(task.title + ' · ' + artifact.type) + '</span><span class="tk-artifact-subtitle">' + escapeHtml(artifact.summary) + '</span><span class="tk-artifact-meta">' + escapeHtml(artifact.author) + ' · ' + escapeHtml(artifact.date) + '</span></span>' +
+          '<span class="tk-artifact-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h6"/></svg></span>' +
+          '<span class="tk-artifact-title">' + escapeHtml(task.title + ' · ' + artifact.type) + '</span>' +
           '<span class="tk-artifact-type">' + escapeHtml(artifact.type) + '</span>' +
           '<svg class="tk-artifact-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>' +
         '</summary>' +
         '<div class="tk-artifact-preview">' +
+          '<p class="tk-artifact-subtitle">' + escapeHtml(artifact.summary) + '</p><div class="tk-artifact-meta">' + escapeHtml(artifact.author) + ' · ' + escapeHtml(artifact.date) + '</div>' +
           artifact.sections.map(function (section) {
             return '<div class="tk-artifact-section"><strong>' + escapeHtml(section.heading) + '</strong><p>' + escapeHtml(section.text) + '</p></div>';
           }).join('') +
         '</div></details>';
-    }).join('') + '</div>';
+    }).join('') + '</div></section>';
 }
 function drawerWidthBounds() {
   return { min:480, max:Math.max(480, window.innerWidth - 240) };
@@ -957,7 +986,6 @@ function openDrawer(taskId) {
       '<h3 class="tk-drawer-title" contenteditable="true" data-field="title">' + escapeHtml(t.title) + '</h3>' +
       '<div class="tk-drawer-tabs">' +
         '<button type="button" class="tk-drawer-tab active" data-tab="info">基础信息</button>' +
-        '<button type="button" class="tk-drawer-tab" data-tab="artifacts">产物</button>' +
         '<button type="button" class="tk-drawer-tab" data-tab="changelog">变更日志</button>' +
       '</div>' +
       '<div class="tk-drawer-tab-content active" data-tab-content="info">' +
@@ -969,6 +997,7 @@ function openDrawer(taskId) {
           '</div>' +
           '<div class="tk-attach-list" id="tkAttachList"></div>' +
         '</div>' +
+        renderTaskArtifacts(t) +
         renderSubtasksSection(t) +
         '<div class="tk-drawer-comments"><div class="tk-drawer-comments-title">动态</div>' +
           renderTaskComments(t) +
@@ -981,9 +1010,6 @@ function openDrawer(taskId) {
           '<div class="tk-drawer-comment-input"><textarea placeholder="输入评论… 使用 @ 提及人员"></textarea></div>' +
           '<button class="tk-drawer-flow-btn" data-action="flow">流转</button>' +
         '</div>' +
-      '</div>' +
-      '<div class="tk-drawer-tab-content" data-tab-content="artifacts" hidden>' +
-        renderTaskArtifacts(t) +
       '</div>' +
       '<div class="tk-drawer-tab-content" data-tab-content="changelog" hidden>' +
         '<div class="tk-drawer-changelog-list">' +
@@ -1263,26 +1289,6 @@ function bindEvents() {
       if (state.viewMode === 'split' && state.layout === 'board') state.viewMode = 'slide';
       render();
     });
-  });
-
-  /* 连接第三方工具 */
-  els.tkConnectBtn.addEventListener('click', function () {
-    els.tkConnectOverlay.classList.remove('hidden');
-    requestAnimationFrame(function () { els.tkConnectOverlay.classList.add('show'); });
-  });
-  function closeConnectOverlay() {
-    els.tkConnectOverlay.classList.remove('show');
-    setTimeout(function () { els.tkConnectOverlay.classList.add('hidden'); }, 200);
-  }
-  els.tkConnectClose.addEventListener('click', closeConnectOverlay);
-  els.tkConnectCancel.addEventListener('click', closeConnectOverlay);
-  els.tkConnectOverlay.addEventListener('click', function (e) {
-    if (e.target === this) closeConnectOverlay();
-    var btn = e.target.closest('.tk-connect-action');
-    if (btn) {
-      if (btn.textContent === '连接') { btn.textContent = '已连接'; btn.classList.add('connected'); }
-      else { btn.textContent = '连接'; btn.classList.remove('connected'); }
-    }
   });
 
   /* 显示设置 Popover */

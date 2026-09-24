@@ -1,7 +1,7 @@
 import { $, $$ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
 import { setUrlState } from '../../core/view.js';
-import { CV_MEMBERS, CV_PROJECTS, CV_TASKS, CV_WORKSPACES, cvCurrentUserName, cvInProject, cvInjectCardActions, cvPersistPersons, cvPersistProjects, cvProject, cvProjectById, cvProjectInWorkspace, cvRenderReviewStats, cvRenderReviews, cvRenderTaskStats, cvRenderTasks, cvRestoreProjects, cvWorkspace, cvWorkspaceName, set_cvProject, set_cvWorkspace } from './data.js';
+import { CV_MEMBERS, CV_PROJECTS, CV_WORKSPACES, cvCurrentUserName, cvInProject, cvInjectCardActions, cvPersistPersons, cvPersistProjects, cvProject, cvProjectById, cvProjectInWorkspace, cvRenderReviewStats, cvRenderReviews, cvRenderTaskStats, cvRenderTasks, cvRestoreProjects, cvWorkspace, cvWorkspaceName, set_cvProject, set_cvWorkspace } from './data.js';
 import { cvApplyReviewFilters } from './tasks.js';
 import { cvApplyFilters, cvLastTab } from './view.js';
 import { xesc } from '../expert/data.js';
@@ -69,8 +69,7 @@ function cvClearWorkbenchTaskFilter(){
   if(search){ search.value=''; delete search.dataset.focusTaskId; }
 }
 function cvUpdateCounts(){
-  var tc=$('#cvTaskCount'); if(tc) tc.textContent=CV_TASKS.filter(function(t){return t.kind!=='epic'}).filter(cvInProject).length;
-  /* 待评审已合并到任务管理，不再单独计数 */
+  /* 页签不再显示任务数量；保留该接口供旧版任务操作调用。 */
 }
 function cvSyncUrl(){
   setUrlState('/collab?tab='+cvLastTab+(cvLastTab==='tasks'&&cvProject?'&proj='+cvProject:''));

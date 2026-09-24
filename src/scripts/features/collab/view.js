@@ -1,7 +1,7 @@
 import { renderTaskBoard } from './task-board.js';
 import { $, $$ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
-import { setNavActive, showView } from '../../core/view.js';
+import { setNavActive, setTasksEmbedded, showView } from '../../core/view.js';
 import { cvRenderExperts } from './experts.js';
 import { getRole } from '../login.js';
 import { cvSyncUrl } from './projects.js';
@@ -61,7 +61,7 @@ function cvRenderSubNav(primary,active){
 function cvToast(msg,type){ toast(msg, type==='error'?'error':undefined); }
 function cvShowPanel(name){
   var primary=cvPrimaryOf(name);
-  $$('#view-collab .cv-panel').forEach(function(p){ if(p.classList.contains('pj-embedded-task-board'))return; p.classList.toggle('active', p.id==='cv-'+name); });
+  $$('#view-collab .cv-panel').forEach(function(p){ if(p.classList.contains('pj-embedded-task-board'))return; p.classList.toggle('active', p.id===(name==='tasks'?'cv-tasks-current':'cv-'+name)); });
   $$('#cvTabNav .tab-nav-item').forEach(function(t){
     t.classList.toggle('tab-nav-item--active', t.getAttribute('data-cvview')===primary);
   });
@@ -74,6 +74,9 @@ function cvSwitchView(name){
   if(name==='config-proj') name='config';   /* 旧链接兼容：项目设置已并入项目管理 */
   if(name==='config-perm') name='config';   /* 人员已并入设置左导航 */
   if(name==='config' && getRole()!=='owner') name='tasks';   /* 设置仅工作区系统管理员可进 */
+  if(name==='tasks'){
+    setTasksEmbedded(true);
+  }
   if(name!=='members'){
     if(window.cvRestoreProjectTaskBoard)window.cvRestoreProjectTaskBoard();
     if(window.cvResetProjectListState)window.cvResetProjectListState();

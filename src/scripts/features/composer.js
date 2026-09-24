@@ -549,10 +549,12 @@ function confirmTaskMention(idx) {
   sel.addRange(taskPickerRange);
   taskPickerRange.deleteContents();
   var chip = document.createElement('span');
-  chip.className = 'mention-chip';
+  chip.className = 'ctag';
   chip.contentEditable = 'false';
-  chip.textContent = '#' + task.code;
   chip.dataset.taskId = String(task.id);
+  chip.innerHTML = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>'
+    + '<span class="ctag-label">' + escapeHtml(task.code || '') + ' ' + escapeHtml(task.title || '') + '</span>'
+    + '<button type="button" class="ctag-x" contenteditable="false" aria-label="移除任务关联"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>';
   taskPickerRange.insertNode(chip);
   var sp = document.createTextNode('\u00A0');
   chip.parentNode.insertBefore(sp, chip.nextSibling);
@@ -612,12 +614,25 @@ function initTaskMention(ed) {
     }
   });
   ed.addEventListener('blur', function () { setTimeout(hideTaskPicker, 150); });
+  ed.addEventListener('click', function (e) {
+    var x = e.target.closest('.ctag-x');
+    if (!x) return;
+    e.preventDefault();
+    var tag = x.closest('.ctag');
+    if (!tag) return;
+    var sp = tag.nextSibling;
+    tag.remove();
+    if (sp && sp.nodeType === Node.TEXT_NODE && sp.textContent === '\u00A0') sp.remove();
+  });
 }
 
 export function initComposer() {
   input.addEventListener('input',refreshSend);
   input.addEventListener('keydown',function(e){
-    if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); doSend(); }
+    if(e.key==='Enter' && !e.shiftKey){
+      if(taskPicker && !taskPicker.hidden) return;
+      e.preventDefault(); doSend();
+    }
   });
   sendBtn.addEventListener('click',doSend);
   initTaskMention(input);
@@ -803,7 +818,10 @@ export function initComposer() {
     if((this.textContent||'').trim()==='') this.innerHTML='';
   });
   chatInput.addEventListener('keydown',function(e){
-    if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); chatDoSend(); }
+    if(e.key==='Enter' && !e.shiftKey){
+      if(taskPicker && !taskPicker.hidden) return;
+      e.preventDefault(); chatDoSend();
+    }
   });
   chatSendBtn.addEventListener('click',chatDoSend);
 }

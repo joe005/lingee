@@ -29,12 +29,23 @@ function applyMode(mode,fromChip){
 
 /* ---------- view switching ---------- */
 var viewHome=$('#view-home'), viewNew=$('#view-newtask'), viewChat=$('#view-chat'), viewApps=$('#view-apps'), viewSkills=$('#view-skills'), viewAgents=$('#view-agents'), viewCollab=$('#view-collab'), viewDesign=$('#view-design'), viewSettings=$('#view-settings'), viewAnalytics=$('#view-analytics'), viewTasks=$('#view-tasks'), viewChangelog=$('#view-changelog');
+var tasksStandaloneParent=viewTasks.parentNode, tasksStandaloneNext=viewTasks.nextSibling;
+function setTasksEmbedded(embedded){
+  var target=embedded ? $('#cv-tasks-current') : tasksStandaloneParent;
+  if(embedded){
+    if(viewTasks.parentNode!==target) target.appendChild(viewTasks);
+    viewTasks.classList.remove('hidden');
+  }else if(viewTasks.parentNode!==tasksStandaloneParent){
+    tasksStandaloneParent.insertBefore(viewTasks,tasksStandaloneNext);
+  }
+}
 function setUrlState(path){
   /* path 是应用内路径（/collab、/design?token=…）；写进地址栏要带上部署前缀，
      存进 localStorage 的仍是应用内路径，换部署路径后旧记录依然可用 */
   try{history.replaceState(null,'',withBase(path));localStorage.setItem('lingeeUrlState',path)}catch(e){}
 }
 function showView(which){
+  if(which==='tasks') setTasksEmbedded(false);
   viewHome.classList.toggle('hidden', which!=='home');
   viewNew.classList.toggle('hidden', which!=='newtask');
   viewChat.classList.toggle('hidden', which!=='chat');
@@ -139,4 +150,4 @@ export function initHomeCards() {
   }
 }
 
-export { applyMode, brandEl, input, modeItems, navItems, setNavActive, setUrlState, showView, viewChat, viewDesign, viewTasks };
+export { applyMode, brandEl, input, modeItems, navItems, setNavActive, setTasksEmbedded, setUrlState, showView, viewChat, viewDesign, viewTasks };
