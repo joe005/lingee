@@ -28,7 +28,7 @@ function cvBuildExpertCard(e){
     +'<div class="card-top"><img class="x-av" src="'+xav(e.k)+'" alt="">'
     +'<div class="card-titles"><div class="card-title-row"><span class="card-title">'+xesc(e.name)+'</span>'
     +(e.ro?'<span class="x-badge x-badge-ro">只读</span>':'')+'</div>'
-    +'<div class="x-sub">'+xesc(e.role)+' · '+xesc(e.by)+'</div></div></div>'
+    +'<div class="x-sub">'+xesc([e.role,e.by].filter(Boolean).join(' · '))+'</div></div></div>'
     +'<div class="card-desc" title="'+xesc(e.desc)+'">'+xesc(e.desc)+'</div>'
     +(tags?'<div class="card-tags">'+tags+'</div>':'')
     +'</div>';

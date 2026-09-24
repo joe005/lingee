@@ -5,7 +5,7 @@ import { $ } from '../../core/dom.js';
 import { cvLoadSavedTasks, cvOpenConversation, cvSendChatMessage } from './chat.js';
 import { cvEnsureProjectRoleDemoData, cvInjectCardActions, cvRenderReviewStats, cvRenderReviews, cvRenderTaskStats, cvRenderTasks, cvRestorePersons } from './data.js';
 import { cvMigrateProjectSquads, cvRestoreSquads } from './squads.js';
-import { cvClosePersonEdit, cvOpenPersonEdit, cvOpenPersonNew, cvRenderPermTable, cvSavePersonEdit, initCollabPersons } from './persons.js';
+import { cvClosePersonEdit, cvOpenPersonNew, cvRenderPermTable, cvSavePersonEdit, initCollabPersons } from './persons.js';
 import { cvCloseFeatureEdit, cvCloseManualSplit, cvCloseProjectSplit, cvConfirmManualSplit, cvConfirmProjectSplit, cvOpenManualSplit, cvRenderProjectDetail, cvRenderProjectList, cvResetProjectListState, cvSaveFeatureEdit, initCollabProjectView } from './project-view.js';
 import { cvCloseArtFiles, cvOpenArtFiles } from './art-files.js';
 import { cvRenderExperts, set_cvExpertKw } from './experts.js';
@@ -99,7 +99,6 @@ export function initCollab() {
   window.cvSendChatMessage=cvSendChatMessage;
   window.cvOpenConversation=cvOpenConversation;
   window.cvOpenPersonNew=cvOpenPersonNew;
-  window.cvOpenPersonEdit=cvOpenPersonEdit;
   window.cvClosePersonEdit=cvClosePersonEdit;
   window.cvSavePersonEdit=cvSavePersonEdit;
   window.cvRenderProjectList=cvRenderProjectList;

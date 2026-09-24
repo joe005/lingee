@@ -13,7 +13,7 @@
 #view-collab .pj-filter-selects{display:flex;align-items:center;gap:6px}
 #view-collab .pj-filter-selects select{height:31px;max-width:130px;padding:0 26px 0 9px;border:1px solid var(--border-hover);border-radius:8px;background:#fff;color:var(--text-secondary);font:inherit;font-size:12px;outline:none;cursor:pointer}
 #view-collab .pj-filter-selects select:focus{border-color:var(--brand)}
-#view-collab .pj-projects-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;width:100%}
+#view-collab .pj-projects-cards{display:grid;grid-template-columns:repeat(auto-fill,320px);align-content:start;gap:14px;width:100%}
 #view-collab .pj-card{min-width:0;border:1px solid var(--border);border-radius:8px;background:#fff;transition:border-color .15s,box-shadow .15s}
 #view-collab .pj-card:hover{border-color:var(--border-focus);box-shadow:0 3px 12px rgba(0,0,0,.04)}
 #view-collab .pj-card-main{padding:12px 14px 10px}

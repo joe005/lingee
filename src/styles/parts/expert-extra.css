@@ -46,6 +46,24 @@
 .x-skill-copy strong{font-size:14px;line-height:1.4;color:var(--text)}
 .x-skill-copy>span{font-size:12.5px;line-height:1.65;color:var(--text-secondary)}
 .x-skill-empty{padding:36px 0;text-align:center;font-size:13px;color:var(--text-soft)}
+.xe-skills-section{min-height:0;display:flex;flex-direction:column}
+.xe-skills-toolbar{display:flex;align-items:center;gap:12px;margin:10px 0 4px}
+.xe-skills-toolbar input{height:36px;min-width:0;flex:1;padding:0 10px;border:1px solid var(--border-hover);border-radius:8px;
+  background:var(--bg);font:inherit;font-size:12.5px;color:var(--text)}
+.xe-skills-toolbar input:focus{outline:none;border-color:var(--border-focus)}
+.xe-skills-toolbar>span{flex:none;font-size:12px;color:var(--text-soft)}
+.xe-skill-options{max-height:310px;overflow-y:auto;border-top:1px solid var(--divider);margin-top:10px}
+.xe-skill-option{position:relative;width:100%;align-items:center;padding:10px 30px 10px 2px;border:0;border-bottom:1px solid var(--divider);
+  background:transparent;color:inherit;text-align:left;font:inherit;cursor:pointer;transition:background .12s}
+.xe-skill-option:hover,.xe-skill-option.on{background:var(--fill-1)}
+.xe-skill-option:focus-visible{outline:2px solid var(--brand);outline-offset:-2px;border-radius:6px}
+.xe-skill-option .x-skill-icon{width:34px;height:34px;font-size:14px}
+.xe-skill-option .x-skill-copy{gap:3px}
+.xe-skill-option .x-skill-copy strong{font-size:13px}
+.xe-skill-option .x-skill-copy>span{font-size:11.5px;line-height:1.5}
+.xe-skill-check{position:absolute;right:5px;top:50%;width:18px;height:18px;transform:translateY(-50%);display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--border);border-radius:50%;font-size:11px;color:var(--text-soft)}
+.xe-skill-option.on .xe-skill-check{border-color:var(--brand);background:var(--brand);color:#fff}
 #view-collab .expert-skills-label{font-size:10px;color:var(--text-soft);padding:2px 1px}
 #view-collab .expert-skill-more{border:1px dashed var(--border);background:var(--bg);color:var(--text-soft)}
 

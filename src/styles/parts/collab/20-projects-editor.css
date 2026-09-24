@@ -81,6 +81,7 @@
 .cv-scope .pe-title-input::placeholder{color:var(--text-soft);font-weight:600}
 .cv-scope .pe-desc-input{width:100%;flex:1;min-height:120px;margin-top:18px;font-size:15px;color:var(--text-secondary);outline:none;resize:none;font-family:inherit;line-height:1.7;background:none;border:0;padding:0}
 .cv-scope .pe-desc-input::placeholder{color:var(--text-soft)}
+.cv-scope .pe-member-default-note{flex:none;margin:8px 0 0;color:var(--text-soft);font-size:12px;line-height:1.5}
 .cv-scope .pe-property-bar{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:10px 28px 16px;flex:none}
 .cv-scope .pe-pill,.cv-scope .pe-more summary{display:inline-flex;align-items:center;gap:6px;min-height:34px;border:1px solid var(--border-hover);border-radius:18px;background:var(--bg);color:var(--text-secondary);padding:0 11px;font-size:12px;white-space:nowrap}
 .cv-scope .pe-pill:focus-within,.cv-scope .pe-more summary:focus-visible{border-color:var(--brand);outline:0}
@@ -88,6 +89,7 @@
 .cv-scope .pe-pill select{cursor:pointer}
 .cv-scope .pe-pill--owner{min-width:150px;max-width:190px}
 .cv-scope .pe-pill--owner select{width:100%;max-width:none;padding-right:12px}
+.cv-scope .pe-pill--owner select:invalid{color:var(--text-soft)}
 .cv-scope .pe-pill--status .pe-pill-mark{color:var(--text-secondary);font-size:10px}
 .cv-scope .pe-pill--required{border-color:var(--border-focus)}
 .cv-scope .pe-pill--required select{max-width:145px}
@@ -113,7 +115,7 @@
 #view-collab .pj-status{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:500;line-height:1.5;flex:none}
 #view-collab .pj-status-dot{width:6px;height:6px;border-radius:50%;flex:none}
 
-/* 项目成员选择保留在项目表单内，直接引用工作区人员。 */
+/* 项目详情中的成员选择弹层 */
 .cv-scope .pe-members,.cv-scope .pj-member-picker{position:relative;min-width:0}
 .cv-scope #cv-pe-members{display:block;max-height:none;overflow:visible;border:0;padding:0}
 .cv-scope .pe-members summary{display:flex;align-items:center;min-height:34px;padding:0 11px;border:1px solid var(--border-hover);border-radius:18px;background:var(--bg);color:var(--text-secondary);font-size:12px;cursor:pointer}

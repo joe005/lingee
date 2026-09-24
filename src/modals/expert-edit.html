@@ -7,6 +7,7 @@
     </div>
     <div class="modal-tabs" id="xeTabs">
       <button type="button" class="modal-tab active" data-xtab="base">专家</button>
+      <button type="button" class="modal-tab" data-xtab="skills">技能</button>
       <button type="button" class="modal-tab" data-xtab="more">触发词与工作方式</button>
       <button type="button" class="modal-tab" data-xtab="kn">知识</button>
     </div>
@@ -26,8 +27,6 @@
           <div class="env-form-grid">
             <label class="env-field"><span>名称<span class="env-required">*</span></span>
               <input type="text" id="xeName" placeholder="例如：苍穹工作流开发专家" autocomplete="off"></label>
-            <label class="env-field"><span>职称<span class="env-required">*</span></span>
-              <input type="text" id="xeRole" placeholder="例如：苍穹流程建模师" autocomplete="off"></label>
             <label class="env-field env-field-wide"><span>简介</span>
               <textarea id="xeDesc" rows="2" placeholder="他深耕什么领域、擅长什么、能帮你解决什么"></textarea></label>
             <label class="env-field env-field-wide"><span>标签</span>
@@ -45,6 +44,14 @@
           <div class="env-form-section-title">模型级别
             <span class="team-hint-inline">决定这个智能体运行时用哪个推理档位</span></div>
           <div class="x-mode-picker" id="xeTiers"></div>
+        </section>
+      </div>
+
+      <div class="team-pane hidden" data-xpane="skills">
+        <section class="env-form-section xe-skills-section">
+          <div class="env-form-section-title">关联技能<span class="team-hint-inline">技能会展示在专家详情中</span></div>
+          <div class="xe-skills-toolbar"><input type="search" id="xeSkillSearch" placeholder="搜索技能名称或用途" autocomplete="off"><span id="xeSkillCount">已选 0 项</span></div>
+          <div id="xeSkillList" class="xe-skill-options"></div>
         </section>
       </div>
 
@@ -86,4 +93,3 @@
     </div>
   </form>
 </div>
-

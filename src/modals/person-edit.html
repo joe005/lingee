@@ -1,30 +1,19 @@
 <div class="sync-overlay" id="cv-personedit-overlay" style="display:none" onclick="if(event.target===this)cvClosePersonEdit()">
-  <div class="sync-modal" style="width:420px">
+  <div class="sync-modal cv-person-search-modal" role="dialog" aria-modal="true" aria-labelledby="cv-pedit-title">
     <div class="sync-modal__header">
-      <h3 class="sync-modal__title" id="cv-pedit-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>新增人员</h3>
+      <h3 class="sync-modal__title" id="cv-pedit-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>添加人员</h3>
       <button class="sync-modal__close" onclick="cvClosePersonEdit()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
-    <div class="sync-modal__body">
-      <div class="sync-modal__field">
-        <label class="sync-modal__label">姓名</label>
-        <input id="cv-ps-name" placeholder="如：张工" style="width:100%;padding:8px 10px;border:1px solid var(--border-hover);border-radius:8px;font-size:13px;color:var(--text);outline:none" />
-      </div>
-      <div class="sync-modal__field">
-        <label class="sync-modal__label">邮箱</label>
-        <input id="cv-ps-email" placeholder="如 zhang***@kingdee.com" style="width:100%;padding:8px 10px;border:1px solid var(--border-hover);border-radius:8px;font-size:13px;color:var(--text);outline:none" />
-      </div>
-      <div class="sync-modal__field">
-        <label class="sync-modal__label">手机号</label>
-        <input id="cv-ps-phone" placeholder="手机号" style="width:100%;padding:8px 10px;border:1px solid var(--border-hover);border-radius:8px;font-size:13px;color:var(--text);outline:none" />
-      </div>
-      <div class="sync-modal__field">
-        <label class="sync-modal__label">部门</label>
-        <input id="cv-ps-dept" placeholder="如：研发部" style="width:100%;padding:8px 10px;border:1px solid var(--border-hover);border-radius:8px;font-size:13px;color:var(--text);outline:none" />
-      </div>
+    <div class="sync-modal__body cv-person-search-body">
+      <p id="cv-ps-note" class="cv-person-search-note">从灵基用户中搜索并添加。当前使用演示数据，人员搜索接口待接入。</p>
+      <label class="sync-modal__label" for="cv-ps-search">搜索人员</label>
+      <input id="cv-ps-search" type="search" autocomplete="off" placeholder="输入姓名、手机号或邮箱" aria-controls="cv-ps-results" aria-autocomplete="list" />
+      <div id="cv-ps-results" class="cv-person-search-results" role="listbox" aria-label="人员搜索结果"></div>
+      <div id="cv-ps-selected" class="cv-person-search-selected hidden"></div>
     </div>
     <div class="sync-modal__footer">
       <button class="sync-modal__btn sync-modal__btn--ghost" onclick="cvClosePersonEdit()">取消</button>
-      <button class="sync-modal__btn sync-modal__btn--primary" onclick="cvSavePersonEdit()">保存</button>
+      <button id="cv-ps-add" class="sync-modal__btn sync-modal__btn--primary" onclick="cvSavePersonEdit()" disabled>添加人员</button>
     </div>
   </div>
 </div>

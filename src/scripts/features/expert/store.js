@@ -37,8 +37,9 @@ function loadTeams(){
       &&Array.isArray(e.modes)&&e.modes.length;
   }).map(function(e){
     return {id:e.id,mine:true,k:AV_KEYS.indexOf(e.k)>=0?e.k:'eng',
-      name:e.name,role:e.role||'自定义专家',by:'我创建的',desc:e.desc||'',
+      name:e.name,role:'',by:'我创建的',desc:e.desc||'',
       tags:Array.isArray(e.tags)?e.tags:[],
+      skills:Array.isArray(e.skills)?e.skills.filter(function(id){return typeof id==='string'}):[],
       modes:e.modes.filter(function(m){return WORK_MODES.indexOf(m)>=0}),
       tier:MODEL_TIERS.some(function(t){return t.id===e.tier})?e.tier:'auto',
       comp:Array.isArray(e.comp)?e.comp:[],
@@ -73,7 +74,7 @@ function saveTeams(){
                 leadId:t.leadId,members:t.members,cmds:t.cmds};
       }),
       experts:MY_EXPERTS.map(function(e){
-        return {id:e.id,k:e.k,name:e.name,role:e.role,desc:e.desc,tags:e.tags,
+        return {id:e.id,k:e.k,name:e.name,desc:e.desc,tags:e.tags,skills:e.skills||[],
                 modes:e.modes,comp:e.comp,cmds:e.cmds,tier:e.tier||'auto',
                 kn:e.kn||[],knOff:e.knOff||[],knUp:e.knUp||[]};
       })

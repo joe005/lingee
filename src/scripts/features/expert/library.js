@@ -54,7 +54,7 @@ function renderExpertGrid(){
         +'<div class="card-titles"><div class="card-title-row"><span class="card-title">'+xesc(e.name)+'</span>'
         +(e.ro?'<span class="x-badge x-badge-ro">只读</span>':'')
         +(e.mine?'<span class="x-badge x-badge-mine">我创建的</span>':'')+'</div>'
-        +'<div class="x-sub">'+xesc(e.role)+' · '+xesc(e.by)+'</div></div></div>'
+        +'<div class="x-sub">'+xesc([e.role,e.by].filter(Boolean).join(' · '))+'</div></div></div>'
         +'<div class="card-desc">'+xesc(e.desc)+'</div>'
         +'<div class="card-tags">'+e.tags.slice(0,3).map(function(t){return '<span class="ptag">'+xesc(t)+'</span>'}).join('')+'</div>'
         +'<div class="x-modes" title="可承担 '+xesc(e.modes.join(' / '))+'"><span class="x-modes-k">可承担</span>'
@@ -85,7 +85,7 @@ function openExpertModal(id){
   xdTab='overview';
   $('#expertModalHead').innerHTML='<div class="x-detail-head"><img class="x-av-lg" src="'+xav(e.k)+'" alt="">'
     +'<div><div class="modal-title">'+xesc(e.name)+(e.ro?' <span class="x-badge x-badge-ro">只读</span>':'')+'</div>'
-    +'<div class="x-sub">'+xesc(e.role)+' · '+xesc(e.by)+'</div></div></div>'
+    +'<div class="x-sub">'+xesc([e.role,e.by].filter(Boolean).join(' · '))+'</div></div></div>'
     +'<button class="modal-close" type="button" data-x-close aria-label="关闭">×</button>';
 
   var overview='<div class="x-sec x-desc">'+xesc(e.desc)+'</div>'
@@ -100,7 +100,7 @@ function openExpertModal(id){
     +'<div class="x-sec"><div class="x-sec-t">模型级别</div><div class="x-chips">'+tierChip(e.tier)+'</div></div>';
 
   var skills=e.skills||[];
-  var skillsHtml='<div class="x-skill-head"><strong>内置技能</strong><span>'+skills.length+'</span></div>'
+  var skillsHtml='<div class="x-skill-head"><strong>关联技能</strong><span>'+skills.length+'</span></div>'
     +(skills.length?'<div class="x-skill-list">'+skills.map(function(id){
       var s=skillInfo(id);
       return '<div class="x-skill-row"><span class="x-skill-icon tone-'+xesc(s.tone)+'" aria-hidden="true">✦</span>'

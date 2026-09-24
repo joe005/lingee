@@ -429,7 +429,7 @@
 .team-config-modal .modal-body { padding-top: 16px; }
 .team-hint-inline.is-warn { color: var(--warning); }
 
-/* 创建/编辑专家弹窗有 3 个页签，内容高矮不一样（知识页签的两栏、专家页签的头像格）；
+/* 创建/编辑专家弹窗有 4 个页签，内容高矮不一样（知识页签的两栏、专家页签的头像格）；
    定死高度，切页签时弹窗不再跟着跳 */
 #expertEditForm { height: min(640px, 84vh); }
 /* 各页签撑满 body 剩余高度；知识页签的左右栏自己滚动，不再下面空一大块 */

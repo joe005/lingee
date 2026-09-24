@@ -54,6 +54,12 @@ var SKILL_META={
   'cosmic-api-integration':{name:'苍穹接口集成',desc:'完成开放接口契约、鉴权、数据映射、幂等同步与异常重试。',tone:'cyan'}
 };
 function skillInfo(id){ return SKILL_META[id]||{name:id,desc:'该技能已挂载，暂无补充说明。',tone:'gray'}; }
+function skillCatalog(){
+  return Object.keys(SKILL_META).map(function(id){
+    var skill=skillInfo(id);
+    return {id:id,name:skill.name,desc:skill.desc,tone:skill.tone};
+  });
+}
 
 var EXPERTS=[
   {id:'software-team-lead',k:'lead',name:'软件团队负责人',role:'交付负责人',by:'Lingee 内置',
@@ -329,4 +335,4 @@ export function initExpertData() {
 /* MY_EXPERTS 由其它模块写回；import 绑定只读，所以走这个 setter */
 export function set_MY_EXPERTS(v){ MY_EXPERTS=v; return v; }
 
-export { AV_KEYS, EX, EXPERTS, MODEL_TIERS, MY_EXPERTS, PRESET_TEAMS, STAGE_MODES, STAGES, WORK_MODES, askFor, compChip, parseComp, pendingInputs, phraseHtml, rebuildExperts, skillInfo, stageById, teamCoverage, tierInfo, xav, xesc };
+export { AV_KEYS, EX, EXPERTS, MODEL_TIERS, MY_EXPERTS, PRESET_TEAMS, STAGE_MODES, STAGES, WORK_MODES, askFor, compChip, parseComp, pendingInputs, phraseHtml, rebuildExperts, skillCatalog, skillInfo, stageById, teamCoverage, tierInfo, xav, xesc };
