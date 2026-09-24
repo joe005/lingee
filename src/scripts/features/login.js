@@ -34,7 +34,7 @@ var ACCOUNTS={
 var DEMO_ROLES=[
   {id:'owner',label:'系统管理员',name:'吴宏超',avatar:'吴',desc:'工作区设置 · 人员 · 系统集成'},
   {id:'project_manager',label:'项目经理',name:'赵琳',avatar:'赵',desc:'创建项目 · 维护负责的项目'},
-  {id:'dev',  label:'开发',  name:'张工',  avatar:'张', desc:'任务执行 · 代码评审 · 创建专家'},
+  {id:'dev',  label:'开发',  name:'张工',  avatar:'张', desc:'任务执行 · 代码评审 · 专家协作'},
   {id:'pm',   label:'需求',  name:'赵琳',  avatar:'赵', desc:'需求创建 · 需求评审'},
   {id:'qa',   label:'测试',  name:'陈晨',  avatar:'陈', desc:'测试评审 · 用例产物'},
   {id:'ops',  label:'运维',  name:'周杰',  avatar:'周', desc:'部署发布 · 运维产物'}

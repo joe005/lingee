@@ -18,12 +18,12 @@ async function cvSearchLingeePeople(query){
   var keyword=query.toLocaleLowerCase();
   return CV_LINGEE_DEMO_USERS.filter(function(person){return [person.name,person.phone,person.email].some(function(value){return value.toLocaleLowerCase().includes(keyword);});});
 }
-function cvLinkedLingeePerson(id){
-  return CV_MEMBERS.find(function(row){return row.id===id||row.userId===id;})||null;
+function cvLinkedLingeePerson(id,name){
+  return CV_MEMBERS.find(function(row){return row.id===id||row.userId===id||(row.linkedUserIds||[]).includes(id)||(name==='吴宏超'&&row.name===name);})||null;
 }
 function cvLinkLingeePerson(person){
   if(!person||!person.id||!person.name)return null;
-  var linked=cvLinkedLingeePerson(person.id);if(linked)return linked;
+  var linked=cvLinkedLingeePerson(person.id,person.name);if(linked)return linked;
   linked={id:person.id,userId:person.id,name:person.name,phone:person.phone||'',email:person.email||'',workspaceRole:'member',roles:[],status:'available',source:cvPeopleSearchIsDemo()?'灵基用户（演示）':'灵基用户'};
   CV_MEMBERS.push(linked);cvPersistPersons();
   return linked;

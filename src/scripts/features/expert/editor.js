@@ -1,41 +1,17 @@
 import { $, $$ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
-import { input, setNavActive, showView } from '../../core/view.js';
-import { renderExpertChips, renderModeTag } from './chips.js';
+import { renderExpertChips } from './chips.js';
 import { AV_KEYS, EX, MODEL_TIERS, MY_EXPERTS, WORK_MODES, rebuildExperts, set_MY_EXPERTS, skillCatalog, xav, xesc } from './data.js';
 import { renderKnPane, resetKnPane } from './knowledge.js';
 import { expertModal, renderExpertGrid } from './library.js';
 import { TEAMS, activePick, clearPick, saveTeams } from './store.js';
-/* 创建 / 编辑我的专家
+/* 编辑已有的我的专家
    拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
    由 main.js 按拆分前的原始顺序调用。 */
 
 
-/* ---------- 创建 / 编辑我的专家 ---------- */
-/* 两条路：手填这张表单，或者一句话交给 expert-manager 在对话里建（同 WorkBuddy） */
-var EXPERT_MANAGER={id:'expert-manager',
-  ic:'<path d="M16 20v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 4 18.5V20"/><circle cx="10" cy="8" r="3.2"/><path d="M18 6v6M15 9h6"/>'};
-var ONE_LINE_PROMPT='帮我创建一个 XXX 专家，擅长 XXXXX。我的经验是：[请补充你的行业背景、相关经验]';
+/* ---------- 编辑我的专家 ---------- */
 var forcedBuilder=null;
-
-function startExpertByChat(){
-  if(expertEditModal) expertEditModal.classList.remove('show');
-  if(expertModal) expertModal.classList.remove('show');
-  forcedBuilder=EXPERT_MANAGER;
-  $$('.mode-item').forEach(function(m){ m.classList.remove('checked') });
-  showView('newtask'); setNavActive('新会话');
-  renderModeTag();
-  if(input){
-    input.setAttribute('data-placeholder','布置任务');
-    input.textContent=ONE_LINE_PROMPT;
-    input.focus();
-    try{
-      var r=document.createRange(); r.selectNodeContents(input); r.collapse(false);
-      var sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
-    }catch(err){}
-  }
-  toast('已切到 expert-manager，把这句话补完就行','info');
-}
 
 function deleteMyExpert(id){
   var e=EX[id]; if(!e||!e.mine) return;
@@ -62,24 +38,17 @@ function setXeTab(which){
   $$('#expertEditModal .team-pane').forEach(function(el){ el.classList.toggle('hidden', el.getAttribute('data-xpane')!==which); });
   var body=$('#expertEditModal .modal-body'); if(body) body.scrollTop=0;
 }
-function blankExpert(){
-  /* mine:true——编辑器只处理「我创建的」专家，没有预置知识这一层，
-     知识模块靠这个字段判断不用去查租户知识覆盖层 */
-  return {k:'eng',name:'',desc:'',tags:[],skills:[],modes:['分析','设计','实现'],mine:true,
-          tier:'auto',comp:[],cmds:[['','']],kn:[],knOff:[],knDocOff:[],knUp:[]};
-}
 function openExpertEditor(id){
   if(!expertEditModal) return;
   var e=id?EX[id]:null;
-  xeEditingId=(e&&e.mine)?id:null;
-  xeDraft = xeEditingId
-    ? {k:e.k,name:e.name,desc:e.desc,tags:e.tags.slice(),skills:(e.skills||[]).slice(),modes:e.modes.slice(),mine:true,
+  if(!e||!e.mine) return;
+  xeEditingId=id;
+  xeDraft = {k:e.k,name:e.name,desc:e.desc,tags:e.tags.slice(),skills:(e.skills||[]).slice(),modes:e.modes.slice(),mine:true,
        tier:e.tier||'auto',
        comp:e.comp.slice(),cmds:e.cmds.length?e.cmds.map(function(c){return c.slice()}):[['','']],
        kn:(e.kn||[]).slice(),knOff:(e.knOff||[]).slice(),knDocOff:(e.knDocOff||[]).slice(),
-       knUp:(e.knUp||[]).map(function(f){return {n:f.n,t:f.t,up:f.up,by:f.by}})}
-    : blankExpert();
-  $('#expertEditTitle').textContent = xeEditingId ? '编辑专家' : '创建专家';
+       knUp:(e.knUp||[]).map(function(f){return {n:f.n,t:f.t,up:f.up,by:f.by}})};
+  $('#expertEditTitle').textContent = '编辑专家';
   xeSkillKw=''; $('#xeSkillSearch').value='';
   $('#xeName').value=xeDraft.name; $('#xeDesc').value=xeDraft.desc;
   $('#xeTags').value=xeDraft.tags.join('、'); $('#xeComp').value=xeDraft.comp.join('、');
@@ -143,7 +112,6 @@ export function initExpertEditor() {
     $('#xeCancelBtn').addEventListener('click',function(){ expertEditModal.classList.remove('show') });
     $('#xeAddCmd').addEventListener('click',function(){ xeDraft.cmds.push(['','']); renderExpertEditor(); });
     $('#xeDeleteBtn').addEventListener('click',function(){ if(xeEditingId){ expertEditModal.classList.remove('show'); deleteMyExpert(xeEditingId); } });
-    $('#xeChatBtn').addEventListener('click',startExpertByChat);
     expertEditModal.addEventListener('click',function(ev){
       if(ev.target===expertEditModal){ expertEditModal.classList.remove('show'); return; }
       var a=ev.target.closest('[data-xe-av]');
@@ -189,17 +157,14 @@ export function initExpertEditor() {
       if(!d.modes.length){ setXeTab('base'); toast('至少勾选一项「可承担的工作」，否则他在专家团里领不到任务','warning'); return; }
       var cmds=d.cmds.map(function(c){ return [String(c[0]||'').trim(),String(c[1]||'').trim()]; })
                      .filter(function(c){ return c[0]; });
-      var rec={id:xeEditingId||('my-'+Date.now()),mine:true,k:d.k,name:d.name,role:'',by:'我创建的',
+      var index=MY_EXPERTS.findIndex(function(item){return item.id===xeEditingId;});
+      if(index<0) return;
+      var rec={id:xeEditingId,mine:true,k:d.k,name:d.name,role:'',by:'我创建的',
                desc:d.desc,tags:d.tags,skills:(d.skills||[]).slice(),modes:d.modes.slice(),tier:d.tier||'auto',comp:d.comp,cmds:cmds,
                kn:(d.kn||[]).slice(),knOff:(d.knOff||[]).slice(),knDocOff:(d.knDocOff||[]).slice(),knUp:(d.knUp||[]).slice()
               };
-      if(xeEditingId){
-        for(var i=0;i<MY_EXPERTS.length;i++) if(MY_EXPERTS[i].id===xeEditingId){ MY_EXPERTS[i]=rec; break; }
-        toast('已保存','success');
-      }else{
-        MY_EXPERTS.push(rec);
-        toast('专家「'+rec.name+'」已创建','success');
-      }
+      MY_EXPERTS[index]=rec;
+      toast('已保存','success');
       rebuildExperts();
       expertEditModal.classList.remove('show');
       saveTeams(); renderExpertGrid(); renderExpertChips();

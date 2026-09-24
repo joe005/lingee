@@ -15,7 +15,7 @@ function cvExpertGroups(){
   });
   return [
     {title:'Lingee 内置',desc:'随产品一起维护，覆盖交付全流程与苍穹、前端等领域',list:rows.filter(function(e){return e.by==='Lingee 内置'})},
-    {title:'我创建的',desc:'你自己建的专家，可随时改配置或删除',list:rows.filter(function(e){return e.mine})}
+    {title:'我创建的',desc:'已有的自建专家，可修改配置',list:rows.filter(function(e){return e.mine})}
   ];
 }
 function cvBuildExpertCard(e){
@@ -39,19 +39,14 @@ function cvRenderExperts(){
   var si=$('#cvExpertSearch');
   if(si && si.value!==cvExpertKw) si.value=cvExpertKw;
   var groups=cvExpertGroups();
-  /* 搜索把结果筛空时要说清楚，否则只剩一张「创建专家」卡，看着像数据没了 */
+  /* 搜索把结果筛空时要说清楚。 */
   if(cvExpertKw.trim() && !groups.some(function(g){return g.list.length})){
     box.innerHTML='<div class="x-empty">没有匹配「'+xesc(cvExpertKw.trim())+'」的专家</div>';
     return;
   }
   var html=groups.map(function(g){
-    if(!g.list.length && g.title!=='我创建的') return '';
+    if(!g.list.length) return '';
     var cards=g.list.map(cvBuildExpertCard).join('');
-    if(g.title==='我创建的'){
-      cards+='<button type="button" class="app-card x-new-card" data-cv-new-expert>'
-        +'<span class="x-new-ic">＋</span><span>创建专家</span>'
-        +'<span class="x-new-sub">手填表单，或一句话交给 expert-manager</span></button>';
-    }
     return '<div class="expert-section-title">'+g.title
       +'<span class="expert-section-desc">'+g.desc+'</span></div>'
       +'<div class="apps-grid">'+cards+'</div>';

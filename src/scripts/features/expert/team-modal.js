@@ -4,7 +4,7 @@ import { summon } from './automatch.js';
 import { renderExpertChips } from './chips.js';
 import { EX, EXPERTS, STAGES, xav, xesc } from './data.js';
 import { openExpertEditor } from './editor.js';
-import { expertTab, openExpertModal, renderExpertGrid } from './library.js';
+import { openExpertModal, renderExpertGrid } from './library.js';
 import { TEAMS, activePick, clearPick, saveTeams, set_TEAMS, teamById, teamLint } from './store.js';
 /* 专家团配置弹窗与添加成员
    拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
@@ -29,23 +29,22 @@ function teamCmdList(d){
 }
 function openTeamModal(id){
   var t=id?teamById(id):null;
-  teamEditingId=id||null;
-  teamDraft=t?{name:t.name,desc:t.desc,leadId:t.leadId,members:t.members.slice(),preset:!!t.preset,
+  if(!t) return;
+  teamEditingId=id;
+  teamDraft={name:t.name,desc:t.desc,leadId:t.leadId,members:t.members.slice(),preset:!!t.preset,
                domains:(t.domains||[]).slice(),
-               cmds:(t.cmds&&t.cmds.length)?t.cmds.map(function(c){return c.slice()}):[['','']]}
-            :{name:'',desc:'',leadId:'software-team-lead',members:['software-team-lead','software-engineer'],preset:false,
-               domains:[],
-               cmds:[['','']]};
-  $('#teamModalTitle').textContent = t?t.name:'新建专家团';
+               cmds:(t.cmds&&t.cmds.length)?t.cmds.map(function(c){return c.slice()}):[['','']]};
+  $('#teamModalTitle').textContent = t.name;
   /* 内置团：标题已经是名字，正文只留一句话说明，不重复摆一份只读表单；
      自建团：正常的可编辑名称 + 说明 */
   $('#teamEditFields').classList.toggle('hidden', teamDraft.preset);
   $('#teamViewDesc').classList.toggle('hidden', !teamDraft.preset);
   $('#teamViewDesc').textContent=teamDraft.desc;
   $('#teamName').value=teamDraft.name; $('#teamDesc').value=teamDraft.desc;
-  $('#teamSaveBtn').textContent = teamDraft.preset?'另存为我的专家团':'保存';
+  $('#teamSaveBtn').textContent = '保存';
   /* 内置团最常用的动作是发起对话，主按钮给它；自建团主按钮还是保存 */
   $('#teamSaveBtn').className = 'modal-btn '+(teamDraft.preset?'cancel':'confirm');
+  $('#teamSaveBtn').classList.toggle('hidden', teamDraft.preset);
   $('#teamCallBtn').className = 'modal-btn '+(teamDraft.preset?'confirm':'cancel');
   $('#teamCallBtn').classList.toggle('hidden', !teamEditingId);
   $('#teamDeleteBtn').classList.toggle('hidden', teamDraft.preset || !teamEditingId);
@@ -122,8 +121,6 @@ function renderMemberList(){
       +'<span class="x-mrow-m">'+e.modes.join(' / ')+'</span></span></button>';
   }).join('') : '<div class="x-empty-sm">没有匹配的专家</div>';
 }
-var newExpertEntryBtn=$('#newExpertEntryBtn');
-
 export function initTeamModal() {
   if(teamModal){
     teamModal.addEventListener('click',function(e){
@@ -183,18 +180,11 @@ export function initTeamModal() {
       var name=(d.name||'').trim();
       if(!name){ setTeamModalTab('info'); toast('请填写专家团名称','warning'); $('#teamName').focus(); return; }
       if(!d.members.length){ setTeamModalTab('info'); toast('至少需要一位成员','warning'); return; }
-      if(d.preset || !teamEditingId){
-        var nid='team-'+Date.now();
-        TEAMS.push({id:nid,preset:false,name:d.preset?name+' 副本':name,by:'我创建的',
-          desc:d.desc,domains:(d.domains||[]).slice(),
-          leadId:d.leadId,members:d.members.slice(),cmds:teamCmdList(d)});
-        toast(d.preset?'已另存为你的专家团':'专家团已创建','success');
-      }else{
-        var t=teamById(teamEditingId);
-        t.name=name; t.desc=d.desc; t.leadId=d.leadId; t.members=d.members.slice(); t.cmds=teamCmdList(d);
-        t.domains=(d.domains||[]).slice();
-        toast('已保存','success');
-      }
+      var t=teamById(teamEditingId);
+      if(!t||t.preset) return;
+      t.name=name; t.desc=d.desc; t.leadId=d.leadId; t.members=d.members.slice(); t.cmds=teamCmdList(d);
+      t.domains=(d.domains||[]).slice();
+      toast('已保存','success');
       teamModal.classList.remove('show');
       saveTeams(); renderExpertGrid(); renderExpertChips();
     });
@@ -212,9 +202,6 @@ export function initTeamModal() {
       renderMemberList(); renderTeamModal();
     });
   }
-  if(newExpertEntryBtn) newExpertEntryBtn.addEventListener('click',function(){
-    if(expertTab==='team') openTeamModal(null); else openExpertEditor(null);
-  });
 }
 
 export { openTeamModal };

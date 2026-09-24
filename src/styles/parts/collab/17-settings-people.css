@@ -1,5 +1,5 @@
 /* 设置：人员关联与灵基用户搜索 */
-#view-collab .cv-perm-head,#view-collab .cv-perm-row{grid-template-columns:minmax(160px,1.2fr) minmax(120px,.8fr) minmax(190px,1.2fr) minmax(110px,.8fr) auto}
+#view-collab .cv-perm-head,#view-collab .cv-perm-row{grid-template-columns:minmax(160px,1.2fr) minmax(120px,.8fr) minmax(190px,1.2fr) minmax(110px,.8fr) 72px}
 #view-collab .ps-av{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:600;flex:none;margin-right:10px}
 #view-collab .cv-proj-desc-wrap{display:flex;flex-direction:column;min-width:0}
 #view-collab .cv-proj-desc-wrap b{font-weight:500;color:var(--text)}

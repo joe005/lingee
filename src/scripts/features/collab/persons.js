@@ -19,7 +19,7 @@ function cvRenderPeopleSearch(rows){
   var el=$('#cv-ps-results');if(!el)return;
   cvSearchResults=Array.isArray(rows)?rows.filter(function(person){return person&&person.id&&person.name;}):[];
   el.innerHTML=cvSearchResults.length?cvSearchResults.map(function(person,index){
-    var linked=!!cvLinkedLingeePerson(person.id);
+    var linked=!!cvLinkedLingeePerson(person.id,person.name);
     return '<button type="button" role="option" data-cv-person-result="'+index+'"'+(linked?' disabled aria-disabled="true"':'')+'><span class="cv-person-result-avatar">'+xesc(person.name[0]||'?')+'</span><span class="cv-person-result-info"><strong>'+xesc(person.name)+'</strong><small>ID '+xesc(person.id)+' · '+xesc(person.phone||'无手机号')+' · '+xesc(person.email||'无邮箱')+'</small></span>'+(linked?'<em>已添加</em>':'')+'</button>';
   }).join(''):'<div class="cv-person-search-empty">没有匹配的灵基用户</div>';
 }
@@ -55,7 +55,7 @@ function cvClosePersonEdit(){
 function cvSavePersonEdit(){
   var person=cvSelectedPerson;
   if(!person){toast('请先选择灵基用户','warning');return;}
-  if(cvLinkedLingeePerson(person.id)){toast('该用户已添加','warning');return;}
+  if(cvLinkedLingeePerson(person.id,person.name)){toast('该用户已添加','warning');return;}
   cvLinkLingeePerson(person);
   cvClosePersonEdit();
   cvRenderProjectDetail();cvRenderProjectList();cvRenderPermTable();

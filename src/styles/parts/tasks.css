@@ -8,22 +8,10 @@
 #view-tasks.hidden{display:none}
 
 /* ---------- 页头 ---------- */
-.tk-header{display:flex;align-items:center;justify-content:space-between;padding:16px 24px 12px;flex-shrink:0}
-.tk-header-left{display:flex;align-items:baseline;gap:12px;min-width:0}
-.tk-header-left h2{font-size:18px;font-weight:600;color:var(--text);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .tk-header-desc{font-size:13px;color:var(--text-secondary)}
 .tk-demo-tag{font-size:11px;color:var(--text-secondary);background:var(--fill-1);border:1px solid var(--border);padding:2px 8px;border-radius:4px}
 
 /* ---------- 视图标签栏 ---------- */
-.tk-view-bar{display:flex;align-items:center;gap:4px;padding:0 24px;flex-shrink:0;height:38px}
-.tk-view-tabs{display:flex;align-items:center;gap:4px;overflow:hidden;flex:0 1 auto}
-.tk-view-tab{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:6px;font-size:13px;color:var(--text);cursor:pointer;white-space:nowrap;border:1px solid transparent;transition:all .15s}
-.tk-view-tab:hover{background:var(--hover);color:var(--text)}
-.tk-view-tab.active{background:var(--fill-1);color:var(--text);border-color:var(--border);font-weight:600}
-.tk-view-tab .tk-tab-name{max-width:120px;overflow:hidden;text-overflow:ellipsis}
-.tk-view-tab .tk-tab-del{display:flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:3px;opacity:0;transition:opacity .15s}
-.tk-view-tab:hover .tk-tab-del{opacity:.5}
-.tk-view-tab .tk-tab-del:hover{opacity:1;background:var(--active)}
 .tk-view-action{position:relative;flex-shrink:0}
 .tk-view-add,.tk-view-overflow-btn{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;border:none;background:var(--fill-1);color:var(--text);cursor:pointer;flex-shrink:0}
 .tk-view-add:hover,.tk-view-add[aria-expanded="true"],.tk-view-overflow-btn:hover{background:var(--hover)}

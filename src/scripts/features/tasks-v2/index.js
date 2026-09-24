@@ -3,12 +3,13 @@
    由 main.js 按拆分前的原始顺序调用。 */
 
 import { $, $$ } from '../../core/dom.js';
+import { renderListPageTabs } from '../shared/list-page-tabs.js';
 import { showView, input, setNavActive } from '../../core/view.js';
 import { toast } from '../../core/toast.js';
 import { applyTaskListFieldSettings, renderTaskListTreeNodes, taskListVisibleColumnCount } from './list-template.js';
 import {
-  TK_STATUSES, TK_PRIORITIES, TK_PEOPLE, TK_AGENTS, TK_PROJECTS, TK_LABELS,
-  TK_VIEWS, TK_FILTER_FIELDS, TK_OPERATORS, TK_TASKS, TK_CURRENT_USER,
+  TK_STATUSES, TK_PRIORITIES, TK_PEOPLE, TK_AGENTS, TK_LABELS,
+  TK_VIEWS, TK_FILTER_FIELDS, TK_OPERATORS, TK_TASKS, tkCurrentUserId, tkPeopleInProject, tkProjectsForCurrentUser, tkSyncPeople,
   tkGetTaskArtifacts,
   tkGetTasks, tkSetTasks, tkAddTask, tkUpdateTask, tkDeleteTask,
   tkGetViews, tkAddView, tkDeleteView, tkRenameView,
@@ -34,6 +35,7 @@ var state = {
   editingTaskId: null, drawerTaskId: null, editingParentId: null,
 };
 var projectListMode = false;
+var projectListProjectId = '';
 var layoutBeforeProjectList = null;
 var els = {};
 var drawerPreferredWidth = null;
@@ -114,7 +116,10 @@ function restoreViewState() {
     var operators = ['eq','neq','contains','not_contains','today','overdue','before','after'];
     state.filters = saved.filters.slice(0, 30).filter(function (f) {
       return f && fields.includes(f.field) && operators.includes(f.op) && typeof f.value === 'string';
-    }).map(function (f) { return { field:f.field, op:f.op, value:f.value }; });
+    }).map(function (f) { return { field:f.field, op:f.op, value:f.value }; }).filter(function (f) {
+      if (f.field === 'assignee' || f.field === 'creator') return TK_PEOPLE.some(function (person) { return person.id === f.value; });
+      return f.field !== 'project' || tkProjectsForCurrentUser().some(function (project) { return project.id === f.value; });
+    });
   }
 }
 
@@ -202,7 +207,7 @@ function handleCardAction(act, aid) {
     var parent = tkGetTasks().find(function(x){return x.id===aid;});
     if (parent) {
       tkAddTask({ title: parent.title + ' - 子任务', desc:'', status:'backlog', priority: parent.priority || 'medium',
-        assignee: parent.assignee || TK_CURRENT_USER, project: parent.project || 'p1',
+        assignee: parent.assignee || tkCurrentUserId(), project: parent.project || tkProjectsForCurrentUser()[0]?.id || '',
         labels:(parent.labels||[]).slice(), dueDate:'', createDate:new Date().toISOString().slice(0,10),
         parentId: parent.id });
       render();
@@ -263,11 +268,14 @@ function priWeight(p) {
 /* ---------- 筛选与排序 ---------- */
 function getFilteredTasks() {
   var tasks = tkGetTasks();
+  var joinedProjectIds = new Set(tkProjectsForCurrentUser().map(function (project) { return project.id; }));
+  tasks = tasks.filter(function (task) { return joinedProjectIds.has(task.project); });
+  if (projectListMode && projectListProjectId) tasks = tasks.filter(function (task) { return task.project === projectListProjectId; });
   var scope = state.scope;
-  if (scope === 'members') tasks = tasks.filter(function (t) { return !t.assignee || t.assignee.charAt(0) === 'u'; });
+  if (scope === 'members') tasks = tasks.filter(function (t) { return !t.assignee || t.assignee.charAt(0) !== 'a'; });
   else if (scope === 'agents') tasks = tasks.filter(function (t) { return t.assignee && t.assignee.charAt(0) === 'a'; });
-  else if (scope === 'my_assigned') tasks = tasks.filter(function (t) { return t.assignee === TK_CURRENT_USER; });
-  else if (scope === 'my_created') tasks = tasks.filter(function (t) { return t.createdBy === TK_CURRENT_USER; });
+  else if (scope === 'my_assigned') tasks = tasks.filter(function (t) { return t.assignee === tkCurrentUserId(); });
+  else if (scope === 'my_created') tasks = tasks.filter(function (t) { return t.createdBy === tkCurrentUserId(); });
   if (state.search) {
     var q = state.search.toLowerCase();
     tasks = tasks.filter(function (t) {
@@ -308,7 +316,7 @@ function getFilteredTasks() {
 function matchFilter(task, filter) {
   var field = filter.field, op = filter.op, val = filter.value;
   if (!val && op !== 'today' && op !== 'overdue') return true;
-  if (field === 'creator') return (task.createdBy || TK_CURRENT_USER) === val;
+  if (field === 'creator') return task.createdBy === val;
   if (field === 'projectStatus') return val === 'active' && !!task.project;
   if (field === 'label' && op === 'eq') return (task.labels || []).includes(val);
   if (field === 'keyword') {
@@ -381,7 +389,7 @@ function getGroupedTasks(tasks) {
     TK_PEOPLE.forEach(function (p) { groups[p.id] = { name: p.name, color: p.color, tasks: [] }; keys.push(p.id); });
     groups.unassigned = { name: '未分配', color: 'gray', tasks: [] }; keys.push('unassigned');
   } else if (state.groupBy === 'project') {
-    TK_PROJECTS.forEach(function (p) { groups[p.id] = { name: p.name, color: 'blue', tasks: [] }; keys.push(p.id); });
+    tkProjectsForCurrentUser().forEach(function (p) { groups[p.id] = { name: p.name, color: 'blue', tasks: [] }; keys.push(p.id); });
     groups.none = { name: '无项目', color: 'gray', tasks: [] }; keys.push('none');
   }
   tasks.forEach(function (t) {
@@ -401,14 +409,7 @@ function getGroupedTasks(tasks) {
 
 /* ---------- 渲染：视图标签栏 ---------- */
 function renderViewBar() {
-  var views = tkGetViews();
-  var html = views.map(function (v) {
-    return '<div class="tk-view-tab' + (v.id === state.activeViewId ? ' active' : '') + '" data-view-id="' + v.id + '">'
-      + '<span class="tk-tab-name">' + escapeHtml(v.name) + '</span>'
-      + (v.builtin ? '' : '<span class="tk-tab-del" data-del-view="' + v.id + '" data-tooltip="删除视图" aria-label="删除视图"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>')
-      + '</div>';
-  }).join('');
-  els.tkViewTabs.innerHTML = html;
+  els.tkViewTabs.innerHTML = renderListPageTabs(tkGetViews().map(function(view){return {id:view.id,name:view.name,removable:!view.builtin};}),state.activeViewId,'data-view-id');
 }
 
 /* ---------- 渲染：看板 ---------- */
@@ -643,7 +644,16 @@ function updateBulkBar() {
   els.tkBulkBar.classList.remove('hidden'); els.tkBulkCount.textContent = count;
 }
 function render() {
-  if (projectListMode) state.layout = 'list';
+  tkSyncPeople();
+  var joinedProjects = new Set(tkProjectsForCurrentUser().map(function (project) { return project.id; }));
+  state.selectedIds.forEach(function (id) {
+    var task = tkGetTasks().find(function (item) { return item.id === id; });
+    if (!task || !joinedProjects.has(task.project)) state.selectedIds.delete(id);
+  });
+  if (state.drawerTaskId) {
+    var openTask = tkGetTasks().find(function (item) { return item.id === state.drawerTaskId; });
+    if (!openTask || !joinedProjects.has(openTask.project)) closeDrawer();
+  }
   var split = state.viewMode === 'split';
   if (split) state.layout = 'list';
   els.tkToolbarNew.classList.remove('hidden');
@@ -680,15 +690,16 @@ function render() {
   persistViewState();
 }
 
-/* 项目详情挂载同一个列表模板和事件控制器，离开后恢复任务页布局。 */
-export function tkSetProjectListMode(active) {
-  if (active === projectListMode) return;
+/* 项目详情复用视图、筛选与布局控制器，离开后恢复任务页布局。 */
+export function tkSetProjectListMode(active, projectId) {
+  if (active === projectListMode && (!active || projectListProjectId === projectId)) return;
   if (active) {
-    layoutBeforeProjectList = state.layout;
+    if (!projectListMode) layoutBeforeProjectList = state.layout;
     projectListMode = true;
-    state.layout = 'list';
+    projectListProjectId = projectId || '';
   } else {
     projectListMode = false;
+    projectListProjectId = '';
     state.layout = layoutBeforeProjectList || state.layout;
     layoutBeforeProjectList = null;
   }
@@ -821,7 +832,9 @@ function saveInlineTask() {
   if (cancelBtn) cancelBtn.disabled = true;
   setTimeout(function () {
     var mx = Math.max.apply(null, tkGetTasks().map(function(x){return x.id;}));
-     tkAddTask({ id:mx+1, code:'T'+String(1000000+mx+1), title:title, desc:'', status:'backlog', priority:'medium', assignee: av||'u1', project:'p1', labels:[], dueDate:'', createDate:new Date().toISOString().slice(0,10) });
+     var projectId = projectListProjectId || tkProjectsForCurrentUser()[0]?.id;
+     if (!projectId || !tkProjectsForCurrentUser().some(function (project) { return project.id === projectId; })) { toast('请先加入项目再创建任务', 'warning'); render(); return; }
+     tkAddTask({ id:mx+1, code:'T'+String(1000000+mx+1), title:title, desc:'', status:'backlog', priority:'medium', assignee: av || tkPeopleInProject(projectId)[0]?.id || '', project:projectId, labels:[], dueDate:'', createDate:new Date().toISOString().slice(0,10) });
     render();
   }, 400);
 }
@@ -839,17 +852,27 @@ function fillSelects() {
   }
   fill(els.tkFormStatus, TK_STATUSES, 'id', 'name');
   fill(els.tkFormPriority, TK_PRIORITIES, 'id', 'name');
-  fill(els.tkFormAssignee, TK_PEOPLE, 'id', 'name');
-  fill(els.tkFormProject, TK_PROJECTS, 'id', 'name');
+  fill(els.tkFormProject, tkProjectsForCurrentUser(), 'id', 'name');
+  refreshFormAssignees();
   if (els.tkBulkAssigneeMenu) {
     els.tkBulkAssigneeMenu.innerHTML = TK_PEOPLE.map(function (p) {
       return '<div class="tk-popover-item" data-assignee="' + p.id + '">' + escapeHtml(p.name) + '</div>';
     }).join('');
   }
 }
+function refreshFormAssignees(preferredId) {
+  var people = tkPeopleInProject(els.tkFormProject.value);
+  var currentId = preferredId || els.tkFormAssignee.value;
+  els.tkFormAssignee.innerHTML = people.map(function (person) {
+    return '<option value="' + escapeHtml(person.id) + '">' + escapeHtml(person.name) + '</option>';
+  }).join('');
+  els.tkFormAssignee.value = people.some(function (person) { return person.id === currentId; }) ? currentId : (people[0]?.id || '');
+}
 
 /* ---------- 新建/编辑弹窗 ---------- */
 function openTaskModal(taskId, parentId) {
+  if (!tkProjectsForCurrentUser().length) { toast('请先加入项目再创建任务', 'warning'); return; }
+  fillSelects();
   state.editingTaskId = null;
   state.editingParentId = parentId || null;
   els.tkModalTitle.textContent = parentId ? '新增子任务' : '新建任务';
@@ -857,16 +880,16 @@ function openTaskModal(taskId, parentId) {
   els.tkFormDesc.value = '';
   els.tkFormStatus.value = 'backlog';
   els.tkFormPriority.value = 'medium';
-  els.tkFormAssignee.value = TK_CURRENT_USER;
-  els.tkFormProject.value = TK_PROJECTS[0].id;
+  els.tkFormProject.value = projectListProjectId || tkProjectsForCurrentUser()[0].id;
+  refreshFormAssignees(tkCurrentUserId());
   els.tkFormDue.value = '';
   els.tkFormLabels.value = '';
   if (parentId) {
     var parent = tkGetTasks().find(function (x) { return x.id === parentId; });
     if (parent) {
       els.tkFormProject.value = parent.project;
+      refreshFormAssignees(parent.assignee);
       els.tkFormPriority.value = parent.priority;
-      els.tkFormAssignee.value = parent.assignee;
     }
   }
   els.tkModalOverlay.classList.remove('hidden');
@@ -879,8 +902,10 @@ function closeTaskModal() {
 function saveTask() {
   var title = els.tkFormTitle.value.trim();
   if (!title) { els.tkFormTitle.focus(); return; }
+  if (!tkProjectsForCurrentUser().some(function (project) { return project.id === els.tkFormProject.value; })) { toast('请先加入项目再创建任务', 'warning'); return; }
   var createdForOpenParent = !state.editingTaskId && state.editingParentId && state.drawerTaskId === state.editingParentId;
   var labels = els.tkFormLabels.value.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+  if (!tkPeopleInProject(els.tkFormProject.value).some(function (person) { return person.id === els.tkFormAssignee.value; })) { toast('请选择该项目成员作为处理人', 'warning'); return; }
   var data = {
     title: title, desc: els.tkFormDesc.value.trim(),
     status: els.tkFormStatus.value, priority: els.tkFormPriority.value,
@@ -908,7 +933,8 @@ var mentionItems = [];
 var mentionIndex = 0;
 
 function createMentionPanel(textarea, query) {
-  var people = TK_PEOPLE.filter(function (p) {
+  var mentionTask = tkGetTasks().find(function (task) { return task.id === state.drawerTaskId; });
+  var people = (mentionTask ? tkPeopleInProject(mentionTask.project) : TK_PEOPLE).filter(function (p) {
     return !query || p.name.toLowerCase().indexOf(query.toLowerCase()) >= 0;
   });
   var agents = TK_AGENTS.filter(function (a) {
@@ -1281,14 +1307,19 @@ function openDrawer(taskId) {
   closeTaskLabelPicker();
   var t = tkGetTasks().find(function (x) { return x.id === taskId; });
   if (!t) return;
-  if (flowAssigneeDraft.taskId !== taskId) flowAssigneeDraft = { taskId: taskId, assigneeId: '' };
+  if (!tkProjectsForCurrentUser().some(function (project) { return project.id === t.project; })) { toast('未加入该项目，无法查看任务', 'warning'); return; }
+  if (flowAssigneeDraft.taskId !== taskId) {
+    var savedAssignee = tkPeopleInProject(t.project).some(function (person) { return person.id === t.flowAssignee; }) ? t.flowAssignee : '';
+    flowAssigneeDraft = { taskId: taskId, assigneeId: savedAssignee };
+  }
   state.drawerTaskId = taskId;
   els.tkDrawer.setAttribute('data-task-id', String(taskId));
   var person = tkGetPerson(t.assignee);
+  var creator = tkGetPerson(t.createdBy);
   var statusOpts = TK_STATUSES.map(function (s) { return { value: s.id, label: s.name }; });
   var priOpts = TK_PRIORITIES.map(function (p) { return { value: p.id, label: p.name }; });
-  var peopleOpts = TK_PEOPLE.map(function (p) { return { value: p.id, label: p.name }; });
-  var projOpts = TK_PROJECTS.map(function (p) { return { value: p.id, label: p.name }; });
+  var peopleOpts = tkPeopleInProject(t.project).map(function (p) { return { value: p.id, label: p.name }; });
+  var projOpts = tkProjectsForCurrentUser().map(function (p) { return { value: p.id, label: p.name }; });
   var moduleOpts = Array.from(new Set(tkGetTasks().filter(function (task) { return task.project === t.project && task.module; }).map(function (task) { return task.module; }))).sort().map(function (name) { return { value:name, label:name }; });
   els.tkDrawerTitle.textContent = t.title;
   els.tkDrawerCode.textContent = '#' + t.code;
@@ -1323,8 +1354,8 @@ function openDrawer(taskId) {
       '</div>' +
       '<div class="tk-drawer-tab-content" data-tab-content="changelog" hidden>' +
         '<div class="tk-drawer-changelog-list">' +
-          '<div class="tk-drawer-changelog-item"><span class="tk-drawer-changelog-time">' + escapeHtml(t.createDate + ' 09:30:00') + '</span><span class="tk-drawer-changelog-user">Alice</span>创建了任务</div>' +
-          '<div class="tk-drawer-changelog-item"><span class="tk-drawer-changelog-time">' + escapeHtml(t.createDate + ' 10:15:30') + '</span><span class="tk-drawer-changelog-user">Alice</span>状态变更为「' + escapeHtml(tkGetStatusName(t.status)) + '」</div>' +
+          '<div class="tk-drawer-changelog-item"><span class="tk-drawer-changelog-time">' + escapeHtml(t.createDate + ' 09:30:00') + '</span><span class="tk-drawer-changelog-user">' + escapeHtml(creator.name) + '</span>创建了任务</div>' +
+          '<div class="tk-drawer-changelog-item"><span class="tk-drawer-changelog-time">' + escapeHtml(t.createDate + ' 10:15:30') + '</span><span class="tk-drawer-changelog-user">' + escapeHtml(creator.name) + '</span>状态变更为「' + escapeHtml(tkGetStatusName(t.status)) + '」</div>' +
         '</div>' +
       '</div>' +
     '</div></div>' +
@@ -1338,7 +1369,7 @@ function openDrawer(taskId) {
         propPicker('截止日期', t.dueDate, null, true) +
         '<div class="tk-prop-row"><span>标签</span>' + renderTaskLabelTrigger(t) + '</div>' +
       '</div>' +
-      '<div class="tk-prop-row"><span>创建者</span><span class="tk-prop-val">' + escapeHtml(person.name) + '</span></div>' +
+      '<div class="tk-prop-row"><span>创建者</span><span class="tk-prop-val">' + escapeHtml(creator.name) + '</span></div>' +
       '<div class="tk-prop-row"><span>创建时间</span><span class="tk-prop-val">' + escapeHtml(t.createdAt || t.createDate) + '</span></div>' +
       '<div class="tk-prop-row"><span>更新时间</span><span class="tk-prop-val">' + escapeHtml(t.updatedAt || t.createdAt || t.createDate) + '</span></div>' +
     '</div>';
@@ -1431,8 +1462,8 @@ function filterOptionsFor(section) {
   ].map(function (o) { return { value:o[0], label:o[1], count:tasks.filter(function (t) { return t.status === o[0]; }).length }; });
   if (section === 'priority') return TK_PRIORITIES.map(function (p) { return { value:p.id, label:p.name, count:tasks.filter(function (t) { return t.priority === p.id; }).length }; });
   if (section === 'assignee') return TK_PEOPLE.map(function (p) { return { value:p.id, label:p.name, count:tasks.filter(function (t) { return t.assignee === p.id; }).length }; });
-  if (section === 'creator') return [{ value:TK_CURRENT_USER, label:tkGetPerson(TK_CURRENT_USER).name, count:tasks.filter(function (t) { return (t.createdBy || TK_CURRENT_USER) === TK_CURRENT_USER; }).length }];
-  if (section === 'project') return TK_PROJECTS.map(function (p) { return { value:p.id, label:p.name, count:tasks.filter(function (t) { return t.project === p.id; }).length }; });
+  if (section === 'creator') return TK_PEOPLE.map(function (p) { return { value:p.id, label:p.name, count:tasks.filter(function (t) { return t.createdBy === p.id; }).length }; });
+  if (section === 'project') return tkProjectsForCurrentUser().map(function (p) { return { value:p.id, label:p.name, count:tasks.filter(function (t) { return t.project === p.id; }).length }; });
   if (section === 'projectStatus') return [{ value:'active', label:'进行中', count:tasks.filter(function (t) { return !!t.project; }).length }];
   if (section === 'label') return TK_LABELS.map(function (l) { return { value:l, label:l, count:tasks.filter(function (t) { return (t.labels || []).includes(l); }).length }; });
   return [];
@@ -1759,6 +1790,7 @@ function bindEvents() {
   els.tkModalClose.addEventListener('click', closeTaskModal);
   els.tkModalCancel.addEventListener('click', closeTaskModal);
   els.tkModalSave.addEventListener('click', saveTask);
+  els.tkFormProject.addEventListener('change', function () { refreshFormAssignees(tkCurrentUserId()); });
   els.tkModalOverlay.addEventListener('click', function (e) { if (e.target === this) closeTaskModal(); });
 
   /* 详情面板 */
@@ -1924,7 +1956,12 @@ function bindEvents() {
           var prop = (propPickerOptions[menu.getAttribute('data-prop')] || {}).key;
           var val = item.getAttribute('data-value');
           if (state.drawerTaskId && prop && val) {
-            tkUpdateTask(state.drawerTaskId, (function (p) { var o = {}; o[p] = val; return o; })(prop));
+            var patch = {}; patch[prop] = val;
+            if (prop === 'project') {
+              var task = tkGetTasks().find(function (row) { return row.id === state.drawerTaskId; });
+              if (task && !tkPeopleInProject(val).some(function (person) { return person.id === task.assignee; })) patch.assignee = tkPeopleInProject(val)[0]?.id || '';
+            }
+            tkUpdateTask(state.drawerTaskId, patch);
             render();
             openDrawer(state.drawerTaskId);
           }
@@ -1977,7 +2014,8 @@ function bindEvents() {
         return;
       }
       var fprop = flowField.getAttribute('data-flow-prop');
-      var fopts = fprop === 'status' ? TK_STATUSES : TK_PEOPLE;
+      var flowTask = tkGetTasks().find(function (task) { return task.id === state.drawerTaskId; });
+      var fopts = fprop === 'status' ? TK_STATUSES : tkPeopleInProject(flowTask?.project);
       var fieldMenu = document.createElement('div');
       fieldMenu.className = 'tk-flow-field-menu show';
       fopts.forEach(function (o) {
@@ -1992,6 +2030,7 @@ function bindEvents() {
           if (state.drawerTaskId) {
             if (fprop === 'assignee') {
               flowAssigneeDraft = { taskId: state.drawerTaskId, assigneeId: o.id };
+              tkUpdateTask(state.drawerTaskId, { flowAssignee: o.id });
               flowField.querySelector('.tk-flow-field-text').value = o.name;
               flowField.classList.remove('is-placeholder');
             } else {
@@ -2057,7 +2096,7 @@ function bindEvents() {
           var commentInput = els.tkDrawerBody.querySelector('.tk-drawer-comment-input textarea');
           var commentText = commentInput ? commentInput.value.trim() : '';
           var newComment = {
-            authorId: TK_CURRENT_USER,
+            authorId: tkCurrentUserId(),
             createdAt: taskCommentTimestamp(),
             status: flowTask.status,
             assignee: flowAssigneeDraft.assigneeId,
@@ -2065,6 +2104,7 @@ function bindEvents() {
           };
           tkUpdateTask(state.drawerTaskId, {
             assignee: flowAssigneeDraft.assigneeId,
+            flowAssignee: '',
             comments: (flowTask.comments || []).concat(newComment),
           });
           if (commentInput) commentInput.value = '';
@@ -2239,7 +2279,7 @@ function bindEvents() {
       render();
       return;
     }
-    var tab = e.target.closest('.tk-view-tab');
+    var tab = e.target.closest('.list-page-tab');
     if (tab) {
       var viewId = tab.getAttribute('data-view-id');
       state.activeViewId = viewId;
@@ -2263,6 +2303,9 @@ function bindEvents() {
       updateFilterButton();
       render();
     }
+  });
+  els.tkViewTabs.addEventListener('keydown', function (e) {
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.closest('.list-page-tab')) { e.preventDefault(); e.target.click(); }
   });
 
   /* 保存视图弹窗 */
@@ -2303,7 +2346,15 @@ function bindEvents() {
       e.stopPropagation();
       var action = this.getAttribute('data-bulk');
       if (action === 'status') { showPopover(els.tkBulkStatusMenu, this); return; }
-      if (action === 'assignee') { showPopover(els.tkBulkAssigneeMenu, this); return; }
+      if (action === 'assignee') {
+        var selectedTasks = tkGetTasks().filter(function (task) { return state.selectedIds.has(task.id); });
+        var candidates = selectedTasks.length ? tkPeopleInProject(selectedTasks[0].project).filter(function (person) {
+          return selectedTasks.every(function (task) { return tkPeopleInProject(task.project).some(function (member) { return member.id === person.id; }); });
+        }) : [];
+        els.tkBulkAssigneeMenu.innerHTML = candidates.map(function (person) { return '<div class="tk-popover-item" data-assignee="' + person.id + '">' + escapeHtml(person.name) + '</div>'; }).join('') || '<div class="tk-popover-item">所选任务没有共同的项目成员</div>';
+        showPopover(els.tkBulkAssigneeMenu, this);
+        return;
+      }
       if (action === 'delete') {
         state.selectedIds.forEach(function (id) { tkDeleteTask(id); });
         state.selectedIds.clear();
@@ -2328,7 +2379,7 @@ function bindEvents() {
     var item = e.target.closest('[data-assignee]');
     if (item) {
       var assignee = item.getAttribute('data-assignee');
-      state.selectedIds.forEach(function (id) { tkUpdateTask(id, { assignee: assignee }); });
+      state.selectedIds.forEach(function (id) { var task = tkGetTasks().find(function (row) { return row.id === id; }); if (task && tkPeopleInProject(task.project).some(function (person) { return person.id === assignee; })) tkUpdateTask(id, { assignee: assignee }); });
       hidePopover();
       render();
     }
@@ -2397,8 +2448,8 @@ function bindEvents() {
       openTaskModal(null);
       if (state.groupBy === 'status') els.tkFormStatus.value = groupKey;
       else if (state.groupBy === 'priority') els.tkFormPriority.value = groupKey;
-      else if (state.groupBy === 'assignee' && groupKey !== 'unassigned') els.tkFormAssignee.value = groupKey;
-      else if (state.groupBy === 'project' && groupKey !== 'none') els.tkFormProject.value = groupKey;
+      else if (state.groupBy === 'assignee' && groupKey !== 'unassigned') { var memberProject = tkProjectsForCurrentUser().find(function (project) { return tkPeopleInProject(project.id).some(function (person) { return person.id === groupKey; }); }); if (memberProject) { els.tkFormProject.value = memberProject.id; refreshFormAssignees(groupKey); } }
+      else if (state.groupBy === 'project' && groupKey !== 'none') { els.tkFormProject.value = groupKey; refreshFormAssignees(); }
       return;
     }
     var moreBtnB = e.target.closest('[data-card-more]');
@@ -2446,7 +2497,7 @@ function bindEvents() {
     if (inlineCreateRow && inlineCreateRow.querySelector('#tkInlineCreateBtn')) {
       if (state.viewMode === 'split') { openTaskModal(null); return; }
       inlineCreateRow.classList.add('is-editing');
-      inlineCreateRow.innerHTML = '<td colspan="' + visibleListColumnCount() + '"><div class="tk-inline-create-form"><input type="text" class="tk-inline-input" id="tkInlineTitle" placeholder="输入任务标题"><div class="tk-inline-dropdown" data-value="" id="tkInlineAssigneeWrap"><div class="tk-inline-select is-placeholder" id="tkInlineAssigneeBtn"><input type="text" id="tkInlineAssigneeInput" placeholder="处理人" aria-label="处理人" role="combobox" aria-expanded="false" autocomplete="off"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div><div class="tk-inline-dropdown-menu" id="tkInlineAssigneeMenu" hidden>' + TK_PEOPLE.map(function(p){return '<div class="tk-inline-dropdown-item" data-assignee="'+p.id+'">'+p.name+'</div>';}).join('') + '</div></div><button class="tk-inline-save" id="tkInlineSave">确定</button><button class="tk-inline-cancel" id="tkInlineCancel">取消</button></div></td>';
+      inlineCreateRow.innerHTML = '<td colspan="' + visibleListColumnCount() + '"><div class="tk-inline-create-form"><input type="text" class="tk-inline-input" id="tkInlineTitle" placeholder="输入任务标题"><div class="tk-inline-dropdown" data-value="" id="tkInlineAssigneeWrap"><div class="tk-inline-select is-placeholder" id="tkInlineAssigneeBtn"><input type="text" id="tkInlineAssigneeInput" placeholder="处理人" aria-label="处理人" role="combobox" aria-expanded="false" autocomplete="off"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div><div class="tk-inline-dropdown-menu" id="tkInlineAssigneeMenu" hidden>' + tkPeopleInProject(projectListProjectId || tkProjectsForCurrentUser()[0]?.id).map(function(p){return '<div class="tk-inline-dropdown-item" data-assignee="'+p.id+'">'+p.name+'</div>';}).join('') + '</div></div><button class="tk-inline-save" id="tkInlineSave">确定</button><button class="tk-inline-cancel" id="tkInlineCancel">取消</button></div></td>';
       setTimeout(function(){ var i=els.tkListBody.querySelector('#tkInlineTitle'); if(i) i.focus(); },0);
       return;
     }
@@ -2663,6 +2714,7 @@ function initColumnResize() {
 /* ---------- 初始化 ---------- */
 export function initTasksV2() {
   restoreTaskLabelCatalog();
+  tkSyncPeople();
   cacheEls();
   try { taskStartLegacy = localStorage.getItem(TASK_START_LEGACY_KEY) === '1'; } catch (e) { taskStartLegacy = false; }
   renderTaskStartAction();

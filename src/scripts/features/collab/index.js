@@ -3,7 +3,7 @@ import { initNewTask } from './new-task.js';
 import { initTaskChat } from './task-chat.js';
 import { $ } from '../../core/dom.js';
 import { cvLoadSavedTasks, cvOpenConversation, cvSendChatMessage } from './chat.js';
-import { cvEnsureProjectRoleDemoData, cvInjectCardActions, cvRenderReviewStats, cvRenderReviews, cvRenderTaskStats, cvRenderTasks, cvRestorePersons } from './data.js';
+import { cvEnsureCurrentUserProjectDemoData, cvEnsureProjectRoleDemoData, cvInjectCardActions, cvRenderReviewStats, cvRenderReviews, cvRenderTaskStats, cvRenderTasks, cvRestorePersons } from './data.js';
 import { cvMigrateProjectSquads, cvRestoreSquads } from './squads.js';
 import { cvClosePersonEdit, cvOpenPersonNew, cvRenderPermTable, cvSavePersonEdit, initCollabPersons } from './persons.js';
 import { cvCloseFeatureEdit, cvCloseManualSplit, cvCloseProjectSplit, cvConfirmManualSplit, cvConfirmProjectSplit, cvOpenManualSplit, cvRenderProjectDetail, cvRenderProjectList, cvResetProjectListState, cvSaveFeatureEdit, initCollabProjectView } from './project-view.js';
@@ -31,6 +31,7 @@ function cvInit(){
   cvRestoreSquads();
   cvRestorePersons();
   cvEnsureProjectRoleDemoData();
+  cvEnsureCurrentUserProjectDemoData();
   cvMigrateProjectSquads();
   cvRenderTaskStats(); cvRenderTasks();
   cvRenderReviewStats(); cvRenderReviews();
@@ -39,7 +40,6 @@ function cvInit(){
   cvRenderWsMenu(); cvRenderProjMenu(); cvUpdateCounts();
 }
 var cvExpertSearch=$('#cvExpertSearch');
-var cvNewExpertBtn=$('#cvNewExpertBtn');
 var cvExpertSections=$('#cvExpertSections');
 
 export function initCollab() {
@@ -49,11 +49,9 @@ export function initCollab() {
   initCollabProjectView();
   initCollabPersons();
   if(cvExpertSearch) cvExpertSearch.addEventListener('input',function(){ set_cvExpertKw(this.value); cvRenderExperts(); });
-  if(cvNewExpertBtn) cvNewExpertBtn.addEventListener('click',function(){ openExpertEditor(null) });
   if(cvExpertSections) cvExpertSections.addEventListener('click',function(e){
     var call=e.target.closest('[data-cv-call]');
     if(call){ summon('expert',call.getAttribute('data-cv-call')); return; }
-    if(e.target.closest('[data-cv-new-expert]')){ openExpertEditor(null); return; }
     var card=e.target.closest('[data-cv-expert]');
     if(card){
       var eid=card.getAttribute('data-cv-expert'), ex=EX[eid];

@@ -1,0 +1,18 @@
+/* 任务管理与项目列表共用的标题和视图页签。页面内容与交互各自维护。 */
+.list-page-header{display:flex;align-items:center;justify-content:space-between;min-height:60px;box-sizing:border-box;padding:16px 24px 12px;flex-shrink:0}
+.list-page-heading{display:flex;align-items:center;gap:12px;min-width:0}
+.list-page-header h2{min-width:0;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);font-size:18px;font-weight:600;line-height:32px}
+.list-page-count{margin-left:8px;color:var(--text-soft);font-size:13px;font-weight:400}
+.list-page-actions{display:flex;align-items:center;gap:8px;flex:none}
+.list-page-description{max-width:min(38vw,380px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-secondary);font-size:12px}
+@media(max-width:900px){.list-page-description{display:none}}
+.list-page-view-bar{display:flex;align-items:center;gap:4px;height:38px;box-sizing:border-box;padding:0 24px;flex-shrink:0}
+.list-page-tabs{display:flex;align-items:center;gap:4px;overflow:hidden;flex:0 1 auto}
+.list-page-tab{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--text);font:inherit;font-size:13px;cursor:pointer;white-space:nowrap;transition:background .15s,border-color .15s}
+.list-page-tab:hover{background:var(--hover)}
+.list-page-tab.active{border-color:var(--border);background:var(--fill-1);font-weight:600}
+.list-page-tab:focus-visible{outline:2px solid var(--border-focus);outline-offset:2px}
+.list-page-tab-name{max-width:120px;overflow:hidden;text-overflow:ellipsis}
+.list-page-tab-remove{display:flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:3px;opacity:0;transition:opacity .15s}
+.list-page-tab:hover .list-page-tab-remove,.list-page-tab:focus-within .list-page-tab-remove{opacity:.5}
+.list-page-tab .list-page-tab-remove:hover{opacity:1;background:var(--active)}

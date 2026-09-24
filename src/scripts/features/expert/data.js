@@ -177,7 +177,7 @@ function rebuildExperts(){
   EX={}; EXPERTS.forEach(function(e){EX[e.id]=e});
 }
 
-/* 可选头像：复用内置的一套图形，创建专家时挑一个 */
+/* 专家头像：复用内置的一套图形 */
 var AV_KEYS=['lead','pm','arch','eng','qa','cr','sec','ana','fe','ux','form','flow','rpt','plug','api'];
 var WORK_MODES=['分析','设计','实现','集成','评审','验证','恢复'];
 

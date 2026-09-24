@@ -62,17 +62,10 @@ function renderExpertGrid(){
         +(e.modes.length>3?'<span class="x-mode x-mode-more">+'+(e.modes.length-3)+'</span>':'')+'</div></div>';
     }).join('');
   }
-  if(!kw) html += expertTab==='team'
-    ? '<button type="button" class="app-card x-new-card" data-new-team><span class="x-new-ic">＋</span><span>新建专家团</span>'
-      +'<span class="x-new-sub">从专家库里挑几个人，定好交付强度</span></button>'
-    : '<button type="button" class="app-card x-new-card" data-new-expert><span class="x-new-ic">＋</span><span>创建专家</span>'
-      +'<span class="x-new-sub">手填表单，或一句话交给 expert-manager</span></button>';
   expertGrid.innerHTML = html || '<div class="x-empty">没有匹配的结果</div>';
   var tc=$('#teamTabCount'), ec=$('#expertTabCount');
   if(tc) tc.textContent=TEAMS.length;
   if(ec) ec.textContent=EXPERTS.length;
-  var lb=$('#newExpertEntryLabel');
-  if(lb) lb.textContent = expertTab==='team' ? '新建专家团' : '创建专家';
 }
 var expertSearchInput=$('#expertSearchInput');
 
@@ -142,8 +135,6 @@ export function initExpertLibrary() {
     if(ct){ summon('team',ct.getAttribute('data-call-team')); return; }
     var ce=e.target.closest('[data-call-expert]');
     if(ce){ summon('expert',ce.getAttribute('data-call-expert')); return; }
-    if(e.target.closest('[data-new-team]')){ openTeamModal(null); return; }
-    if(e.target.closest('[data-new-expert]')){ openExpertEditor(null); return; }
     var tc=e.target.closest('[data-team]'); if(tc){ openTeamModal(tc.getAttribute('data-team')); return; }
     var ec=e.target.closest('[data-expert]'); if(ec){ openExpertModal(ec.getAttribute('data-expert')); return; }
   });
