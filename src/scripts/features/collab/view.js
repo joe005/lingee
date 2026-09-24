@@ -43,7 +43,7 @@ var cvPendingTab, cvPendingProj;   /* 由上面的 URL 恢复逻辑先行赋值�
 /* 一级页签「设置」带二级子页签；cvSubState 记录当前停留的子视图 */
 var cvSubState={config:'config'};
 var CV_SUBS={
-  config:[['config','工作区设置'],['config-perm','人员管理']]
+  config:[['config','工作区设置'],['config-perm','人员与权限']]
 };
 function cvPrimaryOf(name){
   if(name==='config-perm') return 'config';
@@ -61,7 +61,7 @@ function cvRenderSubNav(primary,active){
 function cvToast(msg,type){ toast(msg, type==='error'?'error':undefined); }
 function cvShowPanel(name){
   var primary=cvPrimaryOf(name);
-  $$('#view-collab .cv-panel').forEach(function(p){ p.classList.toggle('active', p.id==='cv-'+name); });
+  $$('#view-collab .cv-panel').forEach(function(p){ if(p.classList.contains('pj-embedded-task-board'))return; p.classList.toggle('active', p.id==='cv-'+name); });
   $$('#cvTabNav .tab-nav-item').forEach(function(t){
     t.classList.toggle('tab-nav-item--active', t.getAttribute('data-cvview')===primary);
   });
@@ -72,8 +72,9 @@ function cvSwitchSub(name){
 }
 function cvSwitchView(name){
   if(name==='config-proj') name='config';   /* 旧链接兼容：项目设置已并入项目管理 */
-  if(name==='config-perm') name='config';   /* 人员管理已并入设置左导航 */
+  if(name==='config-perm') name='config';   /* 人员与权限已并入设置左导航 */
   if(name==='config' && getRole()!=='owner') name='tasks';   /* 设置仅所有者可进 */
+  if(name!=='members'&&window.cvRestoreProjectTaskBoard)window.cvRestoreProjectTaskBoard();
   cvLastTab=(name==='chat'||name==='review-detail')?cvLastTab:name;
   cvShowPanel(name);
   if(name==='teams') renderExpertGrid();
