@@ -19,6 +19,14 @@ var CV_PROJECTS=[
   {id:'supply',name:'供应链协同平台',desc:'供应商评级、订单协同与交付预测',goal:'搭建供应商协同与评级平台，支持订单协同、资质管理与交付预测',dot:'green',defaultTeam:'general-app-dev',status:'planned',priority:'低',owner:'赵琳',repo:'',start:'2026-10-15',end:'2027-03-31',milestones:[{name:'方案设计',date:'2026-11-15'},{name:'门户对接',date:'2027-01-31'},{name:'评级模型上线',date:'2027-03-31'}],members:['p01','p03','p04','p13','p14','p15','p16','p18','p20','p21'],workspace:'ws-build'}
 ];
 
+/* 项目范围演示：吴宏超负责一项，并参与两项。 */
+var CV_ROLE_DEMO_PROJECTS=[
+  {id:'demo-contract',name:'智能合同工作台',desc:'合同起草、审批和归档流程优化',goal:'缩短合同处理周期，统一审批与归档记录',dot:'blue',defaultTeam:'general-app-dev',status:'in_progress',priority:'中',owner:'吴宏超',repo:'',start:'2026-09-01',end:'2026-12-31',members:['p22','p04','p05'],workspace:'ws-app'},
+  {id:'demo-inventory',name:'库存协同门户',desc:'仓储、采购和业务团队共享库存动态',goal:'统一库存查询和补货协作',dot:'orange',defaultTeam:'cosmic-app-dev',status:'planned',priority:'中',owner:'李工',repo:'',start:'2026-09-15',end:'2027-01-31',members:['p02','p22','p07'],workspace:'ws-app'},
+  {id:'demo-quality',name:'质量巡检平台',desc:'巡检计划、问题跟踪和整改闭环',goal:'让质量问题从发现到处理可追踪',dot:'green',defaultTeam:'general-app-dev',status:'in_progress',priority:'高',owner:'赵琳',repo:'',start:'2026-08-20',end:'2026-12-15',members:['p04','p22','p05'],workspace:'ws-app'}
+];
+CV_PROJECTS.push(...CV_ROLE_DEMO_PROJECTS.map(function(project){return {...project,members:project.members.slice()};}));
+
 /* 工作区：顶层的组织单元，项目归属工作区 */
 var CV_WORKSPACES=[
   {id:'ws-build',name:'灵基Build'},
@@ -153,10 +161,10 @@ var CV_REVIEWS = [
 
 /* 人员基础资料（全局主数据，独立维护）：项目/团队通过 id（pid）引用，不在人员身上挂项目 */
 var CV_MEMBERS = [
-  {id:'p01',name:'张工',email:'zhang***@kingdee.com',dept:'研发部',roles:[{tag:'member-tag--dev',text:'开发'},{tag:'member-tag--arch',text:'架构'}],status:'available',source:'直接成员',isMe:true},
+  {id:'p01',name:'张工',email:'zhang***@kingdee.com',dept:'研发部',workspaceRole:'system_admin',roles:[{tag:'member-tag--dev',text:'开发'},{tag:'member-tag--arch',text:'架构'}],status:'available',source:'直接成员',isMe:true},
   {id:'p02',name:'李工',email:'li***@kingdee.com',dept:'研发部',roles:[{tag:'member-tag--dev',text:'开发'}],status:'available',source:'直接成员'},
   {id:'p03',name:'王工',email:'wang***@kingdee.com',dept:'研发部',roles:[{tag:'member-tag--dev',text:'开发'},{tag:'member-tag--arch',text:'架构'}],status:'busy',source:'直接成员'},
-  {id:'p04',name:'赵琳',email:'zha***@kingdee.com',dept:'产品部',roles:[{tag:'member-tag--pm',text:'需求'},{tag:'member-tag--pm',text:'产品'}],status:'available',source:'继承自 灵基AIOS'},
+  {id:'p04',name:'赵琳',email:'zha***@kingdee.com',dept:'产品部',workspaceRole:'project_manager',roles:[{tag:'member-tag--pm',text:'需求'},{tag:'member-tag--pm',text:'产品'}],status:'available',source:'继承自 灵基AIOS'},
   {id:'p05',name:'陈晨',email:'chen***@kingdee.com',dept:'测试部',roles:[{tag:'member-tag--qa',text:'测试'}],status:'available',source:'直接成员'},
   {id:'p06',name:'刘洋',email:'liu***@kingdee.com',dept:'测试部',roles:[{tag:'member-tag--qa',text:'测试'}],status:'busy',source:'直接成员'},
   {id:'p07',name:'周杰',email:'zhou***@kingdee.com',dept:'运维部',roles:[{tag:'member-tag--ops',text:'运维'}],status:'available',source:'直接成员'},
@@ -173,7 +181,8 @@ var CV_MEMBERS = [
   {id:'p18',name:'罗静',email:'luo***@kingdee.com',dept:'测试部',roles:[{tag:'member-tag--qa',text:'测试'}],status:'busy',source:'直接成员'},
   {id:'p19',name:'杨帆',email:'yang***@kingdee.com',dept:'运维部',roles:[{tag:'member-tag--ops',text:'运维'}],status:'available',source:'直接成员'},
   {id:'p20',name:'唐辉',email:'tang***@kingdee.com',dept:'运维部',roles:[{tag:'member-tag--ops',text:'运维'}],status:'available',source:'继承自 灵基AIOS'},
-  {id:'p21',name:'梁平',email:'liang***@kingdee.com',dept:'产品部',roles:[{tag:'member-tag--pm',text:'产品'},{tag:'member-tag--owner',text:'所有者'}],status:'available',source:'直接成员'}
+  {id:'p21',name:'梁平',email:'liang***@kingdee.com',dept:'产品部',roles:[{tag:'member-tag--pm',text:'产品'},{tag:'member-tag--owner',text:'所有者'}],status:'available',source:'直接成员'},
+  {id:'p22',name:'吴宏超',email:'',dept:'产品部',workspaceRole:'system_admin',roles:[],status:'available',source:'演示人员'}
 ];
 
 /* ---------- 人员基础资料：引用与查询 ---------- */
@@ -206,7 +215,7 @@ function cvRestorePersons(){
   try{
     var raw=localStorage.getItem(CV_PERSON_STORE_KEY); if(!raw) return;
     var arr=JSON.parse(raw);
-    if(Array.isArray(arr)&&arr.length){ CV_MEMBERS.length=0; arr.forEach(function(m){CV_MEMBERS.push(m);}); }
+    if(Array.isArray(arr)&&arr.length){ CV_MEMBERS.length=0; arr.forEach(function(m){if(!m.workspaceRole&&m.id==='p01')m.workspaceRole='system_admin';if(!m.workspaceRole&&m.id==='p04')m.workspaceRole='project_manager';CV_MEMBERS.push(m);}); }
   }catch(e){}
 }
 
@@ -221,6 +230,32 @@ function cvRestoreProjects(){
     var arr=JSON.parse(raw);
     if(Array.isArray(arr)&&arr.length){ CV_PROJECTS.length=0; arr.forEach(function(p){CV_PROJECTS.push(p);}); }
   }catch(e){}
+}
+function cvEnsureProjectRoleDemoData(){
+  var key='lingee-collab-project-role-demos-v1';
+  try{if(localStorage.getItem(key))return;}catch(e){}
+  var person=CV_MEMBERS.find(function(row){return row.name==='吴宏超';});
+  if(!person){
+    var personId='p22';
+    if(CV_MEMBERS.some(function(row){return row.id===personId;}))personId='p-demo-wuhc';
+    person={id:personId,name:'吴宏超',email:'',dept:'产品部',workspaceRole:'system_admin',roles:[],status:'available',source:'演示人员'};
+    CV_MEMBERS.push(person);cvPersistPersons();
+  }
+  var changed=false;
+  CV_ROLE_DEMO_PROJECTS.forEach(function(sample){
+    var existing=CV_PROJECTS.find(function(project){return project.id===sample.id;});
+    if(existing){
+      if(person.id!=='p22'&&Array.isArray(existing.members)&&existing.members.includes('p22')){
+        existing.members=existing.members.map(function(id){return id==='p22'?person.id:id;});
+        changed=true;
+      }
+      return;
+    }
+    CV_PROJECTS.push({...sample,members:sample.members.map(function(id){return id==='p22'?person.id:id;})});
+    changed=true;
+  });
+  if(changed)cvPersistProjects();
+  try{localStorage.setItem(key,'1');}catch(e){}
 }
 
 var CV_WORKFLOW = ['需求分析','方案设计','开发实现','代码审查','测试验证','部署发布'];
@@ -450,4 +485,4 @@ function cvSeedTaskDetails(){
   });
 }
 
-export { CV_MEMBERS, CV_PROJECTS, CV_ARTIFACTS, CV_REVIEWS, CV_REVIEW_ARTIFACTS, CV_REVIEW_COMMENTS, CV_TASKS, CV_THIRD_PARTY_MEMBERS, CV_WORKFLOW, CV_WORKFLOW_ROLES, CV_WORKSPACES, cvConfigOverride, cvCurrentUserName, cvInProject, cvInjectCardActions, cvIsMe, cvPeopleInProject, cvPersistPersons, cvPersistProjects, cvPersonById, cvPersonName, cvProject, cvProjectById, cvProjectInWorkspace, cvProjectName, cvProjectPersons, cvRenderReviewStats, cvRenderReviews, cvRenderTaskStats, cvRenderTasks, cvRestorePersons, cvRestoreProjects, cvSeedTaskDetails, cvWorkspace, cvWorkspaceById, cvWorkspaceName };
+export { CV_MEMBERS, CV_PROJECTS, CV_ARTIFACTS, CV_REVIEWS, CV_REVIEW_ARTIFACTS, CV_REVIEW_COMMENTS, CV_TASKS, CV_THIRD_PARTY_MEMBERS, CV_WORKFLOW, CV_WORKFLOW_ROLES, CV_WORKSPACES, cvConfigOverride, cvCurrentUserName, cvEnsureProjectRoleDemoData, cvInProject, cvInjectCardActions, cvIsMe, cvPeopleInProject, cvPersistPersons, cvPersistProjects, cvPersonById, cvPersonName, cvProject, cvProjectById, cvProjectInWorkspace, cvProjectName, cvProjectPersons, cvRenderReviewStats, cvRenderReviews, cvRenderTaskStats, cvRenderTasks, cvRestorePersons, cvRestoreProjects, cvSeedTaskDetails, cvWorkspace, cvWorkspaceById, cvWorkspaceName };

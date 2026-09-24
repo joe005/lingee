@@ -4,13 +4,14 @@
     <div class="cv-head" id="cv-project-head">
       <div>
         <div class="scroll-title">项目<span class="cv-title-count" id="cv-proj-count">0</span></div>
-        <div class="scroll-desc">维护项目成员、专家团与任务进度</div>
+        <div class="scroll-desc">项目由项目经理负责，成员从工作区人员中添加</div>
       </div>
       <div class="cv-head-right">
-        <button class="sync-btn" onclick="cvOpenProjNew()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>新建项目</button>
+        <button class="sync-btn" data-perm="project-create" onclick="cvOpenProjNew()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>新建项目</button>
       </div>
     </div>
     <div class="pj-list-toolbar" id="cv-project-toolbar">
+      <div class="pj-scope" role="group" aria-label="项目范围"><button type="button" data-pj-scope="all" aria-pressed="true">全部项目</button><button type="button" data-pj-scope="owned" aria-pressed="false">我负责的</button><button type="button" data-pj-scope="joined" aria-pressed="false">我参与的</button></div>
       <div class="search-wrap pj-project-search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input id="cvProjectSearch" name="project-search" type="search" autocomplete="new-password" data-1p-ignore data-lpignore="true" placeholder="搜索项目" /></div>
       <div class="pj-filter-selects" aria-label="项目过滤条件">
         <select id="cvProjectStatusFilter" aria-label="按状态筛选项目"><option value="">全部状态</option><option value="planned">规划中</option><option value="in_progress">进行中</option><option value="paused">已暂停</option><option value="completed">已完成</option><option value="cancelled">已取消</option></select>

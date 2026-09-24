@@ -319,6 +319,8 @@
 #view-collab #cv-proj-detail .pj-invite-title>span,#view-collab #cv-proj-detail .pj-share-create-title>span{width:18px;text-align:center;font-size:19px;line-height:1;color:var(--text-secondary)}
 #view-collab #cv-proj-detail .pj-invite-fields{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:12px}
 #view-collab #cv-proj-detail .pj-invite-fields input{box-sizing:border-box;width:100%;height:38px;padding:0 12px;border:1px solid var(--border-hover);border-radius:7px;background:#fff;color:var(--text);font:inherit;font-size:12.5px}
+#view-collab #cv-proj-detail .pj-invite-fields select{box-sizing:border-box;width:100%;min-width:0;height:38px;padding:0 12px;border:1px solid var(--border-hover);border-radius:7px;background:#fff;color:var(--text);font:inherit;font-size:12.5px}
+#view-collab #cv-proj-detail .pj-member-picker-empty{margin:9px 0 0;color:var(--text-soft);font-size:11.5px}
 #view-collab #cv-proj-detail .pj-invite-fields button,#view-collab #cv-proj-detail .pj-share-create-fields button{min-width:78px;height:36px;border:0;border-radius:7px;background:var(--text-secondary);color:#fff;font:inherit;font-size:12px;cursor:pointer}
 #view-collab #cv-proj-detail .pj-invite-fields button:hover,#view-collab #cv-proj-detail .pj-share-create-fields button:hover{background:var(--text)}
 #view-collab #cv-proj-detail .pj-invite-fields button:disabled{background:var(--text-soft);opacity:.72;cursor:not-allowed}

@@ -4,9 +4,9 @@ import { xesc } from '../expert/data.js';
 import { cvUpdateCounts } from './projects.js';
 import { tbSave, tbTeamStages } from './tb-core.js';
 import { renderTaskBoard } from './task-board.js';
-/* 新建任务弹窗：手动创建 / 通过智能体创建
+/* 新建任务弹窗：手动创建 / 一句话草拟。
    手动：关联项目 → 继承项目专家团 → 直接选人。
-   智能体：只描述业务目标，项目 / 负责人自动推断；WorkItem 在运行期生成。
+   一句话：本地规则整理可编辑草稿，创建前由用户确认项目、执行人与内容。
    从 task-board.js 拆出，副作用集中在 initNewTask()。 */
 
 
@@ -22,6 +22,7 @@ let ntExecMode = '单人执行';
 let ntStagePlan = [];
 let ntParentTaskId = '';
 let ntParentIsGroup = false;
+let ntDraftReady = false;
 
 const NT_STATUS_LABELS = { '待规划': '待规划', '待办': '待办', '进行中': '进行中', '审核中': '审核中', '已完成': '已完成', '已阻塞': '已阻塞', '已取消': '已取消' };
 
@@ -118,7 +119,7 @@ function ntRenderPeople() {
 }
 /* 多人协作：按专家团覆盖的阶段逐一指定执行人，每人只负责并启动自己那一段。 */
 function ntStagesFieldVisible() {
-  return ntMode === 'manual' && ntExecMode === '多人协作';
+  return ntExecMode === '多人协作';
 }
 function ntSetExecMode(m) {
   ntExecMode = m === '多人协作' ? '多人协作' : '单人执行';
@@ -172,11 +173,63 @@ function ntOnProjectChange() {
   ntRenderTeam(); ntRenderPeople(); ntRenderGroups();
   if (ntExecMode === '多人协作') ntRenderStages();
 }
-/* 智能体只推断业务归属，运行阶段由 Runtime Harness 管理。 */
+/* 原型仅根据项目名称匹配归属，不调用模型服务。 */
 function ntInferProject(prompt) {
   const p = prompt || '';
   for (const proj of CV_PROJECTS) { if (p.indexOf(proj.name) >= 0) return proj.id; }
   return ntProjectId || cvProject || (CV_PROJECTS[0] && CV_PROJECTS[0].id);
+}
+function ntAppendDraftMessage(kind, text) {
+  const log = document.getElementById('cv-nt-agent-messages');
+  if (!log) return;
+  const item = document.createElement('p');
+  item.className = 'nt-agent-message nt-agent-message--' + kind;
+  item.textContent = text;
+  log.appendChild(item);
+  log.scrollTop = log.scrollHeight;
+}
+function ntBuildDraft(message) {
+  const first = message.split(/[。！？\n]/)[0].replace(/^(?:请帮我|帮我|我想|我要|我希望)\s*/, '').replace(/^(?:做一个|开发一个|实现一个)/, '实现 ');
+  if (/CRM/i.test(message) && /客户管理/.test(message)) {
+    return {
+      title: '实现 CRM 客户管理',
+      desc: '实现 CRM 系统的客户管理模块，建议覆盖以下功能（请确认范围）：\n\n1. 客户信息：创建、编辑、查询与详情查看\n2. 联系人：为客户维护姓名、职位、电话和邮箱\n3. 跟进记录：记录沟通内容、时间和方式\n4. 客户标签：按标签筛选与分组\n5. 数据导入导出：支持 Excel/CSV 批量导入和导出',
+      question: '草稿列出了客户信息、联系人、跟进记录、标签和导入导出。这些都要放进第一期吗？'
+    };
+  }
+  return { title: (first || message).slice(0, 120), desc: message, question: '已整理到左侧草稿。还需要哪些功能或完成标准？可以继续补充，也可以直接确认创建。' };
+}
+function ntSendDraftMessage() {
+  const input = document.getElementById('cv-nt-prompt');
+  const message = (input?.value || '').trim();
+  if (!message) { input?.focus(); return false; }
+  ntAppendDraftMessage('user', message);
+  input.value = '';
+  if (!ntDraftReady) {
+    ntDraftReady = true;
+    const draft = ntBuildDraft(message);
+    document.getElementById('cv-nt-draft-title').value = draft.title;
+    document.getElementById('cv-nt-draft-desc').value = draft.desc;
+    document.getElementById('cv-nt-draft-empty').classList.add('hidden');
+    document.getElementById('cv-nt-draft-content').classList.remove('hidden');
+    document.getElementById('cv-nt-submit').disabled = false;
+    document.getElementById('cv-nt-continue').disabled = false;
+    const project = ntInferProject(message);
+    const select = document.getElementById('cv-nt-project');
+    if (select && project) { select.value = project; ntOnProjectChange(); }
+    ntAppendDraftMessage('assistant', draft.question);
+  } else {
+    const desc = document.getElementById('cv-nt-draft-desc');
+    if (/^(都需要|都要|全部需要|全部都要)[。！!]?$/i.test(message) && desc.value.includes('建议覆盖以下功能（请确认范围）')) {
+      desc.value = desc.value.replace('建议覆盖以下功能（请确认范围）', '包含以下功能');
+      ntAppendDraftMessage('assistant', '好的，已确认这些功能都在范围内。它们要全部放进第一期，还是分阶段交付？');
+    } else {
+      desc.value = (desc.value.trim() + '\n\n补充要求：' + message).trim();
+      ntAppendDraftMessage('assistant', '已补充到任务描述。请核对左侧草稿与下方属性。');
+    }
+  }
+  input.focus();
+  return true;
 }
 export function cvOpenNewTask(status, ctx) {
   ntMode = 'manual';
@@ -188,6 +241,7 @@ export function cvOpenNewTask(status, ctx) {
   ntFiles = [];
   ntTags = [];
   ntStagePlan = [];
+  ntDraftReady = false;
   const psel = document.getElementById('cv-nt-project');
   if (psel) {
     psel.innerHTML = '<option value="">请选择项目</option>' + CV_PROJECTS.map(p => '<option value="' + p.id + '"' + (p.id === ntProjectId ? ' selected' : '') + '>' + xesc(p.name) + '</option>').join('');
@@ -196,6 +250,11 @@ export function cvOpenNewTask(status, ctx) {
   document.getElementById('cv-nt-title').value = '';
   document.getElementById('cv-nt-desc').value = '';
   document.getElementById('cv-nt-prompt').value = '';
+  document.getElementById('cv-nt-draft-title').value = '';
+  document.getElementById('cv-nt-draft-desc').value = '';
+  document.getElementById('cv-nt-draft-empty').classList.remove('hidden');
+  document.getElementById('cv-nt-draft-content').classList.add('hidden');
+  document.getElementById('cv-nt-agent-messages').innerHTML = '<p class="nt-agent-welcome">说出想完成的事，我会先整理成草稿。你可以继续补充，也可以直接编辑左侧内容。</p>';
   document.getElementById('cv-nt-priority').value = '中';
   document.getElementById('cv-nt-more').open = false;
   const tagInput = document.querySelector('#cv-nt-tags .nt-tag-input');
@@ -235,20 +294,24 @@ export function cvOpenNewTask(status, ctx) {
 export function cvCloseNewTask() { document.getElementById('cv-newtask-overlay').style.display = 'none'; }
 function cvSetNewTaskMode(m) {
   ntMode = m;
+  const modal = document.querySelector('#cv-newtask-overlay .nt-modal');
+  if (modal) modal.classList.toggle('nt-modal--agent', m === 'agent');
   document.getElementById('cv-nt-manual').classList.toggle('hidden', m !== 'manual');
   document.getElementById('cv-nt-agent').classList.toggle('hidden', m !== 'agent');
-  document.getElementById('cv-nt-execution').classList.toggle('hidden', m !== 'manual');
   const properties = document.getElementById('cv-nt-properties');
-  if (properties) properties.classList.toggle('hidden', m !== 'manual');
+  if (properties) properties.classList.remove('hidden');
   const stagesField = document.getElementById('cv-nt-stages-field');
+  if (stagesField) (m === 'agent' ? document.getElementById('cv-nt-draft-content') : document.getElementById('cv-nt-manual')).appendChild(stagesField);
   if (stagesField) stagesField.classList.toggle('hidden', !ntStagesFieldVisible());
-  document.getElementById('cv-nt-mode-label').textContent = ntParentTaskId ? (ntParentIsGroup ? '新建任务' : '新增子任务') : (m === 'agent' ? 'Agent 创建' : '手动创建');
+  document.getElementById('cv-nt-mode-label').textContent = ntParentTaskId ? (ntParentIsGroup ? '新建任务' : '新增子任务') : (m === 'agent' ? '一句话创建' : '手动创建');
   const agentTrigger = document.getElementById('cv-nt-agent-trigger');
   const manualTrigger = document.getElementById('cv-nt-manual-trigger');
   if (agentTrigger) agentTrigger.classList.toggle('hidden', m === 'agent' || !!ntParentTaskId);
   if (manualTrigger) manualTrigger.classList.toggle('hidden', m !== 'agent' || !!ntParentTaskId);
   if (agentTrigger) agentTrigger.setAttribute('aria-pressed', String(m === 'agent'));
   if (manualTrigger) manualTrigger.setAttribute('aria-pressed', String(m === 'manual'));
+  document.getElementById('cv-nt-submit').disabled = m === 'agent' && !ntDraftReady;
+  document.getElementById('cv-nt-continue').disabled = m === 'agent' && !ntDraftReady;
   if (document.getElementById('cv-newtask-overlay').style.display !== 'none') {
     document.getElementById(m === 'agent' ? 'cv-nt-prompt' : 'cv-nt-title').focus();
   }
@@ -257,47 +320,39 @@ function cvSubmitNewTask(keepOpen) {
   const fromAgent = ntMode === 'agent';
   let title, desc, assignee, priority, projectId, team, stagePlan, mode;
   if (fromAgent) {
-    const prompt = (document.getElementById('cv-nt-prompt').value || '').trim();
-    if (!prompt) { window.alert('请描述要让智能体做什么'); return; }
-    title = prompt.length > 24 ? prompt.slice(0, 24) + '…' : prompt;
-    desc = prompt;
-    priority = '中';
-    projectId = ntInferProject(prompt);
-    const proj = CV_PROJECTS.find(p => p.id === projectId) || CV_PROJECTS[0];
-    team = ntTeamOfProject(proj.id);
-    const people = ntPeopleOfProject(proj.id);
-    if (!people.length) { window.alert('请先为项目添加成员，再创建任务'); return; }
-    assignee = people[0].name;
-    mode = '多人协作';
+    if (!ntDraftReady) { window.alert('请先输入一句话描述任务'); return; }
+    if (document.getElementById('cv-nt-prompt').value.trim()) { ntSendDraftMessage(); return; }
+    title = (document.getElementById('cv-nt-draft-title').value || '').trim();
+    desc = (document.getElementById('cv-nt-draft-desc').value || '').trim();
   } else {
-    if (!ntProjectId) { window.alert('请先关联一个项目'); return; }
     title = (document.getElementById('cv-nt-title').value || '').trim();
-    if (!title) { window.alert('请输入任务标题'); return; }
     desc = (document.getElementById('cv-nt-desc').value || '').trim();
-    projectId = ntProjectId;
-    team = TEAMS.find(t => t.id === ntTeamId) || TEAMS[0];
-    const pv = document.getElementById('cv-nt-priority').value;
-    priority = pv === '无优先级' ? '中' : pv;
-    mode = ntExecMode;
-    if (!['单人执行', '多人协作'].includes(mode)) { window.alert('请选择执行方式'); return; }
-    if (!ntPeopleOfProject(projectId).length) { window.alert('请先为项目添加成员，再选择执行人'); return; }
-    if (ntExecMode === '多人协作') {
-      const checked = ntStagePlan.filter(s => s.checked);
-      if (!checked.length) { window.alert('请至少选择一个阶段'); return; }
-      if (checked.some(s => !s.assignee)) { window.alert('请为每个已选阶段指定执行人'); return; }
-      stagePlan = checked.map(s => ({ id: s.id, name: s.name, assignee: s.assignee }));
-      assignee = stagePlan[0].assignee;
-    } else {
-      if (!ntAssignee) { window.alert('请选择任务负责人'); return; }
-      assignee = ntAssignee;
-    }
+  }
+  if (!ntProjectId) { window.alert('请先关联一个项目'); return; }
+  if (!title) { window.alert('请输入任务标题'); return; }
+  projectId = ntProjectId;
+  team = TEAMS.find(t => t.id === ntTeamId) || TEAMS[0];
+  const pv = document.getElementById('cv-nt-priority').value;
+  priority = pv === '无优先级' ? '中' : pv;
+  mode = ntExecMode;
+  if (!['单人执行', '多人协作'].includes(mode)) { window.alert('请选择执行方式'); return; }
+  if (!ntPeopleOfProject(projectId).length) { window.alert('请先为项目添加成员，再选择执行人'); return; }
+  if (mode === '多人协作') {
+    const checked = ntStagePlan.filter(s => s.checked);
+    if (!checked.length) { window.alert('请至少选择一个阶段'); return; }
+    if (checked.some(s => !s.assignee)) { window.alert('请为每个已选阶段指定执行人'); return; }
+    stagePlan = checked.map(s => ({ id: s.id, name: s.name, assignee: s.assignee }));
+    assignee = stagePlan[0].assignee;
+  } else {
+    if (!ntAssignee) { window.alert('请选择任务负责人'); return; }
+    assignee = ntAssignee;
   }
   if (!stagePlan) stagePlan = tbTeamStages(team).map(s => ({ id: s.id, name: s.name, assignee }));
   const proj = CV_PROJECTS.find(p => p.id === projectId) || CV_PROJECTS[0];
   const stageActivity = stagePlan ? ('各阶段执行人：' + stagePlan.map(s => s.name + '·' + s.assignee).join('、')) : null;
-  const parentTaskId = !fromAgent ? (ntParentTaskId || document.getElementById('cv-nt-group')?.value || undefined) : undefined;
+  const parentTaskId = ntParentTaskId || document.getElementById('cv-nt-group')?.value || undefined;
   const parentIsGroup = !!parentTaskId && CV_TASKS.some(t => t.boardId === parentTaskId && t.project === proj.id && t.kind === 'epic');
-  const t = { boardId: crypto.randomUUID(), kind: 'task', parentTaskId, source: fromAgent ? '智能体创建' : (parentTaskId ? (parentIsGroup ? '父任务下创建' : '父任务下推') : '手动创建'), sourceId: 'TASK-' + Date.now().toString().slice(-6), size: '小', exec: '专家团', collab: mode === '单人执行' ? '无需协作' : '人Agent协作', progress: 0, status: ntStatus, mode, stage: stagePlan ? stagePlan[0].id : undefined, stagePlan, type: '需求', project: proj.id, title, desc, assignee, priority, tags: ntTags.slice(), files: ntFiles.slice(), activity: [{ author: '张工', text: fromAgent ? ('智能体推断，由 ' + assignee + ' 负责业务验收') : '创建了任务', time: new Date().toLocaleString('zh-CN', { hour12: false }) }].concat(stageActivity ? [{ author: '张工', text: stageActivity, time: new Date().toLocaleString('zh-CN', { hour12: false }) }] : []), artifacts: [] };
+  const t = { boardId: crypto.randomUUID(), kind: 'task', parentTaskId, source: fromAgent ? '一句话创建' : (parentTaskId ? (parentIsGroup ? '父任务下创建' : '父任务下推') : '手动创建'), sourceId: 'TASK-' + Date.now().toString().slice(-6), size: '小', exec: '专家团', collab: mode === '单人执行' ? '无需协作' : '人Agent协作', progress: 0, status: ntStatus, mode, stage: stagePlan ? stagePlan[0].id : undefined, stagePlan, type: '需求', project: proj.id, title, desc, assignee, priority, tags: ntTags.slice(), files: ntFiles.slice(), activity: [{ author: '张工', text: fromAgent ? ('根据草稿创建任务，由 ' + assignee + ' 负责') : '创建了任务', time: new Date().toLocaleString('zh-CN', { hour12: false }) }].concat(stageActivity ? [{ author: '张工', text: stageActivity, time: new Date().toLocaleString('zh-CN', { hour12: false }) }] : []), artifacts: [] };
   CV_TASKS.unshift(t);
   tbSave(); renderTaskBoard(); cvUpdateCounts();
   if (parentTaskId) window.cvRenderProjectDetail && window.cvRenderProjectDetail();
@@ -317,6 +372,10 @@ export function initNewTask() {
   if (!document.getElementById('cv-newtask-overlay')) return;
   document.querySelectorAll('#cv-newtask-overlay [data-nt-mode]').forEach(button => {
     button.addEventListener('click', () => cvSetNewTaskMode(button.getAttribute('data-nt-mode')));
+  });
+  document.getElementById('cv-nt-draft-send').addEventListener('click', ntSendDraftMessage);
+  document.getElementById('cv-nt-prompt').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); ntSendDraftMessage(); }
   });
   document.getElementById('cv-nt-submit').addEventListener('click', () => cvSubmitNewTask(false));
   document.getElementById('cv-nt-continue').addEventListener('click', () => cvSubmitNewTask(true));

@@ -407,3 +407,40 @@
   #cv-newtask-overlay .nt-btn{padding:6px 9px;font-size:12px}
   #cv-newtask-overlay .nt-agent-trigger{max-width:90px;line-height:1.2;text-align:left}
 }
+
+/* 一句话创建：左侧可编辑草稿，右侧补充对话。 */
+@media(min-width:761px){
+  #cv-newtask-overlay .nt-modal--agent{width:min(1080px,calc(100vw - 48px));height:min(660px,calc(100vh - 40px))}
+}
+#cv-newtask-overlay .nt-modal--agent .nt-body{overflow:hidden;padding:0 24px 8px}
+#cv-newtask-overlay .nt-modal--agent .nt-agent{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(300px,.85fr);gap:14px;min-height:0;width:100%}
+#cv-newtask-overlay .nt-draft,#cv-newtask-overlay .nt-agent-chat{display:flex;flex-direction:column;min-width:0;min-height:0;border:1px solid var(--border);border-radius:12px;background:var(--bg)}
+#cv-newtask-overlay .nt-draft-head,#cv-newtask-overlay .nt-agent-chat-head{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:48px;padding:0 18px;border-bottom:1px solid var(--border)}
+#cv-newtask-overlay .nt-draft-head strong,#cv-newtask-overlay .nt-agent-chat-head strong{font-size:14px;color:var(--text)}
+#cv-newtask-overlay .nt-draft-head span,#cv-newtask-overlay .nt-agent-chat-head span{font-size:11px;color:var(--text-soft)}
+#cv-newtask-overlay .nt-draft-empty{display:grid;flex:1;place-items:center;padding:24px;text-align:center;color:var(--text-soft);font-size:13px}
+#cv-newtask-overlay .nt-draft-content{display:flex;flex:1;flex-direction:column;gap:14px;min-height:0;padding:20px;overflow-y:auto}
+#cv-newtask-overlay .nt-draft-title,#cv-newtask-overlay .nt-draft-desc{width:100%;box-sizing:border-box;border:0;background:transparent;color:var(--text);font-family:inherit;outline:0}
+#cv-newtask-overlay .nt-draft-title{font-size:22px;font-weight:600;line-height:1.4}
+#cv-newtask-overlay .nt-draft-desc{flex:1;min-height:140px;resize:vertical;font-size:14px;line-height:1.75}
+#cv-newtask-overlay .nt-draft-title:focus-visible,#cv-newtask-overlay .nt-draft-desc:focus-visible{outline:2px solid var(--focus-ring);outline-offset:4px;border-radius:2px}
+#cv-newtask-overlay .nt-agent-messages{display:flex;flex:1;flex-direction:column;gap:14px;min-height:0;padding:18px;overflow-y:auto}
+#cv-newtask-overlay .nt-agent-welcome{margin:0;color:var(--text-secondary);font-size:12px;line-height:1.6}
+#cv-newtask-overlay .nt-agent-message{max-width:90%;margin:0;padding:10px 12px;border-radius:10px;background:var(--fill-1);color:var(--text);font-size:12.5px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere}
+#cv-newtask-overlay .nt-agent-message--user{align-self:flex-end;background:var(--brand-fill)}
+#cv-newtask-overlay .nt-agent-message--assistant{align-self:flex-start}
+#cv-newtask-overlay .nt-agent-composer{margin:0 14px 14px;padding:10px 12px;border:1px solid var(--border-hover);border-radius:10px;background:var(--bg)}
+#cv-newtask-overlay .nt-agent-composer:focus-within{border-color:var(--brand)}
+#cv-newtask-overlay .nt-agent-composer textarea{display:block;width:100%;min-height:68px;box-sizing:border-box;padding:0;border:0;background:transparent;color:var(--text);font:inherit;font-size:13px;line-height:1.5;resize:vertical;outline:0}
+#cv-newtask-overlay .nt-agent-composer-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px}
+#cv-newtask-overlay .nt-agent-composer-foot span{font-size:11px;color:var(--text-soft)}
+#cv-newtask-overlay .nt-agent-composer-foot button{min-height:30px;padding:5px 12px;border:0;border-radius:7px;background:var(--brand);color:#fff;font:inherit;font-size:12px;cursor:pointer}
+#cv-newtask-overlay .nt-agent-composer-foot button:hover{background:var(--brand-hover)}
+#cv-newtask-overlay .nt-btn:disabled{opacity:.45;cursor:not-allowed}
+@media(max-width:760px){
+  #cv-newtask-overlay .nt-modal--agent .nt-body{padding:0 12px 8px;overflow-y:auto}
+  #cv-newtask-overlay .nt-modal--agent .nt-agent{grid-template-columns:1fr;gap:10px;overflow:visible}
+  #cv-newtask-overlay .nt-agent-chat{min-height:260px;order:-1}
+  #cv-newtask-overlay .nt-draft{min-height:260px}
+  #cv-newtask-overlay .nt-agent-messages{min-height:110px;max-height:170px}
+}

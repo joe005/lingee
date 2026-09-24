@@ -23,6 +23,7 @@ var ACCOUNTS={
   'liangpingxian@gmail.com':{pass:'lingee520',role:'owner',name:'Xian',avatar:'L'},
   /* 虚拟账号（按角色） */
   'owner':{pass:'lingee520',role:'owner',name:'吴宏超',avatar:'吴'},
+  'project_manager':{pass:'lingee520',role:'project_manager',name:'赵琳',avatar:'赵'},
   'dev':{pass:'lingee520',role:'dev',name:'张工',avatar:'张'},
   'pm':{pass:'lingee520',role:'pm',name:'赵琳',avatar:'赵'},
   'qa':{pass:'lingee520',role:'qa',name:'陈晨',avatar:'陈'},
@@ -31,7 +32,8 @@ var ACCOUNTS={
 
 /* 演示角色：不同角色登录后看到不同视图（权限差异演示） */
 var DEMO_ROLES=[
-  {id:'owner',label:'所有者',name:'吴宏超',avatar:'吴',desc:'全部权限 · 人员与权限/项目设置'},
+  {id:'owner',label:'系统管理员',name:'吴宏超',avatar:'吴',desc:'工作区设置 · 人员 · 系统集成'},
+  {id:'project_manager',label:'项目经理',name:'赵琳',avatar:'赵',desc:'创建项目 · 维护负责的项目'},
   {id:'dev',  label:'开发',  name:'张工',  avatar:'张', desc:'任务执行 · 代码评审 · 创建专家'},
   {id:'pm',   label:'需求',  name:'赵琳',  avatar:'赵', desc:'需求创建 · 需求评审'},
   {id:'qa',   label:'测试',  name:'陈晨',  avatar:'陈', desc:'测试评审 · 用例产物'},
@@ -69,7 +71,7 @@ function applyUserInfo(user){
     var nb=nm&&nm.parentNode;
     if(nb){ tag=document.createElement('span'); tag.id='userRoleTag'; tag.className='user-role-tag'; nb.insertBefore(tag,nm.nextSibling); }
   }
-  if(tag) tag.textContent=(DEMO_ROLES.filter(function(r){return r.id===acc.role;})[0]||{}).label||'所有者';
+  if(tag) tag.textContent=(DEMO_ROLES.filter(function(r){return r.id===acc.role;})[0]||{}).label||'系统管理员';
 }
 /* 登录框登录后仍留在 DOM 里，Chrome 会把整页当登录页，
    往搜索框之类的文本框推荐保存的账号。禁用掉就不再是自动填充来源。 */

@@ -6,6 +6,7 @@ import { cvApplyReviewFilters } from './tasks.js';
 import { cvApplyFilters, cvLastTab } from './view.js';
 import { xesc } from '../expert/data.js';
 import { TEAMS } from '../expert/store.js';
+import { getRole } from '../login.js';
 /* 协作开发：工作区切换、工作台项目筛选与专家团默认绑定
    拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
    由 main.js 按拆分前的原始顺序调用。 */
@@ -84,6 +85,11 @@ var cvProjEditId='';
 /* 项目增改落 localStorage（持久化函数已移入 data.js，这里只留新建项目的色板） */
 var CV_PROJ_NEW_DOTS=['blue','orange','green'];
 var CV_PROJ_DOT_COLORS={blue:'#4d89ff',orange:'#ff8d42',green:'#08cc50'};
+function cvMayEditProject(project){
+  if(!project)return false;
+  var name=cvCurrentUserName();
+  return project.owner===name||CV_MEMBERS.some(function(person){return person.name===name&&person.workspaceRole==='project_manager';});
+}
 function cvRenderProjectSettings(){
   var el=$('#cv-proj-settings');if(!el)return;
   el.innerHTML='<div class="cfg-table">'
@@ -95,13 +101,14 @@ function cvRenderProjectSettings(){
         +'<span>'+xesc(p.owner||'未设置')+'</span>'
         +'<span class="cv-proj-repo" title="'+xesc(p.repo||'')+'">'+(p.repo?xesc(p.repo):'未关联')+'</span>'
         +'<span>'+xesc((p.start||'—')+' ~ '+(p.end||'—'))+'</span>'
-        +'<span><button type="button" class="act-btn" data-cv-proj-edit="'+p.id+'">设置</button></span>'
+        +'<span>'+(cvMayEditProject(p)?'<button type="button" class="act-btn" data-cv-proj-edit="'+p.id+'">设置</button>':'只读')+'</span>'
         +'</div>';
     }).join('')
     +'</div>';
 }
 function cvOpenProjEdit(id){
   var p=cvProjectById(id);if(!p)return;
+  if(!cvMayEditProject(p)){toast('只有项目经理或项目负责人可以编辑项目','warning');return;}
   cvProjEditId=id;
   var set=function(k,val){var e=$('#cv-pe-'+k);if(e)e.value=val||'';};
   set('name',p.name);set('desc',p.desc);set('status',p.status||'planned');set('priority',p.priority||'中');set('repo',p.repo);set('start',p.start);set('end',p.end);
@@ -119,18 +126,19 @@ function cvOpenProjEdit(id){
   var btn=$('#cv-pe-submit');if(btn)btn.textContent='保存修改';
 }
 function cvOpenProjNew(){
+  if(!['owner','project_manager'].includes(getRole())){toast('只有系统管理员或项目经理可以新建项目','warning');return;}
   cvProjEditId='';
   var currentName=cvCurrentUserName();
   var currentPerson=CV_MEMBERS.find(function(m){return m.name===currentName;});
   if(currentName&&!currentPerson){
-    currentPerson={id:'p-login-'+Date.now(),name:currentName,email:'',dept:'',roles:[],status:'available',source:'登录账号'};
+    currentPerson={id:'p-login-'+Date.now(),name:currentName,email:'',dept:'',workspaceRole:getRole()==='project_manager'?'project_manager':'system_admin',roles:[],status:'available',source:'登录账号'};
     CV_MEMBERS.push(currentPerson);
     cvPersistPersons();
   }
   var set=function(k,val){var e=$('#cv-pe-'+k);if(e)e.value=val||'';};
   set('name','');set('desc','');set('status','planned');set('priority','中');set('repo','');set('start','');set('end','');
   var sel=$('#cv-pe-owner');
-  if(sel) sel.innerHTML=CV_MEMBERS.map(function(m,i){return '<option'+(m===(currentPerson||CV_MEMBERS[0])?' selected':'')+'>'+xesc(m.name)+'</option>';}).join('');
+  if(sel) sel.innerHTML=CV_MEMBERS.filter(function(m){return ['system_admin','project_manager'].includes(m.workspaceRole);}).map(function(m){return '<option'+(m===currentPerson?' selected':'')+'>'+xesc(m.name)+'</option>';}).join('');
   var tsel=$('#cv-pe-team');
   if(tsel) tsel.innerHTML='<option value="">请选择专家团</option>'+TEAMS.map(function(t){return '<option value="'+xesc(t.id)+'">'+xesc(t.name)+'</option>';}).join('');
   cvFillProjectMembers(currentPerson?[currentPerson.id]:[]);
@@ -168,7 +176,10 @@ function cvSaveProjEdit(){
   var teamId=g('team');
   if(!TEAMS.some(function(t){return t.id===teamId;})){ toast('请选择专家团','error'); $('#cv-pe-team').focus(); return; }
   var isNew=!cvProjEditId;
+  if(isNew&&!['owner','project_manager'].includes(getRole())){toast('只有系统管理员或项目经理可以新建项目','warning');return;}
+  if(isNew&&!CV_MEMBERS.some(function(person){return person.name===g('owner')&&['system_admin','project_manager'].includes(person.workspaceRole);})){toast('项目负责人需是系统管理员或项目经理','warning');return;}
   var p=isNew?null:cvProjectById(cvProjEditId);
+  if(!isNew&&!cvMayEditProject(p)){toast('只有项目经理或项目负责人可以编辑项目','warning');return;}
   if(p){
     p.name=name;p.desc=g('desc');p.status=g('status');p.priority=g('priority');p.owner=g('owner');p.repo=g('repo');p.start=g('start');p.end=g('end');p.defaultTeam=teamId;p.members=members;
   }else{

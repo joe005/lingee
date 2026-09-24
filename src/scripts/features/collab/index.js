@@ -3,10 +3,10 @@ import { initNewTask } from './new-task.js';
 import { initTaskChat } from './task-chat.js';
 import { $ } from '../../core/dom.js';
 import { cvLoadSavedTasks, cvOpenConversation, cvSendChatMessage } from './chat.js';
-import { cvInjectCardActions, cvRenderReviewStats, cvRenderReviews, cvRenderTaskStats, cvRenderTasks, cvRestorePersons } from './data.js';
+import { cvEnsureProjectRoleDemoData, cvInjectCardActions, cvRenderReviewStats, cvRenderReviews, cvRenderTaskStats, cvRenderTasks, cvRestorePersons } from './data.js';
 import { cvMigrateProjectSquads, cvRestoreSquads } from './squads.js';
 import { cvClosePersonEdit, cvOpenPersonEdit, cvOpenPersonNew, cvRenderPermTable, cvSavePersonEdit, initCollabPersons } from './persons.js';
-import { cvCloseFeatureEdit, cvCloseManualSplit, cvCloseProjectSplit, cvConfirmManualSplit, cvConfirmProjectSplit, cvOpenManualSplit, cvRenderProjectDetail, cvRenderProjectList, cvSaveFeatureEdit, initCollabProjectView } from './project-view.js';
+import { cvCloseFeatureEdit, cvCloseManualSplit, cvCloseProjectSplit, cvConfirmManualSplit, cvConfirmProjectSplit, cvOpenManualSplit, cvRenderProjectDetail, cvRenderProjectList, cvResetProjectListState, cvSaveFeatureEdit, initCollabProjectView } from './project-view.js';
 import { cvCloseArtFiles, cvOpenArtFiles } from './art-files.js';
 import { cvRenderExperts, set_cvExpertKw } from './experts.js';
 import { cvRenderProjMenu, cvRenderWsMenu, cvRestoreProjects, cvSetProject, cvUpdateCounts } from './projects.js';
@@ -30,6 +30,7 @@ function cvInit(){
   cvRestoreProjects();
   cvRestoreSquads();
   cvRestorePersons();
+  cvEnsureProjectRoleDemoData();
   cvMigrateProjectSquads();
   cvRenderTaskStats(); cvRenderTasks();
   cvRenderReviewStats(); cvRenderReviews();
@@ -102,6 +103,7 @@ export function initCollab() {
   window.cvClosePersonEdit=cvClosePersonEdit;
   window.cvSavePersonEdit=cvSavePersonEdit;
   window.cvRenderProjectList=cvRenderProjectList;
+  window.cvResetProjectListState=cvResetProjectListState;
   window.cvRenderPermTable=cvRenderPermTable;
   window.cvRenderProjectDetail=cvRenderProjectDetail;
   window.cvOpenArtFiles=cvOpenArtFiles;

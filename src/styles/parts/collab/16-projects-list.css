@@ -4,6 +4,9 @@
 #view-collab .pj-view-switch button{border:0;border-radius:5px;padding:5px 12px;background:transparent;color:var(--text-secondary);font:inherit;font-size:12px;cursor:pointer}
 #view-collab .pj-view-switch button.on{background:#fff;color:var(--brand);box-shadow:0 1px 4px rgba(0,0,0,.08)}
 #view-collab .pj-list-toolbar{display:flex;align-items:center;justify-content:flex-start;gap:10px;padding:0 0 16px;flex-wrap:wrap}
+#view-collab .pj-scope{display:flex;align-items:center;gap:2px;padding:3px;border:1px solid var(--border);border-radius:8px;background:var(--fill-1)}
+#view-collab .pj-scope button{min-height:27px;padding:4px 10px;border:0;border-radius:6px;background:transparent;color:var(--text-secondary);font:inherit;font-size:12px;white-space:nowrap;cursor:pointer}
+#view-collab .pj-scope button.on{background:#fff;color:var(--text);box-shadow:0 1px 3px rgba(23,31,44,.1);font-weight:600}
 #view-collab .pj-list-toolbar>.pj-project-search{min-width:220px}
 #view-collab .pj-list-toolbar>.pj-filter-selects{flex:none;margin-left:auto}
 #view-collab .pj-list-toolbar>.pj-view-switch{margin:0}
