@@ -1,6 +1,15 @@
-/* 任务管理 v2 —— 核心交互逻辑入口
-   拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 initTasksV2() 函数里，
-   由 main.js 按拆分前的原始顺序调用。 */
+import { initIssueNavigation } from './navigation.js';
+import { initExecutionPlan } from './execution-plan.js';
+import { initMyWork } from '../collab/my-work.js';
+import { initWorkItemDetail, renderWorkItemDetail } from '../collab/work-item-detail.js';
+import { initReviewCenter, renderReviewCenter } from '../collab/review-center.js';
+import { openIssueDetail } from './issue-detail.js';
+/* T00 结构拆分：index。保留原交互；事件在 init* 中按原顺序注册。 */
+import { initTaskDetailPreferences, initTaskDetailWidth, initTaskDetailEvents, initTaskDetailSubtaskEvents, initTaskDetailGlobalEvents } from './issue-detail.js';
+import { tkEnsureWorkspaceDemoTasks, tkPruneOrphanTasks, tkSyncPeople } from './data.js';
+import { taskViewState } from './ui-state.js';
+import { initTaskListDisplayEvents, initTaskListFilterEvents, initTaskListRowEvents } from './list.js';
+import { initTaskCreateEvents } from './create.js';
 
 import { $, $$ } from '../../core/dom.js';
 import { renderListPageTabs } from '../shared/list-page-tabs.js';
@@ -21,7 +30,7 @@ import _iconExcel from '../../../assets/file-type-icons/excel.png';
 var _artifactIcons = { requirements:_iconDocument, plan:_iconDocument, technical:_iconDoc, architecture:_iconHtml, prototype:_iconImage, test:_iconExcel, delivery:_iconDocument };
 import {
   TK_STATUSES, TK_PRIORITIES, TK_PEOPLE, TK_AGENTS, TK_LABELS,
-  TK_VIEWS, TK_FILTER_FIELDS, TK_OPERATORS, TK_TASKS, tkCurrentUserId, tkPeopleInProject, tkProjectsForCurrentUser, tkSyncPeople,
+  TK_VIEWS, TK_FILTER_FIELDS, TK_OPERATORS, TK_TASKS, tkCurrentUserId, tkPeopleInProject, tkProjectsForCurrentUser,
   tkGetTaskArtifacts,
   tkGetTasks, tkSetTasks, tkAddTask, tkUpdateTask, tkDeleteTask,
   tkGetViews, tkAddView, tkDeleteView, tkRenameView,
@@ -3168,6 +3177,7 @@ function initColumnResize() {
 /* ---------- 初始化 ---------- */
 export function initTasksV2() {
   restoreTaskLabelCatalog();
+  tkPruneOrphanTasks();
   tkSyncPeople();
   cacheEls();
   try { taskStartLegacy = localStorage.getItem(TASK_START_LEGACY_KEY) === '1'; } catch (e) { taskStartLegacy = false; }
@@ -3182,5 +3192,17 @@ export function initTasksV2() {
   fillSelects();
   bindEvents();
   render();
+  document.addEventListener('cv-workspace-change',()=>{
+    tkPruneOrphanTasks();
+    tkEnsureWorkspaceDemoTasks();
+    Object.assign(taskViewState,{activeViewId:'all',scope:'all',filters:[],search:''});
+    fillSelects();render();
+  });
+  // 隐藏骨架在旧初始化结束后接线，不改变现有事件顺序和首屏。
+  initExecutionPlan();
+  initMyWork();
+  initWorkItemDetail();
+  initReviewCenter();
+  initIssueNavigation({ issue: openIssueDetail, workItem: renderWorkItemDetail, review: renderReviewCenter });
 }
 var propFieldKeys = { '状态':'status', '处理人':'assignee', '项目':'project', '优先级':'priority', '截止日期':'dueDate' };

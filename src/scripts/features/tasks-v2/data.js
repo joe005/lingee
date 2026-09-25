@@ -307,6 +307,24 @@ function persistViews() {
 
 export function tkGetTasks() { return _tasks; }
 export function tkSetTasks(arr) { _tasks = arr; }
+export function tkPruneOrphanTasks() {
+  var projects=new Set(CV_PROJECTS.map(function(project){return project.id;}));
+  _tasks=_tasks.filter(function(task){return projects.has(task.project);});
+}
+export function tkEnsureWorkspaceDemoTasks() {
+  var projects=tkProjectsForCurrentUser();
+  var project=projects.find(function(row){return row.demoSeed;});
+  if(!project||_tasks.some(function(task){return projects.some(function(row){return row.id===task.project;});}))return false;
+  var personId=tkCurrentUserId();
+  if(!personId)return false;
+  [
+    {title:'梳理需求与验收标准',desc:'明确范围、参与人和交付标准',status:'backlog',priority:'high',module:'需求梳理'},
+    {title:'实现核心流程并完成联调',desc:'完成主要功能并与上下游接口联调',status:'in_progress',priority:'medium',module:'开发实现'},
+    {title:'评审代码与测试结果',desc:'检查实现质量并确认关键测试用例',status:'in_review',priority:'medium',module:'质量验证'},
+    {title:'整理发布说明',desc:'汇总变更内容和使用说明',status:'done',priority:'low',module:'交付发布'}
+  ].forEach(function(spec){tkAddTask({...spec,project:project.id,assignee:personId,createdBy:personId,labels:['演示']});});
+  return true;
+}
 export function tkAddTask(task) {
   var now = taskMinuteNow();
   task.id = _nextId++;

@@ -31,6 +31,10 @@ function recordProjectConfigAudit(project,fields,previousName){
   const labels=fields.map(field=>PROJECT_FIELDS[field]).filter(Boolean);
   if(project&&labels.length)recordConfigAudit('project','修改项目「'+(previousName&&previousName!==project.name?previousName+' → '+project.name:project.name)+'」：'+labels.join('、'));
 }
+function forgetWorkspaceAudit(id){
+  entries=entries.filter(row=>(row.workspace||'ws-build')!==id);
+  renderAuditLog();
+}
 
 function filteredAuditLog(){
   const category=$('#cv-audit-category')?.value||'';
@@ -79,4 +83,4 @@ function initConfigAudit(){
   document.addEventListener('cv-workspace-change',renderAuditLog);
 }
 
-export { initConfigAudit, recordConfigAudit, recordProjectConfigAudit, renderAuditLog };
+export { forgetWorkspaceAudit, initConfigAudit, recordConfigAudit, recordProjectConfigAudit, renderAuditLog };

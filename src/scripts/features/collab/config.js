@@ -1,9 +1,10 @@
 import { $, $$ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
 import { xesc } from '../expert/data.js';
-import { initConfigAudit, recordConfigAudit, renderAuditLog } from './audit-log.js';
-import { CV_WORKSPACES, cvPersistWorkspaces, cvWorkspace, cvWorkspaceById } from './data.js';
-import { cvIsWorkspaceAdmin, cvRenderWsMenu } from './projects.js';
+import { forgetWorkspaceAudit, initConfigAudit, recordConfigAudit, renderAuditLog } from './audit-log.js';
+import { CV_WORKSPACES, cvCanAccessWorkspace, cvCurrentUserName, cvDeleteWorkspaceData, cvPersistWorkspaces, cvWorkspace, cvWorkspaceById } from './data.js';
+import { cvIsWorkspaceAdmin, cvRenderWorkspaceEntry, cvRenderWsMenu, cvSetWorkspace } from './projects.js';
+import { cvSwitchView } from './view.js';
 
 /* 设置：人员与第三方任务来源。单文件原型仅保存连接元数据，不保存应用密钥。 */
 const INTEGRATION_KEY='lingee-collab-integrations-v1';
@@ -21,6 +22,37 @@ function renderWorkspaceSettings(){
   $('#cv-ws-settings-form').classList.toggle('hidden',!editable);
   const save=$('#cv-config .cv-ws-settings-heading button');
   if(save)save.classList.toggle('hidden',!editable);
+  $('#cv-ws-danger')?.classList.toggle('hidden',!editable);
+}
+
+function openWorkspaceDelete(){
+  const workspace=cvWorkspaceById(cvWorkspace),dialog=$('#cv-ws-delete-dialog');
+  if(!workspace||!cvIsWorkspaceAdmin()||!dialog){toast('只有工作区创建者或管理员可以删除工作区','warning');return;}
+  $('#cv-ws-delete-target').textContent=workspace.name;
+  $('#cv-ws-delete-name').value='';
+  $('#cv-ws-delete-confirm').disabled=true;
+  dialog.showModal();
+  $('#cv-ws-delete-name').focus();
+}
+
+function confirmWorkspaceDelete(){
+  const workspace=cvWorkspaceById(cvWorkspace),dialog=$('#cv-ws-delete-dialog');
+  if(!workspace||!cvIsWorkspaceAdmin()||!dialog?.open)return;
+  if($('#cv-ws-delete-name').value!==workspace.name){toast('请输入完整的工作区名称以确认删除','warning');return;}
+  const name=workspace.name,id=workspace.id;
+  const result=cvDeleteWorkspaceData(id);
+  if(!result.ok){toast('删除失败，工作区数据未变更；请检查浏览器存储','error');return;}
+  mappings=mappings.filter(row=>(row.workspace||'ws-build')!==id);
+  forgetWorkspaceAudit(id);
+  dialog.close();
+  const next=CV_WORKSPACES.find(row=>cvCanAccessWorkspace(row.id,cvCurrentUserName()));
+  if(next)cvSetWorkspace(next.id);
+  else{
+    cvRenderWorkspaceEntry();cvRenderWsMenu();
+    document.dispatchEvent(new CustomEvent('cv-workspace-change',{detail:{workspaceId:''}}));
+    cvSwitchView('members');
+  }
+  toast('已删除工作区「'+name+'」','success');
 }
 
 function saveWorkspaceSettings(event){
@@ -113,6 +145,13 @@ export function initCollabConfig(){
   renderWorkspaceSettings();
   initConfigAudit();
   $('#cv-ws-settings-form')?.addEventListener('submit',saveWorkspaceSettings);
+  $('#cv-ws-delete-open')?.addEventListener('click',openWorkspaceDelete);
+  $('#cv-ws-delete-cancel')?.addEventListener('click',()=>$('#cv-ws-delete-dialog')?.close());
+  $('#cv-ws-delete-name')?.addEventListener('input',()=>{
+    const workspace=cvWorkspaceById(cvWorkspace);
+    $('#cv-ws-delete-confirm').disabled=!workspace||$('#cv-ws-delete-name').value!==workspace.name;
+  });
+  $('#cv-ws-delete-confirm')?.addEventListener('click',confirmWorkspaceDelete);
   document.addEventListener('cv-workspace-change',()=>{
     $('#cv-integration-form')?.classList.add('hidden');
     $('#cv-integration-secret').value='';

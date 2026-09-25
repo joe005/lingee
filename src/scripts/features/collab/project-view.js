@@ -10,6 +10,7 @@ import { cvSwitchView } from './view.js';
 import { setTasksEmbedded } from '../../core/view.js';
 import { tkSetProjectListMode } from '../tasks-v2/index.js';
 import { TEAMS } from '../expert/store.js';
+import { CV_PROJECT_ICON_COLORS, cvProjectFolderIcon, cvProjectIconOptions } from './project-icons.js';
 /* 项目列表与详情；详情复用同一个任务管理页面，并直接维护项目成员。 */
 
 var cvProjCur='';           /* 项目详情正在看的项目 id，空 = 项目列表 */
@@ -104,7 +105,7 @@ function cvRenderProjectList(){
         var progress=tasks.length?Math.round(done/tasks.length*100):0;
         var sc=PJ_STATUS[p.status||'planned']||PJ_STATUS.planned;
         return '<div class="pj-list-row" data-pj-row="'+xesc(p.id)+'">'
-          +'<button type="button" class="pj-list-name" data-pj-open="'+xesc(p.id)+'" aria-label="查看项目：'+xesc(p.name)+'"><i class="cfg-dot" style="background:'+(CV_PROJ_DOT_COLORS[p.dot]||'#b8b8b8')+'"></i><span><b class="card-title">'+xesc(p.name)+'</b><small>'+xesc(p.desc||'暂无描述')+'</small></span></button>'
+          +'<button type="button" class="pj-list-name" data-pj-open="'+xesc(p.id)+'" aria-label="查看项目：'+xesc(p.name)+'">'+cvProjectFolderIcon(p.dot)+'<span><b class="card-title">'+xesc(p.name)+'</b><small>'+xesc(p.desc||'暂无描述')+'</small></span></button>'
           +'<span class="pj-status" style="color:'+sc.c+';background:'+sc.bg+'">'+sc.t+'</span>'
           +'<span>'+xesc(p.priority||'中')+'</span>'
           +'<span class="pj-list-members" title="'+xesc(members.length?members.map(function(m){return m.name;}).join('、'):'暂无成员')+'"><span class="pj-list-member-avatars">'+members.slice(0,3).map(function(m){return '<span class="pj-list-member-avatar" aria-hidden="true">'+xesc(m.name[0]||'?')+'</span>';}).join('')+'</span><span class="pj-list-member-count">'+members.length+' 人</span></span>'
@@ -116,14 +117,13 @@ function cvRenderProjectList(){
     return;
   }
   el.innerHTML='<div class="pj-projects-cards">'+visible.map(function(p){
-    var color=CV_PROJ_DOT_COLORS[p.dot]||'#b8b8b8';
-    var members=cvPeopleInProject(p);
+  var members=cvPeopleInProject(p);
     var tasks=CV_TASKS.filter(function(t){return t.project===p.id&&t.kind!=='epic';});
     var done=tasks.filter(function(t){return t.status==='已完成';}).length;
     var progress=tasks.length?Math.round(done/tasks.length*100):0;
     var sc=PJ_STATUS[p.status||'planned']||PJ_STATUS.planned;
     return '<div class="pj-card" data-pj-row="'+xesc(p.id)+'">'
-      +'<div class="pj-card-main"><div class="pj-card-head"><div class="pj-card-identity"><span class="pj-card-mark" style="background:'+color+'"></span><button type="button" class="pj-card-title-button" data-pj-open="'+xesc(p.id)+'" aria-label="查看项目：'+xesc(p.name)+'" title="'+xesc(p.name)+'">'+xesc(p.name)+'</button></div>'
+      +'<div class="pj-card-main"><div class="pj-card-head"><div class="pj-card-identity">'+cvProjectFolderIcon(p.dot)+'<button type="button" class="pj-card-title-button" data-pj-open="'+xesc(p.id)+'" aria-label="查看项目：'+xesc(p.name)+'" title="'+xesc(p.name)+'">'+xesc(p.name)+'</button></div>'
       +'<div class="pj-card-actions"><span class="pj-status" style="color:'+sc.c+';background:'+sc.bg+'">'+sc.t+'</span></div></div>'
       +'<div class="pj-card-fields">'
       +'<div class="pj-card-field"><span>优先级</span><b>'+xesc(p.priority||'中')+'</b></div>'
@@ -162,7 +162,7 @@ function cvRenderProjectDetail(){
   el.innerHTML='<div class="pj-crumb">'
     +'<button type="button" class="pj-back" data-pj-back>项目</button>'
     +'<span class="pj-crumb-sep">›</span>'
-    +'<span class="pj-dot pj-dot--sm" style="background:'+(CV_PROJ_DOT_COLORS[p.dot]||'#b8b8b8')+'"></span>'
+    +cvProjectFolderIcon(p.dot)
     +'<span class="pj-crumb-name">'+xesc(p.name)+'</span>'
     +'<div class="pj-crumb-actions"><button type="button" class="pj-members-open" data-pj-members-open aria-controls="cv-project-members-overlay"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-3-3.87M16 3.13a3.2 3.2 0 0 1 0 7.75"/></svg>'+(cvCanManageProject(p)?'成员管理':'查看成员')+' <span>'+members.length+'</span></button>'
     +'<button type="button" class="pj-summary-toggle" data-pj-summary-toggle aria-controls="pj-project-summary" aria-expanded="'+!cvSummaryCollapsed+'" aria-label="'+(cvSummaryCollapsed?'展开':'收起')+'右侧项目摘要面板" title="'+(cvSummaryCollapsed?'展开':'收起')+'右侧项目摘要面板"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M14 4v16M7 8h3M7 12h3M7 16h3"/></svg></button></div>'
@@ -175,6 +175,7 @@ function cvRenderProjectDetail(){
     +'<div class="pj-prop-section">'
     +'<div class="pj-prop-header">属性</div>'
     +'<div class="pj-prop-body">'
+    +'<div class="pj-prop-row"><span class="pj-prop-label">项目图标</span><div class="pj-prop-value"><div class="pj-icon-options" role="group" aria-label="项目文件夹颜色">'+(cvCanManageProject(p)?cvProjectIconOptions(p.dot,'data-pj-icon-color'):cvProjectFolderIcon(p.dot))+'</div></div></div>'
     +'<div class="pj-prop-row"><span class="pj-prop-label">状态</span><div class="pj-prop-value"><select class="sq-edit-select" data-pj-field="status">'+Object.keys(PJ_STATUS).map(function(k){return '<option value="'+k+'"'+(k===(p.status||'planned')?' selected':'')+'>'+PJ_STATUS[k].t+'</option>';}).join('')+'</select></div></div>'
     +'<div class="pj-prop-row"><span class="pj-prop-label">优先级</span><div class="pj-prop-value"><select class="sq-edit-select" data-pj-field="priority">'+['高','中','低'].map(function(v){return '<option'+(v===(p.priority||'中')?' selected':'')+'>'+v+'</option>';}).join('')+'</select></div></div>'
     +'<div class="pj-prop-row"><span class="pj-prop-label">负责人</span><div class="pj-prop-value"><select class="sq-edit-select" data-person-select data-pj-field="owner" aria-label="项目负责人">'+CV_MEMBERS.map(function(m){return '<option'+(m.name===(p.owner||'')?' selected':'')+'>'+xesc(m.name)+'</option>';}).join('')+'</select></div></div>'
@@ -194,7 +195,6 @@ function cvRenderProjectDetail(){
     +'<div class="pj-prop-header">描述</div>'
     +'<div class="pj-prop-body">'
     +'<label class="pj-side-field-label" for="pj-side-desc">项目描述</label><textarea id="pj-side-desc" class="sq-edit-desc" data-pj-field="desc" rows="2" placeholder="添加描述">'+xesc(p.desc||'')+'</textarea>'
-    +'<label class="pj-side-field-label" for="pj-side-goal">项目目标</label><textarea id="pj-side-goal" class="sq-edit-goal" data-pj-field="goal" rows="2" placeholder="项目目标">'+xesc(p.goal||'')+'</textarea>'
     +'</div></div>'
     +'</div>'
     +'</aside>'

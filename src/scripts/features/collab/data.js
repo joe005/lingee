@@ -40,14 +40,30 @@ var CV_WORKSPACES=[
   {id:'ws-skill',name:'Build智能体/Skills开发组'}
 ];
 var CV_WORKSPACE_STORE_KEY='lingee-collab-workspaces-v1';
+var CV_ACTIVE_WORKSPACE_KEY='lingee-collab-active-workspace-v1';
+var CV_DELETED_WORKSPACE_KEY='lingee-collab-deleted-workspaces-v1';
+function cvDeletedWorkspaceIds(){
+  try{var ids=JSON.parse(localStorage.getItem(CV_DELETED_WORKSPACE_KEY)||'[]');return Array.isArray(ids)?ids.filter(function(id){return typeof id==='string';}):[];}catch(e){return [];}
+}
 function cvPersistWorkspaces(){
   try{localStorage.setItem(CV_WORKSPACE_STORE_KEY,JSON.stringify(CV_WORKSPACES));return true;}
   catch(e){return false;}
 }
 function cvRestoreWorkspaces(){
   try{
+    var deleted=new Set(cvDeletedWorkspaceIds());
+    for(var i=CV_WORKSPACES.length-1;i>=0;i--)if(deleted.has(CV_WORKSPACES[i].id))CV_WORKSPACES.splice(i,1);
     var rows=JSON.parse(localStorage.getItem(CV_WORKSPACE_STORE_KEY)||'null');
-    if(Array.isArray(rows)&&rows.length) CV_WORKSPACES.splice(0,CV_WORKSPACES.length,...rows.filter(function(row){return row&&row.id&&row.name;}));
+    if(Array.isArray(rows)){
+      rows.forEach(function(row){
+        if(!row||!row.id||deleted.has(row.id)||typeof row.name!=='string')return;
+        var existing=CV_WORKSPACES.find(function(w){return w.id===row.id;});
+        if(existing)Object.assign(existing,{name:row.name,desc:row.desc||'',creatorId:row.creatorId||'',creatorName:row.creatorName||'',peopleIds:row.peopleIds,roles:row.roles||{},demoInitialized:!!row.demoInitialized});
+        else CV_WORKSPACES.push({id:row.id,name:row.name,desc:row.desc||'',creatorId:row.creatorId||'',creatorName:row.creatorName||'',peopleIds:Array.isArray(row.peopleIds)?row.peopleIds:[],roles:row.roles||{},demoInitialized:!!row.demoInitialized});
+      });
+    }
+    var saved=localStorage.getItem(CV_ACTIVE_WORKSPACE_KEY);
+    if(saved&&cvWorkspaceById(saved))cvWorkspace=saved;
   }catch(e){}
 }
 var cvProject='';                    /* 空串 = 全部项目（个人视角的聚合视图） */
@@ -365,8 +381,63 @@ function cvRestoreProjects(){
   try{
     var raw=localStorage.getItem(CV_PROJ_STORE_KEY); if(!raw) return;
     var arr=JSON.parse(raw);
-    if(Array.isArray(arr)&&arr.length){ CV_PROJECTS.length=0; arr.forEach(function(p){CV_PROJECTS.push(p);}); }
+    if(Array.isArray(arr)){ CV_PROJECTS.length=0; arr.forEach(function(p){if(!p.code)p.code=cvGenProjectCode(p);CV_PROJECTS.push(p);}); }
   }catch(e){}
+}
+/* 旧缓存覆盖源码预置数组时，只增补一次新样例，不覆盖已编辑项目，也不反复复活已删除样例。 */
+function cvEnsureWorkspaceDemoProjects(){
+  var key='lingee-collab-workspace-demos-v2';
+  try{if(localStorage.getItem(key))return;}catch(e){}
+  var changed=false;
+  CV_WORKSPACE_DEMO_PROJECTS.forEach(function(sample){
+    if(!cvWorkspaceById(sample.workspace))return;
+    if(CV_PROJECTS.some(function(project){return project.id===sample.id;}))return;
+    CV_PROJECTS.push({...sample,members:sample.members.slice()});
+    changed=true;
+  });
+  if(changed&&!cvPersistProjects())return;
+  try{localStorage.setItem(key,'1');}catch(e){}
+}
+/* 本地原型没有服务端事务：先计算并写入所有快照，失败时回滚；内存最后才更新。 */
+function cvDeleteWorkspaceData(id){
+  var workspace=cvWorkspaceById(id);
+  if(!workspace||id!==cvWorkspace)return {ok:false};
+  var projectIds=CV_PROJECTS.filter(function(project){return project.workspace===id;}).map(function(project){return project.id;});
+  var removed=new Set(projectIds);
+  var nextWorkspaces=CV_WORKSPACES.filter(function(row){return row.id!==id;});
+  var nextProjects=CV_PROJECTS.filter(function(row){return row.workspace!==id;});
+  var nextTasks=CV_TASKS.filter(function(row){return !removed.has(row.project);});
+  var keys=[CV_DELETED_WORKSPACE_KEY,CV_WORKSPACE_STORE_KEY,CV_PROJ_STORE_KEY,CV_ACTIVE_WORKSPACE_KEY,'lingee_task_board_v1','build_tasks','lingee-collab-integrations-v1','lingee-collab-config-audit-v1'];
+  var previous={};
+  try{
+    keys.forEach(function(key){previous[key]=localStorage.getItem(key);});
+    var readRows=function(key){var value=JSON.parse(previous[key]||'[]');if(!Array.isArray(value))throw new Error('Invalid '+key);return value;};
+    var changes={};
+    changes[CV_DELETED_WORKSPACE_KEY]=JSON.stringify(Array.from(new Set(cvDeletedWorkspaceIds().concat(id))));
+    changes[CV_WORKSPACE_STORE_KEY]=JSON.stringify(nextWorkspaces);
+    changes[CV_PROJ_STORE_KEY]=JSON.stringify(nextProjects);
+    changes[CV_ACTIVE_WORKSPACE_KEY]='';
+    changes['lingee_task_board_v1']=JSON.stringify(readRows('lingee_task_board_v1').filter(function(row){return !removed.has(row.project);}));
+    changes['build_tasks']=JSON.stringify(readRows('build_tasks').filter(function(row){return !removed.has(row.project);}));
+    changes['lingee-collab-integrations-v1']=JSON.stringify(readRows('lingee-collab-integrations-v1').filter(function(row){return (row.workspace||'ws-build')!==id;}));
+    changes['lingee-collab-config-audit-v1']=JSON.stringify(readRows('lingee-collab-config-audit-v1').filter(function(row){return (row.workspace||'ws-build')!==id;}));
+    var written=[];
+    try{keys.forEach(function(key){localStorage.setItem(key,changes[key]);written.push(key);});}
+    catch(error){written.reverse().forEach(function(key){try{if(previous[key]===null)localStorage.removeItem(key);else localStorage.setItem(key,previous[key]);}catch(e){}});throw error;}
+  }catch(e){return {ok:false};}
+  CV_WORKSPACES.splice(0,CV_WORKSPACES.length,...nextWorkspaces);
+  CV_PROJECTS.splice(0,CV_PROJECTS.length,...nextProjects);
+  CV_TASKS.splice(0,CV_TASKS.length,...nextTasks);
+  projectIds.forEach(function(projectId){delete cvConfigOverride[projectId];});
+  cvProject='';cvWorkspace='';
+  return {ok:true,projectIds:projectIds};
+}
+/* 预置数据由源码加载；已删除的工作区不应在下次打开时重新生成任务。 */
+function cvPruneDeletedWorkspaceData(){
+  var deleted=new Set(cvDeletedWorkspaceIds());
+  for(var i=CV_PROJECTS.length-1;i>=0;i--)if(deleted.has(CV_PROJECTS[i].workspace))CV_PROJECTS.splice(i,1);
+  var valid=new Set(CV_PROJECTS.map(function(project){return project.id;}));
+  for(var j=CV_TASKS.length-1;j>=0;j--)if(!valid.has(CV_TASKS[j].project))CV_TASKS.splice(j,1);
 }
 function cvEnsureProjectRoleDemoData(){
   var key='lingee-collab-project-role-demos-v1';
@@ -380,6 +451,7 @@ function cvEnsureProjectRoleDemoData(){
   }
   var changed=false;
   CV_ROLE_DEMO_PROJECTS.forEach(function(sample){
+    if(!cvWorkspaceById(sample.workspace))return;
     var existing=CV_PROJECTS.find(function(project){return project.id===sample.id;});
     if(existing){
       if(person.id!=='p22'&&Array.isArray(existing.members)&&existing.members.includes('p22')){
@@ -654,4 +726,4 @@ function cvEnsureLingeePrototypeData(){
   if(changed)cvPersistProjects();
 }
 
-export { CV_MEMBERS, CV_PROJECTS, CV_ARTIFACTS, CV_REVIEWS, CV_REVIEW_ARTIFACTS, CV_REVIEW_COMMENTS, CV_TASKS, CV_THIRD_PARTY_MEMBERS, CV_WORKFLOW, CV_WORKFLOW_ROLES, CV_WORKSPACES, cvAddPersonToWorkspace, cvCanAccessWorkspace, cvConfigOverride, cvCreateWorkspace, cvCurrentUserName, cvEnsureCurrentUserProjectDemoData, cvEnsureLingeePrototypeData, cvEnsureProjectRoleDemoData, cvGenProjectCode, cvInProject, cvInjectCardActions, cvIsMe, cvPeopleInProject, cvPeopleInWorkspace, cvPersistPersons, cvPersistProjects, cvPersistWorkspaces, cvPersonById, cvPersonName, cvProject, cvProjectById, cvProjectInWorkspace, cvProjectName, cvProjectPersons, cvRenderReviewStats, cvRenderReviews, cvRenderTaskStats, cvRenderTasks, cvRestorePersons, cvRestoreProjects, cvRestoreWorkspaces, cvSeedTaskDetails, cvWorkspace, cvWorkspaceById, cvWorkspaceName, cvWorkspaceRole };
+export { CV_MEMBERS, CV_PROJECTS, CV_ARTIFACTS, CV_REVIEWS, CV_REVIEW_ARTIFACTS, CV_REVIEW_COMMENTS, CV_TASKS, CV_THIRD_PARTY_MEMBERS, CV_WORKFLOW, CV_WORKFLOW_ROLES, CV_WORKSPACES, cvAddPersonToWorkspace, cvCanAccessWorkspace, cvConfigOverride, cvCreateWorkspace, cvCurrentUserName, cvDeleteWorkspaceData, cvEnsureCurrentUserProjectDemoData, cvEnsureLingeePrototypeData, cvEnsureProjectRoleDemoData, cvEnsureWorkspaceDemoProjects, cvGenProjectCode, cvInProject, cvInjectCardActions, cvIsMe, cvPeopleInProject, cvPeopleInWorkspace, cvPersistPersons, cvPersistProjects, cvPersistWorkspaces, cvPersonById, cvPersonName, cvProject, cvProjectById, cvProjectInWorkspace, cvProjectName, cvProjectPersons, cvPruneDeletedWorkspaceData, cvRenderReviewStats, cvRenderReviews, cvRenderTaskStats, cvRenderTasks, cvRestorePersons, cvRestoreProjects, cvRestoreWorkspaces, cvSeedTaskDetails, cvWorkspace, cvWorkspaceById, cvWorkspaceName, cvWorkspaceRole };

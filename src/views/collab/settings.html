@@ -22,6 +22,20 @@
             <div class="cv-ws-settings-row"><label for="cv-ws-settings-desc">描述</label><textarea id="cv-ws-settings-desc" rows="3" maxlength="500" placeholder="这个工作区主要负责什么？"></textarea></div>
             <div class="cv-ws-settings-meta" id="cv-ws-settings-meta"></div>
           </form>
+          <section class="cv-ws-danger" id="cv-ws-danger" aria-labelledby="cv-ws-danger-title">
+            <h3 id="cv-ws-danger-title">危险操作</h3>
+            <div class="cv-ws-danger-card">
+              <div><strong>删除工作区</strong><p>永久删除此工作区及其项目、任务和配置。此操作无法撤销。</p></div>
+              <button type="button" id="cv-ws-delete-open">删除工作区</button>
+            </div>
+          </section>
+          <dialog class="cv-ws-delete-dialog" id="cv-ws-delete-dialog" aria-labelledby="cv-ws-delete-title" aria-describedby="cv-ws-delete-desc">
+            <h3 id="cv-ws-delete-title">删除工作区</h3>
+            <p id="cv-ws-delete-desc">这会永久删除工作区及其项目、任务、集成配置和审计记录，无法恢复。全局人员资料和其他工作区不受影响。</p>
+            <label for="cv-ws-delete-name">请输入工作区名称 <strong id="cv-ws-delete-target"></strong> 以确认</label>
+            <input id="cv-ws-delete-name" type="text" autocomplete="off" spellcheck="false">
+            <div class="cv-ws-delete-actions"><button type="button" id="cv-ws-delete-cancel">取消</button><button type="button" id="cv-ws-delete-confirm" disabled>永久删除</button></div>
+          </dialog>
         </div>
         <div class="config-pane hidden" data-config-pane="perm">
           <div class="cv-head">
