@@ -39,6 +39,17 @@ var CV_WORKSPACES=[
   {id:'ws-quality',name:'Build质量与安全组'},
   {id:'ws-skill',name:'Build智能体/Skills开发组'}
 ];
+var CV_WORKSPACE_STORE_KEY='lingee-collab-workspaces-v1';
+function cvPersistWorkspaces(){
+  try{localStorage.setItem(CV_WORKSPACE_STORE_KEY,JSON.stringify(CV_WORKSPACES));return true;}
+  catch(e){return false;}
+}
+function cvRestoreWorkspaces(){
+  try{
+    var rows=JSON.parse(localStorage.getItem(CV_WORKSPACE_STORE_KEY)||'null');
+    if(Array.isArray(rows)&&rows.length) CV_WORKSPACES.splice(0,CV_WORKSPACES.length,...rows.filter(function(row){return row&&row.id&&row.name;}));
+  }catch(e){}
+}
 var cvProject='';                    /* 空串 = 全部项目（个人视角的聚合视图） */
 var cvWorkspace='';                  /* 空串 = 全部工作区；工作区为项目上层组织单元 */
 var cvConfigOverride={};             /* {项目id:{配置卡 key:是否项目覆盖}} */
@@ -231,6 +242,54 @@ var CV_MEMBERS = [
   {id:'p22',name:'吴宏超',email:'',dept:'产品部',workspaceRole:'system_admin',roles:[],status:'available',source:'演示人员'},
   {id:'p23',name:'吴晓峰',email:'6686612@qq.com',dept:'产品部',workspaceRole:'system_admin',roles:[{tag:'member-tag--pm',text:'产品'},{tag:'member-tag--owner',text:'所有者'}],status:'available',source:'直接成员'}
 ];
+function cvWorkspaceMembers(workspace){
+  if(!workspace)return [];
+  if(Array.isArray(workspace.peopleIds))return workspace.peopleIds;
+  return Array.from(new Set(CV_PROJECTS.filter(function(project){return project.workspace===workspace.id;})
+    .flatMap(function(project){return project.members||[];})));
+}
+function cvPeopleInWorkspace(){
+  var workspace=cvWorkspaceById(cvWorkspace);
+  var ids=cvWorkspaceMembers(workspace);
+  return CV_MEMBERS.filter(function(person){return ids.includes(person.id);});
+}
+function cvWorkspaceRole(person){
+  var workspace=cvWorkspaceById(cvWorkspace);
+  return workspace?.roles?.[person?.id]||person?.workspaceRole||'member';
+}
+function cvCanAccessWorkspace(id,name){
+  var workspace=cvWorkspaceById(id);
+  if(!workspace||!name)return false;
+  if(workspace.creatorName===name)return true;
+  var person=CV_MEMBERS.find(function(row){return row.name===name;});
+  return !!person&&cvWorkspaceMembers(workspace).includes(person.id);
+}
+function cvAddPersonToWorkspace(person,role){
+  var workspace=cvWorkspaceById(cvWorkspace);
+  if(!workspace||!person?.id)return false;
+  var previous=workspace.peopleIds;
+  var previousRoles=workspace.roles;
+  var ids=cvWorkspaceMembers(workspace);
+  workspace.peopleIds=Array.from(new Set(ids.concat(person.id)));
+  workspace.roles={...(workspace.roles||{})};
+  if(role)workspace.roles[person.id]=role;
+  if(cvPersistWorkspaces())return true;
+  workspace.peopleIds=previous;
+  workspace.roles=previousRoles;
+  return false;
+}
+function cvCreateWorkspace(name,desc,creator){
+  if(!name||!creator?.id)return null;
+  var workspace={id:'ws-'+Date.now(),name:name,desc:desc||'',creatorName:creator.name,peopleIds:[creator.id],roles:{[creator.id]:'system_admin'}};
+  CV_WORKSPACES.push(workspace);
+  if(cvPersistWorkspaces())return workspace;
+  CV_WORKSPACES.pop();
+  return null;
+}
+function cvGenProjectCode(project){
+  var match=String(project?.repo||'').match(/\/([^/]+?)(?:\.git)?\/?$/);
+  return (match?match[1]:String(project?.id||'PROJECT')).replace(/[^a-zA-Z0-9-]/g,'-').toUpperCase();
+}
 
 /* ---------- 人员基础资料：引用与查询 ---------- */
 function cvPersonById(id){
@@ -257,7 +316,7 @@ function cvPeopleInProject(project){
 }
 var CV_PERSON_STORE_KEY='lingee-collab-persons-v1';
 function cvPersistPersons(){
-  try{ localStorage.setItem(CV_PERSON_STORE_KEY,JSON.stringify(CV_MEMBERS)); }catch(e){}
+  try{ localStorage.setItem(CV_PERSON_STORE_KEY,JSON.stringify(CV_MEMBERS)); return true; }catch(e){return false;}
 }
 function cvRestorePersons(){
   try{
@@ -299,9 +358,10 @@ function cvMergeDuplicateCurrentUser(){
 /* 项目增改落 localStorage，刷新页面不丢（持久化与数据同源，放这里避免模块循环依赖） */
 var CV_PROJ_STORE_KEY='lingee-collab-projects-v2';
 function cvPersistProjects(){
-  try{ localStorage.setItem(CV_PROJ_STORE_KEY,JSON.stringify(CV_PROJECTS)); }catch(e){}
+  try{ localStorage.setItem(CV_PROJ_STORE_KEY,JSON.stringify(CV_PROJECTS)); return true; }catch(e){return false;}
 }
 function cvRestoreProjects(){
+  cvRestoreWorkspaces();
   try{
     var raw=localStorage.getItem(CV_PROJ_STORE_KEY); if(!raw) return;
     var arr=JSON.parse(raw);
@@ -594,4 +654,4 @@ function cvEnsureLingeePrototypeData(){
   if(changed)cvPersistProjects();
 }
 
-export { CV_MEMBERS, CV_PROJECTS, CV_ARTIFACTS, CV_REVIEWS, CV_REVIEW_ARTIFACTS, CV_REVIEW_COMMENTS, CV_TASKS, CV_THIRD_PARTY_MEMBERS, CV_WORKFLOW, CV_WORKFLOW_ROLES, CV_WORKSPACES, cvConfigOverride, cvCurrentUserName, cvEnsureCurrentUserProjectDemoData, cvEnsureLingeePrototypeData, cvEnsureProjectRoleDemoData, cvInProject, cvInjectCardActions, cvIsMe, cvPeopleInProject, cvPersistPersons, cvPersistProjects, cvPersonById, cvPersonName, cvProject, cvProjectById, cvProjectInWorkspace, cvProjectName, cvProjectPersons, cvRenderReviewStats, cvRenderReviews, cvRenderTaskStats, cvRenderTasks, cvRestorePersons, cvRestoreProjects, cvSeedTaskDetails, cvWorkspace, cvWorkspaceById, cvWorkspaceName };
+export { CV_MEMBERS, CV_PROJECTS, CV_ARTIFACTS, CV_REVIEWS, CV_REVIEW_ARTIFACTS, CV_REVIEW_COMMENTS, CV_TASKS, CV_THIRD_PARTY_MEMBERS, CV_WORKFLOW, CV_WORKFLOW_ROLES, CV_WORKSPACES, cvAddPersonToWorkspace, cvCanAccessWorkspace, cvConfigOverride, cvCreateWorkspace, cvCurrentUserName, cvEnsureCurrentUserProjectDemoData, cvEnsureLingeePrototypeData, cvEnsureProjectRoleDemoData, cvGenProjectCode, cvInProject, cvInjectCardActions, cvIsMe, cvPeopleInProject, cvPeopleInWorkspace, cvPersistPersons, cvPersistProjects, cvPersistWorkspaces, cvPersonById, cvPersonName, cvProject, cvProjectById, cvProjectInWorkspace, cvProjectName, cvProjectPersons, cvRenderReviewStats, cvRenderReviews, cvRenderTaskStats, cvRenderTasks, cvRestorePersons, cvRestoreProjects, cvRestoreWorkspaces, cvSeedTaskDetails, cvWorkspace, cvWorkspaceById, cvWorkspaceName, cvWorkspaceRole };

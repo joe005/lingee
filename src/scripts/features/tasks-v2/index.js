@@ -1564,17 +1564,38 @@ function taskActivityMessage(event) {
   return entry.text || '更新了任务';
 }
 
-function renderTaskSystemFeedGroup(events, expanded) {
-  return '<details class="tk-feed-activity-group"' + (expanded ? ' open' : '') + '><summary><svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m6 3 5 5-5 5"/></svg>'
-    + events.length + ' 条动态</summary><div class="tk-feed-activity-rows">'
-    + events.map(function (event) {
+var _expandedActivityIds = new Set();
+var _collapsedActivityIds = new Set();
+var _showOlderActivityIds = new Set();
+var ACTIVITY_VISIBLE_LIMIT = 8;
+
+function renderTaskSystemFeedGroup(events, isLatest) {
+  var id = 'act-' + events[0].time.replace(/[^0-9]/g, '') + '-' + events.length;
+  var userExpanded = _expandedActivityIds.has(id);
+  var userCollapsed = _collapsedActivityIds.has(id);
+  var expanded = userExpanded ? true : userCollapsed ? false : isLatest;
+  var count = events.length;
+  if (!expanded) {
+    return '<div class="tk-feed-activity-block" data-activity-id="' + id + '">'
+      + '<button type="button" class="tk-feed-activity-toggle" data-activity-toggle="' + id + '"><svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m6 3 5 5-5 5"/></svg>'
+      + '<span>' + count + ' 条动态</span></button></div>';
+  }
+  var hiddenOlder = isLatest && !_showOlderActivityIds.has(id) && count > ACTIVITY_VISIBLE_LIMIT
+    ? count - ACTIVITY_VISIBLE_LIMIT : 0;
+  var visible = hiddenOlder > 0 ? events.slice(-ACTIVITY_VISIBLE_LIMIT) : events;
+  var showHeader = hiddenOlder === 0;
+  return '<div class="tk-feed-activity-block" data-activity-id="' + id + '">'
+    + (showHeader ? '<button type="button" class="tk-feed-activity-toggle" data-activity-toggle="' + id + '"><svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m3 6 5 5 5-5"/></svg><span>' + count + ' 条动态</span></button>' : '')
+    + (hiddenOlder > 0 ? '<button type="button" class="tk-feed-activity-toggle tk-feed-activity-more" data-activity-older="' + id + '"><svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m6 3 5 5-5 5"/></svg><span>显示更多旧动态（' + hiddenOlder + ' 条）</span></button>' : '')
+    + '<div class="tk-feed-activity-rows">'
+    + visible.map(function (event) {
       var entry = event.entry;
       var author = event.type === 'delivery' || event.type === 'status' ? entry.author : tkGetPerson(entry.authorId).name;
       var message = taskActivityMessage(event);
       return '<div class="tk-feed-activity-row"><span class="tk-feed-activity-lead">' + feedLeadIcon(event) + '</span>'
         + '<strong>' + escapeHtml(author) + '</strong><span class="tk-feed-activity-message" title="' + escapeHtml(message) + '">' + escapeHtml(message) + '</span>'
         + '<time>' + escapeHtml(event.time) + '</time></div>';
-    }).join('') + '</div></details>';
+    }).join('') + '</div></div>';
 }
 
 function renderTaskComments(t) {
@@ -2805,6 +2826,21 @@ function bindEvents() {
 
   /* 详情面板内：添加子任务 / 打开子任务 */
   els.tkDrawerBody.addEventListener('click', function (e) {
+    var actToggle = e.target.closest('[data-activity-toggle]');
+    if (actToggle) {
+      var aid = actToggle.getAttribute('data-activity-toggle');
+      if (_expandedActivityIds.has(aid)) { _expandedActivityIds.delete(aid); _collapsedActivityIds.add(aid); }
+      else if (_collapsedActivityIds.has(aid)) { _collapsedActivityIds.delete(aid); _expandedActivityIds.add(aid); }
+      else { _expandedActivityIds.add(aid); }
+      openDrawer(state.drawerTaskId);
+      return;
+    }
+    var actOlder = e.target.closest('[data-activity-older]');
+    if (actOlder) {
+      _showOlderActivityIds.add(actOlder.getAttribute('data-activity-older'));
+      openDrawer(state.drawerTaskId);
+      return;
+    }
     var subToggle = e.target.closest('[data-subtask-toggle]');
     if (subToggle) {
       var subSection = subToggle.closest('.tk-subtasks');
