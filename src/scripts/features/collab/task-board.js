@@ -214,7 +214,7 @@ function stageStatusBarHtml(t) {
   const curOwner = stageOwnerOf(t);
   const mine = curOwner === currentUserName();
   return '<div class="tb-review-status-banner"><span class="tb-review-status-k">当前环节</span><b>' + xesc(stageLabel(taskStageId(t))) + '</b><span class="tb-review-status-k">处理人</span><b>' + xesc(curOwner) + (mine ? '<em>本人</em>' : '') + '</b><span class="tb-review-status-k">状态</span><b>' + xesc(pending ? '审核中' : (t.status === '已完成' ? '已完成' : tbLabel(t.status))) + '</b>'
-    + (mine && t.status !== '已完成' ? '<button type="button" class="tb-stage-handle" data-detail-jump="' + (pending ? 'activity' : 'conversations') + '">立即处理 ↗</button>' : '')
+    + (mine && t.status !== '已完成' ? '<button type="button" class="tb-stage-handle" data-detail-jump="conversations">立即处理 ↗</button>' : '')
     + '</div>';
 }
 function activityPaneHtml(t) {
@@ -337,7 +337,7 @@ export function openTask(index, status = '待办') {
           <div class="tb-next-step"><i>${col[3]}</i><div><strong>${hint[0]}</strong><p>${hint[1]}</p></div>${canSee ? '<button type="button" data-detail-jump="conversations">进入对话 ↗</button>' : ''}</div>
           ${selected ? stageStatusBarHtml(t) : ''}
           <div class="tb-detail-tabs" role="tablist" aria-label="任务内容">
-            ${[['overview','概览'],['conversations','任务对话'],['artifacts','交付产物 <small>' + artifacts.length + '</small>'],['activity','流程 <small' + (pendingReview ? ' class="is-alert"' : '') + '>' + stagePlanFor(t).length + '</small>'],['log','日志 <small>' + (t.activity || []).length + '</small>']].map(([id,label],i) => '<button type="button" role="tab" id="tb-tab-' + id + '" aria-controls="tb-pane-' + id + '" aria-selected="' + !i + '" tabindex="' + (i ? -1 : 0) + '" data-detail-tab="' + id + '">' + label + '</button>').join('')}
+            ${[['overview','概览'],['conversations','任务对话'],['artifacts','交付产物 <small>' + artifacts.length + '</small>']].map(([id,label],i) => '<button type="button" role="tab" id="tb-tab-' + id + '" aria-controls="tb-pane-' + id + '" aria-selected="' + !i + '" tabindex="' + (i ? -1 : 0) + '" data-detail-tab="' + id + '">' + label + '</button>').join('')}
           </div>
           <section class="tb-detail-pane" role="tabpanel" id="tb-pane-overview" aria-labelledby="tb-tab-overview" data-detail-pane="overview">
             <label class="tb-description-field"><span>任务描述</span><textarea name="desc" rows="3" placeholder="说明业务背景、目标与交付范围">${xesc(t.desc || '')}</textarea></label>
@@ -350,16 +350,8 @@ export function openTask(index, status = '待办') {
             <div class="tb-pane-heading"><div><h3>任务对话</h3><p>围绕任务沟通，每次会话独立保留。</p></div>${canSee ? '<button type="button" class="tb-conv-new-btn" data-conv-new>＋ 新会话</button>' : ''}</div><div id="tb-conv-area">${convArea}</div>
           </section>
           <section class="tb-detail-pane" role="tabpanel" id="tb-pane-artifacts" aria-labelledby="tb-tab-artifacts" data-detail-pane="artifacts" hidden>
-            <div class="tb-pane-heading"><div><h3>交付产物</h3><p>汇总本任务各流程节点的产物，点击即可预览。</p></div><div class="tb-pane-actions"><span class="tb-readonly">只读</span>${selected ? '<button type="button" data-detail-jump="activity">查看流程</button>' : ''}</div></div>
+            <div class="tb-pane-heading"><div><h3>交付产物</h3><p>汇总本任务各流程节点的产物，点击即可预览。</p></div><div class="tb-pane-actions"><span class="tb-readonly">只读</span></div></div>
             <div class="tb-artifacts">${artifacts.map(artifactLink).join('') || '<div class="tb-detail-empty"><span class="tb-empty-icon">▤</span><strong>还没有交付产物</strong><span>执行产物关联后，会出现在这里。</span></div>'}</div>
-          </section>
-          <section class="tb-detail-pane" role="tabpanel" id="tb-pane-activity" aria-labelledby="tb-tab-activity" data-detail-pane="activity" hidden>
-            <div class="tb-pane-heading"><div><h3>流程</h3><p>按任务指定的流程推进，展开节点查看对应产物与评审。</p></div>${pendingReview ? '<span class="tb-review-pending">待本人处理</span>' : ''}</div>
-            <div class="tb-reviews">${selected ? activityPaneHtml(t) : '<div class="tb-detail-empty">创建任务后才能查看执行流程。</div>'}</div>
-          </section>
-          <section class="tb-detail-pane" role="tabpanel" id="tb-pane-log" aria-labelledby="tb-tab-log" data-detail-pane="log" hidden>
-            <div class="tb-pane-heading"><div><h3>日志</h3><p>任务的完整流转记录：字段修改、状态变化、转交与评审结论都记录在这里。</p></div></div>
-            ${selected ? logPaneHtml(t) : '<div class="tb-detail-empty">创建任务后才会产生日志。</div>'}
           </section>
         </main>
         <aside class="tb-detail-aside" aria-label="任务属性">
@@ -422,8 +414,8 @@ function submitTask(event) {
   const previous = selected && { status: selected.status, assignee: selected.assignee };
   const requestedStatus = f.get('status') || selected?.status || '待办';
   const pendingReview = selected && (selected.reviews || []).some(r => r.status === 'pending');
-  if (pendingReview && requestedStatus !== '审核中') { window.alert('当前评审尚未处理，任务需要保持“审核中”。'); selectDetailTab('activity'); return; }
-  if (previous?.status !== '已完成' && requestedStatus === '已完成' && !hasApprovedDelivery(selected)) { window.alert('任务完成前需要通过交付评审。'); selectDetailTab('activity'); return; }
+  if (pendingReview && requestedStatus !== '审核中') { window.alert('当前评审尚未处理，任务需要保持“审核中”。'); selectDetailTab('overview'); return; }
+  if (previous?.status !== '已完成' && requestedStatus === '已完成' && !hasApprovedDelivery(selected)) { window.alert('任务完成前需要通过交付评审。'); selectDetailTab('overview'); return; }
   const t = selected || { boardId: crypto.randomUUID(), source: '对话自建', sourceId: 'TASK-' + Date.now().toString().slice(-6), size: '小', exec: '专家团', progress: 0, activity: [], artifacts: [] };
   ['assignee', 'mode', 'priority', 'project', 'type'].forEach(key => { if (f.has(key)) t[key] = f.get(key); });
   if (f.has('status')) t.status = requestedStatus;

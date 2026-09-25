@@ -81,7 +81,7 @@
 .nt-link:hover{color:var(--brand)}
 .nt-btn{border:1px solid var(--border-hover);background:#fff;border-radius:8px;padding:7px 14px;font-size:12.5px;color:var(--text);cursor:pointer;font-family:inherit;transition:all .15s}
 .nt-btn:hover{background:var(--hover)}
-.nt-btn--primary{background:var(--brand);border-color:var(--brand);color:#fff;white-space:nowrap;flex-shrink:0}
+.nt-btn--primary{background:var(--brand);border-color:var(--brand);color:#fff}
 .nt-btn--primary:hover{background:var(--brand-hover);border-color:var(--brand-hover)}
 
 /* 新建任务：附件——常态是一条紧凑可拖拽的行，不占用大块空间；有文件后原地变成 chip 列表 */
@@ -444,21 +444,3 @@
   #cv-newtask-overlay .nt-draft{min-height:260px}
   #cv-newtask-overlay .nt-agent-messages{min-height:110px;max-height:170px}
 }
-
-/* ============ Multica 风格：渐变切换按钮、开关、快捷键 ============ */
-#cv-newtask-overlay .nt-head-actions{display:flex;align-items:center;gap:4px;flex:none}
-#cv-newtask-overlay .nt-expand{display:flex;align-items:center;justify-content:center;width:32px;height:32px;border:0;border-radius:8px;background:transparent;color:var(--text-secondary);cursor:pointer;transition:all .15s}
-#cv-newtask-overlay .nt-expand:hover{color:var(--text);background:var(--fill-2)}
-#cv-newtask-overlay .nt-crumb .nt-user{color:var(--text);font-weight:600;font-size:15px}
-#cv-newtask-overlay .nt-agent-trigger{display:inline-flex;align-items:center;gap:6px;border:1.5px solid transparent;background-image:linear-gradient(var(--bg),var(--bg)),linear-gradient(135deg,#4d89ff,#7c3aed);background-origin:border-box;background-clip:padding-box,border-box;color:var(--text-secondary);padding:6px 14px;border-radius:999px;font:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s}
-#cv-newtask-overlay .nt-agent-trigger:hover{color:var(--brand);background-image:linear-gradient(var(--brand-fill),var(--brand-fill)),linear-gradient(135deg,#4d89ff,#7c3aed)}
-#cv-newtask-overlay .nt-agent-trigger svg{color:var(--brand)}
-#cv-newtask-overlay .nt-agent-trigger--back{background-image:linear-gradient(var(--bg),var(--bg)),linear-gradient(135deg,#7c3aed,#4d89ff);color:var(--brand)}
-#cv-newtask-overlay .nt-toggle{display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--text-secondary);user-select:none}
-#cv-newtask-overlay .nt-toggle input{position:absolute;opacity:0;width:0;height:0}
-#cv-newtask-overlay .nt-toggle-track{display:inline-block;width:32px;height:18px;border-radius:999px;background:var(--border-hover);position:relative;transition:background .2s;flex:none}
-#cv-newtask-overlay .nt-toggle-track::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.15)}
-#cv-newtask-overlay .nt-toggle input:checked+.nt-toggle-track{background:var(--brand)}
-#cv-newtask-overlay .nt-toggle input:checked+.nt-toggle-track::after{transform:translateX(14px)}
-#cv-newtask-overlay .nt-toggle-label{font-size:13px;color:var(--text-secondary)}
-#cv-newtask-overlay.nt-fullscreen .nt-modal{width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;border-radius:0!important}

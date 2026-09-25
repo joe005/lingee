@@ -3,13 +3,13 @@ import { initNewTask } from './new-task.js';
 import { initTaskChat } from './task-chat.js';
 import { $ } from '../../core/dom.js';
 import { cvLoadSavedTasks, cvOpenConversation, cvSendChatMessage } from './chat.js';
-import { CV_WORKSPACES, cvCanAccessWorkspace, cvCurrentUserName, cvEnsureCurrentUserProjectDemoData, cvEnsureProjectRoleDemoData, cvEnsureWorkspaceDemoProjects, cvEnsureWorkspacePeople, cvInjectCardActions, cvProject, cvProjectInWorkspace, cvRenderReviewStats, cvRenderReviews, cvRenderTaskStats, cvRenderTasks, cvRestorePersons, cvRestoreWorkspaces, cvWorkspace, set_cvProject, set_cvWorkspace } from './data.js';
+import { cvEnsureCurrentUserProjectDemoData, cvEnsureLingeePrototypeData, cvEnsureProjectRoleDemoData, cvInjectCardActions, cvRenderReviewStats, cvRenderReviews, cvRenderTaskStats, cvRenderTasks, cvRestorePersons } from './data.js';
 import { cvMigrateProjectSquads, cvRestoreSquads } from './squads.js';
 import { cvClosePersonEdit, cvOpenPersonNew, cvRenderPermTable, cvSavePersonEdit, initCollabPersons } from './persons.js';
 import { cvCloseFeatureEdit, cvCloseManualSplit, cvCloseProjectSplit, cvConfirmManualSplit, cvConfirmProjectSplit, cvOpenManualSplit, cvRenderProjectDetail, cvRenderProjectList, cvResetProjectListState, cvSaveFeatureEdit, initCollabProjectView } from './project-view.js';
 import { cvCloseArtFiles, cvOpenArtFiles } from './art-files.js';
 import { cvRenderExperts, set_cvExpertKw } from './experts.js';
-import { cvRenderProjMenu, cvRenderWorkspaceEntry, cvRenderWsMenu, cvRestoreProjects, cvSetProject, cvUpdateCounts } from './projects.js';
+import { cvRenderProjMenu, cvRenderWsMenu, cvRestoreProjects, cvSetProject, cvUpdateCounts } from './projects.js';
 import { cvOpenReviewDetail, cvReviewPass, cvReviewReject, cvSubmitReview, cvSwitchArtifact } from './reviews.js';
 import { cvApplyReviewFilters, cvClickReviewStat, cvClickStat, cvCloseSyncModal, cvCloseTaskModal, cvConfirmExec, cvConfirmReview, cvConfirmTransfer, cvConfirmTwist, cvOpenSyncModal, cvOpenTaskModal, cvSaveSyncTask, cvSelectCollabMode, cvSelectPersonItem, cvStartSyncTask, cvToggleSyncDropdown } from './tasks.js';
 import { cvApplyFilters, cvInited, cvPendingProj, cvPendingTab, cvSwitchFilter, cvSwitchView, set_cvInited, set_cvPendingProj, set_cvPendingTab } from './view.js';
@@ -23,46 +23,22 @@ import { openExpertModal } from '../expert/library.js';
 
 
 /* ---------- 初始化 ---------- */
-var cvInitUserName='';
-function cvSelectAccessibleWorkspace(){
-  if(cvCanAccessWorkspace(cvWorkspace,cvCurrentUserName()))return;
-  var first=CV_WORKSPACES.find(function(workspace){return cvCanAccessWorkspace(workspace.id,cvCurrentUserName());});
-  set_cvWorkspace(first?.id||'');
-  if(cvProject&&!cvProjectInWorkspace(cvProject))set_cvProject('');
-}
-function cvRenderWorkspaceContext(){
-  cvRenderWorkspaceEntry();
-  cvRenderTaskStats(); cvRenderTasks();
-  cvRenderReviewStats(); cvRenderReviews();
-  cvRenderProjectList();
-  document.dispatchEvent(new CustomEvent('cv-workspace-change',{detail:{workspaceId:cvWorkspace}}));
-  cvInjectCardActions();
-  cvRenderWsMenu(); cvRenderProjMenu(); cvUpdateCounts();
-}
 function cvInit(){
-  var currentName=cvCurrentUserName();
-  if(cvInited){
-    if(currentName===cvInitUserName)return;
-    cvInitUserName=currentName;
-    cvSelectAccessibleWorkspace();
-    cvResetProjectListState();
-    cvRenderWorkspaceContext();
-    return;
-  }
+  if(cvInited) return;
   set_cvInited(true);
-  cvInitUserName=currentName;
   cvLoadSavedTasks();
-  cvRestoreWorkspaces();
   cvRestoreProjects();
-  cvEnsureWorkspaceDemoProjects();
   cvRestoreSquads();
   cvRestorePersons();
   cvEnsureProjectRoleDemoData();
   cvEnsureCurrentUserProjectDemoData();
-  cvEnsureWorkspacePeople();
-  cvSelectAccessibleWorkspace();
+  cvEnsureLingeePrototypeData();
   cvMigrateProjectSquads();
-  cvRenderWorkspaceContext();
+  cvRenderTaskStats(); cvRenderTasks();
+  cvRenderReviewStats(); cvRenderReviews();
+  cvRenderProjectList();
+  cvInjectCardActions();
+  cvRenderWsMenu(); cvRenderProjMenu(); cvUpdateCounts();
 }
 var cvExpertSearch=$('#cvExpertSearch');
 var cvExpertSections=$('#cvExpertSections');

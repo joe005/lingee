@@ -19,7 +19,7 @@ var ACCOUNTS={
   'wuhc2023@gmail.com':{pass:'lingee520',role:'owner',name:'吴宏超',avatar:'吴'},
   '17299999999':{pass:['KDadm!@#2022','lingee520'],role:'owner',name:'张工',avatar:'张'},
   'wei_bu@kingdee.com':{pass:'lingee520',role:'owner',name:'Wei',avatar:'W'},
-  '6686612@qq.com':{pass:'lingee520',role:'owner',name:'Joe',avatar:'J'},
+  '6686612@qq.com':{pass:'lingee520',role:'owner',name:'吴晓峰',avatar:'吴'},
   'liangpingxian@gmail.com':{pass:'lingee520',role:'owner',name:'Xian',avatar:'L'},
   /* 虚拟账号（按角色） */
   'owner':{pass:'lingee520',role:'owner',name:'吴宏超',avatar:'吴'},
@@ -61,7 +61,7 @@ function setAuthed(user){
   try{ sessionStorage.setItem(LOGIN_KEY,user); }catch(e){}
 }
 function applyUserInfo(user){
-  var acc=ACCOUNTS[user]||{name:'Joe',avatar:'J',role:'owner'};
+  var acc=ACCOUNTS[user]||{name:'吴晓峰',avatar:'吴',role:'owner'};
   var av=$('#userAvatar'),nm=$('#userName');
   if(av) av.textContent=acc.avatar;
   if(nm) nm.textContent=acc.name;

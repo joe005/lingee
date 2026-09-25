@@ -1,4 +1,4 @@
-import { CV_TASKS, CV_PROJECTS, cvProject, cvPeopleInProject, cvProjectInWorkspace } from './data.js';
+import { CV_TASKS, CV_PROJECTS, cvProject, cvPeopleInProject, cvCurrentUserName } from './data.js';
 import { TEAMS } from '../expert/store.js';
 import { xesc } from '../expert/data.js';
 import { cvUpdateCounts } from './projects.js';
@@ -176,8 +176,8 @@ function ntOnProjectChange() {
 /* 原型仅根据项目名称匹配归属，不调用模型服务。 */
 function ntInferProject(prompt) {
   const p = prompt || '';
-  for (const proj of CV_PROJECTS.filter(project=>cvProjectInWorkspace(project.id))) { if (p.indexOf(proj.name) >= 0) return proj.id; }
-  return ntProjectId || cvProject || CV_PROJECTS.find(project=>cvProjectInWorkspace(project.id))?.id;
+  for (const proj of CV_PROJECTS) { if (p.indexOf(proj.name) >= 0) return proj.id; }
+  return ntProjectId || cvProject || (CV_PROJECTS[0] && CV_PROJECTS[0].id);
 }
 function ntAppendDraftMessage(kind, text) {
   const log = document.getElementById('cv-nt-agent-messages');
@@ -244,7 +244,7 @@ export function cvOpenNewTask(status, ctx) {
   ntDraftReady = false;
   const psel = document.getElementById('cv-nt-project');
   if (psel) {
-    psel.innerHTML = '<option value="">请选择项目</option>' + CV_PROJECTS.filter(p=>cvProjectInWorkspace(p.id)).map(p => '<option value="' + p.id + '"' + (p.id === ntProjectId ? ' selected' : '') + '>' + xesc(p.name) + '</option>').join('');
+    psel.innerHTML = '<option value="">请选择项目</option>' + CV_PROJECTS.map(p => '<option value="' + p.id + '"' + (p.id === ntProjectId ? ' selected' : '') + '>' + xesc(p.name) + '</option>').join('');
     psel.disabled = !!ntParentTaskId;
   }
   document.getElementById('cv-nt-title').value = '';
@@ -288,6 +288,11 @@ export function cvOpenNewTask(status, ctx) {
   ntRenderFiles();
   ntSetExecMode('单人执行');
   cvSetNewTaskMode('manual');
+  const crumbUser = document.getElementById('cv-nt-crumb-user');
+  if (crumbUser) crumbUser.textContent = cvCurrentUserName() || '吴晓峰';
+  const continueToggle = document.getElementById('cv-nt-continue-toggle');
+  if (continueToggle) continueToggle.checked = false;
+  document.getElementById('cv-newtask-overlay').classList.remove('nt-fullscreen');
   document.getElementById('cv-newtask-overlay').style.display = 'flex';
   setTimeout(() => document.getElementById(ntMode === 'agent' ? 'cv-nt-prompt' : 'cv-nt-title').focus(), 0);
 }
@@ -311,7 +316,6 @@ function cvSetNewTaskMode(m) {
   if (agentTrigger) agentTrigger.setAttribute('aria-pressed', String(m === 'agent'));
   if (manualTrigger) manualTrigger.setAttribute('aria-pressed', String(m === 'manual'));
   document.getElementById('cv-nt-submit').disabled = m === 'agent' && !ntDraftReady;
-  document.getElementById('cv-nt-continue').disabled = m === 'agent' && !ntDraftReady;
   if (document.getElementById('cv-newtask-overlay').style.display !== 'none') {
     document.getElementById(m === 'agent' ? 'cv-nt-prompt' : 'cv-nt-title').focus();
   }
@@ -348,8 +352,7 @@ function cvSubmitNewTask(keepOpen) {
     assignee = ntAssignee;
   }
   if (!stagePlan) stagePlan = tbTeamStages(team).map(s => ({ id: s.id, name: s.name, assignee }));
-  const proj = CV_PROJECTS.find(p => p.id === projectId && cvProjectInWorkspace(p.id));
-  if(!proj){window.alert('请先选择当前工作区的项目');return;}
+  const proj = CV_PROJECTS.find(p => p.id === projectId) || CV_PROJECTS[0];
   const stageActivity = stagePlan ? ('各阶段执行人：' + stagePlan.map(s => s.name + '·' + s.assignee).join('、')) : null;
   const parentTaskId = ntParentTaskId || document.getElementById('cv-nt-group')?.value || undefined;
   const parentIsGroup = !!parentTaskId && CV_TASKS.some(t => t.boardId === parentTaskId && t.project === proj.id && t.kind === 'epic');
@@ -378,8 +381,22 @@ export function initNewTask() {
   document.getElementById('cv-nt-prompt').addEventListener('keydown', e => {
     if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); ntSendDraftMessage(); }
   });
-  document.getElementById('cv-nt-submit').addEventListener('click', () => cvSubmitNewTask(false));
-  document.getElementById('cv-nt-continue').addEventListener('click', () => cvSubmitNewTask(true));
+  document.getElementById('cv-nt-submit').addEventListener('click', () => {
+    const keepOpen = document.getElementById('cv-nt-continue-toggle')?.checked || false;
+    cvSubmitNewTask(keepOpen);
+  });
+  document.getElementById('cv-newtask-overlay').addEventListener('keydown', e => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+      e.preventDefault();
+      const keepOpen = document.getElementById('cv-nt-continue-toggle')?.checked || false;
+      cvSubmitNewTask(keepOpen);
+    }
+    if (e.key === 'Escape') cvCloseNewTask();
+  });
+  const expandBtn = document.getElementById('cv-nt-expand');
+  if (expandBtn) expandBtn.addEventListener('click', () => {
+    document.getElementById('cv-newtask-overlay').classList.toggle('nt-fullscreen');
+  });
   document.getElementById('cv-nt-project').addEventListener('change', ntOnProjectChange);
   const execMode = document.getElementById('cv-nt-exec-mode');
   if (execMode) execMode.addEventListener('click', e => {

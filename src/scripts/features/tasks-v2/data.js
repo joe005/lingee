@@ -1,16 +1,19 @@
 /* 任务管理 v2 —— 模拟数据与状态
    纯前端原型，所有数据本地维护。 */
-import { CV_MEMBERS, CV_PROJECTS, cvCurrentUserName, cvPeopleInProject, cvPeopleInWorkspace, cvProjectInWorkspace } from '../collab/data.js';
+import { CV_MEMBERS, CV_PROJECTS, CV_TASKS, cvCurrentUserName, cvPeopleInProject } from '../collab/data.js';
+import { createDemoReviewReport } from './review-reports.js';
+import { createDemoBlockedRun } from './blocked-runs.js';
+import { createDemoCompletedRun } from './completed-runs.js';
 
 /* ---------- 常量定义 ---------- */
 export const TK_STATUSES = [
-  { id: 'planned',     name: '待规划', color: 'gray'   },
-  { id: 'backlog',     name: '待办',   color: 'gray'   },
-  { id: 'in_progress', name: '进行中', color: 'orange' },
-  { id: 'in_review',  name: '审核中', color: 'green'  },
-  { id: 'blocked',   name: '已阻塞', color: 'red'    },
-  { id: 'done',       name: '已完成', color: 'blue'   },
-  { id: 'cancelled',  name: '已取消', color: 'gray'   },
+  { id: 'planned',     name: '待规划', color: 'gray',   icon: 'dotted' },
+  { id: 'backlog',     name: '待办',   color: 'gray',   icon: 'circle' },
+  { id: 'in_progress', name: '进行中', color: 'orange', icon: 'half' },
+  { id: 'in_review',  name: '审核中', color: 'green',  icon: 'three_quarters' },
+  { id: 'blocked',   name: '已阻塞', color: 'red',    icon: 'slash' },
+  { id: 'done',       name: '已完成', color: 'blue',   icon: 'check' },
+  { id: 'cancelled',  name: '已取消', color: 'gray',   icon: 'cross' },
 ];
 
 export const TK_PRIORITIES = [
@@ -26,15 +29,14 @@ const TK_PERSON_COLORS = ['#495dff', '#08a040', '#e04a3a', '#7858f9', '#c06010',
 export const TK_PEOPLE = [];
 export function tkSyncPeople() {
   var assignedIds = typeof _tasks === 'undefined' ? [] : _tasks.flatMap(function (task) { return [task.assignee, task.createdBy]; }).filter(Boolean);
-  var visibleIds=new Set(cvPeopleInWorkspace().map(function(person){return person.id;}));
-  var personIds = Array.from(new Set(TK_DEMO_PERSON_IDS.concat(assignedIds))).filter(function(id){return visibleIds.has(id);});
+  var personIds = Array.from(new Set(TK_DEMO_PERSON_IDS.concat(assignedIds)));
   TK_PEOPLE.splice(0, TK_PEOPLE.length, ...personIds.map(function (id, index) {
     var person = CV_MEMBERS.find(function (row) { return row.id === id; });
     return person && person.status !== 'disabled' ? { id:person.id, name:person.name, avatar:person.name.slice(0, 1), color:TK_PERSON_COLORS[index % TK_PERSON_COLORS.length] } : null;
   }).filter(Boolean));
   TK_FILTER_FIELDS.find(function (field) { return field.id === 'assignee'; }).options = TK_PEOPLE.map(function (person) { return { value:person.id, label:person.name }; });
   TK_FILTER_FIELDS.find(function (field) { return field.id === 'project'; }).options = tkProjectsForCurrentUser().map(function (project) { return { value:project.id, label:project.name }; });
-  if (typeof _tasks !== 'undefined') _tasks.filter(function(task){return cvProjectInWorkspace(task.project);}).forEach(function (task) {
+  if (typeof _tasks !== 'undefined') _tasks.forEach(function (task) {
     var people = tkPeopleInProject(task.project);
     if (!people.some(function (person) { return person.id === task.assignee; })) task.assignee = people[0]?.id || '';
     if (!CV_MEMBERS.some(function (person) { return person.id === task.createdBy; })) task.createdBy = tkCurrentUserId() || people[0]?.id || '';
@@ -51,12 +53,12 @@ export function tkPeopleInProject(projectId) {
   });
 }
 export function tkCurrentUserId() {
-  var person = cvPeopleInWorkspace().find(function (row) { return row.name === cvCurrentUserName(); });
+  var person = CV_MEMBERS.find(function (row) { return row.name === cvCurrentUserName(); });
   return person ? person.id : '';
 }
 export function tkProjectsForCurrentUser() {
   var userId = tkCurrentUserId();
-  return userId ? CV_PROJECTS.filter(function (project) { return cvProjectInWorkspace(project.id)&&(project.members || []).includes(userId); }) : [];
+  return userId ? CV_PROJECTS.filter(function (project) { return (project.members || []).includes(userId); }) : [];
 }
 
 export const TK_AGENTS = [
@@ -85,30 +87,40 @@ export function tkGetTaskArtifacts(task) {
   var archPerson = (projectPeople[2] || tkGetPerson(task.assignee)).name;
   var testPerson = (projectPeople[3] || tkGetPerson(task.assignee)).name;
   return [
-    { id:'requirements', type:'需求文档', summary:'业务目标、使用场景与验收标准', date: dateTimeAfter(0, '14:30'), author: productPerson, sections:[
+    { id:'requirements', stageId:'requirements', type:'需求文档', summary:'业务目标、使用场景与验收标准', date: dateTimeAfter(0, '09:40'), author: productPerson, sections:[
       { heading:'目标', text:'围绕"' + title + '"明确要解决的问题、目标用户和交付范围。' },
       { heading:'使用场景', text:'梳理在"' + project + '"项目中的入口、主要操作路径与异常场景。' },
       { heading:'验收标准', text:'功能流程可完整走通；关键字段和状态有明确反馈；异常输入有提示与恢复方式。' },
     ] },
-    { id:'technical', type:'技术文档', summary:'实现方案、接口约定与异常处理', date: dateTimeAfter(1, '10:15'), author: devPerson, sections:[
-      { heading:'实现方案', text:'按界面、业务逻辑和数据访问拆分"' + title + '"的实现步骤。' },
-      { heading:'接口约定', text:'列出输入参数、返回字段、状态码及空数据处理方式，并标注待确认项。' },
-      { heading:'异常处理', text:'覆盖加载失败、重复提交、权限不足和网络中断等常见情况。' },
-    ] },
-    { id:'architecture', type:'架构设计', summary:'模块边界、数据流与依赖关系', date: dateTimeAfter(2, '16:00'), author: archPerson, sections:[
+    { id:'architecture', stageId:'design', type:'架构设计', summary:'模块边界、数据流与依赖关系', date: dateTimeAfter(0, '10:25'), author: archPerson, sections:[
       { heading:'模块边界', text:'"' + title + '"由展示层、任务处理层和项目数据层协作完成。' },
       { heading:'数据流', text:'用户操作 → 参数校验 → 业务处理 → 结果更新 → 界面反馈。' },
       { heading:'依赖与风险', text:'依赖"' + project + '"的数据定义；跨模块字段与状态流转需在联调前确认。' },
     ] },
-    { id:'prototype', type:'原型图', summary:'页面布局、关键状态与交互说明', date: dateTimeAfter(3, '11:20'), author: productPerson, sections:[
+    { id:'plan', stageId:'planning', type:'实施计划', summary:'工作项拆分、依赖顺序与验收安排', date: dateTimeAfter(0, '11:10'), author: productPerson, sections:[
+      { heading:'工作项', text:'将"' + title + '"拆为需求确认、方案设计、实现、验证与交付工作项。' },
+      { heading:'依赖顺序', text:'先确认字段和接口约定，再实现主流程与异常分支，最后完成独立验证。' },
+      { heading:'验收安排', text:'每个工作项关联责任人、阶段产物和可观察的验收结果。' },
+    ] },
+    { id:'technical', stageId:'implementation', type:'技术文档', summary:'实现方案、接口约定与异常处理', date: dateTimeAfter(0, '13:45'), author: devPerson, sections:[
+      { heading:'实现方案', text:'按界面、业务逻辑和数据访问拆分"' + title + '"的实现步骤。' },
+      { heading:'接口约定', text:'列出输入参数、返回字段、状态码及空数据处理方式，并标注待确认项。' },
+      { heading:'异常处理', text:'覆盖加载失败、重复提交、权限不足和网络中断等常见情况。' },
+    ] },
+    { id:'prototype', stageId:'implementation', type:'原型图', summary:'页面布局、关键状态与交互说明', date: dateTimeAfter(0, '14:10'), author: productPerson, sections:[
       { heading:'页面结构', text:'包含任务入口、主要内容区、操作区和结果反馈区。' },
       { heading:'交互流程', text:'从任务列表进入"' + title + '"，完成查看、编辑与结果确认。' },
       { heading:'界面状态', text:'覆盖默认、加载、空数据、错误和操作成功等状态。' },
     ] },
-    { id:'test', type:'测试报告', summary:'测试范围、测试用例与待验证项', date: dateTimeAfter(4, '17:45'), author: testPerson, sections:[
+    { id:'test', stageId:'verification', type:'测试报告', summary:'测试范围、模拟结果与待审核项', date: dateTimeAfter(0, '15:05'), author: testPerson, sections:[
       { heading:'测试范围', text:'覆盖"' + title + '"的主流程、边界输入与异常恢复。' },
       { heading:'测试用例', text:'正常提交、必填缺失、重复操作、无权限访问和接口失败。' },
-      { heading:'待验证项', text:'功能实现与接口联调后，核对各用例结果及异常恢复流程。' },
+      { heading:'模拟结论', text:'主流程与异常恢复已形成验证记录；权限边界和交付范围仍需人工审核。' },
+    ] },
+    { id:'delivery', stageId:'delivery', type:'交付说明', summary:'交付范围、验证结论与后续观察项', date: dateTimeAfter(0, '16:20'), author: devPerson, sections:[
+      { heading:'交付范围', text:'"' + title + '"的功能与配套说明已按验收范围整理。' },
+      { heading:'验证结论', text:'记录主流程、权限边界和异常恢复场景的验证结果。' },
+      { heading:'后续观察', text:'上线后持续关注使用反馈和异常记录，按需补充回归检查。' },
     ] },
   ];
 }
@@ -117,7 +129,7 @@ export function tkGetTaskArtifacts(task) {
 export const TK_VIEWS = [
   { id: 'all',        name: '全部',    scope: 'all',       builtin: true },
   { id: 'members',    name: '我负责',  scope: 'my_assigned', builtin: true },
-  { id: 'agents',     name: '我创建',  scope: 'my_created',  builtin: true },
+  { id: 'agents',     name: '进行中',  scope: 'in_progress', builtin: true },
 ];
 
 /* ---------- 筛选字段定义 ---------- */
@@ -182,60 +194,58 @@ export const TK_TASKS = [
   { id: 30, code: 'T1000030', title: '供应商绩效月报', desc: '配置供应商绩效月报自动生成和推送：每月 3 日自动生成上月供应商绩效报告，内容包括交货准时率排行、质量异常 TOP10、价格波动分析、合作金额统计。报告以 PDF 附件形式邮件推送至采购总监和各品类采购经理，同时在系统中归档可在线查阅。支持订阅特定供应商的绩效月报。', status: 'in_review',  priority: 'low',    assignee: 'p03', project: 'supply', labels: ['后端','文档'],        dueDate: '2026-09-29', createDate: '2026-09-19' },
   { id: 31, code: 'T1000031', title: '入库盘点任务管理', desc: '开发入库盘点任务全流程管理：创建盘点计划（选择仓库/品类/盘点日期）→系统生成盘点清单（自动带出账面库存）→分配盘点人→PDA 扫码盘点录入实盘数量→系统自动计算盘盈盘亏→生成盘点差异报告→差异审批处理（盘亏需追究责任）→调整库存账面。支持盲盘（不显示账面数量）和明盘两种模式。', status: 'in_progress', priority: 'medium', assignee: 'p07', project: 'purchase', labels: ['前端','后端'],       dueDate: '2026-09-30', createDate: '2026-09-21' },
   { id: 32, code: 'T1000032', title: '报表订阅推送配置', desc: '配置报表定时订阅推送功能：用户可订阅任意报表并设置推送规则（每日/每周/每月、推送时间、收件人、格式 PDF/Excel）。推送渠道支持邮件附件、站内消息链接、企业微信卡片三种。订阅管理页面展示所有订阅列表，支持暂停/恢复/删除。已实现订阅创建和邮件推送通道，企业微信通道待对接。', status: 'backlog',     priority: 'low',    assignee: 'p04', project: 'expense', labels: ['后端','接口'],       dueDate: '2026-10-08', createDate: '2026-09-22' },
+  { id: 33, code: 'T1000033', title: '生产工单排程引擎开发', desc: '开发生产工单排程引擎，基于工序工时、设备产能和交期约束自动生成最优排产计划。支持手动拖拽调整排程甘特图，调整后自动重算后续工序时间。排程冲突（设备占用、人员重叠）时高亮提示并给出替代方案。已完成排程算法核心逻辑，正在开发甘特图交互组件。', status: 'in_progress', priority: 'high',   assignee: 'p01', project: 'production', labels: ['后端','数据库'],     dueDate: '2026-09-28', createDate: '2026-09-21' },
+  { id: 34, code: 'T1000034', title: '工序流转状态机设计', desc: '设计工序流转状态机：待开工→开工→首检→工序加工→完工检验→流转下一工序。支持并行工序和可选工序分支。状态变更自动记录操作人、时间和设备编号。异常状态（返工、报废、让步接收）走独立流转分支，需质量主管审批后才能继续。已完成状态机UML设计文档，待架构评审。', status: 'in_review',  priority: 'medium', assignee: 'p03', project: 'production', labels: ['后端','文档'],        dueDate: '2026-09-26', createDate: '2026-09-19' },
+  { id: 35, code: 'T1000035', title: '产能利用率看板开发', desc: '开发车间产能利用率实时看板：按产线/设备/班组维度展示当日产能、实际产出、利用率（绿>85%正常/黄70-85%关注/红<70%预警）。看板支持班次切换查看历史对比，自动生成产能趋势曲线（近30天）。低于阈值时推送告警给车间主任。已完成后端聚合查询，正在对接前端图表。', status: 'backlog',     priority: 'medium', assignee: 'p04', project: 'production', labels: ['前端','UI设计'],     dueDate: '2026-10-02', createDate: '2026-09-22' },
+  { id: 36, code: 'T1000036', title: '生产报工扫码功能', desc: '开发车间PDA扫码报工功能：扫描工单条码自动带出工序列表，选择当前工序后扫描设备码确认开工。完工时扫描物料批次号关联产出批次，输入完工数量和不合格数量。支持离线报工缓存，联网后自动同步。已完成PDA端页面开发，正在对接扫码SDK和离线缓存方案。', status: 'in_progress', priority: 'high',   assignee: 'p07', project: 'production', labels: ['前端','接口'],        dueDate: '2026-09-30', createDate: '2026-09-21' },
+  { id: 37, code: 'T1000037', title: '质量追溯数据链路', desc: '搭建产品质量全链路追溯：从原材料批次（供应商/入库/检验）→生产工序（设备/人员/参数）→完工检验→成品入库→发货记录，全链路数据关联并可正反向追溯。输入成品序列号即可查看完整生产履历。追溯数据支持导出PDF质量证明书。已上线试运行，覆盖3条核心产线。', status: 'done',        priority: 'low',    assignee: 'p22', project: 'production', labels: ['后端','数据库'],     dueDate: '2026-09-15', createDate: '2026-09-08' },
+  { id: 38, code: 'T1000038', title: '工单自动派单算法', desc: '开发工单自动派单算法：按技能标签匹配工程师（Java/前端/运维），叠加当前负载权重（处理中工单数）和SLA优先级（紧急工单插队）。支持手动指派覆盖自动分配结果，手动指派记录操作日志。派单后自动推送企微通知，30分钟未响应自动转派。算法方案已评审，正在编码实现。', status: 'in_review',  priority: 'urgent', assignee: 'p03', project: 'service', labels: ['后端','接口'],        dueDate: '2026-09-25', createDate: '2026-09-20' },
+  { id: 39, code: 'T1000039', title: '多渠道工单接入层', desc: '开发多渠道工单接入层：统一接入企业微信、邮件、电话录音转写、官网表单四个渠道的工单。各渠道消息格式归一化为标准工单结构（标题/描述/紧急程度/联系人/来源渠道）。邮件渠道支持附件提取并关联到工单。已完成企微和邮件渠道对接，电话和官网渠道待开发。', status: 'in_progress', priority: 'high',   assignee: 'p01', project: 'service', labels: ['后端','接口'],        dueDate: '2026-09-29', createDate: '2026-09-21' },
+  { id: 40, code: 'T1000040', title: 'SLA倒计时监控', desc: '开发工单SLA倒计时监控：按工单优先级配置响应时效（紧急30分/高2时/中4时/低8时）和解决时效（紧急4时/高8时/中24时/低48时）。超时前15分钟黄色预警，超时后红色告警并自动升级优先级。看板展示所有倒计时工单，按剩余时间排序。阻塞原因：SLA规则引擎依赖的定时调度服务集群扩容审批中。', status: 'blocked',     priority: 'high',   assignee: 'p22', project: 'service', labels: ['后端','数据库'],     dueDate: '2026-09-26', createDate: '2026-09-18' },
+  { id: 41, code: 'T1000041', title: '客户满意度评价页', desc: '开发工单关闭后的客户满意度评价页面：1-5星评分+标签快选（响应快/专业/耐心/已解决）+可选文字评价。评价链接随工单关闭通知短信/邮件发送。低于3星的工单自动标记并推送至客服主管，触发回访流程。已完成评价页UI和提交接口，正在对接通知推送。', status: 'backlog',     priority: 'low',    assignee: 'p04', project: 'service', labels: ['前端','UI设计'],     dueDate: '2026-10-05', createDate: '2026-09-23' },
+  { id: 42, code: 'T1000042', title: '工单批量导出功能', desc: '开发工单批量导出功能：支持按时间范围、渠道、状态、处理人筛选后一键导出 Excel。导出字段可配置（默认含工单号/标题/状态/优先级/处理人/创建时间/关闭时间/满意度），导出数据量上限 5 万条。已上线使用，日均导出 30+ 次。', status: 'done',        priority: 'medium', assignee: 'p05', project: 'service', labels: ['后端','文档'],        dueDate: '2026-09-12', createDate: '2026-09-06' },
+  { id: 43, code: 'T1000043', title: '人效指标体系搭建', desc: '搭建人力效能指标体系：人均产值（总产值/在职人数）、人均利润、单位人工成本产出、加班占比、核心岗位流失率。指标按部门/团队/个人三级下钻，支持同比环比对比。指标定义文档已通过HR部门评审，正在开发指标计算逻辑和落库方案。', status: 'in_review',  priority: 'high',   assignee: 'p04', project: 'hr-analytics', labels: ['后端','文档'],     dueDate: '2026-09-27', createDate: '2026-09-20' },
+  { id: 44, code: 'T1000044', title: '组织画像可视化看板', desc: '开发组织画像可视化看板：部门人数分布树状图、学历分布饼图、年龄结构柱状图、司龄分布、职级分布。支持按部门筛选和层级下钻。看板顶部展示组织健康度综合评分（结构合理性+人才密度+流动率）。已完成前端框架和数据接口对接，正在开发下钻交互。', status: 'in_progress', priority: 'medium', assignee: 'p01', project: 'hr-analytics', labels: ['前端','UI设计'],     dueDate: '2026-09-30', createDate: '2026-09-22' },
+  { id: 45, code: 'T1000045', title: '离职风险预测模型', desc: '开发员工离职风险预测模型：特征工程包含司龄、调薪间隔、加班时长趋势、请假天数变化、绩效评分变化、直属主管离职率等12个维度。采用梯度提升树算法，输出离职概率分档（高>70%/中30-70%/低<30%）。高险人员自动推送给HRBP，附风险因子贡献度。模型方案设计中。', status: 'backlog',     priority: 'urgent', assignee: 'p03', project: 'hr-analytics', labels: ['后端','数据库'],     dueDate: '2026-09-25', createDate: '2026-09-23' },
+  { id: 46, code: 'T1000046', title: '人力数据ETL管道', desc: '搭建人力数据ETL管道：从HR系统（花名册/考勤/薪酬/绩效）定时抽取数据，经清洗转换后落入分析数仓。增量抽取频率每日凌晨2点，全量补数据支持手动触发。字段映射规则可配置，异常数据（空值/越界/编码不匹配）进入待确认队列。阻塞原因：HR系统开放API排期到下月。', status: 'blocked',     priority: 'high',   assignee: 'p22', project: 'hr-analytics', labels: ['后端','接口'],       dueDate: '2026-09-28', createDate: '2026-09-18' },
+  { id: 47, code: 'T1000047', title: '考勤数据自动汇总', desc: '配置考勤数据自动汇总定时任务：每日凌晨从考勤机系统拉取打卡记录，按排班规则自动计算迟到/早退/缺卡/加班时长，生成日考勤汇总。异常打卡（缺班/连续迟到3天）自动推送部门主管。月度汇总次月3日生成，支持导出 Excel 考勤月报。已上线运行。', status: 'done',        priority: 'low',    assignee: 'p05', project: 'hr-analytics', labels: ['后端','文档'],       dueDate: '2026-09-10', createDate: '2026-09-04' },
+  { id: 48, code: 'T1000048', title: '库位动态优化算法', desc: '开发库位动态优化算法：基于ABC分类（高频出入库A类就近/低频C类远端）+批次亲和性（同物料集中存放）+承重均衡三大策略，自动推荐货物上架库位。每周生成库位调整建议清单，支持一键执行调整（系统自动打印搬移标签）。算法模型已通过模拟验证，正在对接WMS库位数据。', status: 'in_progress', priority: 'high',   assignee: 'p03', project: 'warehouse', labels: ['后端','数据库'],     dueDate: '2026-09-28', createDate: '2026-09-21' },
+  { id: 49, code: 'T1000049', title: '扫码出入库PDA开发', desc: '开发仓储PDA扫码出入库功能：入库时扫描采购订单→扫描物料条码→输入实收数量→系统校验订单明细匹配→确认入库并打印库位标签。出库时扫描领料单→推荐拣货库位→扫码确认拣货→更新库存。支持连续扫码模式和离线缓存。已完成PDA端框架和入库流程，出库扫码待开发。', status: 'in_review',  priority: 'urgent', assignee: 'p07', project: 'warehouse', labels: ['前端','接口'],        dueDate: '2026-09-25', createDate: '2026-09-19' },
+  { id: 50, code: 'T1000050', title: '库存实时预警引擎', desc: '开发库存实时预警引擎：监控安全库存阈值（低于安全线黄色/为零红色）、库龄超期（>180天橙色/>365天红色）、呆滞料识别（无动销>90天标记）。预警事件推送至仓储主管和对应采购员，同时在看板滚动展示。引擎已部署，正在调试阈值参数和推送频率。', status: 'in_progress', priority: 'high',   assignee: 'p01', project: 'warehouse', labels: ['后端','接口'],        dueDate: '2026-09-29', createDate: '2026-09-20' },
+  { id: 51, code: 'T1000051', title: '库龄分析与呆滞料识别', desc: '开发库龄分析与呆滞料识别报表：按物料维度展示入库日期、库龄天数、库龄分布直方图。呆滞料识别规则：90天无动销预警、180天冻结采购建议、365天启动清仓处理。报表支持按仓库/品类/供应商筛选，自动计算呆滞金额占比。已完成后端分析逻辑。', status: 'backlog',     priority: 'medium', assignee: 'p02', project: 'warehouse', labels: ['后端','UI设计'],     dueDate: '2026-10-03', createDate: '2026-09-22' },
+  { id: 52, code: 'T1000052', title: '仓储大屏可视化', desc: '开发仓储运营大屏（1920x1080横屏）：四区布局——今日出入库概览（单数/数量/异常）、库存水位热力图（按库区色温展示利用率）、实时出入库流水滚动、预警待处理清单。数据每15秒自动刷新，支持暂停。已上线部署在仓库入口大屏，日均运行稳定。', status: 'done',        priority: 'low',    assignee: 'p04', project: 'warehouse', labels: ['前端','UI设计'],     dueDate: '2026-09-14', createDate: '2026-09-07' },
+  { id: 73, code: 'T1000073', title: '采购合同电子签章需求梳理', desc: '梳理采购合同电子签章的适用单据、签署顺序、证书校验和归档范围；待法务确认签章主体与验收边界后，再安排专家团评估和实施。', status: 'planned', priority: 'medium', assignee: 'p02', project: 'purchase', labels: ['文档'], dueDate: '2026-10-12', createDate: '2026-09-24' },
+  { id: 74, code: 'T1000074', title: '旧版工单短信模板迁移', desc: '原计划将旧版工单短信模板迁移到新通知中心；因模板已被统一消息服务替代，项目负责人取消该项工作并保留任务记录供追溯。', status: 'cancelled', priority: 'low', assignee: 'p04', project: 'service', labels: ['后端'], dueDate: '2026-09-30', createDate: '2026-09-20' },
 ];
 
-/* ---------- 工具函数：根据 id 查名称 ---------- */
-/* 稳定的演示任务：仅关联预置项目，刷新后编号与内容保持一致。 */
-const TK_WORKSPACE_DEMO_TASKS = [
-  ['demo-build-console','应用构建记录列表','展示构建状态、耗时和失败原因','in_progress','high','p01','前端'],
-  ['demo-build-console','发布环境权限校验','按工作区角色限制环境发布操作','in_review','urgent','p22','安全'],
-  ['demo-build-console','构建失败重试','失败任务支持查看日志并重新发起','backlog','medium','p02','后端'],
-  ['demo-build-console','控制台回归测试','覆盖构建、发布与回滚主链路','done','low','p05','测试'],
-  ['demo-build-docs','整理快速开始指南','补充创建项目到首次发布的操作步骤','backlog','medium','p04','文档'],
-  ['demo-build-docs','接入示例代码','提供仓库连接与任务创建示例','in_progress','medium','p22','文档'],
-  ['demo-build-docs','文档目录评审','检查分类、搜索词与链接可用性','in_review','low','p05','测试'],
-  ['demo-build-docs','迁移旧版常见问题','去重旧文档并保留有效链接','done','low','p04','文档'],
-  ['demo-quality-gate','单元测试覆盖率门禁','未达到阈值时阻止合入并展示差异','in_progress','high','p05','测试'],
-  ['demo-quality-gate','扫描报告聚合','按项目和分支汇总静态扫描结果','in_review','medium','p01','后端'],
-  ['demo-quality-gate','例外规则审批','为误报提供限时豁免与操作留痕','backlog','medium','p22','安全'],
-  ['demo-quality-gate','门禁通知模板','向负责人推送失败项与修复入口','done','low','p06','文档'],
-  ['demo-security','依赖风险清单','识别高危依赖并按项目展示','in_progress','high','p03','安全'],
-  ['demo-security','整改期限提醒','对超期问题自动提醒负责人','backlog','medium','p05','后端'],
-  ['demo-security','扫描策略评审','确认扫描频率和误报处理规则','in_review','medium','p01','安全'],
-  ['demo-security','历史风险归档','归档已修复漏洞与验证记录','done','low','p22','文档'],
-  ['demo-agent-studio','编排画布节点连接','支持拖拽连接智能体与工具节点','in_progress','high','p02','前端'],
-  ['demo-agent-studio','运行链路追踪','记录每个节点输入输出与耗时','in_review','medium','p01','后端'],
-  ['demo-agent-studio','失败节点重跑','保留上下文后从失败节点继续执行','backlog','medium','p22','后端'],
-  ['demo-agent-studio','编排示例模板','提供常见任务协作的初始模板','done','low','p04','文档'],
-  ['demo-skill-hub','技能版本列表','展示版本、发布状态与变更说明','in_progress','medium','p02','前端'],
-  ['demo-skill-hub','技能上架校验','校验元数据、权限和必填文档','in_review','high','p03','测试'],
-  ['demo-skill-hub','调用质量指标','按版本统计成功率和执行耗时','backlog','medium','p22','后端'],
-  ['demo-skill-hub','旧技能迁移核对','核对历史技能标识与负责人','done','low','p05','文档'],
-  ['demo-build-observe','流水线耗时统计','按项目展示构建与部署耗时趋势','in_progress','medium','p01','后端'],
-  ['demo-build-observe','异常告警规则','配置失败率和排队时长告警阈值','backlog','high','p07','运维'],
-  ['demo-build-observe','运行日志检索','支持按构建编号和时间范围检索日志','in_review','medium','p22','前端'],
-  ['demo-build-observe','指标采集验证','核对不同构建类型的指标完整性','done','low','p05','测试'],
-  ['demo-test-platform','用例分组管理','按业务模块维护回归用例集','in_progress','medium','p05','测试'],
-  ['demo-test-platform','执行计划调度','支持定时执行与失败重试','backlog','high','p02','后端'],
-  ['demo-test-platform','测试报告评审','确认失败用例归因和覆盖范围','in_review','medium','p06','测试'],
-  ['demo-test-platform','历史结果迁移','导入旧版测试执行记录','done','low','p22','文档'],
-  ['demo-release-audit','发布审批记录','按环境查询审批人、时间和决策','in_progress','medium','p04','前端'],
-  ['demo-release-audit','回滚事件关联','关联发布批次与回滚原因','backlog','medium','p07','后端'],
-  ['demo-release-audit','风险等级规则','评审发布风险分级标准','in_review','high','p05','安全'],
-  ['demo-release-audit','审计导出样例','验证导出字段与权限范围','done','low','p22','测试'],
-  ['demo-knowledge-router','知识源匹配策略','依据任务意图选择相关目录','in_progress','high','p02','后端'],
-  ['demo-knowledge-router','召回结果解释','展示匹配理由与知识来源','in_review','medium','p04','前端'],
-  ['demo-knowledge-router','无结果兜底','知识未命中时引导补充上下文','backlog','medium','p22','产品'],
-  ['demo-knowledge-router','目录权限校验','验证仅返回有权访问的知识','done','high','p03','安全'],
-  ['demo-agent-eval','评测任务集管理','按能力项维护输入与预期结果','in_progress','medium','p05','测试'],
-  ['demo-agent-eval','结果对比视图','并排比较不同版本执行结果','backlog','medium','p01','前端'],
-  ['demo-agent-eval','评分规则评审','确认准确性与完成度评分口径','in_review','high','p04','产品'],
-  ['demo-agent-eval','基线报告生成','生成首批评测基线与异常清单','done','low','p22','文档']
-];
-TK_TASKS.push(...TK_WORKSPACE_DEMO_TASKS.map(function(row,index){
-  var id=33+index;
-  return {id,code:'T'+String(1000000+id),project:row[0],title:row[1],desc:row[2],status:row[3],priority:row[4],assignee:row[5],labels:[row[6]],module:row[6],dueDate:'2026-10-'+String(1+index%20).padStart(2,'0'),createDate:'2026-09-'+String(10+index%15).padStart(2,'0')};
+/* 将吴晓峰项目已有的 20 条演示任务接入当前任务管理列表。 */
+const LINGEE_TASK_STATUSES = {
+  '未开始': 'backlog', '待办': 'backlog', '进行中': 'in_progress',
+  '待评审': 'in_review', '已完成': 'done', '已失败': 'blocked',
+};
+const LINGEE_TASK_PRIORITIES = { '高': 'high', '中': 'medium', '低': 'low' };
+const lingeeModules = new Map(CV_TASKS.filter(function (task) {
+  return task.project === 'lingee-prototype' && task.kind === 'epic';
+}).map(function (task) { return [task.boardId, { name:task.title, priority:task.priority }]; }));
+TK_TASKS.push(...CV_TASKS.filter(function (task) {
+  return task.project === 'lingee-prototype' && task.kind !== 'epic';
+}).slice(0, 20).map(function (task, index) {
+  var id = 53 + index;
+  var assignee = CV_MEMBERS.find(function (person) { return person.name === task.assignee; });
+  var module = lingeeModules.get(task.parentTaskId);
+  var dueDate = new Date(Date.UTC(2026, 8, 26 + index));
+  return {
+    id:id, code:'T' + String(1000000 + id), title:task.title, desc:task.desc || '',
+    status:LINGEE_TASK_STATUSES[task.status] || 'backlog',
+    priority:LINGEE_TASK_PRIORITIES[task.priority || module?.priority] || 'medium',
+    assignee:assignee?.id || 'p23', createdBy:'p23', project:'lingee-prototype',
+    labels:task.type === 'Bug' ? ['测试'] : task.type === '需求' ? ['文档'] : ['前端'],
+    createDate:'2026-09-' + String(15 + index % 10).padStart(2, '0'),
+    dueDate:dueDate.toISOString().slice(0, 10),
+  };
 }));
+
+/* ---------- 工具函数：根据 id 查名称 ---------- */
 export function tkGetStatusName(id) {
   var s = TK_STATUSES.find(function (x) { return x.id === id; });
   return s ? s.name : id;
@@ -262,16 +272,6 @@ export function tkGetPriorityObj(id) {
 }
 
 /* ---------- 可变状态（原型用内存数组，支持增删改） ---------- */
-var taskModules = {
-  1:'采购订单', 2:'供应商评级', 3:'入库审批', 4:'报表数据',
-  5:'采购订单', 6:'供应商准入', 7:'入库质检', 8:'报表导出',
-  9:'采购订单', 10:'供应商准入', 11:'库存预警', 12:'报表生成',
-  13:'采购比价', 14:'供应商合同', 15:'入库单据', 16:'报表权限',
-  17:'采购退货', 18:'供应商评级', 19:'入库扫码', 20:'财务凭证',
-  21:'采购订单', 22:'供应商准入', 23:'库存预警', 24:'报表数据',
-  25:'采购合同', 26:'供应商评级', 27:'入库上架', 28:'财务对账',
-  29:'采购比价', 30:'供应商评级', 31:'库存盘点', 32:'报表订阅',
-};
 function taskMinuteNow() {
   var now = new Date();
   function pad(value) { return String(value).padStart(2, '0'); }
@@ -281,10 +281,13 @@ function taskMinuteNow() {
 var _tasks = TK_TASKS.map(function (t) {
   var people = tkPeopleInProject(t.project).filter(function (person) { return TK_DEMO_PERSON_IDS.includes(person.id); });
   return Object.assign({
+    initialStatus:t.status,
     createdBy: t.project === 'expense' && t.id % 4 === 0 ? 'p22' : (people[(t.id + 1) % people.length]?.id || tkCurrentUserId()),
-    module: taskModules[t.id],
     createdAt: t.createDate + ' 09:30',
     updatedAt: t.createDate + ' 10:15',
+    reviewReport: createDemoReviewReport(t),
+    blockedRun: createDemoBlockedRun(t),
+    completedRun: createDemoCompletedRun(t),
   }, t);
 });
 var _views = TK_VIEWS.map(function (v) { return Object.assign({}, v); });
@@ -292,7 +295,7 @@ try {
   var storedViews = JSON.parse(localStorage.getItem('lingee_tasks_custom_views') || '[]');
   if (Array.isArray(storedViews)) _views = _views.concat(storedViews.filter(function (v) { return v && typeof v.id === 'string' && typeof v.name === 'string' && !v.builtin; }));
 } catch (e) { /* 本地存储不可用时仍可在当前页面管理视图 */ }
-var _nextId = Math.max(...TK_TASKS.map(function(task){return task.id;}))+1;
+var _nextId = Math.max(...TK_TASKS.map(function (task) { return task.id; })) + 1;
 var _nextViewId = Math.max(4, ..._views.map(function (v) {
   var number = Number(v.id.slice(1));
   return v.id.charAt(0) === 'v' && Number.isInteger(number) ? number + 1 : 0;
@@ -302,22 +305,8 @@ function persistViews() {
   catch (e) { /* 本地存储不可用时保留内存中的视图 */ }
 }
 
-export function tkGetTasks() { return _tasks.filter(function(task){return cvProjectInWorkspace(task.project);}); }
+export function tkGetTasks() { return _tasks; }
 export function tkSetTasks(arr) { _tasks = arr; }
-export function tkEnsureWorkspaceDemoTasks() {
-  var projects=tkProjectsForCurrentUser();
-  var project=projects.find(function(row){return row.demoSeed;});
-  if(!project||_tasks.some(function(task){return projects.some(function(row){return row.id===task.project;});}))return false;
-  var personId=tkCurrentUserId();
-  if(!personId)return false;
-  [
-    {title:'梳理需求与验收标准',desc:'明确范围、参与人和交付标准',status:'backlog',priority:'high',module:'需求梳理'},
-    {title:'实现核心流程并完成联调',desc:'完成主要功能并与上下游接口联调',status:'in_progress',priority:'medium',module:'开发实现'},
-    {title:'评审代码与测试结果',desc:'检查实现质量并确认关键测试用例',status:'in_review',priority:'medium',module:'质量验证'},
-    {title:'整理发布说明',desc:'汇总变更内容和使用说明',status:'done',priority:'low',module:'交付发布'}
-  ].forEach(function(spec){tkAddTask({...spec,project:project.id,assignee:personId,createdBy:personId,labels:['演示']});});
-  return true;
-}
 export function tkAddTask(task) {
   var now = taskMinuteNow();
   task.id = _nextId++;
@@ -325,13 +314,22 @@ export function tkAddTask(task) {
   task.createDate = now.slice(0, 10);
   task.createdAt = now;
   task.updatedAt = now;
+  task.initialStatus = task.status;
+  task.statusHistory = [];
   if (!task.createdBy) task.createdBy = tkCurrentUserId();
   _tasks.unshift(task);
   return task;
 }
 export function tkUpdateTask(id, patch) {
   var t = _tasks.find(function (x) { return x.id === id; });
-  if (t) Object.assign(t, patch, { updatedAt: taskMinuteNow() });
+  if (t) {
+    if (patch.status && patch.status !== t.status) {
+      t.statusHistory = (t.statusHistory || []).concat({
+        from:t.status, to:patch.status, authorId:tkCurrentUserId(), time:taskMinuteNow(),
+      });
+    }
+    Object.assign(t, patch, { updatedAt: taskMinuteNow() });
+  }
   return t;
 }
 export function tkDeleteTask(id) {

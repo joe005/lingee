@@ -1,17 +1,15 @@
 import { $, $$ } from '../../core/dom.js';
 import { renderListPageTabs } from '../shared/list-page-tabs.js';
 import { toast } from '../../core/toast.js';
-import { CV_MEMBERS, CV_PROJECTS, CV_TASKS, cvCurrentUserName, cvGenProjectCode, cvPeopleInProject, cvPeopleInWorkspace, cvPersistProjects, cvProjectById, cvProjectInWorkspace } from './data.js';
+import { CV_MEMBERS, CV_PROJECTS, CV_TASKS, cvCurrentUserName, cvPeopleInProject, cvPersistProjects, cvProjectById, cvProjectInWorkspace } from './data.js';
 import { xesc } from '../expert/data.js';
 import { tbSave } from './tb-core.js';
 import { renderTaskBoard, tbOpenTask, tbShowBoard } from './task-board.js';
-import { cvIsWorkspaceAdmin, cvSetProject, cvUpdateCounts, cvSyncWorkspacePermissions } from './projects.js';
+import { cvSetProject, cvUpdateCounts } from './projects.js';
 import { cvSwitchView } from './view.js';
 import { setTasksEmbedded } from '../../core/view.js';
 import { tkSetProjectListMode } from '../tasks-v2/index.js';
 import { TEAMS } from '../expert/store.js';
-import { CV_PROJECT_ICON_COLORS, cvProjectFolderIcon, cvProjectIconOptions } from './project-icons.js';
-import { recordConfigAudit, recordProjectConfigAudit } from './audit-log.js';
 /* 项目列表与详情；详情复用同一个任务管理页面，并直接维护项目成员。 */
 
 var cvProjCur='';           /* 项目详情正在看的项目 id，空 = 项目列表 */
@@ -23,10 +21,11 @@ var cvProjectTaskBoardPlaceholder=null, cvProjectTaskBoardPriorProject='', cvPro
 var cvMembersPageOpen=false;
 var cvMemberPickerSelected=new Set(),cvMemberPickerProject='',cvMemberPickerPopup=null;
 function cvCanManageProject(project){
-  if(!project||!cvProjectInWorkspace(project.id))return false;
+  if(!project)return false;
   var name=cvCurrentUserName();
   if(project.owner===name)return true;
-  return cvIsWorkspaceAdmin();
+  var person=CV_MEMBERS.find(function(row){return row.name===name;});
+  return !!(person&&person.workspaceRole==='project_manager');
 }
 var PJ_STATUS={planned:{c:'#6b7280',bg:'#f3f4f6',t:'规划中'},in_progress:{c:'#ff8d42',bg:'#fff4ed',t:'进行中'},paused:{c:'#6b7280',bg:'#f3f4f6',t:'已暂停'},completed:{c:'#4d89ff',bg:'#eef3ff',t:'已完成'},cancelled:{c:'#e04a3a',bg:'#fdeae8',t:'已取消'}};
 var PJ_FILTER_FIELDS=[
@@ -35,6 +34,7 @@ var PJ_FILTER_FIELDS=[
   ['owner','负责人','<circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/>'],
   ['progress','任务进度','<circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 9 9"/>'],
 ];
+var CV_PROJ_DOT_COLORS={blue:'#4d89ff',orange:'#ff8d42',green:'#08cc50'};
 function cvProjectProgress(project){
   var tasks=CV_TASKS.filter(function(task){return task.project===project.id&&task.kind!=='epic';});
   if(!tasks.length)return 'none';
@@ -55,10 +55,6 @@ function cvProjectFilterChoices(field){
     :field==='owner'?Array.from(new Set(projects.map(function(project){return project.owner||'';}).filter(Boolean))).sort().map(function(value){return [value,value];})
     :[['none','无任务'],['zero','0%'],['partial','1%–99%'],['done','100%']];
   return pairs.map(function(pair){return {value:pair[0],label:pair[1],count:projects.filter(function(project){return cvProjectFieldValue(project,field)===pair[0];}).length};});
-}
-function cvFirstProjectGuide(){
-  return '<div class="pj-first-project">'+cvProjectFolderIcon('blue')+'<div><strong>创建第一个项目</strong><p>项目创建后，就可以在任务管理中安排工作。</p></div>'
-    +(cvIsWorkspaceAdmin()?'<button type="button" onclick="cvOpenProjNew()">新建项目</button>':'<span>请联系工作区管理员创建项目</span>')+'</div>';
 }
 /* 兼容旧版 p.features：首次读取时迁移为 ProjectTask(kind=epic)，
    之后 Epic / Task / Subtask 统一存放在 CV_TASKS，并用 parentTaskId 建树。 */
@@ -82,7 +78,6 @@ function cvProjectEpics(p){
 /* ---------- 项目列表 ---------- */
 function cvRenderProjectList(){
   var el=$('#cv-proj-list'); if(!el) return;
-  cvSyncWorkspacePermissions();
   el.classList.toggle('is-list',cvProjectListView==='list');
   cvRenderProjectFilters();
   var list=CV_PROJECTS.filter(function(p){return cvProjectInWorkspace(p.id);});
@@ -92,7 +87,6 @@ function cvRenderProjectList(){
   var visible=list.filter(function(p){return (cvProjectScope==='all'||(cvProjectScope==='owned'&&p.owner===currentName)||(cvProjectScope==='joined'&&p.owner!==currentName&&currentPerson&&(p.members||[]).includes(currentPerson.id)))
     &&(!query||[p.name,p.desc||''].join(' ').toLocaleLowerCase().includes(query))
     &&PJ_FILTER_FIELDS.every(function(field){var selected=filters.filter(function(item){return item.field===field[0];});return !selected.length||selected.some(function(item){return cvProjectFieldValue(p,field[0])===item.value;});});});
-  var cnt=$('#cv-proj-count'); if(cnt) cnt.textContent=visible.length;
   var switcher=$('#cv-project-view-switch');
   var scopeTabs=$('#cv-project-tabs');if(scopeTabs)scopeTabs.innerHTML=renderListPageTabs([{id:'all',name:'全部'},{id:'owned',name:'我负责'},{id:'joined',name:'我参与'}],cvProjectScope,'data-pj-scope');
   if(switcher) switcher.innerHTML='<button type="button" data-pj-view="cards" class="'+(cvProjectListView==='cards'?'on':'')+'" aria-pressed="'+(cvProjectListView==='cards'?'true':'false')+'">卡片</button><button type="button" data-pj-view="list" class="'+(cvProjectListView==='list'?'on':'')+'" aria-pressed="'+(cvProjectListView==='list'?'true':'false')+'">列表</button>';
@@ -100,9 +94,8 @@ function cvRenderProjectList(){
   if(filterLabel)filterLabel.textContent=filters.length?filters.length+' 个筛选':'筛选';
   if(filterBtn)filterBtn.classList.toggle('has-filters',filters.length>0);
   if(chips){chips.classList.toggle('hidden',!filters.length);chips.innerHTML=filters.map(function(item,index){var field=PJ_FILTER_FIELDS.find(function(entry){return entry[0]===item.field;});var option=cvProjectFilterChoices(item.field).find(function(choice){return choice.value===item.value;});return '<span class="tk-chip"><span class="tk-chip-field">'+xesc(field?field[1]:item.field)+'</span><span class="tk-chip-val">'+xesc(option?option.label:item.value)+'</span><button type="button" class="tk-chip-remove" data-pj-clear="'+index+'" aria-label="移除'+xesc(option?option.label:item.value)+'筛选">×</button></span>';}).join('')+(filters.length>1?'<button type="button" class="tk-chip-clear-all" data-pj-clear="all">清除全部</button>':'');}
-  var firstProjectGuide=list.length?'':cvFirstProjectGuide();
+  if(!visible.length){ el.innerHTML='<div class="x-empty">'+(list.length?'没有匹配的项目':'当前工作区还没有项目，点右上「新建」')+'</div>'; return; }
   if(cvProjectListView==='list'){
-    if(!visible.length){ el.innerHTML=list.length?'<div class="x-empty">没有匹配的项目</div>':firstProjectGuide; return; }
     el.innerHTML='<div class="pj-projects-list"><div class="pj-list-head"><span>项目</span><span>状态</span><span>优先级</span><span>项目成员</span><span>负责人</span><span>开始时间</span><span>结束时间</span><span>任务进度</span></div>'
       +visible.map(function(p){
         var members=cvPeopleInProject(p);
@@ -111,7 +104,7 @@ function cvRenderProjectList(){
         var progress=tasks.length?Math.round(done/tasks.length*100):0;
         var sc=PJ_STATUS[p.status||'planned']||PJ_STATUS.planned;
         return '<div class="pj-list-row" data-pj-row="'+xesc(p.id)+'">'
-          +'<button type="button" class="pj-list-name" data-pj-open="'+xesc(p.id)+'" aria-label="查看项目：'+xesc(p.name)+'">'+cvProjectFolderIcon(p.dot)+'<span><b class="card-title">'+xesc(p.name)+'</b><small>'+xesc(p.desc||'暂无描述')+'</small></span></button>'
+          +'<button type="button" class="pj-list-name" data-pj-open="'+xesc(p.id)+'" aria-label="查看项目：'+xesc(p.name)+'"><i class="cfg-dot" style="background:'+(CV_PROJ_DOT_COLORS[p.dot]||'#b8b8b8')+'"></i><span><b class="card-title">'+xesc(p.name)+'</b><small>'+xesc(p.desc||'暂无描述')+'</small></span></button>'
           +'<span class="pj-status" style="color:'+sc.c+';background:'+sc.bg+'">'+sc.t+'</span>'
           +'<span>'+xesc(p.priority||'中')+'</span>'
           +'<span class="pj-list-members" title="'+xesc(members.length?members.map(function(m){return m.name;}).join('、'):'暂无成员')+'"><span class="pj-list-member-avatars">'+members.slice(0,3).map(function(m){return '<span class="pj-list-member-avatar" aria-hidden="true">'+xesc(m.name[0]||'?')+'</span>';}).join('')+'</span><span class="pj-list-member-count">'+members.length+' 人</span></span>'
@@ -122,27 +115,22 @@ function cvRenderProjectList(){
       }).join('')+'</div>';
     return;
   }
-  el.innerHTML=firstProjectGuide+'<div class="pj-cards-board">'+Object.keys(PJ_STATUS).map(function(sk){
-    var sc=PJ_STATUS[sk];
-    var colProjects=visible.filter(function(p){return (p.status||'planned')===sk;});
-    return '<div class="pj-board-col" data-status="'+sk+'">'
-      +'<div class="pj-board-col-head"><span class="pj-board-col-dot" style="background:'+sc.c+'"></span>'+sc.t+'<small>'+colProjects.length+'</small></div>'
-      +'<div class="pj-board-col-body">'
-      +(colProjects.length?colProjects.map(function(p){
-        var members=cvPeopleInProject(p);
-        var tasks=CV_TASKS.filter(function(t){return t.project===p.id&&t.kind!=='epic';});
-        var done=tasks.filter(function(t){return t.status==='已完成';}).length;
-        var progress=tasks.length?Math.round(done/tasks.length*100):0;
-        return '<div class="pj-card" data-pj-row="'+xesc(p.id)+'">'
-          +'<div class="pj-card-main"><div class="pj-card-head"><div class="pj-card-identity">'+cvProjectFolderIcon(p.dot)+'<button type="button" class="pj-card-title-button" data-pj-open="'+xesc(p.id)+'" aria-label="查看项目：'+xesc(p.name)+'" title="'+xesc(p.name)+'">'+xesc(p.name)+'</button></div></div>'
-          +'<div class="pj-card-fields">'
-          +'<div class="pj-card-field"><span>优先级</span><b>'+xesc(p.priority||'中')+'</b></div>'
-          +'<div class="pj-card-field"><span>负责人</span><b>'+xesc(p.owner||'未设置')+'</b></div>'
-          +'</div></div>'
-          +'<div class="pj-card-bottom"><span class="pj-card-members" title="'+xesc(members.length?members.map(function(m){return m.name;}).join('、'):'暂无成员')+'"><span class="pj-list-member-avatars">'+members.slice(0,3).map(function(m){return '<span class="pj-list-member-avatar" aria-hidden="true">'+xesc(m.name[0]||'?')+'</span>';}).join('')+'</span><span class="pj-list-member-count">'+members.length+' 人</span></span><span class="pj-card-progress">'+(tasks.length?'<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" class="pj-card-ring-base"/><circle cx="8" cy="8" r="6" class="pj-card-ring-value" stroke-dasharray="'+(progress*0.377)+' 37.7"/></svg><span>'+done+' / '+tasks.length+'</span>':'暂无任务')+'</span></div>'
-          +'</div>';
-      }).join(''):'<div class="pj-board-col-empty">暂无项目</div>')
-      +'</div></div>';
+  el.innerHTML='<div class="pj-projects-cards">'+visible.map(function(p){
+    var color=CV_PROJ_DOT_COLORS[p.dot]||'#b8b8b8';
+    var members=cvPeopleInProject(p);
+    var tasks=CV_TASKS.filter(function(t){return t.project===p.id&&t.kind!=='epic';});
+    var done=tasks.filter(function(t){return t.status==='已完成';}).length;
+    var progress=tasks.length?Math.round(done/tasks.length*100):0;
+    var sc=PJ_STATUS[p.status||'planned']||PJ_STATUS.planned;
+    return '<div class="pj-card" data-pj-row="'+xesc(p.id)+'">'
+      +'<div class="pj-card-main"><div class="pj-card-head"><div class="pj-card-identity"><span class="pj-card-mark" style="background:'+color+'"></span><button type="button" class="pj-card-title-button" data-pj-open="'+xesc(p.id)+'" aria-label="查看项目：'+xesc(p.name)+'" title="'+xesc(p.name)+'">'+xesc(p.name)+'</button></div>'
+      +'<div class="pj-card-actions"><span class="pj-status" style="color:'+sc.c+';background:'+sc.bg+'">'+sc.t+'</span></div></div>'
+      +'<div class="pj-card-fields">'
+      +'<div class="pj-card-field"><span>优先级</span><b>'+xesc(p.priority||'中')+'</b></div>'
+      +'<div class="pj-card-field"><span>负责人</span><b>'+xesc(p.owner||'未设置')+'</b></div>'
+      +'</div></div>'
+      +'<div class="pj-card-bottom"><span class="pj-card-members" title="'+xesc(members.length?members.map(function(m){return m.name;}).join('、'):'暂无成员')+'"><span class="pj-list-member-avatars">'+members.slice(0,3).map(function(m){return '<span class="pj-list-member-avatar" aria-hidden="true">'+xesc(m.name[0]||'?')+'</span>';}).join('')+'</span><span class="pj-list-member-count">'+members.length+' 人</span></span><span class="pj-card-progress">'+(tasks.length?'<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6" class="pj-card-ring-base"/><circle cx="8" cy="8" r="6" class="pj-card-ring-value" stroke-dasharray="'+(progress*0.377)+' 37.7"/></svg><span>'+done+' / '+tasks.length+'</span>':'暂无任务')+'</span></div>'
+      +'</div>';
   }).join('')+'</div>';
 }
 
@@ -174,7 +162,7 @@ function cvRenderProjectDetail(){
   el.innerHTML='<div class="pj-crumb">'
     +'<button type="button" class="pj-back" data-pj-back>项目</button>'
     +'<span class="pj-crumb-sep">›</span>'
-    +cvProjectFolderIcon(p.dot)
+    +'<span class="pj-dot pj-dot--sm" style="background:'+(CV_PROJ_DOT_COLORS[p.dot]||'#b8b8b8')+'"></span>'
     +'<span class="pj-crumb-name">'+xesc(p.name)+'</span>'
     +'<div class="pj-crumb-actions"><button type="button" class="pj-members-open" data-pj-members-open aria-controls="cv-project-members-overlay"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M20 21v-2a4 4 0 0 0-3-3.87M16 3.13a3.2 3.2 0 0 1 0 7.75"/></svg>'+(cvCanManageProject(p)?'成员管理':'查看成员')+' <span>'+members.length+'</span></button>'
     +'<button type="button" class="pj-summary-toggle" data-pj-summary-toggle aria-controls="pj-project-summary" aria-expanded="'+!cvSummaryCollapsed+'" aria-label="'+(cvSummaryCollapsed?'展开':'收起')+'右侧项目摘要面板" title="'+(cvSummaryCollapsed?'展开':'收起')+'右侧项目摘要面板"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M14 4v16M7 8h3M7 12h3M7 16h3"/></svg></button></div>'
@@ -187,14 +175,12 @@ function cvRenderProjectDetail(){
     +'<div class="pj-prop-section">'
     +'<div class="pj-prop-header">属性</div>'
     +'<div class="pj-prop-body">'
-    +'<div class="pj-prop-row"><span class="pj-prop-label">项目图标</span><div class="pj-prop-value"><div class="pj-icon-options" role="group" aria-label="项目文件夹颜色">'+(cvCanManageProject(p)?cvProjectIconOptions(p.dot,'data-pj-icon-color'):cvProjectFolderIcon(p.dot))+'</div></div></div>'
-    +'<div class="pj-prop-row"><span class="pj-prop-label">编码</span><span class="pj-prop-value pj-prop-code">'+xesc(p.code||cvGenProjectCode(p))+'</span></div>'
     +'<div class="pj-prop-row"><span class="pj-prop-label">状态</span><div class="pj-prop-value"><select class="sq-edit-select" data-pj-field="status">'+Object.keys(PJ_STATUS).map(function(k){return '<option value="'+k+'"'+(k===(p.status||'planned')?' selected':'')+'>'+PJ_STATUS[k].t+'</option>';}).join('')+'</select></div></div>'
     +'<div class="pj-prop-row"><span class="pj-prop-label">优先级</span><div class="pj-prop-value"><select class="sq-edit-select" data-pj-field="priority">'+['高','中','低'].map(function(v){return '<option'+(v===(p.priority||'中')?' selected':'')+'>'+v+'</option>';}).join('')+'</select></div></div>'
-    +'<div class="pj-prop-row"><span class="pj-prop-label">负责人 <span class="pe-required-mark" aria-hidden="true">*</span></span><div class="pj-prop-value"><select class="sq-edit-select" data-person-select data-pj-field="owner" aria-label="项目负责人（必填）" required><option value="" disabled'+(!cvPeopleInWorkspace().some(function(m){return m.name===p.owner;})?' selected':'')+'>请选择负责人</option>'+cvPeopleInWorkspace().map(function(m){return '<option'+(m.name===(p.owner||'')?' selected':'')+'>'+xesc(m.name)+'</option>';}).join('')+'</select></div></div>'
+    +'<div class="pj-prop-row"><span class="pj-prop-label">负责人</span><div class="pj-prop-value"><select class="sq-edit-select" data-person-select data-pj-field="owner" aria-label="项目负责人">'+CV_MEMBERS.map(function(m){return '<option'+(m.name===(p.owner||'')?' selected':'')+'>'+xesc(m.name)+'</option>';}).join('')+'</select></div></div>'
     +'<div class="pj-prop-row"><span class="pj-prop-label">开始时间</span><div class="pj-prop-value"><input type="date" class="sq-edit-date-field" data-pj-field="start" value="'+xesc(p.start||'')+'"></div></div>'
     +'<div class="pj-prop-row"><span class="pj-prop-label">结束时间</span><div class="pj-prop-value"><input type="date" class="sq-edit-date-field" data-pj-field="end" value="'+xesc(p.end||'')+'"></div></div>'
-    +'<div class="pj-prop-row"><span class="pj-prop-label">代码仓库 <span class="pe-required-mark" aria-hidden="true">*</span></span><div class="pj-prop-value"><input type="url" class="sq-edit-input" data-pj-field="repo" aria-label="Git 仓库地址（必填）" value="'+xesc(p.repo||'')+'" placeholder="仓库 URL" required></div></div>'
+    +'<div class="pj-prop-row"><span class="pj-prop-label">代码仓库</span><div class="pj-prop-value"><input class="sq-edit-input" data-pj-field="repo" value="'+xesc(p.repo||'')+'" placeholder="仓库 URL"></div></div>'
     +'<div class="pj-prop-row"><span class="pj-prop-label">专家团 <span class="pe-required-mark" aria-hidden="true">*</span></span><div class="pj-prop-value"><select class="sq-edit-select" data-pj-field="defaultTeam" aria-label="专家团（必填）" required><option value="">请选择专家团</option>'+TEAMS.map(function(t){return '<option value="'+xesc(t.id)+'"'+(t.id===p.defaultTeam?' selected':'')+'>'+xesc(t.name)+'</option>';}).join('')+'</select></div></div>'
     +'</div></div>'
     +'<div class="pj-prop-section">'
@@ -208,6 +194,7 @@ function cvRenderProjectDetail(){
     +'<div class="pj-prop-header">描述</div>'
     +'<div class="pj-prop-body">'
     +'<label class="pj-side-field-label" for="pj-side-desc">项目描述</label><textarea id="pj-side-desc" class="sq-edit-desc" data-pj-field="desc" rows="2" placeholder="添加描述">'+xesc(p.desc||'')+'</textarea>'
+    +'<label class="pj-side-field-label" for="pj-side-goal">项目目标</label><textarea id="pj-side-goal" class="sq-edit-goal" data-pj-field="goal" rows="2" placeholder="项目目标">'+xesc(p.goal||'')+'</textarea>'
     +'</div></div>'
     +'</div>'
     +'</aside>'
@@ -270,7 +257,7 @@ function cvOpenProjectSplit(){
   if(head.agent) head.agent.textContent='产品经理 · 任务规划';
   if(head.confirm) head.confirm.textContent='确认生成任务';
   var body=document.getElementById('cv-split-body'); if(!body) return;
-  body.innerHTML='<div class="split-msg split-msg--user">基于项目「'+xesc(p.name)+'」规划任务</div>'
+  body.innerHTML='<div class="split-msg split-msg--user">基于项目目标「'+xesc(p.goal||p.name)+'」规划任务</div>'
     +'<div class="split-msg split-msg--agent" id="cv-split-agent-msg"><div class="split-thinking"><i></i><i></i><i></i></div><span class="split-thinking-t">正在思考…</span></div>';
   var ov=document.getElementById('cv-splittask-overlay'); if(ov) ov.style.display='flex';
   setTimeout(cvRenderSplitResult, 900);
@@ -322,7 +309,7 @@ function cvConfirmProjectSplit(){
     checked.forEach(function(cb){
       var t=cvSplitItems[+cb.getAttribute('data-split-idx')]; if(!t) return;
       var id='epic-'+Date.now().toString(36)+'-'+n;
-      CV_TASKS.push({boardId:id,kind:'epic',parentTaskId:null,type:'特性',source:'智能规划',sourceId:'FEAT-'+Date.now().toString().slice(-6)+'-'+(n+1),status:'待规划',title:t.title,desc:t.desc,files:[],assignee:p.owner||'待分配',priority:p.priority||'中',project:p.id,progress:0,artifacts:[],activity:[{author:'系统',text:'由项目智能规划生成任务'}]});
+      CV_TASKS.push({boardId:id,kind:'epic',parentTaskId:null,type:'特性',source:'智能规划',sourceId:'FEAT-'+Date.now().toString().slice(-6)+'-'+(n+1),status:'待规划',title:t.title,desc:t.desc,files:[],assignee:p.owner||'待分配',priority:p.priority||'中',project:p.id,progress:0,artifacts:[],activity:[{author:'系统',text:'由项目目标智能规划生成任务'}]});
       n++;
     });
   }
@@ -455,13 +442,13 @@ function cvPushFeatureToTask(fid){
 /* 关联查看：从项目管理跳到任务详情 */
 function cvOpenTaskById(taskId){
   var task=CV_TASKS.find(function(t){ return t.boardId===taskId&&t.kind!=='epic'; });
-  if(!task||!cvProjectInWorkspace(task.project)||!tbShowBoard()) return;
+  if(!task||!tbShowBoard()) return;
   cvSwitchView('tasks');
   cvSetProject(task.project);
   tbOpenTask(CV_TASKS.indexOf(task));
 }
 function cvOpenProjectDetail(id){
-  if(!cvProjectInWorkspace(id)){toast('当前工作区没有这个项目','warning');cvResetProjectListState();return;}
+  if(!cvProjectById(id)){toast('项目不存在或已移除','warning');cvResetProjectListState();return;}
   var pageScroll=$('#cv-members .scroll');if(pageScroll)pageScroll.classList.remove('pj-list-mode');
   cvCloseProjectMembersModal(false);
   cvMemberPickerSelected.clear();
@@ -570,7 +557,7 @@ function cvSearchProjectMemberCandidates(query){
   if(!project||!popup)return;
   var results=popup.querySelector('.pj-members-candidates');
   var keyword=query.toLocaleLowerCase();
-  var rows=cvPeopleInWorkspace().filter(function(person){
+  var rows=CV_MEMBERS.filter(function(person){
     return person&&person.id&&person.name&&[person.name,person.phone,person.email].some(function(value){return String(value||'').toLocaleLowerCase().includes(keyword);});
   });
   results.innerHTML=rows.length?rows.map(function(person){
@@ -589,23 +576,21 @@ function cvRenderProjectMemberRows(project,members){
 }
 function cvAddProjectMember(){
   var project=cvProjectById(cvProjCur);
-  if(!cvCanManageProject(project)){toast('只有管理员或项目负责人可以添加成员','warning');return;}
+  if(!cvCanManageProject(project)){toast('只有项目经理或项目负责人可以添加成员','warning');return;}
   if(!cvMemberPickerSelected.size){toast('请先选择工作区人员','warning');return;}
-  var people=cvPeopleInWorkspace().filter(function(person){return cvMemberPickerSelected.has(person.id)&&!(project.members||[]).includes(person.id)&&person.status!=='disabled';});
+  var people=CV_MEMBERS.filter(function(person){return cvMemberPickerSelected.has(person.id)&&!(project.members||[]).includes(person.id)&&person.status!=='disabled';});
   if(!people.length){toast('所选人员无法添加','warning');return;}
   project.members=project.members||[];
   people.forEach(function(person){project.members.push(person.id);});
   cvCloseMemberPicker();
-  cvPersistProjects();
-  recordConfigAudit('project','项目「'+project.name+'」添加成员：'+people.map(function(person){return person.name;}).join('、'));
-  cvRenderProjectDetail();cvRenderProjectList();
+  cvPersistProjects();cvRenderProjectDetail();cvRenderProjectList();
   toast('已添加 '+people.length+' 名项目成员');
 }
 function cvRemoveProjectMember(personId){
   var project=cvProjectById(cvProjCur);
-  var person=cvPeopleInWorkspace().find(function(row){return row.id===personId;});
+  var person=CV_MEMBERS.find(function(row){return row.id===personId;});
   if(!project||!person)return;
-  if(!cvCanManageProject(project)){toast('只有管理员或项目负责人可以移除成员','warning');return;}
+  if(!cvCanManageProject(project)){toast('只有项目经理或项目负责人可以移除成员','warning');return;}
   if(person.name===project.owner){toast('请先更换项目负责人，再移除该成员','warning');return;}
   var pending=CV_TASKS.filter(function(task){
     if(task.project!==project.id||task.kind==='epic'||['已完成','已取消'].includes(task.status))return false;
@@ -613,13 +598,11 @@ function cvRemoveProjectMember(personId){
   });
   if(pending.length){toast(person.name+' 还有 '+pending.length+' 个未完成任务，请先完成或转交后再移除','warning');return;}
   var ids=Array.isArray(project.members)?project.members:[];
-  if(!ids.includes(personId))return;
   if(ids.length<=1){toast('项目至少需要 1 名成员','warning');return;}
   if(!window.confirm('确定将「'+person.name+'」从项目中移除吗？'))return;
   project.members=ids.filter(function(id){return id!==personId;});
   if(project.memberRoles)delete project.memberRoles[personId];
   cvPersistProjects();
-  recordConfigAudit('project','项目「'+project.name+'」移除成员：'+person.name);
   cvRenderProjectDetail();
   cvRenderProjectList();
 }
@@ -662,19 +645,6 @@ export function initCollabProjectView(){
   var pdetail=$('#cv-proj-detail');
   if(pdetail) pdetail.addEventListener('click',function(e){
     if(e.target.closest('[data-pj-back]')){ cvHideProjectDetail(); return; }
-    var iconOption=e.target.closest('[data-pj-icon-color]');
-    if(iconOption){
-      var project=cvProjectById(cvProjCur),color=iconOption.getAttribute('data-pj-icon-color');
-      if(project&&cvCanManageProject(project)&&project.dot!==color&&CV_PROJECT_ICON_COLORS.some(function(item){return item.id===color;})){
-        project.dot=color;
-        cvPersistProjects();
-        recordProjectConfigAudit(project,['dot']);
-        cvRenderProjectDetail();
-        cvRenderProjectList();
-        pdetail.querySelector('[data-pj-icon-color="'+color+'"]')?.focus();
-      }
-      return;
-    }
     if(e.target.closest('[data-pj-members-open]')){cvOpenProjectMembersModal();return;}
     var summaryToggle=e.target.closest('[data-pj-summary-toggle]');
     if(summaryToggle){
@@ -748,7 +718,7 @@ export function initCollabProjectView(){
     if(field==='owner'){
       var nextOwner=e.target.value;
       if(nextOwner===p.owner)return;
-      if(!cvPeopleInWorkspace().some(function(person){return person.name===nextOwner&&person.status!=='disabled';})){
+      if(!CV_MEMBERS.some(function(person){return person.name===nextOwner&&person.status!=='disabled';})){
         e.target.value=p.owner||'';
         toast('请选择有效的项目负责人','error');
         return;
@@ -768,29 +738,40 @@ export function initCollabProjectView(){
       toast('请选择专家团','error');
       return;
     }
-    if(field==='repo' && !e.target.value.trim()){
-      e.target.value=p.repo||'';
-      toast('Git 仓库地址不能为空','error');
-      return;
-    }
-    if(field==='repo' && !e.target.checkValidity()){
-      e.target.value=p.repo||'';
-      toast('请填写有效的 Git 仓库 URL','error');
-      return;
-    }
-    var nextValue=field==='name'?e.target.value.trim():e.target.value;
-    if(String(p[field]||'')===nextValue)return;
-    var previousName=p.name;
-    p[field]=nextValue;
+    p[field]=field==='name'?e.target.value.trim():e.target.value;
     cvPersistProjects();
-    recordProjectConfigAudit(p,[field],previousName);
     if(field==='owner'){cvRenderProjectDetail();cvRenderProjectList();return;}
-    if(field==='name'){ var crumb=document.querySelector('.pj-crumb-name'); if(crumb) crumb.textContent=e.target.value; cvRenderProjectList(); toast('项目名称已更新','success'); }
+    if(field==='name'){ var crumb=document.querySelector('.pj-crumb-name'); if(crumb) crumb.textContent=e.target.value; }
   });
   var splitBody=$('#cv-split-body');
   if(splitBody) splitBody.addEventListener('change',function(e){
     if(e.target.closest('[data-split-idx]')) cvUpdateSplitCount();
   });
 }
+
+/* ---------- 项目视图管理 ---------- */
+function cvInitProjectViewMenu(){
+  var addBtn=$('#cvProjectViewAdd'),menu=$('#cvProjectViewMenu');
+  if(!addBtn||!menu)return;
+  addBtn.addEventListener('click',function(e){
+    e.stopPropagation();
+    var opening=menu.classList.contains('hidden');
+    menu.classList.toggle('hidden',!opening);
+    addBtn.setAttribute('aria-expanded',String(opening));
+  });
+  menu.addEventListener('click',function(e){e.stopPropagation();});
+  $('#cvProjectViewMenuNew')&&$('#cvProjectViewMenuNew').addEventListener('click',function(){
+    menu.classList.add('hidden');addBtn.setAttribute('aria-expanded','false');
+    toast('视图管理功能开发中','info');
+  });
+  $('#cvProjectViewManage')&&$('#cvProjectViewManage').addEventListener('click',function(){
+    menu.classList.add('hidden');addBtn.setAttribute('aria-expanded','false');
+    toast('视图管理功能开发中','info');
+  });
+  document.addEventListener('click',function(){
+    if(menu&&!menu.classList.contains('hidden')){menu.classList.add('hidden');addBtn.setAttribute('aria-expanded','false');}
+  });
+}
+document.addEventListener('DOMContentLoaded',cvInitProjectViewMenu);
 
 export { cvCloseFeatureEdit, cvCloseManualSplit, cvCloseProjectSplit, cvConfirmManualSplit, cvConfirmProjectSplit, cvHideProjectDetail, cvOpenManualSplit, cvOpenProjectDetail, cvOpenProjectSplit, cvRenderProjectDetail, cvRenderProjectList, cvResetProjectListState, cvSaveFeatureEdit };

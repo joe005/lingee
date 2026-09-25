@@ -31,9 +31,8 @@ function renderTaskListRow(t, opts, context) {
     + '<td class="tk-col-check"><input type="checkbox" class="tk-row-check" data-task-id="' + t.id + '"' + (context.selectedIds.has(t.id) ? ' checked' : '') + '></td>'
     + '<td class="tk-col-code"><span class="tk-row-code">' + context.escapeHtml(t.code) + '</span></td>'
     + '<td class="tk-col-title"' + indentStyle + '><div class="tk-row-title-wrap">' + toggle + spacer + '<span class="tk-row-title-text">' + context.escapeHtml(t.title) + '</span>' + childBadge + '</div></td>'
-    + '<td class="tk-col-module">' + context.escapeHtml(t.module || '—') + '</td>'
-    + '<td class="tk-col-status"><span class="tk-row-status"><span class="tk-st-dot ' + context.stClass(t.status) + '"></span>' + context.escapeHtml(st.name) + '</span></td>'
-    + '<td class="tk-col-priority"><span class="tk-row-priority ' + context.priClass(t.priority) + '">' + context.escapeHtml(pri.name) + '</span></td>'
+    + '<td class="tk-col-status"><span class="tk-row-status">' + context.statusSvg(t.status) + context.escapeHtml(st.name) + '</span></td>'
+    + '<td class="tk-col-priority"><span class="tk-row-priority">' + context.escapeHtml(pri.name) + '</span></td>'
     + '<td class="tk-col-assignee"><div class="tk-row-assignee">' + context.avatarSm(t.assignee) + '<span>' + context.escapeHtml(person.name) + '</span></div></td>'
     + '<td class="tk-col-project">' + context.escapeHtml(tkGetProjectName(t.project)) + '</td>'
     + '<td class="tk-col-due"><span class="tk-row-due' + (overdue ? ' overdue' : '') + '">' + (t.dueDate ? context.fmtDate(t.dueDate) : '—') + '</span></td>'
@@ -67,4 +66,5 @@ export function applyTaskListFieldSettings(head, body, order, visibility) {
     if (actions) row.appendChild(actions);
   });
   body.querySelectorAll('.tk-row-create td[colspan]').forEach(function(cell) { cell.colSpan = taskListVisibleColumnCount(order, visibility); });
+  /* 数据行多于表头一列(操作列)，表头不包含该列以消除空列视觉干扰 */
 }

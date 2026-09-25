@@ -99,3 +99,19 @@ Consult the wiki when working on features, debugging, or onboarding to a new are
 - 共享导航与容器留在 `src/views/collab.html`；共享 CSS 文件名带 `shared`，
   `src/styles/parts/collab.css` 的导入顺序保留原有层叠关系。`data.js`、
   `view.js`、`index.js` 是跨页模块，修改前先确认接口影响。
+
+### 废弃页面归档规则
+
+「废弃页面」入口下的旧版页面和对应备份文件是归档快照，包括
+`src/views/backup/`、`src/modals/backup/`、`src/styles/parts/collab/backup/`
+及 `src/views/collab/tasks-legacy.html`；旧任务页专属的
+`src/scripts/features/collab/task-board.js` 和 `src/styles/parts/collab/12-workbench-detail.css`
+也按归档代码处理。迭代新版页面时禁止顺带修改、同步功能、
+样式或模拟数据到这些归档文件；需要保留历史版本的原貌。只有用户明确要求维护
+废弃页面时才可修改，并在改动前核对具体归档文件及共享模块对旧页的影响。
+
+### 开发后验证方式
+
+本项目完成开发后，禁止自动使用浏览器操作 Agent 验证页面。按工程要求运行
+`npm run check` 和 `npm run build`，必要时补充非浏览器的静态或命令行检查；
+页面操作验证由用户明确要求时再进行。

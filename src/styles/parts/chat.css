@@ -165,10 +165,9 @@
   .list-table th{background:#fafafa;padding:0 12px;text-align:left;font-size:12px;color:#767676;font-weight:500;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:1;white-space:nowrap;height:40px;background-clip:padding-box}
   .list-table th.sortable{cursor:pointer;user-select:none}
   .list-table th.sortable:hover{color:var(--text)}
-  .list-table th.sortable:hover .sort-arrow{border-top-color:var(--text);border-bottom-color:var(--text)}
-  .sort-arrow{display:inline-block;width:0;height:0;margin-left:6px;vertical-align:middle;border-left:4px solid transparent;border-right:4px solid transparent}
-  .sort-arrow.asc{border-bottom:5px solid var(--brand);border-top:none}
-  .sort-arrow.desc{border-top:5px solid var(--brand);border-bottom:none}
+  .sort-arrow{display:none;width:0;height:0;margin-left:6px;vertical-align:middle;border-left:4px solid transparent;border-right:4px solid transparent}
+  .sort-arrow.asc{display:inline-block;border-bottom:5px solid var(--brand);border-top:none}
+  .sort-arrow.desc{display:inline-block;border-top:5px solid var(--brand);border-bottom:none}
   .list-table th.sortable.sort-asc{color:var(--brand)}
   .list-table th.sortable.sort-desc{color:var(--brand)}
   .list-table td{padding:0 12px;font-size:13px;color:var(--text);border-bottom:1px solid #f0f0f0;white-space:nowrap;height:40px}
