@@ -502,6 +502,11 @@ function renderFilterChips() {
 
 function showEmpty() {
   els.tkBoard.classList.add('hidden'); els.tkList.classList.add('hidden'); els.tkEmpty.classList.remove('hidden');
+  var projects=tkProjectsForCurrentUser(),projectIds=new Set(projects.map(function(project){return project.id;}));
+  var hasTasks=tkGetTasks().some(function(task){return projectIds.has(task.project)&&(!projectListMode||task.project===projectListProjectId);});
+  var message=els.tkEmpty.querySelector('p');
+  if(message)message.textContent=!projects.length?'还没有可参与的项目，请先到「项目」页创建项目或联系管理员':hasTasks?'没有匹配的任务':'项目中还没有任务，点击右上「新建」开始';
+  els.tkResetFilter.classList.toggle('hidden',!hasTasks);
 }
 
 function showBoardOrList() {

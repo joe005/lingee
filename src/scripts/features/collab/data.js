@@ -14,29 +14,103 @@ import { STAGES } from '../expert/data.js';
    协作人员为「引用」关系：项目通过 members 引用人员基础资料（CV_MEMBERS）的 id，不再由成员反向挂项目
    项目归属工作区（workspace），工作区为顶层组织单元 */
 var CV_PROJECTS=[
-  {id:'expense',name:'费用报销应用',desc:'报销、审批与支付集成全流程开发',goal:'实现费用报销全流程线上化，覆盖申请、审批、支付集成与预算控制',dot:'blue',defaultTeam:'kingdee-saas-implementation',status:'in_progress',priority:'高',owner:'吴宏超',repo:'https://github.com/kingdee/expense-app',start:'2026-08-01',end:'2026-11-30',milestones:[{name:'需求确认',date:'2026-08-15'},{name:'方案评审通过',date:'2026-09-10'},{name:'开发完成',date:'2026-10-31'},{name:'上线发布',date:'2026-11-30'}],members:['p22','p01','p02','p03','p04','p05','p07','p08','p09','p10','p12','p15','p20','p21'],workspace:'ws-app'},
-  {id:'purchase',name:'采购管理系统',desc:'采购订单、入库与供应商协同重构',goal:'重构采购从下单到入库的协同流程，提升供应商协同效率与数据准确率',dot:'orange',defaultTeam:'cosmic-app-dev',status:'in_progress',priority:'中',owner:'李工',repo:'https://github.com/kingdee/purchase-ms',start:'2026-09-01',end:'2027-01-31',milestones:[{name:'需求定稿',date:'2026-09-20'},{name:'核心流程开发',date:'2026-11-30'},{name:'集成测试',date:'2026-12-31'},{name:'上线',date:'2027-01-31'}],members:['p22','p01','p02','p06','p07','p11','p12','p14','p15','p17','p19','p20','p21'],workspace:'ws-app'},
-  {id:'supply',name:'供应链协同平台',desc:'供应商评级、订单协同与交付预测',goal:'搭建供应商协同与评级平台，支持订单协同、资质管理与交付预测',dot:'green',defaultTeam:'general-app-dev',status:'planned',priority:'低',owner:'赵琳',repo:'',start:'2026-10-15',end:'2027-03-31',milestones:[{name:'方案设计',date:'2026-11-15'},{name:'门户对接',date:'2027-01-31'},{name:'评级模型上线',date:'2027-03-31'}],members:['p22','p01','p03','p04','p13','p14','p15','p16','p18','p20','p21'],workspace:'ws-build'}
+  {id:'expense',code:'EXPENSE-APP',name:'费用报销应用',desc:'报销、审批与支付集成全流程开发',goal:'实现费用报销全流程线上化，覆盖申请、审批、支付集成与预算控制',dot:'blue',defaultTeam:'kingdee-saas-implementation',status:'in_progress',priority:'高',owner:'吴宏超',repo:'https://github.com/kingdee/expense-app',start:'2026-08-01',end:'2026-11-30',milestones:[{name:'需求确认',date:'2026-08-15'},{name:'方案评审通过',date:'2026-09-10'},{name:'开发完成',date:'2026-10-31'},{name:'上线发布',date:'2026-11-30'}],members:['p22','p01','p02','p03','p04','p05','p07','p08','p09','p10','p12','p15','p20','p21'],workspace:'ws-app'},
+  {id:'purchase',code:'PURCHASE-MS',name:'采购管理系统',desc:'采购订单、入库与供应商协同重构',goal:'重构采购从下单到入库的协同流程，提升供应商协同效率与数据准确率',dot:'orange',defaultTeam:'cosmic-app-dev',status:'in_progress',priority:'中',owner:'李工',repo:'https://github.com/kingdee/purchase-ms',start:'2026-09-01',end:'2027-01-31',milestones:[{name:'需求定稿',date:'2026-09-20'},{name:'核心流程开发',date:'2026-11-30'},{name:'集成测试',date:'2026-12-31'},{name:'上线',date:'2027-01-31'}],members:['p22','p01','p02','p06','p07','p11','p12','p14','p15','p17','p19','p20','p21'],workspace:'ws-app'},
+  {id:'supply',code:'SUPPLY',name:'供应链协同平台',desc:'供应商评级、订单协同与交付预测',goal:'搭建供应商协同与评级平台，支持订单协同、资质管理与交付预测',dot:'green',defaultTeam:'general-app-dev',status:'planned',priority:'低',owner:'赵琳',repo:'https://github.com/kingdee/supply-collab',start:'2026-10-15',end:'2027-03-31',milestones:[{name:'方案设计',date:'2026-11-15'},{name:'门户对接',date:'2027-01-31'},{name:'评级模型上线',date:'2027-03-31'}],members:['p22','p01','p03','p04','p13','p14','p15','p16','p18','p20','p21'],workspace:'ws-build'}
 ];
 
 /* 项目范围演示：吴宏超负责费用报销应用和智能合同工作台，参与其余项目。 */
 var CV_ROLE_DEMO_PROJECTS=[
-  {id:'demo-contract',name:'智能合同工作台',desc:'合同起草、审批和归档流程优化',goal:'缩短合同处理周期，统一审批与归档记录',dot:'blue',defaultTeam:'general-app-dev',status:'in_progress',priority:'中',owner:'吴宏超',repo:'',start:'2026-09-01',end:'2026-12-31',members:['p22','p04','p05'],workspace:'ws-app'},
-  {id:'demo-inventory',name:'库存协同门户',desc:'仓储、采购和业务团队共享库存动态',goal:'统一库存查询和补货协作',dot:'orange',defaultTeam:'cosmic-app-dev',status:'planned',priority:'中',owner:'李工',repo:'',start:'2026-09-15',end:'2027-01-31',members:['p02','p22','p07'],workspace:'ws-app'},
-  {id:'demo-quality',name:'质量巡检平台',desc:'巡检计划、问题跟踪和整改闭环',goal:'让质量问题从发现到处理可追踪',dot:'green',defaultTeam:'general-app-dev',status:'in_progress',priority:'高',owner:'赵琳',repo:'',start:'2026-08-20',end:'2026-12-15',members:['p04','p22','p05'],workspace:'ws-app'}
+  {id:'demo-contract',code:'DEMO-CONTRACT',name:'智能合同工作台',desc:'合同起草、审批和归档流程优化',goal:'缩短合同处理周期，统一审批与归档记录',dot:'blue',defaultTeam:'general-app-dev',status:'in_progress',priority:'中',owner:'吴宏超',repo:'https://github.com/kingdee/smart-contract',start:'2026-09-01',end:'2026-12-31',members:['p22','p04','p05'],workspace:'ws-app'},
+  {id:'demo-inventory',code:'DEMO-INVENTORY',name:'库存协同门户',desc:'仓储、采购和业务团队共享库存动态',goal:'统一库存查询和补货协作',dot:'orange',defaultTeam:'cosmic-app-dev',status:'planned',priority:'中',owner:'李工',repo:'https://github.com/kingdee/inventory-portal',start:'2026-09-15',end:'2027-01-31',members:['p02','p22','p07'],workspace:'ws-app'},
+  {id:'demo-quality',code:'DEMO-QUALITY',name:'质量巡检平台',desc:'巡检计划、问题跟踪和整改闭环',goal:'让质量问题从发现到处理可追踪',dot:'green',defaultTeam:'general-app-dev',status:'in_progress',priority:'高',owner:'赵琳',repo:'https://github.com/kingdee/quality-inspect',start:'2026-08-20',end:'2026-12-15',members:['p04','p22','p05'],workspace:'ws-app'}
 ];
 CV_PROJECTS.push(...CV_ROLE_DEMO_PROJECTS.map(function(project){return {...project,members:project.members.slice()};}));
 
+/* 平级预置工作区的稳定演示项目；用户创建的工作区不自动带入这些数据。 */
+var CV_WORKSPACE_DEMO_PROJECTS=[
+  {id:'demo-build-console',code:'BUILD-CONSOLE',name:'Build控制台',desc:'统一应用构建、发布与环境状态入口',dot:'purple',status:'in_progress',priority:'高',owner:'吴宏超',repo:'https://github.com/kingdee/build-console',start:'2026-08-20',end:'2026-12-20',members:['p22','p01','p02','p05'],workspace:'ws-build'},
+  {id:'demo-build-docs',code:'BUILD-DOCS',name:'开发者文档中心',desc:'整理接入指南与常见问题',dot:'blue',status:'planned',priority:'中',owner:'赵琳',repo:'https://github.com/kingdee/build-docs',start:'2026-09-10',end:'2026-12-31',members:['p22','p04','p05'],workspace:'ws-build'},
+  {id:'demo-build-observe',code:'BUILD-OBSERVE',name:'构建可观测平台',desc:'汇总流水线运行指标与异常告警',dot:'orange',status:'in_progress',priority:'中',owner:'张工',repo:'https://github.com/kingdee/build-observe',start:'2026-09-01',end:'2027-01-20',members:['p22','p01','p07','p05'],workspace:'ws-build'},
+  {id:'demo-quality-gate',code:'QUALITY-GATE',name:'质量门禁平台',desc:'代码扫描、测试覆盖率与发布准入',dot:'green',status:'in_progress',priority:'高',owner:'陈晨',repo:'https://github.com/kingdee/quality-gate',start:'2026-08-25',end:'2026-12-15',members:['p22','p01','p05','p06'],workspace:'ws-quality'},
+  {id:'demo-security',code:'SECURITY-CHECK',name:'安全巡检中心',desc:'依赖风险扫描与问题整改跟踪',dot:'orange',status:'planned',priority:'中',owner:'张工',repo:'https://github.com/kingdee/security-check',start:'2026-09-12',end:'2027-01-15',members:['p22','p01','p03','p05'],workspace:'ws-quality'},
+  {id:'demo-test-platform',code:'TEST-PLATFORM',name:'自动化测试平台',desc:'维护测试用例、执行计划与回归报告',dot:'blue',status:'in_progress',priority:'中',owner:'陈晨',repo:'https://github.com/kingdee/test-platform',start:'2026-08-30',end:'2027-01-10',members:['p22','p05','p06','p02'],workspace:'ws-quality'},
+  {id:'demo-release-audit',code:'RELEASE-AUDIT',name:'发布审计看板',desc:'跟踪发布审批、风险与回滚记录',dot:'purple',status:'planned',priority:'低',owner:'赵琳',repo:'https://github.com/kingdee/release-audit',start:'2026-09-20',end:'2027-02-15',members:['p22','p04','p05','p07'],workspace:'ws-quality'},
+  {id:'demo-agent-studio',code:'AGENT-STUDIO',name:'智能体编排台',desc:'多智能体协作流程设计与调试',dot:'rose',status:'in_progress',priority:'高',owner:'吴宏超',repo:'https://github.com/kingdee/agent-studio',start:'2026-08-15',end:'2026-12-30',members:['p22','p01','p02','p04'],workspace:'ws-skill'},
+  {id:'demo-skill-hub',code:'SKILL-HUB',name:'Skills能力中心',desc:'技能上架、版本管理与运行质量评估',dot:'teal',status:'planned',priority:'中',owner:'李工',repo:'https://github.com/kingdee/skill-hub',start:'2026-09-05',end:'2027-01-31',members:['p22','p02','p03','p05'],workspace:'ws-skill'},
+  {id:'demo-knowledge-router',code:'KNOWLEDGE-ROUTER',name:'知识路由服务',desc:'为智能体匹配合适的知识源',dot:'green',status:'in_progress',priority:'高',owner:'李工',repo:'https://github.com/kingdee/knowledge-router',start:'2026-08-28',end:'2026-12-28',members:['p22','p02','p03','p04'],workspace:'ws-skill'},
+  {id:'demo-agent-eval',code:'AGENT-EVAL',name:'智能体评测台',desc:'构建任务集并对比智能体执行质量',dot:'orange',status:'planned',priority:'中',owner:'陈晨',repo:'https://github.com/kingdee/agent-eval',start:'2026-09-15',end:'2027-02-20',members:['p22','p05','p01','p04'],workspace:'ws-skill'}
+];
+CV_PROJECTS.push(...CV_WORKSPACE_DEMO_PROJECTS.map(function(project){return {...project,members:project.members.slice()};}));
+
 /* 工作区：顶层的组织单元，项目归属工作区 */
 var CV_WORKSPACES=[
-  {id:'ws-build',name:'灵基Build'},
-  {id:'ws-app',name:'Build应用开发组'},
-  {id:'ws-quality',name:'Build质量与安全组'},
-  {id:'ws-skill',name:'Build智能体/Skills开发组'}
+  {id:'ws-build',name:'灵基Build',desc:'',builtin:true},
+  {id:'ws-app',name:'Build应用开发组',desc:'',builtin:true},
+  {id:'ws-quality',name:'Build质量与安全组',desc:'',builtin:true},
+  {id:'ws-skill',name:'Build智能体/Skills开发组',desc:'',builtin:true}
 ];
 var cvProject='';                    /* 空串 = 全部项目（个人视角的聚合视图） */
-var cvWorkspace='';                  /* 空串 = 全部工作区；工作区为项目上层组织单元 */
+var cvWorkspace='ws-build';           /* 始终落在一个具体工作区，避免跨工作区聚合 */
+var CV_WORKSPACE_STORE_KEY='lingee-collab-workspaces-v1';
+var CV_ACTIVE_WORKSPACE_KEY='lingee-collab-active-workspace-v1';
+function cvPersistWorkspaces(){
+  try{localStorage.setItem(CV_WORKSPACE_STORE_KEY,JSON.stringify(CV_WORKSPACES));return true;}catch(e){return false;}
+}
+function cvRestoreWorkspaces(){
+  try{
+    var rows=JSON.parse(localStorage.getItem(CV_WORKSPACE_STORE_KEY)||'null');
+    if(Array.isArray(rows)){
+      rows.forEach(function(row){
+        if(!row||!row.id||typeof row.name!=='string')return;
+        var existing=CV_WORKSPACES.find(function(w){return w.id===row.id;});
+        if(existing)Object.assign(existing,{name:row.name,desc:row.desc||'',creatorId:row.creatorId||'',creatorName:row.creatorName||'',peopleIds:row.peopleIds,roles:row.roles||{},demoInitialized:!!row.demoInitialized});
+        else CV_WORKSPACES.push({id:row.id,name:row.name,desc:row.desc||'',creatorId:row.creatorId||'',creatorName:row.creatorName||'',peopleIds:Array.isArray(row.peopleIds)?row.peopleIds:[],roles:row.roles||{},demoInitialized:!!row.demoInitialized});
+      });
+    }
+    var saved=localStorage.getItem(CV_ACTIVE_WORKSPACE_KEY);
+    if(saved&&cvWorkspaceById(saved))cvWorkspace=saved;
+  }catch(e){}
+}
+function cvCreateWorkspace(name,desc,creator){
+  var row={id:'ws-'+Date.now()+'-'+Math.random().toString(36).slice(2,7),name,desc,creatorId:creator.id,creatorName:creator.name,peopleIds:[creator.id],roles:{[creator.id]:'system_admin'}};
+  CV_WORKSPACES.push(row);
+  if(!cvPersistWorkspaces()){CV_WORKSPACES.pop();return null;}
+  return row;
+}
+function cvEnsureWorkspacePeople(){
+  var changed=false;
+  CV_WORKSPACES.forEach(function(workspace){
+    if(Array.isArray(workspace.peopleIds))return;
+    workspace.peopleIds=CV_MEMBERS.filter(function(person){return !Array.isArray(person.workspaceIds)||person.workspaceIds.includes(workspace.id);}).map(function(person){return person.id;});
+    workspace.roles=Object.fromEntries(CV_MEMBERS.filter(function(person){return workspace.peopleIds.includes(person.id)&&person.workspaceRole==='system_admin';}).map(function(person){return [person.id,'system_admin'];}));
+    changed=true;
+  });
+  if(changed)cvPersistWorkspaces();
+}
 var cvConfigOverride={};             /* {项目id:{配置卡 key:是否项目覆盖}} */
+function cvGenProjectCode(project){
+  if(!project) return '';
+  if(project.code) return project.code;
+  var code='';
+  var repo=project.repo||'';
+  if(repo){
+    try{
+      var url=new URL(repo);
+      var parts=url.pathname.split('/').filter(Boolean);
+      var name=parts[parts.length-1]||'';
+      name=name.replace(/\.git$/,'');
+      if(name) code=name.toUpperCase();
+    }catch(e){
+      var segs=repo.split('/').filter(Boolean);
+      var last=segs[segs.length-1]||'';
+      last=last.replace(/\.git$/,'');
+      if(last) code=last.toUpperCase();
+    }
+  }
+  if(!code) code=(project.id||'PROJECT').toUpperCase();
+  return code;
+}
 function cvProjectById(id){
   for(var i=0;i<CV_PROJECTS.length;i++){ if(CV_PROJECTS[i].id===id) return CV_PROJECTS[i]; }
   return null;
@@ -47,15 +121,46 @@ function cvWorkspaceById(id){
   return null;
 }
 function cvWorkspaceName(id){ var w=cvWorkspaceById(id); return w?w.name:'未归属工作区'; }
-/* 项目是否属于当前工作区（cvWorkspace 为空 = 全部） */
+function cvCanAccessWorkspace(id,name){
+  var workspace=cvWorkspaceById(id);
+  if(!workspace||!name)return false;
+  if(workspace.creatorName&&workspace.creatorName===name)return true;
+  return CV_MEMBERS.some(function(person){return person.name===name&&workspace.peopleIds?.includes(person.id);});
+}
+function cvPeopleInWorkspace(){
+  var workspace=cvWorkspaceById(cvWorkspace);
+  if(!workspace)return [];
+  if(Array.isArray(workspace.peopleIds))return CV_MEMBERS.filter(function(person){return workspace.peopleIds.includes(person.id);});
+  return CV_MEMBERS.filter(function(person){return !Array.isArray(person.workspaceIds)||person.workspaceIds.includes(cvWorkspace);});
+}
+function cvAddPersonToWorkspace(person,role){
+  var workspace=cvWorkspaceById(cvWorkspace);
+  if(!workspace||!person)return false;
+  if(!Array.isArray(workspace.peopleIds))workspace.peopleIds=[];
+  var added=!workspace.peopleIds.includes(person.id);
+  if(added)workspace.peopleIds.push(person.id);
+  var previousRole=workspace.roles?.[person.id];
+  if(role){workspace.roles=workspace.roles||{};workspace.roles[person.id]=role;}
+  if(!cvPersistWorkspaces()){
+    if(added)workspace.peopleIds.pop();
+    if(role){if(previousRole)workspace.roles[person.id]=previousRole;else delete workspace.roles[person.id];}
+    return false;
+  }
+  return true;
+}
+function cvWorkspaceRole(person){
+  if(!person)return 'member';
+  var workspace=cvWorkspaceById(cvWorkspace);
+  return workspace?.roles?.[person.id]||(workspace?.creatorId===person.id?'system_admin':Array.isArray(workspace?.peopleIds)?'member':person.workspaceRole||'member');
+}
+/* 项目是否属于当前工作区 */
 function cvProjectInWorkspace(projId){
-  if(!cvWorkspace) return true;
   var p=cvProjectById(projId);
   return !!p && p.workspace===cvWorkspace;
 }
 function cvInProject(row){
   /* 工作区过滤：任务/评审所属项目须属于当前工作区 */
-  if(row.project && !cvProjectInWorkspace(row.project)) return false;
+  if(!row.project||!cvProjectInWorkspace(row.project)) return false;
   if(!cvProject) return true;
   if(row.projects) return row.projects==='*'||row.projects.indexOf(cvProject)>=0;
   return row.project===cvProject;
@@ -164,7 +269,7 @@ var CV_MEMBERS = [
   {id:'p01',name:'张工',email:'zhang***@kingdee.com',dept:'研发部',workspaceRole:'system_admin',roles:[{tag:'member-tag--dev',text:'开发'},{tag:'member-tag--arch',text:'架构'}],status:'available',source:'直接成员',isMe:true},
   {id:'p02',name:'李工',email:'li***@kingdee.com',dept:'研发部',roles:[{tag:'member-tag--dev',text:'开发'}],status:'available',source:'直接成员'},
   {id:'p03',name:'王工',email:'wang***@kingdee.com',dept:'研发部',roles:[{tag:'member-tag--dev',text:'开发'},{tag:'member-tag--arch',text:'架构'}],status:'busy',source:'直接成员'},
-  {id:'p04',name:'赵琳',email:'zha***@kingdee.com',dept:'产品部',workspaceRole:'project_manager',roles:[{tag:'member-tag--pm',text:'需求'},{tag:'member-tag--pm',text:'产品'}],status:'available',source:'继承自 灵基AIOS'},
+  {id:'p04',name:'赵琳',email:'zha***@kingdee.com',dept:'产品部',workspaceRole:'member',roles:[{tag:'member-tag--pm',text:'需求'},{tag:'member-tag--pm',text:'产品'}],status:'available',source:'继承自 灵基AIOS'},
   {id:'p05',name:'陈晨',email:'chen***@kingdee.com',dept:'测试部',roles:[{tag:'member-tag--qa',text:'测试'}],status:'available',source:'直接成员'},
   {id:'p06',name:'刘洋',email:'liu***@kingdee.com',dept:'测试部',roles:[{tag:'member-tag--qa',text:'测试'}],status:'busy',source:'直接成员'},
   {id:'p07',name:'周杰',email:'zhou***@kingdee.com',dept:'运维部',roles:[{tag:'member-tag--ops',text:'运维'}],status:'available',source:'直接成员'},
@@ -199,24 +304,33 @@ function cvCurrentUserName(){
 function cvIsMe(p){ return !!(p && p.name && p.name===cvCurrentUserName()); }
 /* 当前项目（或「全部项目」）引用的协作人员，人员管理跟着项目走 */
 function cvProjectPersons(){
-  if(!cvProject) return CV_MEMBERS.slice();
+  if(!cvProject) return cvPeopleInWorkspace();
   var proj=cvProjectById(cvProject);
   var ids=proj?(proj.members||[]):[];
-  return CV_MEMBERS.filter(function(m){ return ids.indexOf(m.id)>=0; });
+  return cvPeopleInWorkspace().filter(function(m){ return ids.indexOf(m.id)>=0; });
 }
 function cvPeopleInProject(project){
   var ids=project&&Array.isArray(project.members)?project.members:[];
-  return CV_MEMBERS.filter(function(person){return ids.includes(person.id);});
+  return cvPeopleInWorkspace().filter(function(person){return ids.includes(person.id);});
 }
 var CV_PERSON_STORE_KEY='lingee-collab-persons-v1';
 function cvPersistPersons(){
-  try{ localStorage.setItem(CV_PERSON_STORE_KEY,JSON.stringify(CV_MEMBERS)); }catch(e){}
+  try{ localStorage.setItem(CV_PERSON_STORE_KEY,JSON.stringify(CV_MEMBERS));return true; }catch(e){return false;}
 }
 function cvRestorePersons(){
   try{
     var raw=localStorage.getItem(CV_PERSON_STORE_KEY); if(!raw) return;
     var arr=JSON.parse(raw);
-    if(Array.isArray(arr)&&arr.length){ CV_MEMBERS.length=0; arr.forEach(function(m){if(!m.workspaceRole&&m.id==='p01')m.workspaceRole='system_admin';if(!m.workspaceRole&&m.id==='p04')m.workspaceRole='project_manager';CV_MEMBERS.push(m);}); }
+    if(Array.isArray(arr)&&arr.length){
+      var rolesChanged=false;
+      CV_MEMBERS.length=0;
+      arr.forEach(function(m){
+        if(!m.workspaceRole&&m.id==='p01')m.workspaceRole='system_admin';
+        else if(!['member','system_admin'].includes(m.workspaceRole)){m.workspaceRole='member';rolesChanged=true;}
+        CV_MEMBERS.push(m);
+      });
+      if(rolesChanged)cvPersistPersons();
+    }
     cvMergeDuplicateCurrentUser();
   }catch(e){}
 }
@@ -252,14 +366,27 @@ function cvMergeDuplicateCurrentUser(){
 /* 项目增改落 localStorage，刷新页面不丢（持久化与数据同源，放这里避免模块循环依赖） */
 var CV_PROJ_STORE_KEY='lingee-collab-projects-v1';
 function cvPersistProjects(){
-  try{ localStorage.setItem(CV_PROJ_STORE_KEY,JSON.stringify(CV_PROJECTS)); }catch(e){}
+  try{ localStorage.setItem(CV_PROJ_STORE_KEY,JSON.stringify(CV_PROJECTS));return true; }catch(e){return false;}
 }
 function cvRestoreProjects(){
   try{
     var raw=localStorage.getItem(CV_PROJ_STORE_KEY); if(!raw) return;
     var arr=JSON.parse(raw);
-    if(Array.isArray(arr)&&arr.length){ CV_PROJECTS.length=0; arr.forEach(function(p){CV_PROJECTS.push(p);}); }
+    if(Array.isArray(arr)&&arr.length){ CV_PROJECTS.length=0; arr.forEach(function(p){if(!p.code)p.code=cvGenProjectCode(p);CV_PROJECTS.push(p);}); }
   }catch(e){}
+}
+/* 旧缓存覆盖源码预置数组时，只增补一次新样例，不覆盖已编辑项目，也不反复复活已删除样例。 */
+function cvEnsureWorkspaceDemoProjects(){
+  var key='lingee-collab-workspace-demos-v2';
+  try{if(localStorage.getItem(key))return;}catch(e){}
+  var changed=false;
+  CV_WORKSPACE_DEMO_PROJECTS.forEach(function(sample){
+    if(CV_PROJECTS.some(function(project){return project.id===sample.id;}))return;
+    CV_PROJECTS.push({...sample,members:sample.members.slice()});
+    changed=true;
+  });
+  if(changed&&!cvPersistProjects())return;
+  try{localStorage.setItem(key,'1');}catch(e){}
 }
 function cvEnsureProjectRoleDemoData(){
   var key='lingee-collab-project-role-demos-v1';
@@ -432,7 +559,12 @@ function cvInjectCardActions(){
 /* cvProject 由其它模块写回；import 绑定只读，所以走这个 setter */
 export function set_cvProject(v){ cvProject=v; return v; }
 /* cvWorkspace 由其它模块写回；import 绑定只读，所以走这个 setter */
-export function set_cvWorkspace(v){ cvWorkspace=v; return v; }
+export function set_cvWorkspace(v){
+  if(v!==''&&!cvWorkspaceById(v))return cvWorkspace;
+  cvWorkspace=v;
+  try{localStorage.setItem(CV_ACTIVE_WORKSPACE_KEY,v);}catch(e){}
+  return v;
+}
 
 /* ---------- 产物中心：交付物按项目沉淀（左项目右清单，跟着项目走）
    单文件产物用 file（带后缀名）；代码类产物是目录，用 files 列多个文件 ---------- */
@@ -535,4 +667,4 @@ function cvSeedTaskDetails(){
   });
 }
 
-export { CV_MEMBERS, CV_PROJECTS, CV_ARTIFACTS, CV_REVIEWS, CV_REVIEW_ARTIFACTS, CV_REVIEW_COMMENTS, CV_TASKS, CV_THIRD_PARTY_MEMBERS, CV_WORKFLOW, CV_WORKFLOW_ROLES, CV_WORKSPACES, cvConfigOverride, cvCurrentUserName, cvEnsureCurrentUserProjectDemoData, cvEnsureProjectRoleDemoData, cvInProject, cvInjectCardActions, cvIsMe, cvPeopleInProject, cvPersistPersons, cvPersistProjects, cvPersonById, cvPersonName, cvProject, cvProjectById, cvProjectInWorkspace, cvProjectName, cvProjectPersons, cvRenderReviewStats, cvRenderReviews, cvRenderTaskStats, cvRenderTasks, cvRestorePersons, cvRestoreProjects, cvSeedTaskDetails, cvWorkspace, cvWorkspaceById, cvWorkspaceName };
+export { CV_MEMBERS, CV_PROJECTS, CV_ARTIFACTS, CV_REVIEWS, CV_REVIEW_ARTIFACTS, CV_REVIEW_COMMENTS, CV_TASKS, CV_THIRD_PARTY_MEMBERS, CV_WORKFLOW, CV_WORKFLOW_ROLES, CV_WORKSPACES, cvAddPersonToWorkspace, cvCanAccessWorkspace, cvConfigOverride, cvCreateWorkspace, cvCurrentUserName, cvEnsureCurrentUserProjectDemoData, cvEnsureProjectRoleDemoData, cvEnsureWorkspaceDemoProjects, cvEnsureWorkspacePeople, cvGenProjectCode, cvInProject, cvInjectCardActions, cvIsMe, cvPeopleInProject, cvPeopleInWorkspace, cvPersistPersons, cvPersistProjects, cvPersistWorkspaces, cvPersonById, cvPersonName, cvProjectById, cvProjectInWorkspace, cvProjectName, cvProjectPersons, cvProject, cvRenderReviewStats, cvRenderReviews, cvRenderTaskStats, cvRenderTasks, cvRestorePersons, cvRestoreProjects, cvRestoreWorkspaces, cvSeedTaskDetails, cvWorkspace, cvWorkspaceById, cvWorkspaceName, cvWorkspaceRole };

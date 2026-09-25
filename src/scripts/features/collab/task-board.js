@@ -1,4 +1,4 @@
-import { CV_TASKS, CV_PROJECTS, CV_ARTIFACTS, cvInProject, cvProject, cvProjectName, cvSeedTaskDetails, cvPeopleInProject } from './data.js';
+import { CV_TASKS, CV_PROJECTS, CV_ARTIFACTS, cvInProject, cvProject, cvProjectInWorkspace, cvProjectName, cvSeedTaskDetails, cvPeopleInProject } from './data.js';
 import { TEAMS } from '../expert/store.js';
 import { STAGES, xesc } from '../expert/data.js';
 import { cvSetProject, cvUpdateCounts } from './projects.js';
@@ -292,8 +292,10 @@ function decideTaskReview(action) {
 }
 export function openTask(index, status = '待办') {
   const selected = index === null ? null : CV_TASKS[index];
+  if(selected&&!cvProjectInWorkspace(selected.project))return;
   tbSetSelected(selected);
-  const project = CV_PROJECTS.find(p => p.id === (cvProject || CV_PROJECTS[0].id));
+  const project = CV_PROJECTS.find(p => p.id === cvProject && cvProjectInWorkspace(p.id)) || CV_PROJECTS.find(p=>cvProjectInWorkspace(p.id));
+  if(!project)return;
   const t = selected || { title: '', desc: '', status, assignee: cvPeopleInProject(project)[0]?.name || '', priority: '中', project: project.id, type: '需求', mode: '多人协作' };
   const assigneeOptions = [...new Set([...cvPeopleInProject(CV_PROJECTS.find(p => p.id === t.project)).map(person => person.name), t.assignee].filter(Boolean))];
   const selectedTeamId = tbCurrentTeamId(CV_PROJECTS.find(p => p.id === t.project)?.defaultTeam);
@@ -372,7 +374,7 @@ export function openTask(index, status = '待办') {
           ${t.stagePlan?.length ? '<div class="tb-inherited-field tb-inherited-field--stages"><span>阶段执行人</span>' + t.stagePlan.map(sp => '<div class="tb-stage-owner-row' + (sp.id === taskStageId(t) ? ' is-current' : '') + '"><b>' + xesc(sp.name) + '</b><span>' + xesc(sp.assignee) + '</span></div>').join('') + '<small>创建时按专家团覆盖的阶段分工，每人只启动并负责自己那一段</small></div>' : ''}
           <h3 class="tb-aside-divider">项目与协作</h3>
           <div class="tb-aside-group-k">可编辑</div>
-          <label>所属项目<select name="project">${CV_PROJECTS.map(p => '<option value="' + p.id + '" ' + (p.id === t.project ? 'selected' : '') + '>' + xesc(p.name) + '</option>').join('')}</select></label>
+          <label>所属项目<select name="project">${CV_PROJECTS.filter(p=>cvProjectInWorkspace(p.id)).map(p => '<option value="' + p.id + '" ' + (p.id === t.project ? 'selected' : '') + '>' + xesc(p.name) + '</option>').join('')}</select></label>
           <label>执行模式<select name="mode">${options(['单人执行','多人协作'],tbMode(t))}</select></label>
           <div class="tb-aside-group-k tb-aside-group-k--ro">只读 · 系统维护</div>
           <div class="tb-inherited-field"><span>专家团</span><b>${xesc(selectedTeam?.name || '未绑定')}</b><small>继承自项目 · 任务执行统一使用</small></div>

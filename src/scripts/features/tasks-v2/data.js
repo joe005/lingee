@@ -1,6 +1,6 @@
 /* 任务管理 v2 —— 模拟数据与状态
    纯前端原型，所有数据本地维护。 */
-import { CV_MEMBERS, CV_PROJECTS, cvCurrentUserName, cvPeopleInProject } from '../collab/data.js';
+import { CV_MEMBERS, CV_PROJECTS, cvCurrentUserName, cvPeopleInProject, cvPeopleInWorkspace, cvProjectInWorkspace } from '../collab/data.js';
 
 /* ---------- 常量定义 ---------- */
 export const TK_STATUSES = [
@@ -26,14 +26,15 @@ const TK_PERSON_COLORS = ['#495dff', '#08a040', '#e04a3a', '#7858f9', '#c06010',
 export const TK_PEOPLE = [];
 export function tkSyncPeople() {
   var assignedIds = typeof _tasks === 'undefined' ? [] : _tasks.flatMap(function (task) { return [task.assignee, task.createdBy]; }).filter(Boolean);
-  var personIds = Array.from(new Set(TK_DEMO_PERSON_IDS.concat(assignedIds)));
+  var visibleIds=new Set(cvPeopleInWorkspace().map(function(person){return person.id;}));
+  var personIds = Array.from(new Set(TK_DEMO_PERSON_IDS.concat(assignedIds))).filter(function(id){return visibleIds.has(id);});
   TK_PEOPLE.splice(0, TK_PEOPLE.length, ...personIds.map(function (id, index) {
     var person = CV_MEMBERS.find(function (row) { return row.id === id; });
     return person && person.status !== 'disabled' ? { id:person.id, name:person.name, avatar:person.name.slice(0, 1), color:TK_PERSON_COLORS[index % TK_PERSON_COLORS.length] } : null;
   }).filter(Boolean));
   TK_FILTER_FIELDS.find(function (field) { return field.id === 'assignee'; }).options = TK_PEOPLE.map(function (person) { return { value:person.id, label:person.name }; });
   TK_FILTER_FIELDS.find(function (field) { return field.id === 'project'; }).options = tkProjectsForCurrentUser().map(function (project) { return { value:project.id, label:project.name }; });
-  if (typeof _tasks !== 'undefined') _tasks.forEach(function (task) {
+  if (typeof _tasks !== 'undefined') _tasks.filter(function(task){return cvProjectInWorkspace(task.project);}).forEach(function (task) {
     var people = tkPeopleInProject(task.project);
     if (!people.some(function (person) { return person.id === task.assignee; })) task.assignee = people[0]?.id || '';
     if (!CV_MEMBERS.some(function (person) { return person.id === task.createdBy; })) task.createdBy = tkCurrentUserId() || people[0]?.id || '';
@@ -50,12 +51,12 @@ export function tkPeopleInProject(projectId) {
   });
 }
 export function tkCurrentUserId() {
-  var person = CV_MEMBERS.find(function (row) { return row.name === cvCurrentUserName(); });
+  var person = cvPeopleInWorkspace().find(function (row) { return row.name === cvCurrentUserName(); });
   return person ? person.id : '';
 }
 export function tkProjectsForCurrentUser() {
   var userId = tkCurrentUserId();
-  return userId ? CV_PROJECTS.filter(function (project) { return (project.members || []).includes(userId); }) : [];
+  return userId ? CV_PROJECTS.filter(function (project) { return cvProjectInWorkspace(project.id)&&(project.members || []).includes(userId); }) : [];
 }
 
 export const TK_AGENTS = [
@@ -184,6 +185,57 @@ export const TK_TASKS = [
 ];
 
 /* ---------- 工具函数：根据 id 查名称 ---------- */
+/* 稳定的演示任务：仅关联预置项目，刷新后编号与内容保持一致。 */
+const TK_WORKSPACE_DEMO_TASKS = [
+  ['demo-build-console','应用构建记录列表','展示构建状态、耗时和失败原因','in_progress','high','p01','前端'],
+  ['demo-build-console','发布环境权限校验','按工作区角色限制环境发布操作','in_review','urgent','p22','安全'],
+  ['demo-build-console','构建失败重试','失败任务支持查看日志并重新发起','backlog','medium','p02','后端'],
+  ['demo-build-console','控制台回归测试','覆盖构建、发布与回滚主链路','done','low','p05','测试'],
+  ['demo-build-docs','整理快速开始指南','补充创建项目到首次发布的操作步骤','backlog','medium','p04','文档'],
+  ['demo-build-docs','接入示例代码','提供仓库连接与任务创建示例','in_progress','medium','p22','文档'],
+  ['demo-build-docs','文档目录评审','检查分类、搜索词与链接可用性','in_review','low','p05','测试'],
+  ['demo-build-docs','迁移旧版常见问题','去重旧文档并保留有效链接','done','low','p04','文档'],
+  ['demo-quality-gate','单元测试覆盖率门禁','未达到阈值时阻止合入并展示差异','in_progress','high','p05','测试'],
+  ['demo-quality-gate','扫描报告聚合','按项目和分支汇总静态扫描结果','in_review','medium','p01','后端'],
+  ['demo-quality-gate','例外规则审批','为误报提供限时豁免与操作留痕','backlog','medium','p22','安全'],
+  ['demo-quality-gate','门禁通知模板','向负责人推送失败项与修复入口','done','low','p06','文档'],
+  ['demo-security','依赖风险清单','识别高危依赖并按项目展示','in_progress','high','p03','安全'],
+  ['demo-security','整改期限提醒','对超期问题自动提醒负责人','backlog','medium','p05','后端'],
+  ['demo-security','扫描策略评审','确认扫描频率和误报处理规则','in_review','medium','p01','安全'],
+  ['demo-security','历史风险归档','归档已修复漏洞与验证记录','done','low','p22','文档'],
+  ['demo-agent-studio','编排画布节点连接','支持拖拽连接智能体与工具节点','in_progress','high','p02','前端'],
+  ['demo-agent-studio','运行链路追踪','记录每个节点输入输出与耗时','in_review','medium','p01','后端'],
+  ['demo-agent-studio','失败节点重跑','保留上下文后从失败节点继续执行','backlog','medium','p22','后端'],
+  ['demo-agent-studio','编排示例模板','提供常见任务协作的初始模板','done','low','p04','文档'],
+  ['demo-skill-hub','技能版本列表','展示版本、发布状态与变更说明','in_progress','medium','p02','前端'],
+  ['demo-skill-hub','技能上架校验','校验元数据、权限和必填文档','in_review','high','p03','测试'],
+  ['demo-skill-hub','调用质量指标','按版本统计成功率和执行耗时','backlog','medium','p22','后端'],
+  ['demo-skill-hub','旧技能迁移核对','核对历史技能标识与负责人','done','low','p05','文档'],
+  ['demo-build-observe','流水线耗时统计','按项目展示构建与部署耗时趋势','in_progress','medium','p01','后端'],
+  ['demo-build-observe','异常告警规则','配置失败率和排队时长告警阈值','backlog','high','p07','运维'],
+  ['demo-build-observe','运行日志检索','支持按构建编号和时间范围检索日志','in_review','medium','p22','前端'],
+  ['demo-build-observe','指标采集验证','核对不同构建类型的指标完整性','done','low','p05','测试'],
+  ['demo-test-platform','用例分组管理','按业务模块维护回归用例集','in_progress','medium','p05','测试'],
+  ['demo-test-platform','执行计划调度','支持定时执行与失败重试','backlog','high','p02','后端'],
+  ['demo-test-platform','测试报告评审','确认失败用例归因和覆盖范围','in_review','medium','p06','测试'],
+  ['demo-test-platform','历史结果迁移','导入旧版测试执行记录','done','low','p22','文档'],
+  ['demo-release-audit','发布审批记录','按环境查询审批人、时间和决策','in_progress','medium','p04','前端'],
+  ['demo-release-audit','回滚事件关联','关联发布批次与回滚原因','backlog','medium','p07','后端'],
+  ['demo-release-audit','风险等级规则','评审发布风险分级标准','in_review','high','p05','安全'],
+  ['demo-release-audit','审计导出样例','验证导出字段与权限范围','done','low','p22','测试'],
+  ['demo-knowledge-router','知识源匹配策略','依据任务意图选择相关目录','in_progress','high','p02','后端'],
+  ['demo-knowledge-router','召回结果解释','展示匹配理由与知识来源','in_review','medium','p04','前端'],
+  ['demo-knowledge-router','无结果兜底','知识未命中时引导补充上下文','backlog','medium','p22','产品'],
+  ['demo-knowledge-router','目录权限校验','验证仅返回有权访问的知识','done','high','p03','安全'],
+  ['demo-agent-eval','评测任务集管理','按能力项维护输入与预期结果','in_progress','medium','p05','测试'],
+  ['demo-agent-eval','结果对比视图','并排比较不同版本执行结果','backlog','medium','p01','前端'],
+  ['demo-agent-eval','评分规则评审','确认准确性与完成度评分口径','in_review','high','p04','产品'],
+  ['demo-agent-eval','基线报告生成','生成首批评测基线与异常清单','done','low','p22','文档']
+];
+TK_TASKS.push(...TK_WORKSPACE_DEMO_TASKS.map(function(row,index){
+  var id=33+index;
+  return {id,code:'T'+String(1000000+id),project:row[0],title:row[1],desc:row[2],status:row[3],priority:row[4],assignee:row[5],labels:[row[6]],module:row[6],dueDate:'2026-10-'+String(1+index%20).padStart(2,'0'),createDate:'2026-09-'+String(10+index%15).padStart(2,'0')};
+}));
 export function tkGetStatusName(id) {
   var s = TK_STATUSES.find(function (x) { return x.id === id; });
   return s ? s.name : id;
@@ -240,7 +292,7 @@ try {
   var storedViews = JSON.parse(localStorage.getItem('lingee_tasks_custom_views') || '[]');
   if (Array.isArray(storedViews)) _views = _views.concat(storedViews.filter(function (v) { return v && typeof v.id === 'string' && typeof v.name === 'string' && !v.builtin; }));
 } catch (e) { /* 本地存储不可用时仍可在当前页面管理视图 */ }
-var _nextId = 33;
+var _nextId = Math.max(...TK_TASKS.map(function(task){return task.id;}))+1;
 var _nextViewId = Math.max(4, ..._views.map(function (v) {
   var number = Number(v.id.slice(1));
   return v.id.charAt(0) === 'v' && Number.isInteger(number) ? number + 1 : 0;
@@ -250,8 +302,22 @@ function persistViews() {
   catch (e) { /* 本地存储不可用时保留内存中的视图 */ }
 }
 
-export function tkGetTasks() { return _tasks; }
+export function tkGetTasks() { return _tasks.filter(function(task){return cvProjectInWorkspace(task.project);}); }
 export function tkSetTasks(arr) { _tasks = arr; }
+export function tkEnsureWorkspaceDemoTasks() {
+  var projects=tkProjectsForCurrentUser();
+  var project=projects.find(function(row){return row.demoSeed;});
+  if(!project||_tasks.some(function(task){return projects.some(function(row){return row.id===task.project;});}))return false;
+  var personId=tkCurrentUserId();
+  if(!personId)return false;
+  [
+    {title:'梳理需求与验收标准',desc:'明确范围、参与人和交付标准',status:'backlog',priority:'high',module:'需求梳理'},
+    {title:'实现核心流程并完成联调',desc:'完成主要功能并与上下游接口联调',status:'in_progress',priority:'medium',module:'开发实现'},
+    {title:'评审代码与测试结果',desc:'检查实现质量并确认关键测试用例',status:'in_review',priority:'medium',module:'质量验证'},
+    {title:'整理发布说明',desc:'汇总变更内容和使用说明',status:'done',priority:'low',module:'交付发布'}
+  ].forEach(function(spec){tkAddTask({...spec,project:project.id,assignee:personId,createdBy:personId,labels:['演示']});});
+  return true;
+}
 export function tkAddTask(task) {
   var now = taskMinuteNow();
   task.id = _nextId++;

@@ -101,9 +101,9 @@
 #view-collab #cv-proj-detail .pj-crumb{display:flex;align-items:center;gap:8px;min-width:0;flex:none}
 #view-collab #cv-proj-detail .pj-crumb-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #view-collab #cv-proj-detail .pj-crumb-actions{display:flex;align-items:center;gap:8px;margin-left:auto;flex:none}
-#view-collab #cv-proj-detail .pj-members-open{display:flex;align-items:center;gap:7px;min-height:34px;padding:0 11px;border:1px solid var(--border);border-radius:7px;background:#fff;color:var(--text-secondary);font:inherit;font-size:12px;cursor:pointer}
-#view-collab #cv-proj-detail .pj-members-open:hover{border-color:var(--border-focus);background:var(--fill-1);color:var(--brand)}
-#view-collab #cv-proj-detail .pj-members-open span{display:grid;min-width:20px;height:20px;place-items:center;padding:0 4px;border-radius:10px;background:var(--fill-1);font-size:11px;font-variant-numeric:tabular-nums}
+#view-collab #cv-proj-detail .pj-members-open{display:flex;align-items:center;gap:7px;min-height:34px;padding:0 11px;border:1px solid var(--brand);border-radius:7px;background:var(--brand);color:#fff;font:inherit;font-size:12px;font-weight:500;cursor:pointer}
+#view-collab #cv-proj-detail .pj-members-open:hover{background:var(--brand-hover);border-color:var(--brand-hover)}
+#view-collab #cv-proj-detail .pj-members-open span{display:grid;min-width:20px;height:20px;place-items:center;padding:0 4px;border-radius:10px;background:rgba(255,255,255,.2);font-size:11px;font-variant-numeric:tabular-nums}
 #view-collab #cv-proj-detail .pj-members-open:focus-visible{outline:2px solid var(--border-focus);outline-offset:2px}
 #view-collab #cv-proj-detail .sq-layout{flex:1;min-height:0}
 #view-collab #cv-proj-detail .sq-side{overflow-y:auto}
@@ -277,11 +277,6 @@
 #view-collab .ft-item--row .pj-module-children{flex-basis:100%;padding:8px 0 0;border-top:1px dashed var(--border);background:transparent}
 #view-collab .ft-item--row .ft-item-acts{flex:none;display:flex;gap:4px}
 #view-collab .ft-item--row .ft-item-acts .ft-act{padding:4px 5px}
-
-/* 项目信息：项目目标 */
-#view-collab .pj-side-goal{margin-top:14px;padding:12px 14px;background:var(--brand-fill);border-radius:10px}
-#view-collab .pj-side-goal-k{font-size:11px;color:var(--brand);font-weight:600;margin-bottom:5px}
-#view-collab .pj-side-goal-v{font-size:12.5px;color:var(--text);line-height:1.6}
 
 /* ============ 项目详情：左侧项目基本信息，右侧内容 ============ */
 #view-collab #cv-proj-detail .sq-layout--detail{position:relative;grid-template-columns:minmax(0,1fr) 300px}

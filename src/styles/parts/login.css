@@ -62,17 +62,7 @@
 /* 顶栏角色标签 */
 .user-role-tag{font-size:10px;line-height:1;color:var(--brand);background:var(--brand-fill);border-radius:4px;padding:3px 6px;margin-left:6px;flex:none}
 
-/* ============ 演示角色权限：owner 对应工作区系统管理员 ============
-   data-perm="owner" 仅系统管理员可见；data-perm="project-create" 对项目经理开放 */
-body[data-role="dev"] [data-perm="owner"],
-body[data-role="pm"] [data-perm="owner"],
-body[data-role="qa"] [data-perm="owner"],
-body[data-role="ops"] [data-perm="owner"]{display:none!important}
-body[data-role="project_manager"] [data-perm="owner"]{display:none!important}
-body[data-role="dev"] [data-perm="project-create"],
-body[data-role="pm"] [data-perm="project-create"],
-body[data-role="qa"] [data-perm="project-create"],
-body[data-role="ops"] [data-perm="project-create"]{display:none!important}
+/* 工作区管理员入口由项目模块按人员角色同步；下方保留演示任务角色限制。 */
 body[data-role="pm"] [data-perm="dev"],
 body[data-role="qa"] [data-perm="dev"],
 body[data-role="ops"] [data-perm="dev"]{display:none!important}

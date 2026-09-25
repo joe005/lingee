@@ -1,5 +1,5 @@
 import { cvSimulateExecution, cvSwitchToChat } from './chat.js';
-import { CV_MEMBERS, CV_PROJECTS, CV_REVIEWS, CV_TASKS, CV_WORKFLOW, CV_WORKFLOW_ROLES, cvInjectCardActions, cvProject, cvProjectName, cvRenderTaskStats, cvRenderTasks } from './data.js';
+import { CV_MEMBERS, CV_PROJECTS, CV_REVIEWS, CV_TASKS, CV_WORKFLOW, CV_WORKFLOW_ROLES, cvInjectCardActions, cvPeopleInWorkspace, cvProject, cvProjectInWorkspace, cvProjectName, cvRenderTaskStats, cvRenderTasks } from './data.js';
 import { cvUpdateCounts } from './projects.js';
 import { cvAddSidebarConversation, cvApplyFilters, cvGetFilterVal, cvToast } from './view.js';
 import { xesc } from '../expert/data.js';
@@ -76,6 +76,8 @@ function cvToggleSyncDropdown(el,ev){
 }
 function cvCollectSyncTaskData(status){
   var title=document.getElementById('cv-sync-title');if(!title||!title.value.trim()){cvToast('请输入任务标题','warning');return null;}
+  var activeProject=CV_PROJECTS.find(function(project){return project.id===cvProject&&cvProjectInWorkspace(project.id);})||CV_PROJECTS.find(function(project){return cvProjectInWorkspace(project.id);});
+  if(!activeProject){cvToast('请先在当前工作区创建项目','warning');return null;}
   var desc=document.getElementById('cv-sync-desc');
   var type=document.getElementById('cv-sync-type-val');
   var priority=document.getElementById('cv-sync-priority-val');
@@ -83,7 +85,7 @@ function cvCollectSyncTaskData(status){
   var size=document.getElementById('cv-sync-size-val');
   var sel=document.querySelector('#cv-sync-collab-options .sync-collab-option--selected .sync-collab-name');
   var mode=sel?sel.textContent:'Agent间协作';
-  return{title:title.value.trim(),desc:desc?desc.value.trim():'',type:type?type.textContent:'需求',priority:priority?priority.textContent:'中',source:source?source.textContent:'对话自建',size:size?size.textContent:'小任务',status:status||'未开始',collab:mode,assignee:(CV_PROJECTS.find(p=>p.id===(cvProject||CV_PROJECTS[0].id))||CV_PROJECTS[0]).owner,progress:0};
+  return{title:title.value.trim(),desc:desc?desc.value.trim():'',type:type?type.textContent:'需求',priority:priority?priority.textContent:'中',source:source?source.textContent:'对话自建',size:size?size.textContent:'小任务',status:status||'未开始',collab:mode,assignee:activeProject.owner,project:activeProject.id,progress:0};
 }
 function cvSaveTaskToStorage(task){
   var tasks=[];try{tasks=JSON.parse(localStorage.getItem('build_tasks')||'[]');}catch(e){}
@@ -95,7 +97,7 @@ function cvNormalizeTask(task){
   return {type:task.type,size:big?'大':'小',source:task.source,sourceId:task.sourceId||'新建',
     exec:big?'专家团':'自动执行',status:task.status,collab:task.collab,title:task.title,
     desc:task.desc||'暂无描述',assignee:task.assignee,progress:task.progress||0,
-    project:task.project||cvProject||CV_PROJECTS[0].id};
+    project:task.project||cvProject||CV_PROJECTS.find(function(project){return cvProjectInWorkspace(project.id);})?.id};
 }
 function cvAddTask(task){
   var row=cvNormalizeTask(task);
@@ -125,7 +127,7 @@ function cvOpenTaskModal(id){
 function cvCloseTaskModal(id){var el=document.getElementById(id);if(el)el.style.display='none';}
 function cvRenderPersonList(listId){
   var el=document.getElementById(listId);if(!el)return;
-  el.innerHTML=CV_MEMBERS.map(function(m,i){
+  el.innerHTML=cvPeopleInWorkspace().map(function(m,i){
     return '<button class="person-item" data-person-search="'+xesc((m.name+' '+(m.email||'')).toLocaleLowerCase())+'" onclick="cvSelectPersonItem(this)"><div class="person-avatar-sm">'+m.name[0]+'</div><div><div class="person-name-sm">'+m.name+'</div><div class="person-role-sm">'+m.roles.map(function(r){return r.text;}).join(' · ')+'</div></div></button>';
   }).join('');
 }
@@ -134,7 +136,7 @@ function cvRenderReviewPersonList(){
   var card=window.cvCard;var node='开发实现';
   if(card){var na=card.querySelector('.card-node');if(na)node=na.textContent.replace(/^[\s\u200b]+/,'').trim();}
   var role=CV_WORKFLOW_ROLES[node]||'开发人员';
-  el.innerHTML=CV_MEMBERS.filter(function(m){return !m.roles.length||m.roles.some(function(r){return r.text.indexOf(role)>=0||role.indexOf(r.text)>=0;});}).map(function(m){
+  el.innerHTML=cvPeopleInWorkspace().filter(function(m){return !m.roles.length||m.roles.some(function(r){return r.text.indexOf(role)>=0||role.indexOf(r.text)>=0;});}).map(function(m){
     return '<button class="person-item" data-person-search="'+xesc((m.name+' '+(m.email||'')).toLocaleLowerCase())+'" onclick="cvSelectPersonItem(this)"><div class="person-avatar-sm">'+m.name[0]+'</div><div><div class="person-name-sm">'+m.name+'</div><div class="person-role-sm">'+m.roles.map(function(r){return r.text;}).join(' · ')+'</div></div></button>';
   }).join('');
   if(!el.innerHTML){el.innerHTML='<div style="padding:20px;text-align:center;color:var(--text-soft);font-size:12.5px">当前节点无匹配人员</div>';}

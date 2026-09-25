@@ -3,13 +3,41 @@
     <div class="cv-wsbar">
       <div class="cv-proj cv-ws" id="cvWsSwitch">
         <button type="button" class="cv-proj-btn" id="cvWsBtn" aria-haspopup="true" aria-expanded="false">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-          <span id="cvWsLabel">全部工作区</span>
+          <span id="cvWsLabel">灵基Build</span>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
-        <div class="cv-proj-menu" id="cvWsMenu"></div>
+        <div class="cv-proj-menu cv-ws-menu" id="cvWsMenu">
+          <div class="cv-ws-menu-search"><input id="cvWsSearch" type="search" placeholder="搜索工作区..." autocomplete="off" aria-label="搜索工作区"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></div>
+          <div class="cv-ws-menu-caption">工作区 <span id="cvWsCount">0</span></div>
+          <div class="cv-ws-menu-options" id="cvWsOptions"></div>
+          <div class="cv-ws-menu-footer"><button type="button" id="cvWsCreateToggle" aria-controls="cvWsCreateForm" aria-expanded="false"><span aria-hidden="true" class="cv-ws-menu-plus">+</span>创建工作区</button></div>
+        </div>
       </div>
+      <form class="cv-ws-create-form hidden" id="cvWsCreateForm">
+        <strong>新增工作区</strong>
+        <label for="cvWsCreateName">名称 <span aria-hidden="true">*</span></label>
+        <input id="cvWsCreateName" name="workspaceName" type="text" maxlength="60" placeholder="输入工作区名称" required>
+        <label for="cvWsCreateDesc">描述</label>
+        <textarea id="cvWsCreateDesc" name="workspaceDesc" rows="3" maxlength="500" placeholder="简要说明这个工作区的用途"></textarea>
+        <div class="cv-ws-create-actions"><button type="button" data-ws-create-cancel>取消</button><button type="submit">创建并切换</button></div>
+      </form>
     </div>
+    <section class="cv-workspace-onboarding hidden" id="cvWorkspaceOnboarding" aria-labelledby="cvWorkspaceOnboardingTitle">
+      <div class="cv-workspace-onboarding-card">
+        <div class="cv-workspace-onboarding-icon" aria-hidden="true"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M12 11v6m-3-3h6"/></svg></div>
+        <span class="cv-workspace-onboarding-kicker">协作开发</span>
+        <h1 id="cvWorkspaceOnboardingTitle">先创建一个工作区</h1>
+        <p>工作区用于管理项目、人员和配置。创建后，你就可以新建项目并安排任务。</p>
+        <form id="cvWsOnboardingForm" class="cv-workspace-onboarding-form">
+          <label for="cvWsOnboardingName">工作区名称 <span aria-hidden="true">*</span></label>
+          <input id="cvWsOnboardingName" name="workspaceName" type="text" maxlength="60" placeholder="例如：产品研发组" autocomplete="off" required>
+          <label for="cvWsOnboardingDesc">描述 <small>选填</small></label>
+          <textarea id="cvWsOnboardingDesc" name="workspaceDesc" rows="3" maxlength="500" placeholder="简要说明这个工作区的用途"></textarea>
+          <button type="submit">创建工作区</button>
+        </form>
+        <p class="cv-workspace-onboarding-help">需要进入已有工作区？请联系其创建者或管理员将你添加为成员。</p>
+      </div>
+    </section>
     <div class="tab-nav" id="cvTabNav">
       <button class="tab-nav-item tab-nav-item--active" data-cvview="tasks" onclick="cvSwitchView('tasks')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>任务管理</button>
       <button class="tab-nav-item" data-cvview="members" onclick="cvSwitchView('members')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>项目</button>

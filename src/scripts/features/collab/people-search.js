@@ -1,4 +1,4 @@
-import { CV_MEMBERS, cvPersistPersons } from './data.js';
+import { CV_MEMBERS, cvAddPersonToWorkspace, cvPeopleInWorkspace, cvPersistPersons, cvWorkspace } from './data.js';
 
 /* 待接入：宿主提供 search(query) → [{id,name,phone,email}]，服务端按当前租户和权限过滤。 */
 var CV_LINGEE_DEMO_USERS=[
@@ -19,13 +19,18 @@ async function cvSearchLingeePeople(query){
   return CV_LINGEE_DEMO_USERS.filter(function(person){return [person.name,person.phone,person.email].some(function(value){return value.toLocaleLowerCase().includes(keyword);});});
 }
 function cvLinkedLingeePerson(id,name){
-  return CV_MEMBERS.find(function(row){return row.id===id||row.userId===id||(row.linkedUserIds||[]).includes(id)||(name==='吴宏超'&&row.name===name);})||null;
+  return cvPeopleInWorkspace().find(function(row){return row.id===id||row.userId===id||(row.linkedUserIds||[]).includes(id)||(name==='吴宏超'&&row.name===name);})||null;
 }
 function cvLinkLingeePerson(person){
   if(!person||!person.id||!person.name)return null;
   var linked=cvLinkedLingeePerson(person.id,person.name);if(linked)return linked;
-  linked={id:person.id,userId:person.id,name:person.name,phone:person.phone||'',email:person.email||'',workspaceRole:'member',roles:[],status:'available',source:cvPeopleSearchIsDemo()?'灵基用户（演示）':'灵基用户'};
-  CV_MEMBERS.push(linked);cvPersistPersons();
+  linked=CV_MEMBERS.find(function(row){return row.id===person.id||row.userId===person.id;});
+  if(!linked){
+    linked={id:person.id,userId:person.id,name:person.name,phone:person.phone||'',email:person.email||'',workspaceRole:'member',workspaceIds:[cvWorkspace],roles:[],status:'available',source:cvPeopleSearchIsDemo()?'灵基用户（演示）':'灵基用户'};
+    CV_MEMBERS.push(linked);
+    if(!cvPersistPersons()){CV_MEMBERS.pop();return null;}
+  }
+  if(!cvAddPersonToWorkspace(linked))return null;
   return linked;
 }
 

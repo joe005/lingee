@@ -41,6 +41,9 @@
   --dot-blue: #4d89ff;
   --dot-orange: #ff8d42;
   --dot-green: #08cc50;
+  --dot-purple: #8b5cf6;
+  --dot-teal: #14b8a6;
+  --dot-rose: #e76f96;
 
   /* ---- 中性色（对齐参考工程 neutral 调色板） ---- */
   --neutral-50: rgba(0, 0, 0, 0.03);

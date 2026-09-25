@@ -3,8 +3,7 @@ import { $, $$ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
 import { setNavActive, setTasksEmbedded, showView } from '../../core/view.js';
 import { cvRenderExperts } from './experts.js';
-import { getRole } from '../login.js';
-import { cvSyncUrl } from './projects.js';
+import { cvIsWorkspaceAdmin, cvSyncUrl, cvSyncWorkspacePermissions } from './projects.js';
 import { xesc } from '../expert/data.js';
 import { renderExpertGrid } from '../expert/library.js';
 /* 协作开发：视图与页签切换
@@ -73,7 +72,8 @@ function cvSwitchSub(name){
 function cvSwitchView(name){
   if(name==='config-proj') name='config';   /* 旧链接兼容：项目设置已并入项目管理 */
   if(name==='config-perm') name='config';   /* 人员已并入设置左导航 */
-  if(name==='config' && getRole()!=='owner') name='tasks';   /* 设置仅工作区系统管理员可进 */
+  cvSyncWorkspacePermissions();
+  if(name==='config' && !cvIsWorkspaceAdmin()) name='tasks';   /* 设置仅工作区管理员可进 */
   if(name==='tasks'){
     setTasksEmbedded(true);
   }
