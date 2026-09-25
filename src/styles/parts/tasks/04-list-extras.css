@@ -1,0 +1,44 @@
+/* ---------- 管理视图列表 ---------- */
+.tk-manage-list{display:flex;flex-direction:column;gap:4px}
+.tk-manage-item{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--fill-1)}
+.tk-manage-item-name{font-size:13px;color:var(--text);font-weight:500}
+.tk-manage-item-builtin{font-size:11px;color:var(--text-soft);margin-left:6px}
+.tk-manage-item-actions{display:flex;align-items:center;gap:4px}
+.tk-manage-item-actions button{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border:none;background:transparent;color:var(--text-secondary);cursor:pointer;border-radius:5px}
+.tk-manage-item-actions button:hover{background:var(--hover);color:var(--text)}
+.tk-manage-item-actions .tk-manage-del:hover{color:var(--danger)}
+
+/* ---------- 弹出菜单 ---------- */
+.tk-popover{position:absolute;background:var(--bg);border:1px solid var(--border);border-radius:8px;box-shadow:var(--menu-shadow);padding:4px;z-index:50;min-width:140px;display:none}
+.tk-popover.show{display:block}
+.tk-popover-item{padding:6px 10px;border-radius:4px;font-size:13px;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:space-between}
+.tk-popover-item:hover{background:var(--hover)}
+.tk-popover-item.active{color:var(--brand);background:var(--brand-fill)}
+.tk-popover-item .tk-popover-check{opacity:0}
+.tk-popover-item.active .tk-popover-check{opacity:1}
+
+/* ---------- 头像 ---------- */
+.tk-avatar{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:600;flex-shrink:0}
+
+/* ---------- 看板卡片父子嵌套（参考 Multica table-view 按深度缩进） ---------- */
+.tk-card-top-row{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.tk-card-toggle{flex:none;width:18px;height:18px;display:grid;place-items:center;border:0;background:transparent;color:var(--text-soft);cursor:pointer;border-radius:4px;transition:background .12s,color .12s}
+.tk-card-toggle:hover{background:var(--hover);color:var(--text)}
+.tk-card-toggle svg{transition:transform .15s}
+.tk-card-toggle.is-collapsed svg{transform:rotate(-90deg)}
+.tk-card-spacer{flex:none;width:18px;height:18px}
+.tk-card-child-count{flex:none;display:inline-flex;align-items:center;justify-content:center;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--brand-fill);color:var(--brand);font-size:10px;font-weight:600;font-variant-numeric:tabular-nums}
+.tk-card--child{border-left:2px solid var(--border)}
+.tk-card--child:hover{border-left-color:var(--border-hover)}
+.tk-card--parent{background:var(--fill-1)}
+
+/* ---------- 列表行父子嵌套 ---------- */
+.tk-row-title-wrap{display:flex;align-items:center;gap:6px}
+.tk-row-toggle{flex:none;width:18px;height:18px;display:grid;place-items:center;border:0;background:transparent;color:var(--text-soft);cursor:pointer;border-radius:4px;transition:background .12s,color .12s}
+.tk-row-toggle:hover{background:var(--hover);color:var(--text)}
+.tk-row-toggle svg{transition:transform .15s}
+.tk-row-toggle.is-collapsed svg{transform:rotate(-90deg)}
+.tk-row-spacer{flex:none;width:18px;height:18px}
+.tk-row-child-count{flex:none;display:inline-flex;align-items:center;justify-content:center;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--brand-fill);color:var(--brand);font-size:10px;font-weight:600}
+.tk-row--child{background:var(--fill-1)}
+.tk-row--child:hover{background:var(--hover)}

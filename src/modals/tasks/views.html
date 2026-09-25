@@ -1,0 +1,53 @@
+    <!-- 保存视图对话框 -->
+    <div class="tk-modal-overlay hidden" id="tkSaveViewOverlay">
+      <div class="tk-modal tk-modal-sm">
+        <div class="tk-modal-head">
+          <h3>保存为视图</h3>
+          <button class="tk-modal-close" id="tkSaveViewClose" data-tooltip="关闭" aria-label="关闭">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div class="tk-modal-body">
+          <p class="tk-save-view-hint">基于工作区全部任务创建</p>
+          <div class="tk-form-row">
+            <label for="tkSaveViewName">名称 <span class="tk-req">*</span></label>
+            <input type="text" id="tkSaveViewName" placeholder="例如：需要 Review" maxlength="80">
+          </div>
+          <div class="tk-form-row">
+            <label for="tkSaveViewVisibility">可见性</label>
+            <select id="tkSaveViewVisibility"><option value="private">仅自己可见</option><option value="workspace">工作区成员可见</option></select>
+          </div>
+          <div class="tk-form-row">
+            <label for="tkSaveViewScope">任务范围</label>
+            <select id="tkSaveViewScope"><option value="all">全部任务</option><option value="my_assigned">我负责</option><option value="my_created">我创建</option><option value="members">分配给成员</option><option value="agents">分配给智能体</option></select>
+          </div>
+          <div class="tk-form-row">
+            <label for="tkSaveViewLayout">布局</label>
+            <select id="tkSaveViewLayout"><option value="board">看板</option><option value="list">列表</option></select>
+          </div>
+          <p class="tk-save-view-summary" id="tkSaveViewSummary"></p>
+        </div>
+        <div class="tk-modal-foot">
+          <button class="tk-btn-ghost" id="tkSaveViewCancel">取消</button>
+          <button class="tk-btn-primary" id="tkSaveViewConfirm">创建视图</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 管理视图对话框 -->
+    <div class="tk-modal-overlay hidden" id="tkManageViewsOverlay">
+      <div class="tk-modal tk-modal-sm">
+        <div class="tk-modal-head">
+          <h3>管理视图</h3>
+          <button class="tk-modal-close" id="tkManageViewsClose" data-tooltip="关闭" aria-label="关闭">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div class="tk-modal-body">
+          <div class="tk-manage-list" id="tkManageList"></div>
+        </div>
+        <div class="tk-modal-foot">
+          <button class="tk-btn-ghost" id="tkManageViewsCancel">关闭</button>
+        </div>
+      </div>
+    </div>

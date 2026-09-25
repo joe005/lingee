@@ -1,0 +1,14 @@
+      <!-- 看板视图 -->
+      <div class="tk-board" id="tkBoard">
+        <div class="tk-board-scroll" id="tkBoardScroll">
+          <!-- 看板列由 JS 渲染 -->
+        </div>
+      </div>
+      <!-- 列表视图 -->
+      <!--#include "src/views/tasks/list.html" -->
+      <!-- 空状态 -->
+      <div class="tk-empty hidden" id="tkEmpty">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:.3"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
+        <p>没有匹配的任务</p>
+        <button class="tk-btn-ghost" id="tkResetFilter">清除筛选</button>
+      </div>

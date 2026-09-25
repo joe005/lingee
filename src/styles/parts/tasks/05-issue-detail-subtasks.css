@@ -1,0 +1,24 @@
+/* ---------- 任务详情子任务区域（参考 Multica ProgressRing + ChevronDown） ---------- */
+.tk-subtasks{margin:40px 0}
+.tk-subtasks-empty{margin:24px 0}
+.tk-subtask-empty-add{display:inline-flex;align-items:center;gap:6px;padding:0;border:0;background:transparent;color:var(--text-secondary);font:inherit;font-size:12px;cursor:pointer}
+.tk-subtask-empty-add:hover{color:var(--text)}
+.tk-subtask-head{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.tk-subtasks.is-collapsed .tk-subtask-head{margin-bottom:0}
+.tk-subtask-toggle{display:inline-flex;align-items:center;gap:6px;padding:4px 0;border:0;background:transparent;color:var(--text);font:inherit;font-size:14px;font-weight:600;cursor:pointer}
+.tk-subtask-toggle:hover{color:var(--text-secondary)}
+.tk-subtask-toggle svg{flex:none;color:var(--text-secondary);transition:transform .18s ease}
+.tk-subtask-toggle[aria-expanded="false"] svg{transform:rotate(-90deg)}
+.tk-subtask-progress-ring{flex:none;transition:opacity .15s}
+.tk-subtask-badge{font-size:11px;color:var(--text-secondary);background:var(--fill-1);padding:2px 7px;border-radius:5px;font-variant-numeric:tabular-nums}
+.tk-subtask-add-btn{margin-left:auto;width:28px;height:28px;display:grid;place-items:center;border:0;border-radius:6px;background:transparent;color:var(--text-secondary);cursor:pointer;transition:background .15s,color .15s}
+.tk-subtask-add-btn:hover{background:var(--hover);color:var(--text)}
+.tk-subtask-list{display:flex;flex-direction:column;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.tk-subtask-list[hidden]{display:none}
+.tk-subtask-row{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border:0;border-bottom:1px solid var(--border);background:var(--bg);text-align:left;font:inherit;font-size:12px;cursor:pointer;transition:background .12s}
+.tk-subtask-row:last-child{border-bottom:0}
+.tk-subtask-row:hover{background:var(--hover)}
+.tk-subtask-status{flex:none;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:11px;line-height:1}
+.tk-subtask-status-dot{display:block;width:10px;height:10px;border-radius:50%}
+.tk-subtask-title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);font-weight:500}
+.tk-subtask-meta{flex:none;font-size:11px;color:var(--text-soft)}

@@ -1,0 +1,6 @@
+/* ---------- mac 文件夹风格展开/收起动效 ---------- */
+@keyframes tkCardExpandIn{from{opacity:0;transform:translateY(-8px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes tkCardExpandOut{from{opacity:1;transform:translateY(0) scale(1)}to{opacity:0;transform:translateY(-8px) scale(.96)}}
+.tk-row-collapse-ghost{position:fixed;z-index:20;pointer-events:none;transform-origin:top center}
+.tk-just-expanded .tk-card--child{animation:tkCardExpandIn .28s cubic-bezier(.34,1.3,.64,1) both;transform-origin:top center}
+.tk-card.tk-leaving{animation:tkCardExpandOut .22s cubic-bezier(.4,0,.2,1) both;transform-origin:top center}

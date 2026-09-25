@@ -1,0 +1,33 @@
+/* ---------- 弹窗 ---------- */
+.tk-modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:var(--tb-backdrop);z-index:220;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s}
+.tk-modal-overlay.show{opacity:1}
+.tk-modal-overlay.hidden{display:none}
+.tk-modal{background:var(--bg);border-radius:12px;box-shadow:var(--menu-shadow);width:560px;max-width:90vw;max-height:85vh;display:flex;flex-direction:column;transform:scale(.96);transition:transform .2s}
+.tk-modal-overlay.show .tk-modal{transform:scale(1)}
+.tk-modal-sm{width:400px}
+#tkSaveViewOverlay .tk-modal-sm{width:576px}
+#tkSaveViewOverlay .tk-form-row{display:flex;align-items:center;gap:12px}
+#tkSaveViewOverlay .tk-form-row>label{width:80px;flex:none;margin:0}
+#tkSaveViewOverlay .tk-form-row input,#tkSaveViewOverlay .tk-form-row select{width:256px;box-sizing:border-box}
+.tk-modal-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--divider);flex-shrink:0}
+.tk-modal-head h3{font-size:15px;font-weight:600;color:var(--text);margin:0}
+.tk-modal-close{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border:none;background:transparent;color:var(--text-secondary);cursor:pointer;border-radius:6px}
+.tk-modal-close:hover{background:var(--hover)}
+.tk-modal-body{padding:18px;overflow-y:auto;flex:1}
+.tk-modal-foot{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:12px 18px;border-top:1px solid var(--divider);flex-shrink:0}
+
+/* 表单 */
+.tk-form-row{margin-bottom:14px}
+.tk-form-row>label{display:block;font-size:13px;color:var(--text-secondary);margin-bottom:5px}
+.tk-form-row input[type=text],.tk-form-row input[type=date],.tk-form-row textarea,.tk-form-row select{width:100%;border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:13px;outline:none;background:var(--bg);color:var(--text);font-family:inherit}
+.tk-form-row input:focus,.tk-form-row textarea:focus,.tk-form-row select:focus{border-color:var(--border-focus)}
+.tk-save-view-hint,.tk-save-view-summary{font-size:12px;color:var(--text-secondary);margin:0 0 14px}
+.tk-save-view-summary{margin:0}
+.tk-form-row textarea{resize:vertical}
+.tk-req{color:var(--danger)}
+.tk-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.tk-form-field label{display:block;font-size:13px;color:var(--text-secondary);margin-bottom:5px}
+.tk-form-field input,.tk-form-field select{width:100%;border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:13px;outline:none;background:var(--bg);color:var(--text)}
+.tk-form-field input:focus,.tk-form-field select:focus{border-color:var(--border-focus)}
+.tk-check-label{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text);cursor:pointer}
+.tk-check-label input{width:auto}
