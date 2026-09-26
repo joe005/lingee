@@ -1,0 +1,42 @@
+}
+
+function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml, stageCount, reportHtml) {
+  var stages = activity.filter(function (entry) { return entry.expertId; });
+  if (!stages.length && !activity.length) return reportHtml || '';
+  var latest = stages.at(-1);
+  var byId = new Map(stages.map(function (entry) { return [entry.stageId, entry]; }));
+  var currentState = latest?.state || (task.status === 'cancelled' ? 'cancelled' : 'pending');
+  var activeRun = currentState === 'running' ? getDemoStageRun(task, latest) : null;
+  var currentLabel = activeRun?.label || (currentState === 'review' ? '待审核' : currentState === 'blocked' ? '已阻塞' : currentState === 'done' ? '已完成' : currentState === 'cancelled' ? '已取消' : '待执行');
+  var project = CV_PROJECTS.find(function (row) { return row.id === task.project; });
+  var team = TEAMS.find(function (row) { return row.id === task.teamId || project?.defaultTeam; });
+  var currentDetail = latest ? latest.stage + ' · ' + latest.author : '尚未分派执行专家';
+  var feedback = activeRun ? renderTaskRunFeedback(activeRun)
+    : latest ? '<div class="tk-exec-feedback-line is-' + currentState + '"><span class="tk-exec-feedback-icon" aria-hidden="true">' + renderTaskRunIndicator(currentState === 'blocked' ? 'failed' : 'completed') + '</span>'
+      + '<p>' + escapeHtml(currentState === 'blocked' ? task.blockedRun?.reason || latest.text : currentState === 'review' ? task.reviewReport?.review || latest.text : task.completedRun?.result || latest.text) + '</p>'
+      + '<time>' + escapeHtml(latest.time) + '</time></div>'
+    : renderTaskPreRunFeedback(task);
+  var nextAction = currentState === 'blocked' && task.blockedRun ? '<div class="tk-exec-next"><strong>下一步</strong><span>' + escapeHtml(task.blockedRun.next) + '</span>'
+    + '<button type="button" class="tk-blocked-run-retry" data-action="blocked-retry">重试任务</button></div>' : '';
+  return '<section class="tk-feed-stage-overview tk-exec-card is-' + currentState + '" aria-label="执行概览">'
+    + '<div class="tk-exec-card-head tk-agent-report-head"><span class="tk-exec-card-mark tk-agent-report-mark" aria-hidden="true">✦</span><div class="tk-exec-card-identity tk-agent-report-heading"><strong>' + escapeHtml(team?.name || '任务专家团') + '</strong>'
+    + '<span>当前阶段 · ' + escapeHtml(currentDetail) + '</span></div><span class="tk-feed-stage-current tk-agent-report-state is-' + currentState + '">' + escapeHtml(currentLabel) + '</span></div>'
+    + '<div class="tk-feed-stage-overview-head"><strong>执行进度</strong></div>'
+    + '<ol class="tk-feed-stage-list">' + STAGES.map(function (stage) {
+      var entry = byId.get(stage.id);
+      var state = entry?.state || 'pending';
+      var label = state === 'done' ? '已完成' : state === 'running' ? currentLabel : state === 'review' ? '待审核' : state === 'blocked' ? '已阻塞' : '待执行';
+      var icon = state === 'running' ? renderTaskRunIndicator(activeRun?.status || 'running')
+        : statusSvg(state === 'done' ? 'done' : state === 'review' ? 'in_review' : state === 'blocked' ? 'blocked' : 'backlog');
+      return '<li class="tk-feed-stage is-' + state + '" aria-label="' + escapeHtml(stage.name + '，' + label) + '"' + (['running','review','blocked'].includes(state) ? ' aria-current="step"' : '') + '><span class="tk-feed-stage-mark" aria-hidden="true">' + icon + '</span>'
+        + '<span class="tk-feed-stage-name">' + escapeHtml(stage.name) + '</span><span class="tk-feed-stage-state">' + label + '</span></li>';
+    }).join('') + '</ol>'
+    + '<div class="tk-exec-card-feedback">' + feedback + nextAction + '</div>'
+    + renderTaskArtifactSummary(artifacts)
+    + '<div class="tk-exec-card-more">'
+    + (stageCount ? '<button type="button" class="tk-feed-stage-history-toggle" data-stage-history-toggle aria-expanded="false" aria-controls="tkStageHistory">查看过程明细</button>' : '')
+    + (reportHtml ? '<details class="tk-exec-card-report"><summary>查看执行报告</summary>' + reportHtml + '</details>' : '') + '</div>'
+    + stageHistoryHtml + '</section>';
+}
+
+function renderTaskPreRunFeedback(task) {

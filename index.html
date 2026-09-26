@@ -16,7 +16,7 @@
   var b=p.replace(/[^/]*$/,'').replace(/\/+$/,'');
   if(b){if(p===b)p='/';else if(p.indexOf(b+'/')===0)p=p.slice(b.length)||'/';}
   var seg=p.replace(/^\/+|\/+$/g,'').split('/')[0]||'';
-  var VN=['home','newtask','chat','apps','collab','skills','agents','settings','design','experts','tasks','changelog'];
+  var VN=['home','newtask','chat','apps','collab','skills','agents','settings','design','experts','tasks','changelog','inbox'];var NP=[];
   var v='';
   if(VN.indexOf(seg)>=0)v=seg;
   else{var ov=new URLSearchParams(location.search).get('view');
@@ -41,7 +41,8 @@
   html[data-initial-view="design"] #view-design,
   html[data-initial-view="analytics"] #view-analytics,
   html[data-initial-view="tasks"] #view-tasks,
-  html[data-initial-view="changelog"] #view-changelog{display:flex!important}
+  html[data-initial-view="changelog"] #view-changelog,
+  html[data-initial-view="inbox"] #view-inbox{display:flex!important}
 </style>
 </head>
 <body>
@@ -59,6 +60,7 @@
 <!--#include "src/views/apps.html" -->
 <!--#include "src/views/collab.html" -->
 <!--#include "src/views/tasks.html" -->
+<!--#include "src/views/inbox.html" -->
 <!--#include "src/views/skills.html" -->
 <!--#include "src/views/agents.html" -->
 <!--#include "src/views/settings.html" -->

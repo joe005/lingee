@@ -30,6 +30,10 @@ function refreshFormAssignees(preferredId) {
   els.tkFormAssignee.value = people.some(function (person) { return person.id === currentId; }) ? currentId : (people[0]?.id || '');
 }
 
+function updateSaveButtonState() {
+  els.tkModalSave.disabled = !els.tkFormTitle.value.trim();
+}
+
 function openTaskModal(taskId, parentId) {
   if (!tkProjectsForCurrentUser().length) { toast('请先加入项目再创建任务', 'warning'); return; }
   fillSelects();
@@ -52,6 +56,7 @@ function openTaskModal(taskId, parentId) {
       els.tkFormPriority.value = parent.priority;
     }
   }
+  updateSaveButtonState();
   els.tkModalOverlay.classList.remove('hidden');
   requestAnimationFrame(function () { els.tkModalOverlay.classList.add('show'); });
 }
@@ -93,8 +98,9 @@ function initTaskCreateEvents() {
 els.tkToolbarNew.addEventListener('click', function () { openTaskModal(null); });
 els.tkModalClose.addEventListener('click', closeTaskModal);
 els.tkModalCancel.addEventListener('click', closeTaskModal);
-els.tkModalSave.addEventListener('click', saveTask);
-els.tkFormProject.addEventListener('change', function () { refreshFormAssignees(tkCurrentUserId()); });
+  els.tkModalSave.addEventListener('click', saveTask);
+  els.tkFormTitle.addEventListener('input', updateSaveButtonState);
+  els.tkFormProject.addEventListener('change', function () { refreshFormAssignees(tkCurrentUserId()); });
 els.tkModalOverlay.addEventListener('click', function (e) { if (e.target === this) closeTaskModal(); });
 }
 

@@ -1,0 +1,36 @@
+<div class="view hidden inbox-view" id="view-inbox">
+  <header class="inbox-header">
+    <div class="inbox-heading"><h2>收件箱</h2><span class="inbox-heading-count" id="inboxUnreadCount"></span></div>
+    <div class="inbox-header-actions">
+      <button type="button" class="inbox-icon-btn" id="inboxBulkButton" aria-label="更多收件箱操作" aria-expanded="false" title="更多操作">···</button>
+      <div class="inbox-menu" id="inboxBulkMenu" hidden>
+        <button type="button" data-bulk="read">全部标为已读</button>
+        <button type="button" data-bulk="archive-read">归档已读通知</button>
+        <button type="button" data-bulk="archive-done">归档已完成任务</button>
+        <button type="button" data-bulk="archive-all">归档全部通知</button>
+      </div>
+    </div>
+  </header>
+  <div class="inbox-columns">
+    <aside class="inbox-list-pane" id="inboxListPane">
+      <div class="inbox-list-tools">
+        <button type="button" class="inbox-back" id="inboxBack" hidden aria-label="返回收件箱">‹</button>
+        <strong id="inboxListHeading">收件箱</strong>
+        <button type="button" class="inbox-icon-btn" id="inboxFilterButton" aria-label="筛选通知" aria-expanded="false" title="筛选">☷</button>
+      </div>
+      <div class="inbox-filters" id="inboxFilters" hidden>
+        <label>未读 <input type="checkbox" id="inboxUnreadOnly"></label>
+        <label>状态 <select id="inboxStatusFilter"><option value="">全部状态</option></select></label>
+        <label>优先级 <select id="inboxPriorityFilter"><option value="">全部优先级</option></select></label>
+        <label>发起人 <select id="inboxActorFilter"><option value="">全部发起人</option></select></label>
+      </div>
+      <div class="inbox-list" id="inboxList" role="listbox" aria-label="通知列表"></div>
+      <div class="inbox-menu inbox-row-menu" id="inboxRowMenu" hidden>
+        <button type="button" data-row-action="read">标为已读</button>
+        <button type="button" data-row-action="archive">归档</button>
+      </div>
+      <button type="button" class="inbox-archive-link" id="inboxArchiveLink">▣ <span>已归档</span><span id="inboxArchiveCount"></span></button>
+    </aside>
+    <section class="inbox-detail-pane" id="inboxDetail" aria-live="polite"></section>
+  </div>
+</div>

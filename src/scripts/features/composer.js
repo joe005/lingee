@@ -22,6 +22,24 @@ function refreshSend(){ sendBtn.classList.toggle('active', input.textContent.tri
 var chatMessages=$('#chatMessages');
 var messagesList=$('#messagesList');
 function escapeHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+var conversationTaskId = null;
+function getConversationTask() {
+  return conversationTaskId == null ? null : tkGetTasks().find(function (task) { return task.id === conversationTaskId; }) || null;
+}
+function renderConversationTaskReference() {
+  var task = getConversationTask();
+  ['ntTags', 'chatTags'].forEach(function (id) {
+    var tags = document.getElementById(id);
+    if (!tags) return;
+    tags.classList.toggle('hidden', !task);
+    tags.innerHTML = task ? '<span class="ctag" data-task-ref-id="' + task.id + '"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span class="ctag-label">' + escapeHtml(task.code || '') + ' ' + escapeHtml(task.title || '') + '</span><button type="button" class="ctag-x" data-clear-task-ref aria-label="移除任务关联"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></span>' : '';
+  });
+  if (task && !viewChat.classList.contains('hidden')) $('#chatTitle').textContent = task.title;
+}
+export function setComposerTaskReference(taskId) {
+  conversationTaskId = taskId == null ? null : Number(taskId);
+  renderConversationTaskReference();
+}
 function scrollChatBottom(){ chatMessages.scrollTop=chatMessages.scrollHeight; }
 
 function appendUserMessage(text){
@@ -335,7 +353,9 @@ function doSend(){
     if(am){ set_activePick(am); renderExpertChips(); autoPicked=true; }
   }
   showView('chat');
-  $('#chatTitle').textContent='采购订单管理应用开发';
+  var linkedTask = getConversationTask();
+  $('#chatTitle').textContent = linkedTask ? linkedTask.title : t.slice(0, 60);
+  renderConversationTaskReference();
   var empty=$('#chatEmpty');
   if(empty) empty.remove();
   appendUserMessage(t);
@@ -352,9 +372,14 @@ function doSend(){
   var chatSend=$('#chatSendBtn');
   chatSend.classList.remove('active');
   chatInput.focus();
-  /* 会话详情页关联应用默认选中"采购订单管理"，不可编辑 */
-  selectChatApp('采购订单管理');
-  chatAppDd.classList.add('disabled');
+  if (linkedTask) {
+    selectChatApp('');
+    chatAppDd.classList.remove('disabled');
+  } else {
+    /* 独立演示会话沿用示例应用。 */
+    selectChatApp('采购订单管理');
+    chatAppDd.classList.add('disabled');
+  }
 }
 
 /* ---------- chat composer 发送 ---------- */
@@ -626,6 +651,13 @@ function initTaskMention(ed) {
 }
 
 export function initComposer() {
+  document.addEventListener('lingee:task-updated', function (event) {
+    if (event.detail?.task?.id === conversationTaskId) renderConversationTaskReference();
+  });
+  document.addEventListener('lingee:new-conversation', function () { setComposerTaskReference(null); });
+  document.addEventListener('click', function (event) {
+    if (event.target.closest('#ntTags [data-clear-task-ref], #chatTags [data-clear-task-ref]')) setComposerTaskReference(null);
+  });
   input.addEventListener('input',refreshSend);
   input.addEventListener('keydown',function(e){
     if(e.key==='Enter' && !e.shiftKey){

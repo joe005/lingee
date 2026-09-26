@@ -1,4 +1,4 @@
-import { CV_TASKS, CV_PROJECTS, cvProject, cvPeopleInProject, cvCurrentUserName } from './data.js';
+import { CV_TASKS, CV_PROJECTS, cvProject, cvPeopleInProject } from './data.js';
 import { TEAMS } from '../expert/store.js';
 import { xesc } from '../expert/data.js';
 import { cvUpdateCounts } from './projects.js';
@@ -106,16 +106,25 @@ function ntRenderGroups() {
 /* 负责人：从项目成员中选人。 */
 function ntRenderPeople() {
   const members = ntPeopleOfProject(ntProjectId);
-  const el = document.getElementById('cv-nt-people');
-  if (!el) return;
-  el.disabled = !ntProjectId || !members.length;
-  if (el.disabled) {
+  const menu = document.getElementById('cv-nt-people-menu');
+  const nameEl = document.getElementById('cv-nt-people-name');
+  const avatarEl = document.getElementById('cv-nt-people-avatar');
+  const btn = document.getElementById('cv-nt-people-btn');
+  if (!menu) return;
+  if (!ntProjectId || !members.length) {
     ntAssignee = '';
-    el.innerHTML = '<option value="">' + (ntProjectId ? '请先为项目添加成员' : '请先选择项目') + '</option>';
+    if (nameEl) nameEl.textContent = ntProjectId ? '请先添加成员' : '请先选择项目';
+    if (avatarEl) avatarEl.textContent = '人';
+    if (btn) btn.disabled = true;
+    menu.innerHTML = '';
     return;
   }
+  if (btn) btn.disabled = false;
   if (!members.some(m => m.name === ntAssignee)) ntAssignee = members[0].name;
-  el.innerHTML = members.map(m => '<option value="' + xesc(m.name) + '"' + (m.name === ntAssignee ? ' selected' : '') + '>' + xesc(m.name) + '</option>').join('');
+  const sel = members.find(m => m.name === ntAssignee) || members[0];
+  if (nameEl) nameEl.textContent = sel.name;
+  if (avatarEl) avatarEl.textContent = sel.name[0] || '?';
+  menu.innerHTML = members.map(m => '<button type="button" class="nt-person-item' + (m.name === ntAssignee ? ' selected' : '') + '" data-person="' + xesc(m.name) + '"><span class="person-avatar-sm">' + xesc(m.name[0] || '?') + '</span><span class="person-name-sm">' + xesc(m.name) + '</span></button>').join('');
 }
 /* 多人协作：按专家团覆盖的阶段逐一指定执行人，每人只负责并启动自己那一段。 */
 function ntStagesFieldVisible() {
@@ -212,7 +221,7 @@ function ntSendDraftMessage() {
     document.getElementById('cv-nt-draft-desc').value = draft.desc;
     document.getElementById('cv-nt-draft-empty').classList.add('hidden');
     document.getElementById('cv-nt-draft-content').classList.remove('hidden');
-    document.getElementById('cv-nt-submit').disabled = false;
+    ntUpdateSubmitState();
     document.getElementById('cv-nt-continue').disabled = false;
     const project = ntInferProject(message);
     const select = document.getElementById('cv-nt-project');
@@ -230,6 +239,12 @@ function ntSendDraftMessage() {
   }
   input.focus();
   return true;
+}
+function ntUpdateSubmitState() {
+  const btn = document.getElementById('cv-nt-submit');
+  if (!btn) return;
+  const titleEl = document.getElementById(ntMode === 'agent' ? 'cv-nt-draft-title' : 'cv-nt-title');
+  btn.disabled = ntMode === 'agent' ? (!ntDraftReady || !titleEl.value.trim()) : !titleEl.value.trim();
 }
 export function cvOpenNewTask(status, ctx) {
   ntMode = 'manual';
@@ -288,8 +303,6 @@ export function cvOpenNewTask(status, ctx) {
   ntRenderFiles();
   ntSetExecMode('单人执行');
   cvSetNewTaskMode('manual');
-  const crumbUser = document.getElementById('cv-nt-crumb-user');
-  if (crumbUser) crumbUser.textContent = cvCurrentUserName() || '吴晓峰';
   const continueToggle = document.getElementById('cv-nt-continue-toggle');
   if (continueToggle) continueToggle.checked = false;
   document.getElementById('cv-newtask-overlay').classList.remove('nt-fullscreen');
@@ -315,7 +328,7 @@ function cvSetNewTaskMode(m) {
   if (manualTrigger) manualTrigger.classList.toggle('hidden', m !== 'agent' || !!ntParentTaskId);
   if (agentTrigger) agentTrigger.setAttribute('aria-pressed', String(m === 'agent'));
   if (manualTrigger) manualTrigger.setAttribute('aria-pressed', String(m === 'manual'));
-  document.getElementById('cv-nt-submit').disabled = m === 'agent' && !ntDraftReady;
+  ntUpdateSubmitState();
   if (document.getElementById('cv-newtask-overlay').style.display !== 'none') {
     document.getElementById(m === 'agent' ? 'cv-nt-prompt' : 'cv-nt-title').focus();
   }
@@ -385,6 +398,9 @@ export function initNewTask() {
     const keepOpen = document.getElementById('cv-nt-continue-toggle')?.checked || false;
     cvSubmitNewTask(keepOpen);
   });
+  document.getElementById('cv-nt-title').addEventListener('input', ntUpdateSubmitState);
+  const draftTitle = document.getElementById('cv-nt-draft-title');
+  if (draftTitle) draftTitle.addEventListener('input', ntUpdateSubmitState);
   document.getElementById('cv-newtask-overlay').addEventListener('keydown', e => {
     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
       e.preventDefault();
@@ -446,8 +462,18 @@ export function initNewTask() {
     const x = e.target.closest('[data-nt-tag-x]');
     if (x) { ntTags.splice(+x.getAttribute('data-nt-tag-x'), 1); ntRenderTagList(); }
   });
-  const people = document.getElementById('cv-nt-people');
-  if (people) people.addEventListener('change', () => { ntAssignee = people.value; });
+  const peopleBtn = document.getElementById('cv-nt-people-btn');
+  const peopleMenu = document.getElementById('cv-nt-people-menu');
+  if (peopleBtn) {
+    peopleBtn.addEventListener('click', function(e){ e.stopPropagation(); if(peopleMenu) peopleMenu.hidden = !peopleMenu.hidden; });
+    peopleMenu?.addEventListener('click', function(e){
+      var item = e.target.closest('[data-person]'); if (!item) return;
+      ntAssignee = item.getAttribute('data-person');
+      ntRenderPeople();
+      peopleMenu.hidden = true;
+    });
+    document.addEventListener('click', function(e){ if (peopleMenu && !peopleMenu.hidden && !peopleBtn.contains(e.target) && !peopleMenu.contains(e.target)) peopleMenu.hidden = true; });
+  }
   const fileList = document.getElementById('cv-nt-file-list');
   if (fileList) fileList.addEventListener('click', e => { const x = e.target.closest('[data-nt-file]'); if (x) { ntFiles.splice(+x.getAttribute('data-nt-file'), 1); ntRenderFiles(); } });
 }

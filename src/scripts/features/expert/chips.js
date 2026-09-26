@@ -47,7 +47,7 @@ function renderModeTag(){
 
 function renderExpertChips(){
   var has=pickValid();
-  ['nt','chat'].forEach(function(pfx){
+  ['nt','chat','tkForm'].forEach(function(pfx){
     var label=$('#'+pfx+'ExpertLabel'), faces=$('#'+pfx+'ExpertFaces');
     if(label) label.textContent = has ? pickName() : '选择专家';
     if(faces){
@@ -88,12 +88,65 @@ function renderExpertPicker(pfx,kw){
   }
   list.innerHTML = html || '<div class="x-empty-sm">没有匹配的专家或专家团</div>';
 }
+/* 弹窗内专家团下拉：浮层 portal 到 body，脱离 .tk-modal--mc 的 transform 与 overflow，
+   fixed 按触发器视口坐标定位，实现「在 chip 下方原位弹出」且不被弹窗裁剪 */
+function floatMenu(dd){
+  var menu=dd.querySelector('.menu'); if(!menu) return;
+  var chip=dd.querySelector('[data-chip]'); if(!chip) return;
+  var rect=chip.getBoundingClientRect();
+  document.body.appendChild(menu);
+  menu.classList.add('dd-float-menu');
+  menu.style.position='fixed';
+  menu.style.display='flex';
+  menu.style.zIndex='260';
+  menu.style.maxHeight='';
+  var list=menu.querySelector('.app-list'); if(list) list.style.maxHeight='';
+  var w=menu.offsetWidth||280;
+  menu.style.left=Math.max(8, Math.min(rect.left, window.innerWidth-w-8))+'px';
+  menu.style.right='';
+  var maxH=Math.min(window.innerHeight-16, 400);
+  if(menu.offsetHeight>maxH){
+    menu.style.maxHeight=maxH+'px';
+    if(list) list.style.maxHeight=(maxH-56)+'px';
+  }
+  var h=menu.offsetHeight;
+  if(rect.bottom+h+12<=window.innerHeight){
+    menu.style.top=(rect.bottom+6)+'px'; menu.style.bottom='';
+  }else{
+    menu.style.top=Math.max(8, rect.top-h-6)+'px'; menu.style.bottom='';
+  }
+  dd._floated=menu;
+}
+function refloatMenu(dd){
+  var menu=dd._floated; if(!menu) return;
+  var chip=dd.querySelector('[data-chip]'); if(!chip) return;
+  var rect=chip.getBoundingClientRect();
+  var w=menu.offsetWidth||280;
+  menu.style.left=Math.max(8, Math.min(rect.left, window.innerWidth-w-8))+'px';
+  var h=menu.offsetHeight;
+  if(rect.bottom+h+12<=window.innerHeight){
+    menu.style.top=(rect.bottom+6)+'px'; menu.style.bottom='';
+  }else{
+    menu.style.top=Math.max(8, rect.top-h-6)+'px'; menu.style.bottom='';
+  }
+}
+function unfloatMenu(dd){
+  var menu=dd._floated; if(!menu) return;
+  var chip=dd.querySelector('[data-chip]');
+  if(chip) chip.parentNode.insertBefore(menu, chip.nextSibling);
+  menu.classList.remove('dd-float-menu');
+  menu.style.position=''; menu.style.display=''; menu.style.zIndex='';
+  menu.style.top=''; menu.style.bottom=''; menu.style.left=''; menu.style.right=''; menu.style.maxHeight='';
+  var list=menu.querySelector('.app-list'); if(list) list.style.maxHeight='';
+  dd._floated=null;
+}
 function openExpertPicker(pfx){
   var dd=$('#'+pfx+'ExpertDropdown'); if(!dd) return;
   var si=$('#'+pfx+'ExpertSearchInput');
   closeAll(null);
   renderExpertPicker(pfx, si?si.value:'');
   dd.classList.add('open');
+  if(dd.classList.contains('dd-float')) requestAnimationFrame(function(){ floatMenu(dd); });
   if(si) setTimeout(function(){ si.focus() },40);
 }
 
@@ -114,16 +167,26 @@ export function initExpertChips() {
     }
     if(ev.target.closest('.mode-item')){ set_forcedBuilder(null); setTimeout(renderModeTag,0); }
   });
-  ['nt','chat'].forEach(function(pfx){
+  ['nt','chat','tkForm'].forEach(function(pfx){
     var dd=$('#'+pfx+'ExpertDropdown'); if(!dd) return;
-    var chipEl=dd.querySelector('[data-chip]'), si=$('#'+pfx+'ExpertSearchInput');
+    var chipEl=dd.querySelector('[data-chip]'), si=$('#'+pfx+'ExpertSearchInput'), menuEl=dd.querySelector('.menu');
+    if(dd.classList.contains('dd-float')){
+      var host=dd.closest('.tk-mc-body');
+      function onRepos(){ if(dd._floated) refloatMenu(dd); }
+      new MutationObserver(function(){
+        if(dd.classList.contains('open')) requestAnimationFrame(function(){ floatMenu(dd); });
+        else unfloatMenu(dd);
+      }).observe(dd,{attributes:true,attributeFilter:['class']});
+      if(host) host.addEventListener('scroll',onRepos);
+      window.addEventListener('resize',onRepos);
+    }
     chipEl.addEventListener('click',function(ev){
       ev.stopPropagation();
       if(dd.classList.contains('open')) dd.classList.remove('open');
       else openExpertPicker(pfx);
     });
     if(si) si.addEventListener('input',function(){ renderExpertPicker(pfx,this.value) });
-    dd.addEventListener('click',function(ev){
+    (menuEl||dd).addEventListener('click',function(ev){
       var n;
       if(n=ev.target.closest('[data-pick-team]')){
         var tid=n.getAttribute('data-pick-team');

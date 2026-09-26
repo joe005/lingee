@@ -16,7 +16,7 @@
 #view-collab .cv-workspace-onboarding-form button{align-self:flex-start;margin-top:14px;padding:10px 18px;border:0;border-radius:9px;background:var(--brand);color:#fff;font:inherit;font-size:13px;font-weight:600;cursor:pointer}
 #view-collab .cv-workspace-onboarding-form button:hover{background:var(--brand-hover)}
 #view-collab .cv-workspace-onboarding-card>.cv-workspace-onboarding-help{margin-top:22px;padding-top:18px;border-top:1px solid var(--border);color:var(--text-soft);font-size:12px}
-#view-collab .cv-wsbar{position:relative;padding:14px 28px 8px;border-bottom:0}
+#view-collab .cv-wsbar{display:none}
 #view-collab .cv-wsbar .cv-ws .cv-proj-btn{padding:3px 0;background:transparent;border:0;border-radius:0;color:var(--text);font-size:19px;font-weight:650;gap:10px}
 #view-collab .cv-wsbar .cv-ws .cv-proj-btn:hover{color:var(--brand);background:transparent}
 #view-collab .cv-wsbar .cv-ws .cv-proj-btn svg{color:var(--text-soft)}

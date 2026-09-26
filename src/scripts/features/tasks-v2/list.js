@@ -1,9 +1,13 @@
 /* T00 结构拆分：list。保留原交互；事件在 init* 中按原顺序注册。 */
 import { taskViewState, els, LIST_FIELDS, DEFAULT_LIST_FIELD_ORDER } from './ui-state.js';
-import { tkGetViews, tkGetTasks, TK_PEOPLE, tkProjectsForCurrentUser, tkDeleteTask, tkAddTask, tkCurrentUserId, TK_STATUSES, tkGetPerson, tkGetProjectName, TK_PRIORITIES, tkGetPriorityObj, TK_FILTER_FIELDS, TK_OPERATORS, tkSyncPeople, tkPeopleInProject, TK_LABELS, tkAddView, tkUpdateTask, tkDeleteView, tkRenameView } from './data.js';
+import { tkGetViews, tkGetTasks, TK_PEOPLE, tkProjectsForCurrentUser, tkDeleteTask, tkAddTask, tkCurrentUserId, TK_STATUSES, tkGetPerson, tkGetProjectName, TK_PRIORITIES, tkGetPriorityObj, TK_FILTER_FIELDS, TK_OPERATORS, tkSyncPeople, tkPeopleInProject, TK_LABELS, tkAddView, tkUpdateTask, tkDeleteView, tkRenameView, TK_PROJECTS } from './data.js';
+import { TEAMS } from '../expert/store.js';
+import { AV_KEYS, EX, EXPERTS, xav } from '../expert/data.js';
+import { createDeliveryActivity } from '../collab/delivery-activity.js';
 import { taskStartLegacy, TASK_START_CHAT_ICON, TASK_START_PLAY_ICON, closeDrawer, openTaskConversationWithTask, openDrawer, syncDrawerClickaway } from './issue-detail.js';
-import { priWeight, isOverdue, escapeHtml, stClass, priClass, avatarSm, fmtDate, taskAvatar, positionPopover, filterAssigneeOptions, chooseFirstAssignee } from './ui-utils.js';
-import { renderTaskListTreeNodes, taskListVisibleColumnCount, applyTaskListFieldSettings } from './list-template.js';
+import { priWeight, isOverdue, escapeHtml, stClass, priClass, avatarSm, fmtDate, positionPopover, filterAssigneeOptions, chooseFirstAssignee } from './ui-utils.js';
+import { taskListVisibleColumnCount, applyTaskListFieldSettings } from './list-template.js';
+import { tkGetPerson, tkGetPriorityObj, tkGetProjectName, tkGetStatusObj } from './data.js';
 import { renderListPageTabs } from '../shared/list-page-tabs.js';
 import { $$ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
@@ -243,12 +247,70 @@ function renderTreeNodes(tasks, childrenMap, depth) {
   }).join('');
 }
 
+function statusSvg(status) {
+  var s = TK_STATUSES.find(function(x){return x.id===status;});
+  var icon = (s && s.icon) || 'circle';
+  var colorMap={gray:'#9f9fa9',orange:'#cb9400',green:'#4aa651',red:'#ff6467',blue:'#0f92f7'};
+  var color=colorMap[(s&&s.color)||'gray'];
+  var CX=7,CY=7,OR=6,FR=3.5;
+  function pie(p){var a=2*Math.PI*p;var ex=CX+FR*Math.sin(a);var ey=CY-FR*Math.cos(a);var la=p>0.5?1:0;return 'M'+CX+','+CY+' L'+CX+','+(CY-FR)+' A'+FR+','+FR+' 0 '+la+',1 '+ex.toFixed(2)+','+ey.toFixed(2)+' Z';}
+  var dots='';for(var i=0;i<16;i++){var a=(i/16)*Math.PI*2-Math.PI/2;dots+='<circle cx="'+(CX+OR*Math.cos(a)).toFixed(2)+'" cy="'+(CY+OR*Math.sin(a)).toFixed(2)+'" r="0.55" fill="currentColor"/>';}
+  var ring='<circle cx="'+CX+'" cy="'+CY+'" r="'+OR+'" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="3.14 0" stroke-dashoffset="-0.7"/>';
+  var paths={
+    dotted:dots,
+    circle:ring,
+    half:ring+'<path d="'+pie(0.5)+'" fill="currentColor"/>',
+    three_quarters:ring+'<path d="'+pie(0.75)+'" fill="currentColor"/>',
+    check:'<circle cx="'+CX+'" cy="'+CY+'" r="'+OR+'" fill="currentColor"/><path d="M10.951 4.249C11.283 4.581 11.283 5.119 10.951 5.451L5.951 10.451C5.619 10.783 5.081 10.783 4.749 10.451L2.749 8.451C2.417 8.119 2.417 7.581 2.749 7.249C3.081 6.917 3.619 6.917 3.951 7.249L5.35 8.648L9.749 4.249C10.081 3.917 10.619 3.917 10.951 4.249Z" fill="white" stroke="none"/>',
+    slash:ring+'<line x1="'+(CX+FR*Math.cos(Math.PI*0.75)).toFixed(2)+'" y1="'+(CY-FR*Math.sin(Math.PI*0.75)).toFixed(2)+'" x2="'+(CX+FR*Math.cos(-Math.PI*0.25)).toFixed(2)+'" y2="'+(CY-FR*Math.sin(-Math.PI*0.25)).toFixed(2)+'" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
+    cross:ring+'<path d="M5 5 L9 9 M9 5 L5 9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
+  };
+  return '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="color:'+color+';flex:none">'+(paths[icon]||paths.circle)+'</svg>';
+}
+
 function renderListTreeNodes(tasks, childrenMap, depth) {
-  return renderTaskListTreeNodes(tasks, childrenMap, depth, {
+  var ctx = {
     collapsedParents:collapsedParents, selectedIds:taskViewState.selectedIds, drawerTaskId:taskViewState.drawerTaskId,
     escapeHtml:escapeHtml, isOverdue:isOverdue, stClass:stClass, priClass:priClass,
-    avatarSm:avatarSm, fmtDate:fmtDate,
-  });
+    avatarSm:avatarSm, fmtDate:fmtDate, statusSvg:statusSvg, rowCounter:0,
+  };
+  return tasks.map(function (task) {
+    var children = childrenMap.get(task.id) || [];
+    var hasChildren = children.length > 0;
+    var isCollapsed = ctx.collapsedParents.has(task.id);
+    var rowNum = ++ctx.rowCounter;
+    var html = renderListRow(task, { depth:depth, hasChildren:hasChildren, isCollapsed:isCollapsed, childCount:children.length, rowNum:rowNum }, ctx);
+    if (hasChildren && !isCollapsed) html += renderListTreeNodes(children, childrenMap, depth + 1);
+    return html;
+  }).join('');
+}
+
+function renderListRow(t, opts, ctx) {
+  var depth = opts.depth || 0;
+  var hasChildren = !!opts.hasChildren;
+  var isCollapsed = !!opts.isCollapsed;
+  var childCount = opts.childCount || 0;
+  var pri = tkGetPriorityObj(t.priority);
+  var st = tkGetStatusObj(t.status);
+  var person = tkGetPerson(t.assignee);
+  var overdue = ctx.isOverdue(t.dueDate) && t.status !== 'done';
+  var sel = ctx.selectedIds.has(t.id) ? ' selected' : '';
+  var toggle = hasChildren ? '<button class="tk-row-toggle' + (isCollapsed ? ' is-collapsed' : '') + '" data-tk-toggle="' + t.id + '" aria-expanded="' + !isCollapsed + '" aria-label="' + (isCollapsed ? '展开子任务' : '折叠子任务') + '"><svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 7.5 5 5 5-5"/></svg></button>' : '';
+  var spacer = !hasChildren ? '<span class="tk-row-spacer"></span>' : '';
+  var childBadge = hasChildren ? '<span class="tk-row-child-count"' + (isCollapsed ? '' : ' style="visibility:hidden"') + '>' + childCount + '</span>' : '';
+  var indentStyle = depth > 0 ? ' style="padding-left:calc(10px + ' + depth + 'em)"' : '';
+  return '<tr class="tk-row' + sel + (ctx.drawerTaskId === t.id ? ' detail-active' : '') + (depth ? ' tk-row--child' : '') + (hasChildren ? ' tk-row--parent' : '') + '" data-task-id="' + t.id + '" data-depth="' + depth + '">'
+    + '<td class="tk-col-check"><input type="checkbox" class="tk-row-check" data-task-id="' + t.id + '"' + (ctx.selectedIds.has(t.id) ? ' checked' : '') + '></td>'
+    + '<td class="tk-col-code"><span class="tk-row-code">' + (opts.rowNum || '') + '</span></td>'
+    + '<td class="tk-col-title"' + indentStyle + '><div class="tk-row-title-wrap">' + toggle + spacer + '<span class="tk-row-title-text">' + ctx.escapeHtml(t.title) + '</span>' + childBadge + '</div></td>'
+    + '<td class="tk-col-status"><span class="tk-row-status">' + ctx.statusSvg(t.status) + ctx.escapeHtml(st.name) + '</span></td>'
+    + '<td class="tk-col-priority"><span class="tk-row-priority">' + ctx.escapeHtml(pri.name) + '</span></td>'
+
+    + '<td class="tk-col-project">' + ctx.escapeHtml(tkGetProjectName(t.project)) + '</td>'
+    + '<td class="tk-col-due"><span class="tk-row-due' + (overdue ? ' overdue' : '') + '">' + (t.dueDate ? ctx.fmtDate(t.dueDate) : '—') + '</span></td>'
+    + '<td class="tk-col-created">' + ctx.fmtDate(t.createDate) + '</td>'
+    + '<td class="tk-col-labels">' + ((t.labels || []).length ? t.labels.map(function(name) { return '<span class="tk-row-label">' + ctx.escapeHtml(name) + '</span>'; }).join('') : '—') + '</td>'
+    + '<td class="tk-col-actions"><button class="tk-card-more" data-card-more="' + t.id + '" data-tooltip="更多操作" aria-label="更多操作"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button></td></tr>';
 }
 
 function getGroupedTasks(tasks) {
@@ -322,18 +384,36 @@ function renderCard(t, opts) {
   var spacer = !hasChildren ? '<span class="tk-card-spacer"></span>' : '';
   var childBadge = hasChildren ? '<span class="tk-card-child-count"' + (isCollapsed ? '' : ' style="visibility:hidden"') + '>' + childCount + '</span>' : '';
   var extraCls = (depth ? ' tk-card--child' : '') + (hasChildren ? ' tk-card--parent' : '');
+  var project = TK_PROJECTS.find(function(r){ return r.id === t.project; });
+  var team = (function(){ var tid = t.teamId || (project && project.defaultTeam); return TEAMS.find(function(tm){ return tm.id === tid; }); })();
+  var isBacklog = t.status === 'backlog';
+  var teamAvatarHtml, footExtraHtml;
+  if (isBacklog) {
+    var members = team ? (team.members || []).map(function(id){ return EX[id]; }).filter(Boolean) : [];
+    teamAvatarHtml = members.length
+      ? '<span class="tk-card-team-avatars">' + members.slice(0, 4).map(function(m){ return '<img class="tk-card-team-avatar" src="' + xav(m.k) + '" alt="" title="' + escapeHtml(m.name) + '">'; }).join('') + (members.length > 4 ? '<span class="tk-card-team-avatars-more">+' + (members.length - 4) + '</span>' : '') + '</span>'
+      : (team ? '<img class="tk-card-team-avatar" src="' + xav(AV_KEYS[Math.abs(t.id) % AV_KEYS.length]) + '" alt="" title="' + escapeHtml(team.name) + '">' : '');
+    footExtraHtml = (labels ? '<div class="tk-card-labels">' + labels + '</div>' : '')
+      + (props.priority ? '<span class="tk-card-priority ' + priClass(t.priority) + '">' + escapeHtml(pri.name) + '</span>' : '')
+      + (props.startDate && t.startDate ? '<span class="tk-card-due">' + fmtDate(t.startDate) + '</span>' : '')
+      + (props.dueDate && t.dueDate ? '<span class="tk-card-due' + (overdue ? ' overdue' : '') + '"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' + fmtDate(t.dueDate) + '</span>' : '')
+      + (props.project && t.project ? '<span class="tk-card-project">' + escapeHtml(tkGetProjectName(t.project)) + '</span>' : '');
+  } else {
+    teamAvatarHtml = team ? '<img class="tk-card-team-avatar" src="' + xav(AV_KEYS[Math.abs(t.id) % AV_KEYS.length]) + '" alt="" title="' + escapeHtml(team.name) + '">' : '';
+    var activity = createDeliveryActivity(t, project || {});
+    var stages = activity.filter(function(e){ return e.expertId; });
+    var latest = stages.length ? stages[stages.length - 1] : null;
+    footExtraHtml = latest ? '<span class="tk-card-stage">' + escapeHtml(latest.stage) + '</span>' : '';
+  }
   return '<div class="tk-card' + sel + extraCls + '" draggable="true" data-task-id="' + t.id + '">'
-    + '<button class="tk-card-more" data-card-more="' + t.id + '" data-tooltip="更多操作" aria-label="更多操作"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button>'
+    + (isBacklog
+      ? '<button class="tk-card-exec-btn" data-card-play="' + t.id + '" data-tooltip="开始执行" aria-label="开始执行">' + TASK_START_PLAY_ICON + '</button>'
+      : '<button class="tk-card-more" data-card-more="' + t.id + '" data-tooltip="更多操作" aria-label="更多操作"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button>')
     + '<div class="tk-card-top-row">' + toggle + spacer + '<div class="tk-card-code">' + escapeHtml(t.code) + '</div>' + childBadge + '</div>'
     + '<div class="tk-card-title">' + escapeHtml(t.title) + '</div>'
     + (props.description && t.desc ? '<div class="tk-card-description">' + escapeHtml(t.desc) + '</div>' : '')
-    + (labels ? '<div class="tk-card-labels">' + labels + '</div>' : '')
-    + '<div class="tk-card-foot"><div class="tk-card-foot-left">'
-    + (props.priority ? '<span class="tk-card-priority ' + priClass(t.priority) + '">' + escapeHtml(pri.name) + '</span>' : '')
-    + (props.startDate && t.startDate ? '<span class="tk-card-due">' + fmtDate(t.startDate) + '</span>' : '')
-    + (props.dueDate && t.dueDate ? '<span class="tk-card-due' + (overdue ? ' overdue' : '') + '"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' + fmtDate(t.dueDate) + '</span>' : '')
-    + (props.project && t.project ? '<span class="tk-card-project">' + escapeHtml(tkGetProjectName(t.project)) + '</span>' : '')
-    + '</div>' + (props.assignee ? taskAvatar(t.assignee) : '') + '</div></div>';
+    + '<div class="tk-card-foot"><div class="tk-card-foot-left">' + teamAvatarHtml + footExtraHtml
+    + '</div></div></div>';
 }
 
 function visibleListColumnCount() {
@@ -594,7 +674,7 @@ var displayGroupOptions = [
 
 var displaySortOptions = [
   ['status','状态'],['priority','优先级'],['dueDate','截止日期'],['createDate','创建时间'],
-  ['code','编号'],['title','标题'],['module','模块'],['assignee','处理人'],['project','项目'],
+  ['code','#'],['title','标题'],['module','模块'],['project','项目'],
 ];
 
 var displayChoiceMenu = null;
@@ -1382,6 +1462,8 @@ els.tkBoardScroll.addEventListener('click', function (e) {
       else if (taskViewState.groupBy === 'project' && groupKey !== 'none') { els.tkFormProject.value = groupKey; refreshFormAssignees(); }
       return;
     }
+    var playBtnB = e.target.closest('[data-card-play]');
+    if (playBtnB) { openTaskConversationWithTask(parseInt(playBtnB.getAttribute('data-card-play'), 10)); return; }
     var moreBtnB = e.target.closest('[data-card-more]');
     if (moreBtnB) { showCardMenu(moreBtnB.getAttribute('data-card-more'), moreBtnB); return; }
     var cardAct = e.target.closest('[data-card-action]');

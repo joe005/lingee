@@ -36,6 +36,9 @@
 #cv-tasks .tb-column.collapsed .tb-cards{display:none}
 #cv-tasks .tb-column.collapsed .tb-fold-caret{transform:rotate(-90deg)}
 #cv-tasks .tb-column.collapsed header{padding-bottom:2px}
+#cv-tasks .tb-exec-btn{display:flex;align-items:center;gap:3px;border:0;background:var(--success-bg);color:var(--success);border-radius:5px;padding:3px 6px;cursor:pointer;font-family:inherit;font-size:var(--tb-caption-size);white-space:nowrap;transition:background .15s}
+#cv-tasks .tb-exec-btn:hover{background:var(--success);color:#fff}
+#cv-tasks .tb-exec-btn svg{flex:none}
 #cv-tasks .tb-column-title i{font-style:normal;color:var(--text-secondary)}
 #cv-tasks .tb-running .tb-column-title i{color:var(--warning)}
 #cv-tasks .tb-review .tb-column-title i{color:var(--success)}

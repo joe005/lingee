@@ -28,7 +28,7 @@ function applyMode(mode,fromChip){
 }
 
 /* ---------- view switching ---------- */
-var viewHome=$('#view-home'), viewNew=$('#view-newtask'), viewChat=$('#view-chat'), viewApps=$('#view-apps'), viewSkills=$('#view-skills'), viewAgents=$('#view-agents'), viewCollab=$('#view-collab'), viewDesign=$('#view-design'), viewSettings=$('#view-settings'), viewAnalytics=$('#view-analytics'), viewTasks=$('#view-tasks'), viewChangelog=$('#view-changelog');
+var viewHome=$('#view-home'), viewNew=$('#view-newtask'), viewChat=$('#view-chat'), viewApps=$('#view-apps'), viewSkills=$('#view-skills'), viewAgents=$('#view-agents'), viewCollab=$('#view-collab'), viewDesign=$('#view-design'), viewSettings=$('#view-settings'), viewAnalytics=$('#view-analytics'), viewTasks=$('#view-tasks'), viewChangelog=$('#view-changelog'), viewInbox=$('#view-inbox');
 var tasksStandaloneParent=viewTasks.parentNode, tasksStandaloneNext=viewTasks.nextSibling;
 function setTasksEmbedded(embedded, container){
   var target=embedded ? (container||$('#cv-tasks-current')) : tasksStandaloneParent;
@@ -45,6 +45,7 @@ function setUrlState(path){
   try{history.replaceState(null,'',withBase(path));localStorage.setItem('lingeeUrlState',path)}catch(e){}
 }
 function showView(which){
+  if(which==='newtask') document.dispatchEvent(new Event('lingee:new-conversation'));
   if(which==='tasks'){
     if(window.cvRestoreProjectTaskBoard)window.cvRestoreProjectTaskBoard();
     setTasksEmbedded(false);
@@ -61,6 +62,7 @@ function showView(which){
   viewAnalytics.classList.toggle('hidden', which!=='analytics');
   viewTasks.classList.toggle('hidden', which!=='tasks' && !(which==='collab' && viewTasks.classList.contains('pj-embedded-task-view')));
   viewChangelog.classList.toggle('hidden', which!=='changelog');
+  viewInbox.classList.toggle('hidden', which!=='inbox');
   $('.sidebar').classList.toggle('hidden', which==='design');
   closeAll(null);
   if(which!=='design') setUrlState('/'+which);

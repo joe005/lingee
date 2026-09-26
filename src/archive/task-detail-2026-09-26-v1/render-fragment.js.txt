@@ -1,0 +1,72 @@
+function openDrawer(taskId, legacyMode) {
+  closeTaskLabelPicker();
+  var t = tkGetTasks().find(function (x) { return x.id === taskId; });
+  if (!t) return;
+  if (!tkProjectsForCurrentUser().some(function (project) { return project.id === t.project; })) { toast('未加入该项目，无法查看任务', 'warning'); return; }
+  if (legacyMode === true) legacyDetailPreview = true;
+  else if (lastOpenedTaskId !== taskId) legacyDetailPreview = false;
+  lastOpenedTaskId = taskId;
+  if (flowAssigneeDraft.taskId !== taskId) {
+    var savedAssignee = tkPeopleInProject(t.project).some(function (person) { return person.id === t.flowAssignee; }) ? t.flowAssignee : '';
+    flowAssigneeDraft = { taskId: taskId, assigneeId: savedAssignee };
+  }
+  state.drawerTaskId = taskId;
+  els.tkDrawer.setAttribute('data-task-id', String(taskId));
+  var person = tkGetPerson(t.assignee);
+  var creator = tkGetPerson(t.createdBy);
+  var statusOpts = TK_STATUSES.map(function (s) { return { value: s.id, label: s.name }; });
+  var priOpts = TK_PRIORITIES.map(function (p) { return { value: p.id, label: p.name }; });
+  var peopleOpts = tkPeopleInProject(t.project).map(function (p) { return { value: p.id, label: p.name }; });
+  var projOpts = tkProjectsForCurrentUser().map(function (p) { return { value: p.id, label: p.name }; });
+  els.tkDrawerTitle.textContent = t.title;
+  els.tkDrawerCode.textContent = '#' + t.code;
+  els.tkDrawer.classList.toggle('tk-drawer--legacy', legacyDetailPreview);
+  els.tkDrawerBody.innerHTML =
+    '<div class="tk-drawer-main"><div class="tk-drawer-main-inner">' +
+      '<div class="tk-drawer-tabs">' +
+        '<button type="button" class="tk-drawer-tab active" data-tab="info">基础信息</button>' +
+        '<button type="button" class="tk-drawer-tab" data-tab="changelog">变更日志</button>' +
+      '</div>' +
+      '<div class="tk-drawer-tab-content active" data-tab-content="info">' +
+        (legacyDetailPreview ? '<div class="tk-legacy-detail-note">废弃页面 · 旧版任务详情</div>' : '') +
+        '<div class="tk-drawer-desc" contenteditable="true" data-field="desc">' + escapeHtml(t.desc || '点击添加描述…') + '</div>' +
+        '<div class="tk-drawer-attachments">' +
+          '<div class="tk-attach-dropzone" id="tkAttachDropzone" role="button" tabindex="0" data-tooltip="添加附件（支持粘贴、拖拽）" aria-label="添加附件（支持粘贴、拖拽）">' +
+            '<input type="file" id="tkAttachInput" multiple style="display:none">' +
+            '<svg class="tk-attach-btn-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>' +
+          '</div>' +
+          '<div class="tk-attach-list" id="tkAttachList"></div>' +
+        '</div>' +
+        renderSubtasksSection(t) +
+        '<div class="tk-drawer-comments"><div class="tk-drawer-comments-head"><div class="tk-drawer-comments-title">动态</div></div>' +
+          renderTaskComments(t) +
+          (legacyDetailPreview ? '<div class="tk-drawer-flow-fields">' +
+            '<div class="tk-flow-field"><span class="tk-flow-field-label">状态</span><div class="tk-flow-pills">' +
+              TK_STATUSES.map(function(s) { return '<button type="button" class="tk-flow-pill' + (s.id === t.status ? ' active' : '') + '" data-flow-status="' + s.id + '">' + s.name + '</button>'; }).join('') +
+            '</div></div>' +
+            '<div class="tk-flow-field"><span class="tk-flow-field-label">处理人</span><div class="tk-flow-field-value tk-flow-field-lg' + (flowAssigneeDraft.assigneeId ? '' : ' is-placeholder') + '" data-flow-prop="assignee"><input class="tk-flow-field-text" type="text" value="' + (flowAssigneeDraft.assigneeId ? escapeHtml(tkGetPerson(flowAssigneeDraft.assigneeId).name) : '') + '" placeholder="请选择" aria-label="处理人" role="combobox" aria-expanded="false" autocomplete="off"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div></div>' +
+          '</div>' +
+          '<div class="tk-drawer-comment-input"><textarea placeholder="输入评论… 使用 @ 提及人员"></textarea></div>' +
+          '<button class="tk-drawer-flow-btn" data-action="flow">流转</button>' : renderTaskCommentComposer()) +
+        '</div>' +
+      '</div>' +
+      '<div class="tk-drawer-tab-content" data-tab-content="changelog" hidden>' +
+        '<div class="tk-drawer-changelog-list">' +
+          '<div class="tk-drawer-changelog-item"><span class="tk-drawer-changelog-time">' + escapeHtml(t.createDate + ' 09:30:00') + '</span><span class="tk-drawer-changelog-user">' + escapeHtml(creator.name) + '</span>创建了任务</div>' +
+          '<div class="tk-drawer-changelog-item"><span class="tk-drawer-changelog-time">' + escapeHtml(t.createDate + ' 10:15:30') + '</span><span class="tk-drawer-changelog-user">' + escapeHtml(creator.name) + '</span>状态变更为「' + escapeHtml(tkGetStatusName(t.status)) + '」</div>' +
+        '</div>' +
+      '</div>' +
+    '</div></div>' +
+    '<div class="tk-drawer-sidebar" id="tkDrawerSidebar">' +
+      '<div class="tk-drawer-prop-list" id="tkDrawerPropList">' +
+        propPicker('状态', t.status, statusOpts) +
+        propPicker('处理人', t.assignee, peopleOpts) +
+        propPicker('项目', t.project, projOpts) +
+        propPicker('优先级', t.priority, priOpts) +
+        propPicker('截止日期', t.dueDate, null, true) +
+        '<div class="tk-prop-row"><span>标签</span>' + renderTaskLabelTrigger(t) + '</div>' +
+      '</div>' +
+      '<div class="tk-prop-row"><span>创建者</span><span class="tk-prop-val">' + escapeHtml(creator.name) + '</span></div>' +
+      '<div class="tk-prop-row"><span>创建时间</span><span class="tk-prop-val">' + escapeHtml(t.createdAt || t.createDate) + '</span></div>' +
+      '<div class="tk-prop-row"><span>更新时间</span><span class="tk-prop-val">' + escapeHtml(t.updatedAt || t.createdAt || t.createDate) + '</span></div>' +
+    '</div>';

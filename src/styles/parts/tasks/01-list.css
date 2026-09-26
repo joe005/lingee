@@ -45,7 +45,7 @@
 .tk-filter-btn{display:flex;align-items:center;gap:5px;padding:5px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);font-size:13px;color:var(--text);cursor:pointer;transition:all .15s}
 .tk-filter-btn:hover{border-color:var(--border-hover);color:var(--text)}
 .tk-filter-btn.active{border-color:var(--border-focus);color:var(--brand);background:var(--brand-fill)}
-.tk-filter-btn.has-filters{border-color:var(--brand);color:var(--bg);background:var(--brand)}
+.tk-filter-btn.has-filters{border-color:var(--border-focus);color:var(--brand);background:var(--brand-fill)}
 
 /* 显示设置按钮 */
 .tk-display-btn{display:flex;align-items:center;justify-content:center;height:30px;box-sizing:border-box;padding:5px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);font-size:13px;color:var(--text);cursor:pointer;transition:all .15s}
@@ -156,11 +156,11 @@
 /* ---------- 筛选标签栏 ---------- */
 .tk-filter-chips{display:flex;align-items:center;gap:6px;padding:6px 24px;border-bottom:1px solid var(--divider);flex-shrink:0;flex-wrap:wrap}
 .tk-filter-chips.hidden{display:none}
-.tk-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:4px;font-size:12px;background:var(--fill-1);border:1px solid var(--border);color:var(--text-secondary);cursor:default}
-.tk-chip:hover{border-color:var(--border-hover)}
-.tk-chip .tk-chip-field{color:var(--text);font-weight:500}
-.tk-chip .tk-chip-op{color:var(--text-soft)}
-.tk-chip .tk-chip-val{color:var(--text-secondary)}
+.tk-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:4px;font-size:12px;background:var(--brand-fill);border:1px solid var(--border-focus);color:var(--brand);cursor:default}
+.tk-chip:hover{border-color:var(--brand)}
+.tk-chip .tk-chip-field{color:var(--brand);font-weight:500}
+.tk-chip .tk-chip-op{color:var(--brand)}
+.tk-chip .tk-chip-val{color:var(--brand)}
 .tk-chip .tk-chip-remove{display:flex;align-items:center;justify-content:center;width:14px;height:14px;border:none;background:transparent;color:var(--text-soft);cursor:pointer;border-radius:3px;margin-left:2px}
 .tk-chip .tk-chip-remove:hover{color:var(--danger);background:var(--danger-bg)}
 .tk-chip-clear-all{font-size:12px;color:var(--brand);cursor:pointer;border:none;background:transparent;padding:3px 6px;border-radius:4px}
@@ -223,9 +223,14 @@
 .tk-card-due{font-size:11px;color:var(--text-secondary);display:flex;align-items:center;gap:3px}
 .tk-card-due.overdue{color:var(--danger)}
 .tk-card-assignee{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:600;flex-shrink:0}
+.tk-card-exec-btn{position:absolute;top:6px;right:6px;display:flex;align-items:center;border:none;background:transparent;color:var(--text-soft);cursor:pointer;padding:4px;border-radius:4px;opacity:0;transition:opacity .15s,color .15s,background .15s}
+.tk-card:hover .tk-card-exec-btn{opacity:1}
+.tk-card-exec-btn:hover{color:var(--success);background:var(--success-bg)}
+.tk-card-exec-btn svg{width:14px;height:14px;display:block;flex:none}
 .tk-card-more{position:absolute;top:6px;right:6px;border:none;background:transparent;color:var(--text-secondary);cursor:pointer;padding:4px;border-radius:4px;display:flex;opacity:0;transition:opacity .15s,background .15s,color .15s}
 .tk-card:hover .tk-card-more{opacity:1}
 .tk-card-more:hover{background:var(--hover);color:var(--text)}
+.tk-col-actions .tk-card-exec-btn{position:static;opacity:1}
 .tk-card-menu{position:fixed;background:var(--bg);border:1px solid var(--border);border-radius:8px;box-shadow:var(--menu-shadow);padding:4px;min-width:140px;z-index:200;animation:tk-menu-in .12s ease}
 .tk-card-menu-item{display:flex;align-items:center;gap:8px;padding:7px 12px;font-size:13px;color:var(--text);border-radius:6px;cursor:pointer;white-space:nowrap}
 .tk-card-menu-item:hover{background:var(--hover)}

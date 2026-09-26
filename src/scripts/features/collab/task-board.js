@@ -1,9 +1,9 @@
-import { CV_TASKS, CV_PROJECTS, CV_ARTIFACTS, cvInProject, cvProject, cvProjectInWorkspace, cvProjectName, cvSeedTaskDetails, cvPeopleInProject } from './data.js';
+import { CV_TASKS, CV_PROJECTS, CV_ARTIFACTS, cvCurrentUserName, cvInProject, cvProject, cvProjectInWorkspace, cvProjectName, cvSeedTaskDetails, cvPeopleInProject } from './data.js';
 import { TEAMS } from '../expert/store.js';
 import { STAGES, xesc } from '../expert/data.js';
 import { cvSetProject, cvUpdateCounts } from './projects.js';
 import { tbBoardColumns, tbColumns, tbCurrentTeamId, tbLabel, tbMode, tbOwner, tbPriority, tbTaskId, tbGetSelected, tbSave, tbSetSelected, tbTeamName, tbTeamStages, tbMatchedTeam } from './tb-core.js';
-import { retryTaskRuntime, runtimeArtifacts, syncTaskFromRuntime } from './runtime.js';
+import { ensureTaskRuntime, retryTaskRuntime, runtimeArtifacts, syncTaskFromRuntime } from './runtime.js';
 /* 任务看板：列渲染、任务详情（打开/保存）、筛选与初始化
    共享状态与工具在 tb-core；新建任务在 new-task；任务对话在 task-chat。 */
 
@@ -37,7 +37,20 @@ function card(t) {
   const runtimeState = t.runtime ? ({ ready: '已规划', running: '运行中', failed: '需介入', completed: '待验收' }[t.runtime.status] || '') : '';
   const projLine = cvProjectName(t.project) + " · " + tbTeamName(t) + (runtimeState ? " · " + runtimeState : '');
   const actBtns = '<button type="button" class="tb-quick" data-tb-handoff="' + index + '">转交</button>';
-  return ("<div class=\"tb-card\" data-tb-task=\"" + (index) + "\" role=\"button\" tabindex=\"0\"><span class=\"tb-card-top\"><span>" + (xesc(t.sourceId)) + "</span><span class=\"tb-type\">" + (xesc(t.type)) + "</span></span><strong title=\"" + (xesc(t.title)) + "\">" + (xesc(t.title)) + "</strong><span class=\"tb-description\" title=\"" + (xesc(t.desc)) + "\">" + (xesc(t.desc)) + "</span><span class=\"tb-project\" title=\"" + (xesc(projLine)) + "\">" + (xesc(projLine)) + "</span><span class=\"tb-card-bottom\"><span class=\"tb-person\"><i>" + xesc((t.assignee || '待')[0]) + "</i>" + (xesc(tbOwner(t))) + "</span><span class=\"tb-priority\" data-priority=\"" + (xesc(tbPriority(t))) + "\">≋ " + (xesc(tbPriority(t))) + "</span></span><span class=\"tb-context\">" + (xesc(tbMode(t))) + "<span>" + (t.status === '审核中' ? '等待人工确认' : t.status === '已阻塞' ? '需要介入' : t.status === '进行中' ? '执行中 · ' + (t.progress || 0) + '%' : xesc(tbLabel(t.status))) + "</span></span><span class=\"tb-card-acts\">" + actBtns + "</span></div>");
+  /* 待办卡片右上角用"开始执行"按钮代替类型标签 */
+  const execBtnHtml = '<button type="button" class="tb-exec-btn" data-tb-exec="' + index + '" title="开始执行任务" aria-label="开始执行任务" style="margin-left:auto"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3l14 9-14 9V3z"/></svg></button>';
+  if (index < 3) console.log('[tb-card #'+index+'] status='+t.status+' title='+t.title);
+  const topRight = t.status === '待办'
+    ? execBtnHtml
+    : '<span class="tb-type">' + xesc(t.type) + '</span>' + (t.status === '待办' ? '' : '');
+  return ("<div class=\"tb-card\" data-tb-task=\"" + (index) + "\" role=\"button\" tabindex=\"0\">"
+    + "<span class=\"tb-card-top\"><span>" + (xesc(t.sourceId)) + "</span>" + topRight + "</span>"
+    + "<strong title=\"" + (xesc(t.title)) + "\">" + (xesc(t.title)) + "</strong>"
+    + "<span class=\"tb-description\" title=\"" + (xesc(t.desc)) + "\">" + (xesc(t.desc)) + "</span>"
+    + "<span class=\"tb-project\" title=\"" + (xesc(projLine)) + "\">" + (xesc(projLine)) + "</span>"
+    + "<span class=\"tb-card-bottom\"><span class=\"tb-person\"><i>" + xesc((t.assignee || '待')[0]) + "</i>" + (xesc(tbOwner(t))) + "</span><span class=\"tb-priority\" data-priority=\"" + (xesc(tbPriority(t))) + "\">≋ " + (xesc(tbPriority(t))) + "</span></span>"
+    + "<span class=\"tb-context\">" + (xesc(tbMode(t))) + "<span>" + (t.status === '审核中' ? '等待人工确认' : t.status === '已阻塞' ? '需要介入' : t.status === '进行中' ? '执行中 · ' + (t.progress || 0) + '%' : xesc(tbLabel(t.status))) + "</span></span>"
+    + "<span class=\"tb-card-acts\">" + actBtns + "</span></div>");
 }
 function tbQuickAssign(index) {
   const t = CV_TASKS[index]; if (!t) return;
@@ -189,7 +202,7 @@ function stageTimelineHtml(t) {
     const stageReviews = reviews.filter(r => reviewStageId(t, r, plan) === sp.id);
     const latest = stageReviews[stageReviews.length - 1];
     const wi = t.runtime?.workItems?.find(w => w.stageId === sp.id || w.id === sp.id);
-    const state = t.status === '已完成' || wi?.status === 'completed' || i < curIdx || latest?.status === 'approved' ? 'done' : i === curIdx && !['待办','待规划','已取消'].includes(t.status) ? 'current' : 'upcoming';
+    const state = t.status === '已完成' || wi?.status === 'completed' || latest?.status === 'approved' ? 'done' : (wi?.status === 'running' || (i === curIdx && !['待办','待规划','已取消'].includes(t.status))) ? 'current' : 'upcoming';
     const stateLabel = state === 'done' ? '已完成' : state === 'current' ? (latest?.status === 'pending' ? '待评审' : latest?.status === 'changes_requested' ? '要求修改' : '进行中') : '未开始';
     const canSee = canSeeStageDetail(t, sp, plan);
     let body;
@@ -454,6 +467,19 @@ export function initTaskBoard() {
     }); }
   } catch { /* A damaged local snapshot must not prevent the demo from opening. */ }
   cvSeedTaskDetails();
+  /* 为「进行中」种子任务预置 Runtime：所有执行阶段设为运行中，
+     展示多阶段并行推进时各阶段均为「进行中」的状态。 */
+  CV_TASKS.forEach(t => {
+    if (t.kind === 'epic' || t.status !== '进行中') return;
+    const runtime = ensureTaskRuntime(t);
+    if (!runtime || runtime.status !== 'ready') return;
+    runtime.workItems.forEach((wi, idx) => {
+      wi.status = 'running';
+      wi.dependsOn = [];
+      wi.runs.push({ id: 'run-seed-' + idx + '-' + Date.now().toString(36), attempt: 1, status: 'running', startedAt: new Date().toLocaleString('zh-CN', { hour12: false }) });
+    });
+    runtime.status = 'running';
+  });
   CV_TASKS.forEach(t => { if (t.runtime) syncTaskFromRuntime(t); });
   if (restored) tbSave();
   const panel = document.getElementById('cv-tasks');
@@ -482,6 +508,19 @@ export function initTaskBoard() {
       else if (button.dataset.conv) { if (confirmLeave()) window.tbOpenConv && window.tbOpenConv(button.dataset.conv); }
       else if (button.hasAttribute('data-conv-back')) window.tbBackConv && window.tbBackConv();
       else if (button.hasAttribute('data-conv-new')) { if (confirmLeave()) window.tbNewConv && window.tbNewConv(); }
+      else if (button.hasAttribute('data-tb-exec')) {
+        event.stopPropagation();
+        const idx = Number(button.dataset.tbExec);
+        const task = CV_TASKS[idx];
+        if (task && task.status === '待办') {
+          task.status = '进行中';
+          if (!task.activity) task.activity = [];
+          task.activity.push({ author: cvCurrentUserName(), text: '点击「开始执行」启动任务', time: new Date().toLocaleString('zh-CN', { hour12: false }) });
+          tbSave();
+          renderTaskBoard();
+          cvUpdateCounts();
+        }
+      }
       else if (button.hasAttribute('data-tb-transfer')) {
         if (confirmLeave()) { openTask(CV_TASKS.indexOf(tbGetSelected())); window.tbOpenTransfer && window.tbOpenTransfer(); }
       }

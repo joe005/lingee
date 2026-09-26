@@ -32,26 +32,6 @@ Consult the wiki when working on features, debugging, or onboarding to a new are
 
 ## Collaboration Rules
 
-### 消息通知同步更新
-
-每次实质性功能变更后，需在 `src/scripts/features/changelog.js` 的 `changelogData` 数组中新增一条消息通知。规范：
-
-1. 仅记录核心功能变更，小 BUG 修复及细节调整不记录
-2. 描述精炼为一句，突出重点，不逐条罗列
-3. 同一更新人同一天的多次变更合并为一条通知
-4. 分配递增 id，并在同文件的 `changelogIcons` 中添加对应图标
-5. 日期使用当天日期
-
-### CHANGELOG.md 同步更新
-
-每次实质性功能变更后，需在 `CHANGELOG.md` 中新增一行版本记录。规范：
-
-1. 按天汇总，不逐条罗列 commit，小修小补不单独记录
-2. 同一更新人同一天的多次变更合并为一条记录，不拆分多条
-3. 版本号遵循 SemVer：MAJOR 对应不兼容变更、MINOR 对应新功能、PATCH 对应修复与优化
-4. 更新人从 git 提交记录获取，填写提交者姓名
-5. 描述内容与消息通知对应，但采用 `1. 2. 3. 4.` 编号、`<br>` 换行罗列的格式
-
 ### 源码结构（2026-09-16 拆分后）
 
 原来的单文件 `src/scripts/main.js`（6515 行）与 `index.html`（2310 行）已按
@@ -114,4 +94,25 @@ Consult the wiki when working on features, debugging, or onboarding to a new are
 
 本项目完成开发后，禁止自动使用浏览器操作 Agent 验证页面。按工程要求运行
 `npm run check` 和 `npm run build`，必要时补充非浏览器的静态或命令行检查；
-页面操作验证由用户明确要求时再进行。
+页面操作验证由用户明确要求时再进行。变更记录不属于日常验证范围，
+只在提交推送时按下节处理。
+
+### 变更记录：仅在提交推送时更新
+
+`CHANGELOG.md` 和 `src/scripts/features/changelog.js`（页面内的「更新日志」消息通知）
+是同一份变更说明的两个落点，只在用户要求提交推送的那次操作里一起写，平时不动。
+
+1. 日常修改任务不读、不写、不预留这两处：功能开发、调试、重构、样式调整的过程中
+   都不追加记录，收尾只跑 `npm run check` 和 `npm run build`，避免拉长任务时间。
+2. 一次推送聚合成一条记录，范围取本次待推送的提交（如 `git log origin/main..HEAD`），
+   不逐条罗列 commit；更新人按提交者填写，同一更新人同一天的多次变更合并为一条。
+3. 说明文案只写一句，两处共用：`CHANGELOG.md` 表格的「变更内容」列与 `changelog.js`
+   的 `body` 使用同一句摘要；`body` 写成 `<标题>：<同一句摘要>`，标题由 `type` 和
+   `module` 组合而成，不另起文案，不再使用 `1. 2. 3.` 编号加 `<br>` 换行的罗列格式。
+4. 版本号遵循 SemVer：MAJOR 对应不兼容变更、MINOR 对应新功能、PATCH 对应修复与优化。
+5. `changelog.js` 新增条目分配递增 `id`，并在同文件的 `changelogIcons` 中补对应图标，
+   日期使用当天日期。
+6. 只记录核心功能变更，小 BUG 修复与细节调整不记录；若本次推送全是这类小事，
+   两处都不新增内容，直接提交推送。
+7. 顺序为先写两处记录，再跑 `npm run check` 和 `npm run build`，然后连同代码改动
+   一起提交并推送，保证记录与代码在同一次推送内；不要在推送之后再补一次提交。

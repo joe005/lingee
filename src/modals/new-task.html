@@ -1,7 +1,7 @@
 <div class="sync-overlay" id="cv-newtask-overlay" style="display:none" onclick="if(event.target===this)cvCloseNewTask()">
   <div class="nt-modal" role="dialog" aria-modal="true" aria-labelledby="cv-nt-dialog-title">
     <div class="nt-head">
-      <div class="nt-crumb"><span class="nt-user" id="cv-nt-crumb-user">吴晓峰</span><span class="nt-crumb-arrow" aria-hidden="true">›</span><strong id="cv-nt-dialog-title"><span id="cv-nt-mode-label">手动创建</span></strong></div>
+      <div class="nt-crumb"><strong id="cv-nt-dialog-title"><span id="cv-nt-mode-label">手动创建</span></strong></div>
       <div class="nt-head-actions">
         <button type="button" class="nt-expand" id="cv-nt-expand" aria-label="全屏展开"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg></button>
         <button type="button" class="sync-modal__close" aria-label="关闭新增任务" onclick="cvCloseNewTask()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
@@ -43,7 +43,14 @@
       <label class="nt-property nt-property--priority" for="cv-nt-priority"><span class="sr-only">优先级</span><select id="cv-nt-priority"><option>无优先级</option><option>高</option><option>中</option><option>低</option></select></label>
       <label class="nt-property nt-property--project" for="cv-nt-project"><span class="sr-only">项目</span><select id="cv-nt-project"></select></label>
       <label class="nt-property nt-property--group" id="cv-nt-group-field" for="cv-nt-group"><span>上级任务</span><select id="cv-nt-group" aria-label="上级任务（可选）"><option value="">无上级任务</option></select></label>
-      <label class="nt-property nt-property--assignee" id="cv-nt-single-field" for="cv-nt-people"><span class="sr-only">负责人</span><select class="nt-assignee-select" id="cv-nt-people" data-person-select></select></label>
+      <div class="nt-property nt-property--assignee" id="cv-nt-single-field">
+        <button type="button" class="nt-person-trigger" id="cv-nt-people-btn" aria-label="负责人">
+          <span class="person-avatar-sm" id="cv-nt-people-avatar">人</span>
+          <span class="person-name-sm" id="cv-nt-people-name">负责人</span>
+          <svg class="nt-person-caret" width="10" height="6" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 1l4 4 4-4"/></svg>
+        </button>
+        <div class="nt-person-menu" id="cv-nt-people-menu" hidden></div>
+      </div>
       <button type="button" class="nt-property nt-property--tags" id="cv-nt-tags-trigger">添加标签</button>
       <section class="nt-execution" id="cv-nt-execution" aria-labelledby="cv-nt-exec-title">
         <div class="nt-section-head"><h3 id="cv-nt-exec-title" class="sr-only">执行方式（必填）</h3></div>

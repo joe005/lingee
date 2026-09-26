@@ -8,6 +8,9 @@ import { escapeHtml, stClass, filterAssigneeOptions, chooseFirstAssignee } from 
 import { render, showCardMenu, hidePopover, displayChoiceMenu, closeDisplayChoiceMenu, closeFilterPanel, closeViewMenu, closeFieldSettings } from './list.js';
 import { toast } from '../../core/toast.js';
 import { openTaskModal } from './create.js';
+import { CV_PROJECTS } from '../collab/data.js';
+import { set_activePick } from '../expert/store.js';
+import { renderExpertChips } from '../expert/chips.js';
 
 var drawerPreferredWidth = null;
 
@@ -47,6 +50,9 @@ function openTaskConversationWithTask(taskId) {
   closeDrawer();
   openTaskConversation();
   if (!t) return;
+  var project = CV_PROJECTS.find(function(p){ return p.id === t.project; });
+  var teamId = t.teamId || (project && project.defaultTeam);
+  if (teamId) { set_activePick({kind:'team', id:teamId, auto:false}); renderExpertChips(); }
   var tags = document.getElementById('ntTags');
   if (tags) {
     tags.innerHTML = '<span class="ctag"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span class="ctag-label">' + escapeHtml(t.code) + ' ' + escapeHtml(t.title) + '</span><button type="button" class="ctag-x" data-clear-task-ref data-tooltip="移除任务关联" aria-label="移除任务关联"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></span>';
@@ -148,7 +154,6 @@ function restoreTaskLabelCatalog() {
   try {
     var saved = JSON.parse(localStorage.getItem('lingee_task_label_catalog') || 'null');
     if (!saved || !Array.isArray(saved.labels)) return;
-    TK_LABELS.splice(0, TK_LABELS.length, ...saved.labels.filter(function(name) { return typeof name === 'string' && name.trim(); }));
     if (saved.colors && typeof saved.colors === 'object') Object.keys(saved.colors).forEach(function(name) {
       if (/^#[0-9a-f]{6}$/i.test(saved.colors[name])) taskLabelColors[name] = saved.colors[name];
     });

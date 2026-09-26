@@ -22,6 +22,7 @@ function closeDdDelayed(dd){
 
 /* 下拉面板动态高度 — 不溢出屏幕 */
 function adjustMenuHeight(dd){
+  if(dd.classList.contains('dd-float')) return; /* 浮层式下拉由专用定位接管，避开 overflow 容器裁剪 */
   var menu=dd.querySelector('.menu');
   if(!menu) return;
   var rect=dd.getBoundingClientRect();
@@ -98,6 +99,7 @@ export function initHoverDropdowns() {
     if(dd.id==='appDropdown' || dd.id==='chatAppDropdown') return;
     if(dd.classList.contains('field-dd')) return; // 表单内下拉改为点击展开
     if(dd.classList.contains('project-dd')) return; // 项目操作同为点击展开，与会话操作一致
+    if(dd.classList.contains('dd-float')) return; // 弹窗内浮层下拉改为点击展开，避免 hover 先打开与 click 切换冲突
     var t=null;
     dd.addEventListener('mouseenter',function(){
       clearTimeout(t);
@@ -111,7 +113,7 @@ export function initHoverDropdowns() {
   });
   // close when clicking outside
   document.addEventListener('click',function(e){
-    if(!e.target.closest('.dropdown')) closeAll(null);
+    if(!e.target.closest('.dropdown,.dd-float-menu')) closeAll(null);
   });
   $$('.dropdown').forEach(function(dd){
     new MutationObserver(function(){

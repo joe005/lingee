@@ -369,6 +369,16 @@
 #cv-newtask-overlay .nt-property--project,#cv-newtask-overlay .nt-property--assignee,#cv-newtask-overlay .nt-property--priority{flex:0 1 auto;min-width:0}
 #cv-newtask-overlay .nt-property--project select{max-width:190px}
 #cv-newtask-overlay .nt-property--assignee select{max-width:170px}
+#cv-newtask-overlay .nt-property--assignee{position:relative}
+#cv-newtask-overlay .nt-person-trigger{display:inline-flex;align-items:center;gap:6px;background:none;border:0;cursor:pointer;font:inherit;color:var(--text-secondary);padding:0}
+#cv-newtask-overlay .nt-person-trigger:disabled{opacity:.5;cursor:default}
+#cv-newtask-overlay .nt-person-caret{opacity:.5;flex:none}
+#cv-newtask-overlay .nt-person-menu{position:absolute;bottom:calc(100% + 4px);left:0;min-width:180px;max-height:260px;overflow-y:auto;padding:4px;border:1px solid var(--border);border-radius:9px;background:var(--bg);box-shadow:var(--menu-shadow);z-index:12}
+#cv-newtask-overlay .nt-person-item{display:flex;align-items:center;gap:8px;width:100%;padding:6px 10px;border:0;background:none;cursor:pointer;border-radius:6px;font:inherit;text-align:left;color:var(--text-secondary)}
+#cv-newtask-overlay .nt-person-item:hover{background:var(--fill-1);color:var(--text)}
+#cv-newtask-overlay .nt-person-item.selected{color:var(--brand)}
+#cv-newtask-overlay .person-avatar-sm{width:22px;height:22px;min-width:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;color:#fff;flex-shrink:0;background:linear-gradient(135deg,#7c5cfc,#5b8def)}
+#cv-newtask-overlay .person-name-sm{font-size:13px;font-weight:500;color:inherit}
 #cv-newtask-overlay .nt-status-ring{display:inline-block;width:15px;height:15px;border:2px solid var(--text-secondary);border-radius:50%;box-sizing:border-box}
 #cv-newtask-overlay .nt-execution{display:flex;align-items:center;flex:0 0 auto;padding:0;border:0;background:transparent}
 #cv-newtask-overlay .nt-execution .nt-section-head{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}

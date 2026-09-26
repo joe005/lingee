@@ -1,5 +1,6 @@
-/* 项目与任务管理共用的本地交付过程样例；始终从项目绑定的专家团选人。 */
+/* 项目与任务管理共用的本地交付过程样例；优先使用任务选择的专家团。 */
 import { EXPERTS, PRESET_TEAMS, STAGES } from '../expert/data.js';
+import { TEAMS } from '../expert/store.js';
 import { $ } from '../../core/dom.js'; // 模块自检将模板插值的 $ 识别为跨模块符号。
 
 const PHASE_OWNERS = {
@@ -56,17 +57,18 @@ function normalizedStatus(status) {
 }
 
 export function createDeliveryActivity(task, project, options = {}) {
-  const team = PRESET_TEAMS.find(item => item.id === project?.defaultTeam);
+  const team = TEAMS.find(item => item.id === task.teamId || project?.defaultTeam)
+    || PRESET_TEAMS.find(item => item.id === project?.defaultTeam);
   if (!team) return [];
   const status = normalizedStatus(task.status);
   const date = task.createDate || options.date || '2026-09-22';
   const title = task.title || project.name;
-  const lead = ownerFor('planning', title, team);
   const activity = [{stageId:'kickoff', stage:'任务创建', author:options.creator || project.owner || '项目成员',
     text:`将「${title}」加入「${project.name}」，交由${team.name}评估交付范围。`, time:`${date} 09:15`, state:'done'}];
   if (['planned','backlog','cancelled'].includes(status)) return activity;
-  const completedCount = status === 'done' ? 6 : status === 'in_review' ? 5 : status === 'in_progress' ? 3 : 3;
-  const activeIndex = status === 'in_progress' || status === 'blocked' ? 3 : status === 'in_review' ? 5 : -1;
+  const requestedIndex = STAGES.findIndex(stage => stage.id === task.executionStageId);
+  const activeIndex = status === 'done' ? -1 : requestedIndex < 0 ? 0 : requestedIndex;
+  const completedCount = status === 'done' ? STAGES.length : activeIndex;
   const hours = ['09:40','10:25','11:10','13:45','15:05','16:20'];
   STAGES.forEach((stage, index) => {
     if (index >= completedCount && index !== activeIndex) return;
@@ -77,26 +79,18 @@ export function createDeliveryActivity(task, project, options = {}) {
       state = status === 'blocked' ? 'blocked' : status === 'in_review' ? 'review' : 'running';
       if (status === 'blocked') detail = `${detail} 当前遇到阻塞：${options.blockedReason || '所需依赖尚未就绪，已暂停后续验证。'}`;
       if (status === 'in_progress') detail = `${detail} 本阶段持续处理中，尚未提交独立验证。`;
-      if (status === 'in_review') detail = `已由${lead.name}汇总前五阶段的工作记录，等待项目负责人确认「${title}」的交付范围与验收结论。`;
+      if (status === 'in_review') detail = `已由${expert.name}提交「${title}」的${stage.name}结果，等待项目负责人审核；通过后${index === STAGES.length - 1 ? '完成任务' : '进入下一阶段'}。`;
+    }
+    if (status === 'in_progress' && index === activeIndex && !task.statusHistory?.length) {
+      activity.push(
+        {stageId:'status-flow', stage:'状态流转', author:options.creator || project?.owner || '项目成员',
+         text:`状态从「待办」流转至「进行中」，开始${stage.name}。`, time:`${date} 09:30`, state:'done'},
+        {stageId:'assignee', stage:'处理人分配', author:options.creator || project?.owner || '项目成员',
+         text:`分配处理人「${options.assigneeName || '待分配'}」，协同${expert.name}完成${stage.name}。`, time:`${date} 09:35`, state:'done'},
+      );
     }
     activity.push({stageId:stage.id, stage:stage.name, author:expert.name, expertId:expert.id,
       text:detail, time:`${date} ${hours[index]}`, state});
-    if (status === 'in_progress' && index === 2) {
-      activity.push(
-        {stageId:'status-flow', stage:'状态流转', author:options.creator || project?.owner || '项目成员',
-         text:'状态从「待办」流转至「进行中」，进入开发实现阶段。', time:`${date} 11:30`, state:'done'},
-        {stageId:'assignee', stage:'处理人分配', author:options.creator || project?.owner || '项目成员',
-         text:`分配处理人「${options.assigneeName || '待分配'}」，负责功能实现与界面联动。`, time:`${date} 11:45`, state:'done'},
-      );
-    }
-    if (status === 'in_progress' && index === activeIndex) {
-      activity.push(
-        {stageId:'comment', stage:'沟通确认', author:options.assigneeName || '开发人员',
-         text:'已完成接口字段核对与数据结构设计，预计今日完成主体功能，明日进入联调。', time:`${date} 14:20`, state:'done'},
-        {stageId:'progress', stage:'进度更新', author:options.assigneeName || '开发人员',
-         text:'功能实现完成约 60%，表单配置与流程节点已就绪，正在对接报表口径。', time:`${date} 15:05`, state:'running'},
-      );
-    }
   });
   return activity;
 }

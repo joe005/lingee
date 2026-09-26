@@ -34,6 +34,7 @@ import { initCollabConfig } from './features/collab/config.js';
 import { initCollab } from './features/collab/index.js';
 import { cvSwitchView } from './features/collab/view.js';
 import { initTasksV2 } from './features/tasks-v2/index.js';
+import { initInbox } from './features/inbox/index.js';
 import { _authedUser } from './features/login.js';
 import { withBase } from './core/base-path.js';
 import { initAnalytics } from './features/analytics.js';
@@ -94,6 +95,7 @@ initPersonPicker();
 initCollabConfig();               /* 6370  features/collab/config.js */
 initCollab();                     /* 6445  features/collab/index.js */
 initTasksV2();                    /* 任务管理 v2 */
+initInbox();                      /* 系统通知收件箱 */
 initAnalytics();                  /* 用户行为分析看板 */
 
 /* 双击任务管理标题切换到旧版 */

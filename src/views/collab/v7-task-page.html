@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>任务管理 v2 · 看板 + 详情</title>
+<style>
+/* ============================================================
+   设计令牌
+   ============================================================ */
+:root{
+  --brand:#495dff;--brand-hover:#3a5eff;--brand-active:#1a5cff;--brand-fill:#eef3ff;--focus-ring:var(--brand);
+  --text:#2d2d2d;--text-secondary:#767676;--text-muted:rgba(0,0,0,0.64);--text-soft:#b8b8b8;
+  --bg:#ffffff;--sidebar-bg:#fbfbfb;--fill-1:#fafafa;--fill-2:#fcfcfc;--hover:#f0f0f0;--active:#ebebeb;
+  --border:#efefef;--border-hover:#e0e0e0;--border-focus:#c7d2fe;--divider:#f0f0f0;
+  --success:#08a040;--success-bg:#e8faef;--warning:#c06010;--warning-bg:#fff1e8;--danger:#e04a3a;--danger-bg:#fff1f0;--dot-blue:#4d89ff;--dot-orange:#ff8d42;--dot-green:#08cc50;--dot-purple:#8b5cf6;--dot-teal:#14b8a6;--dot-rose:#e76f96;
+  --neutral-50:rgba(0,0,0,0.03);--neutral-100:rgba(0,0,0,0.06);--neutral-500:rgba(0,0,0,0.46);--neutral-600:rgba(0,0,0,0.64);--neutral-700:rgba(0,0,0,0.82);--neutral-900:rgba(0,0,0,0.94);
+  --scroll-thumb:#c8c8c8;--scroll-thumb-hover:#a8a8a8;
+  --pill-shadow:0 1px 2px rgba(0,0,0,0.06),0 1px 3px rgba(0,0,0,0.04);
+  --menu-shadow:0 8px 28px rgba(0,0,0,0.12),0 2px 6px rgba(0,0,0,0.06);
+  --r-xl:16px;
+  --cv-list-border:1px solid var(--border);--cv-list-radius:0;--cv-list-row-size:13px;--cv-list-row-pad:8px 10px;--cv-list-row-border:1px solid var(--divider);--cv-list-head-pad:8px 10px;--cv-list-head-fw:600;--cv-list-head-fg:var(--text-secondary);--cv-list-head-size:12px;--cv-list-hover:var(--hover);--cv-list-selected:var(--brand-fill);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Segoe UI","Microsoft YaHei",sans-serif;font-size:13px;color:var(--text);background:var(--bg);display:flex;flex-direction:column;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums;font-feature-settings:"tnum"1}
+button,input,select,textarea{font:inherit}
+a{color:var(--brand);text-decoration:none}
+.hidden{display:none!important}
+
+/* ============================================================
+   tk-* 核心样式
+   ============================================================ */
+
+/* 页头 */
+.tk-header-desc{font-size:13px;color:var(--text-secondary)}
+.tk-demo-tag{font-size:11px;color:var(--text-secondary);background:var(--fill-1);border:1px solid var(--border);padding:2px 8px;border-radius:4px}
+
+/* 视图标签栏 */
+.tk-view{display:flex;align-items:center;gap:0;padding:8px 24px;border-bottom:1px solid var(--divider);flex-shrink:0;background:var(--bg)}
+.tk-view-tab{display:flex;align-items:center;gap:6px;padding:6px 12px;border:0;background:transparent;color:var(--text-secondary);font-size:13px;cursor:pointer;border-radius:6px}
+.tk-view-tab:hover{background:var(--hover);color:var(--text)}
+.tk-view-tab.active{color:var(--brand);font-weight:500;background:var(--brand-fill)}
+.tk-view-action{position:relative;flex-shrink:0;margin-left:auto}
+.tk-view-add{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;border:none;background:var(--fill-1);color:var(--text);cursor:pointer}
+
+/* 工具栏 */
+.tk-toolbar{display:flex;align-items:center;justify-content:space-between;padding:8px 24px;border-bottom:1px solid var(--divider);flex-shrink:0;gap:12px;flex-wrap:wrap}
+.tk-tools-left{display:flex;align-items:center;gap:8px}
+.tk-tools-right{display:flex;align-items:center;gap:8px}
+.tk-toolbar-new{display:inline-flex;align-items:center;gap:5px;height:30px;padding:5px 10px;border:1px solid var(--brand);border-radius:6px;background:var(--brand);color:#fff;font-size:13px;cursor:default;white-space:nowrap}
+.tk-search-wrap{display:flex;align-items:center;gap:6px;background:var(--fill-1);border:1px solid var(--border);border-radius:6px;padding:5px 10px}
+.tk-search-wrap input{border:none;background:transparent;outline:none;font-size:13px;width:180px;color:var(--text)}
+.tk-search-wrap input::placeholder{color:var(--text-soft)}
+.tk-filter-btn{display:flex;align-items:center;gap:5px;padding:5px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);font-size:13px;color:var(--text);cursor:default}
+.tk-display-btn{display:flex;align-items:center;justify-content:center;height:30px;padding:5px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);font-size:13px;color:var(--text);cursor:default}
+.tk-layout-toggle{display:flex;align-items:center;border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-top:6px}
+.tk-layout-btn{display:flex;align-items:center;justify-content:center;gap:5px;min-width:64px;height:28px;padding:0 8px;border:none;background:transparent;color:var(--text);font-size:12px}
+.tk-layout-btn.active{background:var(--brand-fill);color:var(--brand)}
+.tk-layout-btn+.tk-layout-btn{border-left:1px solid var(--border)}
+.tk-display-popover{position:fixed;background:var(--bg);border:1px solid var(--border);border-radius:9px;box-shadow:var(--menu-shadow);z-index:60;padding:12px;width:288px}
+
+/* 主体区域 */
+.tk-body{flex:1;min-height:0;overflow:hidden;position:relative;display:flex;flex-direction:column}
+
+/* 看板视图 */
+.tk-board{flex:1;min-height:0;overflow:hidden}
+.tk-board-scroll{display:flex;gap:12px;padding:12px 24px;overflow-x:auto;height:100%;align-items:flex-start}
+.tk-board-scroll::-webkit-scrollbar{height:6px}
+.tk-board-scroll::-webkit-scrollbar-thumb{background:var(--scroll-thumb);border-radius:3px}
+.tk-board-col{flex-shrink:0;width:260px;background:var(--fill-1);border:1px solid var(--border);border-radius:8px;display:flex;flex-direction:column;max-height:calc(100% - 0px)}
+.tk-board-col-head{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-bottom:1px solid var(--divider);flex-shrink:0}
+.tk-board-col-head-left{display:flex;align-items:center;gap:6px}
+.tk-board-col-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.tk-board-col-name{font-size:13px;font-weight:600;color:var(--text)}
+.tk-board-col-count{font-size:11px;color:var(--text-secondary);background:var(--bg);padding:1px 6px;border-radius:10px;border:1px solid var(--border)}
+.tk-board-col-add{display:flex;align-items:center;justify-content:center;width:24px;height:24px;border:none;background:transparent;color:var(--text-soft);border-radius:4px}
+.tk-board-col-body{flex:1;overflow-y:auto;padding:6px;display:flex;flex-direction:column;gap:6px;min-height:40px}
+
+/* 任务卡片 */
+.tk-card{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px;position:relative}
+.tk-card:hover{border-color:var(--border-hover);box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.tk-card-code{font-size:11px;color:var(--text-soft);font-weight:500;margin-bottom:4px}
+.tk-card-title{font-size:13px;color:var(--text);line-height:1.4;margin-bottom:6px;word-break:break-word}
+.tk-card-description{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;color:var(--text-secondary);font-size:11px;line-height:1.4;margin-bottom:6px}
+.tk-card-labels{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:6px}
+.tk-card-label{font-size:10px;padding:1px 6px;border-radius:3px;background:var(--fill-1);color:var(--text-secondary);border:1px solid var(--border)}
+.tk-card-foot{display:flex;align-items:center;justify-content:space-between}
+.tk-card-foot-left{display:flex;align-items:center;gap:6px}
+.tk-card-priority{font-size:10px;padding:1px 6px;border-radius:3px;font-weight:500}
+.tk-card-due{font-size:11px;color:var(--text-secondary);display:flex;align-items:center;gap:3px}
+.tk-card-assignee{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:600;flex-shrink:0}
+.tk-card-actions{display:flex;gap:6px;margin-top:6px;padding-top:6px;border-top:1px solid var(--divider)}
+.tk-card-action-btn{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border:1px solid var(--border);border-radius:5px;background:var(--bg);font-size:11px;color:var(--text-secondary)}
+.tk-card-exec-btn{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border:1px solid var(--brand);border-radius:5px;background:var(--brand-fill);color:var(--brand);font-size:11px;font-weight:600}
+.tk-card-progress{display:flex;align-items:center;gap:6px;margin-top:4px;font-size:10px;color:var(--dot-blue)}
+.tk-card-progress-bar{flex:1;height:4px;border-radius:2px;background:var(--fill-1);overflow:hidden;max-width:80px}
+.tk-card-progress-bar i{display:block;height:100%;border-radius:2px;background:var(--brand)}
+
+/* 空状态 */
+.tk-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--text-secondary)}
+.tk-empty p{font-size:14px}
+.tk-btn-ghost{padding:5px 14px;border:1px solid var(--border);border-radius:6px;background:var(--bg);font-size:13px;color:var(--text-secondary)}
+.tk-btn-primary{padding:5px 14px;border:none;border-radius:6px;background:var(--brand);font-size:13px;color:#fff;font-weight:500}
+
+/* 详情的遮罩层 */
+.tk-drawer-clickaway{position:fixed;inset:0;background:transparent;z-index:200}
+
+/* 详情面板（抽屉） */
+.tk-drawer{position:fixed;top:0;right:0;bottom:0;width:min(900px,75vw);background:var(--bg);border-left:1px solid var(--divider);box-shadow:-8px 0 30px rgba(0,0,0,.08);z-index:201;display:flex;flex-direction:column}
+.tk-drawer-head{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--divider);flex-shrink:0;gap:12px}
+.tk-drawer-head-title{display:flex;align-items:center;gap:8px;min-width:0;flex:1;overflow:hidden}
+.tk-drawer-code{flex:none;font-size:13px;color:var(--text-soft);white-space:nowrap}
+.tk-drawer-head-actions{display:flex;align-items:center;gap:2px;flex:none;margin-left:auto}
+.tk-drawer-head-btn{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border:none;background:transparent;color:var(--text-secondary);border-radius:6px}
+.tk-drawer-head-btn:hover{background:var(--hover);color:var(--text)}
+#tkDrawerChat{width:auto;gap:6px;padding:0 10px;border:1px solid transparent;background:var(--brand-fill);color:var(--brand);font-size:12px;font-weight:600;white-space:nowrap;cursor:default}
+.tk-drawer-close{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border:none;background:transparent;color:var(--text-secondary);border-radius:6px}
+.tk-drawer-close:hover{background:var(--hover)}
+.tk-drawer-body{flex:1;overflow:hidden;display:flex}
+.tk-drawer-main{flex:1;min-width:0;overflow-y:auto;padding:8px 32px 24px}
+.tk-drawer-main-inner{max-width:720px;margin:0 auto}
+.tk-drawer-title{font-size:18px;font-weight:600;color:var(--text);margin:0;line-height:1.4;padding:2px 4px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tk-drawer-tabs{display:flex;gap:0;border-bottom:1px solid var(--divider);margin-top:16px}
+.tk-drawer-tab{padding:8px 16px;border:none;background:transparent;font-size:13px;color:var(--text);position:relative}
+.tk-drawer-tab:first-child{padding-left:0}
+.tk-drawer-tab.active{color:var(--brand);font-weight:500}
+.tk-drawer-tab.active::after{content:'';position:absolute;left:16px;right:16px;bottom:-1px;height:2px;background:var(--brand)}
+.tk-drawer-tab:first-child.active::after{left:0}
+.tk-drawer-tab-content{display:none;padding-top:12px}
+.tk-drawer-tab-content.active{display:block}
+.tk-drawer-empty-tab{padding:32px 0;text-align:center;color:var(--text-soft);font-size:13px}
+.tk-drawer-desc{font-size:13px;color:var(--text);line-height:1.6;padding:4px;min-height:40px;margin-bottom:16px}
+.tk-drawer-section{margin-bottom:16px}
+.tk-drawer-section-label{font-size:12px;color:var(--text-secondary);margin-bottom:4px;font-weight:500}
+/* 快速操作 */
+.tk-drawer-prop-toggle{display:flex;align-items:center;gap:4px;border:none;background:transparent;color:var(--text-secondary);font-size:12px;font-weight:500;padding:4px 0;margin-bottom:4px}
+.tk-prop-row{display:grid;grid-template-columns:112px minmax(0,1fr);align-items:center;gap:0;padding:5px 0;font-size:12px}
+.tk-prop-row>span:first-child{color:var(--text-secondary);flex-shrink:0}
+.tk-prop-val{color:var(--text);font-weight:500}
+.tk-drawer-sidebar{width:300px;flex-shrink:0;border-left:1px solid var(--divider);overflow-y:auto;padding:20px}
+.tk-drawer-sidebar.hidden{display:none}
+.tk-drawer-flow-fields{display:flex;flex-wrap:wrap;gap:12px;margin-top:12px;margin-bottom:8px}
+.tk-flow-field{display:flex;align-items:center;gap:6px}
+.tk-flow-field-label{font-size:12px;color:var(--text-secondary);white-space:nowrap;min-width:3em}
+.tk-flow-field-value{display:inline-flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;color:var(--text);padding:4px 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg)}
+.tk-flow-pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.tk-flow-pill{padding:4px 12px;border:1px solid var(--border);border-radius:16px;background:transparent;color:var(--text);font-size:12px;white-space:nowrap}
+.tk-flow-pill.active{border-color:var(--brand);color:var(--brand);background:var(--brand-fill)}
+.tk-drawer-meta{display:flex;flex-wrap:wrap;gap:12px}
+.tk-drawer-meta-item{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text-secondary)}
+.tk-drawer-meta-item b{color:var(--text)}
+.tk-drawer-flow-btn{display:inline-flex;align-items:center;gap:6px;margin-top:12px;padding:7px 16px;border:1px solid var(--brand);border-radius:6px;background:var(--brand);color:#fff;font-size:13px;font-weight:500}
+.tk-drawer-comments{margin-top:16px;padding-top:16px;border-top:1px solid var(--divider)}
+.tk-drawer-comments-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:8px}
+.tk-drawer-comment{padding:8px 0;border-bottom:1px solid var(--divider)}
+.tk-drawer-comment-head{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.tk-drawer-comment-author{font-size:12px;font-weight:500;color:var(--text)}
+.tk-drawer-comment-time{font-size:11px;color:var(--text-soft)}
+.tk-drawer-comment-text{font-size:13px;color:var(--text);line-height:1.5;white-space:pre-wrap;margin-top:4px}
+.tk-drawer-changelog-list{display:flex;flex-direction:column;gap:0}
+.tk-drawer-changelog-item{display:flex;align-items:baseline;gap:8px;padding:8px 0;border-bottom:1px solid var(--divider);font-size:13px;color:var(--text)}
+.tk-drawer-changelog-time{color:var(--text-soft);font-size:12px;white-space:nowrap;min-width:136px}
+.tk-drawer-changelog-user{font-weight:500;color:var(--brand)}
+.tk-activity-item{display:flex;align-items:flex-start;gap:8px;padding:4px 0}
+.tk-activity-dot{width:6px;height:6px;border-radius:50%;background:var(--border-focus);margin-top:6px;flex-shrink:0}
+.tk-activity-content{display:flex;flex-direction:column;gap:1px}
+.tk-activity-author{font-size:12px;font-weight:500;color:var(--text)}
+.tk-activity-text{font-size:12px;color:var(--text-secondary)}
+.tk-activity-time{font-size:11px;color:var(--text-soft)}
+
+/* 优先级与状态颜色 */
+.tk-pri-urgent{background:var(--danger-bg);color:var(--danger)}
+.tk-pri-high{background:var(--warning-bg);color:var(--warning)}
+.tk-pri-medium{background:var(--brand-fill);color:var(--brand)}
+.tk-pri-low{background:var(--fill-1);color:var(--text-secondary)}
+.tk-st-gray{background:var(--text-soft)}
+.tk-st-blue{background:var(--dot-blue)}
+.tk-st-orange{background:var(--dot-orange)}
+.tk-st-green{background:var(--success)}
+.tk-st-red{background:var(--danger)}
+</style>
+</head>
+<body>
+
+<!-- 页头 -->
+<div class="tk-header" style="display:flex;align-items:center;justify-content:space-between;padding:16px 24px 8px;flex-shrink:0">
+  <div style="display:flex;align-items:center;gap:12px">
+    <h2 style="font-size:20px;font-weight:600;color:var(--text)">任务管理</h2>
+    <span style="font-size:12px;color:var(--text-secondary)">看板 · 列表 · 侧滑详情</span>
+  </div>
+  <span class="tk-demo-tag">📋 独立演示页 · tasks-v2 最新版</span>
+</div>
+
+<!-- 视图标签栏 -->
+<div class="tk-view">
+  <button class="tk-view-tab active"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>全部任务</button>
+  <button class="tk-view-tab">我的任务</button>
+  <button class="tk-view-tab">待处理</button>
+  <div class="tk-view-action">
+    <button class="tk-view-add"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/></svg></button>
+  </div>
+</div>
+
+<!-- 工具栏 -->
+<div class="tk-toolbar">
+  <div class="tk-tools-left">
+    <div class="tk-search-wrap">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input type="search" placeholder="搜索任务或编号…" readonly>
+    </div>
+    <button class="tk-filter-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg><span>筛选</span></button>
+  </div>
+  <div class="tk-tools-right">
+    <button class="tk-toolbar-new"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>新建</span></button>
+    <button class="tk-display-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+  </div>
+</div>
+
+<!-- 视图主体 -->
+<div class="tk-body">
+  <!-- 看板视图 -->
+  <div class="tk-board">
+    <div class="tk-board-scroll">
+
+      <!-- 列：待处理（backlog） -->
+      <div class="tk-board-col">
+        <div class="tk-board-col-head">
+          <div class="tk-board-col-head-left">
+            <span class="tk-board-col-dot tk-st-gray"></span>
+            <span class="tk-board-col-name">待处理</span>
+            <span class="tk-board-col-count">8</span>
+          </div>
+          <button class="tk-board-col-add">＋</button>
+        </div>
+        <div class="tk-board-col-body">
+          <div class="tk-card">
+            <div class="tk-card-code">PROJ-75</div>
+            <div class="tk-card-title">预算控制模块开发</div>
+            <div class="tk-card-description">新增预算控制模块，支持按部门/项目/月份设置预算上限</div>
+            <div class="tk-card-labels"><span class="tk-card-label">需求</span><span class="tk-card-label">后端</span></div>
+            <div class="tk-card-foot">
+              <div class="tk-card-foot-left"><span class="tk-card-priority tk-pri-high">高</span><span class="tk-card-due">9.30</span></div>
+              <div class="tk-card-assignee" style="background:var(--brand)">李</div>
+            </div>
+          </div>
+
+          <div class="tk-card">
+            <div class="tk-card-code">PUR-25</div>
+            <div class="tk-card-title">采购价格审批链重构</div>
+            <div class="tk-card-description">按金额分级审批，超阈值自动加签采购总监</div>
+            <div class="tk-card-labels"><span class="tk-card-label">改进</span><span class="tk-card-label">流程</span></div>
+            <div class="tk-card-foot">
+              <div class="tk-card-foot-left"><span class="tk-card-priority tk-pri-medium">中</span><span class="tk-card-due">10.15</span></div>
+              <div class="tk-card-assignee" style="background:var(--dot-orange)">赵</div>
+            </div>
+          </div>
+
+          <div class="tk-card">
+            <div class="tk-card-code">TASK-215</div>
+            <div class="tk-card-title">审批日志查询接口开发</div>
+            <div class="tk-card-description">开发审批日志查询接口，支持按时间/人员/状态筛选</div>
+            <div class="tk-card-labels"><span class="tk-card-label">任务</span><span class="tk-card-label">API</span></div>
+            <div class="tk-card-foot">
+              <div class="tk-card-foot-left"><span class="tk-card-priority tk-pri-low">低</span><span class="tk-card-due">10.8</span></div>
+              <div class="tk-card-assignee" style="background:var(--text-soft)">?</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 列：进行中（in_progress） -->
+      <div class="tk-board-col">
+        <div class="tk-board-col-head">
+          <div class="tk-board-col-head-left">
+            <span class="tk-board-col-dot tk-st-orange"></span>
+            <span class="tk-board-col-name">进行中</span>
+            <span class="tk-board-col-count">5</span>
+          </div>
+          <button class="tk-board-col-add">＋</button>
+        </div>
+        <div class="tk-board-col-body">
+          <div class="tk-card" style="border-left:3px solid var(--brand)">
+            <div class="tk-card-code">PUR-18</div>
+            <div class="tk-card-title">采购订单批量导入</div>
+            <div class="tk-card-description">支持 Excel 批量导入采购订单，含供应商匹配与价格校验</div>
+            <div class="tk-card-labels"><span class="tk-card-label">需求</span><span class="tk-card-label" style="background:var(--brand-fill);color:var(--brand)">进行中</span></div>
+            <div class="tk-card-progress"><span>38%</span><div class="tk-card-progress-bar"><i style="width:38%"></i></div></div>
+            <div class="tk-card-actions">
+              <span class="tk-card-exec-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 3l14 9-14 9V3z"/></svg>开始执行</span>
+              <span class="tk-card-action-btn">转交</span>
+            </div>
+            <div class="tk-card-foot">
+              <div class="tk-card-foot-left"><span class="tk-card-priority tk-pri-high">高</span></div>
+              <div class="tk-card-assignee" style="background:var(--dot-blue)">李</div>
+            </div>
+          </div>
+
+          <div class="tk-card" style="border-left:3px solid var(--brand)">
+            <div class="tk-card-code">BUG-7831</div>
+            <div class="tk-card-title">报销金额精度丢失修复</div>
+            <div class="tk-card-description">报销金额含小数时 BigDecimal 序列化后精度丢失</div>
+            <div class="tk-card-labels"><span class="tk-card-label">Bug</span></div>
+            <div class="tk-card-progress"><span>62%</span><div class="tk-card-progress-bar"><i style="width:62%"></i></div></div>
+            <div class="tk-card-actions">
+              <span class="tk-card-exec-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 3l14 9-14 9V3z"/></svg>开始执行</span>
+              <span class="tk-card-action-btn">转交</span>
+            </div>
+            <div class="tk-card-foot">
+              <div class="tk-card-foot-left"><span class="tk-card-priority tk-pri-urgent">紧急</span></div>
+              <div class="tk-card-assignee" style="background:var(--dot-teal)">郑</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 列：评审中（in_review） -->
+      <div class="tk-board-col">
+        <div class="tk-board-col-head">
+          <div class="tk-board-col-head-left">
+            <span class="tk-board-col-dot tk-st-green"></span>
+            <span class="tk-board-col-name">评审中</span>
+            <span class="tk-board-col-count">3</span>
+          </div>
+          <button class="tk-board-col-add">＋</button>
+        </div>
+        <div class="tk-board-col-body">
+          <div class="tk-card" style="border-left:3px solid var(--warning)">
+            <div class="tk-card-code">PROJ-42</div>
+            <div class="tk-card-title">审批流插件代码审查</div>
+            <div class="tk-card-description">审查费用报销审批流的插件实现，包括多级审批流转</div>
+            <div class="tk-card-labels"><span class="tk-card-label">需求</span><span class="tk-card-label" style="background:var(--warning-bg);color:var(--warning)">待评审</span></div>
+            <div class="tk-card-actions"><span class="tk-card-action-btn">处理评审</span></div>
+            <div class="tk-card-foot">
+              <div class="tk-card-foot-left"><span class="tk-card-priority tk-pri-high">高</span></div>
+              <div class="tk-card-assignee" style="background:var(--dot-rose)">王</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 列：已阻塞（blocked） -->
+      <div class="tk-board-col">
+        <div class="tk-board-col-head">
+          <div class="tk-board-col-head-left">
+            <span class="tk-board-col-dot tk-st-red"></span>
+            <span class="tk-board-col-name">已阻塞</span>
+            <span class="tk-board-col-count">2</span>
+          </div>
+          <button class="tk-board-col-add">＋</button>
+        </div>
+        <div class="tk-board-col-body">
+          <div class="tk-card" style="opacity:.7">
+            <div class="tk-card-code">BUG-8155</div>
+            <div class="tk-card-title">供应商评级定时任务超时</div>
+            <div class="tk-card-description">评级任务在供应商超 2 万条时超时中断</div>
+            <div class="tk-card-labels"><span class="tk-card-label">Bug</span><span class="tk-card-label" style="background:var(--danger-bg);color:var(--danger)">已失败</span></div>
+            <div class="tk-card-actions"><span class="tk-card-action-btn">需要介入</span></div>
+            <div class="tk-card-foot">
+              <div class="tk-card-foot-left"><span class="tk-card-priority tk-pri-urgent">紧急</span></div>
+              <div class="tk-card-assignee" style="background:var(--danger)">罗</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 列：已完成（done） -->
+      <div class="tk-board-col">
+        <div class="tk-board-col-head">
+          <div class="tk-board-col-head-left">
+            <span class="tk-board-col-dot tk-st-blue"></span>
+            <span class="tk-board-col-name">已完成</span>
+            <span class="tk-board-col-count">6</span>
+          </div>
+          <button class="tk-board-col-add">＋</button>
+        </div>
+        <div class="tk-board-col-body">
+          <div class="tk-card" style="opacity:.65">
+            <div class="tk-card-code">BUG-7852</div>
+            <div class="tk-card-title">列表搜索响应慢修复</div>
+            <div class="tk-card-description">报销单数据量超过 5000 条时搜索响应超 10s</div>
+            <div class="tk-card-labels"><span class="tk-card-label" style="background:var(--success-bg);color:var(--success)">✓ 已完成</span></div>
+            <div class="tk-card-foot">
+              <div class="tk-card-foot-left"><span class="tk-card-priority tk-pri-low">低</span></div>
+              <div class="tk-card-assignee" style="background:var(--dot-green)">唐</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 空状态（隐藏） -->
+  <div class="tk-empty hidden">
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:.3"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
+    <p>没有匹配的任务</p>
+    <button class="tk-btn-ghost">清除筛选</button>
+  </div>
+
+  <!-- 侧滑详情面板 -->
+  <div class="tk-drawer-clickaway hidden"></div>
+  <div class="tk-drawer" id="tkDrawer">
+    <div class="tk-drawer-head">
+      <div class="tk-drawer-head-title">
+        <h3 class="tk-drawer-title">采购订单批量导入</h3>
+        <span class="tk-drawer-code">PUR-18</span>
+      </div>
+      <div class="tk-drawer-head-actions">
+        <button class="tk-drawer-head-btn" id="tkDrawerChat"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 4.7a1 1 0 0 1 1.52-.85l11 7.3a1 1 0 0 1 0 1.7l-11 7.3A1 1 0 0 1 7 19.3V4.7Z"/></svg><span>开始执行</span></button>
+        <button class="tk-drawer-head-btn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="15" y1="3" x2="15" y2="21"/></svg></button>
+        <button class="tk-drawer-close">×</button>
+      </div>
+    </div>
+    <div class="tk-drawer-body">
+      <div class="tk-drawer-main">
+        <div class="tk-drawer-main-inner">
+          <div class="tk-drawer-desc">支持 Excel 批量导入采购订单，含供应商匹配、价格校验与错误行回执，当前进度 38%。</div>
+
+          <!-- 快速操作 -->
+          <div class="tk-drawer-flow-fields">
+            <div class="tk-flow-field">
+              <span class="tk-flow-field-label">状态</span>
+              <span class="tk-flow-field-value">进行中</span>
+            </div>
+            <div class="tk-flow-field">
+              <span class="tk-flow-field-label">处理人</span>
+              <span class="tk-flow-field-value"><b style="color:var(--brand)">李工</b></span>
+            </div>
+            <div class="tk-flow-field">
+              <span class="tk-flow-field-label">优先级</span>
+              <span class="tk-flow-field-value tk-pri-high">高</span>
+            </div>
+            <div class="tk-flow-field">
+              <span class="tk-flow-field-label">项目</span>
+              <span class="tk-flow-field-value">采购管理系统</span>
+            </div>
+          </div>
+
+          <!-- Tab 页签 -->
+          <div class="tk-drawer-tabs">
+            <button class="tk-drawer-tab active">概览</button>
+            <button class="tk-drawer-tab">执行进度</button>
+            <button class="tk-drawer-tab">交付产物</button>
+            <button class="tk-drawer-tab">动态</button>
+          </div>
+
+          <!-- 概览 Tab -->
+          <div class="tk-drawer-tab-content active">
+            <div class="tk-drawer-section">
+              <div class="tk-drawer-section-label">任务描述</div>
+              <div class="tk-drawer-desc" style="font-size:13px;color:var(--text-secondary);line-height:1.6">
+                采购订单目前为手工逐条录入，效率低且容易出错。需要提供 Excel 批量导入能力，支持：
+                <br><br>
+                • 上传含供应商编码、物料编码、数量、价格、交货日期的 Excel 文件<br>
+                • 自动验证供应商是否存在、物料编码是否匹配<br>
+                • 校验不通过的行输出错误回执，供用户修正后重试<br>
+                • 通过校验的数据行直接生成采购订单草稿
+              </div>
+            </div>
+
+            <div class="tk-drawer-section">
+              <div class="tk-drawer-section-label">验收标准</div>
+              <div class="tk-drawer-meta" style="flex-direction:column;gap:6px">
+                <div class="tk-drawer-meta-item"><span class="tk-st-green" style="display:inline-block;width:6px;height:6px;border-radius:50%"></span> <b>✓</b> 支持 .xlsx / .xls 格式上传，单次最大 5000 行</div>
+                <div class="tk-drawer-meta-item"><span class="tk-st-orange" style="display:inline-block;width:6px;height:6px;border-radius:50%"></span> <b>◐</b> 供应商匹配校验（62%）</div>
+                <div class="tk-drawer-meta-item"><span class="tk-st-gray" style="display:inline-block;width:6px;height:6px;border-radius:50%"></span> <b>○</b> 价格校验与错误行回执</div>
+              </div>
+            </div>
+
+            <div class="tk-drawer-section">
+              <div class="tk-drawer-section-label">执行进度</div>
+              <div style="display:flex;align-items:center;gap:12px;margin-top:6px">
+                <span style="font-size:24px;font-weight:700;color:var(--brand)">38%</span>
+                <div style="flex:1;height:6px;border-radius:3px;background:var(--fill-1);overflow:hidden">
+                  <div style="width:38%;height:100%;border-radius:3px;background:linear-gradient(90deg,var(--dot-blue),var(--brand))"></div>
+                </div>
+              </div>
+              <div class="tk-flow-pills" style="margin-top:12px">
+                <span class="tk-flow-pill active">需求澄清 ✓</span>
+                <span class="tk-flow-pill active">方案设计 ✓</span>
+                <span class="tk-flow-pill active" style="border-color:var(--brand);color:var(--brand);background:var(--brand-fill);font-weight:600">开发实现 ◐</span>
+                <span class="tk-flow-pill">代码审查</span>
+                <span class="tk-flow-pill">测试验收</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 执行进度 Tab（隐藏） -->
+          <div class="tk-drawer-tab-content" hidden>
+            <div class="tk-activity-item">
+              <span class="tk-activity-dot tk-st-green" style="background:var(--success)"></span>
+              <div class="tk-activity-content">
+                <span class="tk-activity-author">需求澄清 · 李工</span>
+                <span class="tk-activity-text">已完成 · 需求文档已确认</span>
+                <span class="tk-activity-time">2 天前</span>
+              </div>
+            </div>
+            <div class="tk-activity-item">
+              <span class="tk-activity-dot tk-st-green" style="background:var(--success)"></span>
+              <div class="tk-activity-content">
+                <span class="tk-activity-author">方案设计 · 李工</span>
+                <span class="tk-activity-text">已完成 · 技术方案通过评审</span>
+                <span class="tk-activity-time">昨天</span>
+              </div>
+            </div>
+            <div class="tk-activity-item">
+              <span class="tk-activity-dot tk-st-orange" style="background:var(--brand)"></span>
+              <div class="tk-activity-content">
+                <span class="tk-activity-author">开发实现 · 李工</span>
+                <span class="tk-activity-text">进行中 · 后端校验逻辑 40%，前端上传 35%</span>
+                <span class="tk-activity-time">3 小时前</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 交付产物 Tab（隐藏） -->
+          <div class="tk-drawer-tab-content" hidden>
+            <div class="tk-drawer-section">
+              <div class="tk-drawer-section-label">当前环节产物</div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">
+                <span style="font-size:12px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--fill-1)">📄 导入方案设计.docx</span>
+                <span style="font-size:12px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--fill-1)">📊 导入模板示例.xlsx</span>
+                <span style="font-size:12px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--fill-1)">🔧 导入处理插件.java</span>
+              </div>
+            </div>
+            <div class="tk-drawer-section">
+              <div class="tk-drawer-section-label">历史产物</div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;opacity:.6">
+                <span style="font-size:12px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--fill-1)">📄 需求规格说明.md</span>
+                <span style="font-size:12px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:var(--fill-1)">📄 技术方案设计.md</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 动态 Tab（隐藏） -->
+          <div class="tk-drawer-tab-content" hidden>
+            <div class="tk-drawer-changelog-list">
+              <div class="tk-drawer-changelog-item">
+                <span class="tk-drawer-changelog-time">10:30</span>
+                <span class="tk-drawer-changelog-user">李工</span>
+                <span>更新了状态：进行中</span>
+              </div>
+              <div class="tk-drawer-changelog-item">
+                <span class="tk-drawer-changelog-time">昨天 16:00</span>
+                <span class="tk-drawer-changelog-user">李工</span>
+                <span>上传了产物「导入方案设计.docx」</span>
+              </div>
+              <div class="tk-drawer-changelog-item">
+                <span class="tk-drawer-changelog-time">昨天 14:20</span>
+                <span class="tk-drawer-changelog-user">系统</span>
+                <span>方案设计环节评审通过 ✔</span>
+              </div>
+              <div class="tk-drawer-changelog-item">
+                <span class="tk-drawer-changelog-time">3 天前</span>
+                <span class="tk-drawer-changelog-user">吴宏超</span>
+                <span>创建了任务</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="tk-drawer-sidebar">
+        <div class="tk-drawer-section">
+          <div class="tk-drawer-section-label">任务属性</div>
+          <div class="tk-prop-row"><span>状态</span><span class="tk-prop-val" style="color:var(--brand)">进行中</span></div>
+          <div class="tk-prop-row"><span>负责人</span><span class="tk-prop-val">李工</span></div>
+          <div class="tk-prop-row"><span>优先级</span><span class="tk-prop-val tk-pri-high">高</span></div>
+          <div class="tk-prop-row"><span>任务类型</span><span class="tk-prop-val">需求</span></div>
+          <div class="tk-prop-row"><span>来源</span><span class="tk-prop-val">Jira</span></div>
+          <div class="tk-prop-row"><span>到期日</span><span class="tk-prop-val">2026-10-15</span></div>
+        </div>
+        <div class="tk-drawer-section">
+          <div class="tk-drawer-section-label">阶段执行人</div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <div style="display:flex;align-items:center;justify-content:space-between;font-size:12px;padding:4px 6px;border-radius:4px;background:var(--success-bg)"><span>需求澄清</span><span style="font-weight:500;color:var(--success)">李工 ✓</span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;font-size:12px;padding:4px 6px;border-radius:4px;background:var(--success-bg)"><span>方案设计</span><span style="font-weight:500;color:var(--success)">李工 ✓</span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;font-size:12px;padding:4px 6px;border-radius:4px;background:var(--brand-fill)"><span>开发实现</span><span style="font-weight:600;color:var(--brand)">李工 ◐</span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;font-size:12px;padding:4px 6px;border-radius:4px"><span>代码审查</span><span style="color:var(--text-soft)">王工</span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;font-size:12px;padding:4px 6px;border-radius:4px"><span>测试验收</span><span style="color:var(--text-soft)">陈晨</span></div>
+          </div>
+        </div>
+        <div class="tk-drawer-section">
+          <div class="tk-drawer-section-label">快速操作</div>
+          <div style="display:flex;flex-direction:column;gap:2px;margin-top:4px">
+            <button class="tk-drawer-head-btn" style="width:100%;justify-content:flex-start;gap:6px;padding:5px 8px;font-size:12px;color:var(--brand);background:var(--brand-fill);border-radius:6px;font-weight:500"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 3l14 9-14 9V3z"/></svg>开始执行</button>
+            <button class="tk-drawer-head-btn" style="width:100%;justify-content:flex-start;gap:6px;padding:5px 8px;font-size:12px;color:var(--text-secondary);border-radius:6px">转交任务</button>
+            <button class="tk-drawer-head-btn" style="width:100%;justify-content:flex-start;gap:6px;padding:5px 8px;font-size:12px;color:var(--text-secondary);border-radius:6px">发起评审</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

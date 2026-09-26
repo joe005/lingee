@@ -1,29 +1,17 @@
-import { initIssueNavigation } from './navigation.js';
-import { initExecutionPlan } from './execution-plan.js';
-import { initMyWork } from '../collab/my-work.js';
-import { initWorkItemDetail, renderWorkItemDetail } from '../collab/work-item-detail.js';
-import { initReviewCenter, renderReviewCenter } from '../collab/review-center.js';
-import { openIssueDetail } from './issue-detail.js';
-/* T00 结构拆分：index。保留原交互；事件在 init* 中按原顺序注册。 */
-import { initTaskDetailPreferences, initTaskDetailWidth, initTaskDetailEvents, initTaskDetailSubtaskEvents, initTaskDetailGlobalEvents } from './issue-detail.js';
-import { tkEnsureWorkspaceDemoTasks, tkPruneOrphanTasks, tkSyncPeople } from './data.js';
-import { taskViewState } from './ui-state.js';
-import { initTaskListDisplayEvents, initTaskListFilterEvents, initTaskListRowEvents } from './list.js';
-import { initTaskCreateEvents } from './create.js';
+/* 任务管理 v2 —— 核心交互逻辑入口
+   拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 initTasksV2() 函数里，
+   由 main.js 按拆分前的原始顺序调用。 */
 
-import { initTaskListVersion } from './list-version.js';
 import { $, $$ } from '../../core/dom.js';
 import { renderListPageTabs } from '../shared/list-page-tabs.js';
-import { setComposerTaskReference } from '../composer.js';
 import { showView, input, setNavActive } from '../../core/view.js';
 import { toast } from '../../core/toast.js';
 import { applyTaskListFieldSettings, renderTaskListTreeNodes, taskListVisibleColumnCount } from './list-template.js';
 import { getDemoPreRun, getDemoStageRun } from './run-feedback.js';
 import { CV_PROJECTS } from '../collab/data.js';
 import { createDeliveryActivity } from '../collab/delivery-activity.js';
-import { AV_KEYS, EX, EXPERTS, PRESET_TEAMS, STAGES, xav } from '../expert/data.js';
-import { TEAMS, activePick, set_activePick } from '../expert/store.js';
-import { renderExpertChips } from '../expert/chips.js';
+import { EXPERTS, PRESET_TEAMS, STAGES, xav } from '../expert/data.js';
+import { TEAMS } from '../expert/store.js';
 import _iconDocument from '../../../assets/file-type-icons/document.png';
 import _iconDoc from '../../../assets/file-type-icons/doc.png';
 import _iconHtml from '../../../assets/file-type-icons/html.png';
@@ -32,7 +20,7 @@ import _iconExcel from '../../../assets/file-type-icons/excel.png';
 var _artifactIcons = { requirements:_iconDocument, plan:_iconDocument, technical:_iconDoc, architecture:_iconHtml, prototype:_iconImage, test:_iconExcel, delivery:_iconDocument };
 import {
   TK_STATUSES, TK_PRIORITIES, TK_PEOPLE, TK_AGENTS, TK_LABELS,
-  TK_VIEWS, TK_FILTER_FIELDS, TK_OPERATORS, TK_TASKS, tkCurrentUserId, tkPeopleInProject, tkProjectsForCurrentUser,
+  TK_VIEWS, TK_FILTER_FIELDS, TK_OPERATORS, TK_TASKS, tkCurrentUserId, tkPeopleInProject, tkProjectsForCurrentUser, tkSyncPeople,
   tkGetTaskArtifacts,
   tkGetTasks, tkSetTasks, tkAddTask, tkUpdateTask, tkDeleteTask,
   tkGetViews, tkAddView, tkDeleteView, tkRenameView,
@@ -79,6 +67,7 @@ var TASK_START_PLAY_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill
 var TASK_START_CHAT_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>';
 var taskStartLegacy = false;
 
+var TASK_HEADER_CHECK_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>';
 var TASK_HEADER_RETRY_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 7v5h-5"/><path d="M20 12a8 8 0 1 0-2.3 5.7"/></svg>';
 var TASK_HEADER_VIEW_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"/><circle cx="12" cy="12" r="2.5"/></svg>';
 function taskHeaderAction(task) {
@@ -86,6 +75,7 @@ function taskHeaderAction(task) {
   return {
     planned:{label:'加入待办',action:'queue',icon:TASK_START_PLAY_ICON},
     backlog:{label:'开始执行',action:'start',icon:TASK_START_PLAY_ICON},
+    in_progress:{label:'查看执行',action:'view-run',icon:TASK_HEADER_VIEW_ICON},
     blocked:{label:'重试执行',action:'retry',icon:TASK_HEADER_RETRY_ICON},
     done:{label:'查看结果',action:'view-result',icon:TASK_HEADER_VIEW_ICON},
   }[task.status] || null;
@@ -185,7 +175,7 @@ function cacheEls() {
     'tkCheckAll','tkEmpty','tkResetFilter','tkBulkBar','tkBulkCount','tkBulkClear',
     'tkDrawer','tkDrawerClickaway','tkDrawerResize','tkDrawerClose','tkDrawerTitle','tkDrawerCode','tkDrawerBody','tkDrawerMore','tkDrawerSidebarToggle','tkDrawerChat',
     'tkModalOverlay','tkModalClose','tkModalSave','tkModalTitle','tkMcExpand','tkMcContinue','tkMcAgent','tkMcAgentPanel','tkMcAgentChat','tkMcAgentPrompt','tkMcAgentSend',
-    'tkFormTitle','tkFormDesc','tkFormStatus','tkFormPriority','tkFormAssignee','tkFormProject','tkFormDue','tkFormLabels',
+    'tkFormTitle','tkFormDesc','tkFormStatus','tkFormPriority','tkFormTeam','tkFormAssignee','tkFormProject','tkFormDue','tkFormLabels',
     'tkSaveViewOverlay','tkSaveViewClose','tkSaveViewCancel','tkSaveViewConfirm','tkSaveViewName','tkSaveViewVisibility','tkSaveViewScope','tkSaveViewLayout','tkSaveViewSummary',
     'tkManageViewsOverlay','tkManageViewsClose','tkManageViewsCancel','tkManageList',
     'tkBulkStatusMenu','tkBulkAssigneeMenu',
@@ -206,11 +196,29 @@ function openTaskConversationWithTask(taskId) {
   closeDrawer();
   openTaskConversation();
   if (!t) return;
-  var project = CV_PROJECTS.find(function(p){ return p.id === t.project; });
-  var teamId = t.teamId || (project && project.defaultTeam);
-  if (teamId) { set_activePick({kind:'team', id:teamId, auto:false}); renderExpertChips(); }
-  setComposerTaskReference(t.id);
+  var tags = document.getElementById('ntTags');
+  if (tags) {
+    tags.innerHTML = '<span class="ctag"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span class="ctag-label">' + escapeHtml(t.code) + ' ' + escapeHtml(t.title) + '</span><button type="button" class="ctag-x" data-clear-task-ref data-tooltip="移除任务关联" aria-label="移除任务关联"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></span>';
+    tags.classList.remove('hidden');
+  }
   input.focus();
+}
+function closeTaskReviewMenu() { document.getElementById('tkTaskReviewMenu')?.remove(); }
+function openTaskReviewMenu(anchor) {
+  closeTaskReviewMenu();
+  var menu = document.createElement('div');
+  menu.id = 'tkTaskReviewMenu';
+  menu.className = 'tk-task-review-menu';
+  menu.setAttribute('role', 'menu');
+  menu.setAttribute('aria-label', '审核任务');
+  menu.innerHTML = '<div class="tk-task-review-menu-title">审核结果</div>'
+    + '<button type="button" role="menuitem" data-review-status="done">通过并完成</button>'
+    + '<button type="button" role="menuitem" data-review-status="in_progress">退回继续执行</button>';
+  document.body.appendChild(menu);
+  var rect = anchor.getBoundingClientRect();
+  menu.style.left = Math.max(8, Math.min(rect.right - menu.offsetWidth, window.innerWidth - menu.offsetWidth - 8)) + 'px';
+  menu.style.top = (rect.bottom + menu.offsetHeight + 4 <= window.innerHeight ? rect.bottom + 4 : rect.top - menu.offsetHeight - 4) + 'px';
+  menu.querySelector('button')?.focus();
 }
 function retryBlockedTask(task) {
   if (task?.status !== 'blocked') return;
@@ -338,6 +346,10 @@ function statusSvg(status) {
     cross:ring+'<path d="M5 5 L9 9 M9 5 L5 9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
   };
   return '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="color:'+color+';flex:none">'+(paths[icon]||paths.circle)+'</svg>';
+}
+function avatar(assignee) {
+  var p = tkGetPerson(assignee);
+  return '<span class="tk-avatar" style="background:' + p.color + '">' + escapeHtml(p.avatar) + '</span>';
 }
 function avatarSm(assignee) {
   var p = tkGetPerson(assignee);
@@ -521,40 +533,12 @@ function renderBoard() {
       + '<span class="tk-board-col-count">' + g.tasks.length + '</span>'
       + '</div><div class="tk-board-col-head-right">'
       + '<button class="tk-board-col-toggle" data-toggle-col data-tooltip="折叠分组" aria-label="折叠分组"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>'
+      + '<button class="tk-board-col-add" data-add-group="' + g.key + '" data-tooltip="新建任务" aria-label="新建任务"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>'
       + '</div></div>'
       + '<div class="tk-board-col-body">' + cards + '</div>'
       + '</div>';
   }).join('');
   els.tkBoardScroll.innerHTML = html;
-}
-
-var cardRunClocks = new Map();
-var cardRunTimer = null;
-
-function cardRunDuration(task, entry) {
-  var clock = cardRunClocks.get(task.id);
-  var stageId = entry?.stageId || 'implementation';
-  if (!clock || clock.stageId !== stageId) {
-    var duration = getDemoStageRun(task, entry || { stageId:stageId, state:'running' }).duration;
-    var parts = duration.match(/(\d+)分(\d+)秒/);
-    clock = { stageId:stageId, startedAt:Date.now(), seconds:parts ? Number(parts[1]) * 60 + Number(parts[2]) : 0 };
-    cardRunClocks.set(task.id, clock);
-  }
-  var seconds = clock.seconds + Math.max(0, Math.floor((Date.now() - clock.startedAt) / 1000));
-  return Math.floor(seconds / 60) + '分' + String(seconds % 60).padStart(2, '0') + '秒';
-}
-
-function updateCardRunClocks() {
-  var tasks = tkGetTasks();
-  cardRunClocks.forEach(function (_, id) {
-    if (!tasks.some(function (task) { return task.id === id && task.status === 'in_progress'; })) cardRunClocks.delete(id);
-  });
-  els.tkBoardScroll.querySelectorAll('[data-card-run-duration]').forEach(function (node) {
-    var id = Number(node.getAttribute('data-card-run-duration'));
-    var task = tasks.find(function (item) { return item.id === id; });
-    var clock = cardRunClocks.get(id);
-    if (task?.status === 'in_progress' && clock) node.textContent = cardRunDuration(task, { stageId:clock.stageId });
-  });
 }
 
 function renderCard(t, opts) {
@@ -572,53 +556,28 @@ function renderCard(t, opts) {
   var spacer = !hasChildren ? '<span class="tk-card-spacer"></span>' : '';
   var childBadge = hasChildren ? '<span class="tk-card-child-count"' + (isCollapsed ? '' : ' style="visibility:hidden"') + '>' + childCount + '</span>' : '';
   var extraCls = (depth ? ' tk-card--child' : '') + (hasChildren ? ' tk-card--parent' : '');
-  var project = CV_PROJECTS.find(function(r){ return r.id === t.project; });
-  var team = (function(){ var tid = t.teamId || (project && project.defaultTeam); return TEAMS.find(function(tm){ return tm.id === tid; }); })();
-  var isBacklog = t.status === 'backlog';
-  var teamAvatarHtml, footExtraHtml;
-  var workingHtml = '';
-  if (isBacklog) {
-    var members = team ? (team.members || []).map(function(id){ return EX[id]; }).filter(Boolean) : [];
-    teamAvatarHtml = members.length
-      ? '<span class="tk-card-team-avatars">' + members.slice(0, 4).map(function(m){ return '<img class="tk-card-team-avatar" src="' + xav(m.k) + '" alt="" title="' + escapeHtml(m.name) + '">'; }).join('') + (members.length > 4 ? '<span class="tk-card-team-avatars-more">+' + (members.length - 4) + '</span>' : '') + '</span>'
-      : (team ? '<img class="tk-card-team-avatar" src="' + xav(AV_KEYS[Math.abs(t.id) % AV_KEYS.length]) + '" alt="" title="' + escapeHtml(team.name) + '">' : '');
-    footExtraHtml = (labels ? '<div class="tk-card-labels">' + labels + '</div>' : '')
-      + (props.priority ? '<span class="tk-card-priority">' + escapeHtml(pri.name) + '</span>' : '')
-      + (props.startDate && t.startDate ? '<span class="tk-card-due">' + fmtDate(t.startDate) + '</span>' : '')
-      + (props.dueDate && t.dueDate ? '<span class="tk-card-due' + (overdue ? ' overdue' : '') + '"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' + fmtDate(t.dueDate) + '</span>' : '')
-      + (props.project && t.project ? '<span class="tk-card-project">' + escapeHtml(tkGetProjectName(t.project)) + '</span>' : '');
-  } else {
-    teamAvatarHtml = team ? '<img class="tk-card-team-avatar" src="' + xav(AV_KEYS[Math.abs(t.id) % AV_KEYS.length]) + '" alt="" title="' + escapeHtml(team.name) + '">' : '';
-    var activity = createDeliveryActivity(t, project || {});
-    var stages = activity.filter(function(e){ return e.expertId; });
-    var latest = stages.length ? stages[stages.length - 1] : null;
-    footExtraHtml = latest ? '<span class="tk-card-stage">' + escapeHtml(latest.stage) + '</span>' : '';
-    if (t.status === 'in_progress') {
-      workingHtml = '<span class="tk-card-working" aria-label="运行时长"><span class="dot blue" aria-hidden="true"></span><span class="tk-card-working-duration" data-card-run-duration="' + t.id + '">' + cardRunDuration(t, latest) + '</span></span>';
-    }
-  }
   return '<div class="tk-card' + sel + extraCls + '" draggable="true" data-task-id="' + t.id + '">'
-    + (isBacklog
-      ? '<button class="tk-card-exec-btn" data-card-play="' + t.id + '" data-tooltip="开始执行" aria-label="开始执行">' + TASK_START_PLAY_ICON + '</button>'
+    + (t.status === 'backlog'
+      ? '<button class="tk-card-exec-btn" data-card-play="' + t.id + '" data-tooltip="开始执行任务" aria-label="开始执行任务">' + TASK_START_PLAY_ICON + '</button>'
       : '<button class="tk-card-more" data-card-more="' + t.id + '" data-tooltip="更多操作" aria-label="更多操作"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button>')
     + '<div class="tk-card-top-row">' + toggle + spacer + '<div class="tk-card-code">' + escapeHtml(t.code) + '</div>' + childBadge + '</div>'
     + '<div class="tk-card-title">' + escapeHtml(t.title) + '</div>'
     + (props.description && t.desc ? '<div class="tk-card-description">' + escapeHtml(t.desc) + '</div>' : '')
-    + '<div class="tk-card-foot"><div class="tk-card-foot-left">' + teamAvatarHtml + footExtraHtml
-    + '</div>' + workingHtml + '</div></div>';
+    + (labels ? '<div class="tk-card-labels">' + labels + '</div>' : '')
+    + '<div class="tk-card-foot"><div class="tk-card-foot-left">'
+    + (props.priority ? '<span class="tk-card-priority">' + escapeHtml(pri.name) + '</span>' : '')
+    + (props.startDate && t.startDate ? '<span class="tk-card-due">' + fmtDate(t.startDate) + '</span>' : '')
+    + (props.dueDate && t.dueDate ? '<span class="tk-card-due' + (overdue ? ' overdue' : '') + '"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>' + fmtDate(t.dueDate) + '</span>' : '')
+    + (props.project && t.project ? '<span class="tk-card-project">' + escapeHtml(tkGetProjectName(t.project)) + '</span>' : '')
+    + '</div>' + (props.assignee ? avatar(t.assignee) : '') + '</div></div>';
 }
 
 /* ---------- 渲染：列表 ---------- */
-function latestListFieldVisibility() {
-  return document.getElementById('view-tasks')?.dataset.listVersion === 'v1'
-    ? state.listFieldVisibility
-    : Object.assign({}, state.listFieldVisibility, {assignee:false});
-}
 function visibleListColumnCount() {
-  return taskListVisibleColumnCount(state.listFieldOrder, latestListFieldVisibility());
+  return taskListVisibleColumnCount(state.listFieldOrder, state.listFieldVisibility);
 }
 function applyListFieldSettings() {
-  applyTaskListFieldSettings(els.tkListHead, els.tkListBody, state.listFieldOrder, latestListFieldVisibility());
+  applyTaskListFieldSettings(els.tkListHead, els.tkListBody, state.listFieldOrder, state.listFieldVisibility);
 }
 function renderList(tasks) {
   tasks = tasks || getFilteredTasks();
@@ -793,7 +752,6 @@ function updateBulkBar() {
 }
 function render() {
   tkSyncPeople();
-  updateCardRunClocks();
   var joinedProjects = new Set(tkProjectsForCurrentUser().map(function (project) { return project.id; }));
   state.selectedIds.forEach(function (id) {
     var task = tkGetTasks().find(function (item) { return item.id === id; });
@@ -936,13 +894,12 @@ function renderDisplayControls() {
   els.tkCardProperties.innerHTML = cardPropertyOptions.map(function (opt) {
     return '<button type="button" class="tk-display-property" data-card-property="' + opt[0] + '" aria-pressed="' + !!state.cardProperties[opt[0]] + '">' + opt[1] + '</button>';
   }).join('');
-  var visibility = latestListFieldVisibility();
-  els.tkFieldsSummary.textContent = state.listFieldOrder.filter(function(id) { return id === 'title' || visibility[id] !== false; }).length + ' 个字段';
+  els.tkFieldsSummary.textContent = state.listFieldOrder.filter(function(id) { return id === 'title' || state.listFieldVisibility[id] !== false; }).length + ' 个字段';
 }
 function renderFieldSettings() {
   var query = els.tkFieldsSearch.value.trim().toLocaleLowerCase();
   var fields = state.listFieldOrder.map(function(id) { return LIST_FIELDS.find(function(field) { return field.id === id; }); }).filter(function(field) {
-    return field && (field.id !== 'assignee' || document.getElementById('view-tasks')?.dataset.listVersion === 'v1') && field.name.toLocaleLowerCase().includes(query);
+    return field && field.name.toLocaleLowerCase().includes(query);
   });
   els.tkFieldsList.innerHTML = fields.length ? fields.map(function(field) {
     var checked = field.required || state.listFieldVisibility[field.id] !== false;
@@ -1003,6 +960,7 @@ function fillSelects() {
   fill(els.tkFormStatus, TK_STATUSES, 'id', 'name');
   fill(els.tkFormPriority, TK_PRIORITIES, 'id', 'name');
   fill(els.tkFormProject, tkProjectsForCurrentUser(), 'id', 'name');
+  fill(els.tkFormTeam, TEAMS, 'id', 'name');
   refreshFormAssignees();
   if (els.tkBulkAssigneeMenu) {
     els.tkBulkAssigneeMenu.innerHTML = TK_PEOPLE.map(function (p) {
@@ -1011,98 +969,12 @@ function fillSelects() {
   }
 }
 function refreshFormAssignees(preferredId) {
-  closeModalAssigneeMenu();
   var people = tkPeopleInProject(els.tkFormProject.value);
   var currentId = preferredId || els.tkFormAssignee.value;
   els.tkFormAssignee.innerHTML = people.map(function (person) {
     return '<option value="' + escapeHtml(person.id) + '">' + escapeHtml(person.name) + '</option>';
   }).join('');
   els.tkFormAssignee.value = people.some(function (person) { return person.id === currentId; }) ? currentId : (people[0]?.id || '');
-  renderModalAssigneeTrigger();
-}
-var modalAssigneeMenu = null;
-function renderModalAssigneeTrigger() {
-  var trigger = document.getElementById('tkMcAssigneeTrigger');
-  var person = tkPeopleInProject(els.tkFormProject.value).find(function (item) { return item.id === els.tkFormAssignee.value; });
-  if (!trigger) return;
-  trigger.querySelector('#tkMcAssigneeName').textContent = person?.name || '负责人';
-  var avatar = trigger.querySelector('#tkMcAssigneeAvatar');
-  avatar.textContent = person?.avatar || '?';
-  avatar.style.background = person?.color || 'var(--fill-2)';
-}
-function closeModalAssigneeMenu() {
-  modalAssigneeMenu?.remove();
-  modalAssigneeMenu = null;
-  document.getElementById('tkMcAssigneeTrigger')?.setAttribute('aria-expanded', 'false');
-}
-function openModalAssigneeMenu() {
-  if (modalAssigneeMenu) { closeModalAssigneeMenu(); return; }
-  var trigger = document.getElementById('tkMcAssigneeTrigger');
-  var people = tkPeopleInProject(els.tkFormProject.value);
-  modalAssigneeMenu = document.createElement('div');
-  modalAssigneeMenu.className = 'tk-mc-assignee-menu';
-  modalAssigneeMenu.innerHTML = '<input class="tk-mc-assignee-search" type="search" placeholder="搜索处理人" aria-label="搜索处理人" autocomplete="off"><div role="listbox" aria-label="处理人">'
-    + people.map(function (person) { var selected = person.id === els.tkFormAssignee.value; return '<button type="button" class="tk-flow-field-menu-item' + (selected ? ' is-selected' : '') + '" role="option" aria-selected="' + selected + '" data-modal-assignee="' + escapeHtml(person.id) + '"><span class="tk-avatar-sm" style="background:' + escapeHtml(person.color || '') + '">' + escapeHtml(person.avatar || '?') + '</span><span>' + escapeHtml(person.name) + '</span><span class="tk-mc-assignee-check" aria-hidden="true">' + (selected ? '✓' : '') + '</span></button>'; }).join('')
-    + '</div>';
-  document.body.appendChild(modalAssigneeMenu);
-  var rect = trigger.getBoundingClientRect();
-  modalAssigneeMenu.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - modalAssigneeMenu.offsetWidth - 8)) + 'px';
-  modalAssigneeMenu.style.top = rect.bottom + modalAssigneeMenu.offsetHeight + 4 < window.innerHeight ? rect.bottom + 4 + 'px' : Math.max(8, rect.top - modalAssigneeMenu.offsetHeight - 4) + 'px';
-  trigger.setAttribute('aria-expanded', 'true');
-  modalAssigneeMenu.querySelector('input').focus({preventScroll:true});
-}
-function tkRenderMoreMenu() {
-  var menu = document.getElementById('tkMcMoreMenu');
-  if (!menu) return;
-  var fields = [
-    {id:'tkFormStatus', label:'状态', icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/></svg>'},
-    {id:'tkFormProject', label:'项目', icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18M3 12h18M3 17h18"/></svg>'},
-    {id:'tkFormAssignee', label:'负责人', icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg>'},
-    {id:'tkFormDue', label:'截止日期', icon:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'},
-  ];
-  menu.innerHTML = fields.filter(function(f){ var el=document.getElementById(f.id); return el && (f.id === 'tkFormAssignee' ? document.getElementById('tkMcAssigneeTrigger').hidden : el.hidden); }).map(function(f){
-    return '<button type="button" class="tk-mc-more-item" data-field="'+f.id+'"><span>'+f.label+'</span></button>';
-  }).join('');
-}
-var modalLabelSelection = [];
-var modalLabelPopover = null;
-function renderModalLabelPicker() {
-  var trigger = document.getElementById('tkMcLabelPicker');
-  if (!trigger) return;
-  els.tkFormLabels.value = modalLabelSelection.join(',');
-  trigger.innerHTML = modalLabelSelection.map(function (name) {
-    return '<span class="tk-drawer-label"><span>' + escapeHtml(name) + '</span><button type="button" class="tk-drawer-label-remove" data-modal-label-remove="' + escapeHtml(name) + '" aria-label="移除标签 ' + escapeHtml(name) + '">×</button></span>';
-  }).join('') + '<span class="tk-mc-label-add" aria-hidden="true">' + (modalLabelSelection.length ? '＋' : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3h9l9 9-9 9-9-9z"/><circle cx="8" cy="8" r="1"/></svg>添加标签') + '</span>';
-  trigger.setAttribute('aria-expanded', String(!!modalLabelPopover));
-}
-function closeModalLabelPicker() {
-  modalLabelPopover?.remove();
-  modalLabelPopover = null;
-  document.getElementById('tkMcLabelPicker')?.setAttribute('aria-expanded', 'false');
-}
-function renderModalLabelOptions(query) {
-  if (!modalLabelPopover) return;
-  var normalized = query.trim().toLocaleLowerCase();
-  var names = taskLabelCatalog().filter(function (name) { return name.toLocaleLowerCase().includes(normalized); });
-  modalLabelPopover.querySelector('.tk-label-picker-options').innerHTML = names.map(function (name) {
-    var selected = modalLabelSelection.includes(name);
-    return '<button type="button" class="tk-label-option' + (selected ? ' selected' : '') + '" data-modal-label-option="' + escapeHtml(name) + '" role="option" aria-selected="' + selected + '"><span class="tk-label-color" style="background:' + taskLabelColor(name) + '"></span><span class="tk-label-option-name">' + escapeHtml(name) + '</span><span class="tk-label-check">' + (selected ? '✓' : '') + '</span></button>';
-  }).join('') + (normalized && !taskLabelCatalog().some(function (name) { return name.toLocaleLowerCase() === normalized; })
-    ? '<button type="button" class="tk-label-option" data-modal-label-create="' + escapeHtml(query.trim()) + '"><span class="tk-label-create-plus">＋</span><span class="tk-label-option-name">创建“' + escapeHtml(query.trim()) + '”</span></button>' : '');
-}
-function openModalLabelPicker() {
-  if (modalLabelPopover) { closeModalLabelPicker(); return; }
-  var trigger = document.getElementById('tkMcLabelPicker');
-  modalLabelPopover = document.createElement('div');
-  modalLabelPopover.className = 'tk-label-popover tk-mc-label-popover';
-  modalLabelPopover.innerHTML = '<div class="tk-label-search-wrap"><input type="search" class="tk-label-search" placeholder="搜索标签…" aria-label="搜索标签" autocomplete="off"></div><div class="tk-label-picker-options" role="listbox" aria-multiselectable="true"></div>';
-  document.body.appendChild(modalLabelPopover);
-  renderModalLabelOptions('');
-  var rect = trigger.getBoundingClientRect();
-  modalLabelPopover.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - modalLabelPopover.offsetWidth - 8)) + 'px';
-  modalLabelPopover.style.top = (rect.bottom + modalLabelPopover.offsetHeight + 5 < window.innerHeight ? rect.bottom + 5 : Math.max(8, rect.top - modalLabelPopover.offsetHeight - 5)) + 'px';
-  renderModalLabelPicker();
-  modalLabelPopover.querySelector('input').focus({preventScroll:true});
 }
 
 /* ---------- 新建/编辑弹窗 ---------- */
@@ -1112,6 +984,8 @@ function openTaskModal(taskId, parentId) {
   state.editingTaskId = null;
   state.editingParentId = parentId || null;
   els.tkModalTitle.textContent = parentId ? '新增子任务' : '新建任务';
+  var mcUser = document.getElementById('tkMcUser');
+  if (mcUser) mcUser.textContent = (document.getElementById('userName') && document.getElementById('userName').textContent) || '吴晓峰';
   tkMcSetMode('manual');
   if (els.tkMcAgentPrompt) els.tkMcAgentPrompt.value = '';
   els.tkFormTitle.value = '';
@@ -1119,31 +993,21 @@ function openTaskModal(taskId, parentId) {
   els.tkFormStatus.value = 'backlog';
   els.tkFormPriority.value = 'medium';
   els.tkFormProject.value = projectListProjectId || tkProjectsForCurrentUser()[0].id;
-  set_activePick({kind:'team', id: CV_PROJECTS.find(function (project) { return project.id === els.tkFormProject.value; })?.defaultTeam || TEAMS[0]?.id || '', auto:false}); renderExpertChips();
+  els.tkFormTeam.value = CV_PROJECTS.find(function (project) { return project.id === els.tkFormProject.value; })?.defaultTeam || TEAMS[0]?.id || '';
   refreshFormAssignees(tkCurrentUserId());
   els.tkFormDue.value = '';
-  ['tkFormStatus','tkFormProject','tkFormAssignee','tkFormDue'].forEach(function(fid){ var el=document.getElementById(fid); if(el) el.hidden=true; });
-  document.getElementById('tkMcAssigneeTrigger').hidden = true;
-  closeModalAssigneeMenu();
-  document.getElementById('tkMcMoreFields')?.classList.remove('open');
-  var _mm=document.getElementById('tkMcMoreMenu'); if(_mm) _mm.style.display='none';
-  tkRenderMoreMenu();
   els.tkFormLabels.value = '';
-  closeModalLabelPicker();
-  modalLabelSelection = [];
-  renderModalLabelPicker();
   if (parentId) {
     var parent = tkGetTasks().find(function (x) { return x.id === parentId; });
     if (parent) {
       els.tkFormProject.value = parent.project;
-      set_activePick({kind:'team', id: parent.teamId || CV_PROJECTS.find(function (project) { return project.id === parent.project; })?.defaultTeam || TEAMS[0]?.id || '', auto:false}); renderExpertChips();
+      els.tkFormTeam.value = parent.teamId || CV_PROJECTS.find(function (project) { return project.id === parent.project; })?.defaultTeam || TEAMS[0]?.id || '';
       refreshFormAssignees(parent.assignee);
       els.tkFormPriority.value = parent.priority;
     }
   }
   els.tkModalOverlay.classList.remove('hidden');
   requestAnimationFrame(function () { els.tkModalOverlay.classList.add('show'); });
-  setTimeout(function(){ if (els.tkFormTitle) els.tkFormTitle.focus(); }, 50);
 }
 function tkMcSetMode(mode) {
   var isAgent = mode === 'agent';
@@ -1177,8 +1041,6 @@ function tkMcAgentSendMsg() {
   }, 1500);
 }
 function closeTaskModal() {
-  closeModalLabelPicker();
-  closeModalAssigneeMenu();
   els.tkModalOverlay.classList.remove('show');
   els.tkModalOverlay.classList.remove('tk-mc-fullscreen');
   setTimeout(function () { els.tkModalOverlay.classList.add('hidden'); }, 200);
@@ -1188,13 +1050,13 @@ function saveTask() {
   if (!title) { els.tkFormTitle.focus(); return; }
   if (!tkProjectsForCurrentUser().some(function (project) { return project.id === els.tkFormProject.value; })) { toast('请先加入项目再创建任务', 'warning'); return; }
   var createdForOpenParent = !state.editingTaskId && state.editingParentId && state.drawerTaskId === state.editingParentId;
-  var labels = modalLabelSelection.slice();
+  var labels = els.tkFormLabels.value.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
   if (!tkPeopleInProject(els.tkFormProject.value).some(function (person) { return person.id === els.tkFormAssignee.value; })) { toast('请选择该项目成员作为处理人', 'warning'); return; }
-  if (!TEAMS.some(function (team) { return team.id === (activePick.kind==='team' ? activePick.id : ''); })) { toast('请选择专家团', 'warning'); return; }
+  if (!TEAMS.some(function (team) { return team.id === els.tkFormTeam.value; })) { toast('请选择专家团', 'warning'); els.tkFormTeam.focus(); return; }
   var data = {
     title: title, desc: els.tkFormDesc.value.trim(),
     status: els.tkFormStatus.value, priority: els.tkFormPriority.value,
-    assignee: els.tkFormAssignee.value, teamId: activePick.kind==='team' ? activePick.id : '', project: els.tkFormProject.value,
+    assignee: els.tkFormAssignee.value, teamId: els.tkFormTeam.value, project: els.tkFormProject.value,
     dueDate: els.tkFormDue.value, labels: labels,
   };
   if (state.editingTaskId) { tkUpdateTask(state.editingTaskId, data); }
@@ -1330,6 +1192,7 @@ function restoreTaskLabelCatalog() {
   try {
     var saved = JSON.parse(localStorage.getItem('lingee_task_label_catalog') || 'null');
     if (!saved || !Array.isArray(saved.labels)) return;
+    TK_LABELS.splice(0, TK_LABELS.length, ...saved.labels.filter(function(name) { return typeof name === 'string' && name.trim(); }));
     if (saved.colors && typeof saved.colors === 'object') Object.keys(saved.colors).forEach(function(name) {
       if (/^#[0-9a-f]{6}$/i.test(saved.colors[name])) taskLabelColors[name] = saved.colors[name];
     });
@@ -1546,6 +1409,11 @@ function renderTaskArtifact(artifact) {
           }).join('') +
         '</div></details>';
 }
+function renderTaskArtifactSummary(artifacts) {
+  return '<div class="tk-report-artifacts-summary"><strong>已交付 · ' + artifacts.length + ' 项</strong><span>'
+    + escapeHtml(artifacts.length ? artifacts.map(function (artifact) { return artifact.type; }).join('、') : '暂无交付产物')
+    + '</span></div>';
+}
 function drawerWidthBounds() {
   return { min:480, max:Math.max(480, window.innerWidth - 240) };
 }
@@ -1674,18 +1542,11 @@ function renderTaskAgentFeedEntry(task, entry, artifacts) {
     + '<div class="tk-feed-card-content">'
     + (showRunFeedback ? renderTaskRunFeedback(getDemoStageRun(task, entry)) : '')
     + (entry.state === 'running' ? '' : '<p class="' + (entry.state === 'blocked' ? 'tk-feed-run-error' : '') + '">' + escapeHtml(entry.state === 'blocked' ? task.blockedRun?.reason || entry.text : entry.text) + '</p>')
-    + (stageArtifacts.length ? '<div class="tk-delivery-artifacts"><div class="tk-artifacts-list">'
+    + (stageArtifacts.length ? '<div class="tk-delivery-artifacts"><span class="tk-delivery-artifacts-label">本阶段产物</span><div class="tk-artifacts-list">'
       + stageArtifacts.map(renderTaskArtifact).join('') + '</div></div>' : '')
     + '</div></article>';
 }
 
-function renderTaskTeamAvatarGroup(team) {
-  var members = (team?.members || []).map(function (id) { return EX[id]; }).filter(Boolean);
-  if (!members.length) return '<span class="tk-exec-card-mark tk-agent-report-mark" aria-hidden="true">团</span>';
-  return '<span class="tk-exec-team-avatars" role="img" aria-label="' + escapeHtml(team.name + '，' + members.map(function (member) { return member.name; }).join('、')) + '">'
-    + members.slice(0, 4).map(function (member) { return '<img src="' + xav(member.k) + '" alt="" title="' + escapeHtml(member.name) + '">'; }).join('')
-    + (members.length > 4 ? '<span class="tk-exec-team-avatars-more" aria-hidden="true">+' + (members.length - 4) + '</span>' : '') + '</span>';
-}
 function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml, stageCount, reportHtml) {
   var stages = activity.filter(function (entry) { return entry.expertId; });
   if (!stages.length && !activity.length) return reportHtml || '';
@@ -1695,10 +1556,8 @@ function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml,
   var activeRun = currentState === 'running' ? getDemoStageRun(task, latest) : null;
   var currentLabel = activeRun?.label || (currentState === 'review' ? '待审核' : currentState === 'blocked' ? '已阻塞' : currentState === 'done' ? '已完成' : currentState === 'cancelled' ? '已取消' : '待执行');
   var project = CV_PROJECTS.find(function (row) { return row.id === task.project; });
-  var teamId = task.teamId || project?.defaultTeam;
-  var team = TEAMS.find(function (row) { return row.id === teamId; }) || PRESET_TEAMS.find(function (row) { return row.id === teamId; });
+  var team = TEAMS.find(function (row) { return row.id === task.teamId || project?.defaultTeam; });
   var currentDetail = latest ? latest.stage + ' · ' + latest.author : '尚未分派执行专家';
-  var latestLayout = !legacyDetailPreview && taskDetailVersion === 'latest';
   var feedback = activeRun ? renderTaskRunFeedback(activeRun)
     : latest ? '<div class="tk-exec-feedback-line is-' + currentState + '"><span class="tk-exec-feedback-icon" aria-hidden="true">' + renderTaskRunIndicator(currentState === 'blocked' ? 'failed' : 'completed') + '</span>'
       + '<p>' + escapeHtml(currentState === 'blocked' ? task.blockedRun?.reason || latest.text : currentState === 'review' ? task.reviewReport?.review || latest.text : task.completedRun?.result || latest.text) + '</p>'
@@ -1706,10 +1565,9 @@ function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml,
     : renderTaskPreRunFeedback(task);
   var nextAction = currentState === 'blocked' && task.blockedRun ? '<div class="tk-exec-next"><strong>下一步</strong><span>' + escapeHtml(task.blockedRun.next) + '</span>'
     + '<button type="button" class="tk-blocked-run-retry" data-action="blocked-retry">重试任务</button></div>' : '';
-  var historyButton = stageCount > (latestLayout ? 1 : 0) ? '<div class="tk-exec-card-more"><button type="button" class="tk-feed-stage-history-toggle" data-stage-history-toggle aria-expanded="false" aria-controls="' + (latestLayout ? 'tkOlderStageHistory' : 'tkStageHistory') + '">' + (latestLayout ? '展开明细' : '查看过程明细') + '</button></div>' : '';
   return '<section class="tk-feed-stage-overview tk-exec-card is-' + currentState + '" aria-label="执行概览">'
-    + '<div class="tk-exec-card-head tk-agent-report-head">' + (!legacyDetailPreview && taskDetailVersion === 'latest' ? renderTaskTeamAvatarGroup(team) : '<span class="tk-exec-card-mark tk-agent-report-mark" aria-hidden="true">✦</span>') + '<div class="tk-exec-card-identity tk-agent-report-heading"><strong>' + escapeHtml(team?.name || '任务专家团') + '</strong>'
-    + (legacyDetailPreview || taskDetailVersion === 'v1' ? '<span>当前阶段 · ' + escapeHtml(currentDetail) + '</span>' : '') + '</div><span class="tk-feed-stage-current tk-agent-report-state is-' + currentState + '">' + escapeHtml(currentLabel) + '</span></div>'
+    + '<div class="tk-exec-card-head tk-agent-report-head"><span class="tk-exec-card-mark tk-agent-report-mark" aria-hidden="true">✦</span><div class="tk-exec-card-identity tk-agent-report-heading"><strong>' + escapeHtml(team?.name || '任务专家团') + '</strong>'
+    + '<span>当前阶段 · ' + escapeHtml(currentDetail) + '</span></div><span class="tk-feed-stage-current tk-agent-report-state is-' + currentState + '">' + escapeHtml(currentLabel) + '</span></div>'
     + '<div class="tk-feed-stage-overview-head"><strong>执行进度</strong></div>'
     + '<ol class="tk-feed-stage-list">' + STAGES.map(function (stage) {
       var entry = byId.get(stage.id);
@@ -1720,10 +1578,14 @@ function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml,
       return '<li class="tk-feed-stage is-' + state + '" aria-label="' + escapeHtml(stage.name + '，' + label) + '"' + (['running','review','blocked'].includes(state) ? ' aria-current="step"' : '') + '><span class="tk-feed-stage-mark" aria-hidden="true">' + icon + '</span>'
         + '<span class="tk-feed-stage-name">' + escapeHtml(stage.name) + '</span><span class="tk-feed-stage-state">' + label + '</span>'
         + (task.status === 'in_review' && state === 'review' && !legacyDetailPreview && taskDetailVersion === 'latest'
-          ? '<span class="tk-feed-stage-review-actions"><button type="button" class="tk-feed-stage-review-btn" data-stage-review-status="done" aria-label="通过' + escapeHtml(stage.name) + '审核">通过</button><button type="button" class="tk-feed-stage-review-btn is-reject" data-stage-review-status="in_progress" aria-label="驳回' + escapeHtml(stage.name) + '审核">驳回</button></span>' : '') + '</li>';
+          ? '<button type="button" class="tk-feed-stage-review-btn" data-stage-review aria-label="审核' + escapeHtml(stage.name) + '">' + TASK_HEADER_CHECK_ICON + '<span>审核</span></button>' : '') + '</li>';
     }).join('') + '</ol>'
-    + (latestLayout ? '' : '<div class="tk-exec-card-feedback">' + feedback + nextAction + '</div>')
-    + (latestLayout ? '' : historyButton) + stageHistoryHtml + (latestLayout ? historyButton : '') + '</section>';
+    + '<div class="tk-exec-card-feedback">' + feedback + nextAction + '</div>'
+    + renderTaskArtifactSummary(artifacts)
+    + '<div class="tk-exec-card-more">'
+    + (stageCount ? '<button type="button" class="tk-feed-stage-history-toggle" data-stage-history-toggle aria-expanded="false" aria-controls="tkStageHistory">' + (taskDetailVersion === 'v1' || legacyDetailPreview ? '查看过程明细' : '查看明细') + '</button>' : '')
+    + (reportHtml ? '<details class="tk-exec-card-report"><summary>查看执行报告</summary>' + reportHtml + '</details>' : '') + '</div>'
+    + stageHistoryHtml + '</section>';
 }
 
 function renderTaskPreRunFeedback(task) {
@@ -1828,19 +1690,6 @@ function renderTaskSystemFeedGroup(events, isLatest) {
     }).join('') + '</div></div>';
 }
 
-function renderAgentStageComment(task, entry) {
-  var expert = EXPERTS.find(function (item) { return item.id === entry.expertId; });
-  var showRunFeedback = !!entry.run;
-  return '<article class="tk-feed-card tk-feed-card--agent is-' + entry.state + '" aria-label="专家执行：' + escapeHtml(entry.stage) + '">'
-    + '<header class="tk-feed-card-head tk-feed-card-head--agent"><img class="tk-feed-avatar tk-feed-avatar--agent" src="' + escapeHtml(xav(expert?.k)) + '" alt="">'
-    + '<strong>' + escapeHtml(entry.author) + '</strong><span class="tk-feed-run-stage">· ' + escapeHtml(entry.stage) + '</span><time>' + escapeHtml(entry.createdAt) + '</time></header>'
-    + '<div class="tk-feed-card-content">'
-    + (showRunFeedback ? renderTaskRunFeedback(entry.run) : '')
-    + '<p>' + escapeHtml(entry.text) + '</p>'
-    + (entry.artifacts && entry.artifacts.length ? '<div class="tk-delivery-artifacts"><div class="tk-artifacts-list">'
-      + entry.artifacts.map(renderTaskArtifact).join('') + '</div></div>' : '')
-    + '</div></article>';
-}
 function renderTaskComments(t) {
   var comments = t.comments || [];
   var project = CV_PROJECTS.find(function (row) { return row.id === t.project; });
@@ -1849,13 +1698,8 @@ function renderTaskComments(t) {
     blockedReason:t.blockedRun?.reason,
     assigneeName:tkGetPerson(t.assignee).name,
   });
-  var latestLayout = !legacyDetailPreview && taskDetailVersion === 'latest';
-  var deliveredStages = new Map(activity.filter(function (entry) {
-    return entry.expertId && (entry.state === 'done' || (latestLayout && entry.state === 'review'));
-  }).map(function (entry) { return [entry.stageId, entry]; }));
-  var artifacts = tkGetTaskArtifacts(t).filter(function (artifact) { return deliveredStages.has(artifact.stageId); }).map(function (artifact) {
-    return latestLayout ? Object.assign({}, artifact, {author:deliveredStages.get(artifact.stageId).author}) : artifact;
-  });
+  var completedStages = new Set(activity.filter(function (entry) { return entry.state === 'done'; }).map(function (entry) { return entry.stageId; }));
+  var artifacts = tkGetTaskArtifacts(t).filter(function (artifact) { return completedStages.has(artifact.stageId); });
   if (legacyDetailPreview) {
     /* 废弃页面只保留旧版评论列表，不渲染新版才有的智能体执行报告与专家团交付过程动态 */
     if (!comments.length) return '<div class="tk-drawer-comments-empty">暂无评论</div>';
@@ -1883,30 +1727,21 @@ function renderTaskComments(t) {
   var sections = [];
   events.forEach(function (event) {
     var isAgent = event.type === 'delivery' && event.entry.expertId;
-    var isAgentComment = event.type === 'comment' && event.entry.kind === 'agent-stage';
     var isComment = event.type === 'comment' && event.entry.kind === 'comment';
-    if (!isAgent && !isAgentComment && !isComment) {
+    if (!isAgent && !isComment) {
       var previous = sections[sections.length - 1];
       if (previous?.kind === 'system') previous.events.push(event);
       else sections.push({ kind:'system', events:[event] });
-    } else if (isAgentComment) {
-      sections.push({ kind:'agent-stage', event:event });
     } else sections.push({ kind:isAgent ? 'agent' : 'comment', event:event });
   });
   var stageSections = sections.filter(function (section) { return section.kind === 'agent'; });
-  var stageHistoryHtml = stageSections.length ? latestLayout
-    ? '<div id="tkStageHistory" class="tk-feed-stage-history"><div class="tk-feed-stage-history-content">'
-      + renderTaskAgentFeedEntry(t, stageSections.at(-1).event.entry, artifacts)
-      + (stageSections.length > 1 ? '<div id="tkOlderStageHistory" class="tk-feed-stage-history-content" hidden>'
-        + stageSections.slice(0, -1).reverse().map(function (section) { return renderTaskAgentFeedEntry(t, section.event.entry, artifacts); }).join('') + '</div>' : '')
-      + '</div></div>'
-    : '<div id="tkStageHistory" class="tk-feed-stage-history" hidden><div class="tk-feed-stage-history-content">'
-      + stageSections.map(function (section) { return renderTaskAgentFeedEntry(t, section.event.entry, artifacts); }).join('') + '</div></div>' : '';
+  var stageHistoryHtml = stageSections.length ? '<div id="tkStageHistory" class="tk-feed-stage-history" hidden><div class="tk-feed-stage-history-content">'
+    + stageSections.map(function (section) { return renderTaskAgentFeedEntry(t, section.event.entry, artifacts); }).join('')
+    + '</div></div>' : '';
   var systemEvents = sections.filter(function (section) { return section.kind === 'system'; }).flatMap(function (section) { return section.events; });
   var commentsHtml = sections.filter(function (section) { return section.kind === 'comment'; }).map(function (section) { return renderTaskHumanFeedEntry(section.event); }).join('');
-  var agentStageHtml = sections.filter(function (section) { return section.kind === 'agent-stage'; }).map(function (section) { return renderAgentStageComment(t, section.event.entry); }).join('');
   return '<div class="tk-feed" aria-label="任务动态">' + renderTaskDeliveryOverview(t, activity, artifacts, stageHistoryHtml, stageSections.length, reportHtml)
-    + agentStageHtml + commentsHtml + (systemEvents.length ? renderTaskSystemFeedGroup(systemEvents, false) : '') + '</div>';
+    + commentsHtml + (systemEvents.length ? renderTaskSystemFeedGroup(systemEvents, false) : '') + '</div>';
 }
 
 function renderTaskCommentComposer() {
@@ -1918,60 +1753,16 @@ function renderTaskCommentComposer() {
     + '</div></div>';
 }
 
-function buildAgentStageComment(task) {
-  var project = CV_PROJECTS.find(function (row) { return row.id === task.project; });
-  var teamId = task.teamId || (project && project.defaultTeam);
-  var team = TEAMS.find(function (row) { return row.id === teamId; })
-    || PRESET_TEAMS.find(function (row) { return row.id === teamId; });
-  if (!team) return null;
-  var stageId = 'requirements';
-  var stage = STAGES.find(function (s) { return s.id === stageId; });
-  var expertId = ['software-product-manager','software-team-lead'].find(function (id) { return team.members.includes(id); }) || team.members[0];
-  var expert = EXPERTS.find(function (item) { return item.id === expertId; });
-  var title = task.title || '当前任务';
-  var scope = String(task.desc || '').split(/[。；\n]/)[0].slice(0, 64);
-  var steps = [
-    { kind:'thinking', summary:'梳理业务目标与验收边界', detail:'从「' + title + '」的任务描述提取目标、非目标和验收条件。' + (scope ? '重点核对：' + scope : ''), state:'done' },
-    { kind:'tool', summary:'核对业务入口与异常场景', detail:'检查「' + title + '」涉及的入口、角色权限和失败恢复路径。', state:'done' },
-    { kind:'result', summary:'形成需求清单', detail:'已整理「' + title + '」的需求范围及可观察的验收条件。', state:'done' },
-  ];
-  var productPerson = (tkPeopleInProject(task.project)[0] || tkGetPerson(task.createdBy)).name;
-  var baseDate = task.createDate || '2026-09-20';
-  var d = new Date(baseDate); d.setDate(d.getDate());
-  var dt = d.toISOString().slice(0, 10) + ' 09:40';
-  var artifacts = [{
-    id: 'requirements', stageId: stageId, type: '需求文档',
-    summary: '业务目标、使用场景与验收标准', date: dt, author: productPerson,
-    sections: [
-      { heading:'目标', text:'围绕"' + title + '"明确要解决的问题、目标用户和交付范围。' },
-      { heading:'使用场景', text:'梳理入口、主要操作路径与异常场景。' },
-      { heading:'验收标准', text:'功能流程可完整走通；关键字段和状态有明确反馈；异常输入有提示与恢复方式。' },
-    ],
-  }];
-  return {
-    kind: 'agent-stage', authorId: expertId, createdAt: taskCommentTimestamp(),
-    stageId: stageId, stage: stage ? stage.name : '需求分析',
-    expertId: expertId, author: expert ? expert.name : (team.name || '智能体'),
-    state: 'done', text: '围绕「' + title + '」确认业务入口与验收边界，已形成需求清单。',
-    run: { status:'completed', label:'已完成', summary:'查看执行过程 · 3 个步骤', duration:'1分05秒', steps: steps },
-    artifacts: artifacts,
-  };
-}
 function sendTaskComment() {
   if (!state.drawerTaskId) return;
   var task = tkGetTasks().find(function (row) { return row.id === state.drawerTaskId; });
   var input = els.tkDrawerBody.querySelector('.tk-comment-composer-input');
   var text = input?.value.trim();
   if (!task || !text) return;
-  var newComments = (task.comments || []).concat({
+  tkUpdateTask(task.id, { comments:(task.comments || []).concat({
     kind:'comment', authorId:tkCurrentUserId(), createdAt:taskCommentTimestamp(),
     status:task.status, assignee:task.assignee, text:text,
-  });
-  if (task.status === 'in_progress') {
-    var reply = buildAgentStageComment(task);
-    if (reply) newComments = newComments.concat(reply);
-  }
-  tkUpdateTask(task.id, { comments: newComments });
+  }) });
   closeMentionPanel();
   render();
   openDrawer(task.id);
@@ -1989,6 +1780,7 @@ export function openTaskDetail(taskId) { openDrawer(Number(taskId)); }
 
 function openDrawer(taskId, legacyMode) {
   closeTaskLabelPicker();
+  closeTaskReviewMenu();
   var t = tkGetTasks().find(function (x) { return x.id === taskId; });
   if (!t) return;
   if (!tkProjectsForCurrentUser().some(function (project) { return project.id === t.project; })) { toast('未加入该项目，无法查看任务', 'warning'); return; }
@@ -2014,7 +1806,6 @@ function openDrawer(taskId, legacyMode) {
   els.tkDrawer.setAttribute('data-detail-version', legacyDetailPreview ? 'legacy' : taskDetailVersion);
   els.tkDrawerTitle.title = '右键切换任务详情版本';
   renderTaskStartAction();
-  var _savedDetailsOpen = Array.from(els.tkDrawerBody.querySelectorAll('details')).map(function (d) { return d.open; });
   els.tkDrawerBody.innerHTML =
     '<div class="tk-drawer-main"><div class="tk-drawer-main-inner">' +
       '<div class="tk-drawer-tabs">' +
@@ -2075,8 +1866,6 @@ function openDrawer(taskId, legacyMode) {
     els.tkDrawerBody.querySelectorAll('[data-action="blocked-retry"]').forEach(function (button) { button.remove(); });
     mainInner.prepend(sidebar);
   }
-  var _newDetails = els.tkDrawerBody.querySelectorAll('details');
-  _savedDetailsOpen.forEach(function (open, i) { if (open && _newDetails[i]) _newDetails[i].open = true; });
   /* 附件上传初始化 */
   (function(){
     var dz = els.tkDrawerBody.querySelector('#tkAttachDropzone');
@@ -2138,6 +1927,7 @@ function closeDrawer() {
   closeTaskLabelPicker();
   closeMentionPanel();
   closeTaskDetailVersionMenu();
+  closeTaskReviewMenu();
   document.querySelectorAll('.tk-drawer-more-menu').forEach(function (m) { m.remove(); });
   els.tkDrawerMore.setAttribute('aria-expanded', 'false');
   flowAssigneeDraft = { taskId: null, assigneeId: '' };
@@ -2512,94 +2302,7 @@ function bindEvents() {
   });
   els.tkFormProject.addEventListener('change', function () {
     refreshFormAssignees(tkCurrentUserId());
-    set_activePick({kind:'team', id: CV_PROJECTS.find(function (project) { return project.id === els.tkFormProject.value; })?.defaultTeam || TEAMS[0]?.id || '', auto:false}); renderExpertChips();
-  });
-  var moreDD = document.getElementById('tkMcMoreFields');
-  if (moreDD) {
-    var moreMenu = document.getElementById('tkMcMoreMenu');
-    var moreChip = moreDD.querySelector('[data-chip]');
-    function closeMoreMenu(){ moreDD.classList.remove('open'); if (moreMenu) moreMenu.style.display='none'; }
-    moreChip?.addEventListener('click', function(e){
-      e.stopPropagation();
-      if (moreDD.classList.contains('open')) { closeMoreMenu(); return; }
-      moreDD.classList.add('open');
-      if (!moreMenu) return;
-      var rect = moreChip.getBoundingClientRect();
-      document.body.appendChild(moreMenu);
-      moreMenu.style.position='fixed';
-      moreMenu.style.zIndex='260';
-      moreMenu.style.display='block';
-      var w = moreMenu.offsetWidth || 148;
-      moreMenu.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - w - 8)) + 'px';
-      moreMenu.style.top = (rect.bottom + 4) + 'px';
-    });
-    moreMenu?.addEventListener('click', function(e){
-      var item = e.target.closest('[data-field]'); if (!item) return;
-      var f = document.getElementById(item.getAttribute('data-field'));
-      if (f) { if (f.id === 'tkFormAssignee') document.getElementById('tkMcAssigneeTrigger').hidden = false; else f.hidden = false; tkRenderMoreMenu(); }
-      closeMoreMenu();
-    });
-    document.addEventListener('click', function(e){ if (moreDD.classList.contains('open') && !moreDD.contains(e.target) && !(moreMenu && moreMenu.contains(e.target))) closeMoreMenu(); });
-  }
-  var assigneeTrigger = document.getElementById('tkMcAssigneeTrigger');
-  assigneeTrigger.addEventListener('click', openModalAssigneeMenu);
-  document.addEventListener('click', function (e) {
-    var option = e.target.closest('.tk-mc-assignee-menu [data-modal-assignee]');
-    if (option) {
-      els.tkFormAssignee.value = option.getAttribute('data-modal-assignee');
-      renderModalAssigneeTrigger();
-      closeModalAssigneeMenu();
-      assigneeTrigger.focus();
-    } else if (modalAssigneeMenu && !e.target.closest('.tk-mc-assignee-menu, #tkMcAssigneeTrigger')) closeModalAssigneeMenu();
-  });
-  document.addEventListener('input', function (e) {
-    if (modalAssigneeMenu && e.target.matches('.tk-mc-assignee-search')) filterAssigneeOptions(modalAssigneeMenu, '[data-modal-assignee]', e.target.value);
-  });
-  document.addEventListener('keydown', function (e) {
-    if (!modalAssigneeMenu) return;
-    if (e.key === 'Escape') { e.preventDefault(); closeModalAssigneeMenu(); assigneeTrigger.focus(); }
-    else if (e.target.matches('.tk-mc-assignee-search')) chooseFirstAssignee(modalAssigneeMenu, '[data-modal-assignee]', e);
-  });
-  window.addEventListener('scroll', function (e) {
-    if (modalAssigneeMenu && !modalAssigneeMenu.contains(e.target)) closeModalAssigneeMenu();
-  }, true);
-  window.addEventListener('resize', closeModalAssigneeMenu);
-  var modalLabelTrigger = document.getElementById('tkMcLabelPicker');
-  modalLabelTrigger.addEventListener('click', function (e) {
-    var remove = e.target.closest('[data-modal-label-remove]');
-    if (remove) {
-      e.stopPropagation();
-      modalLabelSelection = modalLabelSelection.filter(function (name) { return name !== remove.getAttribute('data-modal-label-remove'); });
-      renderModalLabelPicker();
-      renderModalLabelOptions(modalLabelPopover?.querySelector('.tk-label-search')?.value || '');
-      return;
-    }
-    openModalLabelPicker();
-  });
-  modalLabelTrigger.addEventListener('keydown', function (e) {
-    if (e.target === modalLabelTrigger && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openModalLabelPicker(); }
-  });
-  document.addEventListener('input', function (e) {
-    if (modalLabelPopover && e.target === modalLabelPopover.querySelector('.tk-label-search')) renderModalLabelOptions(e.target.value);
-  });
-  document.addEventListener('click', function (e) {
-    if (!modalLabelPopover) return;
-    var option = e.target.closest('.tk-mc-label-popover [data-modal-label-option], .tk-mc-label-popover [data-modal-label-create]');
-    if (option) {
-      var name = option.getAttribute('data-modal-label-option') || option.getAttribute('data-modal-label-create');
-      if (option.hasAttribute('data-modal-label-create') && !taskLabelCatalog().includes(name)) { TK_LABELS.push(name); persistTaskLabelCatalog(); }
-      modalLabelSelection = modalLabelSelection.includes(name) ? modalLabelSelection.filter(function (item) { return item !== name; }) : modalLabelSelection.concat(name);
-      renderModalLabelPicker();
-      renderModalLabelOptions(modalLabelPopover.querySelector('.tk-label-search').value);
-    } else if (!e.target.closest('.tk-mc-label-popover, #tkMcLabelPicker')) closeModalLabelPicker();
-  });
-  document.addEventListener('keydown', function (e) {
-    if (!modalLabelPopover) return;
-    if (e.key === 'Escape') { e.stopPropagation(); closeModalLabelPicker(); modalLabelTrigger.focus(); }
-    if (e.key === 'Enter' && e.target === modalLabelPopover.querySelector('.tk-label-search')) {
-      e.preventDefault();
-      modalLabelPopover.querySelector('.tk-label-option')?.click();
-    }
+    els.tkFormTeam.value = CV_PROJECTS.find(function (project) { return project.id === els.tkFormProject.value; })?.defaultTeam || TEAMS[0]?.id || '';
   });
   els.tkModalOverlay.addEventListener('click', function (e) { if (e.target === this) closeTaskModal(); });
   els.tkModalOverlay.addEventListener('keydown', function (e) {
@@ -2690,6 +2393,20 @@ function bindEvents() {
       if (Date.now() - lastRightClickToggle > 500) toggleTaskStartAction();
     });
   }
+  document.addEventListener('click', function (e) {
+    var reviewChoice = e.target.closest('#tkTaskReviewMenu [data-review-status]');
+    if (reviewChoice) {
+      var task = tkGetTasks().find(function (row) { return row.id === state.drawerTaskId; });
+      var nextStatus = reviewChoice.getAttribute('data-review-status');
+      closeTaskReviewMenu();
+      if (task?.status !== 'in_review') return;
+      tkUpdateTask(task.id, {status:nextStatus});
+      render();
+      openDrawer(task.id);
+      toast(nextStatus === 'done' ? '审核通过，任务已完成' : '任务已退回继续执行', 'success');
+    } else if (!e.target.closest('#tkTaskReviewMenu, [data-stage-review]')) closeTaskReviewMenu();
+  });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeTaskReviewMenu(); });
   if (els.tkDrawerSidebarToggle) {
     els.tkDrawerSidebarToggle.addEventListener('click', function () {
       var sb = els.tkDrawerBody.querySelector('.tk-drawer-sidebar');
@@ -2708,8 +2425,9 @@ function bindEvents() {
     menu.className = 'tk-detail-version-menu';
     menu.setAttribute('role', 'menu');
     menu.setAttribute('aria-label', '任务详情版本');
-    menu.innerHTML = '<button type="button" role="menuitemradio" aria-checked="' + (taskDetailVersion === 'latest') + '" data-detail-version="latest">最新版<span>' + (taskDetailVersion === 'latest' ? '✓' : '') + '</span></button>'
-      + '<button type="button" role="menuitemradio" aria-checked="' + (taskDetailVersion === 'v1') + '" data-detail-version="v1">v1 2026-09-26<span>' + (taskDetailVersion === 'v1' ? '✓' : '') + '</span></button>';
+    menu.innerHTML = '<div class="tk-detail-version-menu-title">任务详情版本</div>'
+      + '<button type="button" role="menuitemradio" aria-checked="' + (taskDetailVersion === 'latest') + '" data-detail-version="latest">最新版<span>' + (taskDetailVersion === 'latest' ? '✓' : '') + '</span></button>'
+      + '<button type="button" role="menuitemradio" aria-checked="' + (taskDetailVersion === 'v1') + '" data-detail-version="v1">已保存版本<span>' + (taskDetailVersion === 'v1' ? '✓' : '') + '</span></button>';
     document.body.appendChild(menu);
     menu.style.left = Math.min(e.clientX, window.innerWidth - menu.offsetWidth - 8) + 'px';
     menu.style.top = Math.min(e.clientY, window.innerHeight - menu.offsetHeight - 8) + 'px';
@@ -2775,22 +2493,10 @@ function bindEvents() {
 
   /* 属性区折叠 */
   els.tkDrawerBody.addEventListener('click', function (e) {
-    var stageReviewButton = e.target.closest('[data-stage-review-status]');
+    var stageReviewButton = e.target.closest('[data-stage-review]');
     if (stageReviewButton) {
       var reviewTask = tkGetTasks().find(function (row) { return row.id === state.drawerTaskId; });
-      var nextStatus = stageReviewButton.getAttribute('data-stage-review-status');
-      if (!legacyDetailPreview && taskDetailVersion === 'latest' && reviewTask?.status === 'in_review' && ['done', 'in_progress'].includes(nextStatus)) {
-        var stageIndex = Math.max(0, STAGES.findIndex(function (stage) { return stage.id === reviewTask.executionStageId; }));
-        var finalStage = stageIndex === STAGES.length - 1;
-        var approved = nextStatus === 'done';
-        tkUpdateTask(reviewTask.id, {
-          status: approved && finalStage ? 'done' : 'in_progress',
-          executionStageId: approved && !finalStage ? STAGES[stageIndex + 1].id : STAGES[stageIndex].id,
-        });
-        render();
-        openDrawer(reviewTask.id);
-        toast(approved ? (finalStage ? '审核通过，任务已完成' : '审核通过，进入' + STAGES[stageIndex + 1].name) : '审核驳回，任务已退回继续执行', 'success');
-      }
+      if (!legacyDetailPreview && taskDetailVersion === 'latest' && reviewTask?.status === 'in_review') openTaskReviewMenu(stageReviewButton);
       return;
     }
     if (e.target.closest('[data-action="comment-send"]')) { sendTaskComment(); return; }
@@ -3285,13 +2991,13 @@ function bindEvents() {
   els.tkDrawerBody.addEventListener('click', function (e) {
     var stageHistoryToggle = e.target.closest('[data-stage-history-toggle]');
     if (stageHistoryToggle) {
-      var stageHistory = els.tkDrawerBody.querySelector('#' + stageHistoryToggle.getAttribute('aria-controls'));
+      var stageHistory = els.tkDrawerBody.querySelector('#tkStageHistory');
       if (!stageHistory) return;
       stageHistory.hidden = !stageHistory.hidden;
       stageHistoryToggle.setAttribute('aria-expanded', String(!stageHistory.hidden));
-      stageHistoryToggle.textContent = taskDetailVersion === 'v1' || legacyDetailPreview
-        ? (stageHistory.hidden ? '查看过程明细' : '收起过程明细')
-        : (stageHistory.hidden ? '展开明细' : '收起明细');
+      stageHistoryToggle.textContent = stageHistory.hidden
+        ? (taskDetailVersion === 'v1' || legacyDetailPreview ? '查看过程明细' : '查看明细')
+        : (taskDetailVersion === 'v1' || legacyDetailPreview ? '收起过程明细' : '收起明细');
       return;
     }
     var actToggle = e.target.closest('[data-activity-toggle]');
@@ -3530,6 +3236,12 @@ function bindEvents() {
     }
   });
 
+  document.addEventListener('click', function (e) {
+    if (e.target.closest('[data-clear-task-ref]')) {
+      var tags = document.getElementById('ntTags');
+      if (tags) { tags.innerHTML = ''; tags.classList.add('hidden'); }
+    }
+  });
   /* 点击外部关闭弹出菜单 */
   document.addEventListener('click', function (e) {
     hidePopover();
@@ -3634,13 +3346,8 @@ function initColumnResize() {
 /* ---------- 初始化 ---------- */
 export function initTasksV2() {
   restoreTaskLabelCatalog();
-  tkPruneOrphanTasks();
   tkSyncPeople();
   cacheEls();
-  initTaskListVersion(function () {
-    render();
-    if (!els.tkFieldsPopover.classList.contains('hidden')) renderFieldSettings();
-  });
   try { taskStartLegacy = localStorage.getItem(TASK_START_LEGACY_KEY) === '1'; } catch (e) { taskStartLegacy = false; }
   try { taskDetailVersion = localStorage.getItem(TASK_DETAIL_VERSION_STORAGE_KEY) === 'v1' ? 'v1' : 'latest'; } catch (e) { taskDetailVersion = 'latest'; }
   renderTaskStartAction();
@@ -3654,18 +3361,5 @@ export function initTasksV2() {
   fillSelects();
   bindEvents();
   render();
-  document.addEventListener('cv-workspace-change',()=>{
-    tkPruneOrphanTasks();
-    tkEnsureWorkspaceDemoTasks();
-    Object.assign(taskViewState,{activeViewId:'all',scope:'all',filters:[],search:''});
-    fillSelects();render();
-  });
-  // 隐藏骨架在旧初始化结束后接线，不改变现有事件顺序和首屏。
-  initExecutionPlan();
-  initMyWork();
-  initWorkItemDetail();
-  initReviewCenter();
-  initIssueNavigation({ issue: openIssueDetail, workItem: renderWorkItemDetail, review: renderReviewCenter });
-  if (cardRunTimer === null) cardRunTimer = setInterval(updateCardRunClocks, 1000);
 }
 var propFieldKeys = { '状态':'status', '处理人':'assignee', '项目':'project', '优先级':'priority', '截止日期':'dueDate' };

@@ -76,7 +76,7 @@ export function getDemoStageRun(task, entry) {
     const reason = task.blockedRun?.reason || '所需依赖尚未就绪，执行已中断。';
     run.steps[2] = {kind:'error',summary:'执行中断：' + reason,detail:reason,state:'failed'};
   } else if (entry.state === 'review') {
-    run.steps[2] = {kind:'result',summary:'已提交交付材料，等待人工审核。',detail:`「${task.title}」的执行记录与交付材料已提交，等待项目负责人确认。`,state:'done'};
+    run.steps[2] = {kind:'result',summary:`${entry.stage}结果已提交，等待人工审核。`,detail:`「${task.title}」的${entry.stage}执行记录与阶段产物已提交，等待项目负责人确认。`,state:'done'};
   }
   return run;
 }
@@ -84,7 +84,6 @@ export function getDemoStageRun(task, entry) {
 export function getDemoPreRun(task) {
   const messages = {
     planned:{label:'待规划',summary:'等待确认交付范围，尚未创建智能体运行。'},
-    backlog:{label:'待办',summary:'等待启动任务，尚未创建智能体运行。'},
     cancelled:{label:'已取消',summary:'任务已取消，当前没有正在运行的智能体。'},
   };
   return messages[task.status] || null;

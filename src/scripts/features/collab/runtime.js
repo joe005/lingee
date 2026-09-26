@@ -109,7 +109,8 @@ export function syncTaskFromRuntime(t) {
   const runtime = t && t.runtime;
   if (!runtime || !runtime.workItems.length) return;
   const completed = runtime.workItems.filter(wi => wi.status === 'completed').length;
-  t.progress = Math.round(completed / runtime.workItems.length * 100);
+  const running = runtime.workItems.filter(wi => wi.status === 'running').length;
+  if (completed > 0 || running === 0) t.progress = Math.round(completed / runtime.workItems.length * 100);
   const current = runtime.workItems.find(w => ['running', 'failed'].includes(w.status)) || runtime.workItems.at(-1);
   if (current) t.stage = current.stageId || current.id;
   if (t.status === '已完成' && (t.reviews || []).some(r => r.status === 'approved')) return;
