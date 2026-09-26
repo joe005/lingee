@@ -1,13 +1,12 @@
 /* T00 结构拆分：list。保留原交互；事件在 init* 中按原顺序注册。 */
 import { taskViewState, els, LIST_FIELDS, DEFAULT_LIST_FIELD_ORDER } from './ui-state.js';
-import { tkGetViews, tkGetTasks, TK_PEOPLE, tkProjectsForCurrentUser, tkDeleteTask, tkAddTask, tkCurrentUserId, TK_STATUSES, tkGetPerson, tkGetProjectName, TK_PRIORITIES, tkGetPriorityObj, TK_FILTER_FIELDS, TK_OPERATORS, tkSyncPeople, tkPeopleInProject, TK_LABELS, tkAddView, tkUpdateTask, tkDeleteView, tkRenameView, TK_PROJECTS } from './data.js';
+import { tkGetViews, tkGetTasks, TK_PEOPLE, tkProjectsForCurrentUser, tkDeleteTask, tkAddTask, tkCurrentUserId, TK_STATUSES, tkGetPerson, tkGetProjectName, TK_PRIORITIES, tkGetPriorityObj, TK_FILTER_FIELDS, TK_OPERATORS, tkSyncPeople, tkPeopleInProject, TK_LABELS, tkAddView, tkUpdateTask, tkDeleteView, tkRenameView, TK_PROJECTS, tkGetStatusObj } from './data.js';
 import { TEAMS } from '../expert/store.js';
 import { AV_KEYS, EX, EXPERTS, xav } from '../expert/data.js';
 import { createDeliveryActivity } from '../collab/delivery-activity.js';
 import { taskStartLegacy, TASK_START_CHAT_ICON, TASK_START_PLAY_ICON, closeDrawer, openTaskConversationWithTask, openDrawer, syncDrawerClickaway } from './issue-detail.js';
 import { priWeight, isOverdue, escapeHtml, stClass, priClass, avatarSm, fmtDate, positionPopover, filterAssigneeOptions, chooseFirstAssignee } from './ui-utils.js';
 import { taskListVisibleColumnCount, applyTaskListFieldSettings } from './list-template.js';
-import { tkGetPerson, tkGetPriorityObj, tkGetProjectName, tkGetStatusObj } from './data.js';
 import { renderListPageTabs } from '../shared/list-page-tabs.js';
 import { $$ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
