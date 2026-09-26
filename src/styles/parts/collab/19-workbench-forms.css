@@ -97,6 +97,11 @@
 .nt-attach-x:hover{color:var(--danger)}
 .nt-attach-more{display:flex;align-items:center;justify-content:center;width:24px;height:24px;border:1px dashed var(--border-hover);border-radius:6px;background:none;color:var(--text-soft);cursor:pointer}
 .nt-attach-more:hover{border-color:var(--brand);color:var(--brand)}
+/* 新建任务：描述下方的内联附件列表——无文件时不占位，有文件时紧凑展示，拖拽时高亮 */
+#cv-newtask-overlay .nt-attach-drop--desc{border:0;background:transparent;border-radius:0;padding:0;margin-top:4px}
+#cv-newtask-overlay .nt-attach-drop--desc:empty{display:none}
+#cv-newtask-overlay .nt-attach-drop--desc.is-dragover{display:block;border:1px dashed var(--brand);background:var(--brand-fill);border-radius:8px;min-height:44px}
+#cv-newtask-overlay .nt-attach-drop--desc .nt-attach-grid{padding:4px 0}
 
 /* 任务详情：附件字段 */
 #cv-tasks .tb-files{display:flex;flex-wrap:wrap;gap:8px}
@@ -340,7 +345,7 @@
 #cv-newtask-overlay .nt-expert-team{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--tb-small-size);color:var(--text-secondary)}
 #cv-newtask-overlay .nt-expert-auto{flex:none;padding:4px 10px;border:1px solid var(--border);border-radius:7px;background:var(--bg);color:var(--text-secondary);font:inherit;font-size:var(--tb-caption-size);cursor:pointer}
 #cv-newtask-overlay .nt-expert-auto:hover{border-color:var(--brand);color:var(--brand)}
-#cv-newtask-overlay .nt-expert-list{display:flex;flex-direction:column;max-height:266px;border:1px solid var(--border);border-radius:10px;background:var(--fill-2);overflow-y:auto}
+#cv-newtask-overlay .nt-expert-list{display:flex;flex-direction:column;border:1px solid var(--border);border-radius:10px;background:var(--fill-2);overflow:hidden}
 #cv-newtask-overlay .nt-expert-row{display:flex;align-items:center;gap:10px;min-height:46px;padding:7px 12px}
 #cv-newtask-overlay .nt-expert-row+.nt-expert-row{border-top:1px solid var(--border)}
 #cv-newtask-overlay .nt-expert-av{flex:none;width:26px;height:26px;border-radius:50%;object-fit:cover;background:var(--hover)}

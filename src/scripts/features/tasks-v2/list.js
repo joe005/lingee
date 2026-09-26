@@ -1336,7 +1336,7 @@ els.tkViewTabs.addEventListener('click', function (e) {
         taskViewState.viewMode = ['slide','full','split'].includes(view.viewMode) ? view.viewMode : 'slide';
         taskViewState.sortBy = view.sortBy || 'createDate';
         taskViewState.sortDir = view.sortDir || 'desc';
-        taskViewState.layout = view.layout || 'list';
+        taskViewState.layout = view.layout || 'board';
         taskViewState.showSubtasks = view.showSubtasks !== false;
         taskViewState.cardProperties = Object.assign({}, taskViewState.cardProperties, view.cardProperties || {});
         if (Array.isArray(view.listFieldOrder)) taskViewState.listFieldOrder = Array.from(new Set(view.listFieldOrder.filter(function(id) { return DEFAULT_LIST_FIELD_ORDER.includes(id); }))).concat(DEFAULT_LIST_FIELD_ORDER.filter(function(id) { return !view.listFieldOrder.includes(id); }));

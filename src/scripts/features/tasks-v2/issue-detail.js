@@ -369,7 +369,7 @@ function propPicker(name, currentVal, options, isDate) {
 }
 
 function drawerWidthBounds() {
-  return { min:480, max:Math.max(480, window.innerWidth - 240) };
+  return { min:480, max:window.innerWidth - 100 };
 }
 
 function setDrawerWidth(width, remember) {

@@ -3,19 +3,19 @@
   <div class="scroll">
     <div id="cv-config-header">
       <div class="scroll-title">设置</div>
-      <div class="scroll-desc">维护当前工作区的信息、人员、系统集成与审计日志</div>
+      <div class="scroll-desc">维护人员、系统集成与审计日志</div>
     </div>
     <div class="config-layout">
       <aside class="config-nav">
         <div class="cv-config-nav-group">基础</div>
-        <button type="button" class="config-nav-item on" data-config-nav="workspace">工作区概况</button>
-        <button type="button" class="config-nav-item" data-config-nav="perm">人员</button>
+        <button type="button" class="config-nav-item hidden" data-config-nav="workspace">工作区概况</button>
+        <button type="button" class="config-nav-item on" data-config-nav="perm">人员</button>
         <div class="cv-config-nav-group">管理</div>
         <button type="button" class="config-nav-item" data-config-nav="integration">系统集成</button>
         <button type="button" class="config-nav-item" data-config-nav="audit">审计日志</button>
       </aside>
       <div class="config-main">
-        <div class="config-pane" data-config-pane="workspace">
+        <div class="config-pane hidden" data-config-pane="workspace">
           <div class="cv-ws-settings-heading"><strong>基本信息</strong><span>只有创建者和管理员可以修改工作区设置</span><button type="submit" form="cv-ws-settings-form" class="sync-btn">保存</button></div>
           <form class="cv-ws-settings-form" id="cv-ws-settings-form">
             <div class="cv-ws-settings-row"><label for="cv-ws-settings-name">名称 <span aria-hidden="true">*</span></label><input id="cv-ws-settings-name" type="text" maxlength="60" required></div>
@@ -37,7 +37,7 @@
             <div class="cv-ws-delete-actions"><button type="button" id="cv-ws-delete-cancel">取消</button><button type="button" id="cv-ws-delete-confirm" disabled>永久删除</button></div>
           </dialog>
         </div>
-        <div class="config-pane hidden" data-config-pane="perm">
+        <div class="config-pane" data-config-pane="perm">
           <div class="cv-head">
             <div>
               <div class="cv-sec-title">人员</div>

@@ -14,6 +14,7 @@ import { tkEnsureWorkspaceDemoTasks, tkPruneOrphanTasks, tkSyncPeople } from './
 import { taskViewState } from './ui-state.js';
 import { initTaskListDisplayEvents, initTaskListFilterEvents, initTaskListRowEvents } from './list.js';
 import { initTaskCreateEvents } from './create.js';
+import { initTkFormExpertPicker } from './expert-picker.js';
 
 import { initTaskListVersion } from './list-version.js';
 import { $, $$ } from '../../core/dom.js';
@@ -34,7 +35,10 @@ import _iconDoc from '../../../assets/file-type-icons/doc.png';
 import _iconHtml from '../../../assets/file-type-icons/html.png';
 import _iconImage from '../../../assets/file-type-icons/image.png';
 import _iconExcel from '../../../assets/file-type-icons/excel.png';
-var _artifactIcons = { requirements:_iconDocument, plan:_iconDocument, technical:_iconDoc, architecture:_iconHtml, prototype:_iconImage, test:_iconExcel, delivery:_iconDocument };
+import _iconMarkdown from '../../../assets/file-type-icons/markdown.png';
+import _iconPdf from '../../../assets/file-type-icons/pdf.png';
+import _iconPpt from '../../../assets/file-type-icons/ppt.png';
+var _artifactIcons = { requirements:_iconMarkdown, plan:_iconDocument, technical:_iconDoc, architecture:_iconHtml, prototype:_iconImage, test:_iconExcel, delivery:_iconPdf };
 import {
   TK_STATUSES, TK_PRIORITIES, TK_PEOPLE, TK_AGENTS, TK_LABELS,
   TK_VIEWS, TK_FILTER_FIELDS, TK_OPERATORS, TK_TASKS, tkCurrentUserId, tkPeopleInProject, tkProjectsForCurrentUser,
@@ -55,7 +59,7 @@ var LIST_FIELDS = [
 ];
 var DEFAULT_LIST_FIELD_ORDER = LIST_FIELDS.map(function(field) { return field.id; });
 var state = {
-  layout: 'list', viewMode: 'slide', scope: 'all', groupBy: 'status', sortBy: 'createDate', sortDir: 'desc',
+  layout: 'board', viewMode: 'slide', scope: 'all', groupBy: 'status', sortBy: 'createDate', sortDir: 'desc',
   search: '', filters: [], selectedIds: new Set(), activeViewId: 'all',
   showSubtasks: true,
   cardProperties: { priority:true, description:false, assignee:true, startDate:false, dueDate:true, project:false, labels:false, childProgress:true },
@@ -67,6 +71,8 @@ var projectListProjectId = '';
 var layoutBeforeProjectList = null;
 var els = {};
 var drawerPreferredWidth = null;
+var docPreviewCloseTimer = null;
+var docPreviewSavedDrawerWidth = null;
 var collapsedParents = new Set();
 var subtaskSectionExpanded = new Map();
 var flowAssigneeDraft = { taskId: null, assigneeId: '' };
@@ -86,14 +92,11 @@ var TASK_START_CHAT_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill
 var taskStartLegacy = false;
 
 var TASK_HEADER_RETRY_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 7v5h-5"/><path d="M20 12a8 8 0 1 0-2.3 5.7"/></svg>';
-var TASK_HEADER_VIEW_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"/><circle cx="12" cy="12" r="2.5"/></svg>';
 function taskHeaderAction(task) {
   if (!task) return null;
   return {
     planned:{label:'加入待办',action:'queue',icon:TASK_START_PLAY_ICON},
     backlog:{label:'开始执行',action:'start',icon:TASK_START_PLAY_ICON},
-    blocked:{label:'查看异常',action:'view-exception',icon:TASK_HEADER_VIEW_ICON},
-    done:{label:'查看结果',action:'view-result',icon:TASK_HEADER_VIEW_ICON},
   }[task.status] || null;
 }
 
@@ -246,8 +249,7 @@ function handleTaskHeaderAction() {
     var report = action === 'view-result' ? els.tkDrawerBody.querySelector('.tk-exec-card-report') : null;
     if (report) report.open = true;
     (report || els.tkDrawerBody.querySelector('.tk-feed-stage-overview'))?.scrollIntoView({behavior:'smooth',block:'start'});
-  } else if (action === 'view-exception') viewBlockedTaskSession(task);
-  else if (action === 'retry') retryBlockedTask(task);
+  } else if (action === 'retry') retryBlockedTask(task);
 }
 function returnToTaskDetail(task) {
   var taskView = document.getElementById('view-tasks');
@@ -1594,9 +1596,10 @@ function renderDocPreviewContent(artifact) {
     ['文档编号', artifact.docNo], ['版本', artifact.version], ['状态', artifact.status],
     ['作者', artifact.author], ['评审人', artifact.reviewer], ['更新时间', artifact.date],
   ].filter(function (item) { return item[1]; });
-  return '<div class="tk-doc-preview-head">' +
+  return '<div class="tk-doc-preview-resize" id="tkDocPreviewResize" role="separator" aria-orientation="vertical" aria-label="调整文档预览宽度" tabindex="0"></div>' +
+    '<div class="tk-doc-preview-head">' +
       '<div class="tk-doc-preview-title">' +
-        '<span class="tk-doc-preview-icon"><img src="' + (_artifactIcons[artifact.id] || _iconDocument) + '" width="20" height="20" alt=""></span>' +
+        '<span class="tk-doc-preview-icon"><img src="' + (_artifactIcons[artifact.id] || _iconDocument) + '" alt=""></span>' +
         '<div><strong>' + escapeHtml(artifact.type) + '</strong><span>' + escapeHtml(artifact.summary) + '</span></div>' +
       '</div>' +
       '<button type="button" class="tk-doc-preview-close" id="tkDocPreviewClose" aria-label="关闭文档预览" data-tooltip="关闭">' +
@@ -1620,13 +1623,13 @@ function renderDocPreviewContent(artifact) {
 }
 /* 文档预览挂在详情面板上（与头部同级），从右侧占位弹出，高度与任务窗口一致。 */
 function docPreviewPanel() {
-  var panel = els.tkDrawer.querySelector(':scope > #tkDocPreview');
+  var panel = els.tkDrawerBody.querySelector(':scope > #tkDocPreview');
   if (!panel) {
     panel = document.createElement('aside');
     panel.className = 'tk-doc-preview';
     panel.id = 'tkDocPreview';
     panel.setAttribute('aria-label', '产物文档预览');
-    els.tkDrawer.appendChild(panel);
+    els.tkDrawerBody.appendChild(panel);
   }
   return panel;
 }
@@ -1636,28 +1639,99 @@ function openDocPreview(artifact) {
   panel.innerHTML = renderDocPreviewContent(artifact);
   panel.dataset.artifactId = artifact.id;
   panel.querySelector('.tk-doc-preview-body').scrollTop = 0;
-  els.tkDrawer.classList.add('has-doc-preview');
+  panel.style.width = '';
   panel.classList.add('show');
+  expandDrawerForDocPreview(panel);
   els.tkDrawerBody.querySelectorAll('[data-artifact-preview]').forEach(function (row) {
     row.classList.toggle('is-previewing', row.getAttribute('data-artifact-preview') === artifact.id);
   });
   var closeBtn = panel.querySelector('#tkDocPreviewClose');
   if (closeBtn) closeBtn.addEventListener('click', closeDocPreview);
+  var resize = panel.querySelector('#tkDocPreviewResize');
+  if (resize) initDocPreviewResize(resize, panel);
+}
+function expandDrawerForDocPreview(panel) {
+  var drawerWidth = els.tkDrawer.getBoundingClientRect().width;
+  var viewportWidth = window.innerWidth;
+  var docWidth = panel.style.width ? parseFloat(panel.style.width) : Math.min(880, viewportWidth * 0.8);
+  var sidebar = els.tkDrawerBody.querySelector(':scope > .tk-drawer-sidebar:not(.hidden)');
+  var sidebarWidth = sidebar ? sidebar.offsetWidth : 0;
+  var mainWidth = drawerWidth - sidebarWidth - docWidth;
+  var minMain = 500;
+  if (mainWidth < minMain) {
+    var needed = minMain + sidebarWidth + docWidth;
+    if (needed > viewportWidth) {
+      docWidth = Math.max(320, viewportWidth - minMain - sidebarWidth);
+      panel.style.width = docWidth + 'px';
+      needed = minMain + sidebarWidth + docWidth;
+    }
+    docPreviewSavedDrawerWidth = drawerWidth;
+    els.tkDrawer.style.setProperty('--tk-drawer-width', Math.min(needed, viewportWidth) + 'px');
+  } else {
+    docPreviewSavedDrawerWidth = null;
+  }
 }
 function closeDocPreview() {
-  var panel = els.tkDrawer.querySelector(':scope > #tkDocPreview');
+  var panel = els.tkDrawerBody.querySelector(':scope > #tkDocPreview');
   if (!panel) return;
   panel.classList.remove('show');
-  els.tkDrawer.classList.remove('has-doc-preview');
   delete panel.dataset.artifactId;
   els.tkDrawerBody.querySelectorAll('.is-previewing').forEach(function (row) { row.classList.remove('is-previewing'); });
+  panel.style.width = '';
+  if (docPreviewSavedDrawerWidth != null) {
+    els.tkDrawer.style.setProperty('--tk-drawer-width', docPreviewSavedDrawerWidth + 'px');
+    docPreviewSavedDrawerWidth = null;
+  }
   clearTimeout(docPreviewCloseTimer);
   docPreviewCloseTimer = setTimeout(function () {
     if (panel && !panel.classList.contains('show')) panel.innerHTML = '';
   }, 250);
 }
+function docPreviewWidthBounds() {
+  var bodyWidth = els.tkDrawerBody.getBoundingClientRect().width;
+  return { min:320, max:Math.max(320, bodyWidth - 500) };
+}
+function setDocPreviewWidth(panel, width) {
+  var bounds = docPreviewWidthBounds();
+  var next = Math.round(Math.min(bounds.max, Math.max(bounds.min, width)));
+  panel.style.width = next + 'px';
+}
+function initDocPreviewResize(handle, panel) {
+  handle.addEventListener('pointerdown', function (e) {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    var pointerId = e.pointerId;
+    var startX = e.clientX;
+    var startWidth = panel.getBoundingClientRect().width;
+    handle.setPointerCapture(pointerId);
+    panel.classList.add('resizing');
+    document.body.classList.add('tk-drawer-resizing');
+    function move(ev) {
+      if (ev.pointerId !== pointerId) return;
+      setDocPreviewWidth(panel, startWidth + startX - ev.clientX);
+    }
+    function end(ev) {
+      if (ev.pointerId !== pointerId) return;
+      handle.removeEventListener('pointermove', move);
+      handle.removeEventListener('pointerup', end);
+      handle.removeEventListener('pointercancel', end);
+      if (handle.hasPointerCapture(pointerId)) handle.releasePointerCapture(pointerId);
+      panel.classList.remove('resizing');
+      document.body.classList.remove('tk-drawer-resizing');
+    }
+    handle.addEventListener('pointermove', move);
+    handle.addEventListener('pointerup', end);
+    handle.addEventListener('pointercancel', end);
+  });
+  handle.addEventListener('keydown', function (e) {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    e.preventDefault();
+    var current = panel.getBoundingClientRect().width;
+    setDocPreviewWidth(panel, current + (e.key === 'ArrowLeft' ? 24 : -24));
+  });
+}
 function drawerWidthBounds() {
-  return { min:480, max:Math.max(480, window.innerWidth - 240) };
+  return { min:480, max:window.innerWidth - 100 };
 }
 function setDrawerWidth(width, remember) {
   var bounds = drawerWidthBounds();
@@ -1831,7 +1905,7 @@ function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml,
         + '<span class="tk-feed-stage-name">' + escapeHtml(stage.name) + '</span><span class="tk-feed-stage-state">' + label + '</span>'
         + (task.status === 'in_review' && state === 'review' && !legacyDetailPreview && taskDetailVersion === 'latest'
           ? '<span class="tk-feed-stage-review-actions"><button type="button" class="tk-feed-stage-review-btn" data-stage-review-status="done" aria-label="通过' + escapeHtml(stage.name) + '审核，进入下一步">下一步</button><button type="button" class="tk-feed-stage-review-btn is-reject" data-stage-review-status="in_progress" aria-label="退回修改' + escapeHtml(stage.name) + '，跳转会话二次修改">修改</button></span>' : '')
-        + (task.status === 'blocked' && state === 'blocked' && task.blockedRun && latestLayout
+        + (task.status === 'blocked' && state === 'blocked' && latestLayout
           ? '<span class="tk-feed-stage-review-actions"><button type="button" class="tk-feed-stage-review-btn" data-stage-view-session aria-label="查看' + escapeHtml(stage.name) + '的会话详情与执行异常">查看会话</button></span>' : '') + '</li>';
     }).join('') + '</ol>'
     + (latestLayout ? '' : '<div class="tk-exec-card-feedback">' + feedback + nextAction + '</div>')
@@ -1915,7 +1989,7 @@ function renderTaskSystemFeedGroup(events, isLatest) {
   var id = 'act-' + events[0].time.replace(/[^0-9]/g, '') + '-' + events.length;
   var userExpanded = _expandedActivityIds.has(id);
   var userCollapsed = _collapsedActivityIds.has(id);
-  var expanded = userExpanded ? true : userCollapsed ? false : isLatest;
+  var expanded = userExpanded ? true : userCollapsed ? false : true;
   var count = events.length;
   if (!expanded) {
     return '<div class="tk-feed-activity-block" data-activity-id="' + id + '">'
@@ -2098,12 +2172,14 @@ function taskCommentTimestamp() {
 }
 
 export function openTaskDetail(taskId) { openDrawer(Number(taskId)); }
+/* 从会话关联标签跳转：跳过项目权限检查（会话已建立关联，视为有权查看） */
+export function openTaskDetailFromSession(taskId) { openDrawer(Number(taskId), false, true); }
 
-function openDrawer(taskId, legacyMode) {
+function openDrawer(taskId, legacyMode, skipProjectCheck) {
   closeTaskLabelPicker();
   var t = tkGetTasks().find(function (x) { return x.id === taskId; });
   if (!t) return;
-  if (!tkProjectsForCurrentUser().some(function (project) { return project.id === t.project; })) { toast('未加入该项目，无法查看任务', 'warning'); return; }
+  if (!skipProjectCheck && !tkProjectsForCurrentUser().some(function (project) { return project.id === t.project; })) { toast('未加入该项目，无法查看任务', 'warning'); return; }
   if (legacyMode === true) legacyDetailPreview = true;
   else if (lastOpenedTaskId !== taskId) legacyDetailPreview = false;
   lastOpenedTaskId = taskId;
@@ -3334,7 +3410,7 @@ function bindEvents() {
         state.viewMode = ['slide','full','split'].includes(view.viewMode) ? view.viewMode : 'slide';
         state.sortBy = view.sortBy || 'createDate';
         state.sortDir = view.sortDir || 'desc';
-        state.layout = view.layout || 'list';
+        state.layout = view.layout || 'board';
         state.showSubtasks = view.showSubtasks !== false;
         state.cardProperties = Object.assign({}, state.cardProperties, view.cardProperties || {});
         if (Array.isArray(view.listFieldOrder)) state.listFieldOrder = Array.from(new Set(view.listFieldOrder.filter(function(id) { return DEFAULT_LIST_FIELD_ORDER.includes(id); }))).concat(DEFAULT_LIST_FIELD_ORDER.filter(function(id) { return !view.listFieldOrder.includes(id); }));
@@ -3782,6 +3858,9 @@ export function initTasksV2() {
   tkPruneOrphanTasks();
   tkSyncPeople();
   cacheEls();
+  /* 任务详情抽屉移至 body 顶层，使其在任意视图上都能叠加显示（原在 #view-tasks 内，父级 hidden 时 fixed 也不可见） */
+  if (els.tkDrawer && els.tkDrawer.parentNode !== document.body) document.body.appendChild(els.tkDrawer);
+  if (els.tkDrawerClickaway && els.tkDrawerClickaway.parentNode !== document.body) document.body.appendChild(els.tkDrawerClickaway);
   initTaskListVersion(function () {
     render();
     if (!els.tkFieldsPopover.classList.contains('hidden')) renderFieldSettings();
@@ -3797,6 +3876,7 @@ export function initTasksV2() {
   } catch (e) { /* 本地存储不可用时使用默认宽度 */ }
   applyDrawerWidth();
   fillSelects();
+  initTkFormExpertPicker();
   bindEvents();
   render();
   document.addEventListener('cv-workspace-change',()=>{

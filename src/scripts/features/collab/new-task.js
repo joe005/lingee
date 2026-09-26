@@ -18,8 +18,28 @@ let ntTags = [];
 let ntProjectId = '';
 let ntTeamId = '';
 let ntAssignee = '';
-let ntTagEditing = false;
 let ntExecMode = '单人执行';
+
+/* 标签：与任务详情 labelPicker 共用同一套调色板、哈希算法和预设目录 */
+const NT_LABEL_PALETTE = ['#ef4444','#f97316','#eab308','#22c55e','#14b8a6','#3b82f6','#6366f1','#a855f7','#ec4899','#64748b'];
+const NT_LABELS = ['需求', '缺陷'];
+const ntLabelColors = {};
+let ntLabelMenu = null;
+function ntLabelColor(name) {
+  if (ntLabelColors[name]) return ntLabelColors[name];
+  var hash = 0;
+  for (var i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
+  return NT_LABEL_PALETTE[hash % NT_LABEL_PALETTE.length];
+}
+function ntLabelTextColor(color) {
+  var r = parseInt(color.slice(1, 3), 16), g = parseInt(color.slice(3, 5), 16), b = parseInt(color.slice(5, 7), 16);
+  return (r * .299 + g * .587 + b * .114) / 255 > .55 ? '#111827' : '#f9fafb';
+}
+function ntLabelCatalog() {
+  var set = new Set(NT_LABELS.concat(ntTags));
+  CV_TASKS.forEach(function(t) { (t.tags || []).forEach(function(tag) { set.add(tag); }); });
+  return Array.from(set);
+}
 let ntExpertPlan = [];
 let ntParentTaskId = '';
 let ntParentIsGroup = false;
@@ -32,10 +52,7 @@ function ntRenderFiles() {
   if (!el) return;
   const count = document.getElementById('cv-nt-attach-count');
   if (count) count.textContent = ntFiles.length ? String(ntFiles.length) : '';
-  if (!ntFiles.length) {
-    el.innerHTML = '<button type="button" class="nt-attach-empty" data-nt-attach-trigger><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>点击或拖拽上传文件</span><small>支持 Ctrl+V 粘贴截图</small></button>';
-    return;
-  }
+  if (!ntFiles.length) { el.innerHTML = ''; return; }
   el.innerHTML = '<div class="nt-attach-grid">' + ntFiles.map((f, i) => '<span class="nt-attach-chip"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg><span class="nt-attach-name">' + xesc(f) + '</span><button type="button" class="nt-attach-x" data-nt-file="' + i + '">×</button></span>').join('') + '<button type="button" class="nt-attach-more" data-nt-attach-trigger title="继续添加"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button></div>';
 }
 function ntAddFile() {
@@ -46,39 +63,87 @@ function ntAddFile() {
   inp.click();
 }
 
-/* 标签 */
-function ntRenderTagList() {
-  const el = document.getElementById('cv-nt-tag-list');
+/* 标签：弹出层选择器，与任务详情 labelPicker 交互一致 */
+function ntRenderTags() {
+  var el = document.getElementById('cv-nt-tags-trigger');
   if (!el) return;
-  el.innerHTML = ntTags.map((t, i) => '<span class="nt-chip nt-chip--tag">' + xesc(t) + '<button type="button" class="nt-tag-x" data-nt-tag-x="' + i + '">×</button></span>').join('');
+  el.innerHTML = ntTags.length ? ntTags.map(function(name) {
+    var color = ntLabelColor(name);
+    return '<span class="tk-drawer-label" style="background:' + color + ';color:' + ntLabelTextColor(color) + '"><span>' + xesc(name) + '</span><button type="button" class="tk-drawer-label-remove" data-nt-label-remove="' + xesc(name) + '" aria-label="移除标签 ' + xesc(name) + '">×</button></span>';
+  }).join('') : '<span class="tk-label-placeholder"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3h9l9 9-9 9-9-9z"/><circle cx="8" cy="8" r="1"/></svg>添加标签</span>';
 }
-function ntCommitTag(inp) {
-  const v = inp.value.trim();
-  if (v) ntTags.push(v);
-  if (inp.parentNode) inp.remove();
-  ntTagEditing = false;
-  const btn = document.getElementById('cv-nt-addtag');
-  if (btn) btn.style.display = '';
-  ntRenderTagList();
+function ntCloseLabelPicker() {
+  if (ntLabelMenu) ntLabelMenu.remove();
+  ntLabelMenu = null;
+  var trigger = document.getElementById('cv-nt-tags-trigger');
+  if (trigger) trigger.setAttribute('aria-expanded', 'false');
 }
-function ntStartAddTag() {
-  if (ntTagEditing) return;
-  ntTagEditing = true;
-  const wrap = document.getElementById('cv-nt-tags');
-  const btn = document.getElementById('cv-nt-addtag');
-  if (!wrap || !btn) return;
-  btn.style.display = 'none';
-  const inp = document.createElement('input');
-  inp.type = 'text';
-  inp.className = 'nt-tag-input';
-  inp.placeholder = '输入标签，回车确认';
-  inp.addEventListener('keydown', e => {
-    if (e.key === 'Enter') { e.preventDefault(); ntCommitTag(inp); }
-    else if (e.key === 'Escape') { inp.remove(); ntTagEditing = false; btn.style.display = ''; }
+function ntRenderLabelChoices(query) {
+  if (!ntLabelMenu) return;
+  var normalized = (query || '').trim().toLocaleLowerCase();
+  var labels = ntLabelCatalog().filter(function(name) { return name.toLocaleLowerCase().includes(normalized); });
+  var list = ntLabelMenu.querySelector('.tk-label-picker-options');
+  list.innerHTML = labels.map(function(name) {
+    var selected = ntTags.includes(name);
+    return '<button type="button" class="tk-label-option' + (selected ? ' selected' : '') + '" data-nt-label-option="' + xesc(name) + '" role="option" aria-selected="' + selected + '"><span class="tk-label-color" style="background:' + ntLabelColor(name) + '"></span><span class="tk-label-option-name">' + xesc(name) + '</span><span class="tk-label-check">' + (selected ? '✓' : '') + '</span></button>';
+  }).join('');
+  var exact = ntLabelCatalog().some(function(name) { return name.toLocaleLowerCase() === normalized; });
+  if (normalized && !exact) list.innerHTML += '<button type="button" class="tk-label-option tk-label-create" data-nt-label-create="' + xesc(query.trim()) + '"><span class="tk-label-create-plus">＋</span><span class="tk-label-option-name">创建“' + xesc(query.trim()) + '”</span><span class="tk-label-color" style="background:' + ntLabelColor(query.trim()) + '"></span></button>';
+  if (!list.innerHTML) list.innerHTML = '<div class="tk-label-picker-empty">没有匹配的标签</div>';
+}
+function ntOpenLabelPicker() {
+  ntCloseLabelPicker();
+  var trigger = document.getElementById('cv-nt-tags-trigger');
+  if (!trigger) return;
+  ntLabelMenu = document.createElement('div');
+  ntLabelMenu.className = 'tk-label-popover';
+  ntLabelMenu.innerHTML = '<div class="tk-label-search-wrap"><input type="search" class="tk-label-search" placeholder="搜索标签…" aria-label="搜索标签" autocomplete="off"></div><div class="tk-label-picker-options" role="listbox" aria-multiselectable="true"></div>';
+  ntRenderLabelChoices('');
+  ntLabelMenu.addEventListener('input', function(e) {
+    if (e.target.classList.contains('tk-label-search')) ntRenderLabelChoices(e.target.value);
   });
-  inp.addEventListener('blur', () => { if (document.body.contains(inp)) ntCommitTag(inp); });
-  wrap.appendChild(inp);
-  inp.focus();
+  ntLabelMenu.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); ntCloseLabelPicker(); return; }
+    if (e.isComposing) return;
+    if (e.key === 'Enter' && e.target.classList.contains('tk-label-search')) {
+      var first = ntLabelMenu.querySelector('.tk-label-option');
+      if (first) { e.preventDefault(); first.click(); }
+    }
+    if (e.key === 'ArrowDown' && e.target.classList.contains('tk-label-search')) {
+      var opt = ntLabelMenu.querySelector('.tk-label-option');
+      if (opt) { e.preventDefault(); opt.focus(); }
+    }
+    var focusedOption = e.target.closest('.tk-label-option');
+    if (focusedOption && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+      e.preventDefault();
+      var options = Array.from(ntLabelMenu.querySelectorAll('.tk-label-option'));
+      var idx = options.indexOf(focusedOption) + (e.key === 'ArrowDown' ? 1 : -1);
+      if (options[idx]) options[idx].focus();
+      else ntLabelMenu.querySelector('.tk-label-search').focus();
+    }
+  });
+  ntLabelMenu.addEventListener('click', function(e) {
+    var option = e.target.closest('[data-nt-label-option]');
+    var create = e.target.closest('[data-nt-label-create]');
+    if (!option && !create) return;
+    var name = option ? option.getAttribute('data-nt-label-option') : create.getAttribute('data-nt-label-create');
+    if (ntTags.indexOf(name) >= 0) ntTags = ntTags.filter(function(t) { return t !== name; });
+    else ntTags.push(name);
+    ntRenderTags();
+    var search = ntLabelMenu.querySelector('.tk-label-search');
+    if (search) {
+      if (create) search.value = '';
+      ntRenderLabelChoices(search.value);
+      search.focus({ preventScroll: true });
+    }
+  });
+  document.body.appendChild(ntLabelMenu);
+  ntRenderLabelChoices('');
+  var rect = trigger.getBoundingClientRect();
+  ntLabelMenu.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - ntLabelMenu.offsetWidth - 8)) + 'px';
+  ntLabelMenu.style.top = Math.max(8, Math.min(rect.bottom + 4, window.innerHeight - ntLabelMenu.offsetHeight - 8)) + 'px';
+  trigger.setAttribute('aria-expanded', 'true');
+  ntLabelMenu.querySelector('input').focus({ preventScroll: true });
 }
 
 /* 项目 → 专家团：一个项目只绑定一个专家团 */
@@ -307,10 +372,7 @@ export function cvOpenNewTask(status, ctx) {
   document.getElementById('cv-nt-agent-messages').innerHTML = '<p class="nt-agent-welcome">说出想完成的事，我会先整理成草稿。你可以继续补充，也可以直接编辑左侧内容。</p>';
   document.getElementById('cv-nt-priority').value = '中';
   document.getElementById('cv-nt-more').open = false;
-  const tagInput = document.querySelector('#cv-nt-tags .nt-tag-input');
-  if (tagInput) tagInput.remove();
-  ntTagEditing = false;
-  document.getElementById('cv-nt-addtag').style.display = '';
+  ntCloseLabelPicker();
   const chip = document.getElementById('cv-nt-status-chip');
   if (chip) chip.textContent = NT_STATUS_LABELS[ntStatus] || '待开始';
   const statusProperty = document.getElementById('cv-nt-status-property');
@@ -331,7 +393,7 @@ export function cvOpenNewTask(status, ctx) {
     const suffix = document.getElementById('cv-nt-parent-suffix');
     if (suffix) suffix.textContent = ntParentIsGroup ? '下创建子任务' : '新增子任务';
   }
-  ntRenderTagList();
+  ntRenderTags();
   ntRenderTeam(); ntRenderPeople(); ntRenderGroups();
   const groupSelect = document.getElementById('cv-nt-group');
   if (groupSelect && ctx?.groupId && Array.from(groupSelect.options).some(option => option.value === ctx.groupId)) groupSelect.value = ctx.groupId;
@@ -500,18 +562,29 @@ export function initNewTask() {
       ntRenderFiles();
     });
   }
-  const addtag = document.getElementById('cv-nt-addtag');
-  if (addtag) addtag.addEventListener('click', ntStartAddTag);
-  document.getElementById('cv-nt-tags-trigger')?.addEventListener('click', () => {
+  const tagsTrigger = document.getElementById('cv-nt-tags-trigger');
+  if (tagsTrigger) {
+    tagsTrigger.addEventListener('click', function(e) {
+      if (e.target.closest('[data-nt-label-remove]')) {
+        var name = e.target.closest('[data-nt-label-remove]').getAttribute('data-nt-label-remove');
+        ntTags = ntTags.filter(function(t) { return t !== name; });
+        ntRenderTags();
+        return;
+      }
+      ntOpenLabelPicker();
+    });
+    tagsTrigger.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); ntOpenLabelPicker(); }
+    });
+  }
+  document.getElementById('cv-nt-addtag')?.addEventListener('click', function() {
     document.getElementById('cv-nt-more').open = true;
-    ntStartAddTag();
+    ntOpenLabelPicker();
+  });
+  document.addEventListener('click', function(e) {
+    if (ntLabelMenu && !ntLabelMenu.contains(e.target) && !tagsTrigger?.contains(e.target)) ntCloseLabelPicker();
   });
   document.getElementById('cv-nt-attach-trigger')?.addEventListener('click', ntAddFile);
-  const tagList = document.getElementById('cv-nt-tag-list');
-  if (tagList) tagList.addEventListener('click', e => {
-    const x = e.target.closest('[data-nt-tag-x]');
-    if (x) { ntTags.splice(+x.getAttribute('data-nt-tag-x'), 1); ntRenderTagList(); }
-  });
   const peopleBtn = document.getElementById('cv-nt-people-btn');
   const peopleMenu = document.getElementById('cv-nt-people-menu');
   if (peopleBtn) {

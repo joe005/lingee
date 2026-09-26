@@ -39,7 +39,7 @@ function forgetWorkspaceAudit(id){
 function filteredAuditLog(){
   const category=$('#cv-audit-category')?.value||'';
   const query=($('#cv-audit-search')?.value||'').trim().toLocaleLowerCase();
-  return entries.filter(row=>(row.workspace||'ws-build')===cvWorkspace&&(!category||row.category===category)&&(!query||[row.actor,row.detail,CATEGORIES[row.category]].join(' ').toLocaleLowerCase().includes(query)));
+  return entries.filter(row=>(!cvWorkspace||(row.workspace||'ws-build')===cvWorkspace)&&(!category||row.category===category)&&(!query||[row.actor,row.detail,CATEGORIES[row.category]].join(' ').toLocaleLowerCase().includes(query)));
 }
 
 function auditTime(iso){
@@ -55,7 +55,7 @@ function renderAuditLog(){
   const rows=filteredAuditLog();
   if(count)count.textContent=String(rows.length);
   body.innerHTML=rows.length?rows.map(row=>'<tr><td><time datetime="'+xesc(row.at)+'">'+xesc(auditTime(row.at))+'</time></td><td>'+xesc(row.actor||'当前用户')+'</td><td>'+CATEGORIES[row.category]+'</td><td>'+xesc(row.detail)+'</td></tr>').join('')
-    :'<tr><td colspan="4" class="cv-audit-empty">'+(entries.some(row=>(row.workspace||'ws-build')===cvWorkspace)?'没有匹配的配置记录':'当前工作区暂无配置变更记录。')+'</td></tr>';
+    :'<tr><td colspan="4" class="cv-audit-empty">'+(entries.some(row=>!cvWorkspace||(row.workspace||'ws-build')===cvWorkspace)?'没有匹配的配置记录':'暂无配置变更记录。')+'</td></tr>';
 }
 
 function csvCell(value){

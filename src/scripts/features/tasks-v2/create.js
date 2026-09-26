@@ -5,6 +5,7 @@ import { TK_STATUSES, TK_PRIORITIES, tkProjectsForCurrentUser, TK_PEOPLE, tkPeop
 import { toast } from '../../core/toast.js';
 import { projectListProjectId, render } from './list.js';
 import { openDrawer } from './issue-detail.js';
+import { getTkFormExpertSelection, resetTkFormExpertPicker } from './expert-picker.js';
 
 function fillSelects() {
   function fill(el, arr, valKey, labelKey) {
@@ -57,6 +58,7 @@ function openTaskModal(taskId, parentId) {
     }
   }
   updateSaveButtonState();
+  resetTkFormExpertPicker();
   els.tkModalOverlay.classList.remove('hidden');
   requestAnimationFrame(function () { els.tkModalOverlay.classList.add('show'); });
 }
@@ -79,6 +81,9 @@ function saveTask() {
     assignee: els.tkFormAssignee.value, project: els.tkFormProject.value,
     dueDate: els.tkFormDue.value, labels: labels,
   };
+  var expertSel = getTkFormExpertSelection();
+  data.expertTeam = expertSel.teamId;
+  data.expertPlan = expertSel.plan;
   if (taskViewState.editingTaskId) { tkUpdateTask(taskViewState.editingTaskId, data); }
   else {
     data.createDate = '2026-09-23';

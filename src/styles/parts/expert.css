@@ -182,7 +182,6 @@
   font-size: 11px; color: var(--text-soft); padding: 10px 10px 5px;
   display: flex; align-items: baseline; gap: 8px;
 }
-.pick-group-note { font-size: 10.5px; color: var(--text-soft); opacity: .8; }
 .x-opt-av { width: 24px; height: 24px; border-radius: 7px; flex: none; }
 
 /* 标签行内的选择器：标签即触发器 */

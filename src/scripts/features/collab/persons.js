@@ -1,6 +1,6 @@
 import { $ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
-import { CV_MEMBERS, CV_PROJECTS, CV_TASKS, cvIsMe, cvPeopleInWorkspace, cvPersistProjects, cvPersistWorkspaces, cvPersonById, cvWorkspace, cvWorkspaceById, cvWorkspaceRole } from './data.js';
+import { CV_MEMBERS, CV_PROJECTS, CV_TASKS, CV_WORKSPACES, cvIsMe, cvPeopleInWorkspace, cvPersistProjects, cvPersistWorkspaces, cvPersonById, cvWorkspace, cvWorkspaceById, cvWorkspaceRole } from './data.js';
 import { cvRenderProjectDetail, cvRenderProjectList } from './project-view.js';
 import { xesc } from '../expert/data.js';
 import { cvLinkLingeePerson, cvLinkedLingeePerson, cvPeopleSearchIsDemo, cvSearchLingeePeople } from './people-search.js';
@@ -67,16 +67,17 @@ function cvSavePersonEdit(){
 function cvDeletePerson(pid){
   var p=cvPersonById(pid); if(!p) return;
   if(cvIsMe(p)){ toast('不能移除自己','warning'); return; }
-  var workspace=cvWorkspaceById(cvWorkspace);
+  var workspace=cvWorkspaceById(cvWorkspace)||CV_WORKSPACES.find(function(w){return (w.peopleIds||[]).includes(pid);});
   if(!workspace?.peopleIds?.includes(pid))return;
+  var inScope=function(project){return !cvWorkspace||project.workspace===cvWorkspace;};
   if(cvWorkspaceRole(p)==='system_admin'&&cvPeopleInWorkspace().filter(function(row){return cvWorkspaceRole(row)==='system_admin';}).length<=1){toast('需保留至少一名管理员','warning');return;}
-  if(CV_PROJECTS.some(function(project){return project.workspace===cvWorkspace&&project.owner===p.name;})){toast('该人员仍是项目负责人，请先移交项目','warning');return;}
-  if(CV_TASKS.some(function(task){return task.kind!=='epic'&&CV_PROJECTS.some(function(project){return project.id===task.project&&project.workspace===cvWorkspace;})&&!['已完成','已取消'].includes(task.status)&&(task.assignee===p.name||(task.stagePlan||[]).some(function(stage){return stage.assignee===p.name;}));})){toast('该人员有待处理任务，请先完成或转交','warning');return;}
-  if(CV_PROJECTS.some(function(project){return project.workspace===cvWorkspace&&(project.members||[]).length===1&&project.members[0]===pid;})){
+  if(CV_PROJECTS.some(function(project){return inScope(project)&&project.owner===p.name;})){toast('该人员仍是项目负责人，请先移交项目','warning');return;}
+  if(CV_TASKS.some(function(task){return task.kind!=='epic'&&CV_PROJECTS.some(function(project){return project.id===task.project&&inScope(project);})&&!['已完成','已取消'].includes(task.status)&&(task.assignee===p.name||(task.stagePlan||[]).some(function(stage){return stage.assignee===p.name;}));})){toast('该人员有待处理任务，请先完成或转交','warning');return;}
+  if(CV_PROJECTS.some(function(project){return inScope(project)&&(project.members||[]).length===1&&project.members[0]===pid;})){
     toast('该人员是某项目的唯一成员，请先为项目添加其他成员','warning');return;
   }
   if(!window.confirm('确定移除「'+p.name+'」的协作关联吗？此操作不会删除灵基账号。'))return;
-  var affected=CV_PROJECTS.filter(function(project){return project.workspace===cvWorkspace&&project.members?.includes(pid);});
+  var affected=CV_PROJECTS.filter(function(project){return inScope(project)&&project.members?.includes(pid);});
   var previousMembers=affected.map(function(project){return project.members.slice();});
   var previousPeople=workspace.peopleIds.slice();
   var previousRoles={...workspace.roles};
@@ -96,7 +97,7 @@ function cvDeletePerson(pid){
 
 function cvSetWorkspaceRole(pid,role){
   var person=cvPersonById(pid);
-  var workspace=cvWorkspaceById(cvWorkspace);
+  var workspace=cvWorkspaceById(cvWorkspace)||CV_WORKSPACES.find(function(w){return (w.peopleIds||[]).includes(pid);});
   if(!person||!workspace?.peopleIds?.includes(pid)||!['member','system_admin'].includes(role))return;
   var previousRole=cvWorkspaceRole(person);
   if(previousRole===role)return;

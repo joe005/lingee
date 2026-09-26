@@ -4,11 +4,16 @@ import { navItems, showView } from '../core/view.js';
 import { chatAppDd, selectChatApp } from './attach-app.js';
 import { createArtifactCard, messagesList, scrollChatBottom } from './composer.js';
 import { EX, PRESET_TEAMS, STAGES, xav, xesc } from './expert/data.js';
+import { renderExpertChips } from './expert/chips.js';
+import { set_activePick } from './expert/store.js';
+import { openTaskDetailFromSession } from './tasks-v2/index.js';
 /* 侧边栏演示会话：苍穹应用开发专家团执行「苍穹采购订单开发」。
    阶段沿用专家团流程 STAGES，演示停在「编码实现」完成、等待进入「测试验证」。 */
 
 var TEAM_ID = 'cosmic-app-dev';
 var SESSION_TITLE = '苍穹采购订单开发';
+/* 会话关联的采购订单开发任务，点击标题旁标签可跳转任务详情 */
+var LINKED_TASK = { id: 1, code: 'T1000001', title: '采购订单列表页开发' };
 var USER_PROMPT = '帮我在苍穹上开发采购订单：录入供应商与物料明细，自动计算含税金额；'
   + '提交后走部门主管 → 采购经理两级审批，审核后可同步到供应商协同平台，并提供采购订单执行情况报表。';
 
@@ -134,12 +139,9 @@ function renderHandoff() {
   var nextIdx = STAGES.findIndex(function (s) { return s.id === DONE_UNTIL; }) + 1;
   var next = STAGES[nextIdx];
   return '<div class="ts-handoff">'
-    + '<div class="ts-handoff-b"><b>编码实现已完成，等待进入「' + xesc(next.name) + '」</b>'
-    + '<p>下一阶段由 ' + avatar('software-qa-engineer') + xesc(expertName('software-qa-engineer'))
-    + ' 认领，将按 12 条验收标准执行功能、审批流转与回归测试。确认后开始，也可以先预览单据或提出修改意见。</p></div>'
+    + '<div class="ts-handoff-b"><b>编码实现已完成，等待进入「' + xesc(next.name) + '」</b></div>'
     + '<div class="ts-handoff-actions">'
-    + '<button type="button" class="ts-btn" data-ts-action="changes">查看代码变更</button>'
-    + '<button type="button" class="ts-btn ts-btn--primary" data-ts-action="verify">开始' + xesc(next.name) + '</button>'
+    + '<button type="button" class="ts-btn ts-btn--primary" data-ts-action="verify">提交测试</button>'
     + '</div></div>';
 }
 
@@ -149,6 +151,12 @@ function openTeamSession() {
   showView('chat');
   navItems.forEach(function (n) { n.classList.remove('active'); });
   $('#chatTitle').textContent = SESSION_TITLE;
+  /* 标题旁关联任务标签：点击跳转任务详情 */
+  var taskTag = $('#chatHeaderTask');
+  if (taskTag) {
+    taskTag.innerHTML = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg><span class="chat-header-task-label">' + xesc(LINKED_TASK.code) + ' ' + xesc(LINKED_TASK.title) + '</span>';
+    taskTag.classList.remove('hidden');
+  }
   var empty = $('#chatEmpty');
   if (empty) empty.remove();
   messagesList.innerHTML = '';
@@ -174,6 +182,9 @@ function openTeamSession() {
 
   selectChatApp('采购订单管理');
   chatAppDd.classList.add('disabled');
+  /* 选中苍穹应用开发专家团 */
+  set_activePick({kind:'team', id:TEAM_ID, auto:false});
+  renderExpertChips();
   scrollChatBottom();
 }
 
@@ -197,7 +208,14 @@ export function initTeamSession() {
     if (output) { toast('原型演示：打开「' + output.getAttribute('data-ts-output') + '」'); return; }
     var action = e.target.closest('[data-ts-action]');
     if (!action) return;
-    if (action.getAttribute('data-ts-action') === 'verify') toast('原型演示：已通知软件测试工程师开始测试验证');
-    else toast('原型演示：本次共变更 12 个文件，+1,284 / -36 行');
+    if (action.getAttribute('data-ts-action') === 'verify') toast('原型演示：已提交测试，等待软件测试工程师认领');
+  });
+  /* 标题旁关联任务标签：点击打开任务详情 */
+  var taskTag = $('#chatHeaderTask');
+  if (taskTag) taskTag.addEventListener('click', function () { openTaskDetailFromSession(LINKED_TASK.id); });
+  /* 离开会话时隐藏关联任务标签 */
+  document.addEventListener('lingee:new-conversation', function () {
+    var tag = $('#chatHeaderTask');
+    if (tag) tag.classList.add('hidden');
   });
 }

@@ -10,7 +10,7 @@ import { cvSwitchView } from './view.js';
 const INTEGRATION_KEY='lingee-collab-integrations-v1';
 const PROVIDERS={devops:'DevOps',zentao:'禅道'};
 let mappings=[];
-function workspaceMappings(){return mappings.filter(row=>(row.workspace||'ws-build')===cvWorkspace);}
+function workspaceMappings(){return cvWorkspace?mappings.filter(row=>(row.workspace||'ws-build')===cvWorkspace):mappings;}
 
 function renderWorkspaceSettings(){
   const workspace=cvWorkspaceById(cvWorkspace);

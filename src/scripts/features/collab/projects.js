@@ -31,10 +31,10 @@ function cvRenderWsMenu(){
   }).join(''):'<div class="cv-ws-menu-empty">没有匹配的工作区</div>';
 }
 function cvRenderWorkspaceEntry(){
-  var active=!!cvWorkspace&&cvCanAccessWorkspace(cvWorkspace,cvCurrentUserName());
-  $('#view-collab')?.classList.toggle('cv-no-workspace',!active);
-  $('#cvWorkspaceOnboarding')?.classList.toggle('hidden',active);
-  var label=$('#cvWsLabel');if(label)label.textContent=active?cvWorkspaceName(cvWorkspace):'选择工作区';
+  /* 工作区入口已隐藏，默认展示全部工作区的数据，不再进入「无工作区」引导态 */
+  $('#view-collab')?.classList.remove('cv-no-workspace');
+  $('#cvWorkspaceOnboarding')?.classList.add('hidden');
+  var label=$('#cvWsLabel');if(label)label.textContent='全部工作区';
   cvSyncWorkspacePermissions();
 }
 function cvSetWorkspace(id){
@@ -127,7 +127,7 @@ function cvRenderProjectSettings(){
   var el=$('#cv-proj-settings');if(!el)return;
   el.innerHTML='<div class="cfg-table">'
     +'<div class="cfg-table-head cv-proj-head"><span>项目</span><span>优先级</span><span>负责人</span><span>代码仓库</span><span>里程碑</span><span>操作</span></div>'
-    +CV_PROJECTS.filter(function(p){return p.workspace===cvWorkspace;}).map(function(p){
+    +CV_PROJECTS.map(function(p){
       return '<div class="cfg-table-row cv-proj-row">'
         +'<span class="cfg-t-name">'+cvProjectFolderIcon(p.dot)+'<span>'+xesc(p.name)+(p.desc?'<em class="cv-proj-desc">'+xesc(p.desc)+'</em>':'')+'</span></span>'
         +'<span>'+xesc(p.priority||'未设置')+'</span>'

@@ -14,6 +14,7 @@
       <div class="nt-main" id="cv-nt-manual">
         <label class="nt-field nt-field--title" for="cv-nt-title"><span class="sr-only">任务标题</span><input type="text" autocomplete="off" class="nt-title" id="cv-nt-title" placeholder="任务标题" maxlength="120"></label>
         <label class="nt-field nt-field--desc" for="cv-nt-desc"><span class="sr-only">任务描述</span><textarea class="nt-desc" id="cv-nt-desc" rows="3" placeholder="添加描述..."></textarea></label>
+        <div class="nt-attach-drop nt-attach-drop--desc" id="cv-nt-file-list"></div>
         <div class="nt-expert-field hidden" id="cv-nt-experts-field">
           <div class="nt-section-head"><h3>专家分工 <span id="cv-nt-expert-count"></span></h3><span>为每位专家指定项目成员作为负责人</span></div>
           <div class="nt-expert-bar">
@@ -56,7 +57,7 @@
         </button>
         <div class="nt-person-menu" id="cv-nt-people-menu" hidden></div>
       </div>
-      <button type="button" class="nt-property nt-property--tags" id="cv-nt-tags-trigger">添加标签</button>
+      <div class="nt-property nt-property--tags" id="cv-nt-tags-trigger" role="button" tabindex="0" aria-haspopup="listbox" aria-expanded="false" aria-label="编辑标签"></div>
       <section class="nt-execution" id="cv-nt-execution" aria-labelledby="cv-nt-exec-title">
         <div class="nt-section-head"><h3 id="cv-nt-exec-title" class="sr-only">执行方式（必填）</h3></div>
         <div class="nt-seg" id="cv-nt-exec-mode" role="radiogroup" aria-labelledby="cv-nt-exec-title" aria-required="true">
@@ -68,7 +69,6 @@
         <summary aria-label="更多设置">···</summary>
         <div class="nt-more-body">
           <div class="nt-field"><span class="nt-label">标签</span><div class="nt-chips" id="cv-nt-tags"><span id="cv-nt-tag-list"></span><button type="button" class="nt-chip nt-chip--add" id="cv-nt-addtag">＋ 添加标签</button></div></div>
-          <div class="nt-field"><span class="nt-label">附件</span><div class="nt-attach" id="cv-nt-attach"><div class="nt-attach-drop" id="cv-nt-file-list"></div></div></div>
         </div>
       </details>
     </div>

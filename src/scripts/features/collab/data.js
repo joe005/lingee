@@ -32,6 +32,8 @@ var CV_ROLE_DEMO_PROJECTS=[
   {id:'demo-quality',name:'质量巡检平台',desc:'巡检计划、问题跟踪和整改闭环',goal:'让质量问题从发现到处理可追踪',dot:'green',defaultTeam:'general-app-dev',status:'in_progress',priority:'高',owner:'赵琳',repo:'',start:'2026-08-20',end:'2026-12-15',members:['p04','p22','p05'],workspace:'ws-app'}
 ];
 CV_PROJECTS.push(...CV_ROLE_DEMO_PROJECTS.map(function(project){return {...project,members:project.members.slice()};}));
+/* 种子项目快照：cvRestoreProjects 用 localStorage 覆盖 CV_PROJECTS 后，据此补回缺失的种子项目 */
+var CV_SEED_PROJECT_SNAPSHOT=CV_PROJECTS.map(function(p){return Object.assign({},p,{members:(p.members||[]).slice(),milestones:(p.milestones||[]).map(function(m){return Object.assign({},m);})});});
 
 /* 工作区：顶层的组织单元，项目归属工作区 */
 var CV_WORKSPACES=[
@@ -40,6 +42,8 @@ var CV_WORKSPACES=[
   {id:'ws-quality',name:'Build质量与安全组'},
   {id:'ws-skill',name:'Build智能体/Skills开发组'}
 ];
+/* 内置工作区快照：用户可能曾删除内置工作区，据此恢复 */
+var CV_SEED_WORKSPACE_SNAPSHOT=CV_WORKSPACES.map(function(w){return Object.assign({},w);});
 var CV_WORKSPACE_STORE_KEY='lingee-collab-workspaces-v1';
 var CV_ACTIVE_WORKSPACE_KEY='lingee-collab-active-workspace-v1';
 var CV_DELETED_WORKSPACE_KEY='lingee-collab-deleted-workspaces-v1';
@@ -63,8 +67,7 @@ function cvRestoreWorkspaces(){
         else CV_WORKSPACES.push({id:row.id,name:row.name,desc:row.desc||'',creatorId:row.creatorId||'',creatorName:row.creatorName||'',peopleIds:Array.isArray(row.peopleIds)?row.peopleIds:[],roles:row.roles||{},demoInitialized:!!row.demoInitialized});
       });
     }
-    var saved=localStorage.getItem(CV_ACTIVE_WORKSPACE_KEY);
-    if(saved&&cvWorkspaceById(saved))cvWorkspace=saved;
+    /* 工作区入口已隐藏：不再恢复上次选中的工作区，cvWorkspace 保持空串 = 全部工作区 */
   }catch(e){}
 }
 var cvProject='';                    /* 空串 = 全部项目（个人视角的聚合视图） */
@@ -80,11 +83,10 @@ function cvWorkspaceById(id){
   return null;
 }
 function cvWorkspaceName(id){ var w=cvWorkspaceById(id); return w?w.name:'未归属工作区'; }
-/* 项目是否属于当前工作区（cvWorkspace 为空 = 全部） */
+/* 始终展示全部项目，不按工作区筛选 */
 function cvProjectInWorkspace(projId){
-  if(!cvWorkspace) return true;
   var p=cvProjectById(projId);
-  return !!p && p.workspace===cvWorkspace;
+  return !!p;
 }
 function cvInProject(row){
   /* 工作区过滤：任务/评审所属项目须属于当前工作区 */
@@ -320,6 +322,7 @@ function cvWorkspaceMembers(workspace){
     .flatMap(function(project){return project.members||[];})));
 }
 function cvPeopleInWorkspace(){
+  if(!cvWorkspace) return CV_MEMBERS.slice();
   var workspace=cvWorkspaceById(cvWorkspace);
   var ids=cvWorkspaceMembers(workspace);
   return CV_MEMBERS.filter(function(person){return ids.includes(person.id);});
@@ -490,7 +493,10 @@ function cvDeleteWorkspaceData(id){
 /* 预置数据由源码加载；已删除的工作区不应在下次打开时重新生成任务。 */
 function cvPruneDeletedWorkspaceData(){
   var deleted=new Set(cvDeletedWorkspaceIds());
-  for(var i=CV_PROJECTS.length-1;i>=0;i--)if(deleted.has(CV_PROJECTS[i].workspace))CV_PROJECTS.splice(i,1);
+  var seedIds=new Set(CV_SEED_PROJECT_SNAPSHOT.map(function(p){return p.id;}));
+  for(var i=CV_PROJECTS.length-1;i>=0;i--){
+    if(deleted.has(CV_PROJECTS[i].workspace)&&!seedIds.has(CV_PROJECTS[i].id))CV_PROJECTS.splice(i,1);
+  }
   var valid=new Set(CV_PROJECTS.map(function(project){return project.id;}));
   for(var j=CV_TASKS.length-1;j>=0;j--)if(!valid.has(CV_TASKS[j].project))CV_TASKS.splice(j,1);
 }
@@ -788,4 +794,41 @@ function cvEnsureLingeePrototypeData(){
   if(changed)cvPersistProjects();
 }
 
-export { CV_MEMBERS, CV_PROJECTS, CV_ARTIFACTS, CV_REVIEWS, CV_REVIEW_ARTIFACTS, CV_REVIEW_COMMENTS, CV_TASKS, CV_THIRD_PARTY_MEMBERS, CV_WORKFLOW, CV_WORKFLOW_ROLES, CV_WORKSPACES, cvAddPersonToWorkspace, cvCanAccessWorkspace, cvConfigOverride, cvCreateWorkspace, cvCurrentUserName, cvDeleteWorkspaceData, cvEnsureCurrentUserProjectDemoData, cvEnsureLingeePrototypeData, cvEnsureProjectRoleDemoData, cvEnsureWorkspaceDemoProjects, cvGenProjectCode, cvInProject, cvInjectCardActions, cvIsMe, cvPeopleInProject, cvPeopleInWorkspace, cvPersistPersons, cvPersistProjects, cvPersistWorkspaces, cvPersonById, cvPersonName, cvProject, cvProjectById, cvProjectInWorkspace, cvProjectName, cvProjectPersons, cvPruneDeletedWorkspaceData, cvRenderReviewStats, cvRenderReviews, cvRenderTaskStats, cvRenderTasks, cvRestorePersons, cvRestoreProjects, cvRestoreWorkspaces, cvSeedTaskDetails, cvWorkspace, cvWorkspaceById, cvWorkspaceName, cvWorkspaceRole };
+/* 自愈：确保苍穹应用开发项目在 localStorage 恢复后仍然存在 */
+var CV_PROJ_SEED_COSMIC={id:'cosmic-app-dev',name:'苍穹应用开发',desc:'基于苍穹设计器元模型的应用开发平台，覆盖属性、操作与规则元模型驱动开发',goal:'建设苍穹应用开发平台，基于设计器属性元模型与操作元模型实现元数据驱动的表单开发、操作配置与规则编排',dot:'blue',defaultTeam:'cosmic-app-dev',status:'in_progress',priority:'高',owner:'吴晓峰',repo:'https://github.com/kingdee/cosmic-app-dev',start:'2026-08-01',end:'2026-12-31',milestones:[{name:'元模型抽取完成',date:'2026-09-15'},{name:'属性操作集成',date:'2026-10-31'},{name:'规则引擎上线',date:'2026-11-30'},{name:'平台验收发布',date:'2026-12-31'}],members:['p23','p22','p01','p02','p03','p05','p06','p10','p11','p13','p14','p15','p17'],workspace:'ws-app'};
+function cvEnsureCosmicAppDevData(){
+  var changed=false;
+  var existing=CV_PROJECTS.find(function(p){return p.id==='cosmic-app-dev';});
+  if(!existing){
+    CV_PROJECTS.push(Object.assign({},CV_PROJ_SEED_COSMIC,{members:CV_PROJ_SEED_COSMIC.members.slice()}));
+    changed=true;
+  }
+  if(changed)cvPersistProjects();
+}
+
+/* 通用自愈：localStorage 恢复后，补回所有缺失的种子项目（含 cosmic-app-dev、lingee-prototype 等） */
+function cvEnsureSeedProjects(){
+  var changed=false;
+  CV_SEED_PROJECT_SNAPSHOT.forEach(function(seed){
+    if(!CV_PROJECTS.find(function(p){return p.id===seed.id;})){
+      CV_PROJECTS.push(Object.assign({},seed,{members:seed.members.slice(),milestones:seed.milestones.map(function(m){return Object.assign({},m);})}));
+      changed=true;
+    }
+  });
+  if(changed)cvPersistProjects();
+}
+
+/* 恢复内置工作区：从删除列表中移除内置工作区 ID，并补回缺失的内置工作区 */
+function cvEnsureSeedWorkspaces(){
+  var seedIds=CV_SEED_WORKSPACE_SNAPSHOT.map(function(w){return w.id;});
+  var current=cvDeletedWorkspaceIds();
+  var cleaned=current.filter(function(id){return !seedIds.includes(id);});
+  if(cleaned.length!==current.length){
+    try{localStorage.setItem(CV_DELETED_WORKSPACE_KEY,JSON.stringify(cleaned));}catch(e){}
+  }
+  CV_SEED_WORKSPACE_SNAPSHOT.forEach(function(seed){
+    if(!cvWorkspaceById(seed.id))CV_WORKSPACES.push(Object.assign({},seed));
+  });
+}
+
+export { CV_MEMBERS, CV_PROJECTS, CV_ARTIFACTS, CV_REVIEWS, CV_REVIEW_ARTIFACTS, CV_REVIEW_COMMENTS, CV_TASKS, CV_THIRD_PARTY_MEMBERS, CV_WORKFLOW, CV_WORKFLOW_ROLES, CV_WORKSPACES, cvAddPersonToWorkspace, cvCanAccessWorkspace, cvConfigOverride, cvCreateWorkspace, cvCurrentUserName, cvDeleteWorkspaceData, cvEnsureCosmicAppDevData, cvEnsureCurrentUserProjectDemoData, cvEnsureLingeePrototypeData, cvEnsureProjectRoleDemoData, cvEnsureSeedProjects, cvEnsureSeedWorkspaces, cvEnsureWorkspaceDemoProjects, cvGenProjectCode, cvInProject, cvInjectCardActions, cvIsMe, cvPeopleInProject, cvPeopleInWorkspace, cvPersistPersons, cvPersistProjects, cvPersistWorkspaces, cvPersonById, cvPersonName, cvProject, cvProjectById, cvProjectInWorkspace, cvProjectName, cvProjectPersons, cvPruneDeletedWorkspaceData, cvRenderReviewStats, cvRenderReviews, cvRenderTaskStats, cvRenderTasks, cvRestorePersons, cvRestoreProjects, cvRestoreWorkspaces, cvSeedTaskDetails, cvWorkspace, cvWorkspaceById, cvWorkspaceName, cvWorkspaceRole };

@@ -49,7 +49,7 @@ function renderExpertChips(){
   var has=pickValid();
   ['nt','chat','tkForm'].forEach(function(pfx){
     var label=$('#'+pfx+'ExpertLabel'), faces=$('#'+pfx+'ExpertFaces');
-    if(label) label.textContent = has ? pickName() : '选择专家';
+    if(label) label.textContent = has ? pickName() : (pfx==='tkForm' ? '选择专家团' : '选择专家');
     if(faces){
       faces.innerHTML = has
         ? (activePick.kind==='team'
@@ -64,6 +64,7 @@ function renderExpertChips(){
 }
 function renderExpertPicker(pfx,kw){
   var list=$('#'+pfx+'ExpertList'); if(!list) return;
+  if(pfx==='tkForm' && tkFormHooks && tkFormHooks.render){ tkFormHooks.render(list,kw); return; }
   kw=(kw||'').trim();
   var teams=TEAMS.filter(function(t){ return !kw || (t.name+t.desc).indexOf(kw)>=0; });
   var experts=EXPERTS.filter(function(e){ return !kw || (e.name+e.role+e.desc+e.tags.join()).indexOf(kw)>=0; });
@@ -88,6 +89,11 @@ function renderExpertPicker(pfx,kw){
   }
   list.innerHTML = html || '<div class="x-empty-sm">没有匹配的专家或专家团</div>';
 }
+/* tkForm（任务管理新建任务弹窗）专属：二级展开 + 产物确认人由 tasks-v2 注入，
+   nt / chat 不受影响。 */
+var tkFormHooks=null;
+function setTkFormHooks(h){ tkFormHooks=h; }
+
 /* 弹窗内专家团下拉：浮层 portal 到 body，脱离 .tk-modal--mc 的 transform 与 overflow，
    fixed 按触发器视口坐标定位，实现「在 chip 下方原位弹出」且不被弹窗裁剪 */
 function floatMenu(dd){
@@ -140,6 +146,15 @@ function unfloatMenu(dd){
   var list=menu.querySelector('.app-list'); if(list) list.style.maxHeight='';
   dd._floated=null;
 }
+/* tkForm 二级展开后面板变高：重算 maxHeight 与位置，避免溢出视口 */
+function refloatTkFormMenu(){
+  var dd=$('#tkFormExpertDropdown'); if(!dd||!dd._floated) return;
+  var menu=dd._floated, list=menu.querySelector('.app-list');
+  menu.style.maxHeight=''; if(list) list.style.maxHeight='';
+  var maxH=Math.min(window.innerHeight-16, 400);
+  if(menu.offsetHeight>maxH){ menu.style.maxHeight=maxH+'px'; if(list) list.style.maxHeight=(maxH-56)+'px'; }
+  refloatMenu(dd);
+}
 function openExpertPicker(pfx){
   var dd=$('#'+pfx+'ExpertDropdown'); if(!dd) return;
   var si=$('#'+pfx+'ExpertSearchInput');
@@ -187,6 +202,7 @@ export function initExpertChips() {
     });
     if(si) si.addEventListener('input',function(){ renderExpertPicker(pfx,this.value) });
     (menuEl||dd).addEventListener('click',function(ev){
+      if(pfx==='tkForm' && tkFormHooks && tkFormHooks.onMenuClick && tkFormHooks.onMenuClick(ev)) return;
       var n;
       if(n=ev.target.closest('[data-pick-team]')){
         var tid=n.getAttribute('data-pick-team');
@@ -224,4 +240,4 @@ export function initExpertChips() {
   renderExpertGrid();
 }
 
-export { renderExpertChips, renderModeTag };
+export { renderExpertChips, renderModeTag, refloatTkFormMenu, setTkFormHooks };

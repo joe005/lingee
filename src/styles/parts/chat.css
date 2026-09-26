@@ -2,8 +2,13 @@
   #view-chat{background:#fff;overflow:hidden;min-width:0}
   .chat-container{display:flex;flex-direction:column;height:100vh;position:relative}
   .chat-header{display:flex;align-items:center;padding:0 12px 0 20px;height:40px;/* 收起时左右图标距边一致 */box-sizing:border-box;flex:none;border-bottom:1px solid var(--border)}
-  .chat-header-info{flex:1;min-width:0}
-  .chat-header-title{font-size:15px;font-weight:600;color:var(--text)}
+  .chat-header-info{flex:1;min-width:0;display:flex;align-items:center;gap:8px}
+  .chat-header-title{font-size:15px;font-weight:600;color:var(--text);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .chat-header-task{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:6px;background:var(--brand-fill);color:var(--brand-active);font-size:12px;cursor:pointer;max-width:280px;flex:none;transition:background .15s}
+  .chat-header-task:hover{background:#e4ecff}
+  .chat-header-task.hidden{display:none}
+  .chat-header-task .ic{width:14px;height:14px;flex:none}
+  .chat-header-task-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   /* 关联应用禁用状态 */
   .dropdown.disabled{pointer-events:none;opacity:.65}
   .dropdown.disabled .chip{cursor:default}

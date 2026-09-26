@@ -3,7 +3,7 @@ import { initNewTask } from './new-task.js';
 import { initTaskChat } from './task-chat.js';
 import { $ } from '../../core/dom.js';
 import { cvLoadSavedTasks, cvOpenConversation, cvSendChatMessage } from './chat.js';
-import { CV_WORKSPACES, cvCanAccessWorkspace, cvCurrentUserName, cvEnsureCurrentUserProjectDemoData, cvEnsureLingeePrototypeData, cvEnsureProjectRoleDemoData, cvEnsureWorkspaceDemoProjects, cvInjectCardActions, cvProject, cvProjectInWorkspace, cvPruneDeletedWorkspaceData, cvRenderReviewStats, cvRenderReviews, cvRenderTaskStats, cvRenderTasks, cvRestorePersons, cvRestoreWorkspaces, cvWorkspace, cvWorkspaceById, set_cvProject, set_cvWorkspace } from './data.js';
+import { cvEnsureCurrentUserProjectDemoData, cvEnsureProjectRoleDemoData, cvEnsureSeedProjects, cvEnsureSeedWorkspaces, cvEnsureWorkspaceDemoProjects, cvInjectCardActions, cvProject, cvProjectInWorkspace, cvPruneDeletedWorkspaceData, cvRenderReviewStats, cvRenderReviews, cvRenderTaskStats, cvRenderTasks, cvRestorePersons, cvRestoreWorkspaces, set_cvProject } from './data.js';
 import { cvMigrateProjectSquads, cvRestoreSquads } from './squads.js';
 import { cvClosePersonEdit, cvOpenPersonNew, cvRenderPermTable, cvSavePersonEdit, initCollabPersons } from './persons.js';
 import { cvCloseFeatureEdit, cvCloseManualSplit, cvCloseProjectSplit, cvConfirmManualSplit, cvConfirmProjectSplit, cvOpenManualSplit, cvRenderProjectDetail, cvRenderProjectList, cvResetProjectListState, cvSaveFeatureEdit, initCollabProjectView } from './project-view.js';
@@ -32,23 +32,15 @@ function cvInit(){
   cvRestorePersons();
   cvEnsureProjectRoleDemoData();
   cvEnsureCurrentUserProjectDemoData();
-  cvEnsureLingeePrototypeData();
+  cvEnsureSeedProjects();
+  cvEnsureSeedWorkspaces();
   cvPruneDeletedWorkspaceData();
-  cvSelectAccessibleWorkspace();
   cvMigrateProjectSquads();
   cvRenderTaskStats(); cvRenderTasks();
   cvRenderReviewStats(); cvRenderReviews();
   cvRenderProjectList();
   cvInjectCardActions();
   cvRenderWsMenu(); cvRenderProjMenu(); cvUpdateCounts();
-}
-
-/* 选择当前用户可访问的工作区：若当前工作区有效则保留，否则切到第一个可访问的工作区。 */
-function cvSelectAccessibleWorkspace(){
-  var name=cvCurrentUserName();
-  if(cvWorkspace&&cvWorkspaceById(cvWorkspace)&&cvCanAccessWorkspace(cvWorkspace,name))return;
-  var ws=CV_WORKSPACES.find(function(w){return cvCanAccessWorkspace(w.id,name);});
-  if(ws)set_cvWorkspace(ws.id);
 }
 
 var cvExpertSearch=$('#cvExpertSearch');

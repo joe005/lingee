@@ -191,7 +191,6 @@
   }
   .dot.orange{background:var(--dot-orange)}
   .dot.green{background:var(--dot-green)}
-  .dot.purple{background:var(--dot-purple)}
   .sub-item .txt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   /* 三个点：悬停行才出现；圆形底则是悬停到三个点上才出现 */
   .sub-more{flex:none;display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;margin-left:4px;border:none;border-radius:50%;background:transparent;color:var(--neutral-600);cursor:pointer;opacity:0;transition:opacity .12s,background .12s}
