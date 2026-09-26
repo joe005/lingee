@@ -16,7 +16,7 @@ export function renderIssueArtifacts(task) {
         '<div class="tk-artifact-preview">' +
           '<p class="tk-artifact-subtitle">' + escapeHtml(artifact.summary) + '</p><div class="tk-artifact-meta">' + escapeHtml(artifact.author) + ' · ' + escapeHtml(artifact.date) + '</div>' +
           artifact.sections.map(function (section) {
-            return '<div class="tk-artifact-section"><strong>' + escapeHtml(section.heading) + '</strong><p>' + escapeHtml(section.text) + '</p></div>';
+            return '<div class="tk-artifact-section"><strong>' + escapeHtml(section.heading) + '</strong>' + renderArtifactBlocks(section) + '</div>';
           }).join('') +
         '</div></details>';
     }).join('') + '</div></section>';
@@ -27,6 +27,28 @@ export function renderArtifactPreview(artifact) {
   if (!artifact) return '';
   if (typeof artifact.content === 'string') return '<pre>' + escapeHtml(artifact.content) + '</pre>';
   return (artifact.sections || []).map(function (section) {
-    return '<div class="tk-artifact-section"><strong>' + escapeHtml(section.heading) + '</strong><p>' + escapeHtml(section.text) + '</p></div>';
+    return '<div class="tk-artifact-section"><strong>' + escapeHtml(section.heading) + '</strong>' + renderArtifactBlocks(section) + '</div>';
+  }).join('');
+}
+
+/* 产物正文块：p 段落、ul/ol 列表、table 表格、code 代码、note 提示；兼容旧的 text 字段。 */
+export function renderArtifactBlocks(section) {
+  var blocks = section.blocks || (section.text ? [{ p: section.text }] : []);
+  return blocks.map(function (b) {
+    if (b.p) return '<p class="tk-doc-p">' + escapeHtml(b.p) + '</p>';
+    if (b.ul || b.ol) {
+      var tag = b.ul ? 'ul' : 'ol';
+      return '<' + tag + ' class="tk-doc-list">' + (b.ul || b.ol).map(function (item) { return '<li>' + escapeHtml(item) + '</li>'; }).join('') + '</' + tag + '>';
+    }
+    if (b.table) {
+      return '<div class="tk-doc-table-wrap"><table class="tk-doc-table"><thead><tr>' +
+        b.table.head.map(function (h) { return '<th>' + escapeHtml(h) + '</th>'; }).join('') +
+        '</tr></thead><tbody>' +
+        b.table.rows.map(function (row) { return '<tr>' + row.map(function (cell) { return '<td>' + escapeHtml(cell) + '</td>'; }).join('') + '</tr>'; }).join('') +
+        '</tbody></table></div>';
+    }
+    if (b.code) return '<pre class="tk-doc-code"><code>' + escapeHtml(b.code) + '</code></pre>';
+    if (b.note) return '<div class="tk-doc-note">' + escapeHtml(b.note) + '</div>';
+    return '';
   }).join('');
 }

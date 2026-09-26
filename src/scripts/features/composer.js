@@ -69,6 +69,50 @@ export function openTaskExceptionHistory(task, onBack) {
   showView('chat');
   chatMessages.scrollTop = 0;
 }
+/* 任务详情「我的会话」的回看：与异常回放共用面板和返回按钮，可继续会话。 */
+export function openTaskSessionHistory(task, session, onBack, onContinue) {
+  if (!task || !session) return;
+  closeTaskExceptionHistory();
+  taskExceptionPreviousTitle = $('#chatTitle').textContent;
+  taskExceptionBack = onBack;
+  var header = document.querySelector('#view-chat .chat-header');
+  var back = document.createElement('button');
+  back.type = 'button';
+  back.id = 'taskExceptionBack';
+  back.className = 'header-btn';
+  back.setAttribute('aria-label', '返回任务详情');
+  back.textContent = '←';
+  back.addEventListener('click', function () {
+    var callback = taskExceptionBack;
+    closeTaskExceptionHistory();
+    if (callback) callback();
+  });
+  header.prepend(back);
+  var steps = Array.isArray(session.steps) ? session.steps : [];
+  var panel = document.createElement('div');
+  panel.id = 'taskExceptionHistory';
+  panel.className = 'task-exception-history task-session-history';
+  panel.innerHTML = '<div class="task-exception-intro"><span>我的会话 · ' + escapeHtml(String(task.code || '')) + '</span><strong>' + escapeHtml(String(session.title || task.title || '任务')) + '</strong><small>' + escapeHtml(String(session.startedAt || '')) + (session.lastAt && session.lastAt !== session.startedAt ? ' – ' + escapeHtml(String(session.lastAt)) : '') + ' · ' + escapeHtml(String(session.statusLabel || '')) + '</small></div>'
+    + session.messages.map(function (message) {
+      return message.role === 'user'
+        ? '<div class="task-exception-message task-exception-user"><span>我</span><p>' + escapeHtml(String(message.text || '')) + '</p></div>'
+        : '<div class="task-exception-message task-exception-agent"><span>' + escapeHtml(String(session.agentName || '执行专家')) + '</span><p>' + escapeHtml(String(message.text || '')) + '</p></div>';
+    }).join('')
+    + (steps.length || session.error ? '<div class="task-exception-message task-exception-agent"><span>' + escapeHtml(String(session.agentName || '执行专家')) + ' · 执行过程</span>'
+      + (steps.length ? '<ol>' + steps.map(function (step, index) { return '<li class="' + (session.error && index === steps.length - 1 ? 'is-error' : '') + '"><strong>' + escapeHtml(String(step[0] || '执行步骤')) + '</strong><p>' + escapeHtml(String(step[1] || '')) + '</p></li>'; }).join('') + '</ol>' : '')
+      + (session.error ? '<div class="task-exception-error"><strong>执行异常</strong><p>' + escapeHtml(String(session.error)) + '</p></div>' : '')
+      + (session.next ? '<p class="task-exception-next">建议处理：' + escapeHtml(String(session.next)) + '</p>' : '') + '</div>' : '')
+    + (onContinue ? '<div class="task-session-continue"><button type="button" class="task-session-continue-btn">继续这个会话</button></div>' : '');
+  panel.querySelector('.task-session-continue-btn')?.addEventListener('click', function () {
+    closeTaskExceptionHistory();
+    onContinue();
+  });
+  chatMessages.appendChild(panel);
+  $('#chatTitle').textContent = '我的会话 · ' + (task.title || '任务');
+  viewChat.classList.add('task-exception-open');
+  showView('chat');
+  chatMessages.scrollTop = 0;
+}
 var conversationTaskId = null;
 function getConversationTask() {
   return conversationTaskId == null ? null : tkGetTasks().find(function (task) { return task.id === conversationTaskId; }) || null;
@@ -924,4 +968,4 @@ export function initPlusMenu() {
   $$('.sb-head-icons .ic').forEach(function(i,idx){ i.addEventListener('click',function(){ toast(idx===0?'搜索':'折叠侧栏'); }); });
 }
 
-export { appendAssistantMessage, appendUserMessage, chatResizer, doSend, messagesList, refreshSend, scrollChatBottom, simulateAIResponse };
+export { appendAssistantMessage, appendUserMessage, chatResizer, createArtifactCard, doSend, messagesList, refreshSend, scrollChatBottom, simulateAIResponse };

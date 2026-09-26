@@ -38,6 +38,7 @@ import { initInbox } from './features/inbox/index.js';
 import { _authedUser } from './features/login.js';
 import { withBase } from './core/base-path.js';
 import { initAnalytics } from './features/analytics.js';
+import { initTeamSession } from './features/team-session.js';
 
 /* 产物预览与应用共用同一份设计令牌 */
 const billTemplateWithTokens = billTemplate.replace(
@@ -97,6 +98,7 @@ initCollab();                     /* 6445  features/collab/index.js */
 initTasksV2();                    /* 任务管理 v2 */
 initInbox();                      /* 系统通知收件箱 */
 initAnalytics();                  /* 用户行为分析看板 */
+initTeamSession();                /* 侧边栏演示会话：苍穹应用开发专家团 */
 
 /* 双击任务管理标题切换到旧版 */
 document.addEventListener('dblclick', function (e) {

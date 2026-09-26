@@ -288,8 +288,8 @@ export function initAppsNewDropdown() {
       ctxMenu.classList.add('show');
     });
   });
-  // 点击 sub-item 进入会话详情
-  $$('.sub-item').forEach(function(item){
+  // 点击 sub-item 进入会话详情（带 data-session 的演示会话由各自模块渲染）
+  $$('.sub-item:not([data-session])').forEach(function(item){
     item.addEventListener('click',function(){
       var title=item.querySelector('.txt').textContent.trim();
       showView('chat');

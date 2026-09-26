@@ -60,6 +60,8 @@
   background:var(--bg);color:var(--text);font:inherit;font-size:13px;
 }
 .consent-field input:focus{border-color:var(--brand)}
+/* 密码框保持 type="text"，不让 Chrome 把本页当登录页往其他输入框推荐账号；用掩码显示 */
+.consent-field input.consent-pwd{-webkit-text-security:disc}
 .consent-tabs{display:flex;gap:22px;margin:20px 0 0;border-bottom:1px solid var(--border)}
 .consent-tab{
   padding:0 0 9px;border:0;border-bottom:2px solid transparent;background:none;

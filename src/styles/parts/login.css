@@ -13,6 +13,8 @@
   .login-field-icon{position:absolute;left:12px;width:18px;height:18px;color:var(--text-soft);flex:none;pointer-events:none;transition:color .15s}
   .login-input{width:100%;height:42px;padding:0 12px 0 40px;border:1px solid var(--border);border-radius:8px;font-size:14px;color:var(--text);background:var(--fill-1);outline:none;transition:border-color .15s,background .15s}
   .login-input:focus{border-color:var(--brand);background:#fff}
+  /* 密码框初始为 type="text"（避免 Chrome 把整页判为登录页、往其他输入框推荐账号），用掩码防止明文闪现 */
+  .login-input[data-pw]{-webkit-text-security:disc}
   .login-input:focus + .login-field-icon,.login-field:focus-within .login-field-icon{color:var(--brand)}
   .login-error{font-size:12px;color:var(--danger);min-height:16px;line-height:1.4}
   .login-remember{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-secondary);cursor:pointer;user-select:none}
