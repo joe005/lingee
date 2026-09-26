@@ -458,6 +458,7 @@ body.tk-drawer-resizing{user-select:none;cursor:col-resize}
 .tk-detail-version-menu button{display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%;padding:7px 9px;border:0;border-radius:5px;background:transparent;color:var(--text);font:inherit;font-size:12px;text-align:left;cursor:pointer}
 .tk-detail-version-menu button:hover,.tk-detail-version-menu button:focus-visible{background:var(--hover);outline:none}
 .tk-detail-version-menu button[aria-checked="true"] span{color:var(--brand)}
+.tk-detail-menu-divider{height:1px;margin:4px 7px;background:var(--divider)}
 /* 任务详情最新版：字段从右栏移到标题下方；已保存版本沿用原布局。 */
 .tk-drawer--latest .tk-drawer-main{padding-top:0}
 .tk-drawer--latest .tk-drawer-main-inner{max-width:1080px}
@@ -762,7 +763,7 @@ body.tk-drawer-resizing{user-select:none;cursor:col-resize}
 .tk-delivery-artifacts .tk-artifacts-list{gap:5px}
 .tk-delivery-artifacts .tk-artifact{background:var(--fill-1)}
 .tk-delivery-artifacts .tk-artifact-summary{min-height:34px}
-.tk-legacy-detail-note{display:inline-flex;margin:0 0 12px;padding:4px 8px;border:1px solid var(--border);border-radius:5px;background:var(--fill-1);color:var(--text-secondary);font-size:11px}
+
 .tk-comment-composer{position:sticky;bottom:0;z-index:3;display:flex;flex-direction:column;min-height:78px;margin-top:20px;border:1px solid var(--border);border-radius:9px;background:var(--bg);box-shadow:0 5px 18px rgba(22,35,68,.08)}
 .tk-comment-composer:focus-within{border-color:var(--border-focus)}
 .tk-comment-composer-input{box-sizing:border-box;width:100%;min-height:48px;max-height:40vh;padding:11px 12px 4px;border:0;border-radius:9px 9px 0 0;background:transparent;color:var(--text);font:inherit;font-size:13px;line-height:1.5;resize:vertical;outline:none}
@@ -1126,8 +1127,8 @@ input[type=date].tk-mc-pill{width:auto}
 .xp-submenu.hidden{display:none}
 .xp-submenu.flip{left:auto;right:calc(100% - 1px)}
 .xp-form-menu:has(.xp-submenu:not(.hidden)){overflow:visible}
-.xp-form-menu:has(.xp-submenu:not(.hidden):not(.flip)){border-radius:0 9px 9px 0}
-.xp-form-menu:has(.xp-submenu:not(.hidden).flip){border-radius:9px 0 0 9px}
+.xp-form-menu:has(.xp-submenu:not(.hidden):not(.flip)){border-radius:14px 0 0 14px}
+.xp-form-menu:has(.xp-submenu:not(.hidden).flip){border-radius:0 14px 14px 0}
 .xp-stage-row{display:flex;align-items:center;gap:9px;padding:6px 8px;border-radius:7px}
 .xp-stage-row:hover{background:var(--hover)}
 .xp-stage-id{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}

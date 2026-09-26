@@ -2,9 +2,9 @@
 #view-collab{padding:0;background:#fff;overflow:hidden}
 #view-collab .cv-panel{display:none;flex:1;flex-direction:column;overflow:hidden;min-height:0}
 #view-collab .cv-panel.active{display:flex}
-#view-collab .cv-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:20px}
+#view-collab .cv-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px}
 #view-collab .cv-head .scroll-desc{margin-bottom:0}
-#view-collab .cv-head-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
+#view-collab .cv-head-right{display:flex;align-items:center;gap:10px;flex-shrink:0;margin-left:auto}
 #view-collab .cv-scroll-soft{background:#fafafa}
 #view-collab .cv-scroll-soft .apps-grid{grid-template-columns:repeat(3,1fr)}
 @media(max-width:1160px){#view-collab .cv-scroll-soft .apps-grid{grid-template-columns:repeat(2,1fr)}}

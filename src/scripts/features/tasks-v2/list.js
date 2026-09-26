@@ -34,6 +34,7 @@ function persistViewState() {
       filters:taskViewState.filters,
       showSubtasks:taskViewState.showSubtasks,
       collapsedTaskIds:Array.from(collapsedParents),
+      collapsedBoardGroups:Array.from(taskViewState.collapsedBoardGroups),
       cardProperties:taskViewState.cardProperties,
       listFieldOrder:taskViewState.listFieldOrder,
       listFieldVisibility:taskViewState.listFieldVisibility,
@@ -76,7 +77,7 @@ function restoreViewState() {
     });
   }
   if (Array.isArray(saved.filters)) {
-    var fields = ['status','priority','dueDate','assignee','creator','project','projectStatus','label','keyword'];
+    var fields = ['status','priority','dueDate','assignee','creator','project','label','keyword'];
     var operators = ['eq','neq','contains','not_contains','today','overdue','before','after'];
     taskViewState.filters = saved.filters.slice(0, 30).filter(function (f) {
       return f && fields.includes(f.field) && operators.includes(f.op) && typeof f.value === 'string';
@@ -125,10 +126,10 @@ function showCardMenu(taskId, anchorEl, detailOnly) {
 function handleCardAction(act, aid) {
   if (act === 'chat') { openTaskConversationWithTask(aid); }
   else if (act === 'edit') { openDrawer(aid); }
-  else if (act === 'delete') { tkDeleteTask(aid); render(); }
+  else if (act === 'delete') { tkDeleteTask(aid); render(); toast('删除成功', 'success'); }
   else if (act === 'copy') {
     var src = tkGetTasks().find(function(x){return x.id===aid;});
-    if (src) { tkAddTask(Object.assign({}, src, {labels:(src.labels||[]).slice(), createDate:new Date().toISOString().slice(0,10)})); render(); }
+    if (src) { tkAddTask(Object.assign({}, src, {labels:(src.labels||[]).slice(), createDate:new Date().toISOString().slice(0,10)})); render(); toast('复制成功', 'success'); }
   }
   else if (act === 'subtask') {
     var parent = tkGetTasks().find(function(x){return x.id===aid;});
@@ -138,6 +139,7 @@ function handleCardAction(act, aid) {
         labels:(parent.labels||[]).slice(), dueDate:'', createDate:new Date().toISOString().slice(0,10),
         parentId: parent.id });
       render();
+      toast('创建成功', 'success');
     }
   }
 }
@@ -193,7 +195,6 @@ function matchFilter(task, filter) {
   var field = filter.field, op = filter.op, val = filter.value;
   if (!val && op !== 'today' && op !== 'overdue') return true;
   if (field === 'creator') return task.createdBy === val;
-  if (field === 'projectStatus') return val === 'active' && !!task.project;
   if (field === 'label' && op === 'eq') return (task.labels || []).includes(val);
   if (field === 'keyword') {
     if (op === 'contains') return (task.title + task.desc + task.code).toLowerCase().indexOf(String(val).toLowerCase()) >= 0;
@@ -353,16 +354,19 @@ function renderBoard() {
   var html = groups.map(function (g) {
     var tree = buildTaskTree(g.tasks);
     var cards = renderTreeNodes(tree.roots, tree.childrenMap, 0);
+    var collapsed = taskViewState.collapsedBoardGroups.has(g.key);
+    var toggleLabel = collapsed ? '展开分组' : '折叠分组';
+    var arrow = collapsed ? '18 15 12 9 6 15' : '6 9 12 15 18 9';
     return '<div class="tk-board-col" data-group-key="' + g.key + '">'
       + '<div class="tk-board-col-head"><div class="tk-board-col-head-left">'
       + '<span class="tk-board-col-dot tk-st-' + (g.color || 'gray') + '"></span>'
       + '<span class="tk-board-col-name">' + escapeHtml(g.name) + '</span>'
       + '<span class="tk-board-col-count">' + g.tasks.length + '</span>'
       + '</div><div class="tk-board-col-head-right">'
-      + '<button class="tk-board-col-toggle" data-toggle-col data-tooltip="折叠分组" aria-label="折叠分组"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>'
+      + '<button class="tk-board-col-toggle" data-toggle-col data-tooltip="' + toggleLabel + '" aria-label="' + toggleLabel + '"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="' + arrow + '"/></svg></button>'
       + '<button class="tk-board-col-add" data-add-group="' + g.key + '" data-tooltip="新建任务" aria-label="新建任务"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>'
       + '</div></div>'
-      + '<div class="tk-board-col-body">' + cards + '</div>'
+      + '<div class="tk-board-col-body' + (collapsed ? ' collapsed' : '') + '">' + cards + '</div>'
       + '</div>';
   }).join('');
   els.tkBoardScroll.innerHTML = html;
@@ -796,6 +800,7 @@ function saveInlineTask() {
      if (!projectId || !tkProjectsForCurrentUser().some(function (project) { return project.id === projectId; })) { toast('请先加入项目再创建任务', 'warning'); render(); return; }
      tkAddTask({ id:mx+1, code:'T'+String(1000000+mx+1), title:title, desc:'', status:'backlog', priority:'medium', assignee: av || tkPeopleInProject(projectId)[0]?.id || '', project:projectId, labels:[], dueDate:'', createDate:new Date().toISOString().slice(0,10) });
     render();
+    toast('创建成功', 'success');
   }, 400);
 }
 
@@ -815,7 +820,6 @@ var filterSections = [
   ['assignee','负责人','<circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/>'],
   ['creator','创建者','<circle cx="10" cy="8" r="4"/><path d="M3 21v-2a7 7 0 0 1 12-5M16 20l5-5M18 13l3 3"/>'],
   ['project','项目','<path d="M3 5h7l2 2h9v13H3z"/>'],
-  ['projectStatus','项目状态','<circle cx="12" cy="12" r="9" stroke-dasharray="3 3"/>'],
   ['label','标签','<path d="M3 3h9l9 9-9 9-9-9z"/><circle cx="8" cy="8" r="1"/>'],
 ];
 
@@ -829,7 +833,6 @@ function filterOptionsFor(section) {
   if (section === 'assignee') return TK_PEOPLE.map(function (p) { return { value:p.id, label:p.name, count:tasks.filter(function (t) { return t.assignee === p.id; }).length }; });
   if (section === 'creator') return TK_PEOPLE.map(function (p) { return { value:p.id, label:p.name, count:tasks.filter(function (t) { return t.createdBy === p.id; }).length }; });
   if (section === 'project') return tkProjectsForCurrentUser().map(function (p) { return { value:p.id, label:p.name, count:tasks.filter(function (t) { return t.project === p.id; }).length }; });
-  if (section === 'projectStatus') return [{ value:'active', label:'进行中', count:tasks.filter(function (t) { return !!t.project; }).length }];
   if (section === 'label') return TK_LABELS.map(function (l) { return { value:l, label:l, count:tasks.filter(function (t) { return (t.labels || []).includes(l); }).length }; });
   return [];
 }
@@ -846,6 +849,7 @@ function renderFilterMenu() {
     return '<button type="button" class="tk-filter-category' + (activeFilterSection === section[0] ? ' active' : '') + '" data-filter-section="' + section[0] + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + section[2] + '</svg><span>' + section[1] + '</span>' + (count ? '<span class="tk-filter-count">' + count + '</span>' : '') + '<svg class="tk-filter-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 4 8 8-8 8"/></svg></button>';
   }).join('') + (taskViewState.filters.length ? '<button type="button" class="tk-filter-reset" id="tkFilterReset">重置全部筛选</button>' : '');
   renderFilterSubmenu();
+  positionFilterSubmenu();
 }
 
 function renderFilterSubmenu() {
@@ -862,6 +866,20 @@ function renderFilterSubmenu() {
   }).join('');
 }
 
+function positionFilterSubmenu() {
+  var activeBtn = els.tkFilterPanelBody.querySelector('.tk-filter-category.active');
+  if (!activeBtn) { els.tkFilterSubmenu.style.top = ''; return; }
+  var panelRect = els.tkFilterPanel.getBoundingClientRect();
+  var btnRect = activeBtn.getBoundingClientRect();
+  var borderTop = parseFloat(getComputedStyle(els.tkFilterPanel).borderTopWidth) || 0;
+  var top = btnRect.top - panelRect.top - borderTop;
+  var subH = els.tkFilterSubmenu.offsetHeight;
+  if (panelRect.top + top + subH > window.innerHeight - 8) {
+    top = Math.max(0, window.innerHeight - 8 - panelRect.top - subH);
+  }
+  els.tkFilterSubmenu.style.top = top + 'px';
+}
+
 function openFilterPanel() {
   closeDisplayChoiceMenu();
   closeFieldSettings();
@@ -875,7 +893,8 @@ function openFilterPanel() {
   renderFilterMenu();
   positionPopover(els.tkFilterPanel, els.tkFilterBtn, true);
   var rect = els.tkFilterPanel.getBoundingClientRect();
-  els.tkFilterSubmenu.classList.toggle('flip', rect.left < 200);
+  els.tkFilterSubmenu.classList.toggle('flip', rect.right + 200 > window.innerWidth);
+  positionFilterSubmenu();
 }
 
 function closeFilterPanel() {
@@ -929,6 +948,7 @@ function confirmSaveView() {
   taskViewState.layout = v.layout;
   closeSaveView();
   render();
+  toast('保存成功', 'success');
 }
 
 function openManageViews() {
@@ -1320,6 +1340,7 @@ els.tkViewTabs.addEventListener('click', function (e) {
       tkDeleteView(viewId);
       if (taskViewState.activeViewId === viewId) { taskViewState.activeViewId = 'all'; taskViewState.scope = 'all'; }
       render();
+      toast('删除成功', 'success');
       return;
     }
     var tab = e.target.closest('.list-page-tab');
@@ -1365,6 +1386,7 @@ els.tkManageList.addEventListener('click', function (e) {
       if (taskViewState.activeViewId === viewId) { taskViewState.activeViewId = 'all'; taskViewState.scope = 'all'; }
       openManageViews();
       render();
+      toast('删除成功', 'success');
       return;
     }
     var renameBtn = e.target.closest('[data-rename-view]');
@@ -1373,7 +1395,7 @@ els.tkManageList.addEventListener('click', function (e) {
       var view = tkGetViews().find(function (v) { return v.id === viewId; });
       if (view) {
         var newName = prompt('输入新名称', view.name);
-        if (newName && newName.trim()) { tkRenameView(viewId, newName.trim()); openManageViews(); renderViewBar(); }
+        if (newName && newName.trim()) { tkRenameView(viewId, newName.trim()); openManageViews(); renderViewBar(); toast('重命名成功', 'success'); }
       }
     }
   });
@@ -1393,32 +1415,40 @@ $$('[data-bulk]').forEach(function (btn) {
         return;
       }
       if (action === 'delete') {
+        var delCount = taskViewState.selectedIds.size;
         taskViewState.selectedIds.forEach(function (id) { tkDeleteTask(id); });
         taskViewState.selectedIds.clear();
         hidePopover();
         render();
+        toast('成功删除 ' + delCount + ' 个任务', 'success');
       }
     });
   });
-els.tkBulkStatusMenu.addEventListener('click', function (e) {
+  els.tkBulkStatusMenu.addEventListener('click', function (e) {
     var item = e.target.closest('[data-status]');
     if (item) {
       var status = item.getAttribute('data-status');
+      var statusName = (TK_STATUSES.find(function (s) { return s.id === status; }) || {}).name || status;
+      var updateCount = taskViewState.selectedIds.size;
       els.tkBulkStatusMenu.innerHTML = TK_STATUSES.map(function (s) {
         return '<div class="tk-popover-item" data-status="' + s.id + '">' + escapeHtml(s.name) + '</div>';
       }).join('');
       taskViewState.selectedIds.forEach(function (id) { tkUpdateTask(id, { status: status }); });
       hidePopover();
       render();
+      toast('成功更新 ' + updateCount + ' 个任务状态为「' + statusName + '」', 'success');
     }
   });
-els.tkBulkAssigneeMenu.addEventListener('click', function (e) {
+  els.tkBulkAssigneeMenu.addEventListener('click', function (e) {
     var item = e.target.closest('[data-assignee]');
     if (item) {
       var assignee = item.getAttribute('data-assignee');
+      var assigneeName = tkGetPerson(assignee).name;
+      var assignCount = taskViewState.selectedIds.size;
       taskViewState.selectedIds.forEach(function (id) { var task = tkGetTasks().find(function (row) { return row.id === id; }); if (task && tkPeopleInProject(task.project).some(function (person) { return person.id === assignee; })) tkUpdateTask(id, { assignee: assignee }); });
       hidePopover();
       render();
+      toast('成功指派 ' + assignCount + ' 个任务给「' + assigneeName + '」', 'success');
     }
   });
 }

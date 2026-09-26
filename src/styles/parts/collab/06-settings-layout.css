@@ -25,7 +25,7 @@
 #view-collab #cv-config .hidden{display:none}
 #view-collab #cv-config #cv-squad-detail .sq-layout{grid-template-columns:minmax(190px,260px) minmax(0,1fr)}
 @media(max-width:900px){#view-collab #cv-config #cv-squad-detail .sq-layout{grid-template-columns:1fr}}
-#view-collab .cv-integration-note{padding:12px 14px;border:1px solid var(--border);border-radius:10px;background:var(--fill-1);color:var(--text-secondary);font-size:12.5px;line-height:1.6;margin:14px 0 18px}
+#view-collab .cv-integration-note{padding:12px 14px;border:1px solid var(--border);border-radius:10px;background:var(--fill-1);color:var(--text-secondary);font-size:12.5px;line-height:1.6;margin:0 0 18px}
 #view-collab .cv-integration-providers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 #view-collab .cv-integration-provider{display:flex;align-items:center;gap:12px;width:100%;padding:16px;border:1px solid var(--border);border-radius:12px;background:#fff;text-align:left;cursor:pointer;font:inherit;color:var(--text)}
 #view-collab .cv-integration-provider:hover{border-color:var(--brand)}

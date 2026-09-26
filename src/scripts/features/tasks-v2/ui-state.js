@@ -13,9 +13,10 @@ var taskViewState = {
   layout: 'board', viewMode: 'slide', scope: 'all', groupBy: 'status', sortBy: 'createDate', sortDir: 'desc',
   search: '', filters: [], selectedIds: new Set(), activeViewId: 'all',
   showSubtasks: true,
-  cardProperties: { priority:true, description:false, assignee:true, startDate:false, dueDate:true, project:false, labels:false, childProgress:true },
+  cardProperties: { priority:true, description:false, assignee:true, startDate:false, dueDate:true, project:true, labels:false, childProgress:true },
   listFieldOrder: DEFAULT_LIST_FIELD_ORDER.slice(), listFieldVisibility: { labels:false },
   editingTaskId: null, drawerTaskId: null, editingParentId: null,
+  collapsedBoardGroups: new Set(),
 };
 
 var els = {};
@@ -27,7 +28,7 @@ function cacheEls() {
     'tkDisplayBtn','tkDisplayPopover','tkFieldsBtn','tkFieldsPopover','tkFieldsClose','tkFieldsSearch','tkFieldsList','tkFieldsSummary','tkGroupSelect','tkViewModeSelect','tkSortSelect','tkSortDirection','tkShowSubtasks','tkCardProperties','tkCardPropsSection',
     'tkLayoutToggle','tkBody','tkBoard','tkBoardScroll','tkList','tkListBody','tkListHead','tkSplitEmpty',
     'tkCheckAll','tkEmpty','tkResetFilter','tkBulkBar','tkBulkCount','tkBulkClear',
-    'tkDrawer','tkDrawerClickaway','tkDrawerResize','tkDrawerClose','tkDrawerTitle','tkDrawerCode','tkDrawerBody','tkDrawerMore','tkDrawerSidebarToggle','tkDrawerChat',
+    'tkDrawer','tkDrawerClickaway','tkDrawerResize','tkDrawerClose','tkDrawerTitle','tkDrawerCode','tkDrawerBody','tkDrawerMore','tkDrawerChat',
     'tkModalOverlay','tkModalClose','tkModalCancel','tkModalSave','tkModalTitle',
     'tkFormTitle','tkFormDesc','tkFormStatus','tkFormPriority','tkFormAssignee','tkFormProject','tkFormDue','tkFormLabels',
     'tkSaveViewOverlay','tkSaveViewClose','tkSaveViewCancel','tkSaveViewConfirm','tkSaveViewName','tkSaveViewVisibility','tkSaveViewScope','tkSaveViewLayout','tkSaveViewSummary',

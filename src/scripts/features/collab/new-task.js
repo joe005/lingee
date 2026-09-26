@@ -92,6 +92,7 @@ function ntRenderLabelChoices(query) {
   if (!list.innerHTML) list.innerHTML = '<div class="tk-label-picker-empty">没有匹配的标签</div>';
 }
 function ntOpenLabelPicker() {
+  console.log('[new-task] ntOpenLabelPicker 被调用');
   ntCloseLabelPicker();
   var trigger = document.getElementById('cv-nt-tags-trigger');
   if (!trigger) return;
@@ -138,6 +139,7 @@ function ntOpenLabelPicker() {
     }
   });
   document.body.appendChild(ntLabelMenu);
+  console.log('[new-task] 标签弹出层已挂载到 body, offsetWidth:', ntLabelMenu.offsetWidth, 'offsetHeight:', ntLabelMenu.offsetHeight);
   ntRenderLabelChoices('');
   var rect = trigger.getBoundingClientRect();
   ntLabelMenu.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - ntLabelMenu.offsetWidth - 8)) + 'px';
@@ -371,7 +373,7 @@ export function cvOpenNewTask(status, ctx) {
   document.getElementById('cv-nt-draft-content').classList.add('hidden');
   document.getElementById('cv-nt-agent-messages').innerHTML = '<p class="nt-agent-welcome">说出想完成的事，我会先整理成草稿。你可以继续补充，也可以直接编辑左侧内容。</p>';
   document.getElementById('cv-nt-priority').value = '中';
-  document.getElementById('cv-nt-more').open = false;
+  var _moreBtn = document.getElementById('cv-nt-more-trigger'); var _morePanel = document.getElementById('cv-nt-more-body'); if (_moreBtn) _moreBtn.setAttribute('aria-expanded', 'false'); if (_morePanel) _morePanel.hidden = true;
   ntCloseLabelPicker();
   const chip = document.getElementById('cv-nt-status-chip');
   if (chip) chip.textContent = NT_STATUS_LABELS[ntStatus] || '待开始';
@@ -488,7 +490,8 @@ function cvSubmitNewTask(keepOpen) {
 export function initNewTask() {
   window.cvOpenNewTask = cvOpenNewTask;
   window.cvCloseNewTask = cvCloseNewTask;
-  if (!document.getElementById('cv-newtask-overlay')) return;
+  if (!document.getElementById('cv-newtask-overlay')) { console.error('[new-task] overlay 不存在，initNewTask 中止'); return; }
+  try {
   document.querySelectorAll('#cv-newtask-overlay [data-nt-mode]').forEach(button => {
     button.addEventListener('click', () => cvSetNewTaskMode(button.getAttribute('data-nt-mode')));
   });
@@ -563,8 +566,10 @@ export function initNewTask() {
     });
   }
   const tagsTrigger = document.getElementById('cv-nt-tags-trigger');
+  console.log('[new-task] tagsTrigger 元素:', tagsTrigger ? '存在' : '不存在');
   if (tagsTrigger) {
     tagsTrigger.addEventListener('click', function(e) {
+      console.log('[new-task] 标签触发器被点击');
       if (e.target.closest('[data-nt-label-remove]')) {
         var name = e.target.closest('[data-nt-label-remove]').getAttribute('data-nt-label-remove');
         ntTags = ntTags.filter(function(t) { return t !== name; });
@@ -578,12 +583,33 @@ export function initNewTask() {
     });
   }
   document.getElementById('cv-nt-addtag')?.addEventListener('click', function() {
-    document.getElementById('cv-nt-more').open = true;
+    var _mb = document.getElementById('cv-nt-more-trigger'); var _mp = document.getElementById('cv-nt-more-body'); if (_mb) _mb.setAttribute('aria-expanded', 'true'); if (_mp) _mp.hidden = false;
     ntOpenLabelPicker();
   });
   document.addEventListener('click', function(e) {
-    if (ntLabelMenu && !ntLabelMenu.contains(e.target) && !tagsTrigger?.contains(e.target)) ntCloseLabelPicker();
+    if (ntLabelMenu && !ntLabelMenu.contains(e.target) && !tagsTrigger?.contains(e.target) && !e.target.closest('#cv-nt-addtag')) ntCloseLabelPicker();
   });
+  /* 三点「更多设置」面板：点击切换 + 外部点击关闭（对齐 Multica DropdownMenu 行为） */
+  (function () {
+    var moreBox = document.getElementById('cv-nt-more');
+    var moreBtn = document.getElementById('cv-nt-more-trigger');
+    var morePanel = document.getElementById('cv-nt-more-body');
+    if (!moreBtn || !morePanel) return;
+    function toggleMore(open) {
+      var isOpen = moreBtn.getAttribute('aria-expanded') === 'true';
+      var next = open == null ? !isOpen : open;
+      moreBtn.setAttribute('aria-expanded', String(next));
+      morePanel.hidden = !next;
+    }
+    moreBtn.addEventListener('click', function (e) { e.stopPropagation(); toggleMore(); });
+    document.addEventListener('click', function (e) {
+      if (moreBtn.getAttribute('aria-expanded') !== 'true') return;
+      if (!moreBox.contains(e.target)) toggleMore(false);
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && moreBtn.getAttribute('aria-expanded') === 'true') toggleMore(false);
+    });
+  })();
   document.getElementById('cv-nt-attach-trigger')?.addEventListener('click', ntAddFile);
   const peopleBtn = document.getElementById('cv-nt-people-btn');
   const peopleMenu = document.getElementById('cv-nt-people-menu');
@@ -599,4 +625,6 @@ export function initNewTask() {
   }
   const fileList = document.getElementById('cv-nt-file-list');
   if (fileList) fileList.addEventListener('click', e => { const x = e.target.closest('[data-nt-file]'); if (x) { ntFiles.splice(+x.getAttribute('data-nt-file'), 1); ntRenderFiles(); } });
+  console.log('[new-task] initNewTask 标签绑定完成');
+  } catch(e) { console.error('[initNewTask] 执行中断:', e.message, e.stack); }
 }

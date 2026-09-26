@@ -14,8 +14,8 @@ function cvExpertGroups(){
     return (e.name+e.role+e.desc+(e.tags||[]).join()+(e.skills||[]).map(function(id){return skillInfo(id).name}).join()).indexOf(kw)>=0;
   });
   return [
-    {title:'Lingee 内置',desc:'随产品一起维护，覆盖交付全流程与苍穹、前端等领域',list:rows.filter(function(e){return e.by==='Lingee 内置'})},
-    {title:'我创建的',desc:'已有的自建专家，可修改配置',list:rows.filter(function(e){return e.mine})}
+    {title:'Lingee 内置',list:rows.filter(function(e){return e.by==='Lingee 内置'})},
+    {title:'我创建的',list:rows.filter(function(e){return e.mine})}
   ];
 }
 function cvBuildExpertCard(e){
@@ -47,8 +47,7 @@ function cvRenderExperts(){
   var html=groups.map(function(g){
     if(!g.list.length) return '';
     var cards=g.list.map(cvBuildExpertCard).join('');
-    return '<div class="expert-section-title">'+g.title
-      +'<span class="expert-section-desc">'+g.desc+'</span></div>'
+    return '<div class="expert-section-title">'+g.title+'</div>'
       +'<div class="apps-grid">'+cards+'</div>';
   }).join('');
   box.innerHTML=html||'<div class="x-empty">没有匹配的专家</div>';

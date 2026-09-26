@@ -146,7 +146,7 @@ function openConfirmerMenu(trigger) {
   var conf = confirmerOf(tid, sid);
   var menu = document.createElement('div');
   menu.className = 'xp-confirmer-menu';
-  var opts = [{ id: '', name: '确认人' }].concat(projectPeople());
+  var opts = projectPeople();
   opts.forEach(function (o) {
     var item = document.createElement('div');
     item.className = 'xp-confirmer-menu-item' + (o.id === conf ? ' checked' : '');

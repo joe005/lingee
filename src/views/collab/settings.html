@@ -1,10 +1,6 @@
 <!-- 设置 · 工作区设置 -->
 <div class="cv-panel" id="cv-config">
   <div class="scroll">
-    <div id="cv-config-header">
-      <div class="scroll-title">设置</div>
-      <div class="scroll-desc">维护人员、系统集成与审计日志</div>
-    </div>
     <div class="config-layout">
       <aside class="config-nav">
         <div class="cv-config-nav-group">基础</div>
@@ -39,10 +35,6 @@
         </div>
         <div class="config-pane" data-config-pane="perm">
           <div class="cv-head">
-            <div>
-              <div class="cv-sec-title">人员</div>
-              <div class="cv-sec-desc">关联灵基用户并设置协作角色；项目成员在项目详情中添加</div>
-            </div>
             <div class="cv-head-right">
               <button class="sync-btn" data-perm="owner" onclick="cvOpenPersonNew()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>添加人员</button>
             </div>
@@ -51,9 +43,6 @@
           <div id="cv-perm-table"></div>
         </div>
         <div class="config-pane hidden" data-config-pane="integration">
-          <div class="cv-head">
-            <div><div class="cv-sec-title">系统集成</div><div class="cv-sec-desc">配置 DevOps、禅道的任务来源与第三方应用凭据</div></div>
-          </div>
           <div class="cv-integration-note">当前是单文件原型：应用密钥仅用于演示录入，不会保存到浏览器；真实鉴权与任务同步需要服务端接入。这里不会向第三方发送请求，请勿填写真实密钥。</div>
           <div class="cv-integration-providers">
             <button type="button" class="cv-integration-provider" data-cv-integration-provider="devops"><span class="cv-integration-mark">D</span><span><b>DevOps</b><small>用户故事、缺陷与任务</small></span><span class="cv-integration-action">配置来源 →</span></button>
@@ -75,8 +64,9 @@
         </div>
         <div class="config-pane hidden" data-config-pane="audit">
           <div class="cv-head cv-audit-head">
-            <div><div class="cv-sec-title">审计日志</div><div class="cv-sec-desc">记录人员、系统集成与项目配置变更</div></div>
-            <button type="button" class="cv-audit-export" id="cv-audit-export">导出当前结果</button>
+            <div class="cv-head-right">
+              <button type="button" class="cv-audit-export" id="cv-audit-export">导出当前结果</button>
+            </div>
           </div>
           <div class="cv-audit-note">原型日志仅保存在当前浏览器，不具备服务端防篡改能力；应用密钥、仓库地址和项目描述正文不会写入日志。</div>
           <div class="cv-audit-card">

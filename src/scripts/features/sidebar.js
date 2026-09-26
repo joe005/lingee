@@ -2,7 +2,7 @@ import { $, $$ } from '../core/dom.js';
 import { toast } from '../core/toast.js';
 import { showView } from '../core/view.js';
 import { openChangelog } from './changelog.js';
-import { openLegacyTaskDetail } from './tasks-v2/index.js';
+
 import { chatResizer } from './composer.js';
 import { LOGIN_KEY, REMEMBER_KEY, loginError, loginForm, showLogin } from './login.js';
 /* 侧边栏：滚动条、用户菜单、图标功能、分段页签、分组折叠
@@ -164,23 +164,6 @@ export function initUserMenu() {
       openChangelog();
     });
   }
-  var legacyPages=$('#userMenuLegacyPages');
-  var legacyList=$('#userMenuLegacyList');
-  if(legacyPages&&legacyList){
-    function toggleLegacyPages(){
-      var expanded=legacyPages.getAttribute('aria-expanded')==='true';
-      legacyPages.setAttribute('aria-expanded',String(!expanded));
-      legacyList.hidden=expanded;
-    }
-    legacyPages.addEventListener('click',toggleLegacyPages);
-    legacyPages.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();toggleLegacyPages();}});
-  }
-  var legacyTaskDetail=$('#userMenuLegacyTaskDetail');
-  if(legacyTaskDetail) legacyTaskDetail.addEventListener('click',function(){
-    closeUserMenu();
-    openLegacyTaskDetail();
-    $$('.nav-item').forEach(function(n){n.classList.remove('active')});
-  });
   if(userMenuLogout) userMenuLogout.addEventListener('click',function(){
     closeUserMenu();
     try{ sessionStorage.removeItem(LOGIN_KEY); }catch(e){}

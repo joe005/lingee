@@ -243,16 +243,9 @@
 #cv-newtask-overlay .nt-context strong{color:var(--text-secondary);font-weight:600}
 #cv-newtask-overlay .nt-title,#cv-newtask-overlay .nt-desc,#cv-newtask-overlay .nt-field select{width:100%;box-sizing:border-box;border:1px solid var(--border-hover);border-radius:9px;padding:10px 12px;background:var(--bg);color:var(--text);font-family:inherit;font-size:var(--tb-body-size)}
 #cv-newtask-overlay .nt-title{font-weight:500;line-height:1.45}
-#cv-newtask-overlay .nt-desc{min-height:92px;resize:vertical;line-height:1.6}
+#cv-newtask-overlay .nt-desc{min-height:92px;resize:none;line-height:1.6}
 #cv-newtask-overlay .nt-field select:disabled{background:var(--fill-1);color:var(--text-secondary)}
 #cv-newtask-overlay .nt-label{font-size:var(--tb-small-size);font-weight:600;color:var(--text)}
-#cv-newtask-overlay .nt-more{border-top:1px solid var(--border);padding-top:4px}
-#cv-newtask-overlay .nt-more>summary{display:flex;align-items:center;gap:9px;padding:12px 0;cursor:pointer;list-style:none;color:var(--brand);font-size:var(--tb-body-size);font-weight:600}
-#cv-newtask-overlay .nt-more>summary::-webkit-details-marker{display:none}
-#cv-newtask-overlay .nt-more>summary small{font-size:var(--tb-small-size);font-weight:400;color:var(--text-soft)}
-#cv-newtask-overlay .nt-more-caret{margin-left:auto;font-size:18px;line-height:1;transition:transform .15s}
-#cv-newtask-overlay .nt-more[open] .nt-more-caret{transform:rotate(180deg)}
-#cv-newtask-overlay .nt-more-body{display:flex;flex-direction:column;gap:20px;padding:8px 0 4px}
 #cv-newtask-overlay .nt-execution{padding:14px;border:1px solid var(--border);border-radius:12px;background:var(--fill-1)}
 #cv-newtask-overlay .nt-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
 #cv-newtask-overlay .nt-section-head h3{margin:0;font-size:var(--tb-small-size);font-weight:600;color:var(--text)}
@@ -269,7 +262,7 @@
 #cv-newtask-overlay .nt-agent-intro p{margin:0;color:var(--text-secondary);font-size:var(--tb-small-size);line-height:1.6}
 #cv-newtask-overlay .nt-agent-prompt{display:flex;flex:1;flex-direction:column;min-height:230px;padding:16px;border:1px solid var(--border);border-radius:12px;background:var(--fill-2)}
 #cv-newtask-overlay .nt-agent-prompt:focus-within{border-color:var(--border-hover);box-shadow:none}
-#cv-newtask-overlay .nt-agent .nt-desc{flex:1;min-height:180px;padding:4px;border:0;background:transparent;resize:vertical;font-size:var(--tb-body-size)}
+#cv-newtask-overlay .nt-agent .nt-desc{flex:1;min-height:180px;padding:4px;border:0;background:transparent;resize:none;font-size:var(--tb-body-size)}
 #cv-newtask-overlay .nt-agent .nt-desc:focus{outline:0}
 #cv-newtask-overlay :is(input,textarea,select):focus-visible{outline:0;box-shadow:none;border-color:var(--brand)}
 #cv-newtask-overlay .nt-prompt-hint{padding:8px 4px 0;color:var(--text-soft);font-size:var(--tb-caption-size)}
@@ -283,8 +276,6 @@
   #cv-newtask-overlay .nt-agent-trigger>svg{width:15px;height:15px}
   #cv-newtask-overlay .nt-agent{min-height:300px;gap:16px}
   #cv-newtask-overlay .nt-agent-prompt{min-height:200px;padding:12px}
-  #cv-newtask-overlay .nt-more>summary{flex-wrap:wrap}
-  #cv-newtask-overlay .nt-more>summary small{order:3;width:100%}
   #cv-newtask-overlay .nt-foot{padding:12px 18px}
   #cv-newtask-overlay .nt-foot-hint{display:none}
   #cv-newtask-overlay .nt-foot-right{margin-left:auto}
@@ -358,13 +349,16 @@
 #cv-newtask-overlay .nt-expert-person{flex:0 0 118px;width:118px;box-sizing:border-box;padding:5px 22px 5px 9px;border:1px solid var(--border-hover);border-radius:7px;background:var(--bg);color:var(--text);font:inherit;font-size:var(--tb-small-size);cursor:pointer}
 #cv-newtask-overlay .nt-expert-row.is-unassigned .nt-expert-person{border-style:dashed;color:var(--text-soft)}
 #cv-newtask-overlay .nt-property-bar{position:relative;z-index:2;display:flex;align-items:center;justify-content:flex-start;gap:8px;padding:10px 32px 16px;border:0;background:var(--bg);flex:none;flex-wrap:wrap}
-#cv-newtask-overlay .nt-property,#cv-newtask-overlay .nt-property-bar .nt-more>summary{display:inline-flex;align-items:center;gap:8px;min-height:40px;max-width:280px;padding:0 14px;border:1px solid var(--border);border-radius:999px;background:var(--bg);color:var(--text-secondary);font:inherit;font-size:13px;font-weight:500;white-space:nowrap;cursor:pointer}
-#cv-newtask-overlay .nt-property:hover,#cv-newtask-overlay .nt-property-bar .nt-more>summary:hover{border-color:var(--border-hover);background:var(--fill-2)}
+#cv-newtask-overlay .nt-property{display:inline-flex;align-items:center;gap:8px;min-height:40px;max-width:280px;padding:0 14px;border:1px solid var(--border);border-radius:999px;background:var(--bg);color:var(--text-secondary);font:inherit;font-size:13px;font-weight:500;white-space:nowrap;cursor:pointer}
+#cv-newtask-overlay .nt-property:hover{border-color:var(--border-hover);background:var(--fill-2)}
 #cv-newtask-overlay .nt-property select{width:auto;min-width:0;max-width:220px;padding:0 16px 0 0;border:0;border-radius:0;background:transparent;color:var(--text);font:inherit;cursor:pointer}
 #cv-newtask-overlay .nt-property--project,#cv-newtask-overlay .nt-property--team,#cv-newtask-overlay .nt-property--assignee,#cv-newtask-overlay .nt-property--priority{flex:0 1 auto;min-width:0}
 #cv-newtask-overlay .nt-property--project select{max-width:190px}
 #cv-newtask-overlay .nt-property--team select{max-width:210px}
 #cv-newtask-overlay .nt-property--assignee select{max-width:170px}
+#cv-newtask-overlay .nt-property--priority select{-webkit-appearance:none;appearance:none;-moz-appearance:none;padding-right:0;color:var(--text-secondary)}
+#cv-newtask-overlay .nt-property--priority select option{color:var(--text)}
+#cv-newtask-overlay .nt-pri-caret{opacity:.5;flex:none}
 #cv-newtask-overlay .nt-property--assignee{position:relative}
 #cv-newtask-overlay .nt-person-trigger{display:inline-flex;align-items:center;gap:6px;background:none;border:0;cursor:pointer;font:inherit;color:var(--text-secondary);padding:0}
 #cv-newtask-overlay .nt-person-trigger:disabled{opacity:.5;cursor:default}
@@ -382,15 +376,20 @@
 #cv-newtask-overlay .nt-seg-btn{display:inline-flex;align-items:center;justify-content:center;min-height:31px;padding:5px 10px;border:0;border-radius:999px;background:transparent;white-space:nowrap}
 #cv-newtask-overlay .nt-seg-btn.on{border:0;background:var(--brand-fill);color:var(--brand);box-shadow:none}
 #cv-newtask-overlay .nt-seg-btn b{font-size:12px;color:inherit}
-#cv-newtask-overlay .nt-more{position:static;flex:none;margin:0;padding:0;border:0}
-#cv-newtask-overlay .nt-property-bar .nt-more>summary{font-size:20px;line-height:1;padding:0 13px}
-#cv-newtask-overlay .nt-property-bar .nt-more-body{position:absolute;right:28px;bottom:calc(100% + 8px);width:min(340px,calc(100vw - 40px));max-height:min(50vh,420px);overflow:auto;gap:14px;padding:16px;border:1px solid var(--border);border-radius:12px;background:var(--bg);box-shadow:var(--menu-shadow);z-index:12}
+#cv-newtask-overlay .nt-more{position:relative;flex:none;margin:0;padding:0;border:0}
+/* 三点按钮——1:1 复刻 Multica PillButton + MoreHorizontal(size-3.5) */
+#cv-newtask-overlay .nt-more-trigger{display:inline-flex;align-items:center;justify-content:center;height:40px;padding:0 10px;border:1px solid var(--border);border-radius:999px;background:var(--bg);color:var(--text-secondary);font-family:inherit;cursor:pointer;transition:background .15s,border-color .15s,color .15s}
+#cv-newtask-overlay .nt-more-trigger:hover{background:var(--hover);color:var(--text)}
+#cv-newtask-overlay .nt-more-trigger[aria-expanded="true"]{background:var(--hover);color:var(--text);border-color:var(--border-hover)}
+#cv-newtask-overlay .nt-more-body{display:flex;flex-direction:column;position:absolute;right:0;bottom:calc(100% + 4px);width:min(240px,calc(100vw - 40px));max-height:min(50vh,420px);overflow:auto;gap:14px;padding:12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);box-shadow:var(--menu-shadow);z-index:50}
+#cv-newtask-overlay .nt-more-body[hidden]{display:none}
 #cv-newtask-overlay .nt-foot{min-height:78px;padding:10px 32px;border-top:1px solid var(--border);background:var(--bg)}
 #cv-newtask-overlay .nt-foot-right{display:flex;align-items:center;gap:8px}
-#cv-newtask-overlay .nt-attach-trigger{border:0;background:transparent;color:var(--text-secondary);font:inherit;font-size:22px;cursor:pointer}
+#cv-newtask-overlay .nt-attach-trigger{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border:0;border-radius:8px;background:transparent;color:var(--text-secondary);cursor:pointer;transition:all .15s}
+#cv-newtask-overlay .nt-attach-trigger:hover{color:var(--text);background:var(--fill-2)}
 #cv-newtask-overlay .nt-agent-trigger{order:0;margin-right:8px;border:0;background:transparent;color:var(--brand);font-size:13px;font-weight:500}
 #cv-newtask-overlay .nt-btn{min-height:38px}
-#cv-newtask-overlay :is(button,summary,select):focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+#cv-newtask-overlay :is(button,select):focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 #cv-newtask-overlay .nt-agent{min-height:0;flex:1}
 @media(max-width:760px){
   #cv-newtask-overlay .nt-modal{width:calc(100vw - 20px);height:calc(100vh - 20px);max-height:calc(100vh - 20px);border-radius:14px}
@@ -400,7 +399,7 @@
   #cv-newtask-overlay .nt-desc{font-size:16px}
   #cv-newtask-overlay .nt-expert-id{flex-basis:108px}
   #cv-newtask-overlay .nt-property-bar{gap:6px;padding:8px 16px 12px}
-  #cv-newtask-overlay .nt-property,#cv-newtask-overlay .nt-property-bar .nt-more>summary{min-height:36px;padding:0 10px;font-size:12px}
+  #cv-newtask-overlay .nt-property,#cv-newtask-overlay .nt-more-trigger{min-height:36px;padding:0 10px;font-size:12px}
   #cv-newtask-overlay .nt-foot{min-height:64px;padding:8px 16px}
   #cv-newtask-overlay .nt-agent-trigger{font-size:12px;margin-right:0}
 }
@@ -430,7 +429,7 @@
 #cv-newtask-overlay .nt-draft-content{display:flex;flex:1;flex-direction:column;gap:14px;min-height:0;padding:20px;overflow-y:auto}
 #cv-newtask-overlay .nt-draft-title,#cv-newtask-overlay .nt-draft-desc{width:100%;box-sizing:border-box;border:0;background:transparent;color:var(--text);font-family:inherit;outline:0}
 #cv-newtask-overlay .nt-draft-title{font-size:22px;font-weight:600;line-height:1.4}
-#cv-newtask-overlay .nt-draft-desc{flex:1;min-height:140px;resize:vertical;font-size:14px;line-height:1.75}
+#cv-newtask-overlay .nt-draft-desc{flex:1;min-height:140px;resize:none;font-size:14px;line-height:1.75}
 #cv-newtask-overlay .nt-draft-title:focus-visible,#cv-newtask-overlay .nt-draft-desc:focus-visible{outline:2px solid var(--focus-ring);outline-offset:4px;border-radius:2px}
 #cv-newtask-overlay .nt-agent-messages{display:flex;flex:1;flex-direction:column;gap:14px;min-height:0;padding:18px;overflow-y:auto}
 #cv-newtask-overlay .nt-agent-welcome{margin:0;color:var(--text-secondary);font-size:12px;line-height:1.6}
@@ -439,7 +438,7 @@
 #cv-newtask-overlay .nt-agent-message--assistant{align-self:flex-start}
 #cv-newtask-overlay .nt-agent-composer{margin:0 14px 14px;padding:10px 12px;border:1px solid var(--border-hover);border-radius:10px;background:var(--bg)}
 #cv-newtask-overlay .nt-agent-composer:focus-within{border-color:var(--brand)}
-#cv-newtask-overlay .nt-agent-composer textarea{display:block;width:100%;min-height:68px;box-sizing:border-box;padding:0;border:0;background:transparent;color:var(--text);font:inherit;font-size:13px;line-height:1.5;resize:vertical;outline:0}
+#cv-newtask-overlay .nt-agent-composer textarea{display:block;width:100%;min-height:68px;box-sizing:border-box;padding:0;border:0;background:transparent;color:var(--text);font:inherit;font-size:13px;line-height:1.5;resize:none;outline:0}
 #cv-newtask-overlay .nt-agent-composer-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px}
 #cv-newtask-overlay .nt-agent-composer-foot span{font-size:11px;color:var(--text-soft)}
 #cv-newtask-overlay .nt-agent-composer-foot button{min-height:30px;padding:5px 12px;border:0;border-radius:7px;background:var(--brand);color:#fff;font:inherit;font-size:12px;cursor:pointer}
@@ -470,3 +469,4 @@
 #cv-newtask-overlay .nt-toggle input:checked+.nt-toggle-track::after{transform:translateX(14px)}
 #cv-newtask-overlay .nt-toggle-label{font-size:13px;color:var(--text-secondary)}
 #cv-newtask-overlay.nt-fullscreen .nt-modal{width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;border-radius:0!important}
+#cv-newtask-overlay textarea{resize:none!important}

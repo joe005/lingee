@@ -61,7 +61,7 @@
 .cv-scope .sync-modal__input{width:100%;padding:10px 12px;border:1px solid var(--border-hover);border-radius:9px;font-size:14px;color:var(--text);background:#fff;outline:none;transition:border-color .15s,box-shadow .15s}
 .cv-scope .sync-modal__input:focus{border-color:var(--border-focus);box-shadow:0 0 0 3px rgba(73,93,255,.08)}
 .cv-scope .sync-modal__input::placeholder{color:var(--text-soft)}
-.cv-scope .sync-modal__textarea{width:100%;padding:10px 12px;border:1px solid var(--border-hover);border-radius:9px;font-size:13.5px;color:var(--text);background:#fff;outline:none;resize:vertical;line-height:1.6;transition:border-color .15s,box-shadow .15s}
+.cv-scope .sync-modal__textarea{width:100%;padding:10px 12px;border:1px solid var(--border-hover);border-radius:9px;font-size:13.5px;color:var(--text);background:#fff;outline:none;resize:none;line-height:1.6;transition:border-color .15s,box-shadow .15s}
 .cv-scope .sync-modal__textarea:focus{border-color:var(--border-focus);box-shadow:0 0 0 3px rgba(73,93,255,.08)}
 .cv-scope .sync-modal__row{display:flex;gap:12px}
 .cv-scope .sync-modal__row .sync-modal__field{flex:1}

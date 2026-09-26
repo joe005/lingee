@@ -8,6 +8,7 @@ import { openAppDropdown } from './attach-app.js';
 
 /* ---------- Changelog / 更新日志 ---------- */
 var changelogData=[
+  {id:'52',date:'2026-09-26',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'优化',module:'任务管理',author:'Joe wu',body:'移除废弃版本功能：从侧边栏及右键菜单彻底移除废弃页面入口，清理相关样式与代码。'},
   {id:'51',date:'2026-09-26',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'Joe wu',team:'新建任务专家团确认人',body:'新建任务专家团确认人：新建任务弹窗悬停展开专家团交付阶段二级面板，各阶段可用自定义下拉指定产物确认人，选择后面板保持展开以继续配置。'},
   {id:'50',date:'2026-09-26',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'liangpingxian',team:'任务会话与产物预览',body:'任务会话与产物预览：任务详情新增「我的会话」，可查看并回到自己围绕任务发起的会话；交付物文档改为右侧弹出预览并按任务生成内容；侧边栏新增专家团演示会话。'},
   {id:'49',date:'2026-09-26',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'优化',module:'任务管理',author:'Joe wu',team:'任务创建与详情优化',body:'任务创建与详情优化：多人协作改为按专家分工指定负责人，交付物改为侧边栏预览并扩充内容，异常任务可查看历史会话，审核退回跳转会话二次修改。'},
@@ -49,6 +50,7 @@ var changelogData=[
 ];
 // 每个数据条目对应的 avatar SVG 图标（与 Build_demo 的 lucide 图标一致）
 var changelogIcons={
+  '52':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6v13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M10 11v6M14 11v6"/></svg>',
   '51':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>',
   '50':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
   '49':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>',

@@ -96,6 +96,7 @@ function saveTask() {
   }
   closeTaskModal();
   render();
+  toast(taskViewState.editingTaskId ? '保存成功' : '创建成功', 'success');
   if (createdForOpenParent) openDrawer(taskViewState.drawerTaskId);
 }
 

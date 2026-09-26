@@ -23,7 +23,7 @@
 .tk-form-row input:focus,.tk-form-row textarea:focus,.tk-form-row select:focus{border-color:var(--border-focus)}
 .tk-save-view-hint,.tk-save-view-summary{font-size:12px;color:var(--text-secondary);margin:0 0 14px}
 .tk-save-view-summary{margin:0}
-.tk-form-row textarea{resize:vertical}
+.tk-form-row textarea{resize:none}
 .tk-req{color:var(--danger)}
 .tk-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .tk-form-field label{display:block;font-size:13px;color:var(--text-secondary);margin-bottom:5px}

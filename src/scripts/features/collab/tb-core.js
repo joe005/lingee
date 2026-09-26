@@ -1,6 +1,7 @@
 import { CV_TASKS, CV_PROJECTS } from './data.js';
 import { TEAMS } from '../expert/store.js';
 import { EX, STAGES, STAGE_MODES } from '../expert/data.js';
+import { toast } from '../../core/toast.js';
 /* 任务看板共享核心：列定义、当前任务、状态持久化与派生工具
    task-board / new-task / task-chat 三个模块共用，避免彼此循环依赖。 */
 
@@ -64,6 +65,6 @@ export function tbTeamStages(team) {
 export function tbLabel(status) { return tbColumns.find(c => c[0] === status)?.[1] || status; }
 export function tbSave() {
   try { localStorage.setItem(storageKey, JSON.stringify(CV_TASKS)); return true; }
-  catch { window.alert('本地空间不足，修改仅保留在本次打开的页面中。'); return false; }
+  catch { toast('保存失败，本地存储空间不足', 'error'); return false; }
 }
 export { storageKey };

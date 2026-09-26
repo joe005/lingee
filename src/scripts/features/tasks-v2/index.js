@@ -62,7 +62,7 @@ var state = {
   layout: 'board', viewMode: 'slide', scope: 'all', groupBy: 'status', sortBy: 'createDate', sortDir: 'desc',
   search: '', filters: [], selectedIds: new Set(), activeViewId: 'all',
   showSubtasks: true,
-  cardProperties: { priority:true, description:false, assignee:true, startDate:false, dueDate:true, project:false, labels:false, childProgress:true },
+  cardProperties: { priority:true, description:false, assignee:true, startDate:false, dueDate:true, project:true, labels:false, childProgress:true },
   listFieldOrder: DEFAULT_LIST_FIELD_ORDER.slice(), listFieldVisibility: { labels:false },
   editingTaskId: null, drawerTaskId: null, editingParentId: null,
 };
@@ -76,10 +76,8 @@ var docPreviewSavedDrawerWidth = null;
 var collapsedParents = new Set();
 var subtaskSectionExpanded = new Map();
 var flowAssigneeDraft = { taskId: null, assigneeId: '' };
-var legacyDetailPreview = false;
 var taskDetailVersion = 'latest';
 var TASK_DETAIL_VERSION_STORAGE_KEY = 'lingee_tasks_detail_version';
-function closeTaskDetailVersionMenu() { document.getElementById('tkDetailVersionMenu')?.remove(); }
 var lastOpenedTaskId = null;
 var drawerCloseTimer = null;
 var drawerOpenFrame = null;
@@ -103,7 +101,7 @@ function taskHeaderAction(task) {
 function renderTaskStartAction() {
   var button = els.tkDrawerChat;
   if (!button) return;
-  if (!legacyDetailPreview && taskDetailVersion === 'latest') {
+  if (taskDetailVersion === 'latest') {
     var task = tkGetTasks().find(function (row) { return row.id === state.drawerTaskId; });
     var action = taskHeaderAction(task);
     button.hidden = !action;
@@ -132,6 +130,7 @@ function persistViewState() {
       filters:state.filters,
       showSubtasks:state.showSubtasks,
       collapsedTaskIds:Array.from(collapsedParents),
+      collapsedBoardGroups:Array.from(taskViewState.collapsedBoardGroups),
       cardProperties:state.cardProperties,
       listFieldOrder:state.listFieldOrder,
       listFieldVisibility:state.listFieldVisibility,
@@ -159,6 +158,11 @@ function restoreViewState() {
       return Number.isInteger(id) && taskIds.has(id);
     }));
   }
+  if (Array.isArray(saved.collapsedBoardGroups)) {
+    taskViewState.collapsedBoardGroups = new Set(saved.collapsedBoardGroups.filter(function (k) {
+      return typeof k === 'string';
+    }));
+  }
   if (saved.cardProperties && typeof saved.cardProperties === 'object') {
     Object.keys(state.cardProperties).forEach(function (key) {
       if (typeof saved.cardProperties[key] === 'boolean') state.cardProperties[key] = saved.cardProperties[key];
@@ -173,7 +177,7 @@ function restoreViewState() {
     });
   }
   if (Array.isArray(saved.filters)) {
-    var fields = ['status','priority','dueDate','assignee','creator','project','projectStatus','label','keyword'];
+    var fields = ['status','priority','dueDate','assignee','creator','project','label','keyword'];
     var operators = ['eq','neq','contains','not_contains','today','overdue','before','after'];
     state.filters = saved.filters.slice(0, 30).filter(function (f) {
       return f && fields.includes(f.field) && operators.includes(f.op) && typeof f.value === 'string';
@@ -192,7 +196,7 @@ function cacheEls() {
     'tkDisplayBtn','tkDisplayPopover','tkFieldsBtn','tkFieldsPopover','tkFieldsClose','tkFieldsSearch','tkFieldsList','tkFieldsSummary','tkGroupSelect','tkViewModeSelect','tkSortSelect','tkSortDirection','tkShowSubtasks','tkCardProperties','tkCardPropsSection',
     'tkLayoutToggle','tkBody','tkBoard','tkBoardScroll','tkList','tkListBody','tkListHead','tkSplitEmpty',
     'tkCheckAll','tkEmpty','tkResetFilter','tkBulkBar','tkBulkCount','tkBulkClear',
-    'tkDrawer','tkDrawerClickaway','tkDrawerResize','tkDrawerClose','tkDrawerTitle','tkDrawerCode','tkDrawerBody','tkDrawerMore','tkDrawerSidebarToggle','tkDrawerChat',
+    'tkDrawer','tkDrawerClickaway','tkDrawerResize','tkDrawerClose','tkDrawerTitle','tkDrawerCode','tkDrawerBody','tkDrawerMore','tkDrawerChat',
     'tkModalOverlay','tkModalClose','tkModalSave','tkModalTitle','tkMcExpand','tkMcContinue','tkMcAgent','tkMcAgentPanel','tkMcAgentChat','tkMcAgentPrompt','tkMcAgentSend',
     'tkFormTitle','tkFormDesc','tkFormStatus','tkFormPriority','tkFormAssignee','tkFormProject','tkFormDue','tkFormLabels',
     'tkSaveViewOverlay','tkSaveViewClose','tkSaveViewCancel','tkSaveViewConfirm','tkSaveViewName','tkSaveViewVisibility','tkSaveViewScope','tkSaveViewLayout','tkSaveViewSummary',
@@ -326,10 +330,10 @@ function showCardMenu(taskId, anchorEl, detailOnly) {
 function handleCardAction(act, aid) {
   if (act === 'chat') { openTaskConversationWithTask(aid); }
   else if (act === 'edit') { openDrawer(aid); }
-  else if (act === 'delete') { tkDeleteTask(aid); render(); }
+  else if (act === 'delete') { tkDeleteTask(aid); render(); toast('删除成功', 'success'); }
   else if (act === 'copy') {
     var src = tkGetTasks().find(function(x){return x.id===aid;});
-    if (src) { tkAddTask(Object.assign({}, src, {labels:(src.labels||[]).slice(), createDate:new Date().toISOString().slice(0,10)})); render(); }
+    if (src) { tkAddTask(Object.assign({}, src, {labels:(src.labels||[]).slice(), createDate:new Date().toISOString().slice(0,10)})); render(); toast('复制成功', 'success'); }
   }
   else if (act === 'subtask') {
     var parent = tkGetTasks().find(function(x){return x.id===aid;});
@@ -339,6 +343,7 @@ function handleCardAction(act, aid) {
         labels:(parent.labels||[]).slice(), dueDate:'', createDate:new Date().toISOString().slice(0,10),
         parentId: parent.id });
       render();
+      toast('创建成功', 'success');
     }
   }
 }
@@ -460,7 +465,6 @@ function matchFilter(task, filter) {
   var field = filter.field, op = filter.op, val = filter.value;
   if (!val && op !== 'today' && op !== 'overdue') return true;
   if (field === 'creator') return task.createdBy === val;
-  if (field === 'projectStatus') return val === 'active' && !!task.project;
   if (field === 'label' && op === 'eq') return (task.labels || []).includes(val);
   if (field === 'keyword') {
     if (op === 'contains') return (task.title + task.desc + task.code).toLowerCase().indexOf(String(val).toLowerCase()) >= 0;
@@ -564,15 +568,18 @@ function renderBoard() {
   var html = groups.map(function (g) {
     var tree = buildTaskTree(g.tasks);
     var cards = renderTreeNodes(tree.roots, tree.childrenMap, 0);
+    var collapsed = taskViewState.collapsedBoardGroups.has(g.key);
+    var toggleLabel = collapsed ? '展开分组' : '折叠分组';
+    var arrow = collapsed ? '18 15 12 9 6 15' : '6 9 12 15 18 9';
     return '<div class="tk-board-col" data-group-key="' + g.key + '">'
       + '<div class="tk-board-col-head"><div class="tk-board-col-head-left">'
       + statusSvg(g.key)
       + '<span class="tk-board-col-name">' + escapeHtml(g.name) + '</span>'
       + '<span class="tk-board-col-count">' + g.tasks.length + '</span>'
       + '</div><div class="tk-board-col-head-right">'
-      + '<button class="tk-board-col-toggle" data-toggle-col data-tooltip="折叠分组" aria-label="折叠分组"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>'
+      + '<button class="tk-board-col-toggle" data-toggle-col data-tooltip="' + toggleLabel + '" aria-label="' + toggleLabel + '"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="' + arrow + '"/></svg></button>'
       + '</div></div>'
-      + '<div class="tk-board-col-body">' + cards + '</div>'
+      + '<div class="tk-board-col-body' + (collapsed ? ' collapsed' : '') + '">' + cards + '</div>'
       + '</div>';
   }).join('');
   els.tkBoardScroll.innerHTML = html;
@@ -1036,6 +1043,7 @@ function saveInlineTask() {
      if (!projectId || !tkProjectsForCurrentUser().some(function (project) { return project.id === projectId; })) { toast('请先加入项目再创建任务', 'warning'); render(); return; }
      tkAddTask({ id:mx+1, code:'T'+String(1000000+mx+1), title:title, desc:'', status:'backlog', priority:'medium', assignee: av || tkPeopleInProject(projectId)[0]?.id || '', project:projectId, labels:[], dueDate:'', createDate:new Date().toISOString().slice(0,10) });
     render();
+    toast('创建成功', 'success');
   }, 400);
 }
 function updateCheckAll() {
@@ -1263,6 +1271,7 @@ function saveTask() {
     toast('任务已创建，可继续创建下一个', 'success');
   } else {
     closeTaskModal();
+    toast(state.editingTaskId ? '保存成功' : '创建成功', 'success');
   }
   render();
   if (createdForOpenParent && !keepOpen) openDrawer(state.drawerTaskId);
@@ -1882,7 +1891,7 @@ function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml,
   var teamId = task.teamId || project?.defaultTeam;
   var team = TEAMS.find(function (row) { return row.id === teamId; }) || PRESET_TEAMS.find(function (row) { return row.id === teamId; });
   var currentDetail = latest ? latest.stage + ' · ' + latest.author : '尚未分派执行专家';
-  var latestLayout = !legacyDetailPreview && taskDetailVersion === 'latest';
+  var latestLayout = taskDetailVersion === 'latest';
   var feedback = activeRun ? renderTaskRunFeedback(activeRun)
     : latest ? '<div class="tk-exec-feedback-line is-' + currentState + '"><span class="tk-exec-feedback-icon" aria-hidden="true">' + renderTaskRunIndicator(currentState === 'blocked' ? 'failed' : 'completed') + '</span>'
       + '<p>' + escapeHtml(currentState === 'blocked' ? task.blockedRun?.reason || latest.text : currentState === 'review' ? task.reviewReport?.review || latest.text : task.completedRun?.result || latest.text) + '</p>'
@@ -1892,8 +1901,8 @@ function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml,
     + '<button type="button" class="tk-blocked-run-retry" data-action="blocked-retry">重试任务</button></div>' : '';
   var historyButton = stageCount > (latestLayout ? 1 : 0) ? '<div class="tk-exec-card-more"><button type="button" class="tk-feed-stage-history-toggle" data-stage-history-toggle aria-expanded="false" aria-controls="' + (latestLayout ? 'tkOlderStageHistory' : 'tkStageHistory') + '">' + (latestLayout ? '展开明细' : '查看过程明细') + '</button></div>' : '';
   return '<section class="tk-feed-stage-overview tk-exec-card is-' + currentState + '" aria-label="执行概览">'
-    + '<div class="tk-exec-card-head tk-agent-report-head">' + (!legacyDetailPreview && taskDetailVersion === 'latest' ? renderTaskTeamAvatarGroup(team) : '<span class="tk-exec-card-mark tk-agent-report-mark" aria-hidden="true">✦</span>') + '<div class="tk-exec-card-identity tk-agent-report-heading"><strong>' + escapeHtml(team?.name || '任务专家团') + '</strong>'
-    + (legacyDetailPreview || taskDetailVersion === 'v1' ? '<span>当前阶段 · ' + escapeHtml(currentDetail) + '</span>' : '') + '</div><span class="tk-feed-stage-current tk-agent-report-state is-' + currentState + '">' + escapeHtml(currentLabel) + '</span></div>'
+    + '<div class="tk-exec-card-head tk-agent-report-head">' + (taskDetailVersion === 'latest' ? renderTaskTeamAvatarGroup(team) : '<span class="tk-exec-card-mark tk-agent-report-mark" aria-hidden="true">✦</span>') + '<div class="tk-exec-card-identity tk-agent-report-heading"><strong>' + escapeHtml(team?.name || '任务专家团') + '</strong>'
+    + (taskDetailVersion === 'v1' ? '<span>当前阶段 · ' + escapeHtml(currentDetail) + '</span>' : '') + '</div><span class="tk-feed-stage-current tk-agent-report-state is-' + currentState + '">' + escapeHtml(currentLabel) + '</span></div>'
     + '<div class="tk-feed-stage-overview-head"><strong>执行进度</strong></div>'
     + '<ol class="tk-feed-stage-list">' + STAGES.map(function (stage) {
       var entry = byId.get(stage.id);
@@ -1903,7 +1912,7 @@ function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml,
         : statusSvg(state === 'done' ? 'done' : state === 'review' ? 'in_review' : state === 'blocked' ? 'blocked' : 'backlog');
       return '<li class="tk-feed-stage is-' + state + '" aria-label="' + escapeHtml(stage.name + '，' + label) + '"' + (['running','review','blocked'].includes(state) ? ' aria-current="step"' : '') + '><span class="tk-feed-stage-mark" aria-hidden="true">' + icon + '</span>'
         + '<span class="tk-feed-stage-name">' + escapeHtml(stage.name) + '</span><span class="tk-feed-stage-state">' + label + '</span>'
-        + (task.status === 'in_review' && state === 'review' && !legacyDetailPreview && taskDetailVersion === 'latest'
+        + (task.status === 'in_review' && state === 'review' && taskDetailVersion === 'latest'
           ? '<span class="tk-feed-stage-review-actions"><button type="button" class="tk-feed-stage-review-btn" data-stage-review-status="done" aria-label="通过' + escapeHtml(stage.name) + '审核，进入下一步">下一步</button><button type="button" class="tk-feed-stage-review-btn is-reject" data-stage-review-status="in_progress" aria-label="退回修改' + escapeHtml(stage.name) + '，跳转会话二次修改">修改</button></span>' : '')
         + (task.status === 'blocked' && state === 'blocked' && latestLayout
           ? '<span class="tk-feed-stage-review-actions"><button type="button" class="tk-feed-stage-review-btn" data-stage-view-session aria-label="查看' + escapeHtml(stage.name) + '的会话详情与执行异常">查看会话</button></span>' : '') + '</li>';
@@ -2035,26 +2044,13 @@ function renderTaskComments(t) {
     blockedReason:t.blockedRun?.reason,
     assigneeName:tkGetPerson(t.assignee).name,
   });
-  var latestLayout = !legacyDetailPreview && taskDetailVersion === 'latest';
+  var latestLayout = taskDetailVersion === 'latest';
   var deliveredStages = new Map(activity.filter(function (entry) {
     return entry.expertId && (entry.state === 'done' || (latestLayout && entry.state === 'review'));
   }).map(function (entry) { return [entry.stageId, entry]; }));
   var artifacts = tkGetTaskArtifacts(t).filter(function (artifact) { return deliveredStages.has(artifact.stageId); }).map(function (artifact) {
     return latestLayout ? Object.assign({}, artifact, {author:deliveredStages.get(artifact.stageId).author}) : artifact;
   });
-  if (legacyDetailPreview) {
-    /* 废弃页面只保留旧版评论列表，不渲染新版才有的智能体执行报告与专家团交付过程动态 */
-    if (!comments.length) return '<div class="tk-drawer-comments-empty">暂无评论</div>';
-    return comments.slice().reverse().map(function (entry) {
-      var author = tkGetPerson(entry.authorId).name;
-      var summary = '流转至「' + tkGetStatusName(entry.status) + '」，处理人「' + tkGetPerson(entry.assignee).name + '」';
-      return '<div class="tk-drawer-comment">'
-        + '<div class="tk-drawer-comment-head"><span class="tk-drawer-comment-author">' + escapeHtml(author) + '</span><span class="tk-drawer-comment-time">' + escapeHtml(entry.createdAt) + '</span></div>'
-        + (entry.kind === 'comment' ? '' : '<div class="tk-drawer-comment-action">' + escapeHtml(summary) + '</div>')
-        + (entry.text ? '<div class="tk-drawer-comment-text">' + escapeHtml(entry.text) + '</div>' : '')
-        + '</div>';
-    }).join('');
-  }
   var reportHtml = renderDemoReviewReport(t, artifacts) + renderDemoBlockedRun(t, artifacts) + renderDemoCompletedRun(t, artifacts);
   var events = activity.map(function (entry, index) {
     return { type:'delivery', time:entry.time, index:index, entry:entry };
@@ -2173,15 +2169,13 @@ function taskCommentTimestamp() {
 
 export function openTaskDetail(taskId) { openDrawer(Number(taskId)); }
 /* 从会话关联标签跳转：跳过项目权限检查（会话已建立关联，视为有权查看） */
-export function openTaskDetailFromSession(taskId) { openDrawer(Number(taskId), false, true); }
+export function openTaskDetailFromSession(taskId) { openDrawer(Number(taskId), true); }
 
-function openDrawer(taskId, legacyMode, skipProjectCheck) {
+function openDrawer(taskId, skipProjectCheck) {
   closeTaskLabelPicker();
   var t = tkGetTasks().find(function (x) { return x.id === taskId; });
   if (!t) return;
   if (!skipProjectCheck && !tkProjectsForCurrentUser().some(function (project) { return project.id === t.project; })) { toast('未加入该项目，无法查看任务', 'warning'); return; }
-  if (legacyMode === true) legacyDetailPreview = true;
-  else if (lastOpenedTaskId !== taskId) legacyDetailPreview = false;
   lastOpenedTaskId = taskId;
   if (flowAssigneeDraft.taskId !== taskId) {
     var savedAssignee = tkPeopleInProject(t.project).some(function (person) { return person.id === t.flowAssignee; }) ? t.flowAssignee : '';
@@ -2198,10 +2192,9 @@ function openDrawer(taskId, legacyMode, skipProjectCheck) {
   var projOpts = tkProjectsForCurrentUser().map(function (p) { return { value: p.id, label: p.name }; });
   els.tkDrawerTitle.textContent = t.title;
   els.tkDrawerCode.textContent = '#' + t.code;
-  els.tkDrawer.classList.toggle('tk-drawer--legacy', legacyDetailPreview);
-  els.tkDrawer.classList.toggle('tk-drawer--latest', !legacyDetailPreview && taskDetailVersion === 'latest');
-  els.tkDrawer.setAttribute('data-detail-version', legacyDetailPreview ? 'legacy' : taskDetailVersion);
-  els.tkDrawerTitle.title = '右键切换任务详情版本';
+  els.tkDrawer.classList.toggle('tk-drawer--latest', taskDetailVersion === 'latest');
+  els.tkDrawer.setAttribute('data-detail-version', taskDetailVersion);
+  els.tkDrawerTitle.title = '双击编辑标题';
   renderTaskStartAction();
   var _savedDetailsOpen = Array.from(els.tkDrawerBody.querySelectorAll('details')).map(function (d) { return d.open; });
   els.tkDrawerBody.innerHTML =
@@ -2211,7 +2204,6 @@ function openDrawer(taskId, legacyMode, skipProjectCheck) {
         '<button type="button" class="tk-drawer-tab" data-tab="changelog">变更日志</button>' +
       '</div>' +
       '<div class="tk-drawer-tab-content active" data-tab-content="info">' +
-        (legacyDetailPreview ? '<div class="tk-legacy-detail-note">废弃页面 · 旧版任务详情</div>' : '') +
         '<div class="tk-drawer-desc" contenteditable="true" data-field="desc">' + escapeHtml(t.desc || '点击添加描述…') + '</div>' +
         '<div class="tk-drawer-attachments">' +
           '<div class="tk-attach-dropzone" id="tkAttachDropzone" role="button" tabindex="0" data-tooltip="添加附件（支持粘贴、拖拽）" aria-label="添加附件（支持粘贴、拖拽）">' +
@@ -2221,17 +2213,10 @@ function openDrawer(taskId, legacyMode, skipProjectCheck) {
           '<div class="tk-attach-list" id="tkAttachList"></div>' +
         '</div>' +
         renderSubtasksSection(t) +
-        (legacyDetailPreview ? '' : renderMySessionsSection(t)) +
+        renderMySessionsSection(t) +
         '<div class="tk-drawer-comments"><div class="tk-drawer-comments-head"><div class="tk-drawer-comments-title">动态</div></div>' +
           renderTaskComments(t) +
-          (legacyDetailPreview ? '<div class="tk-drawer-flow-fields">' +
-            '<div class="tk-flow-field"><span class="tk-flow-field-label">状态</span><div class="tk-flow-pills">' +
-              TK_STATUSES.map(function(s) { return '<button type="button" class="tk-flow-pill' + (s.id === t.status ? ' active' : '') + '" data-flow-status="' + s.id + '">' + s.name + '</button>'; }).join('') +
-            '</div></div>' +
-            '<div class="tk-flow-field"><span class="tk-flow-field-label">处理人</span><div class="tk-flow-field-value tk-flow-field-lg' + (flowAssigneeDraft.assigneeId ? '' : ' is-placeholder') + '" data-flow-prop="assignee"><input class="tk-flow-field-text" type="text" value="' + (flowAssigneeDraft.assigneeId ? escapeHtml(tkGetPerson(flowAssigneeDraft.assigneeId).name) : '') + '" placeholder="请选择" aria-label="处理人" role="combobox" aria-expanded="false" autocomplete="off"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div></div>' +
-          '</div>' +
-          '<div class="tk-drawer-comment-input"><textarea placeholder="输入评论… 使用 @ 提及人员"></textarea></div>' +
-          '<button class="tk-drawer-flow-btn" data-action="flow">流转</button>' : renderTaskCommentComposer()) +
+          renderTaskCommentComposer() +
         '</div>' +
       '</div>' +
       '<div class="tk-drawer-tab-content" data-tab-content="changelog" hidden>' +
@@ -2254,7 +2239,7 @@ function openDrawer(taskId, legacyMode, skipProjectCheck) {
       '<div class="tk-prop-row"><span>创建时间</span><span class="tk-prop-val">' + escapeHtml(t.createdAt || t.createDate) + '</span></div>' +
       '<div class="tk-prop-row"><span>更新时间</span><span class="tk-prop-val">' + escapeHtml(t.updatedAt || t.createdAt || t.createDate) + '</span></div>' +
     '</div>';
-  if (!legacyDetailPreview && taskDetailVersion === 'latest') {
+  if (taskDetailVersion === 'latest') {
     var mainInner = els.tkDrawerBody.querySelector('.tk-drawer-main-inner');
     var sidebar = els.tkDrawerBody.querySelector('#tkDrawerSidebar');
     els.tkDrawerBody.querySelector('.tk-drawer-tabs')?.remove();
@@ -2316,25 +2301,15 @@ function openDrawer(taskId, legacyMode, skipProjectCheck) {
     syncDrawerClickaway();
   });
 }
-export function openLegacyTaskDetail() {
-  var available = tkGetTasks().filter(function (task) {
-    return tkProjectsForCurrentUser().some(function (project) { return project.id === task.project; });
-  });
-  var task = available.find(function (row) { return row.id === lastOpenedTaskId; })
-    || available.find(function (row) { return row.status === 'in_review'; }) || available[0];
-  showView('tasks');
-  if (task) openDrawer(task.id, true);
-  else toast('暂无可预览的任务详情', 'warning');
-}
+
 function closeDrawer() {
   closeDocPreview();
   closeTaskLabelPicker();
   closeMentionPanel();
-  closeTaskDetailVersionMenu();
   document.querySelectorAll('.tk-drawer-more-menu').forEach(function (m) { m.remove(); });
   els.tkDrawerMore.setAttribute('aria-expanded', 'false');
   flowAssigneeDraft = { taskId: null, assigneeId: '' };
-  legacyDetailPreview = false;
+  flowAssigneeDraft = { taskId: null, assigneeId: '' };
   lastOpenedTaskId = null;
   cancelAnimationFrame(drawerOpenFrame);
   els.tkDrawer.classList.remove('show');
@@ -2354,7 +2329,7 @@ function closeDrawer() {
 }
 
 /* ---------- 筛选菜单 ---------- */
-var activeFilterSection = 'status';
+var activeFilterSection = '';
 var filterSections = [
   ['status','状态','<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/>'],
   ['priority','优先级','<path d="M4 19v-2M9 19v-6M14 19V9M19 19V4"/>'],
@@ -2362,7 +2337,6 @@ var filterSections = [
   ['assignee','负责人','<circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/>'],
   ['creator','创建者','<circle cx="10" cy="8" r="4"/><path d="M3 21v-2a7 7 0 0 1 12-5M16 20l5-5M18 13l3 3"/>'],
   ['project','项目','<path d="M3 5h7l2 2h9v13H3z"/>'],
-  ['projectStatus','项目状态','<circle cx="12" cy="12" r="9" stroke-dasharray="3 3"/>'],
   ['label','标签','<path d="M3 3h9l9 9-9 9-9-9z"/><circle cx="8" cy="8" r="1"/>'],
 ];
 function filterOptionsFor(section) {
@@ -2375,7 +2349,6 @@ function filterOptionsFor(section) {
   if (section === 'assignee') return TK_PEOPLE.map(function (p) { return { value:p.id, label:p.name, count:tasks.filter(function (t) { return t.assignee === p.id; }).length }; });
   if (section === 'creator') return TK_PEOPLE.map(function (p) { return { value:p.id, label:p.name, count:tasks.filter(function (t) { return t.createdBy === p.id; }).length }; });
   if (section === 'project') return tkProjectsForCurrentUser().map(function (p) { return { value:p.id, label:p.name, count:tasks.filter(function (t) { return t.project === p.id; }).length }; });
-  if (section === 'projectStatus') return [{ value:'active', label:'进行中', count:tasks.filter(function (t) { return !!t.project; }).length }];
   if (section === 'label') return TK_LABELS.map(function (l) { return { value:l, label:l, count:tasks.filter(function (t) { return (t.labels || []).includes(l); }).length }; });
   return [];
 }
@@ -2390,6 +2363,7 @@ function renderFilterMenu() {
     return '<button type="button" class="tk-filter-category' + (activeFilterSection === section[0] ? ' active' : '') + '" data-filter-section="' + section[0] + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + section[2] + '</svg><span>' + section[1] + '</span>' + (count ? '<span class="tk-filter-count">' + count + '</span>' : '') + '<svg class="tk-filter-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 4 8 8-8 8"/></svg></button>';
   }).join('') + (state.filters.length ? '<button type="button" class="tk-filter-reset" id="tkFilterReset">重置全部筛选</button>' : '');
   renderFilterSubmenu();
+  positionFilterSubmenu();
 }
 function renderFilterSubmenu() {
   if (!activeFilterSection) { els.tkFilterSubmenu.classList.add('hidden'); return; }
@@ -2404,6 +2378,19 @@ function renderFilterSubmenu() {
     return '<button type="button" class="tk-filter-option" data-filter-value="' + escapeHtml(option.value) + '" aria-pressed="' + checked + '"><span class="tk-filter-check">' + (checked ? '✓' : '') + '</span>' + (activeFilterSection === 'status' ? statusSvg(option.value) : '') + '<span>' + escapeHtml(option.label) + '</span>' + (option.count ? '<span class="tk-filter-count">' + option.count + ' 个任务</span>' : '') + '</button>';
   }).join('');
 }
+function positionFilterSubmenu() {
+  var activeBtn = els.tkFilterPanelBody.querySelector('.tk-filter-category.active');
+  if (!activeBtn) { els.tkFilterSubmenu.style.top = ''; return; }
+  var panelRect = els.tkFilterPanel.getBoundingClientRect();
+  var btnRect = activeBtn.getBoundingClientRect();
+  var borderTop = parseFloat(getComputedStyle(els.tkFilterPanel).borderTopWidth) || 0;
+  var top = btnRect.top - panelRect.top - borderTop;
+  var subH = els.tkFilterSubmenu.offsetHeight;
+  if (panelRect.top + top + subH > window.innerHeight - 8) {
+    top = Math.max(0, window.innerHeight - 8 - panelRect.top - subH);
+  }
+  els.tkFilterSubmenu.style.top = top + 'px';
+}
 function openFilterPanel() {
   closeDisplayChoiceMenu();
   closeFieldSettings();
@@ -2413,11 +2400,12 @@ function openFilterPanel() {
   els.tkFilterPanel.classList.remove('hidden');
   els.tkFilterBtn.classList.add('active');
   els.tkFilterBtn.setAttribute('aria-expanded', 'true');
-  activeFilterSection = 'status';
+  activeFilterSection = '';
   renderFilterMenu();
-  positionPopover(els.tkFilterPanel, els.tkFilterBtn, true);
+  positionPopover(els.tkFilterPanel, els.tkFilterBtn, false);
   var rect = els.tkFilterPanel.getBoundingClientRect();
-  els.tkFilterSubmenu.classList.toggle('flip', rect.left < 200);
+  els.tkFilterSubmenu.classList.toggle('flip', rect.right + 200 > window.innerWidth);
+  positionFilterSubmenu();
 }
 function closeFilterPanel() {
   els.tkFilterPanel.classList.add('hidden');
@@ -2468,6 +2456,7 @@ function confirmSaveView() {
   state.layout = v.layout;
   closeSaveView();
   render();
+  toast('保存成功', 'success');
 }
 function openManageViews() {
   var views = tkGetViews();
@@ -2862,7 +2851,7 @@ function bindEvents() {
   if (els.tkDrawerChat) {
     els.tkDrawerChat.addEventListener('click', function () {
       if (!state.drawerTaskId) return;
-      if (legacyDetailPreview || taskDetailVersion === 'v1') openTaskConversationWithTask(state.drawerTaskId);
+      if (taskDetailVersion === 'v1') openTaskConversationWithTask(state.drawerTaskId);
       else handleTaskHeaderAction();
     });
     var lastRightClickToggle = 0;
@@ -2873,54 +2862,22 @@ function bindEvents() {
       lastRightClickToggle = Date.now();
     }
     els.tkDrawerChat.addEventListener('pointerdown', function (e) {
-      if (e.button !== 2 || (!legacyDetailPreview && taskDetailVersion === 'latest')) return;
+      if (e.button !== 2 || taskDetailVersion === 'latest') return;
       e.preventDefault();
       toggleTaskStartAction();
     });
     els.tkDrawerChat.addEventListener('contextmenu', function (e) {
-      if (!legacyDetailPreview && taskDetailVersion === 'latest') return;
+      if (taskDetailVersion === 'latest') return;
       e.preventDefault();
       if (Date.now() - lastRightClickToggle > 500) toggleTaskStartAction();
     });
   }
-  if (els.tkDrawerSidebarToggle) {
-    els.tkDrawerSidebarToggle.addEventListener('click', function () {
-      var sb = els.tkDrawerBody.querySelector('.tk-drawer-sidebar');
-      if (sb) sb.classList.toggle('hidden');
-      els.tkDrawerSidebarToggle.classList.toggle('active');
-    });
-  }
   els.tkDrawer.addEventListener('contextmenu', function (e) {
-    if ((legacyDetailPreview || taskDetailVersion === 'v1') && e.target.closest('#tkDrawerChat')) return;
+    if ((taskDetailVersion === 'v1') && e.target.closest('#tkDrawerChat')) return;
     if (e.target.closest('input, textarea, [contenteditable="true"]:not(#tkDrawerTitle), .tk-prop-menu')) return;
-    if (!state.drawerTaskId || legacyDetailPreview) return;
+    if (!state.drawerTaskId) return;
     e.preventDefault();
-    closeTaskDetailVersionMenu();
-    var menu = document.createElement('div');
-    menu.id = 'tkDetailVersionMenu';
-    menu.className = 'tk-detail-version-menu';
-    menu.setAttribute('role', 'menu');
-    menu.setAttribute('aria-label', '任务详情版本');
-    menu.innerHTML = '<button type="button" role="menuitemradio" aria-checked="' + (taskDetailVersion === 'latest') + '" data-detail-version="latest">最新版<span>' + (taskDetailVersion === 'latest' ? '✓' : '') + '</span></button>'
-      + '<button type="button" role="menuitemradio" aria-checked="' + (taskDetailVersion === 'v1') + '" data-detail-version="v1">v1 2026-09-26<span>' + (taskDetailVersion === 'v1' ? '✓' : '') + '</span></button>';
-    document.body.appendChild(menu);
-    menu.style.left = Math.min(e.clientX, window.innerWidth - menu.offsetWidth - 8) + 'px';
-    menu.style.top = Math.min(e.clientY, window.innerHeight - menu.offsetHeight - 8) + 'px';
-    menu.querySelector('[aria-checked="true"]')?.focus();
   });
-  document.addEventListener('click', function (e) {
-    var choice = e.target.closest('#tkDetailVersionMenu [data-detail-version]');
-    if (choice) {
-      var nextVersion = choice.getAttribute('data-detail-version');
-      closeTaskDetailVersionMenu();
-      if (nextVersion === taskDetailVersion) return;
-      taskDetailVersion = nextVersion;
-      try { localStorage.setItem(TASK_DETAIL_VERSION_STORAGE_KEY, taskDetailVersion); } catch (err) { /* 本次会话仍可切换 */ }
-      openDrawer(state.drawerTaskId);
-      toast(taskDetailVersion === 'latest' ? '已切换到最新版任务详情' : '已切换到保存的任务详情版本', 'success');
-    } else if (!e.target.closest('#tkDetailVersionMenu')) closeTaskDetailVersionMenu();
-  });
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeTaskDetailVersionMenu(); });
   /* 评论 @ mention */
   document.addEventListener('pointerdown', function (e) {
     if (mentionPanel?.classList.contains('show') && !e.target.closest('.tk-mention-panel, .tk-drawer-comment-input, .tk-comment-composer')) closeMentionPanel();
@@ -2979,7 +2936,7 @@ function bindEvents() {
     if (stageReviewButton) {
       var reviewTask = tkGetTasks().find(function (row) { return row.id === state.drawerTaskId; });
       var nextStatus = stageReviewButton.getAttribute('data-stage-review-status');
-      if (!legacyDetailPreview && taskDetailVersion === 'latest' && reviewTask?.status === 'in_review' && ['done', 'in_progress'].includes(nextStatus)) {
+      if (taskDetailVersion === 'latest' && reviewTask?.status === 'in_review' && ['done', 'in_progress'].includes(nextStatus)) {
         var stageIndex = Math.max(0, STAGES.findIndex(function (stage) { return stage.id === reviewTask.executionStageId; }));
         var finalStage = stageIndex === STAGES.length - 1;
         var approved = nextStatus === 'done';
@@ -3105,8 +3062,8 @@ function bindEvents() {
       var aid = cardAct.getAttribute('data-card-task');
       var act = cardAct.getAttribute('data-card-action');
       if (act === 'chat') { openTaskConversationWithTask(parseInt(aid, 10)); } else if (act === 'edit') { openDrawer(aid); }
-      else if (act === 'delete') { tkDeleteTask(aid); render(); }
-      else if (act === 'copy') { var src = tkGetTasks().find(function(x){return x.id==aid;}); if (src) { var c = Object.assign({}, src, {id: Date.now(), code: 'T' + String(1000000 + Date.now() % 1000000)}); tkAddTask(c); render(); } }
+      else if (act === 'delete') { tkDeleteTask(aid); render(); toast('删除成功', 'success'); }
+      else if (act === 'copy') { var src = tkGetTasks().find(function(x){return x.id==aid;}); if (src) { var c = Object.assign({}, src, {id: Date.now(), code: 'T' + String(1000000 + Date.now() % 1000000)}); tkAddTask(c); render(); toast('复制成功', 'success'); } }
       else if (act === 'subtask') { openTaskModal(null, parseInt(aid, 10)); document.querySelectorAll('.tk-card-menu').forEach(function(m){m.remove();}); return; }
       document.querySelectorAll('.tk-card-menu').forEach(function(m){m.remove();});
       return;
@@ -3394,6 +3351,7 @@ function bindEvents() {
       tkDeleteView(viewId);
       if (state.activeViewId === viewId) { state.activeViewId = 'all'; state.scope = 'all'; }
       render();
+      toast('删除成功', 'success');
       return;
     }
     var tab = e.target.closest('.list-page-tab');
@@ -3443,6 +3401,7 @@ function bindEvents() {
       if (state.activeViewId === viewId) { state.activeViewId = 'all'; state.scope = 'all'; }
       openManageViews();
       render();
+      toast('删除成功', 'success');
       return;
     }
     var renameBtn = e.target.closest('[data-rename-view]');
@@ -3451,7 +3410,7 @@ function bindEvents() {
       var view = tkGetViews().find(function (v) { return v.id === viewId; });
       if (view) {
         var newName = prompt('输入新名称', view.name);
-        if (newName && newName.trim()) { tkRenameView(viewId, newName.trim()); openManageViews(); renderViewBar(); }
+        if (newName && newName.trim()) { tkRenameView(viewId, newName.trim()); openManageViews(); renderViewBar(); toast('重命名成功', 'success'); }
       }
     }
   });
@@ -3473,10 +3432,12 @@ function bindEvents() {
         return;
       }
       if (action === 'delete') {
+        var delCount = state.selectedIds.size;
         state.selectedIds.forEach(function (id) { tkDeleteTask(id); });
         state.selectedIds.clear();
         hidePopover();
         render();
+        toast('成功删除 ' + delCount + ' 个任务', 'success');
       }
     });
   });
@@ -3484,21 +3445,27 @@ function bindEvents() {
     var item = e.target.closest('[data-status]');
     if (item) {
       var status = item.getAttribute('data-status');
+      var statusName = (TK_STATUSES.find(function (s) { return s.id === status; }) || {}).name || status;
+      var updateCount = state.selectedIds.size;
       els.tkBulkStatusMenu.innerHTML = TK_STATUSES.map(function (s) {
         return '<div class="tk-popover-item" data-status="' + s.id + '">' + escapeHtml(s.name) + '</div>';
       }).join('');
       state.selectedIds.forEach(function (id) { tkUpdateTask(id, { status: status }); });
       hidePopover();
       render();
+      toast('成功更新 ' + updateCount + ' 个任务状态为「' + statusName + '」', 'success');
     }
   });
   els.tkBulkAssigneeMenu.addEventListener('click', function (e) {
     var item = e.target.closest('[data-assignee]');
     if (item) {
       var assignee = item.getAttribute('data-assignee');
+      var assigneeName = tkGetPerson(assignee).name;
+      var assignCount = state.selectedIds.size;
       state.selectedIds.forEach(function (id) { var task = tkGetTasks().find(function (row) { return row.id === id; }); if (task && tkPeopleInProject(task.project).some(function (person) { return person.id === assignee; })) tkUpdateTask(id, { assignee: assignee }); });
       hidePopover();
       render();
+      toast('成功指派 ' + assignCount + ' 个任务给「' + assigneeName + '」', 'success');
     }
   });
 
@@ -3510,7 +3477,7 @@ function bindEvents() {
       if (!stageHistory) return;
       stageHistory.hidden = !stageHistory.hidden;
       stageHistoryToggle.setAttribute('aria-expanded', String(!stageHistory.hidden));
-      stageHistoryToggle.textContent = taskDetailVersion === 'v1' || legacyDetailPreview
+      stageHistoryToggle.textContent = taskDetailVersion === 'v1'
         ? (stageHistory.hidden ? '查看过程明细' : '收起过程明细')
         : (stageHistory.hidden ? '展开明细' : '收起明细');
       return;
@@ -3604,8 +3571,8 @@ function bindEvents() {
       var aid = cardAct.getAttribute('data-card-task');
       var act = cardAct.getAttribute('data-card-action');
       if (act === 'chat') { openTaskConversationWithTask(parseInt(aid, 10)); } else if (act === 'edit') { openDrawer(aid); }
-      else if (act === 'delete') { tkDeleteTask(aid); render(); }
-      else if (act === 'copy') { var src = tkGetTasks().find(function(x){return x.id==aid;}); if (src) { var c = Object.assign({}, src, {id: Date.now(), code: 'T' + String(1000000 + Date.now() % 1000000)}); tkAddTask(c); render(); } }
+      else if (act === 'delete') { tkDeleteTask(aid); render(); toast('删除成功', 'success'); }
+      else if (act === 'copy') { var src = tkGetTasks().find(function(x){return x.id==aid;}); if (src) { var c = Object.assign({}, src, {id: Date.now(), code: 'T' + String(1000000 + Date.now() % 1000000)}); tkAddTask(c); render(); toast('复制成功', 'success'); } }
       else if (act === 'subtask') { openTaskModal(null, parseInt(aid, 10)); document.querySelectorAll('.tk-card-menu').forEach(function(m){m.remove();}); return; }
       document.querySelectorAll('.tk-card-menu').forEach(function(m){m.remove();});
       return;
@@ -3700,8 +3667,8 @@ function bindEvents() {
       var aid2 = cardAct2.getAttribute('data-card-task');
       var act2 = cardAct2.getAttribute('data-card-action');
       if (act2 === 'chat') { openTaskConversationWithTask(parseInt(aid2, 10)); } else if (act2 === 'edit') { openDrawer(aid2); }
-      else if (act2 === 'delete') { tkDeleteTask(aid2); render(); }
-      else if (act2 === 'copy') { var src2 = tkGetTasks().find(function(x){return x.id==aid2;}); if (src2) { var c2 = Object.assign({}, src2, {id: Date.now(), code: 'T' + String(1000000 + Date.now() % 1000000)}); tkAddTask(c2); render(); } }
+      else if (act2 === 'delete') { tkDeleteTask(aid2); render(); toast('删除成功', 'success'); }
+      else if (act2 === 'copy') { var src2 = tkGetTasks().find(function(x){return x.id==aid2;}); if (src2) { var c2 = Object.assign({}, src2, {id: Date.now(), code: 'T' + String(1000000 + Date.now() % 1000000)}); tkAddTask(c2); render(); toast('复制成功', 'success'); } }
       else if (act2 === 'subtask') { openTaskModal(null, parseInt(aid2, 10)); document.querySelectorAll('.tk-card-menu').forEach(function(m){m.remove();}); return; }
       document.querySelectorAll('.tk-card-menu').forEach(function(m){m.remove();});
       return;
@@ -3736,18 +3703,24 @@ function bindEvents() {
     if (e.target.id === 'tkInlineAssigneeInput') chooseFirstAssignee(els.tkListBody.querySelector('#tkInlineAssigneeMenu'), '.tk-inline-dropdown-item', e);
   });
 
-  /* 看板列折叠 */
+  /* 看板列折叠（记忆折叠状态） */
   els.tkBoardScroll.addEventListener('click', function (e) {
     var toggleBtn = e.target.closest('[data-toggle-col]');
     if (toggleBtn) {
-      var body = toggleBtn.closest('.tk-board-col').querySelector('.tk-board-col-body');
+      var col = toggleBtn.closest('.tk-board-col');
+      var body = col.querySelector('.tk-board-col-body');
+      var groupKey = col.getAttribute('data-group-key');
       body.classList.toggle('collapsed');
-      var toggleLabel = body.classList.contains('collapsed') ? '展开分组' : '折叠分组';
+      var isCollapsed = body.classList.contains('collapsed');
+      if (isCollapsed) taskViewState.collapsedBoardGroups.add(groupKey);
+      else taskViewState.collapsedBoardGroups.delete(groupKey);
+      var toggleLabel = isCollapsed ? '展开分组' : '折叠分组';
       toggleBtn.setAttribute('data-tooltip', toggleLabel);
       toggleBtn.setAttribute('aria-label', toggleLabel);
       var svg = toggleBtn.querySelector('svg');
-      if (body.classList.contains('collapsed')) svg.innerHTML = '<polyline points="18 15 12 9 6 15"/>';
+      if (isCollapsed) svg.innerHTML = '<polyline points="18 15 12 9 6 15"/>';
       else svg.innerHTML = '<polyline points="6 9 12 15 18 9"/>';
+      persistViewState();
     }
   });
 
