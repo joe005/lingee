@@ -1,11 +1,12 @@
 import { CV_TASKS, CV_PROJECTS, cvProject, cvPeopleInProject } from './data.js';
 import { TEAMS } from '../expert/store.js';
-import { xesc } from '../expert/data.js';
+import { EX, STAGES, STAGE_MODES, xav, xesc } from '../expert/data.js';
 import { cvUpdateCounts } from './projects.js';
 import { tbSave, tbTeamStages } from './tb-core.js';
 import { renderTaskBoard } from './task-board.js';
+import { toast } from '../../core/toast.js';
 /* 新建任务弹窗：手动创建 / 一句话草拟。
-   手动：关联项目 → 继承项目专家团 → 直接选人。
+   手动：关联项目 → 选定专家团 → 按专家逐一指定负责人。
    一句话：本地规则整理可编辑草稿，创建前由用户确认项目、执行人与内容。
    从 task-board.js 拆出，副作用集中在 initNewTask()。 */
 
@@ -19,7 +20,7 @@ let ntTeamId = '';
 let ntAssignee = '';
 let ntTagEditing = false;
 let ntExecMode = '单人执行';
-let ntStagePlan = [];
+let ntExpertPlan = [];
 let ntParentTaskId = '';
 let ntParentIsGroup = false;
 let ntDraftReady = false;
@@ -91,9 +92,16 @@ function ntPeopleOfProject(pid) {
   const proj = CV_PROJECTS.find(p => p.id === pid);
   return proj ? cvPeopleInProject(proj) : [];
 }
+/* 项目 → 默认专家团：一个项目绑定一个团，用户可在弹窗内改选 */
 function ntRenderTeam() {
+  const sel = document.getElementById('cv-nt-team');
   const team = ntProjectId ? ntTeamOfProject(ntProjectId) : null;
-  ntTeamId = team ? team.id : '';
+  ntTeamId = team ? team.id : (TEAMS[0] ? TEAMS[0].id : '');
+  if (sel) {
+    sel.innerHTML = TEAMS.map(t => '<option value="' + xesc(t.id) + '">' + xesc(t.name) + ' · ' + (t.members || []).length + ' 人</option>').join('');
+    sel.value = ntTeamId;
+    sel.disabled = !TEAMS.length;
+  }
 }
 function ntRenderGroups() {
   const field = document.getElementById('cv-nt-group-field');
@@ -126,8 +134,8 @@ function ntRenderPeople() {
   if (avatarEl) avatarEl.textContent = sel.name[0] || '?';
   menu.innerHTML = members.map(m => '<button type="button" class="nt-person-item' + (m.name === ntAssignee ? ' selected' : '') + '" data-person="' + xesc(m.name) + '"><span class="person-avatar-sm">' + xesc(m.name[0] || '?') + '</span><span class="person-name-sm">' + xesc(m.name) + '</span></button>').join('');
 }
-/* 多人协作：按专家团覆盖的阶段逐一指定执行人，每人只负责并启动自己那一段。 */
-function ntStagesFieldVisible() {
+/* 多人协作：按专家团成员逐一指定负责人，每人只负责并启动自己那一段。 */
+function ntExpertsFieldVisible() {
   return ntExecMode === '多人协作';
 }
 function ntSetExecMode(m) {
@@ -139,48 +147,75 @@ function ntSetExecMode(m) {
     b.tabIndex = selected ? 0 : -1;
   });
   const single = document.getElementById('cv-nt-single-field');
-  const stagesField = document.getElementById('cv-nt-stages-field');
+  const expertsField = document.getElementById('cv-nt-experts-field');
   if (single) single.classList.toggle('hidden', ntExecMode !== '单人执行');
-  if (stagesField) stagesField.classList.toggle('hidden', !ntStagesFieldVisible());
+  if (expertsField) expertsField.classList.toggle('hidden', !ntExpertsFieldVisible());
   if (ntExecMode === '多人协作') {
-    ntRenderStages();
-    stagesField?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    ntRenderExperts();
+    expertsField?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }
 }
-/* 阶段流程节点：节点本身是开关，节点下方选择执行人。 */
-function ntRenderStages() {
-  const el = document.getElementById('cv-nt-stage-list');
+/* 专家覆盖的阶段：由「工作模式 → 阶段」映射反查，作为只读信息展示 */
+function ntStagesOfExpert(id) {
+  const modes = (EX[id] || {}).modes || [];
+  return STAGES.filter(s => (STAGE_MODES[s.id] || []).some(m => modes.indexOf(m) >= 0));
+}
+/* 专家分工 → 阶段执行人。团长往往覆盖大部分阶段，因此按「覆盖阶段越少越专一」排序，
+   同专一度才让团长靠前，保证 stagePlan 落到真正做这件事的人身上，且仍是单执行人。 */
+function ntDeriveStagePlan(team, plan, fallback) {
+  const coverage = {};
+  plan.forEach(e => { coverage[e.id] = ntStagesOfExpert(e.id).length; });
+  return tbTeamStages(team).map(s => {
+    const owners = plan
+      .filter(e => (STAGE_MODES[s.id] || []).some(m => e.modes.indexOf(m) >= 0))
+      .sort((a, b) => (coverage[a.id] - coverage[b.id]) || (Number(b.lead) - Number(a.lead)));
+    const owner = owners[0];
+    return { id: s.id, name: s.name, assignee: (owner && owner.assignee) || fallback };
+  });
+}
+function ntRenderExperts() {
+  const el = document.getElementById('cv-nt-expert-list');
   if (!el) return;
   const team = ntTeamId ? TEAMS.find(t => t.id === ntTeamId) : null;
-  const stages = tbTeamStages(team);
   const members = ntPeopleOfProject(ntProjectId);
-  const count = document.getElementById('cv-nt-stage-count');
-  if (count) count.textContent = '';
-  if (!ntProjectId || !members.length) { el.innerHTML = '<span class="nt-people-empty">' + (ntProjectId ? '请先为项目添加成员' : '请先选择项目') + '</span>'; ntStagePlan = []; return; }
-  if (!ntStagePlan.length || ntStagePlan[0].teamId !== ntTeamId) {
-    ntStagePlan = stages.map((s, i) => ({ id: s.id, name: s.name, teamId: ntTeamId, checked: true, assignee: members[i % members.length].name }));
+  const count = document.getElementById('cv-nt-expert-count');
+  const teamEl = document.getElementById('cv-nt-expert-team');
+  if (teamEl) teamEl.textContent = team ? (team.name + ' · ' + (team.members || []).length + ' 位专家') : '未选择专家团';
+  if (!team) { el.innerHTML = '<span class="nt-people-empty">请先选择专家团</span>'; ntExpertPlan = []; if (count) count.textContent = ''; return; }
+  if (!ntProjectId || !members.length) { el.innerHTML = '<span class="nt-people-empty">' + (ntProjectId ? '请先为项目添加成员' : '请先选择项目') + '</span>'; ntExpertPlan = []; if (count) count.textContent = ''; return; }
+  const roster = (team.members || []).filter(id => EX[id]);
+  if (!roster.length) { el.innerHTML = '<span class="nt-people-empty">该专家团暂无专家</span>'; ntExpertPlan = []; if (count) count.textContent = ''; return; }
+  if (!ntExpertPlan.length || ntExpertPlan[0].teamId !== ntTeamId) {
+    ntExpertPlan = roster.map((id, i) => ({ id, teamId: ntTeamId, lead: id === team.leadId, assignee: members[i % members.length].name }));
   }
-  if (count) count.textContent = ntStagePlan.filter(s => s.checked).length + ' / ' + ntStagePlan.length;
-  el.innerHTML = ntStagePlan.map((sp, i) => {
-    const node = '<div class="nt-flow-item" data-state="' + (sp.checked ? 'on' : 'off') + '">'
-      + '<button type="button" class="nt-flow-node" aria-pressed="' + sp.checked + '" data-nt-stage-toggle="' + sp.id + '" title="' + xesc(sp.name) + (sp.checked ? '（点击取消该阶段）' : '（点击加入该阶段）') + '">'
-      + '<span class="nt-flow-dot">' + (sp.checked ? '✓' : (i + 1)) + '</span>'
-      + '<span class="nt-flow-name">' + xesc(sp.name) + '</span>'
-      + '</button>'
-      + (sp.checked
-        ? '<select class="nt-flow-person" data-person-select data-nt-stage-assignee="' + sp.id + '" aria-label="' + xesc(sp.name) + ' 执行人">' + members.map(m => '<option' + (m.name === sp.assignee ? ' selected' : '') + '>' + xesc(m.name) + '</option>').join('') + '</select>'
-        : '<span class="nt-flow-person nt-flow-person--off">未启用</span>')
-      + '</div>';
-    return node;
+  if (count) count.textContent = ntExpertPlan.filter(e => e.assignee).length + ' / ' + ntExpertPlan.length;
+  el.innerHTML = ntExpertPlan.map(e => {
+    const ex = EX[e.id] || {};
+    const name = ex.name || e.id;
+    return '<div class="nt-expert-row' + (e.assignee ? '' : ' is-unassigned') + '" data-expert="' + xesc(e.id) + '">'
+      + '<img class="nt-expert-av" src="' + xav(ex.k) + '" alt="">'
+      + '<span class="nt-expert-id"><span class="nt-expert-name">' + xesc(name) + (e.lead ? '<em class="nt-expert-badge">团长</em>' : '') + '</span><span class="nt-expert-role">' + xesc(ex.role || '') + '</span></span>'
+      + '<span class="nt-expert-modes">' + ntStagesOfExpert(e.id).map(s => '<span class="nt-expert-chip">' + xesc(s.name) + '</span>').join('') + '</span>'
+      + '<select class="nt-expert-person" data-nt-expert-assignee="' + xesc(e.id) + '" aria-label="' + xesc(name) + ' 负责人">'
+      + '<option value="">待指定</option>'
+      + members.map(m => '<option value="' + xesc(m.name) + '"' + (m.name === e.assignee ? ' selected' : '') + '>' + xesc(m.name) + '</option>').join('')
+      + '</select></div>';
   }).join('');
+}
+/* 一键铺默认值：按项目成员依次分配，与打开弹窗时的初始分工一致 */
+function ntAutoAssignExperts() {
+  const members = ntPeopleOfProject(ntProjectId);
+  if (!members.length || !ntExpertPlan.length) return;
+  ntExpertPlan.forEach((e, i) => { e.assignee = members[i % members.length].name; });
+  ntRenderExperts();
 }
 function ntOnProjectChange() {
   const sel = document.getElementById('cv-nt-project');
   ntProjectId = sel ? sel.value : '';
   ntAssignee = '';
-  ntStagePlan = [];
+  ntExpertPlan = [];
   ntRenderTeam(); ntRenderPeople(); ntRenderGroups();
-  if (ntExecMode === '多人协作') ntRenderStages();
+  if (ntExecMode === '多人协作') ntRenderExperts();
 }
 /* 原型仅根据项目名称匹配归属，不调用模型服务。 */
 function ntInferProject(prompt) {
@@ -255,7 +290,7 @@ export function cvOpenNewTask(status, ctx) {
   ntAssignee = '';
   ntFiles = [];
   ntTags = [];
-  ntStagePlan = [];
+  ntExpertPlan = [];
   ntDraftReady = false;
   const psel = document.getElementById('cv-nt-project');
   if (psel) {
@@ -318,9 +353,9 @@ function cvSetNewTaskMode(m) {
   document.getElementById('cv-nt-agent').classList.toggle('hidden', m !== 'agent');
   const properties = document.getElementById('cv-nt-properties');
   if (properties) properties.classList.remove('hidden');
-  const stagesField = document.getElementById('cv-nt-stages-field');
-  if (stagesField) (m === 'agent' ? document.getElementById('cv-nt-draft-content') : document.getElementById('cv-nt-manual')).appendChild(stagesField);
-  if (stagesField) stagesField.classList.toggle('hidden', !ntStagesFieldVisible());
+  const expertsField = document.getElementById('cv-nt-experts-field');
+  if (expertsField) (m === 'agent' ? document.getElementById('cv-nt-draft-content') : document.getElementById('cv-nt-manual')).appendChild(expertsField);
+  if (expertsField) expertsField.classList.toggle('hidden', !ntExpertsFieldVisible());
   document.getElementById('cv-nt-mode-label').textContent = ntParentTaskId ? (ntParentIsGroup ? '新建任务' : '新增子任务') : (m === 'agent' ? '一句话创建' : '手动创建');
   const agentTrigger = document.getElementById('cv-nt-agent-trigger');
   const manualTrigger = document.getElementById('cv-nt-manual-trigger');
@@ -335,7 +370,7 @@ function cvSetNewTaskMode(m) {
 }
 function cvSubmitNewTask(keepOpen) {
   const fromAgent = ntMode === 'agent';
-  let title, desc, assignee, priority, projectId, team, stagePlan, mode;
+  let title, desc, assignee, priority, projectId, team, stagePlan, expertPlan, mode;
   if (fromAgent) {
     if (!ntDraftReady) { window.alert('请先输入一句话描述任务'); return; }
     if (document.getElementById('cv-nt-prompt').value.trim()) { ntSendDraftMessage(); return; }
@@ -355,21 +390,26 @@ function cvSubmitNewTask(keepOpen) {
   if (!['单人执行', '多人协作'].includes(mode)) { window.alert('请选择执行方式'); return; }
   if (!ntPeopleOfProject(projectId).length) { window.alert('请先为项目添加成员，再选择执行人'); return; }
   if (mode === '多人协作') {
-    const checked = ntStagePlan.filter(s => s.checked);
-    if (!checked.length) { window.alert('请至少选择一个阶段'); return; }
-    if (checked.some(s => !s.assignee)) { window.alert('请为每个已选阶段指定执行人'); return; }
-    stagePlan = checked.map(s => ({ id: s.id, name: s.name, assignee: s.assignee }));
-    assignee = stagePlan[0].assignee;
+    if (!ntExpertPlan.length) { window.alert('请先为专家团选择专家'); return; }
+    const fallback = (ntExpertPlan.find(e => e.assignee) || {}).assignee || ntAssignee;
+    if (!fallback) { window.alert('请至少为一位专家指定负责人'); return; }
+    const pending = ntExpertPlan.filter(e => !e.assignee);
+    if (pending.length) toast('还有 ' + pending.length + ' 位专家未指定负责人，将继承「' + fallback + '」', 'warning');
+    expertPlan = ntExpertPlan.map(e => ({ id: e.id, name: (EX[e.id] || {}).name || e.id, lead: !!e.lead, modes: ((EX[e.id] || {}).modes || []).slice(), assignee: e.assignee || fallback }));
+    stagePlan = ntDeriveStagePlan(team, expertPlan, fallback);
+    assignee = (expertPlan.find(e => e.lead) || expertPlan[0]).assignee;
   } else {
     if (!ntAssignee) { window.alert('请选择任务负责人'); return; }
     assignee = ntAssignee;
   }
   if (!stagePlan) stagePlan = tbTeamStages(team).map(s => ({ id: s.id, name: s.name, assignee }));
   const proj = CV_PROJECTS.find(p => p.id === projectId) || CV_PROJECTS[0];
-  const stageActivity = stagePlan ? ('各阶段执行人：' + stagePlan.map(s => s.name + '·' + s.assignee).join('、')) : null;
+  const stageActivity = expertPlan
+    ? ('各专家负责人：' + expertPlan.map(e => e.name + '·' + e.assignee).join('、'))
+    : ('各阶段执行人：' + stagePlan.map(s => s.name + '·' + s.assignee).join('、'));
   const parentTaskId = ntParentTaskId || document.getElementById('cv-nt-group')?.value || undefined;
   const parentIsGroup = !!parentTaskId && CV_TASKS.some(t => t.boardId === parentTaskId && t.project === proj.id && t.kind === 'epic');
-  const t = { boardId: crypto.randomUUID(), kind: 'task', parentTaskId, source: fromAgent ? '一句话创建' : (parentTaskId ? (parentIsGroup ? '父任务下创建' : '父任务下推') : '手动创建'), sourceId: 'TASK-' + Date.now().toString().slice(-6), size: '小', exec: '专家团', collab: mode === '单人执行' ? '无需协作' : '人Agent协作', progress: 0, status: ntStatus, mode, stage: stagePlan ? stagePlan[0].id : undefined, stagePlan, type: '需求', project: proj.id, title, desc, assignee, priority, tags: ntTags.slice(), files: ntFiles.slice(), activity: [{ author: '张工', text: fromAgent ? ('根据草稿创建任务，由 ' + assignee + ' 负责') : '创建了任务', time: new Date().toLocaleString('zh-CN', { hour12: false }) }].concat(stageActivity ? [{ author: '张工', text: stageActivity, time: new Date().toLocaleString('zh-CN', { hour12: false }) }] : []), artifacts: [] };
+  const t = { boardId: crypto.randomUUID(), kind: 'task', parentTaskId, source: fromAgent ? '一句话创建' : (parentTaskId ? (parentIsGroup ? '父任务下创建' : '父任务下推') : '手动创建'), sourceId: 'TASK-' + Date.now().toString().slice(-6), size: '小', exec: '专家团', collab: mode === '单人执行' ? '无需协作' : '人Agent协作', progress: 0, status: ntStatus, mode, stage: stagePlan ? stagePlan[0].id : undefined, stagePlan, expertPlan: expertPlan || null, team: ntTeamId, type: '需求', project: proj.id, title, desc, assignee, priority, tags: ntTags.slice(), files: ntFiles.slice(), activity: [{ author: '张工', text: fromAgent ? ('根据草稿创建任务，由 ' + assignee + ' 负责') : '创建了任务', time: new Date().toLocaleString('zh-CN', { hour12: false }) }].concat(stageActivity ? [{ author: '张工', text: stageActivity, time: new Date().toLocaleString('zh-CN', { hour12: false }) }] : []), artifacts: [] };
   CV_TASKS.unshift(t);
   tbSave(); renderTaskBoard(); cvUpdateCounts();
   if (parentTaskId) window.cvRenderProjectDetail && window.cvRenderProjectDetail();
@@ -428,17 +468,27 @@ export function initNewTask() {
     options[next].focus();
     ntSetExecMode(options[next].getAttribute('data-nt-exec'));
   });
-  const stageList = document.getElementById('cv-nt-stage-list');
-  if (stageList) {
-    stageList.addEventListener('click', e => {
-      const btn = e.target.closest('[data-nt-stage-toggle]');
-      if (btn) { const sp = ntStagePlan.find(s => s.id === btn.getAttribute('data-nt-stage-toggle')); if (sp) sp.checked = !sp.checked; ntRenderStages(); }
-    });
-    stageList.addEventListener('change', e => {
-      const sel = e.target.closest('[data-nt-stage-assignee]');
-      if (sel) { const sp = ntStagePlan.find(s => s.id === sel.getAttribute('data-nt-stage-assignee')); if (sp) sp.assignee = sel.value; }
+  const expertList = document.getElementById('cv-nt-expert-list');
+  if (expertList) {
+    expertList.addEventListener('change', e => {
+      const sel = e.target.closest('[data-nt-expert-assignee]');
+      if (!sel) return;
+      const item = ntExpertPlan.find(x => x.id === sel.getAttribute('data-nt-expert-assignee'));
+      if (!item) return;
+      item.assignee = sel.value;
+      sel.closest('.nt-expert-row')?.classList.toggle('is-unassigned', !item.assignee);
+      const count = document.getElementById('cv-nt-expert-count');
+      if (count) count.textContent = ntExpertPlan.filter(x => x.assignee).length + ' / ' + ntExpertPlan.length;
     });
   }
+  const expertAuto = document.getElementById('cv-nt-expert-auto');
+  if (expertAuto) expertAuto.addEventListener('click', ntAutoAssignExperts);
+  const teamSelect = document.getElementById('cv-nt-team');
+  if (teamSelect) teamSelect.addEventListener('change', () => {
+    ntTeamId = teamSelect.value;
+    ntExpertPlan = [];
+    if (ntExecMode === '多人协作') ntRenderExperts();
+  });
   const attachDrop = document.getElementById('cv-nt-file-list');
   if (attachDrop) {
     attachDrop.addEventListener('click', e => { if (e.target.closest('[data-nt-attach-trigger]')) ntAddFile(); });

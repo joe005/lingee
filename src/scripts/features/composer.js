@@ -22,6 +22,53 @@ function refreshSend(){ sendBtn.classList.toggle('active', input.textContent.tri
 var chatMessages=$('#chatMessages');
 var messagesList=$('#messagesList');
 function escapeHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+var taskExceptionBack = null;
+var taskExceptionPreviousTitle = '';
+function closeTaskExceptionHistory() {
+  var panel = document.getElementById('taskExceptionHistory');
+  var back = document.getElementById('taskExceptionBack');
+  viewChat.classList.remove('task-exception-open');
+  if (panel) panel.remove();
+  if (back) back.remove();
+  if (taskExceptionPreviousTitle) $('#chatTitle').textContent = taskExceptionPreviousTitle;
+  taskExceptionBack = null;
+}
+export function openTaskExceptionHistory(task, onBack) {
+  if (!task) return;
+  closeTaskExceptionHistory();
+  taskExceptionPreviousTitle = $('#chatTitle').textContent;
+  taskExceptionBack = onBack;
+  var run = task.blockedRun;
+  var reason = run?.reason || '本次执行未完成，请查看任务动态中的异常信息。';
+  var steps = Array.isArray(run?.steps) ? run.steps : [];
+  var header = document.querySelector('#view-chat .chat-header');
+  var back = document.createElement('button');
+  back.type = 'button';
+  back.id = 'taskExceptionBack';
+  back.className = 'header-btn';
+  back.setAttribute('aria-label', '返回任务详情');
+  back.textContent = '←';
+  back.addEventListener('click', function () {
+    var callback = taskExceptionBack;
+    closeTaskExceptionHistory();
+    if (callback) callback();
+  });
+  header.prepend(back);
+  var panel = document.createElement('div');
+  panel.id = 'taskExceptionHistory';
+  panel.className = 'task-exception-history';
+  panel.innerHTML = '<div class="task-exception-intro"><span>历史会话 · ' + escapeHtml(String(task.code || '')) + '</span><strong>' + escapeHtml(String(task.title || '任务')) + '</strong><small>' + escapeHtml(String(run?.failedAt || task.createDate || '')) + '</small></div>'
+    + '<div class="task-exception-message task-exception-user"><span>任务指令</span><p>' + escapeHtml(String(task.desc || task.title || '执行任务')) + '</p></div>'
+    + '<div class="task-exception-message task-exception-agent"><span>' + escapeHtml(String(run?.agentName || '执行专家')) + ' · 执行过程</span>'
+    + (steps.length ? '<ol>' + steps.map(function (step, index) { return '<li class="' + (index === steps.length - 1 ? 'is-error' : '') + '"><strong>' + escapeHtml(String(step[0] || '执行步骤')) + '</strong><p>' + escapeHtml(String(step[1] || '')) + '</p></li>'; }).join('') + '</ol>' : '<p>运行在当前阶段停止，未产生完整步骤记录。</p>')
+    + '<div class="task-exception-error"><strong>执行异常</strong><p>' + escapeHtml(String(reason)) + '</p></div>'
+    + (run?.next ? '<p class="task-exception-next">建议处理：' + escapeHtml(String(run.next)) + '</p>' : '') + '</div>';
+  chatMessages.appendChild(panel);
+  $('#chatTitle').textContent = '异常会话 · ' + (task.title || '任务');
+  viewChat.classList.add('task-exception-open');
+  showView('chat');
+  chatMessages.scrollTop = 0;
+}
 var conversationTaskId = null;
 function getConversationTask() {
   return conversationTaskId == null ? null : tkGetTasks().find(function (task) { return task.id === conversationTaskId; }) || null;
@@ -651,6 +698,7 @@ function initTaskMention(ed) {
 }
 
 export function initComposer() {
+  document.addEventListener('lingee:new-conversation', closeTaskExceptionHistory);
   document.addEventListener('lingee:task-updated', function (event) {
     if (event.detail?.task?.id === conversationTaskId) renderConversationTaskReference();
   });

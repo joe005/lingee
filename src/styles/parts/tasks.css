@@ -120,14 +120,16 @@
 
 /* ---------- 筛选面板 ---------- */
 .tk-filter-panel{position:fixed;background:var(--bg);border:1px solid var(--border);border-radius:9px;box-shadow:var(--menu-shadow);z-index:60;width:128px;box-sizing:border-box;padding:4px}
+.tk-filter-panel:has(.tk-filter-submenu:not(.hidden):not(.flip)){border-radius:0 9px 9px 0}
+.tk-filter-panel:has(.tk-filter-submenu:not(.hidden).flip){border-radius:9px 0 0 9px}
 .tk-filter-panel.hidden{display:none}
 .tk-filter-category{display:flex;align-items:center;gap:8px;width:100%;height:28px;padding:0 6px;border:0;border-radius:5px;background:transparent;color:var(--text);font-size:13px;text-align:left;cursor:pointer;white-space:nowrap}
 .tk-filter-category:hover,.tk-filter-category.active{background:var(--hover)}
 .tk-filter-category svg{width:14px;height:14px;flex:none}
 .tk-filter-category .tk-filter-arrow{width:12px;height:12px;margin-left:auto}
-.tk-filter-submenu{position:absolute;right:calc(100% - 1px);top:0;width:192px;max-height:320px;overflow-y:auto;box-sizing:border-box;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:9px;box-shadow:var(--menu-shadow)}
+.tk-filter-submenu{position:absolute;right:calc(100% - 1px);top:0;width:192px;max-height:320px;overflow-y:auto;box-sizing:border-box;padding:4px;background:var(--bg);border:1px solid var(--border);border-radius:9px 0 0 9px;box-shadow:var(--menu-shadow)}
 .tk-filter-submenu.hidden{display:none}
-.tk-filter-submenu.flip{right:auto;left:calc(100% - 1px)}
+.tk-filter-submenu.flip{right:auto;left:calc(100% - 1px);border-radius:0 9px 9px 0}
 .tk-filter-category .tk-filter-count{margin-left:auto;color:var(--brand);font-size:11px}
 .tk-filter-option{display:flex;align-items:center;gap:8px;width:100%;min-height:28px;padding:4px 6px;border:0;border-radius:5px;background:transparent;color:var(--text);font-size:13px;text-align:left;cursor:pointer}
 .tk-filter-option:hover{background:var(--hover)}
@@ -646,6 +648,8 @@ body.tk-drawer-resizing{user-select:none;cursor:col-resize}
 .tk-feed-stage-review-btn:hover{filter:brightness(.92)}
 .tk-feed-stage-review-btn:focus-visible{outline:2px solid var(--border-focus);outline-offset:2px}
 .tk-feed-stage.is-running .tk-feed-stage-mark{color:var(--brand)}
+.tk-feed-stage.is-running .tk-feed-stage-mark svg{visibility:hidden}
+.tk-feed-stage.is-running .tk-feed-stage-mark::after{content:'';position:absolute;inset:2px;border:2px solid currentColor;border-right-color:transparent;border-bottom-color:transparent;border-radius:50%;animation:tk-feed-spin .65s linear infinite}
 .tk-feed-stage.is-running,.tk-feed-stage.is-review{color:var(--text)}
 .tk-feed-stage.is-blocked .tk-feed-stage-mark{color:var(--danger)}
 .tk-feed-stage.is-blocked{color:var(--danger)}
@@ -724,8 +728,8 @@ body.tk-drawer-resizing{user-select:none;cursor:col-resize}
 .tk-feed-run-chevron{flex:none;color:var(--text-soft);transition:transform .16s}
 .tk-feed-run[open] .tk-feed-run-chevron,.tk-feed-run-step[open]>summary svg{transform:rotate(90deg)}
 @keyframes tk-feed-spin{to{transform:rotate(360deg)}}
-.tk-feed-run-spinner{animation:tk-feed-spin .9s linear infinite}
-@media(prefers-reduced-motion:reduce){.tk-feed-run-spinner{animation:none}}
+.tk-feed-run-spinner{animation:tk-feed-spin .65s linear infinite;transform-origin:center}
+@media(prefers-reduced-motion:reduce){.tk-feed-run-spinner,.tk-feed-stage.is-running .tk-feed-stage-mark::after{animation-duration:1.8s}}
 .tk-feed-run-steps{display:flex;flex-direction:column;gap:3px;margin:7px 0 0 22px;padding-left:10px;border-left:1px solid var(--divider)}
 .tk-feed-run-step>summary{display:flex;align-items:center;gap:7px;min-height:26px;list-style:none;color:var(--text-secondary);font-size:11px;cursor:pointer}
 .tk-feed-step-icon{display:grid;place-items:center;flex:none;width:14px;height:14px;color:var(--success);font-size:10px;font-weight:700}

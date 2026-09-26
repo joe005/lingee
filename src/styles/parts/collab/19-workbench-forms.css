@@ -176,26 +176,10 @@
 .nt-person-b b{font-size:12px;color:var(--text);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .nt-person-b small{font-size:11px;color:var(--text-soft)}
 .nt-people-empty{font-size:12px;color:var(--text-soft);padding:6px 0}
-/* 执行模式切换 + 多人协作阶段计划 */
+/* 执行模式切换 */
 .nt-seg{display:flex;border:1px solid var(--border-hover);border-radius:8px;padding:2px;background:var(--bg)}
 .nt-seg-btn{flex:1;border:0;background:none;padding:6px 8px;border-radius:6px;font-size:12px;font-family:inherit;color:var(--text-secondary);cursor:pointer}
 .nt-seg-btn.on{background:var(--brand);color:#fff;font-weight:600}
-/* 新建任务：阶段流程图（横向节点 + 连线，点节点切换是否经过，选中节点挂执行人选择器） */
-#cv-newtask-overlay .nt-flow-field{margin:14px 20px 16px;padding-top:0;flex:none}
-#cv-newtask-overlay .nt-flow-head{display:flex;align-items:baseline;gap:8px;margin-bottom:8px}
-#cv-newtask-overlay .nt-flow-label{font-size:12.5px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:4px;flex:none}
-#cv-newtask-overlay .nt-flow-hint{font-size:11px;color:var(--text-soft);line-height:1.5}
-#cv-newtask-overlay .nt-flow{display:flex;align-items:flex-start;padding:14px 14px 10px;border:1px solid var(--border);border-radius:10px;background:var(--fill-2);overflow-x:auto}
-#cv-newtask-overlay .nt-flow-line{flex:1 1 16px;min-width:14px;height:2px;background:var(--border-hover);margin-top:14px}
-#cv-newtask-overlay .nt-flow-item{display:flex;flex-direction:column;align-items:center;gap:5px;flex:none;width:92px}
-#cv-newtask-overlay .nt-flow-node{display:flex;flex-direction:column;align-items:center;gap:4px;border:0;background:none;cursor:pointer;font-family:inherit;padding:0;width:100%}
-#cv-newtask-overlay .nt-flow-dot{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:11.5px;font-weight:600;background:var(--bg);border:1.5px solid var(--border-hover);color:var(--text-soft);transition:all .15s}
-#cv-newtask-overlay .nt-flow-item[data-state=on] .nt-flow-dot{background:var(--brand);border-color:var(--brand);color:#fff}
-#cv-newtask-overlay .nt-flow-node:hover .nt-flow-dot{border-color:var(--brand)}
-#cv-newtask-overlay .nt-flow-name{font-size:11.5px;color:var(--text);text-align:center;line-height:1.4;white-space:nowrap}
-#cv-newtask-overlay .nt-flow-item[data-state=off] .nt-flow-name{color:var(--text-soft)}
-#cv-newtask-overlay .nt-flow-person{margin-top:1px;width:100%;box-sizing:border-box;border:1px solid var(--border-hover);border-radius:7px;padding:4px 4px;font-size:10.5px;text-align:center;background:var(--bg);color:var(--text);cursor:pointer;font-family:inherit}
-#cv-newtask-overlay .nt-flow-person--off{border:1px dashed var(--border);color:var(--text-soft);background:none;cursor:default}
 .nt-chip--tag{display:inline-flex;align-items:center;gap:4px;background:var(--brand-fill);color:var(--brand)}
 .nt-tag-x{border:none;background:none;color:var(--brand);cursor:pointer;font-size:12px;line-height:1;padding:0}
 .nt-tag-input{width:110px;border:1px solid var(--brand);border-radius:6px;padding:4px 8px;font-size:12px;font-family:inherit;outline:none}
@@ -273,10 +257,6 @@
 #cv-newtask-overlay .nt-seg-btn.on{border-color:var(--brand);background:var(--brand-fill);box-shadow:inset 0 0 0 1px var(--brand);color:var(--brand)}
 #cv-newtask-overlay .nt-seg-btn b{font-size:var(--tb-small-size);font-weight:600;color:var(--text)}
 #cv-newtask-overlay .nt-seg-btn small{font-size:var(--tb-caption-size);color:var(--text-secondary)}
-#cv-newtask-overlay .nt-flow-field{margin:14px 0 0;padding:14px 0 0;border-top:1px solid var(--border)}
-#cv-newtask-overlay .nt-flow{padding:14px 12px 12px;border-radius:9px}
-#cv-newtask-overlay .nt-flow-item{width:92px}
-#cv-newtask-overlay .nt-flow-name,#cv-newtask-overlay .nt-flow-person{font-size:var(--tb-small-size)}
 #cv-newtask-overlay .nt-agent{display:flex;flex-direction:column;gap:20px;min-height:360px}
 #cv-newtask-overlay .nt-agent-intro{display:flex;align-items:flex-start;gap:12px}
 #cv-newtask-overlay .nt-agent-mark{display:grid;place-items:center;width:30px;height:30px;flex:none;border-radius:9px;background:var(--brand-fill);color:var(--brand);font-size:18px}
@@ -350,24 +330,35 @@
 #cv-newtask-overlay .nt-title:focus-visible,#cv-newtask-overlay .nt-desc:focus-visible{border:0;box-shadow:none;outline:0}
 #cv-newtask-overlay .nt-context{margin-top:auto;padding:8px 0 16px;color:var(--text-secondary);font-size:13px}
 #cv-newtask-overlay .nt-context strong{font-weight:500;color:var(--text)}
-#cv-newtask-overlay .nt-flow-field{margin:0 0 14px;padding:14px 0 0;border-top:1px solid var(--border);flex:none}
-#cv-newtask-overlay .nt-flow-field>.nt-section-head{margin-bottom:10px}
-#cv-newtask-overlay .nt-flow-field .nt-section-head h3{font-size:13px}
-#cv-newtask-overlay .nt-flow-field .nt-section-head span{font-size:12px}
-#cv-newtask-overlay .nt-flow{display:flex;align-items:flex-start;gap:18px;padding:4px 0 12px;border:0;background:transparent;overflow-x:auto;overflow-y:hidden}
-#cv-newtask-overlay .nt-flow-item{position:relative;display:flex;flex:0 0 170px;flex-direction:column;align-items:center;gap:9px;min-width:0;padding:0;border:0;background:transparent}
-#cv-newtask-overlay .nt-flow-item:not(:last-child)::after{content:"";position:absolute;left:calc(50% + 14px);top:14px;width:calc(100% - 10px);height:2px;background:var(--border-hover);z-index:0}
-#cv-newtask-overlay .nt-flow-node{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:7px;min-height:56px;min-width:0;text-align:center}
-#cv-newtask-overlay .nt-flow-dot{width:28px;height:28px;flex:none;background:var(--bg)}
-#cv-newtask-overlay .nt-flow-name{min-width:0;white-space:normal;text-align:center;font-size:12px;line-height:1.35}
-#cv-newtask-overlay .nt-flow-person{width:100%;min-width:0;margin:0;padding:7px 22px 7px 9px;border-radius:7px;text-align:left;font-size:12px}
-#cv-newtask-overlay .nt-flow-person--off{padding:7px;text-align:center}
+/* 新建任务：专家分工（团内每位专家指定一位项目成员负责） */
+#cv-newtask-overlay .nt-expert-field{margin:0 0 14px;padding:14px 0 0;border-top:1px solid var(--border);flex:none}
+#cv-newtask-overlay .nt-expert-field>.nt-section-head{margin-bottom:8px}
+#cv-newtask-overlay .nt-expert-field .nt-section-head h3{font-size:13px}
+#cv-newtask-overlay .nt-expert-field .nt-section-head h3 span{color:var(--text-soft);font-weight:400}
+#cv-newtask-overlay .nt-expert-field .nt-section-head span{font-size:12px}
+#cv-newtask-overlay .nt-expert-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+#cv-newtask-overlay .nt-expert-team{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--tb-small-size);color:var(--text-secondary)}
+#cv-newtask-overlay .nt-expert-auto{flex:none;padding:4px 10px;border:1px solid var(--border);border-radius:7px;background:var(--bg);color:var(--text-secondary);font:inherit;font-size:var(--tb-caption-size);cursor:pointer}
+#cv-newtask-overlay .nt-expert-auto:hover{border-color:var(--brand);color:var(--brand)}
+#cv-newtask-overlay .nt-expert-list{display:flex;flex-direction:column;max-height:266px;border:1px solid var(--border);border-radius:10px;background:var(--fill-2);overflow-y:auto}
+#cv-newtask-overlay .nt-expert-row{display:flex;align-items:center;gap:10px;min-height:46px;padding:7px 12px}
+#cv-newtask-overlay .nt-expert-row+.nt-expert-row{border-top:1px solid var(--border)}
+#cv-newtask-overlay .nt-expert-av{flex:none;width:26px;height:26px;border-radius:50%;object-fit:cover;background:var(--hover)}
+#cv-newtask-overlay .nt-expert-id{display:flex;flex:0 0 132px;flex-direction:column;gap:1px;min-width:0}
+#cv-newtask-overlay .nt-expert-name{display:flex;align-items:center;gap:5px;min-width:0;font-size:var(--tb-small-size);font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#cv-newtask-overlay .nt-expert-badge{flex:none;padding:0 5px;border-radius:4px;background:var(--brand-fill);color:var(--brand);font-style:normal;font-size:10px;font-weight:600;line-height:1.7}
+#cv-newtask-overlay .nt-expert-role{min-width:0;font-size:var(--tb-caption-size);color:var(--text-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#cv-newtask-overlay .nt-expert-modes{display:flex;flex:1 1 auto;flex-wrap:wrap;gap:4px;min-width:0}
+#cv-newtask-overlay .nt-expert-chip{padding:0 6px;border-radius:4px;background:var(--hover);color:var(--text-secondary);font-size:var(--tb-caption-size);line-height:1.8;white-space:nowrap}
+#cv-newtask-overlay .nt-expert-person{flex:0 0 118px;width:118px;box-sizing:border-box;padding:5px 22px 5px 9px;border:1px solid var(--border-hover);border-radius:7px;background:var(--bg);color:var(--text);font:inherit;font-size:var(--tb-small-size);cursor:pointer}
+#cv-newtask-overlay .nt-expert-row.is-unassigned .nt-expert-person{border-style:dashed;color:var(--text-soft)}
 #cv-newtask-overlay .nt-property-bar{position:relative;z-index:2;display:flex;align-items:center;justify-content:flex-start;gap:8px;padding:10px 32px 16px;border:0;background:var(--bg);flex:none;flex-wrap:wrap}
 #cv-newtask-overlay .nt-property,#cv-newtask-overlay .nt-property-bar .nt-more>summary{display:inline-flex;align-items:center;gap:8px;min-height:40px;max-width:280px;padding:0 14px;border:1px solid var(--border);border-radius:999px;background:var(--bg);color:var(--text-secondary);font:inherit;font-size:13px;font-weight:500;white-space:nowrap;cursor:pointer}
 #cv-newtask-overlay .nt-property:hover,#cv-newtask-overlay .nt-property-bar .nt-more>summary:hover{border-color:var(--border-hover);background:var(--fill-2)}
 #cv-newtask-overlay .nt-property select{width:auto;min-width:0;max-width:220px;padding:0 16px 0 0;border:0;border-radius:0;background:transparent;color:var(--text);font:inherit;cursor:pointer}
-#cv-newtask-overlay .nt-property--project,#cv-newtask-overlay .nt-property--assignee,#cv-newtask-overlay .nt-property--priority{flex:0 1 auto;min-width:0}
+#cv-newtask-overlay .nt-property--project,#cv-newtask-overlay .nt-property--team,#cv-newtask-overlay .nt-property--assignee,#cv-newtask-overlay .nt-property--priority{flex:0 1 auto;min-width:0}
 #cv-newtask-overlay .nt-property--project select{max-width:190px}
+#cv-newtask-overlay .nt-property--team select{max-width:210px}
 #cv-newtask-overlay .nt-property--assignee select{max-width:170px}
 #cv-newtask-overlay .nt-property--assignee{position:relative}
 #cv-newtask-overlay .nt-person-trigger{display:inline-flex;align-items:center;gap:6px;background:none;border:0;cursor:pointer;font:inherit;color:var(--text-secondary);padding:0}
@@ -402,14 +393,16 @@
   #cv-newtask-overlay .nt-body{padding:8px 18px 0}
   #cv-newtask-overlay .nt-title{font-size:24px}
   #cv-newtask-overlay .nt-desc{font-size:16px}
-  #cv-newtask-overlay .nt-flow-item{flex-basis:148px}
+  #cv-newtask-overlay .nt-expert-id{flex-basis:108px}
   #cv-newtask-overlay .nt-property-bar{gap:6px;padding:8px 16px 12px}
   #cv-newtask-overlay .nt-property,#cv-newtask-overlay .nt-property-bar .nt-more>summary{min-height:36px;padding:0 10px;font-size:12px}
   #cv-newtask-overlay .nt-foot{min-height:64px;padding:8px 16px}
   #cv-newtask-overlay .nt-agent-trigger{font-size:12px;margin-right:0}
 }
 @media(max-width:470px){
-  #cv-newtask-overlay .nt-flow-item{flex-basis:138px}
+  #cv-newtask-overlay .nt-expert-id{flex-basis:86px}
+  #cv-newtask-overlay .nt-expert-person{flex-basis:88px;width:88px}
+  #cv-newtask-overlay .nt-expert-modes{display:none}
   #cv-newtask-overlay .nt-property--project select{max-width:135px}
   #cv-newtask-overlay .nt-execution{order:4}
   #cv-newtask-overlay .nt-more{order:5}

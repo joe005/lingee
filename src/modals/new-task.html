@@ -12,11 +12,15 @@
     </div>
     <div class="nt-body">
       <div class="nt-main" id="cv-nt-manual">
-        <label class="nt-field nt-field--title" for="cv-nt-title"><span class="sr-only">任务标题</span><input class="nt-title" id="cv-nt-title" placeholder="任务标题" maxlength="120"></label>
+        <label class="nt-field nt-field--title" for="cv-nt-title"><span class="sr-only">任务标题</span><input type="text" autocomplete="off" class="nt-title" id="cv-nt-title" placeholder="任务标题" maxlength="120"></label>
         <label class="nt-field nt-field--desc" for="cv-nt-desc"><span class="sr-only">任务描述</span><textarea class="nt-desc" id="cv-nt-desc" rows="3" placeholder="添加描述..."></textarea></label>
-        <div class="nt-flow-field hidden" id="cv-nt-stages-field">
-          <div class="nt-section-head"><h3>阶段分工 <span id="cv-nt-stage-count"></span></h3><span>点击节点选择阶段，在节点下方指定执行人</span></div>
-          <div class="nt-flow" id="cv-nt-stage-list"></div>
+        <div class="nt-expert-field hidden" id="cv-nt-experts-field">
+          <div class="nt-section-head"><h3>专家分工 <span id="cv-nt-expert-count"></span></h3><span>为每位专家指定项目成员作为负责人</span></div>
+          <div class="nt-expert-bar">
+            <span class="nt-expert-team" id="cv-nt-expert-team"></span>
+            <button type="button" class="nt-expert-auto" id="cv-nt-expert-auto">按成员依次分配</button>
+          </div>
+          <div class="nt-expert-list" id="cv-nt-expert-list"></div>
         </div>
       </div>
       <div class="nt-agent hidden" id="cv-nt-agent">
@@ -24,7 +28,7 @@
           <div class="nt-draft-head"><strong id="cv-nt-draft-heading">任务草稿</strong><span>确认内容后创建</span></div>
           <div class="nt-draft-empty" id="cv-nt-draft-empty">在右侧输入一句话，先生成可编辑的任务草稿。</div>
           <div class="nt-draft-content hidden" id="cv-nt-draft-content">
-            <label class="sr-only" for="cv-nt-draft-title">任务标题</label><input id="cv-nt-draft-title" class="nt-draft-title" maxlength="120" placeholder="任务标题">
+            <label class="sr-only" for="cv-nt-draft-title">任务标题</label><input type="text" autocomplete="off" id="cv-nt-draft-title" class="nt-draft-title" maxlength="120" placeholder="任务标题">
             <label class="sr-only" for="cv-nt-draft-desc">任务描述</label><textarea id="cv-nt-draft-desc" class="nt-draft-desc" placeholder="任务描述"></textarea>
           </div>
         </section>
@@ -42,6 +46,7 @@
       <span class="nt-property nt-property--status" aria-label="任务状态"><span class="nt-status-ring" aria-hidden="true"></span><span id="cv-nt-status-property">待办</span></span>
       <label class="nt-property nt-property--priority" for="cv-nt-priority"><span class="sr-only">优先级</span><select id="cv-nt-priority"><option>无优先级</option><option>高</option><option>中</option><option>低</option></select></label>
       <label class="nt-property nt-property--project" for="cv-nt-project"><span class="sr-only">项目</span><select id="cv-nt-project"></select></label>
+      <label class="nt-property nt-property--team" for="cv-nt-team"><span class="sr-only">专家团</span><select id="cv-nt-team" aria-label="专家团"></select></label>
       <label class="nt-property nt-property--group" id="cv-nt-group-field" for="cv-nt-group"><span>上级任务</span><select id="cv-nt-group" aria-label="上级任务（可选）"><option value="">无上级任务</option></select></label>
       <div class="nt-property nt-property--assignee" id="cv-nt-single-field">
         <button type="button" class="nt-person-trigger" id="cv-nt-people-btn" aria-label="负责人">

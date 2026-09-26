@@ -1,7 +1,7 @@
 /* ============ 项目：卡片 / 列表视图 ============ */
 #view-collab #cv-members .scroll{display:flex;flex-direction:column}
 #view-collab #cv-members .scroll.pj-list-mode{padding:0}
-#view-collab #cv-project-view-bar{border-bottom:1px solid var(--divider)}
+#view-collab #cv-project-view-bar{display:none}
 #view-collab .pj-list-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;position:relative;padding:8px 24px;border-bottom:1px solid var(--divider)}
 #view-collab .pj-list-toolbar .tk-tools-left{min-width:0}
 #view-collab .pj-project-search{min-width:0}
