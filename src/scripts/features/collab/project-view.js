@@ -279,7 +279,6 @@ function cvRenderProjectDetail(resetDraft){
     +(canEdit&&cvProjectDetailTab==='overview'?(editing?'<button type="submit" form="pj-project-form" class="pj-detail-save">保存</button>':'<button type="button" class="pj-detail-edit" data-pj-edit>编辑信息</button>'):'')
     +(canEdit?'<button type="button" class="pj-detail-delete" data-pj-delete>删除项目</button>':'')
     +'</div>'
-    +'<div class="pj-detail-tabs" role="tablist" aria-label="项目详情"><button type="button" role="tab" data-pj-detail-tab="overview" aria-selected="'+(cvProjectDetailTab==='overview')+'">概览</button><button type="button" role="tab" data-pj-detail-tab="artifacts" aria-selected="'+(cvProjectDetailTab==='artifacts')+'">产物</button></div>'
     +'<div class="pj-detail-main'+(cvProjectDetailTab==='artifacts'?' pj-detail-main--artifacts':'')+'">'
     +(cvProjectDetailTab==='artifacts'?cvRenderProjectArtifacts(p.id):'' )
     +(cvProjectDetailTab==='overview'?
