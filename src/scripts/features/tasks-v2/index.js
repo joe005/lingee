@@ -274,6 +274,9 @@ function startTaskExecution(taskId) {
   openTaskConversationWithTask(taskId, 'start', true);
   toast('已进入' + (started.stage?.name || '当前节点') + '，会话已发起并运行中', 'success');
 }
+export function startTaskExecutionFromSession(taskId) {
+  startTaskExecution(Number(taskId));
+}
 function handleTaskHeaderAction() {
   var task = tkGetTasks().find(function (row) { return row.id === state.drawerTaskId; });
   var action = taskHeaderAction(task)?.action;
@@ -3275,7 +3278,7 @@ function bindEvents() {
         if (submitted.ok) {
           render();
           openDrawer(sessionTask.id);
-          toast(submitted.stage.name + '已完成，等待审核', 'success');
+          toast(submitted.stage.name + (submitted.autoReviewed ? '已自动审核并流转' : '已完成，等待审核'), 'success');
         }
       }
       return;

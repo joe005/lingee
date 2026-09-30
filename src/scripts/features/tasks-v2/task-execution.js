@@ -87,6 +87,10 @@ export function submitTaskStage(task) {
     });
   }
   tkUpdateTask(task.id, {status:'in_review', executionStageId:stage.id, executionPlan:stagePlan(task,stage.id,'review'), executionArtifacts:artifacts});
+  if (task.executionPlan?.find(function (row) { return row.id === stage.id; })?.requiresConfirmation === false) {
+    const approved = reviewTaskStage(task, true);
+    return approved.ok ? {ok:true, stage:stage, autoReviewed:true, next:approved.next, done:approved.done} : approved;
+  }
   return {ok:true, stage:stage};
 }
 
