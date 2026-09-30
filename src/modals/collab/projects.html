@@ -71,7 +71,6 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg>
           <input id="cv-project-member-search" type="search" placeholder="搜索人员姓名、手机号或邮箱" autocomplete="off" aria-controls="pj-member-picker-popup" aria-expanded="false">
         </label>
-        <select id="cv-project-member-role" class="pj-member-role-select pj-member-add-role" aria-label="新增成员角色（必选）" required><option value="" disabled selected>请选择角色</option><option value="product">产品</option><option value="development">开发</option><option value="testing">测试</option></select>
         <button type="button" class="pj-member-add-btn" id="cv-project-member-add" data-pj-add-member disabled>添加</button>
       </div>
       <div class="pj-members-heading">
@@ -80,6 +79,6 @@
       <div class="pj-members-table-head"><span>姓名</span><span>所属部门</span><span>角色</span><span></span></div>
       <div id="cv-project-members-list"></div>
     </div>
-    <div class="sync-modal__footer pj-members-modal-footer"><button type="button" class="sync-modal__btn sync-modal__btn--ghost" data-pj-members-close>取消</button><button type="button" class="sync-modal__btn sync-modal__btn--primary" data-pj-members-close>添加成员</button></div>
+    <div class="sync-modal__footer pj-members-modal-footer"><button type="button" class="sync-modal__btn sync-modal__btn--ghost" data-pj-members-close>取消</button><button type="button" class="sync-modal__btn sync-modal__btn--primary" data-pj-members-confirm>添加成员</button></div>
   </div>
 </div>
