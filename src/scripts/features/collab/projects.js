@@ -133,13 +133,13 @@ function cvRenderProjectMemberSelection(){
   if(count)count.textContent='已选 '+(base.length+additions.length)+' 人';
   var pickerCount=$('#cv-pe-member-picker-count');if(pickerCount)pickerCount.textContent='共 '+(base.length+additions.length)+' 人';
   selected.innerHTML=base.concat(additions).map(function(person){
-    var role=person.id===cvSelectedProjectOwner?.id?'':cvSelectedProjectMemberRoles.get(String(person.id));
-    var label={product:'产品',development:'开发',testing:'测试'}[role];
+    var role=person.id===cvSelectedProjectOwner?.id?'owner':cvSelectedProjectMemberRoles.get(String(person.id));
+    var label={owner:'项目负责人',product:'产品',development:'开发',testing:'测试'}[role];
     return '<span class="pe-member-chip">'+xesc(person.name)+(label?' · '+label:'')+'</span>';
   }).join('');
   if(assignments)assignments.innerHTML=base.concat(additions).map(function(person,index){
-    var id=String(person.id),isOwner=person.id===cvSelectedProjectOwner?.id,canRemove=!baseIds.has(id),role=cvSelectedProjectMemberRoles.get(id)||'member';
-    return '<div class="pe-member-assignment"><span class="pe-member-person"><i class="pe-member-avatar pe-member-avatar--'+(index%4)+'">'+xesc((person.name||'?')[0])+'</i>'+xesc(person.name)+'</span><span>'+xesc(person.dept||'未填写部门')+'</span><span class="pe-member-role-cell"><select data-pe-member-role="'+xesc(id)+'" aria-label="'+xesc(person.name)+'的项目角色"><option value="member"'+(!isOwner&&role==='member'?' selected':'')+'>成员</option>'+(canRemove?'<option value="product"'+(role==='product'&&!isOwner?' selected':'')+'>产品</option><option value="development"'+(role==='development'&&!isOwner?' selected':'')+'>开发</option><option value="testing"'+(role==='testing'&&!isOwner?' selected':'')+'>测试</option>':'')+'<option value="owner"'+(isOwner?' selected':'')+'>负责人</option></select>'+(canRemove?'<button type="button" data-pe-member-remove="'+xesc(id)+'" aria-label="移除 '+xesc(person.name)+'">⊖</button>':'')+'</span></div>';
+    var id=String(person.id),isOwner=person.id===cvSelectedProjectOwner?.id,canRemove=!baseIds.has(id),role=cvSelectedProjectMemberRoles.get(id)||'';
+    return '<div class="pe-member-assignment"><span class="pe-member-person"><i class="pe-member-avatar pe-member-avatar--'+(index%4)+'">'+xesc((person.name||'?')[0])+'</i>'+xesc(person.name)+'</span><span>'+xesc(person.dept||'未填写部门')+'</span><span class="pe-member-role-cell"><select required data-pe-member-role="'+xesc(id)+'" aria-label="'+xesc(person.name)+'的项目角色"><option value="" disabled'+(!isOwner&&!role?' selected':'')+'>请选择角色</option><option value="owner"'+(isOwner?' selected':'')+'>项目负责人</option><option value="product"'+(role==='product'&&!isOwner?' selected':'')+'>产品</option><option value="development"'+(role==='development'&&!isOwner?' selected':'')+'>开发</option><option value="testing"'+(role==='testing'&&!isOwner?' selected':'')+'>测试</option></select>'+(canRemove?'<button type="button" data-pe-member-remove="'+xesc(id)+'" aria-label="移除 '+xesc(person.name)+'">⊖</button>':'')+'</span></div>';
   }).join('');
 }
 function cvMissingProjectMemberRole(){
@@ -148,6 +148,13 @@ function cvMissingProjectMemberRole(){
     var id=String(person.id);
     return !baseIds.has(id)&&!['product','development','testing'].includes(cvSelectedProjectMemberRoles.get(id));
   });
+}
+function cvValidateProjectMemberRoles(){
+  var missing=cvMissingProjectMemberRole();
+  if(!missing)return true;
+  toast('请为「'+missing.name+'」选择项目角色','warning');
+  $$('#cv-pe-member-assignments [data-pe-member-role]').find(function(field){return field.dataset.peMemberRole===String(missing.id);})?.focus();
+  return false;
 }
 function cvOpenProjectMemberPicker(){
   var overlay=$('#cv-pe-member-picker-overlay');if(!overlay)return;
@@ -160,6 +167,7 @@ function cvOpenProjectMemberPicker(){
 }
 function cvCloseProjectMemberPicker(save,restoreFocus){
   var overlay=$('#cv-pe-member-picker-overlay');if(!overlay||overlay.getAttribute('aria-hidden')==='true')return false;
+  if(save&&!cvValidateProjectMemberRoles())return false;
   if(!save&&cvMemberPickerSnapshot){
     cvSelectedProjectMembers=new Map(cvMemberPickerSnapshot.members);
     cvSelectedProjectMemberRoles=new Map(cvMemberPickerSnapshot.roles);
@@ -274,6 +282,7 @@ function cvOpenProjEdit(id){
   cvSetProjectIcon(p.dot);
   var set=function(k,val){var e=$('#cv-pe-'+k);if(e)e.value=val||'';};
   set('name',p.name);set('desc',p.desc);if($('#cv-pe-desc-count'))$('#cv-pe-desc-count').textContent=(p.desc||'').length+'/100';set('status',p.status||'planned');set('priority',p.priority||'中');set('repo',p.repo);set('start',p.start);set('end',p.end);
+  Object.entries(p.memberRoles||{}).forEach(function(entry){if(['product','development','testing'].includes(entry[1]))cvSelectedProjectMemberRoles.set(String(entry[0]),entry[1]);});
   cvSetProjectOwner(CV_MEMBERS.find(function(m){return m.name===p.owner;})||null);
   if(!cvSelectedProjectOwner){var ownerInput=$('#cv-pe-owner');if(ownerInput)ownerInput.value=p.owner||'';}
   var tsel=$('#cv-pe-team');
@@ -320,6 +329,7 @@ function cvCloseProjEdit(){
   if(toolbar && detail?.classList.contains('hidden'))toolbar.classList.remove('hidden');
 }
 function cvSaveProjEdit(){
+  if(!cvValidateProjectMemberRoles())return;
   var g=function(k){var e=$('#cv-pe-'+k);return e?e.value.trim():'';};
   var name=g('name');
   if(!name){ toast('请填写项目标题','error'); return; }
@@ -352,12 +362,14 @@ function cvSaveProjEdit(){
     p.name=name;p.desc=g('desc');p.status=g('status');p.priority=g('priority');p.owner=g('owner');p.repo=g('repo');p.dot=cvSelectedProjectIcon;p.start=g('start');p.end=g('end');p.defaultTeam=teamId;p.updatedAt=Date.now();
     p.memberRoles={...p.memberRoles};
     addedMembers.forEach(function(id){if(id!==owner.id&&!(p.members||[]).includes(id))p.memberRoles[id]=addedMemberRoles.get(id);});
+    cvSelectedProjectMemberRoles.forEach(function(role,id){if((p.members||[]).some(function(memberId){return String(memberId)===id;})&&['product','development','testing'].includes(role))p.memberRoles[id]=role;});
     delete p.memberRoles[owner.id];
     p.members=Array.from(new Set((p.members||[]).concat(owner.id,addedMembers)));
   }else{
     if(!currentPerson){toast('未找到当前用户，无法创建项目','error');return;}
     var memberIds=Array.from(new Set([currentPerson.id,owner.id].concat(addedMembers)));
     var memberRoles={};
+    cvSelectedProjectMemberRoles.forEach(function(role,id){if(memberIds.some(function(memberId){return String(memberId)===id;})&&String(owner.id)!==id&&['product','development','testing'].includes(role))memberRoles[id]=role;});
     addedMembers.forEach(function(id){var role=addedMemberRoles.get(id);if(id!==owner.id&&role)memberRoles[id]=role;});
     p={id:'proj-'+Date.now(),name:name,desc:g('desc'),status:g('status'),dot:cvSelectedProjectIcon,defaultTeam:teamId,members:memberIds,memberRoles:memberRoles,priority:g('priority'),owner:owner.name,repo:g('repo'),code:cvGenProjectCode({repo:g('repo'),id:'proj-'+Date.now()}),start:g('start'),end:g('end'),updatedAt:Date.now()};
     CV_PROJECTS.push(p);
@@ -426,7 +438,7 @@ export function initCollabProjects() {
       field.value='owner';toast('请先为项目选择另一位负责人','warning');
     }else{
       var roleId=field.dataset.peMemberRole;
-      cvSelectedProjectMemberRoles.set(roleId,field.value==='member'?'':field.value);
+      cvSelectedProjectMemberRoles.set(roleId,field.value);
       cvRenderProjectMemberSelection();
       $$('#cv-pe-member-assignments [data-pe-member-role]').find(function(option){return option.dataset.peMemberRole===roleId;})?.focus();
     }

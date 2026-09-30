@@ -133,7 +133,7 @@ function cvRenderProjectList(){
     var avatars=members.slice(0,4).map(function(member,index){return '<span class="pj-card-avatar pj-card-avatar--'+index+'" aria-hidden="true">'+xesc((member.name||'?').slice(0,1))+'</span>';}).join('');
     if(members.length>4)avatars+='<span class="pj-card-avatar pj-card-avatar--more" aria-hidden="true">+'+(members.length-4)+'</span>';
     return '<div class="pj-card" data-pj-row="'+xesc(p.id)+'">'
-      +'<div class="pj-card-main" data-pj-open="'+xesc(p.id)+'" role="button" tabindex="0" aria-label="查看项目：'+xesc(p.name)+'"><div class="pj-card-head"><div class="pj-card-identity">'+cvProjectFolderIcon(p.dot)+'<span class="pj-card-title" title="'+xesc(p.name)+'">'+xesc(p.name)+'</span></div>'
+      +'<div class="pj-card-main" data-pj-open="'+xesc(p.id)+'" role="button" tabindex="0" aria-label="查看项目：'+xesc(p.name)+'"><div class="pj-card-head"><div class="pj-card-identity"><span class="pj-card-title" title="'+xesc(p.name)+'">'+xesc(p.name)+'</span></div>'
       +'<span class="pj-card-status pj-card-status--'+statusKey+'">'+sc.t+'</span></div>'
       +'<p class="pj-card-desc" title="'+xesc(p.desc||'暂无描述')+'">'+xesc(p.desc||'暂无描述')+'</p>'
       +'<div class="pj-card-fields"><span><em>负责人：</em><b title="'+xesc(p.owner||'未设置')+'">'+xesc(p.owner||'未设置')+'</b></span><span><em>优先级：</em><b>'+xesc(p.priority||'中')+'</b></span><span><em>专家团：</em><b title="'+xesc(teamName)+'">'+xesc(teamName)+'</b></span></div>'
@@ -756,6 +756,7 @@ function cvCloseProjectMembersModal(restoreFocus){
 function cvOpenProjectMembersModal(){
   var project=cvProjectById(cvProjCur),overlay=$('#cv-project-members-overlay');
   if(!project||!overlay)return;
+  var role=$('#cv-project-member-role');if(role)role.value='';
   cvRenderProjectMembersModal();
   overlay.style.display='flex';overlay.setAttribute('aria-hidden','false');
   var focusTarget=cvCanManageProject(project)?$('#cv-project-member-search'):overlay.querySelector('[data-pj-members-close]');
@@ -827,12 +828,14 @@ function cvAddProjectMember(){
   var project=cvProjectById(cvProjCur);
   if(!cvCanManageProject(project)){toast('只有项目负责人可以添加成员','warning');return;}
   if(!cvMemberPickerSelected.size){toast('请先搜索并选择人员','warning');return;}
+  var role=$('#cv-project-member-role')?.value;
+  if(!CV_PROJECT_MEMBER_ROLES.some(function(option){return option[0]===role;})){toast('请选择新增成员的项目角色','warning');$('#cv-project-member-role')?.focus();return;}
   var people=Array.from(cvMemberPickerSelected).map(function(id){return cvEnsureProjectPerson(cvMemberSearchRows.get(id));}).filter(function(person){return person&&!(project.members||[]).includes(person.id)&&person.status!=='disabled';});
   if(!people.length){toast('所选人员无法添加','warning');return;}
   var previousMembers=(project.members||[]).slice(),previousRoles=project.memberRoles?{...project.memberRoles}:null,previousUpdatedAt=project.updatedAt;
   project.members=previousMembers.slice();
   project.memberRoles={...project.memberRoles};
-  people.forEach(function(person){project.members.push(person.id);});
+  people.forEach(function(person){project.members.push(person.id);project.memberRoles[person.id]=role;});
   project.updatedAt=Date.now();
   if(!cvPersistProjects()){
     project.members=previousMembers;
