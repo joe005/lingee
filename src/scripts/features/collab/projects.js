@@ -131,15 +131,16 @@ function cvRenderProjectMemberSelection(){
   var base=cvProjectBaseMemberRows(),baseIds=new Set(base.map(function(person){return String(person.id);}));
   var additions=Array.from(cvSelectedProjectMembers.values()).filter(function(person){return !baseIds.has(String(person.id));});
   if(count)count.textContent='已选 '+(base.length+additions.length)+' 人';
-  var pickerCount=$('#cv-pe-member-picker-count');if(pickerCount)pickerCount.textContent=additions.length+' 人';
-  selected.innerHTML=base.map(function(person){return '<span class="pe-member-chip">'+xesc(person.name)+'</span>';}).join('')
-    +additions.map(function(person){var role=cvSelectedProjectMemberRoles.get(String(person.id));var label={product:'产品',development:'开发',testing:'测试'}[role]||'待设置';return '<span class="pe-member-chip">'+xesc(person.name)+' · '+label+'</span>';}).join('');
-  if(assignments)assignments.innerHTML=additions.length?additions.map(function(person){
-      var id=String(person.id),role=cvSelectedProjectMemberRoles.get(id)||'';
-      return '<div class="pe-member-assignment"><span title="'+xesc(person.name)+'">'+xesc(person.name)+'</span>'
-        +'<select data-pe-member-role="'+xesc(id)+'" aria-label="'+xesc(person.name)+'的项目角色"><option value=""'+(!role?' selected':'')+'>选择角色</option><option value="product"'+(role==='product'?' selected':'')+'>产品</option><option value="development"'+(role==='development'?' selected':'')+'>开发</option><option value="testing"'+(role==='testing'?' selected':'')+'>测试</option></select>'
-        +'<button type="button" data-pe-member-remove="'+xesc(id)+'" aria-label="移除 '+xesc(person.name)+'">×</button></div>';
-    }).join(''):'<div class="pe-member-picker-empty">尚未添加其他成员</div>';
+  var pickerCount=$('#cv-pe-member-picker-count');if(pickerCount)pickerCount.textContent='共 '+(base.length+additions.length)+' 人';
+  selected.innerHTML=base.concat(additions).map(function(person){
+    var role=person.id===cvSelectedProjectOwner?.id?'':cvSelectedProjectMemberRoles.get(String(person.id));
+    var label={product:'产品',development:'开发',testing:'测试'}[role];
+    return '<span class="pe-member-chip">'+xesc(person.name)+(label?' · '+label:'')+'</span>';
+  }).join('');
+  if(assignments)assignments.innerHTML=base.concat(additions).map(function(person,index){
+    var id=String(person.id),isOwner=person.id===cvSelectedProjectOwner?.id,canRemove=!baseIds.has(id),role=cvSelectedProjectMemberRoles.get(id)||'member';
+    return '<div class="pe-member-assignment"><span class="pe-member-person"><i class="pe-member-avatar pe-member-avatar--'+(index%4)+'">'+xesc((person.name||'?')[0])+'</i>'+xesc(person.name)+'</span><span>'+xesc(person.dept||'未填写部门')+'</span><span class="pe-member-role-cell"><select data-pe-member-role="'+xesc(id)+'" aria-label="'+xesc(person.name)+'的项目角色"><option value="member"'+(!isOwner&&role==='member'?' selected':'')+'>成员</option>'+(canRemove?'<option value="product"'+(role==='product'&&!isOwner?' selected':'')+'>产品</option><option value="development"'+(role==='development'&&!isOwner?' selected':'')+'>开发</option><option value="testing"'+(role==='testing'&&!isOwner?' selected':'')+'>测试</option>':'')+'<option value="owner"'+(isOwner?' selected':'')+'>负责人</option></select>'+(canRemove?'<button type="button" data-pe-member-remove="'+xesc(id)+'" aria-label="移除 '+xesc(person.name)+'">⊖</button>':'')+'</span></div>';
+  }).join('');
 }
 function cvMissingProjectMemberRole(){
   var baseIds=new Set(cvProjectBaseMemberRows().map(function(person){return String(person.id);}));
@@ -150,7 +151,7 @@ function cvMissingProjectMemberRole(){
 }
 function cvOpenProjectMemberPicker(){
   var overlay=$('#cv-pe-member-picker-overlay');if(!overlay)return;
-  cvMemberPickerSnapshot={members:new Map(cvSelectedProjectMembers),roles:new Map(cvSelectedProjectMemberRoles)};
+  cvMemberPickerSnapshot={members:new Map(cvSelectedProjectMembers),roles:new Map(cvSelectedProjectMemberRoles),owner:cvSelectedProjectOwner};
   var search=$('#cv-pe-member-search');if(search){search.value='';search.setAttribute('aria-expanded','false');}
   $('#cv-pe-member-results')?.classList.add('hidden');
   cvRenderProjectMemberSelection();
@@ -159,12 +160,11 @@ function cvOpenProjectMemberPicker(){
 }
 function cvCloseProjectMemberPicker(save,restoreFocus){
   var overlay=$('#cv-pe-member-picker-overlay');if(!overlay||overlay.getAttribute('aria-hidden')==='true')return false;
-  if(save){
-    var missing=cvMissingProjectMemberRole();
-    if(missing){toast('请为新增成员选择项目角色','warning');$$('#cv-pe-member-assignments [data-pe-member-role]').find(function(field){return field.dataset.peMemberRole===String(missing.id);})?.focus();return false;}
-  }else if(cvMemberPickerSnapshot){
+  if(!save&&cvMemberPickerSnapshot){
     cvSelectedProjectMembers=new Map(cvMemberPickerSnapshot.members);
     cvSelectedProjectMemberRoles=new Map(cvMemberPickerSnapshot.roles);
+    cvSelectedProjectOwner=cvMemberPickerSnapshot.owner;
+    var ownerInput=$('#cv-pe-owner');if(ownerInput)ownerInput.value=cvSelectedProjectOwner?.name||'';
   }
   cvMemberPickerSnapshot=null;
   clearTimeout(cvMemberSearchTimer);cvMemberSearchSeq++;
@@ -273,7 +273,7 @@ function cvOpenProjEdit(id){
   cvResetProjectMemberPicker();
   cvSetProjectIcon(p.dot);
   var set=function(k,val){var e=$('#cv-pe-'+k);if(e)e.value=val||'';};
-  set('name',p.name);set('desc',p.desc);set('status',p.status||'planned');set('priority',p.priority||'中');set('repo',p.repo);set('start',p.start);set('end',p.end);
+  set('name',p.name);set('desc',p.desc);if($('#cv-pe-desc-count'))$('#cv-pe-desc-count').textContent=(p.desc||'').length+'/100';set('status',p.status||'planned');set('priority',p.priority||'中');set('repo',p.repo);set('start',p.start);set('end',p.end);
   cvSetProjectOwner(CV_MEMBERS.find(function(m){return m.name===p.owner;})||null);
   if(!cvSelectedProjectOwner){var ownerInput=$('#cv-pe-owner');if(ownerInput)ownerInput.value=p.owner||'';}
   var tsel=$('#cv-pe-team');
@@ -298,7 +298,7 @@ function cvOpenProjNew(){
     if(!cvPersistPersons()){CV_MEMBERS.pop();toast('无法保存当前登录人员','error');return;}
   }
   var set=function(k,val){var e=$('#cv-pe-'+k);if(e)e.value=val||'';};
-  set('name','');set('desc','');set('status','planned');set('priority','中');set('repo','');set('start','');set('end','');
+  set('name','');set('desc','');if($('#cv-pe-desc-count'))$('#cv-pe-desc-count').textContent='0/100';set('status','planned');set('priority','中');set('repo','');set('start','');set('end','');
   cvSetProjectOwner(currentPerson);
   var tsel=$('#cv-pe-team');
   if(tsel) tsel.innerHTML='<option value="">请选择专家团</option>'+TEAMS.map(function(t){return '<option value="'+xesc(t.id)+'">'+xesc(t.name)+'</option>';}).join('');
@@ -335,13 +335,6 @@ function cvSaveProjEdit(){
   var p=isNew?null:cvProjectById(cvProjEditId);
   if(!isNew&&!cvMayEditProject(p)){toast('只有项目负责人可以编辑项目','warning');return;}
   if(p&&g('owner')!==p.owner&&!window.confirm('确定将「'+p.name+'」的负责人由「'+(p.owner||'未设置')+'」变更为「'+g('owner')+'」吗？'))return;
-  var missingRole=cvMissingProjectMemberRole();
-  if(missingRole){
-    toast('请为新增成员选择项目角色','warning');
-    cvOpenProjectMemberPicker();
-    $$('#cv-pe-member-assignments [data-pe-member-role]').find(function(field){return field.dataset.peMemberRole===String(missingRole.id);})?.focus();
-    return;
-  }
   var owner=cvEnsureProjectPerson(cvSelectedProjectOwner);
   if(!owner||owner.status==='disabled'){toast('无法保存项目负责人','error');return;}
   var addedMembers=[],addedMemberRoles=new Map();
@@ -365,7 +358,7 @@ function cvSaveProjEdit(){
     if(!currentPerson){toast('未找到当前用户，无法创建项目','error');return;}
     var memberIds=Array.from(new Set([currentPerson.id,owner.id].concat(addedMembers)));
     var memberRoles={};
-    addedMembers.forEach(function(id){if(id!==owner.id)memberRoles[id]=addedMemberRoles.get(id);});
+    addedMembers.forEach(function(id){var role=addedMemberRoles.get(id);if(id!==owner.id&&role)memberRoles[id]=role;});
     p={id:'proj-'+Date.now(),name:name,desc:g('desc'),status:g('status'),dot:cvSelectedProjectIcon,defaultTeam:teamId,members:memberIds,memberRoles:memberRoles,priority:g('priority'),owner:owner.name,repo:g('repo'),code:cvGenProjectCode({repo:g('repo'),id:'proj-'+Date.now()}),start:g('start'),end:g('end'),updatedAt:Date.now()};
     CV_PROJECTS.push(p);
   }
@@ -395,6 +388,15 @@ export function initCollabProjects() {
     if(event.key==='Escape'){event.stopPropagation();cvCloseProjectMemberPicker(false);}
   });
   $('#cv-pe-member-search')?.addEventListener('input',function(event){cvSearchProjectMembers(event.target.value.trim());});
+  $('#cv-pe-member-search-add')?.addEventListener('click',function(){
+    var search=$('#cv-pe-member-search'),query=search?.value.trim(),results=$('#cv-pe-member-results');
+    if(!query){search?.focus();return;}
+    var choices=$$('#cv-pe-member-results [data-pe-member-result]:not(:disabled)');
+    var exact=choices.find(function(button){return button.querySelector('span')?.textContent===query;});
+    if(exact||choices.length===1){(exact||choices[0]).click();return;}
+    if(results?.classList.contains('hidden'))cvSearchProjectMembers(query);
+    else choices[0]?.focus();
+  });
   $('#cv-pe-member-search')?.addEventListener('focus',function(event){if(event.target.value.trim())cvSearchProjectMembers(event.target.value.trim());});
   $('#cv-pe-member-results')?.addEventListener('click',function(event){
     var button=event.target.closest('[data-pe-member-result]');if(!button||button.disabled)return;
@@ -415,8 +417,21 @@ export function initCollabProjects() {
   });
   $('#cv-pe-member-assignments')?.addEventListener('change',function(event){
     var field=event.target.closest('[data-pe-member-role]');
-    if(field)cvSelectedProjectMemberRoles.set(field.dataset.peMemberRole,field.value);
+    if(!field)return;
+    if(field.value==='owner'){
+      var id=field.dataset.peMemberRole;
+      var person=cvProjectBaseMemberRows().concat(Array.from(cvSelectedProjectMembers.values())).find(function(row){return String(row.id)===id;});
+      if(person)cvSetProjectOwner(person);
+    }else if(String(cvSelectedProjectOwner?.id)===field.dataset.peMemberRole){
+      field.value='owner';toast('请先为项目选择另一位负责人','warning');
+    }else{
+      var roleId=field.dataset.peMemberRole;
+      cvSelectedProjectMemberRoles.set(roleId,field.value==='member'?'':field.value);
+      cvRenderProjectMemberSelection();
+      $$('#cv-pe-member-assignments [data-pe-member-role]').find(function(option){return option.dataset.peMemberRole===roleId;})?.focus();
+    }
   });
+  $('#cv-pe-desc')?.addEventListener('input',function(event){var count=$('#cv-pe-desc-count');if(count)count.textContent=event.target.value.length+'/100';});
   $('#cv-pe-owner')?.addEventListener('input',function(event){cvSearchProjectOwner(event.target.value.trim());});
   $('#cv-pe-owner-results')?.addEventListener('click',function(event){
     var button=event.target.closest('[data-pe-owner-result]');

@@ -177,6 +177,8 @@ function rebuildExperts(){
   EXPERTS=BUILTIN_EXPERTS.concat(MY_EXPERTS);
   EX={}; EXPERTS.forEach(function(e){EX[e.id]=e});
 }
+/* 平台原型安装官方版本时只替换内置定义，保留个人专家。 */
+function setBuiltinExperts(items){ BUILTIN_EXPERTS=items; rebuildExperts(); }
 
 /* 专家头像：复用内置的一套图形 */
 var AV_KEYS=['lead','pm','arch','eng','qa','cr','sec','ana','fe','ux','form','flow','rpt','plug','api'];
@@ -322,4 +324,4 @@ export function initExpertData() {
 /* MY_EXPERTS 由其它模块写回；import 绑定只读，所以走这个 setter */
 export function set_MY_EXPERTS(v){ MY_EXPERTS=v; return v; }
 
-export { AV_KEYS, EX, EXPERTS, MODEL_TIERS, MY_EXPERTS, PRESET_TEAMS, STAGE_MODES, STAGES, WORK_MODES, askFor, compChip, parseComp, pendingInputs, phraseHtml, rebuildExperts, skillCatalog, skillInfo, stageById, tierInfo, xav, xesc };
+export { AV_KEYS, EX, EXPERTS, MODEL_TIERS, MY_EXPERTS, PRESET_TEAMS, STAGE_MODES, STAGES, WORK_MODES, askFor, compChip, parseComp, pendingInputs, phraseHtml, rebuildExperts, setBuiltinExperts, skillCatalog, skillInfo, stageById, tierInfo, xav, xesc };

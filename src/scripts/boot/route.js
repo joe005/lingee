@@ -18,7 +18,7 @@ var _pathParts=stripBase(location.pathname).replace(/^\/+|\/+$/g,'').split('/');
 var _origSearch=location.search;
 /* showView() 对认不出的名字会把九个视图全部隐藏（线上曾因此登录后一片空白），
    所以路径段必须先过白名单，认不出就按「没指定」处理，走默认/localStorage 恢复 */
-var VIEW_NAMES=['home','newtask','chat','apps','collab','skills','agents','settings','design','experts','tasks','changelog','inbox'];
+var VIEW_NAMES=['home','newtask','chat','apps','collab','skills','agents','settings','design','experts','tasks','changelog','inbox','platform'];
 var _seg=_pathParts[0]||'';
 var dsViewParam=VIEW_NAMES.indexOf(_seg)>=0 ? _seg : '';
 var dsSearch;
@@ -66,6 +66,7 @@ export function initRoute() {
     else if(dsViewParam==='agents') setNavActive('智能体开发');
     else if(dsViewParam==='apps') setNavActive('应用开发');
     else if(dsViewParam==='tasks') setNavActive('任务');
+    else if(dsViewParam==='platform') setNavActive('平台空间');
     else if(dsViewParam==='collab'){
       setNavActive('协作开发');
       /* 协作开发模块最后才初始化，这里只记下要打开的页签。

@@ -436,6 +436,18 @@
 #cvModals .pj-members-modal .pj-member-remove-btn{flex:none;margin-left:2px;padding:6px 9px;border:1px solid #f0c4c4;border-radius:6px;background:#fff;color:var(--danger);font:inherit;font-size:11.5px;cursor:pointer}
 #cvModals .pj-members-modal .pj-member-remove-btn:hover{background:var(--danger-bg)}
 #cvModals .pj-members-modal .pj-members-empty{padding:32px 16px;border:1px dashed var(--border);border-radius:9px;color:var(--text-soft);font-size:12px;text-align:center}
+#cvModals .pj-project-delete-overlay{z-index:240}
+#cvModals .pj-project-delete-overlay[aria-hidden="true"]{display:none!important}
+#cvModals .pj-project-delete-modal{width:min(324px,calc(100vw - 32px))}
+#cvModals .pj-project-delete-header{align-items:center;gap:10px;padding:22px 22px 0}
+#cvModals .pj-project-delete-warning{display:inline-flex;width:19px;height:19px;flex:none;align-items:center;justify-content:center;border-radius:50%;background:var(--warning);color:#fff;font-size:12px;font-weight:700}
+#cvModals .pj-project-delete-modal .sync-modal__title{font-size:16px}
+#cvModals .pj-project-delete-modal .sync-modal__body{padding:12px 22px 20px}
+#cvModals .pj-project-delete-modal p{margin:0;padding-left:29px;color:var(--text-soft);font-size:13px;line-height:1.6}
+#cvModals .pj-project-delete-modal .sync-modal__footer{padding:12px 20px 20px;border-top:0}
+#cvModals .pj-project-delete-confirm{border:1px solid var(--danger);background:var(--danger);color:#fff}
+#cvModals .pj-project-delete-confirm:hover{filter:brightness(.94)}
+#cvModals .pj-project-delete-modal .sync-modal__btn:focus-visible{outline:2px solid var(--border-focus);outline-offset:2px}
 #cvModals .pj-member-remove-overlay{z-index:230}
 #cvModals .pj-member-remove-overlay[aria-hidden="true"]{display:none!important}
 #cvModals .pj-member-remove-modal{width:min(420px,calc(100vw - 32px))}
@@ -449,3 +461,71 @@
 #cvModals .pj-member-remove-modal .sync-modal__btn:focus-visible{outline:2px solid var(--border-focus);outline-offset:2px}
 @media(max-width:560px){#cvModals .pj-members-modal-header{padding:16px 16px 0}#cvModals .pj-members-modal-body{padding:14px 16px 18px}#cvModals .pj-members-modal .pj-members-row{gap:8px;padding:9px}#cvModals .pj-members-modal .pj-role-pill{min-width:0;padding:4px 6px}}
 @media(max-width:560px){#cvModals .pj-member-search-row{flex-wrap:wrap}#cvModals .pj-member-search-field{flex-basis:100%}#cvModals .pj-member-add-role{flex:1}#cvModals .pj-members-modal .pj-members-info small{display:none}}
+
+/* 项目详情顶部页签与产物双栏。 */
+#view-collab #cv-proj-detail .pj-crumb{min-height:56px;padding-block:12px}
+#view-collab #cv-proj-detail .pj-detail-tabs{position:relative;z-index:2;min-height:52px;box-sizing:border-box;align-items:center;padding:0 28px 10px;background:#f7f7fa}
+#view-collab #cv-proj-detail .pj-detail-main--artifacts{gap:0;padding:0;background:#f7f7fa}
+#view-collab #cv-proj-detail .pj-detail-main--artifacts.has-preview{overflow:visible}
+#view-collab #cv-proj-detail:has(.pj-detail-main--artifacts.has-preview) .pj-crumb,
+#view-collab #cv-proj-detail:has(.pj-detail-main--artifacts.has-preview) .pj-detail-tabs,
+#view-collab #cv-proj-detail:has(.pj-detail-main--artifacts.has-preview) .pj-detail-main--artifacts{box-sizing:border-box;width:50%}
+#view-collab #cv-proj-detail .pj-artifacts-list-pane{padding:12px 24px 20px}
+#view-collab #cv-proj-detail .pj-detail-main--artifacts.has-preview .pj-artifacts-list-pane{flex:1;padding:12px 16px 20px 24px}
+#view-collab #cv-proj-detail .pj-artifacts-table{flex:0 1 auto;max-height:100%;border-radius:10px;background:#fff}
+#view-collab #cv-proj-detail .pj-artifacts-head,#view-collab #cv-proj-detail .pj-artifacts-row{grid-template-columns:32px minmax(170px,1fr) 65px 130px 54px;gap:9px;min-width:530px;padding:10px 12px}
+#view-collab #cv-proj-detail .pj-artifacts-index{color:var(--text-secondary);font-variant-numeric:tabular-nums}
+#view-collab #cv-proj-detail .has-preview .pj-artifacts-head,#view-collab #cv-proj-detail .has-preview .pj-artifacts-row{grid-template-columns:25px minmax(120px,1fr) 50px 105px 44px;gap:6px;min-width:390px;padding:8px}
+#view-collab #cv-proj-detail .pj-artifacts-row{position:relative;min-height:50px}
+#view-collab #cv-proj-detail .pj-artifacts-row.is-selected{background:var(--brand-fill)}
+#view-collab #cv-proj-detail .pj-artifacts-row.is-selected:after{content:'';position:absolute;inset:0 auto 0 0;width:3px;background:var(--brand)}
+#view-collab #cv-proj-detail .pj-artifacts-file-icon{width:23px;height:27px;color:var(--brand)}
+#view-collab #cv-proj-detail .pj-artifacts-name{gap:6px}
+#view-collab #cv-proj-detail .pj-artifacts-name a{font-size:12px}
+#view-collab #cv-proj-detail .pj-artifact-preview{position:absolute;inset:0 0 0 auto;box-sizing:border-box;width:50%;height:100%;margin:0;padding:16px 24px 20px;border-left:1px solid var(--border);background:#f7f7fa}
+#view-collab #cv-proj-detail .pj-artifact-pane-label{flex:none;min-height:34px;color:var(--text);font-size:14px;font-weight:600}
+#view-collab #cv-proj-detail .pj-artifact-preview-head{padding:0 0 14px;border:0}
+#view-collab #cv-proj-detail .pj-artifact-preview-body{border-radius:12px;background:#fff;padding:28px 36px}
+#view-collab #cv-proj-detail .pj-artifact-preview.is-fullscreen{width:100%;padding:24px;background:#f7f7fa}
+#view-collab #cv-proj-detail:has(.pj-detail-main--artifacts.has-preview) .pj-detail-delete{position:absolute;top:12px;right:24px;z-index:3}
+#cvModals .pj-members-modal{width:min(920px,calc(100vw - 32px));max-height:min(690px,88vh)}
+#cvModals .pj-members-modal-header{padding:24px 26px 0}
+#cvModals .pj-members-modal-body{padding:20px 26px 12px}
+#cvModals .pj-member-search-row{margin-bottom:18px}
+#cvModals .pj-member-search-field{height:46px}
+#cvModals .pj-member-add-role{height:46px}
+#cvModals .pj-member-add-btn{height:46px;background:#fff;color:var(--brand)}
+#cvModals .pj-member-add-btn:disabled:hover{background:#fff}
+#cvModals .pj-members-heading h2{font-size:14px}
+#cvModals .pj-members-heading>span{color:var(--text-soft);font-size:12px}
+#cvModals .pj-members-table-head,#cvModals .pj-members-modal .pj-members-row{display:grid;grid-template-columns:minmax(140px,1fr) minmax(140px,1.7fr) 160px 54px;gap:12px;align-items:center;box-sizing:border-box;min-width:550px;padding:10px 16px}
+#cvModals .pj-members-table-head{border:1px solid var(--border);border-radius:10px 10px 0 0;background:var(--fill-1);color:var(--text-secondary);font-size:12px}
+#cvModals .pj-members-modal .pj-members-list{max-height:320px;overflow:auto;border-radius:0 0 10px 10px;border-top:0}
+#cvModals .pj-members-modal .pj-members-row{min-height:58px;border-top:0;border-bottom:1px solid var(--border)}
+#cvModals .pj-members-modal .pj-members-row:last-child{border-bottom:0}
+#cvModals .pj-members-modal .pj-members-info{flex-direction:row;align-items:center;gap:10px}
+#cvModals .pj-members-modal .pj-member-avatar{width:28px;height:28px;font-size:12px}
+#cvModals .pj-members-dept{color:var(--text-secondary);font-size:12px}
+#cvModals .pj-members-modal .pj-member-role-select{width:100%;height:36px}
+#cvModals .pj-members-modal .pj-member-remove-btn{border:0;color:var(--danger)}
+#cvModals .pj-members-modal-footer{border-top:0}
+@media(max-width:760px){#view-collab #cv-proj-detail:has(.pj-detail-main--artifacts.has-preview) .pj-crumb,#view-collab #cv-proj-detail:has(.pj-detail-main--artifacts.has-preview) .pj-detail-tabs,#view-collab #cv-proj-detail:has(.pj-detail-main--artifacts.has-preview) .pj-detail-main--artifacts{width:100%}#view-collab #cv-proj-detail .pj-detail-main--artifacts.has-preview{flex-direction:column}#view-collab #cv-proj-detail .pj-detail-main--artifacts.has-preview .pj-artifacts-list-pane{flex:0 0 42%;padding:8px 16px}#view-collab #cv-proj-detail .pj-artifact-preview{position:relative;inset:auto;width:100%;height:auto;border-top:1px solid var(--border);border-left:0}#view-collab #cv-proj-detail .pj-artifact-preview.is-fullscreen{position:absolute;inset:0;height:100%}#view-collab #cv-proj-detail:has(.pj-detail-main--artifacts.has-preview) .pj-detail-delete{position:static}}
+#view-collab #cv-proj-detail .pj-detail-delete{order:2;margin-left:8px;min-height:32px;padding:0 12px;border:1px solid var(--border);border-radius:7px;background:transparent;color:var(--text-secondary);font:inherit;font-size:12px;cursor:pointer}
+#view-collab #cv-proj-detail .pj-detail-delete:hover{color:var(--danger);border-color:var(--danger)}
+#view-collab #cv-proj-detail .pj-detail-delete:focus-visible{outline:2px solid var(--border-focus);outline-offset:2px}
+#view-collab #cv-proj-detail .pj-detail-edit,#view-collab #cv-proj-detail .pj-detail-save{order:3;margin-left:8px}
+#view-collab #cv-proj-detail .pj-crumb-name{margin-right:auto}
+
+/* 项目详情使用自身页签；返回按钮仍可回到项目列表。 */
+#view-collab:has(#cv-members.active #cv-proj-detail:not(.hidden)) #cvTabNav{display:none}
+#view-collab #cv-proj-detail .pj-back{display:grid;place-items:center;width:32px;height:32px;flex:none;border:0;border-radius:7px;background:transparent;color:var(--text-secondary);cursor:pointer}
+#view-collab #cv-proj-detail .pj-back:hover{background:var(--hover);color:var(--text)}
+#view-collab #cv-proj-detail .pj-back:focus-visible{outline:2px solid var(--border-focus);outline-offset:2px}
+
+/* 详情与成员弹窗的移除操作使用同一种文字按钮。 */
+#view-collab #cv-proj-detail .pj-detail-member-remove,
+#cvModals .pj-members-modal .pj-member-remove-btn{box-sizing:border-box;padding:4px 0;border:0;border-radius:4px;background:transparent;color:var(--danger);font:inherit;font-size:12px;text-align:left;cursor:pointer}
+#view-collab #cv-proj-detail .pj-detail-member-remove:hover,
+#cvModals .pj-members-modal .pj-member-remove-btn:hover{background:transparent;text-decoration:underline}
+#view-collab #cv-proj-detail .pj-detail-member-remove:focus-visible,
+#cvModals .pj-members-modal .pj-member-remove-btn:focus-visible{outline:2px solid var(--border-focus);outline-offset:2px}

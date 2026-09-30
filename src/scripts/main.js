@@ -37,6 +37,7 @@ import { initInbox } from './features/inbox/index.js';
 import { _authedUser } from './features/login.js';
 import { withBase } from './core/base-path.js';
 import { initAnalytics } from './features/analytics.js';
+import { initPlatformAdmin } from './features/expert/platform-admin.js';
 
 /* 产物预览与应用共用同一份设计令牌 */
 const billTemplateWithTokens = billTemplate.replace(
@@ -96,6 +97,7 @@ initCollab();                     /* 6445  features/collab/index.js */
 initTasksV2();                    /* 任务管理 v2 */
 initInbox();                      /* 系统通知收件箱 */
 initAnalytics();                  /* 用户行为分析看板 */
+initPlatformAdmin();              /* 平台专家管理原型与本地更新 */
 
 /* 全局 ESC 关闭弹窗：找到最上层的可见 overlay，触发其关闭按钮点击 */
 document.addEventListener('keydown', function (e) {

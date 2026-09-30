@@ -6,6 +6,7 @@ import { EX, EXPERTS, STAGES, xav, xesc } from './data.js';
 import { openExpertEditor } from './editor.js';
 import { openExpertModal, renderExpertGrid } from './library.js';
 import { TEAMS, activePick, clearPick, saveTeams, set_TEAMS, teamById, teamLint } from './store.js';
+import { installedTeamMemberVersion } from './platform-admin.js';
 /* 专家团配置弹窗与添加成员
    拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
    由 main.js 按拆分前的原始顺序调用。 */
@@ -32,6 +33,7 @@ function openTeamModal(id){
   if(!t) return;
   teamEditingId=id;
   teamDraft={name:t.name,desc:t.desc,leadId:t.leadId,members:t.members.slice(),preset:!!t.preset,
+               memberRefs:(t.memberRefs||[]).map(function(ref){return {id:ref.id,version:ref.version};}),
                domains:(t.domains||[]).slice(),
                cmds:(t.cmds&&t.cmds.length)?t.cmds.map(function(c){return c.slice()}):[['','']]};
   $('#teamModalTitle').textContent = t.name;
@@ -62,7 +64,8 @@ function renderTeamModal(){
     return '<div class="x-member"><img src="'+xav(e.k)+'" alt="" data-view-expert="'+id+'">'
       +'<div class="x-member-b" data-view-expert="'+id+'"><div class="x-member-n">'+xesc(e.name)
       +(d.leadId===id?'<span class="x-badge x-badge-lead">组长</span>':'')
-      +(e.ro?'<span class="x-badge x-badge-ro">只读</span>':'')+'</div></div>'
+      +(e.ro?'<span class="x-badge x-badge-ro">只读</span>':'')
+      +(d.preset&&installedTeamMemberVersion(teamEditingId,id)?'<span class="x-badge">v'+installedTeamMemberVersion(teamEditingId,id)+'</span>':'')+'</div></div>'
       +'<div class="x-member-a">'
       +(d.leadId===id?'':'<button type="button" class="x-ic" data-set-lead="'+id+'" title="设为组长">☆</button>')
       +'<button type="button" class="x-ic x-ic-dg" data-rm-member="'+id+'" title="移出">✕</button></div></div>';

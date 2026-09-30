@@ -16,7 +16,7 @@
   var b=p.replace(/[^/]*$/,'').replace(/\/+$/,'');
   if(b){if(p===b)p='/';else if(p.indexOf(b+'/')===0)p=p.slice(b.length)||'/';}
   var seg=p.replace(/^\/+|\/+$/g,'').split('/')[0]||'';
-  var VN=['home','newtask','chat','apps','collab','skills','agents','settings','design','experts','tasks','changelog','inbox'];var NP=[];
+  var VN=['home','newtask','chat','apps','collab','skills','agents','settings','design','experts','tasks','changelog','inbox','platform'];var NP=[];
   var v='';
   if(VN.indexOf(seg)>=0)v=seg;
   else{var ov=new URLSearchParams(location.search).get('view');
@@ -43,6 +43,7 @@
   html[data-initial-view="tasks"] #view-tasks,
   html[data-initial-view="changelog"] #view-changelog,
   html[data-initial-view="inbox"] #view-inbox{display:flex!important}
+  html[data-initial-view="platform"] #view-platform{display:flex!important}
 </style>
 </head>
 <body>
@@ -63,6 +64,7 @@
 <!--#include "src/views/inbox.html" -->
 <!--#include "src/views/skills.html" -->
 <!--#include "src/views/agents.html" -->
+<!--#include "src/views/platform.html" -->
 <!--#include "src/views/settings.html" -->
 <!--#include "src/views/design.html" -->
 <!--#include "src/views/analytics.html" -->
@@ -77,6 +79,7 @@
 <!--#include "src/modals/expert-detail.html" -->
 <!--#include "src/modals/expert-edit.html" -->
 <!--#include "src/modals/knowledge-pick.html" -->
+<!--#include "src/modals/platform-update.html" -->
 <!--#include "src/modals/env-config.html" -->
 <!--#include "src/modals/env-authorize.html" -->
 <!--#include "src/modals/erp-consent.html" -->

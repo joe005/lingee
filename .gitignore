@@ -15,6 +15,12 @@ data.nosync/
 .lingeebuild/
 .lingeebuild-beta/
 skills/
+# 项目级原型界面设计 skill 随仓库维护
+!/.agents/skills/
+/.agents/skills/*
+!/.agents/skills/lingee-prototype-design/
+/.agents/skills/lingee-prototype-design/*
+!/.agents/skills/lingee-prototype-design/SKILL.md
 app/
 **/_runtime/
 **/*token_cache*

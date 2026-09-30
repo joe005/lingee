@@ -9,6 +9,7 @@ import { knDir } from './knowledge.js';
    内置团不入库，这样以后改内置定义能直接生效，不会被旧缓存盖住 */
 var TEAM_STORE_KEY='lingee.experts.v1';
 var TEAMS=PRESET_TEAMS.slice();
+function setBuiltinTeams(items){ TEAMS=items.concat(TEAMS.filter(function(t){return !t.preset})); }
 /* 选中对象：团或单个专家，同一语义位、只能选其一
    —— 对应 lingee-build 的 mode: team / personal */
 var activePick={kind:null,id:''};   /* 默认不指定，由系统自动匹配 */
@@ -113,4 +114,4 @@ export function set_TEAMS(v){ TEAMS=v; return v; }
 /* activePick 由其它模块写回；import 绑定只读，所以走这个 setter */
 export function set_activePick(v){ activePick=v; return v; }
 
-export { TEAMS, activePick, clearPick, loadTeams, pickName, pickValid, saveTeams, teamById, teamDomains, teamLint };
+export { TEAMS, activePick, clearPick, loadTeams, pickName, pickValid, saveTeams, setBuiltinTeams, teamById, teamDomains, teamLint };

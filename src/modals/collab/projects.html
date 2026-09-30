@@ -7,14 +7,13 @@
     </div>
     <div class="sync-modal__body pe-body">
       <div class="pe-form-grid">
-        <div class="pe-field"><label for="cv-pe-name">项目名称 <span class="pe-required-mark" aria-hidden="true">*</span></label><input id="cv-pe-name" type="text" placeholder="输入项目名称" autocomplete="off" required></div>
-        <div class="pe-field pe-icon-field"><span id="cv-pe-icon-label">项目图标</span><div id="cv-pe-icon-options" class="pj-icon-options" role="group" aria-labelledby="cv-pe-icon-label"></div></div>
-        <div class="pe-field pe-field--full"><label for="cv-pe-desc">项目描述 <span class="pe-required-mark" aria-hidden="true">*</span></label><textarea id="cv-pe-desc" rows="2" placeholder="描述项目的目标和范围" required></textarea></div>
+        <div class="pe-field"><label for="cv-pe-name">项目名称 <span class="pe-required-mark" aria-hidden="true">*</span></label><input id="cv-pe-name" type="text" placeholder="请输入" autocomplete="off" required></div>
         <div class="pe-field pe-pill--owner"><label for="cv-pe-owner">项目负责人 <span class="pe-required-mark" aria-hidden="true">*</span></label><input id="cv-pe-owner" type="search" placeholder="搜索项目负责人" autocomplete="off" required><div id="cv-pe-owner-results" class="pe-owner-results hidden"></div></div>
         <div class="pe-field"><label for="cv-pe-team">专家团 <span class="pe-required-mark" aria-hidden="true">*</span></label><select id="cv-pe-team" required></select></div>
-        <div class="pe-field pe-field--full pe-pill--repo pe-pill--required"><label for="cv-pe-repo">Git 仓库地址 <span class="pe-required-mark" aria-hidden="true">*</span></label><input id="cv-pe-repo" type="url" placeholder="https://github.com/organization/repository" required></div>
+        <div class="pe-field pe-pill--repo pe-pill--required"><label for="cv-pe-repo">Git 仓库地址 <span class="pe-required-mark" aria-hidden="true">*</span></label><input id="cv-pe-repo" type="url" placeholder="请输入" required></div>
+        <div class="pe-field pe-field--full"><label for="cv-pe-desc">项目描述 <span class="pe-required-mark" aria-hidden="true">*</span></label><textarea id="cv-pe-desc" rows="3" maxlength="100" placeholder="请输入" required></textarea><small class="pe-desc-count" id="cv-pe-desc-count">0/100</small></div>
         <div class="pe-field pe-field--full pe-project-members"><div class="pe-member-heading"><span>项目成员 <small id="cv-pe-member-count">已选 0 人</small></span><button type="button" id="cv-pe-member-open" aria-haspopup="dialog" aria-controls="cv-pe-member-picker-overlay">＋ 添加成员</button></div><div id="cv-pe-member-selected" class="pe-member-selected"></div><small>创建人和项目负责人自动加入；新增成员在弹窗中设置角色。</small></div>
-        <details class="pe-advanced pe-field--full" id="cv-pe-more"><summary>更多设置</summary><div class="pe-advanced-grid"><div class="pe-field"><label for="cv-pe-status">项目状态</label><select id="cv-pe-status"><option value="planned">规划中</option><option value="in_progress">执行中</option><option value="paused">已暂停</option><option value="completed">已完成</option><option value="cancelled">已取消</option></select></div><div class="pe-field"><label for="cv-pe-priority">优先级</label><select id="cv-pe-priority"><option>高</option><option>中</option><option>低</option></select></div><div class="pe-field"><label for="cv-pe-start">开始时间</label><input id="cv-pe-start" type="date"></div><div class="pe-field"><label for="cv-pe-end">结束时间</label><input id="cv-pe-end" type="date"></div></div></details>
+        <details class="pe-advanced pe-field--full" id="cv-pe-more"><summary>更多设置</summary><div class="pe-advanced-grid"><div class="pe-field"><label for="cv-pe-status">项目状态</label><select id="cv-pe-status"><option value="planned">规划中</option><option value="in_progress">进行中</option><option value="paused">已暂停</option><option value="completed">已完成</option><option value="cancelled">已取消</option></select></div><div class="pe-field"><label for="cv-pe-priority">优先级</label><select id="cv-pe-priority"><option>高</option><option>中</option><option>低</option></select></div><div class="pe-field"><label for="cv-pe-start">开始时间</label><input id="cv-pe-start" type="date"></div><div class="pe-field"><label for="cv-pe-end">结束时间</label><input id="cv-pe-end" type="date"></div></div></details>
       </div>
     </div>
     <div class="sync-modal__footer pe-footer">
@@ -27,15 +26,23 @@
 <!-- 新建或编辑项目时，集中选择成员及其项目角色 -->
 <div class="sync-overlay pe-member-picker-overlay" id="cv-pe-member-picker-overlay" style="display:none" aria-hidden="true">
   <div class="sync-modal pe-member-picker-modal" role="dialog" aria-modal="true" aria-labelledby="cv-pe-member-picker-title">
-    <div class="sync-modal__header"><div class="sync-modal__title" id="cv-pe-member-picker-title">添加项目成员</div><button type="button" class="sync-modal__close" data-pe-member-cancel aria-label="关闭成员选择弹窗">×</button></div>
+    <div class="sync-modal__header"><div class="sync-modal__title" id="cv-pe-member-picker-title">添加成员</div><button type="button" class="sync-modal__close" data-pe-member-cancel aria-label="关闭成员选择弹窗">×</button></div>
     <div class="sync-modal__body pe-member-picker-body">
-      <label for="cv-pe-member-search">搜索成员</label>
-      <input id="cv-pe-member-search" type="search" placeholder="搜索姓名、手机号或邮箱" autocomplete="off" aria-controls="cv-pe-member-results" aria-expanded="false">
-      <div id="cv-pe-member-results" class="pe-member-results hidden" role="listbox" aria-multiselectable="true"></div>
-      <div class="pe-member-picker-subhead">本次选择 <span id="cv-pe-member-picker-count">0 人</span></div>
+      <div class="pe-member-search-row"><div class="pe-member-search-anchor"><label class="pj-member-search-field" for="cv-pe-member-search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg><input id="cv-pe-member-search" type="search" placeholder="搜索人员姓名、手机号或邮箱" autocomplete="off" aria-controls="cv-pe-member-results" aria-expanded="false"></label><div id="cv-pe-member-results" class="pe-member-results hidden" role="listbox" aria-multiselectable="true"></div></div><button type="button" id="cv-pe-member-search-add">添加</button></div>
+      <div class="pe-member-picker-subhead">已选成员 <span id="cv-pe-member-picker-count">0 人</span></div>
+      <div class="pe-member-table-head"><span>姓名</span><span>所属部门</span><span>角色</span></div>
       <div id="cv-pe-member-assignments" class="pe-member-assignments"></div>
     </div>
-    <div class="sync-modal__footer"><button type="button" class="sync-modal__btn sync-modal__btn--ghost" data-pe-member-cancel>取消</button><button type="button" class="sync-modal__btn sync-modal__btn--primary" id="cv-pe-member-done">完成</button></div>
+    <div class="sync-modal__footer"><button type="button" class="sync-modal__btn sync-modal__btn--ghost" data-pe-member-cancel>取消</button><button type="button" class="sync-modal__btn sync-modal__btn--primary" id="cv-pe-member-done">添加成员</button></div>
+  </div>
+</div>
+
+<!-- 删除项目确认 -->
+<div class="sync-overlay pj-project-delete-overlay" id="cv-project-delete-overlay" style="display:none" aria-hidden="true">
+  <div class="sync-modal pj-project-delete-modal" role="alertdialog" aria-modal="true" aria-labelledby="cv-project-delete-title" aria-describedby="cv-project-delete-message" tabindex="-1">
+    <div class="sync-modal__header pj-project-delete-header"><span class="pj-project-delete-warning" aria-hidden="true">!</span><div class="sync-modal__title" id="cv-project-delete-title">删除该项目</div></div>
+    <div class="sync-modal__body"><p id="cv-project-delete-message">删除后不可恢复，确定删除？</p></div>
+    <div class="sync-modal__footer"><button type="button" class="sync-modal__btn sync-modal__btn--ghost" data-pj-delete-cancel>取消</button><button type="button" class="sync-modal__btn pj-project-delete-confirm" data-pj-delete-confirm>删除</button></div>
   </div>
 </div>
 
@@ -53,7 +60,7 @@
   <div class="sync-modal pj-members-modal" role="dialog" aria-modal="true" aria-labelledby="cv-project-members-heading" tabindex="-1">
     <div class="sync-modal__header pj-members-modal-header">
       <div class="pj-members-modal-heading">
-        <div class="sync-modal__title" id="cv-project-members-heading">项目成员</div>
+        <div class="sync-modal__title" id="cv-project-members-heading">添加成员</div>
         <div class="pj-members-modal-project" id="cv-project-members-project-name"></div>
       </div>
       <button type="button" class="sync-modal__close" data-pj-members-close aria-label="关闭项目成员弹窗"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
@@ -64,13 +71,14 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg>
           <input id="cv-project-member-search" type="search" placeholder="搜索人员姓名、手机号或邮箱" autocomplete="off" aria-controls="pj-member-picker-popup" aria-expanded="false">
         </label>
-        <select id="cv-project-member-role" class="pj-member-add-role" aria-label="新增成员的项目角色"><option value="">选择角色</option><option value="product">产品</option><option value="development">开发</option><option value="testing">测试</option></select>
         <button type="button" class="pj-member-add-btn" id="cv-project-member-add" data-pj-add-member disabled>添加</button>
       </div>
       <div class="pj-members-heading">
-        <h2 id="cv-project-members-title">成员（0）</h2>
+        <h2>已选成员</h2><span id="cv-project-members-title">共 0 人</span>
       </div>
+      <div class="pj-members-table-head"><span>姓名</span><span>所属部门</span><span>角色</span><span></span></div>
       <div id="cv-project-members-list"></div>
     </div>
+    <div class="sync-modal__footer pj-members-modal-footer"><button type="button" class="sync-modal__btn sync-modal__btn--ghost" data-pj-members-close>取消</button><button type="button" class="sync-modal__btn sync-modal__btn--primary" data-pj-members-close>添加成员</button></div>
   </div>
 </div>

@@ -473,7 +473,7 @@ function getFilteredTasks(skipField) {
   if (projectListMode && projectListProjectId) tasks = tasks.filter(function (task) { return task.project === projectListProjectId; });
   /* 默认仅显示自己参与的任务；筛选了「负责人」（含全部选项）后按筛选查看他人任务。
      skipField 供筛选菜单计数复用：预览「负责人」选项时按放开参与过滤后的口径计数。 */
-  if (skipField !== 'assignee' && !state.filters.some(function (f) { return f.field === 'assignee'; })) tasks = tasks.filter(tkParticipatesCurrentUser);
+  if (!projectListMode && skipField !== 'assignee' && !state.filters.some(function (f) { return f.field === 'assignee'; })) tasks = tasks.filter(tkParticipatesCurrentUser);
   var scope = state.scope;
   if (scope === 'members') tasks = tasks.filter(function (t) { return !t.assignee || t.assignee.charAt(0) !== 'a'; });
   else if (scope === 'agents') tasks = tasks.filter(function (t) { return t.assignee && t.assignee.charAt(0) === 'a'; });
@@ -922,12 +922,12 @@ export function tkSetProjectListMode(active, projectId) {
   if (active) {
     if (!projectListMode) {
       layoutBeforeProjectList = state.layout;
-      viewBeforeProjectList = {activeViewId:state.activeViewId,scope:state.scope,filters:state.filters,search:state.search,viewMode:state.viewMode};
+      viewBeforeProjectList = {activeViewId:state.activeViewId,scope:state.scope,filters:state.filters,search:state.search,viewMode:state.viewMode,sortBy:state.sortBy,sortDir:state.sortDir,showSubtasks:state.showSubtasks};
     }
     projectListMode = true;
     projectListProjectId = projectId || '';
     state.layout = 'list';
-    state.activeViewId = 'all';state.scope = 'all';state.filters = [];state.search = '';state.viewMode = 'slide';
+    state.activeViewId = 'all';state.scope = 'all';state.filters = [];state.search = '';state.viewMode = 'slide';state.sortBy = 'createDate';state.sortDir = 'desc';state.showSubtasks = true;
     if(els.tkSearch)els.tkSearch.value='';
   } else {
     projectListMode = false;

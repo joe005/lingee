@@ -50,10 +50,10 @@
 #view-collab .pj-board-col-body{display:flex;flex-direction:column;gap:10px;min-height:60px}
 #view-collab .pj-board-col-empty{padding:24px 12px;border:1px dashed var(--border);border-radius:8px;text-align:center;color:var(--text-soft);font-size:12px}
 #view-collab #cv-proj-list:not(.is-list){flex:1;padding:20px 24px 28px;container-type:inline-size;background:#f7f7fa}
-#view-collab .pj-card{display:flex;min-width:0;min-height:210px;border:1px solid var(--border);border-radius:20px;background:var(--bg);cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.03);transition:border-color .16s,box-shadow .16s}
+#view-collab .pj-card{display:flex;flex-direction:column;min-width:0;min-height:210px;border:1px solid var(--border);border-radius:20px;background:var(--bg);box-shadow:0 1px 2px rgba(0,0,0,.03);transition:border-color .16s,box-shadow .16s}
 #view-collab .pj-card:hover{border-color:var(--border-hover);box-shadow:0 7px 20px rgba(0,0,0,.08)}
-#view-collab .pj-card:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
-#view-collab .pj-card-main{display:flex;flex:1;min-width:0;flex-direction:column;padding:20px 18px 16px}
+#view-collab .pj-card-main{display:flex;flex:1;min-width:0;flex-direction:column;padding:20px 18px 12px;cursor:pointer}
+#view-collab .pj-card-main:focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:18px}
 #view-collab .pj-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;min-width:0}
 #view-collab .pj-card-identity{display:flex;align-items:center;gap:9px;min-width:0}
 .pj-folder-icon{display:block;width:20px;height:20px;flex:none}
@@ -79,9 +79,10 @@
 #view-collab .pj-card-fields>span{display:flex;align-items:center;min-width:0;line-height:1.45}
 #view-collab .pj-card-fields em{flex:none;color:var(--text-soft);font-style:normal}
 #view-collab .pj-card-fields b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-secondary);font-weight:500}
-#view-collab .pj-card-bottom{display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:0;margin-top:auto;color:var(--text-secondary);font-size:12px}
-#view-collab .pj-card-progress{display:flex;align-items:center;gap:4px;flex:none;color:var(--text-secondary);font-variant-numeric:tabular-nums}
-#view-collab .pj-card-progress b{font-weight:500}
+#view-collab .pj-card-bottom{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;margin-top:auto;padding:0 18px 16px;color:var(--text-secondary);font-size:12px}
+#view-collab .pj-card-tasks{display:inline-flex;align-items:center;flex:none;padding:4px 0;border:0;background:transparent;color:var(--brand);font:inherit;font-size:12px;font-weight:500;white-space:nowrap;cursor:pointer}
+#view-collab .pj-card-tasks:hover{text-decoration:underline}
+#view-collab .pj-card-tasks:focus-visible{outline:2px solid var(--border-focus);outline-offset:3px;border-radius:3px}
 #view-collab .pj-card-avatars{display:flex;align-items:center;min-width:0;flex:none;padding-left:6px}
 #view-collab .pj-card-avatar{display:grid;width:28px;height:28px;box-sizing:border-box;place-items:center;margin-left:-6px;border:2px solid var(--bg);border-radius:50%;background:var(--brand-fill);color:var(--brand);font-size:11px;font-weight:600}
 #view-collab .pj-card-avatar--1{background:var(--danger-bg);color:var(--danger)}

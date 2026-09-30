@@ -32,6 +32,18 @@ Consult the wiki when working on features, debugging, or onboarding to a new are
 
 ## Collaboration Rules
 
+### 原型界面设计 Skill（项目级）
+
+新增或修改原型界面时，必须先读取并使用
+[lingee-prototype-design](.agents/skills/lingee-prototype-design/SKILL.md)，
+由该 skill 指导布局、控件选择、样式与交互状态，再落实到对应页面源码。
+触发范围包括页面、弹窗、表单、列表、卡片和局部 UI 调整，无需用户重复点名；
+纯数据逻辑、服务配置或文档修改不触发。也可通过 `$lingee-prototype-design` 显式调用。
+
+以用户当前要求和项目现有设计令牌、共享组件为依据，不套用无关视觉风格。
+skill 入口未出现在可用列表时，直接读取上述文件执行；验证仍遵守本文件的
+「开发后验证方式」，不得因设计任务自动启动浏览器。
+
 ### 源码结构（2026-09-16 拆分后）
 
 原来的单文件 `src/scripts/main.js`（6515 行）与 `index.html`（2310 行）已按

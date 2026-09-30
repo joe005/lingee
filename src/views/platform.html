@@ -1,0 +1,13 @@
+<div class="view hidden platform-view" id="view-platform">
+  <header class="platform-head">
+    <div><div class="platform-kicker">平台空间 <span>原型演示</span></div><h1>官方专家库</h1><p>在 Build 使用创建专家或专家团技能生成 ZIP，再导入这里。导入后生成新的官方版本。</p></div>
+    <button type="button" class="platform-btn" id="platformBack">返回客户端</button>
+  </header>
+  <div class="platform-denied hidden" id="platformDenied"><h2>当前账号没有平台管理权限</h2><p>原型演示中，仅管理员角色可进入平台空间。</p><button type="button" class="platform-btn" data-platform-back>返回客户端</button></div>
+  <div class="platform-body" id="platformBody">
+    <nav class="platform-tabs"><button type="button" class="on" data-platform-tab="expert">专家</button><button type="button" data-platform-tab="team">专家团</button></nav>
+    <div class="platform-toolbar"><input id="platformSearch" type="search" placeholder="搜索专家或专家团" autocomplete="off"><select id="platformFilter"><option value="all">全部</option><option value="online">已上架</option><option value="pending">待上架</option><option value="offline">已下架</option></select><button type="button" class="platform-btn primary" id="platformImport">导入专家 ZIP</button><input type="file" id="platformZipFile" accept=".zip,application/zip" hidden></div>
+    <div id="platformList" class="platform-cards"></div>
+  </div>
+  <div class="platform-overlay hidden" id="platformDialog"><div class="platform-dialog" role="dialog" aria-modal="true" aria-labelledby="platformDialogTitle"><h2 id="platformDialogTitle"></h2><div id="platformDialogBody"></div><div class="platform-dialog-actions"><button type="button" class="platform-btn" id="platformDialogCancel">取消</button><button type="button" class="platform-btn primary" id="platformDialogConfirm">确认</button></div></div></div>
+</div>

@@ -36,7 +36,7 @@ function applyMode(mode,fromChip){
 }
 
 /* ---------- view switching ---------- */
-var viewHome=$('#view-home'), viewNew=$('#view-newtask'), viewChat=$('#view-chat'), viewApps=$('#view-apps'), viewSkills=$('#view-skills'), viewAgents=$('#view-agents'), viewCollab=$('#view-collab'), viewDesign=$('#view-design'), viewSettings=$('#view-settings'), viewAnalytics=$('#view-analytics'), viewTasks=$('#view-tasks'), viewChangelog=$('#view-changelog'), viewInbox=$('#view-inbox');
+var viewHome=$('#view-home'), viewNew=$('#view-newtask'), viewChat=$('#view-chat'), viewApps=$('#view-apps'), viewSkills=$('#view-skills'), viewAgents=$('#view-agents'), viewCollab=$('#view-collab'), viewDesign=$('#view-design'), viewSettings=$('#view-settings'), viewAnalytics=$('#view-analytics'), viewTasks=$('#view-tasks'), viewChangelog=$('#view-changelog'), viewInbox=$('#view-inbox'), viewPlatform=$('#view-platform');
 var tasksStandaloneParent=viewTasks.parentNode, tasksStandaloneNext=viewTasks.nextSibling;
 function setTasksEmbedded(embedded, container){
   var target=embedded ? (container||$('#cv-tasks-current')) : tasksStandaloneParent;
@@ -53,7 +53,7 @@ function setUrlState(path){
   try{history.replaceState(null,'',withBase(path));localStorage.setItem('lingeeUrlState',path)}catch(e){}
 }
 function showView(which){
-  if(which!=='collab'&&window.cvLeaveProjectTasks)window.cvLeaveProjectTasks();
+  if(which!=='collab'&&which!=='tasks'&&window.cvLeaveProjectTasks)window.cvLeaveProjectTasks();
   if(which==='newtask') document.dispatchEvent(new Event('lingee:new-conversation'));
   if(which==='tasks'){
     if(window.cvRestoreProjectTaskBoard)window.cvRestoreProjectTaskBoard();
@@ -72,6 +72,7 @@ function showView(which){
   viewTasks.classList.toggle('hidden', which!=='tasks' && !(which==='collab' && viewTasks.classList.contains('pj-embedded-task-view')));
   viewChangelog.classList.toggle('hidden', which!=='changelog');
   viewInbox.classList.toggle('hidden', which!=='inbox');
+  viewPlatform.classList.toggle('hidden', which!=='platform');
   $('.sidebar').classList.toggle('hidden', which==='design');
   closeAll(null);
   if(which!=='design') setUrlState('/'+which);
@@ -115,7 +116,10 @@ export function initSidebarNav() {
         cvInit();
         cvSwitchView(cvLastTab);
       }else if(name==='任务'){
+        if(window.cvLeaveProjectTasks)window.cvLeaveProjectTasks();
         showView('tasks');
+      }else if(name==='平台空间'){
+        showView('platform');
       }else if(name==='新会话'){
         showView('newtask');
         input.setAttribute('data-placeholder','布置任务');
