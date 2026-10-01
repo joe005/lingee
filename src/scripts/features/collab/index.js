@@ -1,3 +1,7 @@
+import { initExpertMarket } from './expert-market.js';
+import { renderExpertGrid } from '../expert/library.js';
+import { handleLayerAction, layerOf } from '../expert/layers.js';
+import { set_cvExpertLayer } from './experts.js';
 import { initTaskBoard } from './task-board.js';
 import { initNewTask } from './new-task.js';
 import { initTaskChat } from './task-chat.js';
@@ -17,6 +21,7 @@ import { cvApplyFilters, cvInited, cvPendingProj, cvPendingTab, cvSwitchFilter, 
 import { summon } from '../expert/automatch.js';
 import { EX } from '../expert/data.js';
 import { openExpertEditor } from '../expert/editor.js';
+import { startAssetCreationChat } from '../composer.js';
 import { openExpertModal } from '../expert/library.js';
 /* 协作开发：初始化与对外暴露
    拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
@@ -52,21 +57,28 @@ var cvExpertSearch=$('#cvExpertSearch');
 var cvExpertSections=$('#cvExpertSections');
 
 export function initCollab() {
+  initExpertMarket({expert:cvRenderExperts,team:renderExpertGrid});
   cvRemoveLingeePrototypeTasks();
   initTaskBoard();
   initTaskChat();
   initNewTask();
   initCollabProjectView();
   initCollabPersons();
+  document.querySelectorAll('#cv-experts [data-asset-create],#cv-teams [data-asset-create]').forEach(function(button){
+    button.addEventListener('click',function(){startAssetCreationChat(button.dataset.assetCreate);});
+  });
+  document.querySelector('[data-layer-tabs="expert"]')?.addEventListener('click',function(e){var btn=e.target.closest('[data-layer]');if(btn){set_cvExpertLayer(btn.dataset.layer);cvRenderExperts();}});
+  document.addEventListener('cv-workspace-change',cvRenderExperts);
   if(cvExpertSearch) cvExpertSearch.addEventListener('input',function(){ set_cvExpertKw(this.value); cvRenderExperts(); });
   if(cvExpertSections) cvExpertSections.addEventListener('click',function(e){
+    if(handleLayerAction(e)){cvRenderExperts();renderExpertGrid();return;}
     var call=e.target.closest('[data-cv-call]');
     if(call){ summon('expert',call.getAttribute('data-cv-call')); return; }
     var card=e.target.closest('[data-cv-expert]');
     if(card){
       var eid=card.getAttribute('data-cv-expert'), ex=EX[eid];
       /* 自己建的专家没有「只读详情」这一说，点开就是编辑；预置专家不能改，点开还是详情 */
-      if(ex&&ex.mine) openExpertEditor(eid); else openExpertModal(eid);
+      if(ex&&layerOf('expert',ex)==='personal') openExpertEditor(eid); else openExpertModal(eid);
     }
   });
 

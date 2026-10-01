@@ -1,3 +1,5 @@
+import { submitAssetForReview } from './asset-review.js';
+import { layerOf } from './layers.js';
 import { $, $$ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
 import { renderExpertChips } from './chips.js';
@@ -14,7 +16,7 @@ import { TEAMS, activePick, clearPick, saveTeams } from './store.js';
 var forcedBuilder=null;
 
 function deleteMyExpert(id){
-  var e=EX[id]; if(!e||!e.mine) return;
+  var e=EX[id]; if(!e||!e.mine||layerOf('expert',e)!=='personal') return;
   var used=TEAMS.filter(function(t){ return t.members.indexOf(id)>=0; });
   var msg='删除专家「'+e.name+'」？此操作不可撤销。';
   if(used.length) msg+='\n他还在 '+used.length+' 个专家团里，删除后会一并移出。';
@@ -41,7 +43,7 @@ function setXeTab(which){
 function openExpertEditor(id){
   if(!expertEditModal) return;
   var e=id?EX[id]:null;
-  if(!e||!e.mine) return;
+  if(!e||!e.mine||layerOf('expert',e)!=='personal') return;
   xeEditingId=id;
   xeDraft = {k:e.k,name:e.name,desc:e.desc,tags:e.tags.slice(),skills:(e.skills||[]).slice(),modes:e.modes.slice(),mine:true,
        tier:e.tier||'auto',
@@ -159,15 +161,17 @@ export function initExpertEditor() {
                      .filter(function(c){ return c[0]; });
       var index=MY_EXPERTS.findIndex(function(item){return item.id===xeEditingId;});
       if(index<0) return;
-      var rec={id:xeEditingId,mine:true,k:d.k,name:d.name,role:'',by:'我创建的',
+      var rec={id:xeEditingId,mine:true,ownerId:MY_EXPERTS[index].ownerId||'',k:d.k,name:d.name,role:'',by:'我创建的',
                desc:d.desc,tags:d.tags,skills:(d.skills||[]).slice(),modes:d.modes.slice(),tier:d.tier||'auto',comp:d.comp,cmds:cmds,
                kn:(d.kn||[]).slice(),knOff:(d.knOff||[]).slice(),knDocOff:(d.knDocOff||[]).slice(),knUp:(d.knUp||[]).slice()
               };
-      MY_EXPERTS[index]=rec;
+      var previous=MY_EXPERTS[index];MY_EXPERTS[index]=rec;
+      if(!saveTeams()){MY_EXPERTS[index]=previous;toast('保存失败，编辑内容已保留，请重试','warning');return;}
       toast('已保存','success');
       rebuildExperts();
       expertEditModal.classList.remove('show');
-      saveTeams(); renderExpertGrid(); renderExpertChips();
+      renderExpertGrid(); renderExpertChips();
+      if(ev.submitter?.id==='xeSubmitReviewBtn')submitAssetForReview('expert',rec);
     });
   }
 }

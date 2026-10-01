@@ -7,7 +7,11 @@ import { syncTogglePreviewBtn } from './chat.js';
 import { closeAll } from './dropdown.js';
 import { appendAskCard, appendAutoNote, autoMatch } from './expert/automatch.js';
 import { renderExpertChips } from './expert/chips.js';
-import { EX, pendingInputs, xav, xesc } from './expert/data.js';
+import { EX, WORK_MODES, pendingInputs, xav, xesc } from './expert/data.js';
+import { applyAssetMessage, availableAssetMembers, commitAssetDraft, newAssetDraft } from './expert/asset-creation.js';
+import { assetOwnerKey } from './expert/layers.js';
+import { renderExpertGrid, set_teamLayer } from './expert/library.js';
+import { cvRenderExperts, set_cvExpertLayer } from './collab/experts.js';
 import { activePick, pickValid, set_activePick, teamById } from './expert/store.js';
 import { set__prevWishW } from './sidebar.js';
 import { CV_MEMBERS, CV_PROJECTS } from './collab/data.js';
@@ -204,6 +208,7 @@ function saveChatSessions() {
   try { localStorage.setItem(CHAT_SESSIONS_KEY, JSON.stringify(chatSessions.slice(0, 200))); } catch (e) {}
 }
 function isMyChatSession(session) {
+  if(session.assetCreate)return !!session.ownerId&&session.ownerId===assetOwnerKey();
   if (/^cosmicdemo\d+/.test(session.id)) return !!session.ownerId && session.ownerId === tkCurrentUserId();
   return !session.ownerId || session.ownerId === tkCurrentUserId();
 }
@@ -688,6 +693,59 @@ export function startTaskCreationChat(projectId, initialPrompt) {
     if (activeEntry) activeEntry.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   });
 }
+function appendAssetCreateAgent(html){
+  var response=appendAssistantMessage(null);
+  response.innerHTML='<div class="chat-agent-identity"><img class="task-create-avatar" src="'+xav('pm')+'" alt=""><strong>数字员工创建智能体</strong><span class="chat-agent-state">对话创建 · 原型</span></div>'+html;
+}
+function assetCreatePreview(draft){
+  var kindName=draft.kind==='team'?'专家团':'数字员工';
+  var fields='<label>名称<input type="text" data-asset-field="name" maxlength="60" value="'+xesc(draft.name)+'" placeholder="填写'+kindName+'名称"></label>'
+    +'<label>职责与用途<textarea data-asset-field="desc" rows="4" placeholder="描述要解决的问题和承担的工作">'+xesc(draft.desc)+'</textarea></label>';
+  if(draft.kind==='expert'){
+    fields+='<fieldset><legend>可承担的工作</legend><div class="asset-create-options">'+WORK_MODES.map(function(mode){return '<label><input type="checkbox" data-asset-mode="'+xesc(mode)+'"'+(draft.modes.includes(mode)?' checked':'')+'><span>'+xesc(mode)+'</span></label>';}).join('')+'</div></fieldset>';
+  }else{
+    fields+='<fieldset><legend>专家团成员</legend><input type="search" class="asset-create-member-search" data-asset-member-search placeholder="搜索数字员工" aria-label="搜索数字员工"><div class="asset-create-member-options">'
+      +availableAssetMembers().map(function(expert){return '<label data-asset-member-row="'+xesc(expert.name.toLowerCase())+'"><input type="checkbox" data-asset-member="'+xesc(expert.id)+'"'+(draft.members.includes(expert.id)?' checked':'')+'><span>'+xesc(expert.name)+'</span></label>';}).join('')+'</div></fieldset>';
+  }
+  return '<div class="asset-create-card"><strong>请核对'+kindName+'草稿</strong><p>根据对话整理，可直接修改后提交。</p><div class="asset-create-fields">'+fields+'</div><div class="asset-create-actions"><button type="button" data-asset-submit>创建完成，提交</button></div></div>';
+}
+function renderAssetCreateChat(session){
+  var draft=session.assetCreate,kindName=draft.kind==='team'?'专家团':'数字员工';
+  messagesList.innerHTML='';
+  hideTaskQuestionPanel();
+  appendAssetCreateAgent('<p>请描述要创建的'+kindName+'，包括名称、职责'+(draft.kind==='team'?'和希望加入的数字员工':'与可承担的工作')+'。我会整理成草稿，提交前由你核对。</p>');
+  draft.messages.forEach(function(message,index){
+    appendUserMessage(message);
+    if(index<draft.messages.length-1)appendAssetCreateAgent('<p>已记录这项要求，你可以继续补充。</p>');
+  });
+  if(draft.status==='draft')appendAssetCreateAgent(assetCreatePreview(draft));
+  else if(draft.status==='scope'){draft.scope='personal';appendAssetCreateAgent('<div class="asset-create-card"><strong>保存'+kindName+'</strong><p>「'+xesc(draft.name)+'」已完成草稿核对，将保存到个人列表。需要供租户安装时，请在编辑页提交审核。</p><div class="asset-create-actions"><button type="button" class="asset-create-secondary" data-asset-back>返回修改</button><button type="button" data-asset-confirm>确认保存</button></div></div>');}
+  else if(draft.status==='done')appendAssetCreateAgent('<div class="asset-create-card"><strong>创建完成</strong><p>「'+xesc(draft.name)+'」已保存为'+(draft.scope==='shared'?'租户共享':'自用')+'。</p><div class="asset-create-actions"><button type="button" data-asset-return>返回'+kindName+'</button></div></div>');
+  chatInput.contentEditable=draft.status==='done'?'false':'true';
+  chatInput.setAttribute('data-placeholder',draft.status==='done'?'创建已完成':draft.status==='prompt'?'描述要创建的'+kindName+'…':draft.status==='scope'?'请选择使用范围并确认提交…':'继续补充创建要求…');
+  document.getElementById('chatExpertLabel').textContent='数字员工创建智能体';
+  scrollChatBottom();
+}
+export function startAssetCreationChat(kind){
+  if(kind!=='expert'&&kind!=='team')return;
+  closeTaskExceptionHistory();
+  activeResponseRun++;
+  activeSessionTaskId=null;
+  setComposerTaskReference(null);
+  set_activePick({kind:'expert',id:'software-product-manager',auto:false});
+  var session=createChatSession(kind==='team'?'创建专家团':'创建数字员工',null);
+  session.assetCreate=newAssetDraft(kind);
+  session.ownerId=assetOwnerKey();
+  saveChatSessions();
+  renderChatSessions();
+  showView('chat');
+  closeChatDocViewer();
+  $('#chatTitle').textContent=session.title;
+  chatInput.innerHTML='';refreshChatSend();
+  renderChatTaskSide();
+  renderAssetCreateChat(session);
+  chatInput.focus();
+}
 function openChatSession(sessionId) {
   var session = chatSessions.find(function (row) { return row.id === sessionId; });
   if (!session || !isMyChatSession(session)) return;
@@ -711,6 +769,13 @@ function openChatSession(sessionId) {
   renderChatTaskSide();
   setComposerTaskReference(activeSessionTaskId);
   $('#chatTitle').textContent = session.title;
+  if(session.assetCreate){
+    set_activePick({kind:'expert',id:'software-product-manager',auto:false});
+    renderChatTaskSide();
+    renderAssetCreateChat(session);
+    renderChatSessions();
+    return;
+  }
   if (session.taskCreate) {
     set_activePick({kind:'expert', id:'software-product-manager', auto:false});
     renderExpertChips();
@@ -918,13 +983,15 @@ function renderConversationTaskReference() {
 }
 function renderChatTaskSide() {
   var task = tkGetTasks().find(function (row) { return row.id === activeSessionTaskId; });
+  var assetSession = chatSessions.find(function (row) { return row.id === activeSessionId && row.assetCreate; });
   var expertDropdown = document.getElementById('chatExpertDropdown');
   var taskTeam = task ? resolveChatTeam(null, task) : null;
-  expertDropdown.classList.toggle('task-team-locked', !!task);
+  expertDropdown.classList.toggle('task-team-locked', !!task || !!assetSession);
   expertDropdown.dataset.lockedTeamId = taskTeam?.id || '';
   expertDropdown.classList.remove('open');
-  expertDropdown.querySelector('[data-chip]').setAttribute('aria-disabled', task ? 'true' : 'false');
+  expertDropdown.querySelector('[data-chip]').setAttribute('aria-disabled', task || assetSession ? 'true' : 'false');
   renderExpertChips();
+  if(assetSession)document.getElementById('chatExpertLabel').textContent='数字员工创建智能体';
   if (task) {
     viewChat.classList.remove('preview-open');
     var preview = document.getElementById('chatPreviewSide');
@@ -1703,6 +1770,13 @@ function refreshChatSend(){ chatSendBtn.classList.toggle('active', chatInput.tex
 function chatDoSend(){
   var t=chatInput.textContent.trim();
   if(!t){ chatInput.focus(); return; }
+  var assetCreation=chatSessions.find(function(row){return row.id===activeSessionId&&row.assetCreate;});
+  if(assetCreation){
+    if(assetCreation.assetCreate.status==='done')return;
+    applyAssetMessage(assetCreation.assetCreate,t);
+    saveChatSessions();renderChatSessions();renderAssetCreateChat(assetCreation);
+    chatInput.innerHTML='';refreshChatSend();chatInput.focus();return;
+  }
   var creation = chatSessions.find(function (row) { return row.id === activeSessionId && row.taskCreate; });
   if (creation) { if (answerTaskCreateMessage(creation, t)) { chatInput.innerHTML=''; refreshChatSend(); } chatInput.focus(); return; }
   if (answerTaskQuestion(t)) { chatInput.innerHTML=''; refreshChatSend(); return; }
@@ -1974,6 +2048,27 @@ function initTaskMention(ed) {
 
 export function initComposer() {
   document.querySelector('#view-chat .chat-container').addEventListener('click', function (event) {
+    var assetSession=chatSessions.find(function(row){return row.id===activeSessionId&&row.assetCreate;});
+    if(assetSession){
+      var draft=assetSession.assetCreate;
+      if(event.target.closest('[data-asset-submit]')){
+        if(!draft.name.trim()){toast('请先填写名称','warning');messagesList.querySelector('[data-asset-field="name"]')?.focus();return;}
+        draft.status='scope';saveChatSessions();renderAssetCreateChat(assetSession);return;
+      }
+      if(event.target.closest('[data-asset-back]')){draft.status='draft';saveChatSessions();renderAssetCreateChat(assetSession);return;}
+      if(event.target.closest('[data-asset-confirm]')){
+        var result=commitAssetDraft(draft,draft.scope);
+        if(!result.ok){toast(result.message,'warning');return;}
+        saveChatSessions();renderChatSessions();
+        if(draft.kind==='expert'){set_cvExpertLayer(draft.scope==='shared'?'shared':'personal');cvRenderExperts();}
+        else{set_teamLayer(draft.scope==='shared'?'shared':'personal');renderExpertGrid();}
+        renderAssetCreateChat(assetSession);
+        toast('已创建'+(draft.kind==='team'?'专家团':'数字员工'),'success');return;
+      }
+      if(event.target.closest('[data-asset-return]')){
+        showView('collab');window.cvSwitchView?.(draft.kind==='team'?'teams':'experts');return;
+      }
+    }
     var creation = chatSessions.find(function (row) { return row.id === activeSessionId && row.taskCreate; });
     var type = event.target.closest('[data-task-create-type]');
     if (creation && type) { answerTaskCreateMessage(creation, type.dataset.taskCreateType); return; }
@@ -2127,6 +2222,27 @@ export function initComposer() {
       document.getElementById('chatTaskQPanelConfirm').disabled = matches.length !== 1;
     });
   }
+  document.querySelector('#view-chat .chat-container').addEventListener('input',function(event){
+    var assetSession=chatSessions.find(function(row){return row.id===activeSessionId&&row.assetCreate;});
+    if(!assetSession)return;
+    var field=event.target.closest('[data-asset-field]');
+    if(field){assetSession.assetCreate[field.dataset.assetField]=field.value;saveChatSessions();return;}
+    var search=event.target.closest('[data-asset-member-search]');
+    if(search){
+      var query=search.value.trim().toLowerCase();
+      search.closest('.asset-create-card').querySelectorAll('[data-asset-member-row]').forEach(function(row){row.hidden=!row.dataset.assetMemberRow.includes(query);});
+    }
+  });
+  document.querySelector('#view-chat .chat-container').addEventListener('change',function(event){
+    var assetSession=chatSessions.find(function(row){return row.id===activeSessionId&&row.assetCreate;});
+    if(!assetSession)return;
+    var draft=assetSession.assetCreate;
+    if(event.target.matches('[data-asset-mode]'))draft.modes=Array.from(messagesList.querySelectorAll('[data-asset-mode]:checked')).map(function(input){return input.dataset.assetMode;});
+    else if(event.target.matches('[data-asset-member]'))draft.members=Array.from(messagesList.querySelectorAll('[data-asset-member]:checked')).map(function(input){return input.dataset.assetMember;});
+    else if(event.target.matches('input[name="asset-create-scope"]'))draft.scope=event.target.value;
+    else return;
+    saveChatSessions();
+  });
   renderChatSessions();
   queueMicrotask(renderChatSessions);
   document.addEventListener('lingee:auth-changed', renderChatSessions);

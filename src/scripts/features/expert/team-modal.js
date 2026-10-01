@@ -1,3 +1,5 @@
+import { submitAssetForReview } from './asset-review.js';
+import { layerOf, layerVisible } from './layers.js';
 import { $, $$ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
 import { summon } from './automatch.js';
@@ -32,7 +34,7 @@ function openTeamModal(id){
   var t=id?teamById(id):null;
   if(!t) return;
   teamEditingId=id;
-  teamDraft={name:t.name,desc:t.desc,leadId:t.leadId,members:t.members.slice(),preset:!!t.preset,
+  teamDraft={name:t.name,desc:t.desc,leadId:t.leadId,members:t.members.slice(),preset:layerOf('team',t)!=='personal',
                memberRefs:(t.memberRefs||[]).map(function(ref){return {id:ref.id,version:ref.version};}),
                domains:(t.domains||[]).slice(),
                cmds:(t.cmds&&t.cmds.length)?t.cmds.map(function(c){return c.slice()}):[['','']]};
@@ -47,6 +49,8 @@ function openTeamModal(id){
   /* 内置团最常用的动作是发起对话，主按钮给它；自建团主按钮还是保存 */
   $('#teamSaveBtn').className = 'modal-btn '+(teamDraft.preset?'cancel':'confirm');
   $('#teamSaveBtn').classList.toggle('hidden', teamDraft.preset);
+  $('#teamSubmitReviewBtn').classList.toggle('hidden', teamDraft.preset);
+  if(!teamDraft.preset)$('#teamSaveBtn').className='modal-btn cancel';
   $('#teamCallBtn').className = 'modal-btn '+(teamDraft.preset?'confirm':'cancel');
   $('#teamCallBtn').classList.toggle('hidden', !teamEditingId);
   $('#teamDeleteBtn').classList.toggle('hidden', teamDraft.preset || !teamEditingId);
@@ -92,13 +96,10 @@ function renderTeamModal(){
     return '<div class="x-warn"><span>⚠</span><span>'+xesc(w)+'</span></div>'; }).join('');
 
   var stagesEl=$('#teamStages');
-  if(stagesEl) stagesEl.innerHTML = STAGES.map(function(s,i){
+  if(stagesEl) stagesEl.innerHTML = STAGES.map(function(s){
     return '<div class="team-stage" role="listitem">'
-      +'<span class="team-stage-item"><span class="team-stage-idx">'+(i+1)+'</span>'
-      +'<span class="team-stage-t"><span class="team-stage-n">'+xesc(s.name)+'</span>'
-      +'<span class="team-stage-d">'+xesc(s.desc)+'</span></span></span>'
-      +(i<STAGES.length-1?'<span class="team-stage-arrow" aria-hidden="true">›</span>':'')
-      +'</div>';
+      +'<span class="team-stage-dot" aria-hidden="true"></span>'
+      +'<span class="team-stage-n">'+xesc(s.name)+'</span></div>';
   }).join('');
 
   $$('#teamMembers .x-member-a').forEach(function(a){ a.classList.toggle('hidden', !!d.preset); });
@@ -112,7 +113,7 @@ function openMemberModal(){ memberKw=''; $('#memberSearchInput').value=''; rende
 function renderMemberList(){
   $('#memberSelectedCount').textContent='已选 '+teamDraft.members.length+' 人';
   var kw=memberKw.trim().toLocaleLowerCase();
-  var rows=EXPERTS.filter(function(e){ return !kw || (e.name+e.role+e.desc+e.tags.join()).toLocaleLowerCase().includes(kw); });
+  var rows=EXPERTS.filter(function(e){ return layerVisible('expert',e)&&(!kw || (e.name+e.role+e.desc+e.tags.join()).toLocaleLowerCase().includes(kw)); });
   $('#memberList').innerHTML = rows.length ? rows.map(function(e){
     var on=teamDraft.members.indexOf(e.id)>=0;
     return '<button type="button" class="x-mrow'+(on?' on':'')+'" data-toggle-member="'+e.id+'">'
@@ -169,7 +170,7 @@ export function initTeamModal() {
       if(c) teamDraft.cmds[+c.getAttribute('data-tm-cmd')][+c.getAttribute('data-f')]=c.value;
     });
     $('#teamDeleteBtn').addEventListener('click',function(){
-      var t=teamById(teamEditingId); if(!t||t.preset) return;
+      var t=teamById(teamEditingId); if(!t||layerOf('team',t)!=='personal') return;
       if(!window.confirm('删除专家团「'+t.name+'」？此操作不可撤销。')) return;
       set_TEAMS(TEAMS.filter(function(x){ return x.id!==t.id; }));
       if(activePick.kind==='team'&&activePick.id===t.id) clearPick();
@@ -184,12 +185,15 @@ export function initTeamModal() {
       if(!name){ setTeamModalTab('info'); toast('请填写专家团名称','warning'); $('#teamName').focus(); return; }
       if(!d.members.length){ setTeamModalTab('info'); toast('至少需要一位成员','warning'); return; }
       var t=teamById(teamEditingId);
-      if(!t||t.preset) return;
+      if(!t||layerOf('team',t)!=='personal') return;
+      var previous=JSON.parse(JSON.stringify(t));
       t.name=name; t.desc=d.desc; t.leadId=d.leadId; t.members=d.members.slice(); t.cmds=teamCmdList(d);
       t.domains=(d.domains||[]).slice();
+      if(!saveTeams()){Object.assign(t,previous);toast('保存失败，编辑内容已保留，请重试','warning');return;}
       toast('已保存','success');
       teamModal.classList.remove('show');
-      saveTeams(); renderExpertGrid(); renderExpertChips();
+      renderExpertGrid(); renderExpertChips();
+      if(ev.submitter?.id==='teamSubmitReviewBtn')submitAssetForReview('team',t);
     });
   }
   if(memberModal){

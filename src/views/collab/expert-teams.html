@@ -1,14 +1,20 @@
 <!-- 专家团管理 -->
 <div class="cv-panel" id="cv-teams">
   <div class="scroll cv-scroll-soft">
-    <div class="cv-head">
-      <button type="button" class="platform-btn platform-update-button" data-platform-update>检查更新</button>
+    <div class="cv-head expert-assets-toolbar">
+      <div class="asset-primary-tabs" data-asset-primary="team" aria-label="专家团目录"><button type="button" class="list-page-tab active" data-asset-mode="mine" aria-pressed="true">我的专家团 <span data-asset-total></span></button><button type="button" class="list-page-tab" data-asset-mode="more" aria-pressed="false">更多专家团</button></div>
+
       <div class="cv-head-right">
-        <div class="apps-search">
-          <input type="search" id="expertSearchInput" placeholder="搜索专家团" autocomplete="off" readonly>
+        <div class="apps-search asset-search">
+          <input type="search" id="expertSearchInput" placeholder="搜索专家团" aria-label="搜索专家团" autocomplete="off" readonly>
           <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
         </div>
+        <button type="button" class="asset-create-btn" data-asset-create="team" aria-label="新增专家团">＋ 新增</button>
       </div>
+    </div>
+    <div class="asset-secondary-row">
+      <div class="expert-layer-tabs asset-source-filters" data-layer-tabs="team" aria-label="来源筛选"><button type="button" class="list-page-tab active" data-layer="all" aria-pressed="true">全部 <span data-layer-count="all"></span></button><button type="button" class="list-page-tab" data-layer="builtin" aria-pressed="false">官方 <span data-layer-count="builtin"></span></button><button type="button" class="list-page-tab" data-layer="shared" aria-pressed="false">租户 <span data-layer-count="shared"></span></button><button type="button" class="list-page-tab" data-layer="personal" aria-pressed="false">个人 <span data-layer-count="personal"></span></button></div>
+      <span class="x-badge hidden" data-cloud-demo="team">原型演示</span>
     </div>
     <div class="apps-grid" id="expertGrid"></div>
   </div>

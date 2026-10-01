@@ -18,3 +18,65 @@
 #view-collab .expert-new-t{font-size:13px;font-weight:600;color:var(--text)}
 #view-collab .expert-new-s{font-size:11.5px;color:var(--text-secondary)}
 #view-collab .x-empty{padding:40px;text-align:center;color:var(--text-secondary);font-size:13px}
+
+#view-collab .expert-layer-tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px}
+#view-collab .asset-create-btn{flex:none;min-height:34px;padding:0 12px;border:1px solid var(--brand);border-radius:7px;background:var(--brand);color:var(--bg);font:inherit;font-size:12px;font-weight:600;cursor:pointer}
+#view-collab .asset-create-btn:hover{background:var(--brand-hover);border-color:var(--brand-hover)}
+#view-collab .asset-create-btn:focus-visible{outline:2px solid var(--border-focus);outline-offset:2px}
+#view-collab .expert-layer-tabs span{color:var(--text-secondary);font-weight:400}
+#view-collab .expert-layer-hint{margin:0 0 16px;color:var(--text-secondary);font-size:var(--tb-small-size);line-height:1.6}
+#view-collab .expert-layer-footer{display:flex;align-items:center;gap:12px;margin-top:16px;padding-top:12px;border-top:1px solid var(--border);flex-wrap:wrap}
+#view-collab .expert-layer-footer .x-badge{margin-right:auto}
+#view-collab .expert-layer-footer button{font-size:var(--tb-small-size)}
+#view-collab .expert-layer-footer button:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+#view-collab .expert-layer-tabs{border-bottom:1px solid var(--border);gap:16px}
+#view-collab .expert-layer-tabs .list-page-tab{border-radius:0;border:0;border-bottom:2px solid transparent;padding:10px 4px;background:transparent}
+#view-collab .expert-layer-tabs .list-page-tab.active{border-bottom-color:var(--brand);color:var(--brand)}
+#view-collab .asset-cloud-grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr));gap:16px}
+#view-collab .asset-cloud-grid .x-card{display:flex;flex-direction:column;text-align:left}
+#view-collab .asset-cloud-grid .expert-layer-footer{margin-top:auto}
+#view-collab .expert-market-note{color:var(--text-secondary);font-size:var(--tb-small-size);line-height:1.6;margin:0 0 16px}
+#view-collab .expert-market-update{color:var(--warning);background:var(--warning-bg)}
+#view-collab .asset-cloud-grid .platform-btn:disabled{cursor:default;color:var(--text-secondary);background:var(--fill-1)}
+/* 卡片自动提示升级；未安装内容以右上角加号操作。 */
+#view-collab .expert-upgrade-badge{display:inline-flex;align-items:center;gap:4px;margin:4px 0 0 8px;padding:3px 8px;border:0;border-radius:var(--tb-radius);background:var(--warning-bg);color:var(--warning);font:inherit;font-size:var(--tb-small-size);line-height:1.4;white-space:nowrap;cursor:pointer;vertical-align:middle}
+#view-collab .expert-upgrade-badge:hover{box-shadow:inset 0 0 0 1px currentColor}
+#view-collab .expert-upgrade-badge:focus-visible,#view-collab .expert-install-plus:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+#view-collab .platform-client-badge{margin-left:6px;align-self:center;flex:none;background:var(--fill-1);color:var(--text-secondary);border-radius:var(--tb-radius)}
+#view-collab .asset-cloud-grid .x-card{position:relative;min-width:0}
+#view-collab .asset-cloud-grid .expert-market-uninstalled{padding-right:64px}
+#view-collab .expert-install-plus{position:absolute;top:20px;right:20px;display:flex;align-items:center;justify-content:center;width:32px;height:32px;border:1px solid var(--border-hover);border-radius:50%;background:var(--bg);color:var(--text-secondary);cursor:pointer}
+#view-collab .expert-install-plus:hover{border-color:var(--brand);background:var(--brand-fill);color:var(--brand)}
+#view-collab .asset-cloud-grid .card-title-row{flex-wrap:wrap;gap:4px;min-width:0}
+#view-collab .asset-cloud-grid .card-title{white-space:normal}
+#view-collab .asset-cloud-grid .expert-market-uninstalled .card-desc{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;margin-bottom:0}
+
+
+/* 来源页签与搜索、新增组成同一行胶囊工具栏。 */
+#view-collab .expert-assets-toolbar{gap:16px;flex-wrap:wrap;margin-bottom:24px}
+#view-collab .expert-assets-toolbar .expert-layer-tabs{display:inline-flex;align-items:center;flex:none;flex-wrap:nowrap;gap:4px;min-height:40px;box-sizing:border-box;padding:4px;margin:0;border:0;border-radius:var(--asset-pill-radius);background:var(--hover)}
+#view-collab .expert-assets-toolbar .list-page-tab{min-height:32px;padding:6px 12px;border:0;border-radius:var(--asset-pill-radius);color:var(--text-secondary);font-size:var(--tb-body-size);line-height:20px}
+#view-collab .expert-assets-toolbar .list-page-tab:hover{background:var(--active);color:var(--text)}
+#view-collab .expert-assets-toolbar .list-page-tab.active{background:var(--bg);color:var(--text);box-shadow:var(--pill-shadow)}
+#view-collab .expert-assets-toolbar .cv-head-right{gap:12px;min-width:0;flex:1;justify-content:flex-end}
+#view-collab .expert-assets-toolbar .asset-search{display:flex;align-items:center;gap:8px;box-sizing:border-box;width:220px;min-width:140px;height:40px;padding:0 14px;border:1px solid var(--border-hover);border-radius:var(--asset-pill-radius);background:var(--bg)}
+#view-collab .expert-assets-toolbar .asset-search:focus-within{border-color:var(--brand);outline:none}
+#view-collab .expert-assets-toolbar .asset-search input{border:0;outline:none;box-shadow:none;background:transparent;min-width:0;width:100%;flex:1;font:inherit;font-size:var(--tb-body-size);color:var(--text)}
+#view-collab .expert-assets-toolbar .asset-search svg{width:16px;height:16px;flex:none;color:var(--text-soft)}
+#view-collab .expert-assets-toolbar .asset-create-btn{height:40px;padding:0 16px;border-radius:var(--asset-pill-radius);font-size:var(--tb-body-size);font-weight:500;white-space:nowrap}
+@media(max-width:760px){
+  #view-collab .expert-assets-toolbar .cv-head-right{flex:1 1 280px;margin-left:0}
+  #view-collab .expert-assets-toolbar .asset-search{flex:1;width:auto}
+}
+
+/* 一级区分使用与获取，二级区分来源或安装状态。 */
+#view-collab .expert-assets-toolbar .asset-primary-tabs{display:inline-flex;align-items:center;gap:4px;flex:none;box-sizing:border-box;min-height:40px;padding:4px;border-radius:var(--asset-pill-radius);background:var(--hover)}
+#view-collab .expert-assets-toolbar .asset-primary-tabs .list-page-tab{min-height:32px;padding:6px 16px;border:0;border-radius:var(--asset-pill-radius);font-size:var(--tb-body-size);color:var(--text-secondary);line-height:20px}
+#view-collab .expert-assets-toolbar .asset-primary-tabs .list-page-tab.active{background:var(--bg);color:var(--text);box-shadow:var(--pill-shadow)}
+#view-collab .asset-primary-tabs [data-asset-total]{font-weight:inherit}
+#view-collab .asset-secondary-row{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:-8px 0 16px}
+#view-collab .asset-secondary-row .asset-source-filters{display:flex;flex-wrap:wrap;gap:8px;margin:0;padding:0;border:0;background:transparent}
+#view-collab .asset-source-filters .list-page-tab{padding:6px 16px;border:1px solid transparent;border-radius:var(--asset-pill-radius);background:transparent;color:var(--text-secondary);font-size:var(--tb-body-size)}
+#view-collab .asset-source-filters .list-page-tab.active{border-color:var(--brand);color:var(--brand);background:transparent;font-weight:600}
+#view-collab .asset-source-filters .list-page-tab:hover{background:var(--brand-fill)}
+#view-collab .asset-source-filters .list-page-tab.active span{color:inherit}

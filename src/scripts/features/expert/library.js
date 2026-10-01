@@ -1,3 +1,5 @@
+import { isMoreAssets, syncAssetBrowser, cloudCardsHtml } from '../collab/expert-market.js';
+import { layerOf, layerVisible, layerActions, layerToolbar, handleLayerAction } from './layers.js';
 import { $, $$ } from '../../core/dom.js';
 import { summon } from './automatch.js';
 import { EX, EXPERTS, compChip, phraseHtml, skillInfo, tierInfo, xav, xesc } from './data.js';
@@ -11,7 +13,8 @@ import { openTeamModal } from './team-modal.js';
 
 
 /* ---------- 专家库视图 ---------- */
-var expertTab='team', expertKw='';
+var expertTab='team', expertKw='',teamLayer='all';
+export function set_teamLayer(value){teamLayer=value;}
 var expertGrid=$('#expertGrid');
 function facesHtml(ids,n){
   return '<span class="x-faces">'+ids.slice(0,n||4).map(function(i){
@@ -27,7 +30,12 @@ function renderExpertGrid(){
   if(si && si.value!==expertKw) si.value=expertKw;
   var kw=expertKw.trim(), html='';
   if(expertTab==='team'){
+    syncAssetBrowser('team',TEAMS);
+    layerToolbar('team',TEAMS,teamLayer);
+    expertGrid.classList.toggle('asset-cloud-grid',isMoreAssets('team'));
+    if(isMoreAssets('team')){expertGrid.innerHTML=cloudCardsHtml('team',expertKw);return;}
     var rows=TEAMS.filter(function(t){
+      if(!layerVisible('team',t)||(teamLayer!=='all'&&layerOf('team',t)!==teamLayer))return false;
       if(!kw) return true;
       return (t.name+t.desc+teamDomains(t).join()+t.members.map(function(m){return EX[m].name}).join()).indexOf(kw)>=0;
     });
@@ -36,14 +44,15 @@ function renderExpertGrid(){
         +'<button type="button" class="x-call" data-call-team="'+t.id+'" title="对话这个专家团">对话</button>'
         +'<div class="card-top">'+facesHtml(t.members,4)
         +'<div class="card-titles"><div class="card-title-row"><span class="card-title">'+xesc(t.name)+'</span>'
-        +(t.preset?'<span class="x-badge">内置</span>':'')+'</div>'
-        +'<div class="x-sub">'+xesc(t.by)+' · '+t.members.length+' 位专家</div></div></div>'
+        +'</div>'
+        +'<div class="x-sub">'+t.members.length+' 位专家</div></div></div>'
         +'<div class="card-desc">'+xesc(t.desc)+'</div>'
         +'<div class="card-tags">'
-        +teamDomains(t).slice(0,4).map(function(g){return '<span class="ptag">'+xesc(g)+'</span>'}).join('')+'</div></div>';
+        +teamDomains(t).slice(0,4).map(function(g){return '<span class="ptag">'+xesc(g)+'</span>'}).join('')+'</div>'+layerActions('team',t)+'</div>';
     }).join('');
   }else{
     var rows2=EXPERTS.filter(function(e){
+      if(!layerVisible('expert',e))return false;
       if(!kw) return true;
       return (e.name+e.role+e.desc+e.tags.join()+(e.skills||[]).map(function(id){return skillInfo(id).name}).join()).indexOf(kw)>=0;
     });
@@ -77,7 +86,7 @@ function openExpertModal(id){
   resetKnDetail();
   xdTab='overview';
   $('#expertModalHead').innerHTML='<div class="x-detail-head"><img class="x-av-lg" src="'+xav(e.k)+'" alt="">'
-    +'<div><div class="modal-title">'+xesc(e.name)+(e.ro?' <span class="x-badge x-badge-ro">只读</span>':'')+'</div>'
+    +'<div><div class="modal-title">'+xesc(e.name)+(layerOf('expert',e)!=='personal'?' <span class="x-badge x-badge-ro">只读</span>':'')+'</div>'
     +'<div class="x-sub">'+xesc([e.role,e.by].filter(Boolean).join(' · '))+'</div></div></div>'
     +'<button class="modal-close" type="button" data-x-close aria-label="关闭">×</button>';
 
@@ -110,9 +119,9 @@ function openExpertModal(id){
     +'<div class="x-detail-pane hidden" data-xdpane="skills">'+skillsHtml+'</div>'
     +(knHtml?'<div class="x-detail-pane hidden" data-xdpane="kn">'+knHtml+'</div>':'');
   $('#expertModalFoot').innerHTML=
-    (e.mine?'<button type="button" class="btn-link team-delete-btn" data-x-del="'+e.id+'">删除该专家</button>':'')
+    (layerOf('expert',e)==='personal'?'<button type="button" class="btn-link team-delete-btn" data-x-del="'+e.id+'">删除该专家</button>':'')
     +'<div class="team-footer-spacer"></div>'
-    +(e.mine?'<button type="button" class="modal-btn cancel" data-x-edit="'+e.id+'">编辑</button>':'')
+    +(layerOf('expert',e)==='personal'?'<button type="button" class="modal-btn cancel" data-x-edit="'+e.id+'">编辑</button>':'')
     +(knHtml?'<button type="button" class="modal-btn cancel hidden" id="xkDtlCancelBtn">取消</button>':'')
     +(knHtml?'<button type="button" class="modal-btn cancel hidden" id="xkDtlSaveBtn" data-x-save-kn="'+e.id+'">保存</button>':'')
     +'<button type="button" class="modal-btn confirm" data-x-call="'+e.id+'">对话专家</button>';
@@ -129,8 +138,11 @@ export function initExpertLibrary() {
       renderExpertGrid();
     });
   });
+  document.querySelector('[data-layer-tabs="team"]')?.addEventListener('click',function(e){var btn=e.target.closest('[data-layer]');if(btn){teamLayer=btn.dataset.layer;renderExpertGrid();}});
+  document.addEventListener('cv-workspace-change',renderExpertGrid);
   if(expertSearchInput) expertSearchInput.addEventListener('input',function(){ expertKw=this.value; renderExpertGrid(); });
   if(expertGrid) expertGrid.addEventListener('click',function(e){
+    if(handleLayerAction(e)){renderExpertGrid();return;}
     var ct=e.target.closest('[data-call-team]');
     if(ct){ summon('team',ct.getAttribute('data-call-team')); return; }
     var ce=e.target.closest('[data-call-expert]');

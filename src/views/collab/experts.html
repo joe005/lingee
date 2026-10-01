@@ -1,11 +1,17 @@
 <!-- 专家管理 -->
 <div class="cv-panel" id="cv-experts">
   <div class="scroll">
-    <div class="cv-head">
-      <button type="button" class="platform-btn platform-update-button" data-platform-update>检查更新</button>
+    <div class="cv-head expert-assets-toolbar">
+      <div class="asset-primary-tabs" data-asset-primary="expert" aria-label="数字员工目录"><button type="button" class="list-page-tab active" data-asset-mode="mine" aria-pressed="true">我的数字员工 <span data-asset-total></span></button><button type="button" class="list-page-tab" data-asset-mode="more" aria-pressed="false">更多数字员工</button></div>
+
       <div class="cv-head-right">
-        <div class="search-wrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg><input type="search" id="cvExpertSearch" placeholder="搜索专家、职业或能力" autocomplete="off" readonly></div>
+        <div class="search-wrap asset-search"><input type="search" id="cvExpertSearch" placeholder="搜索数字员工" aria-label="搜索数字员工、职业或能力" autocomplete="off" readonly><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg></div>
+        <button type="button" class="asset-create-btn" data-asset-create="expert" aria-label="新增数字员工">＋ 新增</button>
       </div>
+    </div>
+    <div class="asset-secondary-row">
+      <div class="expert-layer-tabs asset-source-filters" data-layer-tabs="expert" aria-label="来源筛选"><button type="button" class="list-page-tab active" data-layer="all" aria-pressed="true">全部 <span data-layer-count="all"></span></button><button type="button" class="list-page-tab" data-layer="builtin" aria-pressed="false">官方 <span data-layer-count="builtin"></span></button><button type="button" class="list-page-tab" data-layer="shared" aria-pressed="false">租户 <span data-layer-count="shared"></span></button><button type="button" class="list-page-tab" data-layer="personal" aria-pressed="false">个人 <span data-layer-count="personal"></span></button></div>
+      <span class="x-badge hidden" data-cloud-demo="expert">原型演示</span>
     </div>
     <div id="cvExpertSections"></div>
   </div>

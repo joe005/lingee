@@ -1,4 +1,5 @@
 import { $, $$ } from '../../core/dom.js';
+import { layerVisible } from './layers.js';
 import { brandEl, navItems, setNavActive, showView } from '../../core/view.js';
 import { cvInit } from '../collab/index.js';
 import { cvSwitchView } from '../collab/view.js';
@@ -73,8 +74,8 @@ function renderExpertPicker(pfx,kw){
   var list=$('#'+pfx+'ExpertList'); if(!list) return;
   if(pfx==='tkForm' && tkFormHooks && tkFormHooks.render){ tkFormHooks.render(list,kw); return; }
   kw=(kw||'').trim();
-  var teams=TEAMS.filter(function(t){ return !kw || (t.name+t.desc).indexOf(kw)>=0; });
-  var experts=EXPERTS.filter(function(e){ return !kw || (e.name+e.role+e.desc+e.tags.join()).indexOf(kw)>=0; });
+  var teams=TEAMS.filter(function(t){ return layerVisible('team',t)&&(!kw || (t.name+t.desc).indexOf(kw)>=0); });
+  var experts=EXPERTS.filter(function(e){ return layerVisible('expert',e)&&(!kw || (e.name+e.role+e.desc+e.tags.join()).indexOf(kw)>=0); });
   var html='';
   if(teams.length){
     html+='<div class="pick-group">专家团</div>'+teams.map(function(t){

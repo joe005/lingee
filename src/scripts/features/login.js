@@ -55,6 +55,7 @@ var LOGIN_PEOPLE_IDS={
   'owner':'p22','dev':'p01','project_manager':'p04','pm':'p04','qa':'p05','ops':'p07'
 };
 export function getLoginPersonId(){ return LOGIN_PEOPLE_IDS[getAuthedUser()] || ''; }
+export function getLoginAccount(){ return getAuthedUser() || ''; }
 function getLoginPeople(){
   return Object.keys(ACCOUNTS).filter(function(account){return account.includes('@')||/^\d{11}$/.test(account);}).map(function(account){
     var profile=ACCOUNTS[account];

@@ -37,7 +37,7 @@ function loadTeams(){
     return e&&typeof e.id==='string'&&e.id.indexOf('my-')===0&&typeof e.name==='string'&&e.name
       &&Array.isArray(e.modes)&&e.modes.length;
   }).map(function(e){
-    return {id:e.id,mine:true,k:AV_KEYS.indexOf(e.k)>=0?e.k:'eng',
+    return {id:e.id,mine:true,ownerId:e.ownerId||'',k:AV_KEYS.indexOf(e.k)>=0?e.k:'eng',
       name:e.name,role:'',by:'我创建的',desc:e.desc||'',
       tags:Array.isArray(e.tags)?e.tags:[],
       skills:Array.isArray(e.skills)?e.skills.filter(function(id){return typeof id==='string'}):[],
@@ -59,7 +59,7 @@ function loadTeams(){
     return t&&typeof t.id==='string'&&!t.preset&&typeof t.name==='string'
       &&Array.isArray(t.members)&&t.members.every(function(m){return !!EX[m]});
   }).map(function(t){
-    return {id:t.id,preset:false,name:t.name,by:t.by||'我创建的',desc:t.desc||'',
+    return {id:t.id,preset:false,ownerId:t.ownerId||'',name:t.name,by:t.by||'我创建的',desc:t.desc||'',
       domains:Array.isArray(t.domains)?t.domains:[],
       leadId:EX[t.leadId]?t.leadId:(t.members[0]||null),members:t.members.slice(),
       cmds:(Array.isArray(t.cmds)?t.cmds:[]).filter(function(c){return Array.isArray(c)&&c[0]})};
@@ -71,16 +71,17 @@ function saveTeams(){
     localStorage.setItem(TEAM_STORE_KEY, JSON.stringify({
       v:1,
       teams:TEAMS.filter(function(t){return !t.preset}).map(function(t){
-        return {id:t.id,name:t.name,by:t.by,desc:t.desc,domains:t.domains||[],
+        return {id:t.id,ownerId:t.ownerId||'',name:t.name,by:t.by,desc:t.desc,domains:t.domains||[],
                 leadId:t.leadId,members:t.members,cmds:t.cmds};
       }),
       experts:MY_EXPERTS.map(function(e){
-        return {id:e.id,k:e.k,name:e.name,desc:e.desc,tags:e.tags,skills:e.skills||[],
+        return {id:e.id,ownerId:e.ownerId||'',k:e.k,name:e.name,desc:e.desc,tags:e.tags,skills:e.skills||[],
                 modes:e.modes,comp:e.comp,cmds:e.cmds,tier:e.tier||'auto',
                 kn:e.kn||[],knOff:e.knOff||[],knUp:e.knUp||[]};
       })
     }));
-  }catch(e){ /* 隐私模式 / 配额满：原型退化为内存态，不打扰用户 */ }
+    return true;
+  }catch(e){ return false; }
 }
 function teamById(id){ for(var i=0;i<TEAMS.length;i++) if(TEAMS[i].id===id) return TEAMS[i]; return null; }
 

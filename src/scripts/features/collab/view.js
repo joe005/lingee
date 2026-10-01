@@ -1,3 +1,4 @@
+import { setAssetBrowseMode } from './expert-market.js';
 import { renderTaskBoard } from './task-board.js';
 import { $, $$ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
@@ -70,6 +71,7 @@ function cvSwitchSub(name){
   cvSwitchView(name);
 }
 function cvSwitchView(name){
+  if(name==='market'){setAssetBrowseMode('expert','more');name='experts';}
   if(name==='config-proj') name='config';   /* 旧链接兼容：项目设置已并入项目管理 */
   if(name==='config-perm') name='config';   /* 人员已并入设置左导航 */
   if(window.cvLeaveProjectTasks)window.cvLeaveProjectTasks();

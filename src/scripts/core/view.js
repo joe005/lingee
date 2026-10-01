@@ -118,7 +118,7 @@ export function initSidebarNav() {
       }else if(name==='任务'){
         if(window.cvLeaveProjectTasks)window.cvLeaveProjectTasks();
         showView('tasks');
-      }else if(name==='平台空间'){
+      }else if(name==='管理平台'){
         showView('platform');
       }else if(name==='新会话'){
         showView('newtask');

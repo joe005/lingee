@@ -8,6 +8,7 @@ import { openAppDropdown } from './attach-app.js';
 
 /* ---------- Changelog / 更新日志 ---------- */
 var changelogData=[
+  {id:'69',date:'2026-10-01',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'数字员工与专家团',author:'wuhc2023',body:'功能·数字员工与专家团：管理平台与协作开发支持数字员工、专家团分层浏览和对话创建，个人内容可提交审核后供租户安装，卡片提示安装与版本更新，专家团安装自动补齐成员。'},
   {id:'68',date:'2026-09-30',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'平台与协作开发',author:'wuhc2023',body:'功能·平台与协作开发：智能创建支持项目内持续会话与阶段确认；平台空间新增专家和专家团 ZIP 导入、版本上架、导出及客户端更新原型，项目卡片可直达任务清单，项目详情、成员和产物预览同步优化。'},
   {id:'67',date:'2026-09-29',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'Joe',body:'功能·任务管理：任务看板按状态提供开始、回复与确认快捷操作，产物统一为五类阶段文档并通过确认弹窗流转；任务会话增加执行阶段、处理人、任务编码与专家团展示，支持阻塞、提问、待确认、按账号隔离预制会话及刷新后恢复会话和预览；本地共享数据库迁至 data.nosync。'},
   {id:'66',date:'2026-09-29',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'协作开发',author:'wuhc2023',body:'功能·协作开发：项目列表和详情重构分组、搜索筛选、显示设置与权限化编辑，产物支持侧栏预览、全屏、筛选和下载；新建任务支持两步式智能创建及逐阶段执行人和自动审核配置，任务管理新增 Excel 模板下载与导入。'},
@@ -59,6 +60,7 @@ var changelogData=[
 ];
 // 每个数据条目对应的 avatar SVG 图标（与 Build_demo 的 lucide 图标一致）
 var changelogIcons={
+  '69':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M12 3v12m-4-4 4 4 4-4M5 17v4h14v-4"/></svg>',
   '68':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M4 5h16v11H8l-4 4V5Z"/><path d="M8 9h8M8 12h5"/></svg>',
   '67':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M4 12l5 5L20 6"/><path d="M4 5h8M4 20h16"/></svg>',
   '66':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M8 12h8M8 16h5"/></svg>',
