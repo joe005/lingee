@@ -1,5 +1,5 @@
 import { assetModesHtml, assetTagsHtml, isMoreAssets, syncAssetBrowser, cloudCardsHtml, teamWorkModes } from '../collab/expert-market.js';
-import { layerOf, layerVisible, layerActions, layerToolbar, handleLayerAction } from './layers.js';
+import { layerOf, layerVisible, layerActions, layerToolbar, handleLayerAction, assetSourceBadge } from './layers.js';
 import { $, $$ } from '../../core/dom.js';
 import { summon } from './automatch.js';
 import { EX, EXPERTS, compChip, phraseHtml, skillInfo, tierInfo, xav, xesc } from './data.js';
@@ -43,7 +43,7 @@ function renderExpertGrid(){
       return '<div class="app-card x-card" data-team="'+t.id+'">'
         +'<button type="button" class="x-call" data-call-team="'+t.id+'" title="对话这个专家团">对话</button>'
         +'<div class="card-top">'+facesHtml(t.members,4)
-        +'<div class="card-titles"><div class="card-title-row"><span class="card-title">'+xesc(t.name)+'</span>'
+        +'<div class="card-titles"><div class="card-title-row"><span class="card-title">'+xesc(t.name)+'</span>'+assetSourceBadge('team',t)
         +'</div>'
         +'<div class="x-sub asset-card-summary"><span>'+t.members.length+' 个专家</span><span class="asset-card-upgrade-anchor"></span></div></div></div>'
         +'<div class="card-desc">'+xesc(t.desc)+'</div>'
@@ -60,8 +60,7 @@ function renderExpertGrid(){
         +'<button type="button" class="x-call" data-call-expert="'+e.id+'" title="对话这位专家">对话</button>'
         +'<div class="card-top"><img class="x-av" src="'+xav(e.k)+'" alt="">'
         +'<div class="card-titles"><div class="card-title-row"><span class="card-title">'+xesc(e.name)+'</span>'
-        +(e.ro?'<span class="x-badge x-badge-ro">只读</span>':'')
-        +(e.mine?'<span class="x-badge x-badge-mine">我创建的</span>':'')+'</div>'
+        +assetSourceBadge('expert',e)+'</div>'
         +'<div class="x-sub">'+xesc([e.role,e.by].filter(Boolean).join(' · '))+'</div></div></div>'
         +'<div class="card-desc">'+xesc(e.desc)+'</div>'
         +'<div class="card-tags">'+e.tags.slice(0,3).map(function(t){return '<span class="ptag">'+xesc(t)+'</span>'}).join('')+'</div>'
@@ -85,7 +84,7 @@ function openExpertModal(id){
   resetKnDetail();
   xdTab='overview';
   $('#expertModalHead').innerHTML='<div class="x-detail-head"><img class="x-av-lg" src="'+xav(e.k)+'" alt="">'
-    +'<div><div class="modal-title">'+xesc(e.name)+(layerOf('expert',e)==='builtin'?' <span class="x-badge x-badge-ro">内置</span>':'')+'</div>'
+    +'<div><div class="modal-title">'+xesc(e.name)+' '+assetSourceBadge('expert',e)+'</div>'
     +'<div class="x-sub">'+xesc([e.role,e.by].filter(Boolean).join(' · '))+'</div></div></div>'
     +'<button class="modal-close" type="button" data-x-close aria-label="关闭">×</button>';
 

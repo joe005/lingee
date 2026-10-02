@@ -1,5 +1,5 @@
 import { assetModesHtml, assetTagsHtml, isMoreAssets, syncAssetBrowser, cloudCardsHtml } from './expert-market.js';
-import { layerOf, layerVisible, layerActions, layerToolbar } from '../expert/layers.js';
+import { layerOf, layerVisible, layerActions, layerToolbar, assetSourceBadge } from '../expert/layers.js';
 import { $ } from '../../core/dom.js';
 import { EXPERTS, skillInfo, xav, xesc } from '../expert/data.js';
 /* 协作开发：专家管理分组卡片
@@ -29,7 +29,7 @@ function cvBuildExpertCard(e){
     +'<button type="button" class="x-call" data-cv-call="'+e.id+'" title="对话这位数字员工">对话</button>'
     +'<div class="card-top"><img class="x-av" src="'+xav(e.k)+'" alt="">'
     +'<div class="card-titles"><div class="card-title-row"><span class="card-title">'+xesc(e.name)+'</span>'
-    +(layerOf('expert',e)==='builtin'?'<span class="x-badge x-badge-ro">内置</span>':'')+'</div>'
+    +assetSourceBadge('expert',e)+'</div>'
     +'<div class="x-sub asset-card-summary"><span>'+(e.skills||[]).length+' 个技能</span><span class="asset-card-upgrade-anchor"></span></div></div></div>'
     +'<div class="card-desc" title="'+xesc(e.desc)+'">'+xesc(e.desc)+'</div>'
     +assetTagsHtml(tags)+assetModesHtml(e.modes)

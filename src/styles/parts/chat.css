@@ -454,3 +454,6 @@
   /* 会话详情不显示项目切换与关联应用（进入会话后二者已确定） */
   #view-chat .workspace-bar{display:none}
   #view-chat #chatAppDropdown{display:none}
+
+#view-chat .chat-asset-editor{width:50%;max-width:calc(100% - 361px);min-width:0;background:var(--bg)}
+@media(max-width:850px){#view-chat .chat-asset-editor{width:100%;max-width:none}}

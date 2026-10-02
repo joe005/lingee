@@ -78,7 +78,7 @@ export function initCollab() {
     if(card){
       var eid=card.getAttribute('data-cv-expert'), ex=EX[eid];
       /* 自己建的专家没有「只读详情」这一说，点开就是编辑；预置专家不能改，点开还是详情 */
-      if(ex&&layerOf('expert',ex)==='personal') openExpertEditor(eid); else openExpertModal(eid);
+      openExpertModal(eid);
     }
   });
 

@@ -26,6 +26,10 @@ export function layerOf(kind,item){
   if(kind==='team'?item.preset:!item.mine)return 'builtin';
   return records()[kind+':'+item.id]?.workspace?'shared':'personal';
 }
+export function assetSourceBadge(kind,item){
+  const layer=layerOf(kind,item);
+  return `<span class="x-badge asset-source-badge asset-source-${layer}">${{builtin:'金蝶官方',shared:'企业自建',personal:'个人开发'}[layer]}</span>`;
+}
 export function layerVisible(kind,item){
   const rec=records()[kind+':'+item.id];
   return layerOf(kind,item)==='shared'?(item.tenantId||rec?.workspace)===cvWorkspace:!item.ownerId||item.ownerId===assetOwnerKey();

@@ -1,6 +1,6 @@
 /* 平台专家库与客户端更新原型 */
 .platform-view{display:flex;flex-direction:column;overflow:auto;background:#f7f9fc;color:#243047;padding:28px 36px;gap:22px}.platform-view.hidden,.platform-body.hidden,.platform-denied.hidden,.platform-overlay.hidden,.platform-btn.hidden{display:none}.platform-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;border-bottom:1px solid #e2e8f0;padding-bottom:18px}.platform-head h1{font-size:25px;margin:5px 0}.platform-head p{font-size:13px;color:#6b7890;margin:0;line-height:1.6}.platform-kicker{font-size:12px;font-weight:650;color:#386dc2}.platform-kicker span{background:#eaf0ff;border-radius:20px;padding:3px 8px;margin-left:7px}.platform-body{display:flex;flex-direction:column;gap:16px}.platform-tabs{display:flex;gap:22px;border-bottom:1px solid #e0e6ee}.platform-tabs button{border:0;background:none;padding:10px 2px;color:#6b7890;cursor:pointer;font:inherit}.platform-tabs button.on{color:#2866c8;border-bottom:2px solid #2866c8;font-weight:650}.platform-toolbar{display:flex;gap:10px;align-items:center}.platform-toolbar input,.platform-toolbar select,.platform-dialog input{border:1px solid #d2dbe8;background:#fff;border-radius:8px;padding:8px 11px;font:inherit;font-size:13px;color:#334155}.platform-toolbar input{width:min(310px,45vw)}.platform-toolbar .primary{margin-left:auto}.platform-btn{border:1px solid #cfd9e5;border-radius:8px;background:#fff;color:#334155;padding:8px 14px;font:inherit;font-size:13px;cursor:pointer;white-space:nowrap}.platform-btn:hover{border-color:#83a2da;color:#245fbc}.platform-btn.primary{background:#356fd8;border-color:#356fd8;color:#fff}.platform-btn.primary:hover{background:#245fca}.platform-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:15px;align-content:start}.platform-card{position:relative;cursor:pointer;min-height:170px}.platform-card .card-top{display:flex;align-items:center;gap:10px}.platform-card .card-desc{margin-top:14px}.platform-card .card-tags{margin-top:12px}.platform-card-version{margin-left:auto;align-self:flex-start;color:#3268b8;background:#eef4ff;border-radius:20px;font-size:12px;font-weight:650;padding:4px 8px}.platform-card-meta{font-size:12px;color:#7c8aa0;margin-top:9px}.platform-card-offline{color:#b86736}.platform-card .x-av{flex:none}.platform-faces{display:flex;align-items:center;min-width:38px}.platform-faces img{width:26px;height:26px;border-radius:50%;border:2px solid #fff;margin-right:-9px;object-fit:cover}.platform-empty,.platform-denied{text-align:center;color:#75839a;padding:35px}.platform-denied{margin:auto}.platform-denied h2{color:#26364b}.platform-overlay{position:fixed;inset:0;z-index:10000;background:rgba(18,31,49,.38);display:flex;align-items:center;justify-content:center;padding:20px}.platform-dialog{background:#fff;border-radius:12px;box-shadow:0 20px 60px rgba(18,31,49,.2);padding:24px;width:min(650px,100%);max-height:82vh;overflow:auto;color:#26364c}.platform-dialog h2{font-size:19px;margin:0 0 14px}.platform-dialog p{font-size:13px;line-height:1.65}.platform-dialog-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}.platform-detail-headline{display:flex;align-items:center;gap:10px}.platform-detail-headline strong{font-size:18px}.platform-detail-headline span{color:#3769b3;background:#edf4ff;border-radius:20px;padding:3px 8px;font-size:12px}.platform-info-list{display:grid;grid-template-columns:90px 1fr;gap:9px 12px;font-size:13px;margin:18px 0}.platform-info-list dt{color:#7d8aa0}.platform-info-list dd{margin:0;overflow-wrap:anywhere}.platform-dialog-note{color:#7c8aa0;font-size:12px}.platform-dialog-error{color:#bd3d43;font-size:12px}.platform-history,.platform-update-row{display:grid;grid-template-columns:55px 1fr 130px;gap:12px;align-items:center;border-bottom:1px solid #edf0f5;padding:12px 0;font-size:13px}.platform-history small,.platform-update-row small{color:#7f8ca0}.platform-update-row{grid-template-columns:minmax(130px,1fr) 58px 95px minmax(140px,1.2fr)}.platform-update-dialog{width:min(700px,100%)}.platform-dialog-title{display:flex;justify-content:space-between}.platform-link{border:0;background:none;color:#386ec3;cursor:pointer;font:inherit;font-size:13px;padding:4px}.platform-offline{margin-top:12px;padding:10px;background:#fff7ed;color:#945e2f;border-radius:7px;font-size:12px}.platform-update-button{margin-right:auto}.platform-client-badge{margin-left:auto;align-self:flex-start;font-size:11px;color:#3769b3;background:#edf4ff;border-radius:20px;padding:3px 7px;white-space:nowrap}.platform-demo-fail{display:block;margin-top:15px;color:#7c8aa0;font-size:12px}.platform-import-summary{border:1px solid #e3e9f2;background:#f8faff;border-radius:8px;padding:12px 15px;font-size:13px}.platform-import-summary div{margin:6px 0}.platform-import-warning{color:#a0602a;background:#fff7ed;padding:10px;border-radius:7px;font-size:12px}.platform-snapshot-prompt{white-space:pre-wrap;background:#f5f7fb;border:1px solid #e5eaf1;border-radius:7px;padding:12px;font:inherit;font-size:12px;max-height:180px;overflow:auto}@media(max-width:700px){.platform-view{padding:18px}.platform-head{flex-wrap:wrap}.platform-toolbar{flex-wrap:wrap}.platform-toolbar .primary{margin-left:0}.platform-cards{grid-template-columns:1fr}.platform-update-row{grid-template-columns:1fr 70px 90px}.platform-update-row small{grid-column:1/-1}}
-.platform-card{display:flex;flex-direction:column;min-height:214px;text-align:left}.platform-card .card-top{width:100%;min-width:0}.platform-card .card-titles{min-width:0}.platform-card .card-title{display:block;overflow:hidden;text-overflow:ellipsis;max-width:100%}.platform-card .card-desc{width:100%;margin:16px 0 0;text-align:left;min-height:42px}.platform-card .card-tags{width:100%;margin:12px 0 0;text-align:left}.platform-card-version{flex:none;margin-left:8px}.platform-card-meta{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;margin-top:auto;padding-top:15px;border-top:1px solid #edf0f5;text-align:left;font-size:11px;color:#8190a3}.platform-card-meta time{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.platform-card-status{display:inline-flex;align-items:center;gap:5px;flex:none;font-size:11px;font-weight:600}.platform-card-status::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor}.platform-card-status.online{color:#27845d}.platform-card-status.offline{color:#b3683d}
+.platform-card{display:flex;flex-direction:column;min-height:214px;text-align:left}.platform-card .card-top{width:100%;min-width:0}.platform-card .card-titles{min-width:0}.platform-card .card-title{display:block;overflow:hidden;text-overflow:ellipsis;max-width:100%}.platform-card .card-desc{width:100%;margin:16px 0 0;text-align:left;min-height:42px}.platform-card .card-tags{width:100%;margin:12px 0 12px;text-align:left}.platform-card-version{flex:none;margin-left:8px}.platform-card-meta{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;margin-top:auto;padding-top:15px;border-top:1px solid #edf0f5;text-align:left;font-size:11px;color:#8190a3}.platform-card-meta time{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.platform-card-status{display:inline-flex;align-items:center;gap:5px;flex:none;font-size:11px;font-weight:600}.platform-card-status::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor}.platform-card-status.online{color:#27845d}.platform-card-status.offline{color:#b3683d}
 
 /* 客户端安装与升级确认：按对象、版本、变更、依赖逐层阅读。 */
 .platform-dialog:has(.platform-install-target){width:min(500px,100%)}
@@ -43,3 +43,62 @@
 .platform-dialog .platform-history{grid-template-columns:72px minmax(120px,1fr) 120px 52px}
 .platform-dialog .platform-update-row{grid-template-columns:minmax(120px,1fr) 58px minmax(135px,auto) minmax(130px,1fr)}
 @media(max-width:700px){.platform-dialog .platform-history{grid-template-columns:72px minmax(0,1fr) 52px}.platform-dialog .platform-history small{grid-column:2/3;grid-row:2}.platform-dialog .platform-update-row{grid-template-columns:minmax(0,1fr) 58px minmax(125px,auto)}.platform-dialog .platform-update-row small{grid-column:1/-1}}
+
+/* 管理卡片沿用协作开发数字员工、专家团卡片的宽度与内容节奏。 */
+.platform-view[data-platform-mode="tenant"] .platform-cards{grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr));gap:16px}
+.platform-view[data-platform-mode="tenant"] .platform-card{min-height:0;border-color:var(--border);border-radius:14px;padding:20px 22px;color:var(--text)}
+.platform-view[data-platform-mode="tenant"] .platform-card:hover{border-color:var(--border-hover)}
+.platform-view[data-platform-mode="tenant"] .platform-card:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+.platform-view[data-platform-mode="tenant"] .platform-card .card-top{align-items:flex-start;gap:14px}
+.platform-view[data-platform-mode="tenant"] .platform-card .card-title{white-space:normal;line-height:1.35;overflow-wrap:anywhere}
+.platform-view[data-platform-mode="tenant"] .platform-card .card-desc{min-height:0;margin:12px 0 10px;line-height:1.6;-webkit-line-clamp:3}
+.platform-view[data-platform-mode="tenant"] .platform-card .card-tags{flex-wrap:wrap;gap:6px;margin:0 0 12px}
+.platform-view[data-platform-mode="tenant"] .platform-card .ptag{padding:4px 8px;border-radius:var(--tb-radius);font-size:11px;color:var(--text-secondary);background:var(--fill-1)}
+.platform-view[data-platform-mode="tenant"] .platform-card .platform-card-meta{gap:8px;margin-top:auto;padding-top:12px;border-color:var(--border);color:var(--text-secondary)}
+.platform-view[data-platform-mode="tenant"] .platform-card .platform-card-version{white-space:nowrap}
+.platform-view[data-platform-mode="tenant"] .platform-faces{min-width:0;padding-right:8px}
+.platform-view[data-platform-mode="tenant"] .platform-faces img{width:28px;height:28px;border-radius:8px;border-color:var(--bg)}
+
+/* 租户管理的筛选、搜索与导入共用操作行。 */
+.platform-controls{display:flex;flex-direction:column;gap:16px}
+.platform-view[data-platform-mode="tenant"] .platform-controls{flex-direction:row;align-items:center;justify-content:space-between;gap:16px;min-width:0}
+.platform-view[data-platform-mode="tenant"] .platform-status-tabs{min-width:0}
+.platform-view[data-platform-mode="tenant"] .platform-toolbar{flex:none;margin-left:auto}
+.platform-view[data-platform-mode="tenant"] .platform-toolbar .primary{margin-left:0}
+@media(max-width:1200px){
+  .platform-view[data-platform-mode="tenant"] .platform-controls{flex-wrap:wrap}
+  .platform-view[data-platform-mode="tenant"] .platform-status-tabs{flex:1 1 100%}
+  .platform-view[data-platform-mode="tenant"] .platform-toolbar{justify-content:flex-end;width:100%}
+}
+@media(max-width:700px){
+  .platform-view[data-platform-mode="tenant"] .platform-toolbar input{flex:1;min-width:150px;width:auto}
+}
+
+/* 管理操作使用全站主按钮颜色。 */
+.platform-view .platform-btn.primary{background:var(--brand);border-color:var(--brand);color:var(--bg)}
+.platform-view .platform-btn.primary:hover{background:var(--brand-hover);border-color:var(--brand-hover)}
+.platform-view .platform-btn.primary:focus-visible{outline:2px solid var(--border-focus);outline-offset:2px}
+
+.platform-import-version{display:flex;flex-direction:column;gap:8px;margin-top:20px}
+.platform-import-version h3{margin:0 0 4px;color:var(--text);font-size:var(--tb-body-size)}
+.platform-import-version label{color:var(--text);font-size:var(--tb-body-size)}
+.platform-import-version label span{color:var(--text-secondary)}
+.platform-import-version input[readonly]{box-sizing:border-box;width:100%;background:var(--hover);border-color:var(--border-hover);color:var(--text-secondary);cursor:default}
+.platform-import-version .platform-dialog-note{margin:0}
+
+.platform-view .platform-card-status.review{color:var(--warning)}
+
+/* 安装与导入弹窗沿用全站按钮和表单样式。 */
+.platform-dialog-actions .platform-btn.primary{background:var(--brand);border-color:var(--brand);color:var(--bg)}
+.platform-dialog-actions .platform-btn.primary:hover{background:var(--brand-hover);border-color:var(--brand-hover)}
+.platform-dialog-actions .platform-btn:focus-visible{outline:2px solid var(--border-focus);outline-offset:2px}
+.platform-dialog:has(.platform-import-version){width:min(500px,100%)}
+.platform-import-file{display:flex;flex-direction:column;gap:6px;padding:12px 16px;border:1px solid var(--border);border-radius:var(--tb-radius);background:var(--fill-1)}
+.platform-import-file strong{color:var(--text);overflow-wrap:anywhere}
+.platform-import-file span{color:var(--text-secondary);font-size:var(--tb-small-size)}
+.platform-dialog .platform-import-note-label textarea{border-color:var(--border-hover);background:var(--bg);color:var(--text);border-radius:var(--tb-radius)}
+.platform-dialog .platform-import-note-label textarea:focus{outline:2px solid var(--border-focus);outline-offset:1px}
+
+.platform-update-options{display:grid;gap:12px;margin:20px 0}
+.platform-update-options label{display:flex;align-items:center;gap:8px;color:var(--text);font-size:var(--tb-body-size)}
+.platform-dialog .platform-update-options input{width:16px;height:16px;margin:0;accent-color:var(--brand)}

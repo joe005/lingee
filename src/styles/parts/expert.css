@@ -15,6 +15,10 @@
   background: var(--brand-fill); color: var(--brand); font-weight: 400;
 }
 .x-badge-ro { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); }
+.asset-source-badge { border: 0; white-space: nowrap; }
+.asset-source-builtin { color: var(--asset-source-official-text); background: var(--asset-source-official-bg); }
+.asset-source-shared { color: var(--asset-source-tenant-text); background: var(--asset-source-tenant-bg); }
+.asset-source-personal { color: var(--asset-source-personal-text); background: var(--asset-source-personal-bg); }
 .x-badge-lead { background: var(--brand-fill); color: var(--brand); }
 .x-empty { grid-column: 1 / -1; text-align: center; color: var(--text-soft); padding: 48px 0; font-size: 14px; }
 .x-empty-sm { color: var(--text-soft); font-size: 13px; text-align: center; padding: 18px; }

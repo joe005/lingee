@@ -47,6 +47,12 @@
   --dot-purple: #8b5cf6;
   --dot-teal: #14b8a6;
   --dot-rose: #e76f96;
+  --asset-source-official-text: var(--brand);
+  --asset-source-official-bg: var(--brand-fill);
+  --asset-source-tenant-text: var(--success);
+  --asset-source-tenant-bg: var(--success-bg);
+  --asset-source-personal-text: var(--warning);
+  --asset-source-personal-bg: var(--warning-bg);
 
   /* ---- 中性色（对齐参考工程 neutral 调色板） ---- */
   --neutral-50: rgba(0, 0, 0, 0.03);
@@ -83,3 +89,5 @@
   --tb-canceled-bg: #f5f5f4;
   --tb-backdrop: rgba(20, 25, 40, .28);
 }
+
+:root{--asset-expert-card-height:208px;}

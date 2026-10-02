@@ -8,7 +8,7 @@ import { openAppDropdown } from './attach-app.js';
 
 /* ---------- Changelog / 更新日志 ---------- */
 var changelogData=[
-  {id:'70',date:'2026-10-02',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'平台与协作开发',author:'wuhc2023',body:'功能·平台与协作开发：协作开发按问题类型展示专家团交付路径，数字员工与专家团支持真实定义、会话编辑及版本升级；管理平台新增角色化审核视图，资产版本采用三段式编码并通过成员引用安装。'},
+  {id:'70',date:'2026-10-02',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'平台与协作开发',author:'wuhc2023',body:'功能·平台与协作开发：协作开发支持专家团交付路径、专家定义与会话编辑，统一来源标签及紧凑卡片；管理页模拟导入自动生成版本，按草稿、提交审核、审核通过上架流转，设置页支持专家和专家团自动更新，安装补齐成员并保留失败前版本。'},
   {id:'69',date:'2026-10-01',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'平台与协作开发',author:'wuhc2023',body:'功能·平台与协作开发：管理平台与协作开发支持数字员工、专家团分层浏览、对话创建及审核安装，专家团安装自动补齐成员；智能创建任务支持生成建议后持续对话调整并确认创建，新增王工演示登录账号。'},
   {id:'68',date:'2026-09-30',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'平台与协作开发',author:'wuhc2023',body:'功能·平台与协作开发：智能创建支持项目内持续会话与阶段确认；平台空间新增专家和专家团 ZIP 导入、版本上架、导出及客户端更新原型，项目卡片可直达任务清单，项目详情、成员和产物预览同步优化。'},
   {id:'67',date:'2026-09-29',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'Joe',body:'功能·任务管理：任务看板按状态提供开始、回复与确认快捷操作，产物统一为五类阶段文档并通过确认弹窗流转；任务会话增加执行阶段、处理人、任务编码与专家团展示，支持阻塞、提问、待确认、按账号隔离预制会话及刷新后恢复会话和预览；本地共享数据库迁至 data.nosync。'},
