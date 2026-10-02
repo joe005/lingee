@@ -88,6 +88,10 @@
   --tb-backlog-bg: #f7f7f6;
   --tb-canceled-bg: #f5f5f4;
   --tb-backdrop: rgba(20, 25, 40, .28);
+  --tb-list-actions-width: 200px;
+  --tb-list-action-button-width: 136px;
+  --tb-review-files-width: 220px;
+  --tb-detail-primary-width: 120px;
 }
 
 :root{--asset-expert-card-height:208px;--asset-card-title-size:13px;}

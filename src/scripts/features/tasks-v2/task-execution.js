@@ -32,10 +32,10 @@ export function taskStageHandoffPatch(task, assigneeId) {
   };
 }
 
-export function startTaskStage(task) {
+export function startTaskStage(task, options) {
   if (!task) return {ok:false};
   var currentHandlerId = tkCurrentStageHandlerId(task);
-  if (!currentHandlerId || currentHandlerId !== tkCurrentUserId() || !tkCanViewTask(task)) {
+  if (!options?.skipHandlerCheck && (!currentHandlerId || currentHandlerId !== tkCurrentUserId() || !tkCanViewTask(task))) {
     return {ok:false, message:'仅当前阶段处理人可开始执行'};
   }
   if (task.status === 'in_progress') {
@@ -53,7 +53,7 @@ export function startTaskStage(task) {
     || stages.find(function (row) { return task.executionPlan?.find(function (item) { return item.id === row.id; })?.status !== 'done'; })
     || stages[0];
   if (!stage) return {ok:false};
-  var assigneeId = currentHandlerId;
+  var assigneeId = currentHandlerId || tkCurrentUserId() || task.assignee;
   tkUpdateTask(task.id, {status:'in_progress', assignee:assigneeId, executionStageId:stage.id, executionPlan:stagePlan(task,stage.id,'running'),
     planStatus:task.executionPlan?.length ? 'confirmed' : task.planStatus});
   return {ok:true, stage:stage};

@@ -8,7 +8,7 @@ import { openAppDropdown } from './attach-app.js';
 
 /* ---------- Changelog / 更新日志 ---------- */
 var changelogData=[
-  {id:'71',date:'2026-10-02',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'kingdee',body:'功能·任务管理：任务页默认进入列表视图，新增“需要我处理、执行中、已完成”状态页签与实时数量，列表改为进度卡片并精简操作；项目任务清单保持原表格、搜索筛选及新建能力且与任务页样式隔离。'},
+  {id:'71',date:'2026-10-02',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'kingdee',body:'功能·任务管理：任务页默认进入列表视图，新增“需要我处理、执行中、已完成”状态页签与实时数量，列表改为进度卡片，按状态提供“交给AI执行、查看验收产物、重新执行”快捷操作；待验收产物支持 Markdown、代码和 HTML 多文件切换预览，任务详情主操作下移，项目任务清单继续保持原表格和独立工具栏。'},
   {id:'70',date:'2026-10-02',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'平台与协作开发',author:'wuhc2023',body:'功能·平台与协作开发：协作开发支持专家团交付路径、专家定义与会话编辑，统一来源标签及紧凑卡片；管理页模拟导入自动生成版本，按草稿、提交审核、审核通过上架流转，设置页支持专家和专家团自动更新，安装补齐成员并保留失败前版本，并支持 expert-builder 创建侧栏、技能搜索增删、企业自建安装展示及导入模拟解析扫描后配置名称与头像，统一管理端和客户端卡片字号。'},
   {id:'69',date:'2026-10-01',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'平台与协作开发',author:'wuhc2023',body:'功能·平台与协作开发：管理平台与协作开发支持数字员工、专家团分层浏览、对话创建及审核安装，专家团安装自动补齐成员；智能创建任务支持生成建议后持续对话调整并确认创建，新增王工演示登录账号。'},
   {id:'68',date:'2026-09-30',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'平台与协作开发',author:'wuhc2023',body:'功能·平台与协作开发：智能创建支持项目内持续会话与阶段确认；平台空间新增专家和专家团 ZIP 导入、版本上架、导出及客户端更新原型，项目卡片可直达任务清单，项目详情、成员和产物预览同步优化。'},
