@@ -151,6 +151,9 @@ function platformExpertName(){return '数字员工';}
 function platformMode(){return $('#view-platform').dataset.platformMode||identity()?.role||'factory';}
 function previewTenantId(){const user=identity();return user?.role==='tenant'?user.tenantId:'ws-build';}
 function inScope(item){return !!item&&!retiredSeed(item)&&(platformMode()==='factory'?!item.tenantId:item.tenantId===previewTenantId());}
+export function canApprovePlatformReview(row){const user=identity();return !!row&&(isFactoryAdmin()||user?.role==='tenant'&&platformMode()==='tenant'&&row.tenantId===user.tenantId);}
+export function nextReviewVersion(kind,id){return bumpVersion(latest(key(kind,id))?.version);}
+export function currentPublishedVersion(kind,id){return meta[key(kind,id)]?.activeVersion||'';}
 export function canViewPlatformReview(row){return !!sessionStorage.getItem(LOGIN_KEY)&&!!row&&(platformMode()==='factory'||row.tenantId===previewTenantId());}
 function canEdit(){return identity()?.role===platformMode();}
 function canManage(item){return canEdit()&&inScope(item);}
@@ -169,7 +172,7 @@ function refreshAccess(){
   $('#platformImport').classList.toggle('hidden',!editable);
   renderCards();
 }
-export function assetReviewDialog(title,body,onConfirm,confirmText='确认'){$('#platformDialogTitle').textContent=title;$('#platformDialogBody').innerHTML=body;$('#platformDialogConfirm').textContent=confirmText;dialogConfirm=onConfirm;$('#platformDialog').classList.remove('hidden');}
+export function assetReviewDialog(title,body,onConfirm,confirmText='确认'){$('#assetRejectButton')?.remove();$('#platformDialogTitle').textContent=title;$('#platformDialogBody').innerHTML=body;$('#platformDialogConfirm').textContent=confirmText;$('#platformDialogConfirm').disabled=false;dialogConfirm=onConfirm;$('#platformDialog').classList.remove('hidden');}
 export function assetReviewClose(){$('#platformDialog').classList.add('hidden');dialogConfirm=null;}
 function renderCards(){
   decorateClient();
@@ -214,7 +217,7 @@ function showCard(id){
   const status=visibleStatus(m);
   const canSubmit=canManage(m)&&!!m.pendingVersion;
   const manageActions=canSubmit&&!team&&!m.reviewSubmitted?`<button type="button" class="platform-link" data-platform-avatar="${xesc(id)}">选择头像</button>`:canManage(m)&&!m.pendingVersion&&m.activeVersion?`<button type="button" class="platform-link" data-platform-toggle="${xesc(id)}">${m.status==='offline'?'重新上架':'下架'}</button>`:'';
-  assetReviewDialog(`${team?'专家团':platformExpertName()}详情`,`<div class="platform-detail-headline"><strong>${xesc(d.name)}</strong><span>V${row.version}</span></div><dl class="platform-info-list"><dt>来源</dt><dd>${xesc(m.tenantId?cvWorkspaceName(m.tenantId):'原厂')}</dd><dt>状态</dt><dd>${status==='draft'?'草稿':status==='review'?'待审核':status==='offline'?'已下架':'已上架'}</dd><dt>当前上架</dt><dd>${m.activeVersion?'V'+m.activeVersion:'暂无'}</dd><dt>编码</dt><dd>${xesc(d.id)}</dd><dt>简介</dt><dd>${xesc(d.desc||'暂无')}</dd><dt>更新说明</dt><dd>${xesc(row.note)}</dd><dt>导入包</dt><dd>${xesc(row.packageName||'初始标品定义')}</dd><dt>更新时间</dt><dd>${xesc(row.at)}</dd>${team?`<dt>引用成员</dt><dd>${members.length?members.map(memberId=>xesc(label(key('expert',memberId)))).join('、'):'未提供成员清单'}</dd>`:''}</dl><p class="platform-dialog-note">版本格式为主版本.次版本.修订号；专家团只引用成员编码，成员版本独立更新。</p><button type="button" class="platform-link" data-platform-history="${xesc(id)}">查看历史版本</button> <button type="button" class="platform-link" data-platform-export="${xesc(id)}" data-platform-version="${row.version}">导出 ZIP</button> ${manageActions}`,canSubmit?()=>publishPending(id):null,canSubmit?(m.reviewSubmitted?'审核通过':'提交审核'):'关闭');
+  assetReviewDialog(`${team?'专家团':platformExpertName()}详情`,`<div class="platform-detail-headline"><strong>${xesc(d.name)}</strong><span>V${row.version}</span></div><dl class="platform-info-list"><dt>来源</dt><dd>${xesc(m.tenantId?cvWorkspaceName(m.tenantId):'原厂')}</dd><dt>状态</dt><dd>${status==='draft'?'草稿':status==='review'?'待审核':status==='offline'?'已下架':'已上架'}</dd><dt>当前上架</dt><dd>${m.activeVersion?'V'+m.activeVersion:'暂无'}</dd><dt>编码</dt><dd>${xesc(d.id)}</dd><dt>简介</dt><dd>${xesc(d.desc||'暂无')}</dd><dt>更新说明</dt><dd>${xesc(row.note)}</dd><dt>更新时间</dt><dd>${xesc(row.at)}</dd>${team?`<dt>引用成员</dt><dd>${members.length?members.map(memberId=>xesc(label(key('expert',memberId)))).join('、'):'未提供成员清单'}</dd>`:''}</dl><p class="platform-dialog-note">版本格式为主版本.次版本.修订号；专家团只引用成员编码，成员版本独立更新。</p><button type="button" class="platform-link" data-platform-history="${xesc(id)}">查看历史版本</button> <button type="button" class="platform-link" data-platform-export="${xesc(id)}" data-platform-version="${row.version}">导出 ZIP</button> ${manageActions}`,canSubmit?()=>publishPending(id):null,canSubmit?(m.reviewSubmitted?'审核通过':'提交审核'):'关闭');
 }
 function chooseDraftAvatar(id){
   const m=meta[id],row=version(id,m?.pendingVersion);
@@ -244,6 +247,14 @@ function zipManifest(manifest){
   const c=localSize;view.setUint32(c,0x02014b50,true);view.setUint16(c+4,20,true);view.setUint16(c+6,20,true);view.setUint16(c+8,0x0800,true);view.setUint32(c+16,crc,true);view.setUint32(c+20,data.length,true);view.setUint32(c+24,data.length,true);view.setUint16(c+28,name.length,true);bytes.set(name,c+46);
   const e=c+centralSize;view.setUint32(e,0x06054b50,true);view.setUint16(e+8,1,true);view.setUint16(e+10,1,true);view.setUint32(e+12,centralSize,true);view.setUint32(e+16,localSize,true);
   return new Blob([bytes],{type:'application/zip'});
+}
+export function reviewVersionHistory(kind,id){
+  return clone(versions[key(kind,id)]||[]);
+}
+export function exportReviewSnapshot(kind,data,number,note){
+  const definition=clone(data);delete definition.memberRefs;
+  const url=URL.createObjectURL(zipManifest({schemaVersion:1,type:kind,...definition,version:number,updateNote:note})),a=document.createElement('a');
+  a.href=url;a.download=`${data.id}-V${number}.zip`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 function exportVersion(id,number){
   const row=version(id,number),item=meta[id];if(!row||!inScope(item))return;
@@ -288,7 +299,7 @@ function textValue(value){return typeof value==='string'?value:typeof value==='o
 function normalizePackage(kind,id,manifest,file,tenantId=''){
   const previous=latest(key(kind,id))?.data||{};
   const name=textValue(manifest.name||manifest.displayName)||previous.name||cleanName(file.name);
-  const desc=textValue(manifest.description||manifest.desc)||previous.desc||`从 ${file.name} 导入的${kind==='team'?'专家团':'专家'}包（原型展示）`;
+  const desc=textValue(manifest.description||manifest.desc)||previous.desc||'';
   if(kind==='team'){
     const supplied=Array.isArray(manifest.members)?manifest.members:Array.isArray(manifest.memberRefs)?manifest.memberRefs.map(ref=>ref?.id):previous.members||[];
     const members=supplied.filter(memberId=>typeof memberId==='string'&&memberId).map(memberId=>{
@@ -376,12 +387,12 @@ async function importZip(file){
     assetReviewDialog('导入成功',`<p>「${xesc(data.name)}」V${chosen} 已保存为草稿，可在详情中提交审核。</p><p class="platform-dialog-note">原型演示：未读取或校验实际文件，内容按文件名模拟生成。</p>`,null,'关闭');
   }
   const avatarHtml=kind==='expert'?`<section class="platform-import-avatar"><div class="platform-import-note-label">头像</div><div class="x-av-picker">${AV_KEYS.map(k=>`<button type="button" class="x-av-opt${k===(AV_KEYS.includes(data.k)?data.k:'eng')?' on':''}" data-platform-avatar-key="${k}" aria-label="头像 ${k}" aria-pressed="${k===(AV_KEYS.includes(data.k)?data.k:'eng')}"><img src="${xav(k)}" alt=""></button>`).join('')}</div></section>`:'';
-  assetReviewDialog('确认导入'+(kind==='team'?'专家团':platformExpertName()),`<div class="platform-import-file"><strong>${xesc(file.name)}</strong><span>模拟解析与扫描完成 · 原型演示</span></div><section class="platform-import-version"><label for="platformImportName">${kind==='team'?'专家团':'数字员工'}名称 <span>*</span></label><input id="platformImportName" value="${xesc(data.name)}" maxlength="80" autocomplete="off"></section>${avatarHtml}<section class="platform-import-version"><label for="platformNextVersion">版本号（系统自动生成）</label><input id="platformNextVersion" value="V${next}" readonly aria-readonly="true"></section>${previous?`<p>已有内容将生成新版本草稿，请填写更新说明。</p><label class="platform-import-note-label">更新说明 <span>*</span><textarea id="platformImportNote" rows="4" maxlength="500" required placeholder="请输入本次更新的内容说明"></textarea></label>`:''}<div class="platform-dialog-error" id="platformImportError" role="alert"></div><p class="platform-dialog-note">确认后保存为草稿，提交审核通过后上架。</p>`,()=>{
+  assetReviewDialog('确认导入'+(kind==='team'?'专家团':platformExpertName()),`<div class="platform-import-file"><strong>${xesc(file.name)}</strong><span>模拟解析与扫描完成 · 原型演示</span></div><section class="platform-import-version"><label for="platformImportName">${kind==='team'?'专家团':'数字员工'}名称 <span>*</span></label><input id="platformImportName" value="${xesc(data.name)}" maxlength="80" autocomplete="off"></section><label class="platform-import-note-label">简介<textarea id="platformImportDesc" rows="3" maxlength="2000" placeholder="填写职责、用途或适用场景">${xesc(data.desc||'')}</textarea></label>${avatarHtml}<section class="platform-import-version"><label for="platformNextVersion">版本号（系统自动生成）</label><input id="platformNextVersion" value="V${next}" readonly aria-readonly="true"></section>${previous?`<p>已有内容将生成新版本草稿，请填写更新说明。</p><label class="platform-import-note-label">更新说明 <span>*</span><textarea id="platformImportNote" rows="4" maxlength="500" required placeholder="请输入本次更新的内容说明"></textarea></label>`:''}<div class="platform-dialog-error" id="platformImportError" role="alert"></div><p class="platform-dialog-note">确认后保存为草稿，提交审核通过后上架。</p>`,()=>{
     const chosenName=$('#platformImportName').value.trim();
     if(!chosenName){$('#platformImportError').textContent='请填写名称';$('#platformImportName').focus();return;}
     const note=previous?$('#platformImportNote').value.trim():'首次演示导入';
     if(!note){$('#platformImportError').textContent='请填写更新说明';return;}
-    data.name=chosenName;
+    data.name=chosenName;data.desc=$('#platformImportDesc').value.trim();
     if(kind==='expert')data.k=$('#platformDialogBody [data-platform-avatar-key].on')?.dataset.platformAvatarKey||'eng';
     saveDraft(note);
   },'确定');
@@ -563,7 +574,8 @@ export function publishedExpertRef(id){
   return item?.status==='online'&&active(itemKey)&&availableToClient(item)?{id}:null;
 }
 export function publishReviewedBundle(bundle,note,reviewEntry){
-  if(!isFactoryAdmin())return '当前账号没有审核权限';
+  const requestTenant=reviewEntry?.value?.find(row=>row.status==='approved'&&row.bundle===bundle)?.tenantId||bundle[0]?.data.tenantId;
+  if(!canApprovePlatformReview({tenantId:requestTenant})||bundle.some(item=>item.data.tenantId!==requestTenant))return '当前账号没有审核权限';
   const oldMeta=clone(meta),oldVersions=clone(versions),numbers={};
   for(const item of bundle){const id=key(item.kind,item.data.id);numbers[id]=bumpVersion(latest(id)?.version);}
   for(const item of bundle){

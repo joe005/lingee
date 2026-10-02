@@ -108,3 +108,4 @@
 #platformDialog .platform-import-avatar .x-av-picker{margin-top:8px}
 #platformDialog [data-platform-avatar-key].on{border-color:var(--brand)}
 #platformDialog [data-platform-avatar-key]:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+#platformDialog #assetRejectFields[hidden]{display:none}
