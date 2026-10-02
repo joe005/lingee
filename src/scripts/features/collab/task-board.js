@@ -1,4 +1,4 @@
-import { CV_TASKS, CV_PROJECTS, CV_ARTIFACTS, cvCurrentUserName, cvInProject, cvProject, cvProjectInWorkspace, cvProjectName, cvSeedTaskDetails, cvPeopleInProject } from './data.js';
+import { CV_TASKS, CV_PROJECTS, CV_ARTIFACTS, cvCurrentUserName, cvInProject, cvProject, cvProjectInWorkspace, cvProjectName, cvSeedTaskDetails, cvPeopleInProject, setTaskRenderers } from './data.js';
 import { TEAMS } from '../expert/store.js';
 import { STAGES, xesc } from '../expert/data.js';
 import { cvSetProject, cvUpdateCounts } from './projects.js';
@@ -11,12 +11,39 @@ import { ensureTaskRuntime, retryTaskRuntime, runtimeArtifacts, syncTaskFromRunt
 let scope = 'all';
 let returnFocus = null;
 
+/* 任务页只展示当前用户此刻有处理权限的任务：当前阶段处理人或当前评审人；
+   没有阶段计划的普通任务按负责人隔离，工作区管理员可查看全部任务。 */
+function canHandleTask(t) {
+  if (!t || t.kind === 'epic') return false;
+  if (document.body.dataset.role === 'owner') return true;
+  const me = currentUserName();
+  if (!me || me === '当前用户') return false;
+  const plan = stagePlanFor(t);
+  const current = currentStageFor(t, plan);
+  if (current) {
+    if (current.assignee === me) return true;
+    return (t.reviews || []).some(r => r.status === 'pending' && reviewStageId(t, r, plan) === current.id && r.reviewer === me);
+  }
+  return t.assignee === me;
+}
+
+function visibleTasks() {
+  return CV_TASKS.filter(t => t.kind !== 'epic').filter(cvInProject).filter(canHandleTask);
+}
+
+function currentStageFor(t, plan = stagePlanFor(t)) {
+  const id = taskStageId(t);
+  return plan.find(sp => sp.id === id || sp.stageId === id)
+    || plan.find(sp => t.runtime?.workItems?.some(w => w.stageId === id && (w.id === sp.id || w.stageId === sp.stageId)))
+    || plan[0];
+}
+
 function filtered() {
   const searchInput = document.getElementById('tb-search');
   const search = (searchInput?.value || '').trim().toLowerCase();
   const focusedTaskId = searchInput?.dataset.focusTaskId;
   const execution = document.getElementById('tb-mode')?.value;
-  return CV_TASKS.filter(t => t.kind !== 'epic').filter(cvInProject).filter(t =>
+  return visibleTasks().filter(t =>
     (scope !== 'mine' || t.assignee === currentUserName()) &&
     (scope !== 'attention' || ['审核中', '已阻塞'].includes(t.status)) &&
     (!execution || tbMode(t) === execution) &&
@@ -26,7 +53,7 @@ function filtered() {
 export function renderTaskSummary() {
   const el = document.getElementById('cv-task-stats');
   if (!el) return;
-  const rows = CV_TASKS.filter(t => t.kind !== 'epic').filter(cvInProject);
+  const rows = visibleTasks();
   el.innerHTML = '<span><b>' + rows.length + '</b> 个任务</span><span class="tb-live">◐ ' + rows.filter(t => t.status === '进行中').length + ' 个任务执行中</span><span class="tb-summary-note">成员与专家共同参与 · 本地演示</span>';
   document.getElementById('tb-attention-count').textContent = rows.filter(t => ['审核中', '已阻塞'].includes(t.status)).length;
   const mine = document.getElementById('tb-mine-count');
@@ -183,14 +210,25 @@ function stageReviewPendingHtml(pending) {
 /* 兼容旧数据：评审的 stageId 可能是本地缓存里的老值（不在当前阶段计划里），
    这种情况一律归到「当前环节」，避免评审卡片在流程图里找不到归属节点而消失。 */
 function reviewStageId(t, r, plan) { return plan.some(s => s.id === r.stageId) ? r.stageId : taskStageId(t); }
-/* 阶段隔离：只有该阶段的处理人能看到评审详情与产物；自己处理完的阶段仍保留只读可见，
-   跟自己无关的阶段（不是处理人，也没参与过评审）一律折叠成一行占位。 */
+/* 阶段隔离：只有当前阶段处理人或当前评审人能看到该阶段详情与产物，
+   其他阶段只保留流程节点和处理人提示。 */
 function canSeeStageDetail(t, sp, plan) {
   if (document.body.dataset.role === 'owner') return true;
   const me = currentUserName();
   if (sp.assignee === me) return true;
   const stageReviews = (t.reviews || []).filter(r => reviewStageId(t, r, plan) === sp.id);
-  return stageReviews.some(r => r.reviewer === me || (r.decisions || []).some(d => d.by === me));
+  return stageReviews.some(r => r.status === 'pending' && r.reviewer === me);
+}
+function visibleTaskArtifacts(t) {
+  const plan = stagePlanFor(t);
+  const current = currentStageFor(t, plan);
+  return taskArtifacts(t).filter(a => {
+    const stage = a.stageId
+      ? plan.find(sp => sp.id === a.stageId || sp.stageId === a.stageId)
+        || plan.find(sp => t.runtime?.workItems?.some(w => w.stageId === a.stageId && w.id === sp.id))
+      : current;
+    return stage ? canSeeStageDetail(t, stage, plan) : document.body.dataset.role === 'owner';
+  });
 }
 function stageTimelineHtml(t) {
   const plan = stagePlanFor(t);
@@ -212,11 +250,11 @@ function stageTimelineHtml(t) {
     else if (state === 'current' && !pending && t.status !== '已完成') body = stageReviewStartHtml(t, sp.name);
     else body = stageArtifactsHtml(latest, state) + stageDecisionHtml(latest);
     const outputs = artifactsForStage(t, sp);
-    const artifactBody = '<div class="tb-artifacts">' + (outputs.map(artifactLink).join('') || '<div class="tb-detail-empty">该节点暂无产物</div>') + '</div>';
+    const artifactBody = canSee ? '<div class="tb-artifacts">' + (outputs.map(artifactLink).join('') || '<div class="tb-detail-empty">该节点暂无产物</div>') + '</div>' : '';
     return '<details class="tb-stage-step tb-stage-collapse" data-state="' + state + '"><summary>'
       + '<span class="tb-stage-dot">' + (state === 'done' ? '✓' : (i + 1)) + '</span>'
       + '<span class="tb-stage-body"><span class="tb-stage-top"><b>' + xesc(sp.name) + '</b><span class="tb-stage-state">' + stateLabel + '</span></span>'
-      + '<span class="tb-stage-owner">处理人 · ' + xesc(sp.assignee || t.assignee) + ' · ' + outputs.length + ' 项产物</span></span><span class="tb-stage-chevron">›</span></summary>'
+      + '<span class="tb-stage-owner">处理人 · ' + xesc(sp.assignee || t.assignee) + (canSee ? ' · ' + outputs.length + ' 项产物' : '') + '</span></span><span class="tb-stage-chevron">›</span></summary>'
       + '<div class="tb-stage-expanded">' + (artifactBody + (canSee ? (state === 'current' ? body : stageDecisionHtml(latest)) : body || '')) + '</div></details>';
   }).join('') + '</div>';
 }
@@ -316,7 +354,7 @@ export function openTask(index, status = '待办') {
   const canSee = selected && window.tbCanSeeConv ? window.tbCanSeeConv(selected) : false;
   const convArea = !selected ? '<div class="tb-detail-empty">创建任务后，就可以在这里发起会话。</div>'
     : canSee ? window.tbConvListHtml(selected) : '<div class="tb-detail-empty"><strong>会话仅处理人可见</strong><span>请联系当前负责人，或转交给自己后继续协作。</span></div>';
-  const artifacts = taskArtifacts(t);
+  const artifacts = visibleTaskArtifacts(t);
   const reviews = t.reviews || [];
   const pendingReview = reviews.find(r => r.status === 'pending');
   const canComplete = t.status === '已完成' || hasApprovedDelivery(t);
@@ -467,6 +505,7 @@ function submitTask(event) {
   document.getElementById('tb-save-state').textContent = saved ? (window.lingeeStorageMode === 'sqlite' ? '正在同步到共享数据库' : '已保存到本地') : '未持久保存';
 }
 export function initTaskBoard() {
+  setTaskRenderers({summary:renderTaskSummary,board:renderTaskBoard});
   /* 先给内置任务补稳定 id，再合并本地快照。旧快照可能没有 boardId，
      因此同时用来源、编号和项目识别同一业务任务，避免刷新后生成重复卡片。 */
   cvSeedTaskDetails();

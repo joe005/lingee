@@ -7,7 +7,7 @@ import { initNewTask } from './new-task.js';
 import { initTaskChat } from './task-chat.js';
 import { $ } from '../../core/dom.js';
 import { cvLoadSavedTasks, cvOpenConversation, cvSendChatMessage } from './chat.js';
-import { cvEnsureCurrentUserProjectDemoData, cvEnsureProjectRoleDemoData, cvEnsureSeedPersons, cvEnsureSeedProjects, cvEnsureTeamPersons, cvEnsureTeamProjectMembers, cvEnsureSeedWorkspaces, cvEnsureWorkspaceDemoProjects, cvInjectCardActions, cvProject, cvProjectInWorkspace, cvPruneDeletedWorkspaceData, cvRenderReviewStats, cvRenderReviews, cvRenderTaskStats, cvRenderTasks, cvRestorePersons, cvRestoreWorkspaces, set_cvProject } from './data.js';
+import { cvEnsureCurrentUserProjectDemoData, cvEnsureProjectRoleDemoData, cvEnsureSeedPersons, cvEnsureSeedProjects, cvEnsureTeamPersons, cvEnsureTeamProjectMembers, cvEnsureSeedWorkspaces, cvEnsureWorkspaceDemoProjects, cvInjectCardActions, cvProject, cvProjectInWorkspace, cvPruneDeletedWorkspaceData, cvRenderReviewStats, cvRenderReviews, cvRenderTaskStats, cvRenderTasks, cvRestorePersons, cvRestoreWorkspaces, setConversationOpener, set_cvProject } from './data.js';
 import { cvMigrateProjectSquads, cvRestoreSquads } from './squads.js';
 import { cvClosePersonEdit, cvOpenPersonNew, cvRenderPermTable, cvSavePersonEdit, initCollabPersons } from './persons.js';
 import { cvCloseFeatureEdit, cvCloseManualSplit, cvCloseProjectSplit, cvConfirmManualSplit, cvConfirmProjectSplit, cvOpenManualSplit, cvRenderProjectDetail, cvRenderProjectList, cvResetProjectListState, cvSaveFeatureEdit, initCollabProjectView } from './project-view.js';
@@ -57,6 +57,7 @@ var cvExpertSearch=$('#cvExpertSearch');
 var cvExpertSections=$('#cvExpertSections');
 
 export function initCollab() {
+  setConversationOpener(cvOpenConversation);
   initExpertMarket({expert:cvRenderExperts,team:renderExpertGrid});
   cvRemoveLingeePrototypeTasks();
   initTaskBoard();

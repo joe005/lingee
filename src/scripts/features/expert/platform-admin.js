@@ -9,6 +9,7 @@ import { setBuiltinTeams } from './store.js';
 import { cvRenderExperts } from '../collab/experts.js';
 import { renderExpertGrid } from './library.js';
 import { bumpVersion, compareVersions, normalizeVersion } from './versioning.js';
+import { setCloudAssetProviders } from '../collab/expert-market.js';
 
 /* 同一浏览器内模拟平台发布和客户端安装；ZIP 本体不会写入 localStorage。 */
 const META_KEY='lingee.platform.meta.v1';
@@ -398,6 +399,26 @@ async function importZip(file){
   },'确定');
 }
 
+function openImportDialog(){
+  const kind=tab;
+  assetReviewDialog('导入'+(kind==='team'?'专家团':platformExpertName()),`<div class="platform-import-drop-zone" id="platformImportDropZone" tabindex="0" role="button" aria-label="点击或拖拽 ZIP 包到此处上传"><input id="platformDialogZip" type="file" accept=".zip,application/zip" hidden><svg class="platform-import-drop-icon" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m-4-4 4-4 4 4"/><path d="M5 15v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg><p class="platform-import-drop-primary">点击或拖拽 ZIP 包到此处上传</p><p class="platform-import-drop-secondary">支持 .zip 格式，原型演示不校验实际内容</p></div><div class="platform-import-file-bar hidden" id="platformImportFileBar"><div class="platform-import-file-info"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg><div class="platform-import-file-meta"><span id="platformImportFileName" class="platform-import-file-name"></span><span id="platformImportFileSize" class="platform-import-file-size"></span></div></div><button type="button" class="platform-import-file-remove" id="platformImportFileRemove" aria-label="重新选择文件">×</button></div><p class="platform-dialog-note">选择文件后点击“解析并导入”，将进入模拟解析与扫描流程。</p><div class="platform-dialog-error" id="platformImportPickerError" role="alert"></div>`,()=>{
+    if(!selectedFile){$('#platformImportPickerError').textContent='请选择一个 ZIP 包';return;}
+    assetReviewClose();importZip(selectedFile);
+  },'解析并导入');
+  let selectedFile=null;
+  const input=$('#platformDialogZip'),confirm=$('#platformDialogConfirm'),dropZone=$('#platformImportDropZone'),fileBar=$('#platformImportFileBar'),fileName=$('#platformImportFileName'),fileSize=$('#platformImportFileSize');
+  confirm.disabled=true;
+  const selectFile=file=>{if(!file)return;selectedFile=file;confirm.disabled=false;dropZone.classList.add('hidden');fileBar.classList.remove('hidden');fileName.textContent=file.name;fileSize.textContent=`${(file.size/1024/1024).toFixed(2)} MB · ZIP 文件`;};
+  const resetFile=()=>{selectedFile=null;confirm.disabled=true;input.value='';dropZone.classList.remove('hidden');fileBar.classList.add('hidden');fileName.textContent='';fileSize.textContent='';};
+  input?.addEventListener('change',()=>selectFile(input.files?.[0]));
+  dropZone?.addEventListener('click',()=>input.click());
+  dropZone?.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();input.click();}});
+  dropZone?.addEventListener('dragover',event=>{event.preventDefault();dropZone.classList.add('drag-over');});
+  dropZone?.addEventListener('dragleave',()=>dropZone.classList.remove('drag-over'));
+  dropZone?.addEventListener('drop',event=>{event.preventDefault();dropZone.classList.remove('drag-over');selectFile(event.dataTransfer?.files?.[0]);});
+  $('#platformImportFileRemove')?.addEventListener('click',resetFile);
+}
+
 function installable(){return Object.entries(meta).filter(([id,m])=>availableToClient(m)&&m.status==='online'&&active(id)&&compareVersions(installed[id],active(id).version)<0).map(([id,m])=>({id,kind:m.kind,old:installed[id]||'',row:active(id)}));}
 function installedSnapshot(kind,id){const itemKey=key(kind,id);return version(itemKey,installed[itemKey])?.data||null;}
 function applyInstalled(){
@@ -414,6 +435,7 @@ export function cloudUpgradeBadge(itemKey){
   if(!current||item?.status!=='online'||compareVersions(active(itemKey)?.version,current)<=0)return '';
   return `<button type="button" class="expert-upgrade-badge" data-cloud-update="${xesc(itemKey)}" aria-label="将${xesc(active(itemKey).data.name)}升级至 V${active(itemKey).version}" title="本地 V${current}，云端 V${active(itemKey).version}"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><path d="M10 14V6m-3 3 3-3 3 3"/></svg>升级至 V${active(itemKey).version}</button>`;
 }
+setCloudAssetProviders({catalog:cloudCatalog,upgradeBadge:cloudUpgradeBadge});
 const UPDATE_SETTINGS_KEY='lingee.asset-update-settings.v1';
 let updateQueued=false,updateAttempt='';
 function updateSettings(){return read(UPDATE_SETTINGS_KEY,{})[getLoginAccount()]||{expert:false,team:false};}
@@ -503,8 +525,7 @@ export function initPlatformAdmin(){
   $$('.platform-tabs button').forEach(button=>button.addEventListener('click',()=>{tab=button.dataset.platformTab;renderCards();}));
   $$('.platform-status-tabs button').forEach(button=>button.addEventListener('click',()=>{statusTab=button.dataset.platformStatus;renderCards();}));
   $('#platformSearch').addEventListener('input',renderCards);
-  $('#platformImport').addEventListener('click',()=>$('#platformZipFile').click());
-  $('#platformZipFile').addEventListener('change',async event=>{const input=event.target,file=input.files?.[0];if(!file)return;try{await importZip(file);}finally{input.value='';}});
+  $('#platformImport').addEventListener('click',openImportDialog);
   $('#platformList').addEventListener('click',event=>{const review=event.target.closest('[data-asset-review]');if(review){openAssetReview(review.dataset.assetReview,renderCards);return;}const card=event.target.closest('[data-platform-card]');if(card)showCard(card.dataset.platformCard);});
   $('#platformDialogCancel').addEventListener('click',assetReviewClose);
   $('#platformDialogConfirm').addEventListener('click',()=>{if(dialogConfirm)dialogConfirm();else assetReviewClose();});

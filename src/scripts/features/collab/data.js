@@ -1,5 +1,3 @@
-import { renderTaskBoard, renderTaskSummary } from './task-board.js';
-import { cvOpenConversation } from './chat.js';
 import { STAGES } from '../expert/data.js';
 /* 协作开发：项目 / 任务 / 评审 / 人员数据与卡片渲染
    拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
@@ -639,6 +637,15 @@ export function cvRemoveLingeePrototypeTasks(){
 
 var CV_WORKFLOW = ['需求分析','方案设计','开发实现','代码审查','测试验证','部署发布'];
 var CV_WORKFLOW_ROLES = {'需求分析':'需求人员','方案设计':'架构人员','开发实现':'开发人员','代码审查':'开发人员','测试验证':'测试人员','部署发布':'运维人员'};
+/* 数据层只发布刷新信号，由任务看板在初始化时接入具体渲染器，避免反向依赖。 */
+var taskRenderers={summary:function(){},board:function(){}};
+export function setTaskRenderers(renderers){
+  taskRenderers={...taskRenderers,...(renderers||{})};
+}
+var openConversation=function(){};
+export function setConversationOpener(handler){
+  openConversation=typeof handler==='function'?handler:openConversation;
+}
 var CV_THIRD_PARTY_MEMBERS=[
   {name:'钱涛',email:'qian***@kingdee.com',role:'开发',tag:'member-tag--dev',dept:'研发部'},
   {name:'宋宇',email:'song***@kingdee.com',role:'开发',tag:'member-tag--dev',dept:'研发部'},
@@ -658,10 +665,10 @@ var CV_THIRD_PARTY_MEMBERS=[
 ];
 
 function cvRenderTaskStats(){
-  renderTaskSummary();
+  taskRenderers.summary();
 }
 function cvRenderTasks(){
-  renderTaskBoard();
+  taskRenderers.board();
 }
 
 function cvBuildTaskCard(t,i){
@@ -750,7 +757,7 @@ function cvInjectCardActions(){
     var btns='';
     if(status==='未开始'){btns=execBtn+transferBtn+twistBtn+reviewBtn;}
     else if(status==='待评审'){btns=reviewBtn+viewBtn;}
-    else{btns=viewBtn;card.classList.add('card--clickable');card.onclick=function(e){if(!e.target.closest('.act-btn')&&!e.target.closest('.card-view-btn'))cvOpenConversation(card);};}
+    else{btns=viewBtn;card.classList.add('card--clickable');card.onclick=function(e){if(!e.target.closest('.act-btn')&&!e.target.closest('.card-view-btn'))openConversation(card);};}
     var ad=document.createElement('div');ad.className='card-actions';
     ad.innerHTML='<span class="card-node"><span class="card-node-dot"></span>'+node+'</span><div style="display:flex;gap:4px;margin-left:auto">'+btns+'</div>';
     card.appendChild(ad);
