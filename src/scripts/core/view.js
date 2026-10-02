@@ -1,7 +1,7 @@
 import { $, $$ } from './dom.js';
 import { appDd } from '../features/attach-app.js';
 import { cvInit } from '../features/collab/index.js';
-import { cvLastTab, cvSwitchView } from '../features/collab/view.js';
+import { cvSwitchView } from '../features/collab/view.js';
 import { closeAll } from '../features/dropdown.js';
 import { withBase } from './base-path.js';
 /* 视图切换、侧边栏导航、首页卡片、Logo 回首页
@@ -116,7 +116,8 @@ export function initSidebarNav() {
       }else if(name==='协作开发'){
         showView('collab');
         cvInit();
-        cvSwitchView(cvLastTab);
+        cvSwitchView('tasks');
+        document.dispatchEvent(new CustomEvent('lingee:collab-menu-open'));
       }else if(name==='任务'){
         if(window.cvLeaveProjectTasks)window.cvLeaveProjectTasks();
         showView('tasks');

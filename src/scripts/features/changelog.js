@@ -8,6 +8,7 @@ import { openAppDropdown } from './attach-app.js';
 
 /* ---------- Changelog / 更新日志 ---------- */
 var changelogData=[
+  {id:'71',date:'2026-10-02',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'kingdee',body:'功能·任务管理：任务页默认进入列表视图，新增“需要我处理、执行中、已完成”状态页签与实时数量，列表改为进度卡片并精简操作；项目任务清单保持原表格、搜索筛选及新建能力且与任务页样式隔离。'},
   {id:'70',date:'2026-10-02',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'平台与协作开发',author:'wuhc2023',body:'功能·平台与协作开发：协作开发支持专家团交付路径、专家定义与会话编辑，统一来源标签及紧凑卡片；管理页模拟导入自动生成版本，按草稿、提交审核、审核通过上架流转，设置页支持专家和专家团自动更新，安装补齐成员并保留失败前版本。'},
   {id:'69',date:'2026-10-01',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'平台与协作开发',author:'wuhc2023',body:'功能·平台与协作开发：管理平台与协作开发支持数字员工、专家团分层浏览、对话创建及审核安装，专家团安装自动补齐成员；智能创建任务支持生成建议后持续对话调整并确认创建，新增王工演示登录账号。'},
   {id:'68',date:'2026-09-30',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'平台与协作开发',author:'wuhc2023',body:'功能·平台与协作开发：智能创建支持项目内持续会话与阶段确认；平台空间新增专家和专家团 ZIP 导入、版本上架、导出及客户端更新原型，项目卡片可直达任务清单，项目详情、成员和产物预览同步优化。'},
@@ -61,6 +62,7 @@ var changelogData=[
 ];
 // 每个数据条目对应的 avatar SVG 图标（与 Build_demo 的 lucide 图标一致）
 var changelogIcons={
+  '71':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="7" cy="6" r="1" fill="currentColor"/><circle cx="7" cy="12" r="1" fill="currentColor"/><circle cx="7" cy="18" r="1" fill="currentColor"/></svg>',
   '70':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h10M7 13h7M7 17h5"/></svg>',
   '69':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M12 3v12m-4-4 4 4 4-4M5 17v4h14v-4"/></svg>',
   '68':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M4 5h16v11H8l-4 4V5Z"/><path d="M8 9h8M8 12h5"/></svg>',

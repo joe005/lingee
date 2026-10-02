@@ -8,30 +8,29 @@
       </div>
     </div>
 
-    <!-- 视图标签栏 -->
-    <div class="list-page-view-bar tk-view-bar" id="tkViewBar">
-      <div class="list-page-tabs tk-view-tabs" id="tkViewTabs" role="tablist" aria-label="任务视图">
-        <!-- 视图 Tab 由 JS 渲染 -->
-      </div>
-      <div class="tk-view-action">
-        <button class="tk-view-add" id="tkViewAdd" data-tooltip="视图" aria-label="视图" aria-expanded="false">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/></svg>
-        </button>
-        <div class="tk-view-menu hidden" id="tkViewMenu">
-          <button type="button" id="tkViewMenuNew"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>新增视图</button>
-          <button type="button" id="tkViewManage"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="2" fill="var(--bg)"/><circle cx="15" cy="17" r="2" fill="var(--bg)"/></svg>管理视图</button>
-        </div>
-      </div>
-      <div class="tk-view-overflow hidden" id="tkViewOverflow">
-        <button class="tk-view-overflow-btn" id="tkViewOverflowBtn" data-tooltip="更多视图" aria-label="更多视图">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
-        </button>
-        <div class="tk-overflow-menu" id="tkOverflowMenu"></div>
-      </div>
-    </div>
-
     <!-- 工具栏 -->
     <div class="tk-toolbar">
+      <!-- 列表状态页签与显示设置共用一行 -->
+      <div class="list-page-view-bar tk-view-bar" id="tkViewBar">
+        <div class="list-page-tabs tk-view-tabs" id="tkViewTabs" role="tablist" aria-label="任务视图">
+          <!-- 视图 Tab 由 JS 渲染 -->
+        </div>
+        <div class="tk-view-action">
+          <button class="tk-view-add" id="tkViewAdd" data-tooltip="视图" aria-label="视图" aria-expanded="false">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 17 9 5 9-5"/></svg>
+          </button>
+          <div class="tk-view-menu hidden" id="tkViewMenu">
+            <button type="button" id="tkViewMenuNew"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>新增视图</button>
+            <button type="button" id="tkViewManage"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="2" fill="var(--bg)"/><circle cx="15" cy="17" r="2" fill="var(--bg)"/></svg>管理视图</button>
+          </div>
+        </div>
+        <div class="tk-view-overflow hidden" id="tkViewOverflow">
+          <button class="tk-view-overflow-btn" id="tkViewOverflowBtn" data-tooltip="更多视图" aria-label="更多视图">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
+          </button>
+          <div class="tk-overflow-menu" id="tkOverflowMenu"></div>
+        </div>
+      </div>
       <div class="tk-tools-left">
         <div class="tk-search-wrap">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>

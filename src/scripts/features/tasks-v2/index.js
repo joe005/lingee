@@ -64,9 +64,15 @@ var LIST_FIELDS = [
   { id:'desc', name:'描述' },
 ];
 var DEFAULT_LIST_FIELD_ORDER = LIST_FIELDS.map(function(field) { return field.id; });
+var LIST_STATUS_TABS = [
+  { id:'needs', name:'需要我处理', statuses:['backlog','in_review','blocked'] },
+  { id:'running', name:'执行中', statuses:['in_progress'] },
+  { id:'done', name:'已完成', statuses:['done'] },
+];
 var state = {
   layout: 'board', viewMode: 'slide', scope: 'all', groupBy: 'status', sortBy: 'updatedAt', sortDir: 'desc',
   search: '', filters: [], selectedIds: new Set(), activeViewId: 'all',
+  listStatusTab: 'needs',
   showSubtasks: true,
   cardProperties: { priority:true, description:false, assignee:true, startDate:false, project:false, childProgress:true },
   listFieldOrder: DEFAULT_LIST_FIELD_ORDER.slice(), listFieldVisibility: { desc:false },
@@ -569,8 +575,30 @@ function renderListTreeNodes(tasks, childrenMap, depth) {
   return renderTaskListTreeNodes(tasks, childrenMap, depth, {
     collapsedParents:collapsedParents, selectedIds:state.selectedIds, drawerTaskId:state.drawerTaskId,
     escapeHtml:escapeHtml, isOverdue:isOverdue, stClass:stClass, priClass:priClass, statusSvg:statusSvg,
-    avatarSm:avatarSm, fmtDate:fmtDate,
+    avatarSm:avatarSm, fmtDate:fmtDate, listStageProgress:listStageProgress, cardLayout:!projectListMode,
   });
+}
+
+function listStageProgress(task) {
+  var stages = taskExecutionStages(task);
+  if (!stages.length) stages = [{ id:'task', name:'任务处理' }];
+  var index = stages.findIndex(function (stage) { return stage.id === task.executionStageId; });
+  if (task.status === 'done') index = stages.length - 1;
+  else if (index < 0) index = 0;
+  return { name:stages[index]?.name || '任务处理', index:index, total:stages.length };
+}
+
+function listStatusPool() {
+  var tasks = tkGetTasks().filter(tkCanViewTask);
+  if (projectListMode && projectListProjectId) tasks = tasks.filter(function (task) { return task.project === projectListProjectId; });
+  if (!projectListMode) tasks = tasks.filter(tkParticipatesCurrentUser);
+  if (!state.showSubtasks) tasks = tasks.filter(function (task) { return !task.parentId; });
+  return tasks;
+}
+
+function filterListStatus(tasks) {
+  var tab = LIST_STATUS_TABS.find(function (item) { return item.id === state.listStatusTab; }) || LIST_STATUS_TABS[0];
+  return tasks.filter(function (task) { return tab.statuses.includes(task.status); });
 }
 
 /* ---------- 分组 ---------- */
@@ -614,6 +642,19 @@ function getGroupedTasks(tasks) {
 
 /* ---------- 渲染：视图标签栏 ---------- */
 function renderViewBar() {
+  var listMode = state.layout === 'list' && !projectListMode;
+  var viewAction = els.tkViewAdd.closest('.tk-view-action');
+  if (viewAction) viewAction.hidden = listMode;
+  if (listMode) {
+    var pool = listStatusPool();
+    els.tkViewTabs.innerHTML = LIST_STATUS_TABS.map(function (tab) {
+      var count = pool.filter(function (task) { return tab.statuses.includes(task.status); }).length;
+      var active = tab.id === state.listStatusTab;
+      return '<button type="button" class="list-page-tab' + (active ? ' active' : '') + '" data-list-status="' + tab.id + '" role="tab" aria-selected="' + active + '"><span class="list-page-tab-name">' + tab.name + '</span><span class="tk-list-tab-count">' + count + '</span></button>';
+    }).join('');
+    els.tkViewOverflow.classList.add('hidden');
+    return;
+  }
   els.tkViewTabs.innerHTML = renderListPageTabs(tkGetViews().map(function(view){return {id:view.id,name:view.name,removable:!view.builtin};}),state.activeViewId,'data-view-id');
 }
 
@@ -700,6 +741,7 @@ function applyListFieldSettings() {
 }
 function renderList(tasks) {
   tasks = tasks || getFilteredTasks();
+  if (!projectListMode) tasks = filterListStatus(tasks);
   if (tasks.length === 0 && state.viewMode === 'split') {
     showBoardOrList();
     els.tkListBody.innerHTML = '<tr class="tk-row-create"><td colspan="' + visibleListColumnCount() + '">没有匹配的任务</td></tr>';
@@ -710,7 +752,8 @@ function renderList(tasks) {
   showBoardOrList();
   var tree = buildTaskTree(tasks);
   var html = renderListTreeNodes(tree.roots, tree.childrenMap, 0);
-  els.tkListBody.innerHTML = '<tr class="tk-row-create" id="tkRowCreate"><td colspan="' + visibleListColumnCount() + '"><button class="tk-inline-create-btn" id="tkInlineCreateBtn">+ 快速新建</button></td></tr>' + html;
+  var quickCreate = projectListMode ? '<tr class="tk-row-create" id="tkRowCreate"><td colspan="' + visibleListColumnCount() + '"><button class="tk-inline-create-btn" id="tkInlineCreateBtn">+ 快速新建</button></td></tr>' : '';
+  els.tkListBody.innerHTML = quickCreate + html;
   updateSortArrows();
 }
 
@@ -881,6 +924,9 @@ function render() {
   }
   var split = state.viewMode === 'split';
   if (split) state.layout = 'list';
+  var tasksView = document.getElementById('view-tasks');
+  tasksView?.classList.toggle('tk-list-mode', state.layout === 'list');
+  tasksView?.classList.toggle('tk-project-list-mode', projectListMode);
   els.tkToolbarNewGroup.classList.remove('hidden');
   els.tkBody.classList.toggle('is-split', split);
   els.tkDrawer.classList.toggle('mode-full', state.viewMode === 'full');
@@ -894,6 +940,7 @@ function render() {
   renderViewBar();
   if (split) {
     var visibleTasks = getFilteredTasks();
+    if (!projectListMode) visibleTasks = filterListStatus(visibleTasks);
     if (!visibleTasks.some(function (t) { return t.id === state.drawerTaskId; })) {
       state.drawerTaskId = visibleTasks.length ? visibleTasks[0].id : null;
     }
@@ -2865,6 +2912,10 @@ function bindEvents() {
   $$('.tk-layout-btn').forEach(function (btn) {
     btn.addEventListener('click', function () {
       state.layout = this.getAttribute('data-layout');
+      if (state.layout === 'list') {
+        state.activeViewId = 'all'; state.scope = 'all'; state.filters = []; state.search = '';
+        els.tkSearch.value = '';
+      }
       if (state.viewMode === 'split' && state.layout === 'board') state.viewMode = 'slide';
       render();
     });
@@ -3669,6 +3720,14 @@ function bindEvents() {
   els.tkViewManage.addEventListener('click', function () { closeViewMenu(); openManageViews(); });
   document.addEventListener('click', function (e) { if (!e.target.closest('.tk-view-action')) closeViewMenu(); });
   els.tkViewTabs.addEventListener('click', function (e) {
+    var statusTab = e.target.closest('[data-list-status]');
+    if (statusTab) {
+      state.listStatusTab = statusTab.getAttribute('data-list-status');
+      state.selectedIds.clear();
+      closeDrawer();
+      render();
+      return;
+    }
     var delBtn = e.target.closest('[data-del-view]');
     if (delBtn) {
       e.stopPropagation();
@@ -4060,6 +4119,12 @@ function bindEvents() {
     filterAssigneeOptions(menu, '.tk-inline-dropdown-item', e.target.value);
   });
   els.tkListBody.addEventListener('keydown', function (e) {
+    var row = e.target.closest('tr[data-task-id]');
+    if (row && !e.target.closest('button,input,select,textarea,a') && (e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault();
+      openDrawer(parseInt(row.getAttribute('data-task-id'), 10));
+      return;
+    }
     if (e.target.id === 'tkInlineTitle' && e.key === 'Enter' && !e.isComposing) {
       e.preventDefault();
       saveInlineTask();
@@ -4129,6 +4194,16 @@ function bindEvents() {
     var ffm = document.querySelector('.tk-flow-field-menu.show');
     if (ffm) ffm.remove();
   });
+}
+
+function openCollabTaskList() {
+  if (projectListMode) tkSetProjectListMode(false);
+  Object.assign(state, {
+    layout:'list', activeViewId:'all', scope:'all', filters:[], search:'', listStatusTab:'needs',
+  });
+  state.selectedIds.clear();
+  if (els.tkSearch) els.tkSearch.value = '';
+  if (els.tkBody) render();
 }
 
 /* ---------- 列宽拖拽 ---------- */
@@ -4236,6 +4311,7 @@ export function initTasksV2() {
   initTkFormExpertPicker();
   initImportEvents();
   bindEvents();
+  document.addEventListener('lingee:collab-menu-open', openCollabTaskList);
   render();
   document.addEventListener('lingee:auth-changed', render);
   updateCollabReviewBadge();
