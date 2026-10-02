@@ -462,3 +462,12 @@
 #view-chat.expert-builder-session #chatExpertDropdown{display:none}
 #view-chat .builder-skill-mention{display:inline-flex;align-items:center;gap:6px;vertical-align:middle;padding:4px 10px;margin:0 8px 4px 0;border-radius:var(--asset-pill-radius);background:var(--brand-fill);color:var(--brand);font-size:var(--tb-body-size);font-weight:500;white-space:nowrap;user-select:none;line-height:1.5}
 #view-chat .builder-skill-mention svg{flex:none}
+#view-chat .chat-task-project-picker{display:inline-flex;align-items:center;gap:8px;margin:8px 16px 0;padding:8px 12px;border-radius:999px;background:var(--brand-fill);color:var(--brand);font-size:var(--tb-body-size);max-width:calc(100% - 32px)}
+#view-chat .chat-task-project-picker[hidden]{display:none}
+#view-chat .chat-task-project-picker>span{flex:none}
+#chatTaskProjectSelect{min-width:0;max-width:320px;border:0;background:transparent;color:inherit;font:inherit;cursor:pointer}
+#chatTaskProjectSelect:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+
+#view-chat .task-builder-skill{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;font-weight:500}
+#view-chat .task-builder-divider{height:18px;width:1px;background:var(--border-focus)}
+#view-chat.task-builder-session #chatExpertDropdown{display:none}

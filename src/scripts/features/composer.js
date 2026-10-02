@@ -475,7 +475,7 @@ function renderTaskCreateChat(session) {
   messagesList.innerHTML = '';
   hideTaskQuestionPanel();
   if (draft.prompt) appendUserMessage(draft.prompt);
-  if (!draft.prompt) appendTaskCreateAgent('<p>请描述要创建的任务。所属项目已在开始创建前选定。</p>');
+  if (!draft.prompt) appendTaskCreateAgent('<p>请描述要创建的任务。请在下方输入框中选择所属项目。</p>');
   else {
     appendTaskCreateAgent('<div class="task-create-intent"><strong>' + (draft.status === 'intent' ? '正在理解任务意图' : '已理解任务意图') + '</strong><p class="task-create-intent-text"></p></div>');
     var intentTarget = messagesList.querySelector('.task-create-intent-text');
@@ -498,6 +498,7 @@ function renderTaskCreateChat(session) {
   chatInput.contentEditable = draft.status === 'intent' ? 'false' : 'true';
   chatInput.setAttribute('data-placeholder', draft.status === 'done' ? '继续询问这项任务…' : draft.status === 'intent' ? '正在整理任务建议…' : draft.status === 'prompt' ? '一句话描述任务…' : '补充要求，或点击确认创建…');
   setTaskCreateChipLabel();
+  syncTaskCreateProjectPicker();
   scrollChatBottom();
 }
 function answerTaskCreateMessage(session, message) {
@@ -556,14 +557,14 @@ function confirmTaskCreate(session) {
 export function startTaskCreationChat(projectId, initialPrompt) {
   var projects = tkProjectsForCurrentUser();
   if (!projects.length) { toast('请先加入项目再创建任务', 'warning'); return; }
-  if (!projects.some(function (row) { return row.id === projectId; })) { toast('请先选择所属项目', 'warning'); return; }
+  if (projectId&&!projects.some(function (row) { return row.id === projectId; })) { toast('所属项目不可用', 'warning'); return; }
   hideAssetEditorPanel();
   set_activePick({kind:'expert', id:'software-product-manager', auto:false});
   renderExpertChips();
   setTaskCreateChipLabel();
   activeSessionTaskId = null;
   setComposerTaskReference(null);
-  var selectedProjectId = projectId;
+  var selectedProjectId = projectId || '';
   var session = createChatSession('创建任务', null);
   session.taskCreate = {projectId:selectedProjectId, prompt:'', title:'', description:'', issueType:'', selectedStages:null, autoReviewStages:[], reviewers:{}, revisions:[], status:'prompt'};
   session.projectId = selectedProjectId;
@@ -619,7 +620,7 @@ function renderAssetCreateChat(session){
   });
   if(draft.status==='question'&&draft.question&&!draft.questions?.[draft.messages.length-1])appendAssetCreateAgent(assetCreateQuestionHtml(draft.question,true));
   if(draft.status==='ready'||draft.status==='error')appendAssetCreateAgent('<p>'+xesc(draft.error||'已理解创建意图，正在保存…')+'</p><button type="button" class="asset-create-inline-action" data-asset-retry>重试创建</button>');
-  else if(draft.status==='done')appendAssetCreateAgent('<div class="asset-create-result"><strong>已创建「'+xesc(draft.name)+'」</strong><p>已保存到我的'+kindName+'。可在右侧继续完善配置并保存。</p><button type="button" class="asset-create-inline-action" data-asset-return>查看'+kindName+'</button></div>');
+  else if(draft.status==='done')appendAssetCreateAgent('<div class="asset-create-result" data-asset-open><strong>已创建「'+xesc(draft.name)+'」</strong><p>已保存到我的'+kindName+'。点击下方卡片查看并完善配置。</p><button type="button" class="asset-create-inline-action" data-asset-open>查看'+kindName+'</button></div>');
   chatInput.contentEditable=draft.status==='done'?'false':'true';
   chatInput.setAttribute('data-placeholder',draft.status==='done'?'创建已完成':draft.status==='question'?'回答上面的问题…':'继续描述创建要求…');
   if(draft.status==='prompt'&&!draft.messages.length)chatInput.textContent=assetStarterPrompt(draft.kind);
@@ -627,7 +628,7 @@ function renderAssetCreateChat(session){
   document.getElementById('chatExpertLabel').textContent='专家创建智能体';
   viewChat.classList.remove('preview-open');
   syncTogglePreviewBtn();
-  renderAssetCreationPanel(draft);
+  hideAssetEditorPanel();
   refreshChatSend();
   scrollChatBottom();
 }
@@ -936,7 +937,17 @@ function renderConversationTaskReference() {
   }
   if (task && !viewChat.classList.contains('hidden')) $('#chatTitle').textContent = task.title;
 }
+function syncTaskCreateProjectPicker(){
+  var session=chatSessions.find(function(row){return row.id===activeSessionId&&row.taskCreate;});
+  var picker=$('#chatTaskProjectPicker'),select=$('#chatTaskProjectSelect');
+  picker.hidden=!session||session.taskCreate.status==='done';
+  viewChat.classList.toggle('task-builder-session',!picker.hidden);
+  if(picker.hidden)return;
+  select.innerHTML='<option value="">请选择项目</option>'+tkProjectsForCurrentUser().map(function(project){return '<option value="'+escapeHtml(project.id)+'">'+escapeHtml(project.name)+'</option>';}).join('');
+  select.value=session.taskCreate.projectId||'';
+}
 function renderChatTaskSide() {
+  syncTaskCreateProjectPicker();
   var task = tkGetTasks().find(function (row) { return row.id === activeSessionTaskId; });
   var assetSession = chatSessions.find(function (row) { return row.id === activeSessionId && (row.assetCreate||row.assetEdit); });
   var expertDropdown = document.getElementById('chatExpertDropdown');
@@ -2015,6 +2026,15 @@ function initTaskMention(ed) {
 }
 
 export function initComposer() {
+  $('#chatTaskProjectSelect').addEventListener('change',function(event){
+    var session=chatSessions.find(function(row){return row.id===activeSessionId&&row.taskCreate;});
+    var projectId=event.target.value;
+    if(!session||session.taskCreate.status==='done'||!tkProjectsForCurrentUser().some(function(project){return project.id===projectId;}))return;
+    session.taskCreate.projectId=projectId;session.projectId=projectId;
+    session.teamId=CV_PROJECTS.find(function(project){return project.id===projectId;})?.defaultTeam||'';
+    if(session.taskCreate.prompt){activeResponseRun++;session.taskCreate.selectedStages=null;session.taskCreate.reviewers={};prepareTaskCreateDraft(session.taskCreate);session.taskCreate.status='confirm';}
+    saveChatSessions();renderChatSessions();renderTaskCreateChat(session);chatInput.focus();
+  });
   document.addEventListener('lingee:chat-leave',hideAssetEditorPanel);
   document.addEventListener('lingee:asset-editor-saved',function(event){
     var edit=event.detail;
@@ -2039,6 +2059,9 @@ export function initComposer() {
           toast('已创建'+(draft.kind==='team'?'专家团':'专家'),'success');
         }else{draft.status='error';draft.error=result.message;}
         saveChatSessions();renderChatSessions();renderAssetCreateChat(assetSession);return;
+      }
+      if(event.target.closest('[data-asset-open]')){
+        if(draft.status==='done')renderAssetCreationPanel(draft);return;
       }
       if(event.target.closest('[data-asset-return]')){
         showView('collab');window.cvSwitchView?.(draft.kind==='team'?'teams':'experts');return;

@@ -191,6 +191,7 @@ function renderSmartProjectOptions() {
 
 function setCreateMode(mode) {
   const smart = mode === 'smart';
+  if(smart){closeOverlays();startTaskCreationChat(selectedProjectId||'');return;}
   closeProjectPopup();
   closePersonPopup();
   byId('niuSmartPane').hidden = !smart;
