@@ -161,7 +161,7 @@ function reviewCardHtml(r, current) {
 function stagePlanFor(t) {
   if (t.stagePlan?.length) return t.stagePlan;
   if (t.runtime?.workItems?.length) return t.runtime.workItems.map(w => ({ id: w.id, name: w.title, assignee: t.assignee }));
-  return tbTeamStages(tbMatchedTeam(t)).map(s => ({ id: s.id, name: s.name, assignee: t.assignee }));
+  return tbTeamStages(tbMatchedTeam(t), t).map(s => ({ id: s.id, name: s.name, assignee: t.assignee }));
 }
 function stageArtifactsHtml(latest, state) {
   if (latest?.artifacts?.length) return '<div class="tb-stage-artifacts">' + latest.artifacts.map(a => '<span>' + xesc(a.name) + '</span>').join('') + '</div>';
