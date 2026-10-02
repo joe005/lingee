@@ -325,7 +325,7 @@
 .tk-list .tk-table td.tk-list-card-cell{padding:0;border:1px solid var(--border);border-radius:8px;background:var(--bg);white-space:normal;overflow:hidden;transition:border-color .15s,box-shadow .15s}
 .tk-list .tk-table tr:hover td.tk-list-card-cell{border-color:var(--border-hover);box-shadow:var(--pill-shadow)}
 .tk-list .tk-table tr:focus-visible td.tk-list-card-cell{outline:2px solid var(--border-focus);outline-offset:2px}
-.tk-list-card{display:grid;grid-template-columns:minmax(0,1fr) minmax(250px,330px) auto;align-items:center;gap:28px;min-height:112px;padding:14px 18px;box-sizing:border-box}
+.tk-list-card{display:grid;grid-template-columns:minmax(0,1fr) minmax(250px,330px) var(--tb-list-actions-width);align-items:center;gap:28px;min-height:112px;padding:14px 18px;box-sizing:border-box}
 .tk-list-card-main{min-width:0}
 .tk-list-card-meta{display:flex;align-items:center;gap:7px;min-width:0;color:var(--text-soft);font-size:11px;white-space:nowrap}
 .tk-list-card-meta>span:last-child{overflow:hidden;text-overflow:ellipsis}
@@ -337,27 +337,81 @@
 .tk-list-card-title{display:flex;align-items:center;gap:6px;min-width:0;margin-top:7px}
 .tk-list-card-title strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);font-size:14px;font-weight:600}
 .tk-list-card-desc{margin:5px 0 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-secondary);font-size:12px;line-height:1.5}
-.tk-list-card-foot{display:flex;align-items:center;gap:10px;margin-top:7px;color:var(--text-soft);font-size:11px}
-.tk-list-priority{color:var(--text-secondary)}
-.tk-list-priority[data-priority="urgent"],.tk-list-priority[data-priority="high"]{color:var(--warning)}
-.tk-list-stage{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px 12px;min-width:0;color:var(--text-soft);font-size:10px}
-.tk-list-stage strong{grid-column:1/-1;color:var(--text);font-size:11px;font-weight:600}
-.tk-list-progress{display:flex;align-items:center;min-width:180px}
+.tk-list-card-foot{display:flex;align-items:center;gap:6px;margin-top:7px;color:var(--text-soft);font-size:11px}
+.tk-list-card-label{display:inline-flex;align-items:center;max-width:120px;height:20px;padding:0 7px;box-sizing:border-box;border-radius:4px;background:var(--fill-1);color:var(--text-secondary);font-weight:500;line-height:20px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tk-list-card-type[data-type="需求"]{background:var(--brand-fill);color:var(--brand)}
+.tk-list-card-type[data-type="缺陷"]{background:var(--danger-bg);color:var(--danger)}
+.tk-list-priority[data-priority="medium"]{background:var(--brand-fill);color:var(--brand)}
+.tk-list-priority[data-priority="high"]{background:var(--warning-bg);color:var(--warning)}
+.tk-list-priority[data-priority="urgent"]{background:var(--danger-bg);color:var(--danger)}
+.tk-list-stage{display:flex;align-items:flex-start;flex-direction:column;gap:8px;min-width:0;color:var(--text-soft);font-size:10px}
+.tk-list-stage strong{color:var(--text);font-size:11px;font-weight:600}
+.tk-list-progress-row{display:inline-flex;align-items:center;gap:12px;max-width:100%}
+.tk-list-progress{display:flex;align-items:center;min-width:0}
+.tk-list-progress-count{flex:none;font-variant-numeric:tabular-nums}
 .tk-list-progress-dot{position:relative;width:7px;height:7px;flex:none;border:1px solid var(--border-hover);border-radius:50%;background:var(--bg);box-sizing:border-box}
 .tk-list-progress-dot:not(:last-child){margin-right:31px}
 .tk-list-progress-dot:not(:last-child):after{content:"";position:absolute;left:6px;top:2px;width:32px;height:1px;background:var(--border-hover)}
 .tk-list-progress-dot.is-done{border-color:var(--success);background:var(--success)}
 .tk-list-progress-dot.is-done:after{background:var(--success)}
 .tk-list-progress-dot.is-current{border-color:var(--brand);background:var(--brand);box-shadow:0 0 0 2px var(--brand-fill)}
-.tk-list-detail-btn{height:30px;padding:0 15px;border:1px solid var(--brand);border-radius:6px;background:var(--brand);color:var(--bg);font:inherit;font-size:12px;font-weight:600;white-space:nowrap;cursor:pointer}
-.tk-list-detail-btn:hover{background:var(--brand-hover);border-color:var(--brand-hover)}
-.tk-list-detail-btn:focus-visible{outline:2px solid var(--border-focus);outline-offset:2px}
+.tk-list-card-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;width:var(--tb-list-actions-width)}
+.tk-list-action-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;width:var(--tb-list-action-button-width);height:30px;padding:0 12px;box-sizing:border-box;border:1px solid var(--brand);border-radius:6px;background:var(--brand);color:var(--bg);font:inherit;font-size:12px;font-weight:600;white-space:nowrap;cursor:pointer}
+.tk-list-action-btn:hover{background:var(--brand-hover);border-color:var(--brand-hover)}
+.tk-list-action-btn:focus-visible{outline:2px solid var(--border-focus);outline-offset:2px}
 .tk-body.is-split .tk-table tbody tr.tk-list-card-row{display:block;padding:0;border:0}
 .tk-body.is-split .tk-table tbody tr.tk-list-card-row td.tk-list-card-cell{display:block;width:auto;padding:0}
 .tk-body.is-split .tk-list-card{display:flex;min-height:0;padding:12px 14px}
-.tk-body.is-split .tk-list-stage,.tk-body.is-split .tk-list-detail-btn{display:none}
-@media(max-width:900px){.tk-list-card{grid-template-columns:minmax(0,1fr) auto;gap:18px}.tk-list-stage{display:none}}
-@media(max-width:620px){#view-tasks:not(.tk-project-list-mode) .tk-list .tk-list-scroll{padding:0 10px 12px}.tk-list-card{display:flex;align-items:flex-start;min-height:0;padding:12px}.tk-list-detail-btn{margin-left:auto}.tk-list-card-desc{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}}
+.tk-body.is-split .tk-list-stage,.tk-body.is-split .tk-list-card-actions{display:none}
+@media(max-width:900px){.tk-list-card{grid-template-columns:minmax(0,1fr) var(--tb-list-actions-width);gap:18px}.tk-list-stage{display:none}}
+@media(max-width:620px){#view-tasks:not(.tk-project-list-mode) .tk-list .tk-list-scroll{padding:0 10px 12px}.tk-list-card{display:flex;align-items:flex-start;flex-wrap:wrap;min-height:0;padding:12px}.tk-list-card-main{flex:1 1 100%}.tk-list-card-actions{width:100%;justify-content:flex-end}.tk-list-card-desc{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}}
+
+/* 待验收任务的列表快捷产物预览：独立于任务详情，确认弹窗仍保持最高层级。 */
+.tk-list-review-overlay[hidden]{display:none}
+.tk-list-review-overlay{position:fixed;inset:0;z-index:9000;display:flex;justify-content:flex-end;background:var(--tb-backdrop)}
+.tk-list-review-panel{width:min(820px,92vw);height:100%;display:flex;flex-direction:column;min-width:0;background:var(--bg);box-shadow:-12px 0 36px rgba(20,25,40,.14)}
+.tk-list-review-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:20px 24px 16px;border-bottom:1px solid var(--divider)}
+.tk-list-review-heading{min-width:0}
+.tk-list-review-kicker{display:block;margin-bottom:4px;color:var(--warning);font-size:11px;font-weight:600}
+.tk-list-review-heading h2{margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);font-size:18px;font-weight:600;line-height:1.4}
+.tk-list-review-heading p{margin:5px 0 0;color:var(--text-secondary);font-size:12px}
+.tk-list-review-close{display:grid;place-items:center;flex:none;width:32px;height:32px;border:0;border-radius:6px;background:transparent;color:var(--text-secondary);cursor:pointer}
+.tk-list-review-close:hover{background:var(--hover);color:var(--text)}
+.tk-list-review-close:focus-visible{outline:2px solid var(--border-focus);outline-offset:2px}
+.tk-list-review-workspace{display:grid;grid-template-columns:var(--tb-review-files-width) minmax(0,1fr);flex:1;min-height:0}
+.tk-list-review-files{display:flex;flex-direction:column;min-width:0;border-right:1px solid var(--divider);background:var(--fill-2)}
+.tk-list-review-files-head{display:flex;align-items:center;justify-content:space-between;height:42px;padding:0 14px;border-bottom:1px solid var(--divider);color:var(--text-secondary);font-size:12px;font-weight:600;box-sizing:border-box}
+.tk-list-review-files-head span:last-child{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:18px;padding:0 5px;border-radius:9px;background:var(--bg);color:var(--text-secondary);font-size:11px;font-weight:500;box-sizing:border-box}
+.tk-list-review-tabs{display:flex;align-items:stretch;flex-direction:column;gap:3px;padding:8px;overflow-y:auto;box-sizing:border-box}
+.tk-list-review-tab{display:grid;grid-template-columns:20px minmax(0,1fr) auto;align-items:center;gap:8px;width:100%;min-height:42px;padding:6px 8px;border:1px solid transparent;border-radius:7px;background:transparent;color:var(--text-secondary);font:inherit;font-size:12px;text-align:left;cursor:pointer;box-sizing:border-box}
+.tk-list-review-tab img{width:16px;height:16px;object-fit:contain;flex:none}
+.tk-list-review-tab span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tk-list-review-tab small{padding:2px 4px;border-radius:3px;background:var(--bg);color:var(--text-soft);font-size:9px;font-weight:600;line-height:1}
+.tk-list-review-tab:hover{background:var(--hover);color:var(--text)}
+.tk-list-review-tab.is-active{border-color:var(--border-focus);background:var(--brand-fill);color:var(--brand);font-weight:600}
+.tk-list-review-tab:focus-visible{outline:2px solid var(--border-focus);outline-offset:2px}
+.tk-list-review-body{flex:1;min-height:0;overflow-y:auto;padding:24px}
+.tk-list-review-body .tk-doc-article{width:min(100%,720px);margin:0 auto}
+.tk-list-review-file-preview{width:min(100%,720px);height:100%;min-height:0;display:flex;flex-direction:column;margin:0 auto}
+.tk-list-review-file-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;color:var(--text);font-size:13px;font-weight:600}
+.tk-list-review-file-head span{padding:2px 6px;border-radius:4px;background:var(--fill-1);color:var(--text-secondary);font-size:10px;font-weight:600;text-transform:uppercase}
+.tk-list-review-code{flex:1;min-height:320px;margin:0;padding:16px;border:1px solid var(--border);border-radius:8px;background:var(--fill-1);color:var(--text);font-size:12px;line-height:1.65;overflow:auto;white-space:pre;box-sizing:border-box}
+.tk-list-review-markdown h2,.tk-list-review-markdown h3,.tk-list-review-markdown h4,.tk-list-review-markdown h5{margin:20px 0 8px;color:var(--text);font-weight:600;line-height:1.4}
+.tk-list-review-markdown h2{font-size:17px}.tk-list-review-markdown h3{font-size:15px}.tk-list-review-markdown h4,.tk-list-review-markdown h5{font-size:13px}
+.tk-list-review-markdown p{margin:0 0 10px;color:var(--text-secondary);line-height:1.75;white-space:pre-wrap}
+.tk-list-review-html-frame{flex:1;min-height:420px;border:1px solid var(--border);border-radius:8px;background:var(--bg);overflow:hidden}
+.tk-list-review-html-frame iframe{display:block;width:100%;height:100%;min-height:420px;border:0;background:var(--bg)}
+.tk-list-review-empty{display:grid;place-items:center;height:100%;min-height:240px;color:var(--text-secondary);font-size:13px}
+.tk-list-review-foot{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:14px 24px;border-top:1px solid var(--divider);background:var(--bg)}
+.tk-list-review-foot p{margin:0;color:var(--text-secondary);font-size:12px;line-height:1.5}
+.tk-list-review-actions{display:flex;align-items:center;gap:8px;flex:none}
+.tk-list-review-actions button{height:34px;padding:0 16px;border-radius:7px;font:inherit;font-size:13px;font-weight:500;cursor:pointer}
+.tk-list-review-revise{border:1px solid var(--border-hover);background:var(--bg);color:var(--text)}
+.tk-list-review-revise:hover{background:var(--hover)}
+.tk-list-review-approve{border:1px solid var(--brand);background:var(--brand);color:var(--bg)}
+.tk-list-review-approve:hover{border-color:var(--brand-hover);background:var(--brand-hover)}
+.tk-list-review-actions button:focus-visible{outline:2px solid var(--border-focus);outline-offset:2px}
+@media(max-width:620px){.tk-list-review-panel{width:100vw}.tk-list-review-head,.tk-list-review-body,.tk-list-review-foot{padding-left:16px;padding-right:16px}.tk-list-review-workspace{display:flex;flex-direction:column}.tk-list-review-files{flex:none;border-right:0;border-bottom:1px solid var(--divider)}.tk-list-review-tabs{flex-direction:row;overflow-x:auto}.tk-list-review-tab{grid-template-columns:20px minmax(120px,1fr) auto;width:auto;min-width:190px}.tk-list-review-body{padding-top:16px}.tk-list-review-foot{align-items:stretch;flex-direction:column;gap:10px}.tk-list-review-actions{justify-content:flex-end}}
 
 /* 状态颜色 */
 .tk-st-gray{background:var(--text-soft)}
@@ -1039,6 +1093,9 @@ body.tk-drawer-resizing{user-select:none;cursor:col-resize}
 .tk-flow-field-menu-item:hover{background:var(--hover)}
 .tk-flow-field-menu .tk-avatar-sm{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:600;flex-shrink:0}
 .tk-drawer-foot{display:flex;gap:12px;padding:12px 18px;border-top:1px solid var(--divider);flex-shrink:0}
+.tk-drawer-foot[hidden]{display:none}
+.tk-drawer-foot.is-start-action{align-items:center;justify-content:flex-end;padding:12px 24px;background:var(--bg)}
+.tk-drawer-foot.is-start-action #tkDrawerChat{width:var(--tb-detail-primary-width);height:36px;padding:0 18px}
 .tk-drawer-foot>div{flex:1}
 .tk-drawer-foot label{display:block;font-size:11px;color:var(--text-secondary);margin-bottom:4px}
 .tk-drawer-foot select{width:100%;border:1px solid var(--border);border-radius:5px;padding:5px 8px;font-size:13px;outline:none;background:var(--bg)}

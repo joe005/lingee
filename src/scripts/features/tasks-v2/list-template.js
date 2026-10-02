@@ -1,4 +1,4 @@
-import { TK_PROJECTS, tkGetPerson, tkGetPriorityObj, tkGetProjectName, tkGetStatusObj } from './data.js';
+import { tkGetPerson, tkGetPriorityObj, tkGetProjectName, tkGetStatusObj } from './data.js';
 
 /* 任务列表的共用行模板与列设置。任务页和项目详情挂载同一个列表实例，
    排序、折叠、选择、快捷新建及详情事件均由任务页的控制器处理。 */
@@ -45,16 +45,25 @@ function renderTaskListRow(t, opts, context) {
     var progressState = index < progress.index || t.status === 'done' && index < progress.total - 1 ? ' is-done' : index === progress.index ? ' is-current' : '';
     return '<span class="tk-list-progress-dot' + progressState + '"></span>';
   }).join('');
-  var projectEnd = TK_PROJECTS.find(function (project) { return project.id === t.project; })?.end || '—';
   var cardStatusName = { backlog:'待交给AI执行', in_review:'待验收' }[t.status] || st.name;
+  var listAction = t.status === 'backlog'
+    ? '<button type="button" class="tk-list-action-btn" data-list-task-action="start" data-list-task-id="' + t.id + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3-1.6 4.4L6 9l4.4 1.6L12 15l1.6-4.4L18 9l-4.4-1.6L12 3Z"/><path d="m5 15-.8 2.2L2 18l2.2.8L5 21l.8-2.2L8 18l-2.2-.8L5 15Z"/></svg><span>交给AI执行</span></button>'
+    : t.status === 'in_review'
+      ? '<button type="button" class="tk-list-action-btn" data-list-task-action="preview" data-list-task-id="' + t.id + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg><span>查看验收产物</span></button>'
+      : t.status === 'blocked'
+        ? '<button type="button" class="tk-list-action-btn" data-list-task-action="retry" data-list-task-id="' + t.id + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8.1 8.1 0 1 0-2.4 5.7"/><path d="M20 4v7h-7"/></svg><span>重新执行</span></button>'
+        : '';
   return '<tr class="tk-row tk-list-card-row' + sel + (context.drawerTaskId === t.id ? ' detail-active' : '') + (depth ? ' tk-row--child' : '') + (hasChildren ? ' tk-row--parent' : '') + '" data-task-id="' + t.id + '" data-depth="' + depth + '" tabindex="0">'
     + '<td class="tk-list-card-cell" colspan="11"><div class="tk-list-card">'
     + '<div class="tk-list-card-main"><div class="tk-list-card-meta"><span class="tk-list-status" data-status="' + context.escapeHtml(t.status) + '">' + context.escapeHtml(cardStatusName) + '</span><span>' + context.escapeHtml(t.code) + '</span><i>·</i><span>' + context.escapeHtml(tkGetProjectName(t.project)) + '</span></div>'
     + '<div class="tk-list-card-title"><strong>' + context.escapeHtml(t.title) + '</strong>' + toggle + childBadge + '</div>'
     + '<p class="tk-list-card-desc" title="' + context.escapeHtml(String(t.desc || '').replace(/\s+/g, ' ')) + '">' + context.escapeHtml(t.desc || '暂无任务描述') + '</p>'
-    + '<div class="tk-list-card-foot"><span>项目结束时间 ' + context.escapeHtml(projectEnd) + '</span></div></div>'
-    + '<div class="tk-list-stage"><strong>' + context.escapeHtml(progress.name) + '</strong><div class="tk-list-progress">' + progressDots + '</div><span>' + (progress.index + 1) + '/' + progress.total + '</span></div>'
-    + '<button type="button" class="tk-list-detail-btn">查看详情</button>'
+    + '<div class="tk-list-card-foot">'
+    + '<span class="tk-list-card-label tk-list-card-type" data-type="' + context.escapeHtml(t.issueType || '') + '" title="任务类型：' + context.escapeHtml(t.issueType || '未设置') + '" aria-label="任务类型：' + context.escapeHtml(t.issueType || '未设置') + '">' + context.escapeHtml(t.issueType || '未设置') + '</span>'
+    + '<span class="tk-list-card-label tk-list-priority" data-priority="' + context.escapeHtml(t.priority) + '" title="优先级：' + context.escapeHtml(pri.name) + '" aria-label="优先级：' + context.escapeHtml(pri.name) + '">优先级：' + context.escapeHtml(pri.name) + '</span>'
+    + '</div></div>'
+    + '<div class="tk-list-stage"><strong>' + context.escapeHtml(progress.name) + '</strong><div class="tk-list-progress-row"><div class="tk-list-progress">' + progressDots + '</div><span class="tk-list-progress-count">' + (progress.index + 1) + '/' + progress.total + '</span></div></div>'
+    + '<div class="tk-list-card-actions">' + listAction + '</div>'
     + '</div></td></tr>';
 }
 

@@ -444,6 +444,26 @@ const TK_COSMIC_WUXF_TASKS = [
       { id:'s5', workType:'测试验证', title:'测试验证', description:'验证漂移检测与差异报告输出', assigneeId:'p37', status:'pending' },
       { id:'s6', workType:'部署交付', title:'部署交付', description:'接入流水线并归档校验基线', assigneeId:'p39', status:'pending' },
     ] },
+  { id:1211, code:'T1001211', title:'设计器控件元数据增量扫描异常修复', status:'blocked', initialStatus:'blocked', priority:'high', assignee:'p23', createdBy:'p23', project:'cosmic-app-dev', labels:['缺陷'], issueType:'缺陷', createDate:'2026-09-29', dueDate:'2026-10-10', createdAt:'2026-09-29 09:30', updatedAt:'2026-09-29 15:42',
+    desc:'修复设计器控件元数据增量扫描异常：扫描任务在合并局部覆盖定义时检测到重复 EntryId，当前批次已停止写入，等待清理冲突数据后重新执行。',
+    executionStageId:'s3',
+    statusHistory:[
+      { from:'backlog', to:'in_progress', time:'2026-09-29 10:05:00', authorId:'p23' },
+      { from:'in_progress', to:'blocked', time:'2026-09-29 15:42:00', authorId:'p23' },
+    ],
+    blockedRun:{
+      agentName:'元模型开发专家', teamName:'苍穹应用开发专家团', failedAt:'2026-09-29 15:42', duration:'2分11秒',
+      reason:'增量扫描发现重复 EntryId，继续写入可能覆盖现有控件元数据。',
+      next:'清理冲突记录并确认局部覆盖优先级后重新执行扫描。',
+      steps:[['读取增量变更','已识别本批次新增与修改的控件定义。'],['合并局部覆盖','发现两条记录使用相同 EntryId。'],['执行写入前校验','为避免覆盖现有数据，已中止本次写入。']],
+    },
+    executionPlan:[
+      { id:'s1', workType:'需求分析', title:'需求分析', description:'确认增量扫描范围与异常处理口径', assigneeId:'p23', status:'done' },
+      { id:'s2', workType:'方案设计', title:'方案设计', description:'设计重复 EntryId 检测与冲突清理方案', assigneeId:'p30', status:'done' },
+      { id:'s3', workType:'编码实现', title:'编码实现', description:'修复增量合并逻辑并重新执行扫描', assigneeId:'p23', status:'blocked' },
+      { id:'s4', workType:'测试验证', title:'测试验证', description:'验证重复记录处理与增量结果完整性', assigneeId:'p33', status:'pending' },
+      { id:'s5', workType:'部署交付', title:'部署交付', description:'归档扫描结果与异常处理记录', assigneeId:'p40', status:'pending' },
+    ] },
 ];
 TK_TASKS.push(...TK_COSMIC_WUXF_TASKS);
 
@@ -541,9 +561,9 @@ try {
     localStorage.setItem('lingee_tasks_cosmic_wuxf_v1', '1');
   }
 } catch (e) { /* 本地存储不可用时跳过 */ }
-  /* 「待审核/待开始」预置任务补充：每次加载按编号幂等补种 1207–1210，缺则补回（含被删与漏补场景，刷新自愈），不改写已有任务。 */
+  /* 「待审核/待开始/已阻塞」预置任务补充：每次加载按编号幂等补种，缺则补回（含被删与漏补场景，刷新自愈），不改写已有任务。 */
 try {
-  var wuxfReviewCodes = new Set(['T1001207', 'T1001208', 'T1001209', 'T1001210']);
+  var wuxfReviewCodes = new Set(['T1001207', 'T1001208', 'T1001209', 'T1001210', 'T1001211']);
   var wuxfExistingCodes = new Set(_tasks.map(function (task) { return task.code; }));
   var wuxfReviewAdds = TK_COSMIC_WUXF_TASKS.filter(function (task) { return wuxfReviewCodes.has(task.code) && !wuxfExistingCodes.has(task.code); });
   if (wuxfReviewAdds.length) {

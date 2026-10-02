@@ -182,9 +182,9 @@
           <h3 class="tk-drawer-title" id="tkDrawerTitle" contenteditable="true" data-field="title"></h3>
           <span class="tk-drawer-code" id="tkDrawerCode"></span>
         </div>
-        <div class="tk-drawer-head-actions">
-          <button class="tk-drawer-head-btn" id="tkDrawerChat" aria-label="开始执行">
-            <span>开始执行</span>
+        <div class="tk-drawer-head-actions" id="tkDrawerHeadActions">
+          <button class="tk-drawer-head-btn" id="tkDrawerChat" aria-label="交给AI执行">
+            <span>交给AI执行</span>
           </button>
           <button class="tk-drawer-head-btn" id="tkDrawerMore" data-tooltip="更多" aria-label="更多" aria-haspopup="menu" aria-expanded="false">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
@@ -197,7 +197,7 @@
       <div class="tk-drawer-body" id="tkDrawerBody">
         <!-- 详情内容由 JS 渲染 -->
       </div>
-      <div class="tk-drawer-foot"></div>
+      <div class="tk-drawer-foot" id="tkDrawerFoot" hidden></div>
       </div>
       <div class="tk-split-empty hidden" id="tkSplitEmpty">从左侧选择任务查看详情</div>
     </div>
@@ -333,6 +333,36 @@
       <div class="tk-popover-item" data-status="blocked">已阻塞</div>
     </div>
     <div class="tk-popover" id="tkBulkAssigneeMenu"></div>
+
+    <!-- 待验收任务：列表快速预览产物 -->
+    <div class="tk-list-review-overlay" id="tkListReviewOverlay" hidden>
+      <section class="tk-list-review-panel" role="dialog" aria-modal="true" aria-labelledby="tkListReviewTitle" aria-describedby="tkListReviewHint">
+        <header class="tk-list-review-head">
+          <div class="tk-list-review-heading">
+            <span class="tk-list-review-kicker">待验收产物</span>
+            <h2 id="tkListReviewTitle"></h2>
+            <p id="tkListReviewMeta"></p>
+          </div>
+          <button type="button" class="tk-list-review-close" id="tkListReviewClose" aria-label="关闭产物预览" data-tooltip="关闭">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </header>
+        <div class="tk-list-review-workspace">
+          <aside class="tk-list-review-files" aria-label="验收产物文件">
+            <div class="tk-list-review-files-head"><span>产物文件</span><span id="tkListReviewCount">0</span></div>
+            <div class="tk-list-review-tabs" id="tkListReviewTabs" role="tablist" aria-label="本阶段产物"></div>
+          </aside>
+          <div class="tk-list-review-body" id="tkListReviewBody"></div>
+        </div>
+        <footer class="tk-list-review-foot">
+          <p id="tkListReviewHint">请核对产物内容。需要调整时可返回任务会话继续修改。</p>
+          <div class="tk-list-review-actions">
+            <button type="button" class="tk-list-review-revise" id="tkListReviewRevise">继续修改</button>
+            <button type="button" class="tk-list-review-approve" id="tkListReviewApprove">通过验收</button>
+          </div>
+        </footer>
+      </section>
+    </div>
 <!--#include "src/modals/tasks/new-issue-ui.html" -->
 <!--#include "src/modals/tasks/confirm.html" -->
 <!--#include "src/modals/tasks/import-excel.html" -->

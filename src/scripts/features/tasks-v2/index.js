@@ -40,8 +40,36 @@ import _iconMarkdown from '../../../assets/file-type-icons/markdown.png';
 import _iconPdf from '../../../assets/file-type-icons/pdf.png';
 import _iconPpt from '../../../assets/file-type-icons/ppt.png';
 var _artifactIcons = { requirements:_iconMarkdown, technical:_iconDoc, implementation:_iconHtml, test:_iconExcel, delivery:_iconPdf };
+function artifactFormat(artifact) {
+  if (artifact.format) return String(artifact.format).toLowerCase();
+  var name = artifact.fileName || artifact.name || artifact.docTitle || '';
+  var ext = name.includes('.') ? name.split('.').pop().toLowerCase() : '';
+  if (['md','markdown'].includes(ext)) return 'md';
+  if (['html','htm'].includes(ext)) return 'html';
+  if (['js','ts','jsx','tsx','py','java','json','css','sh','sql'].includes(ext)) return 'code';
+  return artifact.sections?.length ? 'md' : typeof artifact.content === 'string' ? 'code' : 'md';
+}
 function artifactIcon(artifact) {
+  if (artifact.format || artifact.fileName || artifact.name) {
+    var format = artifactFormat(artifact);
+    if (format === 'md') return _iconMarkdown;
+    if (format === 'html') return _iconHtml;
+    if (format === 'code') return _iconDocument;
+  }
   return _artifactIcons[artifact.id] || ({ '需求文档':_iconMarkdown, '技术文档':_iconDoc, '开发成果':_iconHtml, '测试报告':_iconExcel, '交付报告':_iconPdf })[artifact.type] || _iconDocument;
+}
+function artifactFileName(artifact, fallbackStem, index) {
+  if (artifact.fileName || artifact.name) return artifact.fileName || artifact.name;
+  var title = artifact.docTitle || artifact.type || '';
+  if (/\.[a-z0-9]{1,8}$/i.test(title)) return title;
+  var format = artifactFormat(artifact);
+  var extension = format === 'html' ? 'html' : format === 'code' ? 'txt' : 'md';
+  return (fallbackStem || 'artifact') + (index ? '-' + index : '') + '.' + extension;
+}
+function artifactFormatLabel(artifact) {
+  var name = artifact.fileName || artifact.name || '';
+  var extension = name.includes('.') ? name.split('.').pop() : '';
+  return (extension || artifactFormat(artifact)).toUpperCase();
 }
 import {
   TK_STATUSES, TK_PRIORITIES, TK_PEOPLE, TK_AGENTS, TK_LABELS,
@@ -88,6 +116,9 @@ var docPreviewCloseTimer = null;
 var docPreviewSavedDrawerWidth = null;
 /* 产物预览支持浏览器页签式多开：docPreviewTabs 按打开顺序存产物对象，docPreviewActiveId 是当前页签。 */
 var docPreviewTabs = [];
+var listReviewPreviewTaskId = null;
+var listReviewPreviewArtifactId = null;
+var listReviewPreviewFocus = null;
 var docPreviewActiveId = null;
 var collapsedParents = new Set();
 var subtaskSectionExpanded = new Map();
@@ -109,9 +140,21 @@ function taskHeaderAction(task) {
   if (!task) return null;
   return {
     planned:{label:'加入待开始',action:'queue'},
-    backlog:{label:'开始执行',action:'start'},
+    backlog:{label:'交给AI执行',action:'start'},
     blocked:{label:'重试执行',action:'retry'},
   }[task.status] || null;
+}
+
+function placeTaskActionButton(button, atBottom) {
+  if (atBottom) {
+    if (button.parentNode !== els.tkDrawerFoot) els.tkDrawerFoot.appendChild(button);
+    els.tkDrawerFoot.hidden = false;
+    els.tkDrawerFoot.classList.add('is-start-action');
+    return;
+  }
+  if (button.parentNode !== els.tkDrawerHeadActions) els.tkDrawerHeadActions.insertBefore(button, els.tkDrawerMore);
+  els.tkDrawerFoot.hidden = true;
+  els.tkDrawerFoot.classList.remove('is-start-action');
 }
 
 function renderTaskStartAction() {
@@ -120,6 +163,7 @@ function renderTaskStartAction() {
   if (taskDetailVersion === 'latest') {
     var task = tkGetTasks().find(function (row) { return row.id === state.drawerTaskId; });
     var action = taskHeaderAction(task);
+    placeTaskActionButton(button, action?.action === 'start' && task?.status === 'backlog');
     button.hidden = !action;
     if (!action) return;
     button.dataset.taskAction = action.action;
@@ -127,6 +171,7 @@ function renderTaskStartAction() {
     button.setAttribute('aria-label', action.label);
     return;
   }
+  placeTaskActionButton(button, false);
   button.hidden = false;
   button.dataset.taskAction = 'legacy-chat';
   var label = taskStartLegacy ? '发起会话' : '开始执行';
@@ -217,12 +262,13 @@ function cacheEls() {
     'tkDisplayBtn','tkDisplayPopover','tkFieldsBtn','tkFieldsPopover','tkFieldsClose','tkFieldsSearch','tkFieldsList','tkFieldsSummary','tkGroupSelect','tkViewModeSelect','tkSortSelect','tkSortDirection','tkShowSubtasks','tkCardProperties','tkCardPropsSection',
     'tkLayoutToggle','tkBody','tkBoard','tkBoardScroll','tkList','tkListBody','tkListHead','tkSplitEmpty',
     'tkCheckAll','tkEmpty','tkResetFilter','tkBulkBar','tkBulkCount','tkBulkClear',
-    'tkDrawer','tkDrawerClickaway','tkDrawerResize','tkDrawerClose','tkDrawerTitle','tkDrawerCode','tkDrawerBody','tkDrawerMore','tkDrawerChat',
+    'tkDrawer','tkDrawerClickaway','tkDrawerResize','tkDrawerClose','tkDrawerTitle','tkDrawerCode','tkDrawerBody','tkDrawerMore','tkDrawerChat','tkDrawerHeadActions','tkDrawerFoot',
     'tkModalOverlay','tkModalClose','tkModalSave','tkModalTitle','tkMcExpand','tkMcContinue','tkMcAgent','tkMcAgentPanel','tkMcAgentChat','tkMcAgentPrompt','tkMcAgentSend',
     'tkFormTitle','tkFormDesc','tkFormStatus','tkFormPriority','tkFormAssignee','tkFormProject','tkFormDue','tkFormLabels',
     'tkSaveViewOverlay','tkSaveViewClose','tkSaveViewCancel','tkSaveViewConfirm','tkSaveViewName','tkSaveViewVisibility','tkSaveViewScope','tkSaveViewLayout','tkSaveViewSummary',
     'tkManageViewsOverlay','tkManageViewsClose','tkManageViewsCancel','tkManageList',
     'tkBulkStatusMenu','tkBulkAssigneeMenu',
+    'tkListReviewOverlay','tkListReviewClose','tkListReviewTitle','tkListReviewMeta','tkListReviewTabs','tkListReviewCount','tkListReviewBody','tkListReviewRevise','tkListReviewApprove',
     'tkImportOverlay','tkImportClose','tkImportCancel','tkImportConfirm','tkImportProject','tkImportDropZone','tkImportFileInput','tkImportFileBar','tkImportFileName','tkImportFileSize','tkImportFileRemove','tkImportPreview','tkImportPreviewLabel','tkImportPreviewHint','tkImportTableHead','tkImportTableBody','tkImportError','tkImportErrorMsg','tkDownloadTplBtn',
   ];
   ids.forEach(function (id) { els[id] = document.getElementById(id); });
@@ -260,20 +306,26 @@ function startTaskConversationRun(task, origin) {
   setNavActive('新会话');
   sendComposerText(tkTaskSessionOpeningMessage(task, origin, task.executionStageId || null));
 }
-function retryBlockedTask(task) {
+function retryBlockedTask(task, openConversation) {
   if (task?.status !== 'blocked') return;
   tkUpdateTask(task.id, { status:'in_progress', comments:(task.comments || []).concat({
     kind:'comment', authorId:tkCurrentUserId(), createdAt:taskCommentTimestamp(),
     status:'in_progress', assignee:task.assignee, text:'已提交重试，保留上次失败运行记录。',
   }) });
+  if (openConversation) {
+    render();
+    openTaskConversationWithTask(task.id, 'retry', true);
+    toast('已重新执行，正在进入任务会话', 'success');
+    return;
+  }
   tkAddTaskSession(task, 'retry', task.executionStageId);
   render();
   openDrawer(task.id);
 }
-function startTaskExecution(taskId) {
+function startTaskExecution(taskId, options) {
   var task = tkGetTasks().find(function (row) { return row.id === taskId; });
   if (!task) return;
-  var started = startTaskStage(task);
+  var started = startTaskStage(task, options);
   if (!started.ok) { if (started.message) toast(started.message, 'warning'); else openDrawer(taskId); return; }
   scheduleTaskStageStartedNotice(taskId, started.stage?.id);
   render();
@@ -376,7 +428,7 @@ function showCardMenu(taskId, anchorEl, detailOnly) {
   menu.style.top = top + 'px';
   menu.style.left = left + 'px';
 }
-function confirmTaskStageApproval(task, reopenDrawer) {
+function confirmTaskStageApproval(task, reopenDrawer, onApproved) {
   if (!task || task.status !== 'in_review') return;
   showTaskStageConfirm(task, function () {
     var currentTask = tkGetTasks().find(function (row) { return row.id === task.id; });
@@ -384,6 +436,7 @@ function confirmTaskStageApproval(task, reopenDrawer) {
     if (!reviewed.ok) { toast(reviewed.message || '任务状态已变化，请刷新后重试', 'warning'); return; }
     render();
     if (reopenDrawer) openDrawer(task.id);
+    if (onApproved) onApproved(reviewed);
     toast(reviewed.done ? '最终节点审核通过，任务已完成' : '审核通过，已流转到' + reviewed.next.name + '，等待处理人开始', 'success');
     document.dispatchEvent(new CustomEvent('lingee:task-stage-completed', {detail:{taskId:task.id}}));
   });
@@ -1918,10 +1971,6 @@ function renderDocPreviewTabsBar() {
   }).join('') + '</div>';
 }
 function renderDocPreviewContent(artifact) {
-  var meta = [
-    ['文档编号', artifact.docNo], ['版本', artifact.version], ['状态', artifact.status],
-    ['作者', artifact.author], ['评审人', artifact.reviewer], ['更新时间', artifact.date],
-  ].filter(function (item) { return item[1]; });
   return '<div class="tk-doc-preview-resize" id="tkDocPreviewResize" role="separator" aria-orientation="vertical" aria-label="调整文档预览宽度" tabindex="0"></div>' +
     renderDocPreviewTabsBar() +
     '<div class="tk-doc-preview-head">' +
@@ -1933,20 +1982,156 @@ function renderDocPreviewContent(artifact) {
         '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
       '</button>' +
     '</div>' +
-    '<div class="tk-doc-preview-body">' +
-      '<article class="tk-doc-article">' +
+    '<div class="tk-doc-preview-body">' + renderArtifactDocument(artifact) + '</div>';
+}
+function renderArtifactDocument(artifact) {
+  var meta = [
+    ['文档编号', artifact.docNo], ['版本', artifact.version], ['状态', artifact.status],
+    ['作者', artifact.author], ['评审人', artifact.reviewer], ['更新时间', artifact.date],
+  ].filter(function (item) { return item[1]; });
+  return '<article class="tk-doc-article">' +
         '<h3 class="tk-doc-article-title">' + escapeHtml(artifact.docTitle || artifact.type) + '</h3>' +
         '<dl class="tk-doc-preview-meta">' + meta.map(function (item) {
           return '<div><dt>' + escapeHtml(item[0]) + '</dt><dd>' + escapeHtml(item[1]) + '</dd></div>';
         }).join('') + '</dl>' +
-        artifact.sections.map(function (section) {
+        (artifact.sections || []).map(function (section) {
           return '<section class="tk-doc-preview-section">' +
             '<h4>' + escapeHtml(section.heading) + '</h4>' +
             renderArtifactBlocks(section) +
           '</section>';
         }).join('') +
-      '</article>' +
-    '</div>';
+        (typeof artifact.content === 'string' ? '<pre class="tk-doc-code"><code>' + escapeHtml(artifact.content) + '</code></pre>' : '') +
+      '</article>';
+}
+
+function renderMarkdownContent(content, fileName) {
+  var lines = String(content || '').split('\n');
+  var html = '', listOpen = false, codeOpen = false, codeLines = [];
+  function closeList() { if (listOpen) { html += '</ul>'; listOpen = false; } }
+  lines.forEach(function (line) {
+    if (/^```/.test(line)) {
+      closeList();
+      if (codeOpen) { html += '<pre class="tk-doc-code"><code>' + escapeHtml(codeLines.join('\n')) + '</code></pre>'; codeLines = []; }
+      codeOpen = !codeOpen;
+      return;
+    }
+    if (codeOpen) { codeLines.push(line); return; }
+    var heading = line.match(/^(#{1,4})\s+(.+)$/);
+    if (heading) { closeList(); html += '<h' + (heading[1].length + 1) + '>' + escapeHtml(heading[2]) + '</h' + (heading[1].length + 1) + '>'; return; }
+    var bullet = line.match(/^[-*]\s+(.+)$/);
+    if (bullet) { if (!listOpen) { html += '<ul class="tk-doc-list">'; listOpen = true; } html += '<li>' + escapeHtml(bullet[1]) + '</li>'; return; }
+    closeList();
+    if (line.trim()) html += '<p>' + escapeHtml(line) + '</p>';
+  });
+  closeList();
+  if (codeOpen) html += '<pre class="tk-doc-code"><code>' + escapeHtml(codeLines.join('\n')) + '</code></pre>';
+  return '<article class="tk-doc-article tk-list-review-markdown"><h3 class="tk-doc-article-title">' + escapeHtml(fileName) + '</h3>' + html + '</article>';
+}
+function renderReviewArtifactPreview(artifact) {
+  var format = artifactFormat(artifact);
+  var fileName = artifact.fileName || artifact.name || artifact.docTitle || artifact.type;
+  if (format === 'html' && typeof artifact.content === 'string') {
+    return '<article class="tk-list-review-file-preview"><div class="tk-list-review-file-head"><strong>' + escapeHtml(fileName) + '</strong><span>HTML 预览</span></div><div class="tk-list-review-html-frame"><iframe sandbox title="' + escapeHtml(fileName) + '" srcdoc="' + escapeHtml(artifact.content) + '"></iframe></div></article>';
+  }
+  if (format === 'code') {
+    return '<article class="tk-list-review-file-preview"><div class="tk-list-review-file-head"><strong>' + escapeHtml(fileName) + '</strong><span>' + escapeHtml(artifact.language || '代码') + '</span></div><pre class="tk-list-review-code"><code>' + escapeHtml(artifact.content || '') + '</code></pre></article>';
+  }
+  if (!(artifact.sections || []).length && typeof artifact.content === 'string') return renderMarkdownContent(artifact.content, fileName);
+  return renderArtifactDocument(artifact);
+}
+function reviewArtifactSamples(task, artifacts) {
+  var stem = String(task.code || ('task-' + task.id)).toLowerCase();
+  var normalized = artifacts.map(function (artifact, index) {
+    var format = artifactFormat(artifact);
+    return Object.assign({}, artifact, { format:format, fileName:artifactFileName(artifact, stem + '-review', index + 1) });
+  });
+  var formats = new Set(normalized.map(artifactFormat));
+  if (!formats.has('md')) normalized.unshift({
+    id:'review-md-' + task.id, stageId:task.executionStageId, format:'md', fileName:stem + '-验收说明.md', type:'Markdown 文档',
+    content:'# ' + task.title + '\n\n## 验收摘要\n\n' + (task.desc || '本阶段产物已提交，等待验收。') + '\n\n## 验收清单\n\n- 核对功能范围与任务描述一致\n- 核对异常处理和边界场景\n- 核对交付文件可独立使用',
+  });
+  if (!formats.has('code')) normalized.push({
+    id:'review-code-' + task.id, stageId:task.executionStageId, format:'code', language:'JavaScript', fileName:stem + '-validator.js', type:'代码文件',
+    content:'const delivery = {\n  task: ' + JSON.stringify(task.title) + ',\n  status: "ready-for-review"\n};\n\nexport function validate(result) {\n  if (!result) throw new Error("缺少执行结果");\n  return { ...delivery, valid: true, result };\n}\n',
+  });
+  if (!formats.has('html')) normalized.push({
+    id:'review-html-' + task.id, stageId:task.executionStageId, format:'html', fileName:stem + '-preview.html', type:'HTML 文件',
+    content:'<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><style>body{margin:0;padding:32px;font:14px/1.7 system-ui;color:#2d2d2d;background:#f7f8fb}.card{max-width:640px;margin:auto;padding:28px;background:#fff;border:1px solid #e8eaf0;border-radius:12px;box-shadow:0 8px 24px rgba(30,40,70,.08)}h1{margin:0 0 8px;font-size:22px}.tag{display:inline-block;padding:3px 9px;border-radius:5px;background:#eef3ff;color:#495dff;font-size:12px}.row{margin-top:20px;padding:14px;background:#fafafa;border-radius:8px}</style></head><body><main class="card"><span class="tag">验收预览</span><h1>' + escapeHtml(task.title) + '</h1><p>' + escapeHtml(task.desc || '本阶段产物已生成。') + '</p><div class="row"><strong>交付状态</strong><br>产物已生成，等待验收确认。</div></main></body></html>',
+  });
+  return normalized;
+}
+function listReviewArtifacts(task) {
+  var stageId = task.executionStageId;
+  var generated = (task.executionArtifacts || []).filter(function (artifact) { return artifact.stageId === stageId; });
+  var artifacts = generated.length ? generated : tkGetTaskArtifacts(task).filter(function (artifact) { return artifact.stageId === stageId; });
+  return reviewArtifactSamples(task, artifacts);
+}
+function closeListReviewPreview(restoreFocus) {
+  if (!els.tkListReviewOverlay || els.tkListReviewOverlay.hidden) return;
+  els.tkListReviewOverlay.hidden = true;
+  listReviewPreviewTaskId = null;
+  listReviewPreviewArtifactId = null;
+  if (restoreFocus !== false && listReviewPreviewFocus?.isConnected) listReviewPreviewFocus.focus();
+  listReviewPreviewFocus = null;
+}
+function renderListReviewPreview() {
+  var task = tkGetTasks().find(function (row) { return row.id === listReviewPreviewTaskId; });
+  if (!task || task.status !== 'in_review') { closeListReviewPreview(false); return; }
+  var artifacts = listReviewArtifacts(task);
+  var active = artifacts.find(function (artifact) { return artifact.id === listReviewPreviewArtifactId; }) || artifacts[0];
+  listReviewPreviewArtifactId = active?.id || null;
+  var stage = taskExecutionStages(task).find(function (row) { return row.id === task.executionStageId; });
+  els.tkListReviewTitle.textContent = task.title;
+  els.tkListReviewMeta.textContent = [task.code, tkGetProjectName(task.project), stage?.name, artifacts.length + ' 个产物'].filter(Boolean).join(' · ');
+  els.tkListReviewCount.textContent = artifacts.length;
+  els.tkListReviewTabs.innerHTML = artifacts.map(function (artifact) {
+    var selected = artifact.id === listReviewPreviewArtifactId;
+    return '<button type="button" class="tk-list-review-tab' + (selected ? ' is-active' : '') + '" role="tab" aria-selected="' + selected + '" data-list-review-artifact="' + escapeHtml(artifact.id) + '"><img src="' + artifactIcon(artifact) + '" alt=""><span>' + escapeHtml(artifact.fileName || artifact.docTitle || artifact.type) + '</span><small>' + escapeHtml(artifactFormatLabel(artifact)) + '</small></button>';
+  }).join('');
+  els.tkListReviewBody.innerHTML = active ? renderReviewArtifactPreview(active) : '<div class="tk-list-review-empty">当前阶段暂无可预览产物</div>';
+  els.tkListReviewBody.scrollTop = 0;
+}
+function openListReviewPreview(taskId, trigger) {
+  var task = tkGetTasks().find(function (row) { return row.id === Number(taskId); });
+  if (!task || task.status !== 'in_review') { toast('任务状态已变化，请刷新后重试', 'warning'); return; }
+  listReviewPreviewTaskId = task.id;
+  listReviewPreviewArtifactId = null;
+  listReviewPreviewFocus = trigger || document.activeElement;
+  renderListReviewPreview();
+  els.tkListReviewOverlay.hidden = false;
+  els.tkListReviewClose.focus({ preventScroll:true });
+}
+function initListReviewPreviewEvents() {
+  if (els.tkListReviewOverlay.parentNode !== document.body) document.body.appendChild(els.tkListReviewOverlay);
+  els.tkListReviewClose.addEventListener('click', function () { closeListReviewPreview(true); });
+  els.tkListReviewOverlay.addEventListener('click', function (event) {
+    if (event.target === els.tkListReviewOverlay) { closeListReviewPreview(true); return; }
+    var tab = event.target.closest('[data-list-review-artifact]');
+    if (tab) { listReviewPreviewArtifactId = tab.getAttribute('data-list-review-artifact'); renderListReviewPreview(); }
+  });
+  els.tkListReviewRevise.addEventListener('click', function () {
+    var task = tkGetTasks().find(function (row) { return row.id === listReviewPreviewTaskId; });
+    var reviewed = reviewTaskStage(task, false);
+    if (!reviewed.ok) { toast('任务状态已变化，请刷新后重试', 'warning'); closeListReviewPreview(false); return; }
+    closeListReviewPreview(false);
+    render();
+    toast('已退回修改，正在打开任务会话', 'success');
+    openTaskConversationWithTask(task.id, 'revise');
+  });
+  els.tkListReviewApprove.addEventListener('click', function () {
+    var task = tkGetTasks().find(function (row) { return row.id === listReviewPreviewTaskId; });
+    confirmTaskStageApproval(task, false, function () { closeListReviewPreview(false); });
+  });
+  document.addEventListener('keydown', function (event) {
+    if (els.tkListReviewOverlay.hidden || event.defaultPrevented) return;
+    if (event.key === 'Escape') { event.preventDefault(); closeListReviewPreview(true); return; }
+    if (event.key !== 'Tab') return;
+    var focusable = Array.from(els.tkListReviewOverlay.querySelectorAll('button:not([disabled]),[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])')).filter(function (node) { return !node.hidden && node.offsetParent !== null; });
+    if (!focusable.length) return;
+    var first = focusable[0], last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+  });
 }
 /* 文档预览挂在详情面板上（与头部同级），从右侧占位弹出，高度与任务窗口一致。 */
 function docPreviewPanel() {
@@ -4023,6 +4208,15 @@ function bindEvents() {
 
   /* 列表点击（折叠子任务 / 打开详情 / 多选） */
   els.tkListBody.addEventListener('click', function (e) {
+    var listActionBtn = e.target.closest('[data-list-task-action]');
+    if (listActionBtn) {
+      var listAction = listActionBtn.getAttribute('data-list-task-action');
+      var listTaskId = parseInt(listActionBtn.getAttribute('data-list-task-id'), 10);
+      if (listAction === 'preview') openListReviewPreview(listTaskId, listActionBtn);
+      else if (listAction === 'start') startTaskExecution(listTaskId, {skipHandlerCheck:true});
+      else if (listAction === 'retry') retryBlockedTask(tkGetTasks().find(function (row) { return row.id === listTaskId; }), true);
+      return;
+    }
     var toggleBtn = e.target.closest('[data-tk-toggle]');
     if (toggleBtn) {
       animateListSubtasks(toggleBtn);
@@ -4294,6 +4488,7 @@ export function initTasksV2() {
   tkPruneOrphanTasks();
   tkSyncPeople();
   cacheEls();
+  initListReviewPreviewEvents();
   /* 任务详情抽屉移至 body 顶层，使其在任意视图上都能叠加显示（原在 #view-tasks 内，父级 hidden 时 fixed 也不可见） */
   if (els.tkDrawer && els.tkDrawer.parentNode !== document.body) document.body.appendChild(els.tkDrawer);
   if (els.tkDrawerClickaway && els.tkDrawerClickaway.parentNode !== document.body) document.body.appendChild(els.tkDrawerClickaway);
