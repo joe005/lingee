@@ -90,4 +90,4 @@
   --tb-backdrop: rgba(20, 25, 40, .28);
 }
 
-:root{--asset-expert-card-height:208px;}
+:root{--asset-expert-card-height:208px;--asset-card-title-size:13px;}

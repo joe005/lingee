@@ -3,7 +3,7 @@ import { layerOf } from './layers.js';
 import { $, $$ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
 import { renderExpertChips } from './chips.js';
-import { AV_KEYS, EX, MODEL_TIERS, MY_EXPERTS, WORK_MODES, rebuildExperts, set_MY_EXPERTS, skillCatalog, xav, xesc } from './data.js';
+import { AV_KEYS, EX, MODEL_TIERS, MY_EXPERTS, WORK_MODES, rebuildExperts, set_MY_EXPERTS, skillCatalog, skillInfo, xav, xesc } from './data.js';
 import { renderKnPane, resetKnPane } from './knowledge.js';
 import { expertModal, renderExpertGrid } from './library.js';
 import { TEAMS, activePick, clearPick, saveTeams } from './store.js';
@@ -89,20 +89,25 @@ function renderExpertEditor(){
 
   renderKnPane(d);
 }
+var xeSkillSelection=new Set(),xeSkillReturnFocus=null;
+function skillRow(skill,action){
+  return '<div class="xe-managed-skill x-skill-row"><span class="x-skill-icon tone-'+xesc(skill.tone)+'" aria-hidden="true">'+xesc(skill.name.slice(0,1))+'</span><span class="x-skill-copy"><strong>'+xesc(skill.name)+'</strong><span title="'+xesc(skill.desc)+'">'+xesc(skill.desc)+'</span></span>'+action+'</div>';
+}
 function renderSkillEditor(d){
-  var list=$('#xeSkillList'),count=$('#xeSkillCount'); if(!list||!d) return;
-  var selected=d.skills||[],kw=xeSkillKw.trim().toLocaleLowerCase();
-  var rows=skillCatalog().filter(function(skill){
-    return !kw||(skill.name+skill.desc+skill.id).toLocaleLowerCase().indexOf(kw)>=0;
-  });
-  if(count) count.textContent='已选 '+selected.length+' 项';
-  list.innerHTML=rows.length?rows.map(function(skill){
-    var on=selected.indexOf(skill.id)>=0;
-    return '<button type="button" class="xe-skill-option x-skill-row'+(on?' on':'')+'" data-xe-skill="'+xesc(skill.id)+'" aria-pressed="'+(on?'true':'false')+'">'
-      +'<span class="x-skill-icon tone-'+xesc(skill.tone)+'" aria-hidden="true">✦</span>'
-      +'<span class="x-skill-copy"><strong>'+xesc(skill.name)+'</strong><span>'+xesc(skill.desc)+'</span></span>'
-      +'<span class="xe-skill-check" aria-hidden="true">'+(on?'✓':'＋')+'</span></button>';
-  }).join(''):'<div class="x-skill-empty">没有匹配的技能</div>';
+  var list=$('#xeSkillList'),count=$('#xeSkillCount');if(!list||!d)return;
+  var kw=xeSkillKw.trim().toLocaleLowerCase();
+  var rows=(d.skills||[]).map(function(id){return {id,...skillInfo(id)};}).filter(function(skill){return !kw||(skill.name+skill.desc+skill.id).toLocaleLowerCase().includes(kw);});
+  count.textContent='已关联 '+(d.skills||[]).length+' 项';
+  list.innerHTML=rows.map(function(skill){return skillRow(skill,'<button type="button" class="xe-skill-remove" data-xe-skill-remove="'+xesc(skill.id)+'" aria-label="移除 '+xesc(skill.name)+'"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg></button>');}).join('')||'<div class="x-skill-empty">'+(kw?'没有匹配的技能':'尚未添加技能')+'</div>';
+}
+function renderSkillPicker(){
+  var kw=$('#xeSkillPickerSearch').value.trim().toLocaleLowerCase();
+  var rows=skillCatalog().filter(function(skill){return !kw||(skill.name+skill.desc+skill.id).toLocaleLowerCase().includes(kw);});
+  $('#xeSkillPickerList').innerHTML=rows.map(function(skill){return '<label class="xe-skill-choice">'+skillRow(skill,'<input type="checkbox" data-xe-skill-choice="'+xesc(skill.id)+'" '+(xeSkillSelection.has(skill.id)?'checked':'')+' aria-label="选择 '+xesc(skill.name)+'">')+'</label>';}).join('')||'<div class="x-skill-empty">没有匹配的技能</div>';
+  $('#xeSkillPickerCount').textContent='已选 '+xeSkillSelection.size+' 项';
+}
+function closeSkillPicker(){
+  $('#xeSkillPicker').classList.remove('show');xeSkillReturnFocus?.focus();
 }
 function splitList(v){
   return String(v||'').split(/[、,，\n]/).map(function(x){return x.trim()}).filter(Boolean);
@@ -119,6 +124,15 @@ export function initExpertEditor() {
     var b=e.target.closest('.modal-tab'); if(b) setXeTab(b.getAttribute('data-xtab'));
   });
   if(expertEditModal){
+    $('#xeAddSkill').addEventListener('click',function(){
+      xeSkillReturnFocus=document.activeElement;xeSkillSelection=new Set(xeDraft.skills||[]);$('#xeSkillPickerSearch').value='';renderSkillPicker();$('#xeSkillPicker').classList.add('show');$('#xeSkillPickerSearch').focus();
+    });
+    ['xeSkillPickerClose','xeSkillPickerCancel'].forEach(function(id){$('#'+id).addEventListener('click',closeSkillPicker);});
+    $('#xeSkillPicker').addEventListener('click',function(ev){if(ev.target===$('#xeSkillPicker'))closeSkillPicker();});
+    $('#xeSkillPicker').addEventListener('keydown',function(ev){if(ev.key==='Escape'){ev.stopPropagation();closeSkillPicker();}});
+    $('#xeSkillPickerSearch').addEventListener('input',renderSkillPicker);
+    $('#xeSkillPickerList').addEventListener('change',function(ev){var id=ev.target.dataset.xeSkillChoice;if(!id)return;if(ev.target.checked)xeSkillSelection.add(id);else xeSkillSelection.delete(id);$('#xeSkillPickerCount').textContent='已选 '+xeSkillSelection.size+' 项';});
+    $('#xeSkillPickerConfirm').addEventListener('click',function(){xeDraft.skills=Array.from(xeSkillSelection);renderSkillEditor(xeDraft);closeSkillPicker();});
     $('#expertEditClose').addEventListener('click',hideAssetEditorPanel);
     $('#xeCancelBtn').addEventListener('click',hideAssetEditorPanel);
     $('#xeAddCmd').addEventListener('click',function(){ xeDraft.cmds.push(['','']); renderExpertEditor(); });
@@ -135,16 +149,8 @@ export function initExpertEditor() {
       }
       var t=ev.target.closest('[data-xe-tier]');
       if(t){ xeDraft.tier=t.getAttribute('data-xe-tier'); renderExpertEditor(); return; }
-      var s=ev.target.closest('[data-xe-skill]');
-      if(s){
-        var skillId=s.getAttribute('data-xe-skill'), skillIndex=xeDraft.skills.indexOf(skillId);
-        if(skillIndex<0) xeDraft.skills.push(skillId); else xeDraft.skills.splice(skillIndex,1);
-        renderSkillEditor(xeDraft);
-        $$('#xeSkillList [data-xe-skill]').forEach(function(button){
-          if(button.getAttribute('data-xe-skill')===skillId) button.focus();
-        });
-        return;
-      }
+      var s=ev.target.closest('[data-xe-skill-remove]');
+      if(s){xeDraft.skills=xeDraft.skills.filter(function(id){return id!==s.dataset.xeSkillRemove;});renderSkillEditor(xeDraft);$('#xeAddSkill').focus();return;}
       var r=ev.target.closest('[data-xe-rmcmd]');
       if(r){
         xeDraft.cmds.splice(+r.getAttribute('data-xe-rmcmd'),1);

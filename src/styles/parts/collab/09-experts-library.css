@@ -107,3 +107,6 @@
 #view-collab #cv-experts .x-card .card-title-row{flex-wrap:nowrap;min-width:0;gap:6px}
 #view-collab #cv-experts .x-card .card-title{display:block;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #view-collab #cv-experts .x-card .card-title-row .asset-source-badge,#view-collab #cv-experts .x-card .platform-client-badge{flex:none;white-space:nowrap;margin-left:0}
+
+/* 数字员工与专家团卡片名称与管理端共用字号。 */
+#view-collab #cv-experts .x-card .card-title,#view-collab #cv-teams .x-card .card-title{font-size:var(--asset-card-title-size)}

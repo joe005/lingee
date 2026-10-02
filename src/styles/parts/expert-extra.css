@@ -116,3 +116,21 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
 .modal-overlay{display:flex;align-items:center;justify-content:center}
 .modal-overlay>.modal-card{position:relative;top:auto;left:auto;transform:scale(.96)}
 .modal-overlay.show>.modal-card{transform:scale(1)}
+/* 数字员工技能配置：已关联列表与独立多选弹窗。 */
+#expertEditModal #xeSkillList{border-top:0;max-height:none;display:flex;flex-direction:column;gap:12px}
+#expertEditModal .xe-managed-skill,#xeSkillPicker .xe-managed-skill{display:flex;align-items:center;gap:16px;padding:16px;border:1px solid var(--border);border-radius:var(--tb-radius);background:var(--bg);min-width:0;margin:0}
+#expertEditModal .xe-managed-skill .x-skill-copy,#xeSkillPicker .x-skill-copy{flex:1;min-width:0}
+#expertEditModal .xe-managed-skill .x-skill-copy>span,#xeSkillPicker .x-skill-copy>span{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+#expertEditModal .xe-skill-remove{display:flex;align-items:center;justify-content:center;flex:none;width:36px;height:36px;border:0;border-radius:var(--tb-radius);background:var(--danger-bg);color:var(--danger);cursor:pointer}
+#expertEditModal .xe-skill-remove:focus-visible,#xeSkillPicker input:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+#xeSkillPicker{z-index:310}
+#xeSkillPicker .modal-card{width:min(800px,calc(100vw - 48px));max-height:85vh}
+#xeSkillPicker .modal-header{gap:16px}
+#xeSkillPickerSearch{margin-left:auto;flex:1;min-width:0;max-width:320px;height:40px;border:1px solid var(--border-hover);border-radius:var(--tb-radius);padding:0 12px;font:inherit;color:var(--text);background:var(--bg)}
+#xeSkillPickerList{display:flex;flex-direction:column;gap:12px;overflow:auto;min-height:0}
+#xeSkillPicker .xe-skill-choice{cursor:pointer;display:block}
+#xeSkillPicker .xe-skill-choice:hover .xe-managed-skill{border-color:var(--border-hover)}
+#xeSkillPicker .xe-skill-choice:has(input:checked) .xe-managed-skill{border-color:var(--brand)}
+#xeSkillPicker input[type=checkbox]{width:20px;height:20px;flex:none;accent-color:var(--brand)}
+#xeSkillPickerCount{color:var(--text-secondary)}
+@media(max-width:600px){#xeSkillPicker .modal-header{flex-wrap:wrap}#xeSkillPickerSearch{order:3;flex-basis:100%;max-width:none}#expertEditModal .xe-skills-toolbar{flex-wrap:wrap}}

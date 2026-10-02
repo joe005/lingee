@@ -1,11 +1,11 @@
 <div class="view hidden platform-view" id="view-platform">
   <header class="platform-head">
-    <div><h1>专家管理</h1><p id="platformIntro">导入专家或专家团 ZIP，管理所属内容的版本与上架状态。</p></div>
+    <div><h1>数字员工管理</h1><p id="platformIntro">导入数字员工或专家团 ZIP，管理所属内容的版本与上架状态。</p></div>
   </header>
   <div class="platform-denied hidden" id="platformDenied"><h2 id="platformDeniedTitle">当前账号没有平台管理权限</h2><p id="platformDeniedHint">请使用对应的管理员账号。</p><button type="button" class="platform-btn" data-platform-back>返回客户端</button></div>
   <div class="platform-body" id="platformBody">
     <p class="platform-readonly hidden" id="platformReadOnly">当前为只读预览，使用对应管理员账号可导入和管理内容。</p>
-    <nav class="platform-tabs" aria-label="资产类型"><button type="button" class="on" data-platform-tab="expert" aria-pressed="true">专家 <span data-platform-type-count="expert">(0)</span></button><button type="button" data-platform-tab="team" aria-pressed="false">专家团 <span data-platform-type-count="team">(0)</span></button></nav>
+    <nav class="platform-tabs" aria-label="资产类型"><button type="button" class="on" data-platform-tab="expert" aria-pressed="true">数字员工 <span data-platform-type-count="expert">(0)</span></button><button type="button" data-platform-tab="team" aria-pressed="false">专家团 <span data-platform-type-count="team">(0)</span></button></nav>
     <div class="platform-controls">
       <nav class="platform-status-tabs" aria-label="资产状态"><button type="button" class="on" data-platform-status="all" aria-pressed="true">全部 <span class="platform-status-count" data-platform-count="all">0</span></button><button type="button" data-platform-status="draft" aria-pressed="false">草稿 <span class="platform-status-count" data-platform-count="draft">0</span></button><button type="button" data-platform-status="review" aria-pressed="false">待审核 <span class="platform-status-count" data-platform-count="review">0</span></button><button type="button" data-platform-status="online" aria-pressed="false">已上架 <span class="platform-status-count" data-platform-count="online">0</span></button><button type="button" data-platform-status="offline" aria-pressed="false">已下架 <span class="platform-status-count" data-platform-count="offline">0</span></button></nav>
       <div class="platform-toolbar"><input id="platformSearch" type="search" placeholder="搜索" aria-label="搜索" autocomplete="off"><button type="button" class="platform-btn primary" id="platformImport">导入</button><input type="file" id="platformZipFile" accept=".zip,application/zip" hidden></div>

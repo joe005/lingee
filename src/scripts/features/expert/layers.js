@@ -1,8 +1,8 @@
-import { cvWorkspace, cvCurrentUserName } from '../collab/data.js';
+import { cvWorkspace, cvCurrentUserName, cvCanAccessWorkspace } from '../collab/data.js';
 import { EX, MY_EXPERTS, rebuildExperts, xesc } from './data.js';
 import { TEAMS, saveTeams } from './store.js';
 import { toast } from '../../core/toast.js';
-import { getLoginAccount, getLoginPersonId } from '../login.js';
+import { getLoginAccount, getLoginPersonId, getPlatformIdentity } from '../login.js';
 
 /* 原型来源标记独立保存；当前工作区模拟租户，已有个人配置保持原结构。 */
 const KEY='lingee.expert-layers.v1';
@@ -32,7 +32,14 @@ export function assetSourceBadge(kind,item){
 }
 export function layerVisible(kind,item){
   const rec=records()[kind+':'+item.id];
-  return layerOf(kind,item)==='shared'?(item.tenantId||rec?.workspace)===cvWorkspace:!item.ownerId||item.ownerId===assetOwnerKey();
+  if(layerOf(kind,item)==='shared'){
+    const tenantId=item.tenantId||rec?.workspace;
+    if(!tenantId)return false;
+    const accountTenant=getPlatformIdentity()?.tenantId;
+    if(accountTenant)return tenantId===accountTenant&&(!cvWorkspace||tenantId===cvWorkspace);
+    return cvWorkspace?tenantId===cvWorkspace:cvCanAccessWorkspace(tenantId,cvCurrentUserName());
+  }
+  return !item.ownerId||item.ownerId===assetOwnerKey();
 }
 export function layerActions(){return '';}
 export function layerToolbar(kind,items,selected){

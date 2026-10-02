@@ -10,7 +10,7 @@ import { renderExpertChips } from './expert/chips.js';
 import { EX, pendingInputs, xav, xesc } from './expert/data.js';
 import { applyAssetMessage, assetClarifyingQuestion, assetStarterPrompt, commitAssetDraft, newAssetDraft } from './expert/asset-creation.js';
 import { assetOwnerKey } from './expert/layers.js';
-import { hideAssetEditorPanel } from './expert/editor-panel.js';
+import { hideAssetEditorPanel, renderAssetCreationPanel } from './expert/editor-panel.js';
 import { renderExpertGrid, set_teamLayer } from './expert/library.js';
 import { cvRenderExperts, set_cvExpertLayer } from './collab/experts.js';
 import { activePick, pickValid, set_activePick, teamById } from './expert/store.js';
@@ -594,6 +594,15 @@ function assetCreateQuestionHtml(question,interactive){
     +(interactive&&question.options?'<div class="asset-ask-options">'+question.options.map(function(option){return '<button type="button" data-asset-answer="'+xesc(option)+'">'+xesc(option)+'</button>';}).join('')+'</div>':'')
     +(interactive?'<small>也可以直接在下方输入回答</small>':'')+'</div>';
 }
+function builderSkillChip(){
+  return '<span class="builder-skill-mention" data-skill-mention="expert-builder" contenteditable="false" title="expert-builder · 创建专家和专家团"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="7" width="16" height="13" rx="4"/><path d="M12 3v4M8 12v2M16 12v2M9 17h6"/><circle cx="12" cy="2" r="1"/></svg><span>expert-builder</span></span>';
+}
+function builderInputText(){
+  var copy=chatInput.cloneNode(true);copy.querySelectorAll('[data-skill-mention]').forEach(function(chip){chip.remove();});return copy.textContent.trim();
+}
+function ensureBuilderMention(){
+  if(!chatInput.querySelector('[data-skill-mention="expert-builder"]'))chatInput.insertAdjacentHTML('afterbegin',builderSkillChip()+' ');
+}
 function renderAssetCreateChat(session){
   var draft=session.assetCreate,kindName=draft.kind==='team'?'专家团':'专家';
   if(['draft','scope'].includes(draft.status)){
@@ -610,11 +619,15 @@ function renderAssetCreateChat(session){
   });
   if(draft.status==='question'&&draft.question&&!draft.questions?.[draft.messages.length-1])appendAssetCreateAgent(assetCreateQuestionHtml(draft.question,true));
   if(draft.status==='ready'||draft.status==='error')appendAssetCreateAgent('<p>'+xesc(draft.error||'已理解创建意图，正在保存…')+'</p><button type="button" class="asset-create-inline-action" data-asset-retry>重试创建</button>');
-  else if(draft.status==='done')appendAssetCreateAgent('<div class="asset-create-result"><strong>已创建「'+xesc(draft.name)+'」</strong><p>已保存到我的'+kindName+'。如需完善配置，可在列表中继续编辑。</p><button type="button" class="asset-create-inline-action" data-asset-return>查看'+kindName+'</button></div>');
+  else if(draft.status==='done')appendAssetCreateAgent('<div class="asset-create-result"><strong>已创建「'+xesc(draft.name)+'」</strong><p>已保存到我的'+kindName+'。可在右侧继续完善配置并保存。</p><button type="button" class="asset-create-inline-action" data-asset-return>查看'+kindName+'</button></div>');
   chatInput.contentEditable=draft.status==='done'?'false':'true';
   chatInput.setAttribute('data-placeholder',draft.status==='done'?'创建已完成':draft.status==='question'?'回答上面的问题…':'继续描述创建要求…');
   if(draft.status==='prompt'&&!draft.messages.length)chatInput.textContent=assetStarterPrompt(draft.kind);
+  if(draft.status!=='done')ensureBuilderMention();
   document.getElementById('chatExpertLabel').textContent='专家创建智能体';
+  viewChat.classList.remove('preview-open');
+  syncTogglePreviewBtn();
+  renderAssetCreationPanel(draft);
   refreshChatSend();
   scrollChatBottom();
 }
@@ -929,6 +942,7 @@ function renderChatTaskSide() {
   var expertDropdown = document.getElementById('chatExpertDropdown');
   var taskTeam = task ? resolveChatTeam(null, task) : null;
   expertDropdown.classList.toggle('task-team-locked', !!task || !!assetSession);
+  viewChat.classList.toggle('expert-builder-session',!!assetSession?.assetCreate);
   expertDropdown.dataset.lockedTeamId = taskTeam?.id || '';
   expertDropdown.classList.remove('open');
   expertDropdown.querySelector('[data-chip]').setAttribute('aria-disabled', task || assetSession ? 'true' : 'false');
@@ -1708,9 +1722,9 @@ export function sendComposerText(text){
 /* ---------- chat composer 发送 ---------- */
 var chatInput=$('#chatInput');
 var chatSendBtn=$('#chatSendBtn');
-function refreshChatSend(){ chatSendBtn.classList.toggle('active', chatInput.textContent.trim().length>0); }
+function refreshChatSend(){ chatSendBtn.classList.toggle('active', builderInputText().length>0); }
 function chatDoSend(){
-  var t=chatInput.textContent.trim();
+  var t=builderInputText();
   if(!t){ chatInput.focus(); return; }
   var assetEditing=chatSessions.find(function(row){return row.id===activeSessionId&&row.assetEdit;});
   if(assetEditing){
@@ -2016,7 +2030,7 @@ export function initComposer() {
     if(assetSession){
       var draft=assetSession.assetCreate;
       var answer=event.target.closest('[data-asset-answer]');
-      if(answer){handleAssetCreateMessage(assetSession,answer.dataset.assetAnswer);chatInput.innerHTML='';refreshChatSend();return;}
+      if(answer){chatInput.innerHTML='';handleAssetCreateMessage(assetSession,answer.dataset.assetAnswer);refreshChatSend();return;}
       if(event.target.closest('[data-asset-retry]')){
         var result=commitAssetDraft(draft,'personal');
         if(result.ok){

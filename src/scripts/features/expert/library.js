@@ -85,7 +85,7 @@ function openExpertModal(id){
   xdTab='overview';
   $('#expertModalHead').innerHTML='<div class="x-detail-head"><img class="x-av-lg" src="'+xav(e.k)+'" alt="">'
     +'<div><div class="modal-title">'+xesc(e.name)+' '+assetSourceBadge('expert',e)+'</div>'
-    +'<div class="x-sub">'+xesc([e.role,e.by].filter(Boolean).join(' · '))+'</div></div></div>'
+    +'</div></div>'
     +'<button class="modal-close" type="button" data-x-close aria-label="关闭">×</button>';
 
   var overview='<div class="x-sec x-desc">'+xesc(e.desc)+'</div>'
