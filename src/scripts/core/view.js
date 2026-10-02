@@ -53,6 +53,7 @@ function setUrlState(path){
   try{history.replaceState(null,'',withBase(path));localStorage.setItem('lingeeUrlState',path)}catch(e){}
 }
 function showView(which){
+  if(which!=='chat')document.dispatchEvent(new Event('lingee:chat-leave'));
   if(which!=='collab'&&which!=='tasks'&&window.cvLeaveProjectTasks)window.cvLeaveProjectTasks();
   if(which==='newtask') document.dispatchEvent(new Event('lingee:new-conversation'));
   if(which==='tasks'){
@@ -102,6 +103,7 @@ export function initViewSwitch() {
 export function initSidebarNav() {
   /* ---------- sidebar nav ---------- */
   navItems.forEach(function(n){
+    if(n.dataset.platformNav)n.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();n.click();}});
     n.addEventListener('click',function(){
       var name=navText(n);
       setNavActive(name);
@@ -118,7 +120,8 @@ export function initSidebarNav() {
       }else if(name==='任务'){
         if(window.cvLeaveProjectTasks)window.cvLeaveProjectTasks();
         showView('tasks');
-      }else if(name==='管理平台'){
+      }else if(n.dataset.platformNav){
+        viewPlatform.dataset.platformMode=n.dataset.platformNav;
         showView('platform');
       }else if(name==='新会话'){
         showView('newtask');

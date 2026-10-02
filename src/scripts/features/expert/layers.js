@@ -10,7 +10,7 @@ function records(){try{return JSON.parse(localStorage.getItem(KEY)||'{}');}catch
 export function assetOwnerKey(){return getLoginPersonId()||('login:'+getLoginAccount());}
 export function canShareNewAsset(kind,item){
   if(!cvWorkspace)return {ok:false,message:'请先选择协作空间，再共享到租户'};
-  if(kind==='team'&&item.members.some(id=>!EX[id]||layerOf('expert',EX[id])==='personal'||!layerVisible('expert',EX[id])))return {ok:false,message:'请先将团内个人数字员工共享到当前租户'};
+  if(kind==='team'&&item.members.some(id=>!EX[id]||layerOf('expert',EX[id])==='personal'||!layerVisible('expert',EX[id])))return {ok:false,message:'请先将团内个人专家共享到当前租户'};
   return {ok:true};
 }
 export function setNewAssetScope(kind,item){

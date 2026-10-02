@@ -7,6 +7,7 @@
    数据取自 lingee-build/packages/opencode/builtin-experts/
    技能名取自 packages/opencode/builtin-skills/
    ============================================================ */
+import { BUILTIN_CATALOG, BUILTIN_SKILL_META, builtinAvatar } from './builtin-catalog.js';
 import _av01 from '../../../assets/avatars/avatar-01.png';
 import _av02 from '../../../assets/avatars/avatar-02.png';
 import _av03 from '../../../assets/avatars/avatar-03.png';
@@ -24,7 +25,7 @@ var EXPERT_AV = {
   cr:_av06, sec:_av07, ana:_av08, fe:_av09, ux:_av10,
   form:_av11, flow:_av12, rpt:_av01, plug:_av02, api:_av03
 };
-function xav(k){ return EXPERT_AV[k] || _av01; }
+function xav(k){ return builtinAvatar(k) || EXPERT_AV[k] || _av01; }
 function xesc(v){ return String(v==null?'':v).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]}); }
 
 /* 技能是专家可直接调用的工作方法；详情页用中文名与描述展示，机器 id 只用于内部绑定。 */
@@ -54,7 +55,7 @@ var SKILL_META={
   'cosmic-reverse-engineering':{name:'苍穹二开分析',desc:'定位扩展点、插件注册与生命周期，支持二开实现与排障。',tone:'purple'},
   'cosmic-api-integration':{name:'苍穹接口集成',desc:'完成开放接口契约、鉴权、数据映射、幂等同步与异常重试。',tone:'cyan'}
 };
-function skillInfo(id){ return SKILL_META[id]||{name:id,desc:'该技能已挂载，暂无补充说明。',tone:'gray'}; }
+function skillInfo(id){ return SKILL_META[id]||BUILTIN_SKILL_META[id]||{name:id,desc:'该技能已挂载，暂无补充说明。',tone:'gray'}; }
 function skillCatalog(){
   return Object.keys(SKILL_META).map(function(id){
     var skill=skillInfo(id);
@@ -170,12 +171,14 @@ var EXPERTS=[
          ['接口鉴权怎么配？','配置鉴权与安全策略'],
          ['两边数据要同步，帮我设计方案','设计幂等同步任务与异常重试']]}
 ];
+var LEGACY_EXPERTS=EXPERTS;
+EXPERTS=BUILTIN_CATALOG;
 var BUILTIN_EXPERTS=EXPERTS;
 var MY_EXPERTS=[];                 /* 我自己创建的专家，落 localStorage */
 var EX={};
 function rebuildExperts(){
   EXPERTS=BUILTIN_EXPERTS.concat(MY_EXPERTS);
-  EX={}; EXPERTS.forEach(function(e){EX[e.id]=e});
+  EX={}; LEGACY_EXPERTS.forEach(function(e){EX[e.id]=e}); EXPERTS.forEach(function(e){EX[e.id]=e});
 }
 /* 平台原型安装官方版本时只替换内置定义，保留个人专家。 */
 function setBuiltinExperts(items){ BUILTIN_EXPERTS=items; rebuildExperts(); }
@@ -204,6 +207,31 @@ var STAGE_MODES={
   verification:['验证'],
   delivery:['集成']
 };
+/* 同一专家团可按问题类型采用不同交付路径；阶段 id 沿用任务执行层的能力映射。 */
+var TEAM_STAGE_SCENARIOS=[
+  {id:'feature',name:'功能开发',hint:'新需求、功能建设',example:'新增一项业务功能',stages:STAGES},
+  {id:'bug',name:'缺陷修复',hint:'错误、异常、回归问题',example:'修复审批提交失败',stages:[
+    {id:'requirements',name:'问题定位',desc:'复现问题，确认影响范围和根因'},
+    {id:'design',name:'修复方案',desc:'确定最小修复范围及兼容处理'},
+    {id:'implementation',name:'修复实现',desc:'修改代码并完成针对性自测'},
+    {id:'verification',name:'回归验证',desc:'验证问题解决且相关功能未受影响'},
+    {id:'delivery',name:'发布确认',desc:'发布修复并确认线上结果'}
+  ]},
+  {id:'consult',name:'方案咨询',hint:'评估、调研、方案设计',example:'评估审批流程改造方案',stages:[
+    {id:'requirements',name:'目标澄清',desc:'明确问题、约束和判断标准'},
+    {id:'design',name:'方案设计',desc:'比较可行路径并形成建议'},
+    {id:'verification',name:'方案评审',desc:'检查风险、成本和可实施性'},
+    {id:'delivery',name:'方案交付',desc:'交付结论、依据与后续建议'}
+  ]}
+];
+function teamStageScenario(issue){
+  var type=String(issue?.type||issue?.issueType||''),title=String(issue?.title||'');
+  if(/Bug|缺陷|故障/i.test(type))return TEAM_STAGE_SCENARIOS[1];
+  if(/咨询|评估|调研|方案/.test(type))return TEAM_STAGE_SCENARIOS[2];
+  if(/Bug|缺陷|故障|修复|错误|异常|失败|回归/i.test(title))return TEAM_STAGE_SCENARIOS[1];
+  if(/^(评估|调研|咨询|分析一下)/.test(title))return TEAM_STAGE_SCENARIOS[2];
+  return TEAM_STAGE_SCENARIOS[0];
+}
 function stageById(id){ for(var i=0;i<STAGES.length;i++){ if(STAGES[i].id===id) return STAGES[i]; } return null; }
 
 /* 模型级别：智能体运行时用哪个推理档位 */
@@ -286,35 +314,19 @@ var PRESET_TEAMS=[
   {id:'cosmic-app-dev',preset:true,name:'苍穹应用开发专家团',by:'Lingee 内置',
    desc:'面向苍穹应用完整交付，覆盖需求、表单、流程、报表、二开插件、接口与质量验证。',
    domains:['苍穹应用','表单','工作流','报表','集成'],
-   leadId:'software-team-lead',
-   members:['software-team-lead','software-product-manager','cosmic-form','cosmic-workflow','cosmic-report','cosmic-plugin','cosmic-api','software-qa-engineer'],
+   leadId:'cosmic-team-lead',
+   members:['cosmic-team-lead','cosmic-product-manager','cosmic-architect','cosmic-metadata-expert','cosmic-software-engineer','cosmic-api-engineer','kwc-frontend-engineer','cosmic-ui-designer','cosmic-qa-engineer','cosmic-code-reviewer'],
    cmds:[['帮我在苍穹上做一套请假申请，从单据到审批','表单、流程、报表、接口一体化交付'],
          ['这个业务要在苍穹落地，帮我出方案并实现','先出需求规格，再按依赖拆分实现与验证'],
          ['苍穹单据、流程和报表都要改，帮我排一下','按依赖顺序编排配置、二开与验证任务']]},
   {id:'general-app-dev',preset:true,name:'通用应用开发专家团',by:'Lingee 内置',
    desc:'面向 Web 与通用业务应用，覆盖产品、架构、体验、前后端实现、测试与集成交付。',
    domains:['通用应用','Web','前端','产品设计'],
-   leadId:'software-team-lead',
-   members:['software-team-lead','software-product-manager','software-architect','software-engineer','frontend-engineer','ux-designer','software-qa-engineer'],
+   leadId:'general-app-team-lead',
+   members:['general-app-team-lead','general-app-product-expert','general-app-architecture-expert','general-app-development-expert','general-app-qa-expert'],
    cmds:[['帮我把购物车支持优惠券做成能上线的功能','从需求、设计、实现到验收走完整闭环'],
          ['做一个业务管理 Web 应用','产品、架构、体验与工程协同交付'],
-         ['按这份设计稿把页面实现出来并走查一遍','实现页面并完成设计与质量验证']]},
-  {id:'kingdee-saas-implementation',preset:true,name:'金蝶 SaaS 实施专家团',by:'Lingee 内置',
-   desc:'面向金蝶 SaaS 业务落地，梳理实施需求并完成表单、流程、报表和系统集成配置。',
-   domains:['金蝶 SaaS','实施','流程配置','业务集成'],
-   leadId:'software-team-lead',
-   members:['software-team-lead','software-product-manager','cosmic-form','cosmic-workflow','cosmic-report','cosmic-api'],
-   cmds:[['帮我梳理费用报销的 SaaS 实施方案','从业务需求到配置清单形成实施方案'],
-         ['这套审批业务要在金蝶 SaaS 落地','完成表单、流程、报表与接口配置'],
-         ['帮我检查当前实施配置还缺什么','核对需求覆盖、配置结果和集成风险']]},
-  {id:'kingdee-secondary-dev',preset:true,name:'金蝶二次开发专家团',by:'Lingee 内置',
-   desc:'面向金蝶产品扩展开发，覆盖技术方案、插件与接口实现、前端扩展、测试和升级兼容。',
-   domains:['金蝶二开','插件','开放接口','前端扩展'],
-   leadId:'software-architect',
-   members:['software-architect','software-engineer','frontend-engineer','cosmic-plugin','cosmic-api','software-qa-engineer'],
-   cmds:[['现有金蝶应用要增加一个二开功能','定位扩展点，完成方案、实现与验证'],
-         ['帮我开发并联调这个苍穹插件','完成插件、接口和前端扩展的协同交付'],
-         ['这次升级会不会影响已有二开','检查扩展点、接口契约和回归风险']]}
+         ['按这份设计稿把页面实现出来并走查一遍','实现页面并完成设计与质量验证']]}
 ];
 
 export function initExpertData() {
@@ -324,4 +336,4 @@ export function initExpertData() {
 /* MY_EXPERTS 由其它模块写回；import 绑定只读，所以走这个 setter */
 export function set_MY_EXPERTS(v){ MY_EXPERTS=v; return v; }
 
-export { AV_KEYS, EX, EXPERTS, MODEL_TIERS, MY_EXPERTS, PRESET_TEAMS, STAGE_MODES, STAGES, WORK_MODES, askFor, compChip, parseComp, pendingInputs, phraseHtml, rebuildExperts, setBuiltinExperts, skillCatalog, skillInfo, stageById, tierInfo, xav, xesc };
+export { AV_KEYS, EX, EXPERTS, MODEL_TIERS, MY_EXPERTS, PRESET_TEAMS, STAGE_MODES, STAGES, TEAM_STAGE_SCENARIOS, WORK_MODES, askFor, compChip, parseComp, pendingInputs, phraseHtml, rebuildExperts, setBuiltinExperts, skillCatalog, skillInfo, stageById, teamStageScenario, tierInfo, xav, xesc };

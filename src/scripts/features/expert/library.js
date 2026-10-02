@@ -1,4 +1,4 @@
-import { isMoreAssets, syncAssetBrowser, cloudCardsHtml } from '../collab/expert-market.js';
+import { assetModesHtml, assetTagsHtml, isMoreAssets, syncAssetBrowser, cloudCardsHtml, teamWorkModes } from '../collab/expert-market.js';
 import { layerOf, layerVisible, layerActions, layerToolbar, handleLayerAction } from './layers.js';
 import { $, $$ } from '../../core/dom.js';
 import { summon } from './automatch.js';
@@ -45,10 +45,9 @@ function renderExpertGrid(){
         +'<div class="card-top">'+facesHtml(t.members,4)
         +'<div class="card-titles"><div class="card-title-row"><span class="card-title">'+xesc(t.name)+'</span>'
         +'</div>'
-        +'<div class="x-sub">'+t.members.length+' 位专家</div></div></div>'
+        +'<div class="x-sub asset-card-summary"><span>'+t.members.length+' 个专家</span><span class="asset-card-upgrade-anchor"></span></div></div></div>'
         +'<div class="card-desc">'+xesc(t.desc)+'</div>'
-        +'<div class="card-tags">'
-        +teamDomains(t).slice(0,4).map(function(g){return '<span class="ptag">'+xesc(g)+'</span>'}).join('')+'</div>'+layerActions('team',t)+'</div>';
+        +assetTagsHtml(teamDomains(t))+assetModesHtml(teamWorkModes(t))+layerActions('team',t)+'</div>';
     }).join('');
   }else{
     var rows2=EXPERTS.filter(function(e){
@@ -86,7 +85,7 @@ function openExpertModal(id){
   resetKnDetail();
   xdTab='overview';
   $('#expertModalHead').innerHTML='<div class="x-detail-head"><img class="x-av-lg" src="'+xav(e.k)+'" alt="">'
-    +'<div><div class="modal-title">'+xesc(e.name)+(layerOf('expert',e)!=='personal'?' <span class="x-badge x-badge-ro">只读</span>':'')+'</div>'
+    +'<div><div class="modal-title">'+xesc(e.name)+(layerOf('expert',e)==='builtin'?' <span class="x-badge x-badge-ro">内置</span>':'')+'</div>'
     +'<div class="x-sub">'+xesc([e.role,e.by].filter(Boolean).join(' · '))+'</div></div></div>'
     +'<button class="modal-close" type="button" data-x-close aria-label="关闭">×</button>';
 

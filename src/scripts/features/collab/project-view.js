@@ -13,7 +13,7 @@ import { openTaskDetail, tkOpenProjectTaskCreate, tkSetProjectListMode } from '.
 import { tkCanViewTask, tkGetPerson, tkGetTaskArtifacts, tkGetTasks } from '../tasks-v2/data.js';
 import { createDeliveryActivity } from './delivery-activity.js';
 import { renderArtifactPreview } from './run-artifacts.js';
-import { TEAMS } from '../expert/store.js';
+import { TEAMS, teamById } from '../expert/store.js';
 import { cvProjectFolderIcon, cvProjectIconColor, cvProjectIconOptions } from './project-icons.js';
 import { cvEnsureProjectPerson, cvSearchLingeePeople } from './people-search.js';
 import { recordProjectConfigAudit } from './audit-log.js';
@@ -129,7 +129,7 @@ function cvRenderProjectList(){
     var members=cvPeopleInProject(p);
     var sc=PJ_STATUS[p.status||'planned']||PJ_STATUS.planned;
     var statusKey=PJ_STATUS[p.status]?p.status:'planned';
-    var teamName=TEAMS.find(function(team){return team.id===p.defaultTeam;})?.name||'未设置专家团';
+    var teamName=teamById(p.defaultTeam)?.name||'未设置专家团';
     var memberNames=members.map(function(member){return member.name;}).join('、')||'暂无成员';
     var avatars=members.slice(0,4).map(function(member,index){return '<span class="pj-card-avatar pj-card-avatar--'+index+'" aria-hidden="true">'+xesc((member.name||'?').slice(0,1))+'</span>';}).join('');
     if(members.length>4)avatars+='<span class="pj-card-avatar pj-card-avatar--more" aria-hidden="true">+'+(members.length-4)+'</span>';
@@ -269,7 +269,7 @@ function cvRenderProjectDetail(resetDraft){
   if(!p){cvResetProjectListState();return;}
   var canEdit=cvMayEditProject(p),editing=canEdit&&cvProjectDetailEditing,draft=cvProjectDetailDraft?.projectId===p.id?cvProjectDetailDraft:null;
   if(!canEdit)cvProjectDetailEditing=false;
-  var values=Object.assign({name:p.name||'',status:p.status||'planned',priority:p.priority||'中',owner:p.owner||'',defaultTeam:p.defaultTeam||'',start:p.start||'',end:p.end||'',repo:p.repo||'',desc:p.desc||''},draft?.values||{});
+  var values=Object.assign({name:p.name||'',status:p.status||'planned',priority:p.priority||'中',owner:p.owner||'',defaultTeam:teamById(p.defaultTeam)?.id||p.defaultTeam||'',start:p.start||'',end:p.end||'',repo:p.repo||'',desc:p.desc||''},draft?.values||{});
   cvDetailIconColor=draft?.dot||cvProjectIconColor(p.dot);
   cvDetailOwnerSelected=draft?.ownerSelected||null;
   var members=cvPeopleInProject(p);
@@ -289,7 +289,7 @@ function cvRenderProjectDetail(resetDraft){
     +cvProjectDetailField('状态','status',values.status,(PJ_STATUS[p.status||'planned']||PJ_STATUS.planned).t,editing,false)
     +cvProjectDetailField('优先级','priority',values.priority,p.priority||'中',editing,false)
     +cvProjectDetailField('负责人','owner',values.owner,p.owner||'未设置',editing,false)
-    +cvProjectDetailField('专家团','defaultTeam',values.defaultTeam,TEAMS.find(function(team){return team.id===p.defaultTeam;})?.name||'未设置',editing,false)
+    +cvProjectDetailField('专家团','defaultTeam',values.defaultTeam,teamById(p.defaultTeam)?.name||'未设置',editing,false)
     +cvProjectDetailField('开始时间','start',values.start,p.start||'—',editing,false)
     +cvProjectDetailField('结束时间','end',values.end,p.end||'—',editing,false)
     +cvProjectDetailField('代码仓库','repo',values.repo,p.repo||'未设置',editing,false)

@@ -4,18 +4,19 @@ import { $, $$ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
 import { summon } from './automatch.js';
 import { renderExpertChips } from './chips.js';
-import { EX, EXPERTS, STAGES, xav, xesc } from './data.js';
+import { EX, EXPERTS, STAGE_MODES, TEAM_STAGE_SCENARIOS, xav, xesc } from './data.js';
 import { openExpertEditor } from './editor.js';
 import { openExpertModal, renderExpertGrid } from './library.js';
-import { TEAMS, activePick, clearPick, saveTeams, set_TEAMS, teamById, teamLint } from './store.js';
-import { installedTeamMemberVersion } from './platform-admin.js';
+import { TEAMS, activePick, clearPick, saveTeams, set_TEAMS, teamById } from './store.js';
+import { startAssetEditChat } from '../composer.js';
+import { hideAssetEditorPanel, showAssetEditorPanel } from './editor-panel.js';
 /* 专家团配置弹窗与添加成员
    拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
    由 main.js 按拆分前的原始顺序调用。 */
 
 
 /* ---------- 专家团配置弹窗 ---------- */
-var teamModal=$('#teamModal'), teamDraft=null, teamEditingId=null, teamModalTab='info';
+var teamModal=$('#teamModal'), teamDraft=null, teamEditingId=null, teamModalTab='info', teamStageScenarioId='feature';
 function setTeamModalTab(which){
   teamModalTab=which||'info';
   $$('#teamModal [data-team-tab]').forEach(function(el){
@@ -31,14 +32,22 @@ function teamCmdList(d){
                      .filter(function(c){ return c[0]; });
 }
 function openTeamModal(id){
+  var selected=id?teamById(id):null;
+  if(selected&&layerOf('team',selected)==='personal'){
+    startAssetEditChat('team',id,selected.name);
+    return;
+  }
+  populateTeamModal(id);
+}
+function populateTeamModal(id){
   var t=id?teamById(id):null;
   if(!t) return;
   teamEditingId=id;
+  teamStageScenarioId='feature';
   teamDraft={name:t.name,desc:t.desc,leadId:t.leadId,members:t.members.slice(),preset:layerOf('team',t)!=='personal',
-               memberRefs:(t.memberRefs||[]).map(function(ref){return {id:ref.id,version:ref.version};}),
                domains:(t.domains||[]).slice(),
                cmds:(t.cmds&&t.cmds.length)?t.cmds.map(function(c){return c.slice()}):[['','']]};
-  $('#teamModalTitle').textContent = t.name;
+  $('#teamModalTitle').textContent = teamDraft.preset?t.name:'编辑专家团 · '+t.name;
   /* 内置团：标题已经是名字，正文只留一句话说明，不重复摆一份只读表单；
      自建团：正常的可编辑名称 + 说明 */
   $('#teamEditFields').classList.toggle('hidden', teamDraft.preset);
@@ -57,8 +66,8 @@ function openTeamModal(id){
   renderTeamModal();
   setTeamModalTab('info');
   var body=$('#teamModal .modal-body'); if(body) body.scrollTop=0;
-  teamModal.classList.add('show');
-  if(!teamDraft.preset) setTimeout(function(){ $('#teamName').focus(); },40);
+  if(teamDraft.preset)teamModal.classList.add('show');
+  else showAssetEditorPanel(teamModal);
 }
 function renderTeamModal(){
   var d=teamDraft; if(!d) return;
@@ -69,7 +78,7 @@ function renderTeamModal(){
       +'<div class="x-member-b" data-view-expert="'+id+'"><div class="x-member-n">'+xesc(e.name)
       +(d.leadId===id?'<span class="x-badge x-badge-lead">组长</span>':'')
       +(e.ro?'<span class="x-badge x-badge-ro">只读</span>':'')
-      +(d.preset&&installedTeamMemberVersion(teamEditingId,id)?'<span class="x-badge">v'+installedTeamMemberVersion(teamEditingId,id)+'</span>':'')+'</div></div>'
+      +'</div></div>'
       +'<div class="x-member-a">'
       +(d.leadId===id?'':'<button type="button" class="x-ic" data-set-lead="'+id+'" title="设为组长">☆</button>')
       +'<button type="button" class="x-ic x-ic-dg" data-rm-member="'+id+'" title="移出">✕</button></div></div>';
@@ -91,19 +100,28 @@ function renderTeamModal(){
     ? '点任意一条就会带着这个团开一个新会话。'
     : '用户平时会怎么找这个团做事。点「发起对话」会带上第一条。';
 
-  var warns=teamLint(d);
-  $('#teamWarnings').innerHTML = warns.map(function(w){
-    return '<div class="x-warn"><span>⚠</span><span>'+xesc(w)+'</span></div>'; }).join('');
-
-  var stagesEl=$('#teamStages');
-  if(stagesEl) stagesEl.innerHTML = STAGES.map(function(s){
-    return '<div class="team-stage" role="listitem">'
-      +'<span class="team-stage-dot" aria-hidden="true"></span>'
-      +'<span class="team-stage-n">'+xesc(s.name)+'</span></div>';
-  }).join('');
+  renderTeamStages();
 
   $$('#teamMembers .x-member-a').forEach(function(a){ a.classList.toggle('hidden', !!d.preset); });
   $('#teamAddBtn').classList.toggle('hidden', !!d.preset);
+}
+function renderTeamStages(){
+  if(!teamDraft)return;
+  var scenario=TEAM_STAGE_SCENARIOS.find(function(item){return item.id===teamStageScenarioId})||TEAM_STAGE_SCENARIOS[0];
+  $('#teamStageScenarios').innerHTML=TEAM_STAGE_SCENARIOS.map(function(item){
+    var selected=item.id===scenario.id;
+    return '<button type="button" class="team-stage-scenario'+(selected?' active':'')+'" data-team-scenario="'+item.id+'" aria-pressed="'+selected+'">'
+      +'<strong>'+xesc(item.name)+'</strong><span>'+xesc(item.hint)+'</span><small>'+item.stages.length+' 个阶段</small></button>';
+  }).join('');
+  $('#teamStageScenarioTitle').textContent=scenario.name;
+  $('#teamStageScenarioHint').textContent='例如：'+scenario.example;
+  $('#teamStageScenarioCount').textContent=scenario.stages.length+' 个阶段';
+  var modes=new Set(teamDraft.members.flatMap(function(id){return EX[id]?.modes||[]}));
+  $('#teamStages').innerHTML=scenario.stages.map(function(stage,index){
+    var covered=(STAGE_MODES[stage.id]||[]).some(function(mode){return modes.has(mode)});
+    return '<div class="team-stage" role="listitem"><span class="team-stage-index">'+(index+1)+'</span><div class="team-stage-content"><strong>'+xesc(stage.name)+'</strong><p>'+xesc(stage.desc)+'</p></div>'
+      +(covered?'':'<span class="team-stage-gap" title="当前成员暂无对应工作模式">能力待补齐</span>')+'</div>';
+  }).join('');
 }
 
 /* ---------- 添加成员弹窗 ---------- */
@@ -126,11 +144,15 @@ function renderMemberList(){
   }).join('') : '<div class="x-empty-sm">没有匹配的专家</div>';
 }
 export function initTeamModal() {
+  document.addEventListener('lingee:asset-edit-session',function(ev){
+    if(ev.detail.kind==='team')populateTeamModal(ev.detail.id);
+  });
   if(teamModal){
     teamModal.addEventListener('click',function(e){
-      if(e.target===teamModal){ teamModal.classList.remove('show'); return; }
+      if(e.target===teamModal){ if(teamDraft&&!teamDraft.preset)hideAssetEditorPanel();else teamModal.classList.remove('show'); return; }
       var n;
       if(n=e.target.closest('[data-team-tab]')){ setTeamModalTab(n.getAttribute('data-team-tab')); return; }
+      if(n=e.target.closest('[data-team-scenario]')){ teamStageScenarioId=n.getAttribute('data-team-scenario');renderTeamStages();return; }
       if(n=e.target.closest('[data-team-cmd]')){
         if(!teamEditingId){ toast('先保存这个专家团，再对话','warning'); return; }
         teamModal.classList.remove('show');
@@ -143,6 +165,7 @@ export function initTeamModal() {
       }
       if(n=e.target.closest('[data-view-expert]')){
         var vid=n.getAttribute('data-view-expert'), vex=EX[vid];
+        if(vex&&vex.mine)teamModal.classList.remove('show');
         if(vex&&vex.mine) openExpertEditor(vid); else openExpertModal(vid);
         return;
       }
@@ -154,15 +177,15 @@ export function initTeamModal() {
         renderTeamModal(); return;
       }
     });
-    $('#teamModalClose').addEventListener('click',function(){ teamModal.classList.remove('show') });
-    $('#teamCancelBtn').addEventListener('click',function(){ teamModal.classList.remove('show') });
+    $('#teamModalClose').addEventListener('click',function(){if(teamDraft&&!teamDraft.preset)hideAssetEditorPanel();else teamModal.classList.remove('show');});
+    $('#teamCancelBtn').addEventListener('click',function(){if(teamDraft&&!teamDraft.preset)hideAssetEditorPanel();else teamModal.classList.remove('show');});
     $('#teamName').addEventListener('input',function(){ if(teamDraft.preset){ this.value=teamDraft.name; return; } teamDraft.name=this.value });
     $('#teamDesc').addEventListener('input',function(){ if(teamDraft.preset){ this.value=teamDraft.desc; return; } teamDraft.desc=this.value });
     $('#teamAddBtn').addEventListener('click',function(){ openMemberModal() });
     $('#teamAddCmd').addEventListener('click',function(){ teamDraft.cmds.push(['','']); renderTeamModal(); });
     $('#teamCallBtn').addEventListener('click',function(){
       if(!teamEditingId){ toast('先保存这个专家团，再对话','warning'); return; }
-      teamModal.classList.remove('show');
+      if(teamDraft&&!teamDraft.preset)hideAssetEditorPanel();else teamModal.classList.remove('show');
       summon('team',teamEditingId);
     });
     teamModal.addEventListener('input',function(ev){
@@ -174,7 +197,7 @@ export function initTeamModal() {
       if(!window.confirm('删除专家团「'+t.name+'」？此操作不可撤销。')) return;
       set_TEAMS(TEAMS.filter(function(x){ return x.id!==t.id; }));
       if(activePick.kind==='team'&&activePick.id===t.id) clearPick();
-      teamModal.classList.remove('show');
+      hideAssetEditorPanel();
       saveTeams(); renderExpertGrid(); renderExpertChips();
       toast('已删除「'+t.name+'」','success');
     });
@@ -191,7 +214,8 @@ export function initTeamModal() {
       t.domains=(d.domains||[]).slice();
       if(!saveTeams()){Object.assign(t,previous);toast('保存失败，编辑内容已保留，请重试','warning');return;}
       toast('已保存','success');
-      teamModal.classList.remove('show');
+      hideAssetEditorPanel();
+      document.dispatchEvent(new CustomEvent('lingee:asset-editor-saved',{detail:{kind:'team',id:t.id,name:t.name}}));
       renderExpertGrid(); renderExpertChips();
       if(ev.submitter?.id==='teamSubmitReviewBtn')submitAssetForReview('team',t);
     });

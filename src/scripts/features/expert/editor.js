@@ -7,6 +7,8 @@ import { AV_KEYS, EX, MODEL_TIERS, MY_EXPERTS, WORK_MODES, rebuildExperts, set_M
 import { renderKnPane, resetKnPane } from './knowledge.js';
 import { expertModal, renderExpertGrid } from './library.js';
 import { TEAMS, activePick, clearPick, saveTeams } from './store.js';
+import { startAssetEditChat } from '../composer.js';
+import { hideAssetEditorPanel, showAssetEditorPanel } from './editor-panel.js';
 /* 编辑已有的我的专家
    拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
    由 main.js 按拆分前的原始顺序调用。 */
@@ -41,6 +43,11 @@ function setXeTab(which){
   var body=$('#expertEditModal .modal-body'); if(body) body.scrollTop=0;
 }
 function openExpertEditor(id){
+  var e=EX[id];
+  if(!e||!e.mine||layerOf('expert',e)!=='personal')return;
+  startAssetEditChat('expert',id,e.name);
+}
+function populateExpertEditor(id){
   if(!expertEditModal) return;
   var e=id?EX[id]:null;
   if(!e||!e.mine||layerOf('expert',e)!=='personal') return;
@@ -50,7 +57,7 @@ function openExpertEditor(id){
        comp:e.comp.slice(),cmds:e.cmds.length?e.cmds.map(function(c){return c.slice()}):[['','']],
        kn:(e.kn||[]).slice(),knOff:(e.knOff||[]).slice(),knDocOff:(e.knDocOff||[]).slice(),
        knUp:(e.knUp||[]).map(function(f){return {n:f.n,t:f.t,up:f.up,by:f.by}})};
-  $('#expertEditTitle').textContent = '编辑专家';
+  $('#expertEditTitle').textContent = '编辑数字员工';
   xeSkillKw=''; $('#xeSkillSearch').value='';
   $('#xeName').value=xeDraft.name; $('#xeDesc').value=xeDraft.desc;
   $('#xeTags').value=xeDraft.tags.join('、'); $('#xeComp').value=xeDraft.comp.join('、');
@@ -58,8 +65,7 @@ function openExpertEditor(id){
   setXeTab('base');
   resetKnPane(xeDraft);
   renderExpertEditor();
-  expertEditModal.classList.add('show');
-  setTimeout(function(){ $('#xeName').focus(); },40);
+  showAssetEditorPanel(expertEditModal);
 }
 function renderExpertEditor(){
   var d=xeDraft; if(!d) return;
@@ -106,16 +112,19 @@ function splitLines(v){
 }
 
 export function initExpertEditor() {
+  document.addEventListener('lingee:asset-edit-session',function(ev){
+    if(ev.detail.kind==='expert')populateExpertEditor(ev.detail.id);
+  });
   if($('#xeTabs')) $('#xeTabs').addEventListener('click',function(e){
     var b=e.target.closest('.modal-tab'); if(b) setXeTab(b.getAttribute('data-xtab'));
   });
   if(expertEditModal){
-    $('#expertEditClose').addEventListener('click',function(){ expertEditModal.classList.remove('show') });
-    $('#xeCancelBtn').addEventListener('click',function(){ expertEditModal.classList.remove('show') });
+    $('#expertEditClose').addEventListener('click',hideAssetEditorPanel);
+    $('#xeCancelBtn').addEventListener('click',hideAssetEditorPanel);
     $('#xeAddCmd').addEventListener('click',function(){ xeDraft.cmds.push(['','']); renderExpertEditor(); });
-    $('#xeDeleteBtn').addEventListener('click',function(){ if(xeEditingId){ expertEditModal.classList.remove('show'); deleteMyExpert(xeEditingId); } });
+    $('#xeDeleteBtn').addEventListener('click',function(){ if(xeEditingId){ hideAssetEditorPanel(); deleteMyExpert(xeEditingId); } });
     expertEditModal.addEventListener('click',function(ev){
-      if(ev.target===expertEditModal){ expertEditModal.classList.remove('show'); return; }
+      if(ev.target===expertEditModal){ hideAssetEditorPanel(); return; }
       var a=ev.target.closest('[data-xe-av]');
       if(a){ xeDraft.k=a.getAttribute('data-xe-av'); renderExpertEditor(); return; }
       var m=ev.target.closest('[data-xe-mode]');
@@ -169,7 +178,8 @@ export function initExpertEditor() {
       if(!saveTeams()){MY_EXPERTS[index]=previous;toast('保存失败，编辑内容已保留，请重试','warning');return;}
       toast('已保存','success');
       rebuildExperts();
-      expertEditModal.classList.remove('show');
+      hideAssetEditorPanel();
+      document.dispatchEvent(new CustomEvent('lingee:asset-editor-saved',{detail:{kind:'expert',id:rec.id,name:rec.name}}));
       renderExpertGrid(); renderExpertChips();
       if(ev.submitter?.id==='xeSubmitReviewBtn')submitAssetForReview('expert',rec);
     });

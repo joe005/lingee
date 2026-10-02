@@ -32,11 +32,14 @@
         </section>
       </div>
       <div class="team-pane hidden" data-team-pane="stages" role="tabpanel">
-        <section class="env-form-section">
-          <div class="env-form-section-title">交付阶段</div>
-          <div class="team-stages" id="teamStages" role="list" aria-label="交付阶段，从上到下"></div>
-        </section>
-        <div id="teamWarnings"></div>
+        <div class="team-stage-intro"><strong>按问题选择交付路径</strong><span>不同问题可采用不同阶段；创建任务时自动匹配，也可在执行计划中调整。</span></div>
+        <div class="team-stage-layout">
+          <div class="team-stage-scenarios" id="teamStageScenarios" aria-label="问题类型"></div>
+          <section class="team-stage-detail" aria-live="polite">
+            <div class="team-stage-detail-head"><div><strong id="teamStageScenarioTitle"></strong><span id="teamStageScenarioHint"></span></div><span id="teamStageScenarioCount"></span></div>
+            <div class="team-stages" id="teamStages" role="list" aria-label="当前问题类型的交付阶段"></div>
+          </section>
+        </div>
       </div>
       <div class="team-pane hidden" data-team-pane="commands" role="tabpanel">
         <section class="env-form-section">

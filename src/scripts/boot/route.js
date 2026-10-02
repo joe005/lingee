@@ -6,6 +6,7 @@ import { appendAssistantMessage, appendUserMessage, messagesList, restoreChatSes
 import { dsNavEl, renderOverview } from '../features/design/index.js';
 import { stripBase } from '../core/base-path.js';
 import { openChangelog } from '../features/changelog.js';
+import { getPlatformIdentity } from '../features/login.js';
 /* 启动路由：从路径 / 旧链接 / localStorage 还原视图
    拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
    由 main.js 按拆分前的原始顺序调用。 */
@@ -66,7 +67,7 @@ export function initRoute() {
     else if(dsViewParam==='agents') setNavActive('智能体开发');
     else if(dsViewParam==='apps') setNavActive('应用开发');
     else if(dsViewParam==='tasks') setNavActive('任务');
-    else if(dsViewParam==='platform') setNavActive('管理平台');
+    else if(dsViewParam==='platform') setNavActive(getPlatformIdentity()?.role==='tenant'?'租户管理':'原厂管理');
     else if(dsViewParam==='collab'){
       setNavActive('协作开发');
       /* 协作开发模块最后才初始化，这里只记下要打开的页签。

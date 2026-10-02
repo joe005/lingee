@@ -58,8 +58,10 @@ function normalizedStatus(status) {
 }
 
 export function createDeliveryActivity(task, project, options = {}) {
-  const team = TEAMS.find(item => item.id === task.teamId || project?.defaultTeam)
-    || PRESET_TEAMS.find(item => item.id === project?.defaultTeam)
+  const oldTeamAlias = {'kingdee-saas-implementation':'cosmic-app-dev','kingdee-secondary-dev':'general-app-dev'};
+  const teamId = oldTeamAlias[task.teamId || project?.defaultTeam] || task.teamId || project?.defaultTeam;
+  const team = TEAMS.find(item => item.id === teamId)
+    || PRESET_TEAMS.find(item => item.id === teamId)
     || {id:'task-ai',name:'AI 助手',members:EXPERTS[0] ? [EXPERTS[0].id] : [],leadId:EXPERTS[0]?.id};
   const status = normalizedStatus(task.status);
   const date = task.createDate || options.date || '2026-09-22';

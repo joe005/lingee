@@ -1,12 +1,14 @@
 #view-collab .expert-card{position:relative;cursor:pointer;text-align:left}
 #view-collab .expert-section-title{justify-content:flex-start}
 #view-collab .expert-section-desc{font-size:12px;font-weight:400;color:var(--text-secondary)}
-#view-collab #cv-experts .apps-grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr));gap:16px;margin-bottom:24px}
-#view-collab #cv-experts .x-card{display:flex;flex-direction:column;min-height:184px;padding:20px 22px;border-radius:14px}
+#view-collab #cv-experts .apps-grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr));gap:16px;margin-bottom:24px;align-items:start}
+#view-collab #cv-experts .apps-grid:not(.asset-cloud-grid){align-items:stretch}
+#view-collab #cv-experts .x-card{display:flex;flex-direction:column;padding:20px 22px;border-radius:14px}
 #view-collab #cv-experts .x-card .card-top{gap:14px;padding-right:42px}
 #view-collab #cv-experts .x-card .card-title{white-space:normal;line-height:1.35}
-#view-collab #cv-experts .x-card .card-desc{margin:16px 0 14px;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;line-height:1.6}
-#view-collab #cv-experts .x-card .card-tags{flex-wrap:wrap;gap:6px;margin-top:auto}
+#view-collab #cv-experts .x-card .card-desc{margin:12px 0 10px;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;line-height:1.6}
+#view-collab #cv-experts .apps-grid:not(.asset-cloud-grid) .x-card .card-desc{flex-grow:1}
+#view-collab #cv-experts .x-card .card-tags{flex-wrap:wrap;gap:6px;margin-top:0}
 #view-collab #cv-experts .x-card .ptag{font-size:11px;padding:4px 8px}
 #view-collab .expert-av{width:32px;height:32px;border-radius:50%;flex-shrink:0}
 #view-collab .expert-flag{margin-left:6px;font-size:10px;font-weight:500;color:var(--text-secondary);
@@ -32,16 +34,24 @@
 #view-collab .expert-layer-tabs{border-bottom:1px solid var(--border);gap:16px}
 #view-collab .expert-layer-tabs .list-page-tab{border-radius:0;border:0;border-bottom:2px solid transparent;padding:10px 4px;background:transparent}
 #view-collab .expert-layer-tabs .list-page-tab.active{border-bottom-color:var(--brand);color:var(--brand)}
-#view-collab .asset-cloud-grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr));gap:16px}
+#view-collab .asset-cloud-grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr));gap:16px;align-items:start}
 #view-collab .asset-cloud-grid .x-card{display:flex;flex-direction:column;text-align:left}
+#view-collab #cvExpertSections .card-top,#view-collab #expertGrid .card-top{align-items:flex-start}
+#view-collab #expertGrid:not(.asset-cloud-grid) .card-tags{margin-top:0}
+#view-collab .asset-cloud-grid .card-tags{margin-top:12px}
+#view-collab .asset-cloud-grid .x-modes{margin-top:8px}
 #view-collab .asset-cloud-grid .expert-layer-footer{margin-top:auto}
-#view-collab .expert-market-note{color:var(--text-secondary);font-size:var(--tb-small-size);line-height:1.6;margin:0 0 16px}
 #view-collab .expert-market-update{color:var(--warning);background:var(--warning-bg)}
 #view-collab .asset-cloud-grid .platform-btn:disabled{cursor:default;color:var(--text-secondary);background:var(--fill-1)}
 /* 卡片自动提示升级；未安装内容以右上角加号操作。 */
 #view-collab .expert-upgrade-badge{display:inline-flex;align-items:center;gap:4px;margin:4px 0 0 8px;padding:3px 8px;border:0;border-radius:var(--tb-radius);background:var(--warning-bg);color:var(--warning);font:inherit;font-size:var(--tb-small-size);line-height:1.4;white-space:nowrap;cursor:pointer;vertical-align:middle}
 #view-collab .expert-upgrade-badge:hover{box-shadow:inset 0 0 0 1px currentColor}
 #view-collab .expert-upgrade-badge:focus-visible,#view-collab .expert-install-plus:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+#view-collab .asset-card-summary{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px;line-height:1.4}
+#view-collab .asset-card-upgrade-anchor{display:inline-flex;align-items:center}
+#view-collab .asset-card-summary .expert-upgrade-badge{margin:0}
+#view-collab #cvExpertSections .card-title-row,#view-collab #expertGrid:not(.asset-cloud-grid) .card-title-row{flex-wrap:wrap;gap:4px;min-width:0}
+#view-collab #cvExpertSections .expert-upgrade-badge,#view-collab #expertGrid:not(.asset-cloud-grid) .expert-upgrade-badge{margin:0}
 #view-collab .platform-client-badge{margin-left:6px;align-self:center;flex:none;background:var(--fill-1);color:var(--text-secondary);border-radius:var(--tb-radius)}
 #view-collab .asset-cloud-grid .x-card{position:relative;min-width:0}
 #view-collab .asset-cloud-grid .expert-market-uninstalled{padding-right:64px}
@@ -50,6 +60,7 @@
 #view-collab .asset-cloud-grid .card-title-row{flex-wrap:wrap;gap:4px;min-width:0}
 #view-collab .asset-cloud-grid .card-title{white-space:normal}
 #view-collab .asset-cloud-grid .expert-market-uninstalled .card-desc{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;margin-bottom:0}
+#view-collab .cv-scroll-soft #expertGrid.asset-cloud-grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr))}
 
 
 /* 来源页签与搜索、新增组成同一行胶囊工具栏。 */

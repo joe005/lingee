@@ -1,6 +1,6 @@
 import { CV_TASKS, CV_PROJECTS } from './data.js';
 import { TEAMS } from '../expert/store.js';
-import { EX, STAGES, STAGE_MODES } from '../expert/data.js';
+import { EX, STAGE_MODES, teamStageScenario } from '../expert/data.js';
 import { toast } from '../../core/toast.js';
 /* 任务看板共享核心：列定义、当前任务、状态持久化与派生工具
    task-board / new-task / task-chat 三个模块共用，避免彼此循环依赖。 */
@@ -20,8 +20,8 @@ export const tbColumns = [
 export const tbBoardColumns = tbColumns.filter(c => c[0] !== '待规划');
 const storageKey = 'lingee_task_board_v1';
 const legacyTeamIds = {
-  'software-company': 'general-app-dev', 'fast-app': 'kingdee-saas-implementation',
-  'cosmic-team': 'cosmic-app-dev', 'web-team': 'kingdee-secondary-dev',
+  'software-company': 'general-app-dev', 'fast-app': 'cosmic-app-dev',
+  'cosmic-team': 'cosmic-app-dev', 'web-team': 'general-app-dev',
 };
 let selected = null;
 
@@ -55,12 +55,13 @@ export function tbMatchExperts(t) {
 }
 export function tbPriority(t) { return t.priority || (t.type === 'Bug' ? '高' : '中'); }
 /* 专家团实际能覆盖到的阶段：按团内成员的工作模式，交叉 STAGE_MODES 过滤。 */
-export function tbTeamStages(team) {
-  if (!team) return STAGES.slice();
+export function tbTeamStages(team, issue) {
+  const stages = teamStageScenario(issue).stages;
+  if (!team) return stages.slice();
   const modes = {};
   (team.members || []).forEach(id => { const e = EX[id]; if (e) (e.modes || []).forEach(m => { modes[m] = true; }); });
-  const covered = STAGES.filter(s => (STAGE_MODES[s.id] || []).some(m => modes[m]));
-  return covered.length ? covered : STAGES.slice();
+  const covered = stages.filter(s => (STAGE_MODES[s.id] || []).some(m => modes[m]));
+  return covered.length ? covered : stages.slice();
 }
 export function tbLabel(status) { return tbColumns.find(c => c[0] === status)?.[1] || status; }
 /* 任务是否已启动：待规划与待办视为未启动，目标与分工仍可编辑；

@@ -83,7 +83,11 @@ function saveTeams(){
     return true;
   }catch(e){ return false; }
 }
-function teamById(id){ for(var i=0;i<TEAMS.length;i++) if(TEAMS[i].id===id) return TEAMS[i]; return null; }
+function teamById(id){
+  var current=({'kingdee-saas-implementation':'cosmic-app-dev','kingdee-secondary-dev':'general-app-dev'})[id]||id;
+  for(var i=0;i<TEAMS.length;i++) if(TEAMS[i].id===current) return TEAMS[i];
+  return null;
+}
 
 /* ---------- 团队能力自检 ----------
    专家团不是一条写死的流程，谁做哪一步由编排在运行时按当前任务动态决定；

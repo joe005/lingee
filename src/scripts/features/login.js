@@ -23,6 +23,7 @@ var ACCOUNTS={
   'liangpingxian@gmail.com':{pass:'lingee520',role:'owner',name:'Xian',avatar:'L'},
   /* 团队人员账号（账号 = 姓名） */
   '吴宏超':{pass:'lingee520',role:'owner',name:'吴宏超',avatar:'吴'},
+  '张工':{pass:['KDadm!@#2022','lingee520'],role:'owner',name:'张工',avatar:'张'},
   '部伟':{pass:'lingee520',role:'owner',name:'部伟',avatar:'部'},
   '张利军':{pass:'lingee520',role:'owner',name:'张利军',avatar:'张'},
   '王育权':{pass:'lingee520',role:'owner',name:'王育权',avatar:'王'},
@@ -50,13 +51,19 @@ var ACCOUNTS={
 /* 仅暴露可登录账号的公开资料，供协作人员选择；不包含密码和演示角色账号。 */
 var LOGIN_PEOPLE_IDS={
   'wuhc2023@gmail.com':'p22','17299999999':'p01','6686612@qq.com':'p23','66866':'p23',
-  '吴宏超':'p22','部伟':'p29','张利军':'p30','王育权':'p31','王工':'p03','付鹏城':'p32',
+  '吴宏超':'p22','张工':'p01','部伟':'p29','张利军':'p30','王育权':'p31','王工':'p03','付鹏城':'p32',
   '陈惠琼':'p33','吴晓锋':'p23','钟伟纯':'p35','刘鉴洲':'p36','陈谨':'p37',
   '陈来珍':'p38','暴福音':'p39','荆龙刚':'p40','梁平贤':'p41','陈瑾':'p37',
   'owner':'p22','dev':'p01','project_manager':'p04','pm':'p04','qa':'p05','ops':'p07'
 };
 export function getLoginPersonId(){ return LOGIN_PEOPLE_IDS[getAuthedUser()] || ''; }
 export function getLoginAccount(){ return getAuthedUser() || ''; }
+export function getPlatformIdentity(){
+  var personId=getLoginPersonId();
+  if(personId==='p22')return {role:'factory',tenantId:''};
+  if(personId==='p01')return {role:'tenant',tenantId:'ws-build'};
+  return null;
+}
 function getLoginPeople(){
   return Object.keys(ACCOUNTS).filter(function(account){return account.includes('@')||/^\d{11}$/.test(account);}).map(function(account){
     var profile=ACCOUNTS[account];
@@ -105,7 +112,8 @@ function applyUserInfo(user){
     var nb=nm&&nm.parentNode;
     if(nb){ tag=document.createElement('span'); tag.id='userRoleTag'; tag.className='user-role-tag'; nb.insertBefore(tag,nm.nextSibling); }
   }
-  if(tag) tag.textContent=(DEMO_ROLES.filter(function(r){return r.id===acc.role;})[0]||{}).label||'管理员';
+  var platformRole=getPlatformIdentity()?.role;
+  if(tag) tag.textContent=platformRole==='tenant'?'租户管理员':platformRole==='factory'?'原厂管理员':(DEMO_ROLES.filter(function(r){return r.id===acc.role;})[0]||{}).label||'管理员';
 }
 /* 登录框登录后仍留在 DOM 里，Chrome 会把整页当登录页，
    往搜索框之类的文本框推荐保存的账号。禁用掉就不再是自动填充来源。 */

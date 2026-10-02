@@ -1,4 +1,4 @@
-import { isMoreAssets, syncAssetBrowser, cloudCardsHtml } from './expert-market.js';
+import { assetModesHtml, assetTagsHtml, isMoreAssets, syncAssetBrowser, cloudCardsHtml } from './expert-market.js';
 import { layerOf, layerVisible, layerActions, layerToolbar } from '../expert/layers.js';
 import { $ } from '../../core/dom.js';
 import { EXPERTS, skillInfo, xav, xesc } from '../expert/data.js';
@@ -24,17 +24,15 @@ function cvExpertGroups(){
 }
 function cvBuildExpertCard(e){
   /* 与专家团卡片统一用 app-card x-card 结构，更清爽 */
-  var skills=(e.skills||[]).map(function(id){return skillInfo(id)});
-  var tags=skills.slice(0,3).map(function(s){return '<span class="ptag">'+xesc(s.name)+'</span>'}).join('')
-    +(skills.length>3?'<span class="ptag">+'+(skills.length-3)+'</span>':'');
+  var tags=(e.tags||[]).length?e.tags:(e.skills||[]).map(function(id){return skillInfo(id).name});
   return '<div class="app-card x-card" data-cv-expert="'+e.id+'">'
-    +'<button type="button" class="x-call" data-cv-call="'+e.id+'" title="对话这位专家">对话</button>'
+    +'<button type="button" class="x-call" data-cv-call="'+e.id+'" title="对话这位数字员工">对话</button>'
     +'<div class="card-top"><img class="x-av" src="'+xav(e.k)+'" alt="">'
     +'<div class="card-titles"><div class="card-title-row"><span class="card-title">'+xesc(e.name)+'</span>'
-    +(layerOf('expert',e)!=='personal'?'<span class="x-badge x-badge-ro">只读</span>':'')+'</div>'
-    +'<div class="x-sub">'+xesc([e.role,e.by].filter(Boolean).join(' · '))+'</div></div></div>'
+    +(layerOf('expert',e)==='builtin'?'<span class="x-badge x-badge-ro">内置</span>':'')+'</div>'
+    +'<div class="x-sub asset-card-summary"><span>'+(e.skills||[]).length+' 个技能</span><span class="asset-card-upgrade-anchor"></span></div></div></div>'
     +'<div class="card-desc" title="'+xesc(e.desc)+'">'+xesc(e.desc)+'</div>'
-    +(tags?'<div class="card-tags">'+tags+'</div>':'')
+    +assetTagsHtml(tags)+assetModesHtml(e.modes)
     +layerActions('expert',e)+'</div>';
 }
 function cvRenderExperts(){
@@ -48,7 +46,7 @@ function cvRenderExperts(){
   var groups=cvExpertGroups();
   /* 搜索把结果筛空时要说清楚。 */
   if(cvExpertKw.trim() && !groups.some(function(g){return g.list.length})){
-    box.innerHTML='<div class="x-empty">没有匹配「'+xesc(cvExpertKw.trim())+'」的专家</div>';
+    box.innerHTML='<div class="x-empty">没有匹配「'+xesc(cvExpertKw.trim())+'」的数字员工</div>';
     return;
   }
   var cards=groups.flatMap(function(g){return g.list;}).map(cvBuildExpertCard).join('');

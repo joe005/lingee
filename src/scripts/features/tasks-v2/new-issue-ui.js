@@ -153,7 +153,7 @@ function setDefaultStageOwner(projectId) {
 
 /* 执行计划的执行阶段选项：项目对应专家团的每个交付阶段一项，逐个预置、不重复。 */
 const projectTeamOf = projectId => TEAMS.find(item => item.id === CV_PROJECTS.find(project => project.id === projectId)?.defaultTeam) || null;
-const planStageOptions = projectId => tbTeamStages(projectTeamOf(projectId)).map(stage => ({ name: stage.name, desc: stage.desc || '' }));
+const planStageOptions = projectId => tbTeamStages(projectTeamOf(projectId), currentTask()).map(stage => ({ name: stage.name, desc: stage.desc || '' }));
 
 /* 默认执行计划：按项目成员角色预选每个阶段的执行人；同角色多人先选第一人。 */
 function defaultPlanStages(projectId) {
@@ -463,6 +463,12 @@ export function initNewIssueUI(renderCallback, detailCallback) {
   byId('niuSmartBackHead').addEventListener('click', () => setCreateMode('manual'));
   byId('niuSmartSubmit').addEventListener('click', submitSmartCreate);
   byId('niuSmartProject').addEventListener('change', event => selectProject(event.target.value));
+  byId('niuType').addEventListener('change', () => {
+    if (activePlanScope !== 'create' || planLocked() || !selectedProjectId) return;
+    draftStages = defaultPlanStages(selectedProjectId);
+    draftConfirmed = false;
+    byId('niuCreateStageCount').textContent = String(draftStages.length);
+  });
   byId('niuSmartPrompt').addEventListener('keydown', event => {
     if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) { event.preventDefault(); submitSmartCreate(); }
   });
