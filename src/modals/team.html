@@ -2,13 +2,28 @@
 <div class="modal-overlay" id="teamModal">
   <form class="modal-card env-config-modal team-config-modal" id="teamConfigForm" role="dialog" aria-modal="true" aria-labelledby="teamModalTitle" novalidate>
     <div class="modal-header">
-      <div class="env-config-heading"><div class="modal-title" id="teamModalTitle">专家团详情</div></div>
+      <div class="env-config-heading">
+        <div class="team-panel-title-row">
+          <div class="modal-title" id="teamModalTitle">专家团详情</div>
+          <span class="team-panel-badge" id="teamModalBadge">已保存</span>
+        </div>
+        <div class="team-panel-sub" id="teamModalSub"></div>
+      </div>
+      <div class="modal-header-actions">
+        <button type="submit" class="modal-btn cancel team-panel-btn-save" id="teamSaveBtn"><svg class="btn-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg><span class="btn-label">保存</span></button>
+        <button type="button" class="modal-btn cancel team-panel-btn-test" id="teamCallBtn"><svg class="btn-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6M10 3v6.2L5.2 18a2 2 0 0 0 1.7 3h10.2a2 2 0 0 0 1.7-3L14 9.2V3"/><path d="M7.5 15h9"/></svg><span class="btn-label">测试</span></button>
+        <button type="submit" class="modal-btn confirm team-panel-btn-submit" id="teamSubmitReviewBtn"><svg class="btn-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M4 16v4h16v-4"/></svg><span class="btn-label">提交审核</span></button>
+        <button type="button" class="modal-btn cancel hidden" id="teamEditBtn">编辑</button>
+      </div>
       <button class="modal-close" id="teamModalClose" type="button" aria-label="关闭">×</button>
     </div>
-    <div class="modal-tabs team-modal-tabs" role="tablist" aria-label="专家团配置">
-      <button type="button" class="modal-tab team-modal-tab active" role="tab" aria-selected="true" data-team-tab="info">基本信息</button>
-      <button type="button" class="modal-tab team-modal-tab" role="tab" aria-selected="false" data-team-tab="stages">交付阶段</button>
-      <button type="button" class="modal-tab team-modal-tab" role="tab" aria-selected="false" data-team-tab="commands">触发词</button>
+    <div class="team-panel-tabs-row">
+      <div class="modal-tabs team-modal-tabs" role="tablist" aria-label="专家团配置">
+        <button type="button" class="modal-tab team-modal-tab active" role="tab" aria-selected="true" data-team-tab="info">基本信息</button>
+        <button type="button" class="modal-tab team-modal-tab" role="tab" aria-selected="false" data-team-tab="stages">交付阶段</button>
+        <button type="button" class="modal-tab team-modal-tab" role="tab" aria-selected="false" data-team-tab="commands">触发词</button>
+      </div>
+      <button type="button" class="team-panel-reset" id="teamResetBtn" hidden aria-label="还原为已保存内容" title="还原为已保存内容"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4v5h-5"/></svg></button>
     </div>
     <div class="modal-body env-config-body">
       <div class="team-pane" data-team-pane="info" role="tabpanel">
@@ -50,13 +65,6 @@
         </section>
       </div>
     </div>
-    <div class="modal-footer team-modal-footer">
-      <button type="button" class="btn-link team-delete-btn hidden" id="teamDeleteBtn">删除该专家团</button>
-      <div class="team-footer-spacer"></div>
-      <button type="button" class="modal-btn cancel" id="teamCancelBtn">取消</button>
-      <button type="button" class="modal-btn cancel" id="teamCallBtn">发起对话</button>
-      <button type="submit" class="modal-btn confirm" id="teamSaveBtn">保存</button>
-      <button type="submit" class="modal-btn confirm" id="teamSubmitReviewBtn">提交审核</button>
-    </div>
+    <div class="modal-footer team-modal-footer hidden"><button type="button" id="teamCancelBtn">取消</button><button type="button" id="teamDeleteBtn">删除该专家团</button></div>
   </form>
 </div>

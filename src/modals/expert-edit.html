@@ -2,14 +2,28 @@
 <div class="modal-overlay" id="expertEditModal">
   <form class="modal-card env-config-modal team-config-modal" id="expertEditForm" role="dialog" aria-modal="true" aria-labelledby="expertEditTitle" novalidate>
     <div class="modal-header">
-      <div class="env-config-heading"><div class="modal-title" id="expertEditTitle">编辑专家</div></div>
+      <div class="env-config-heading">
+        <div class="team-panel-title-row">
+          <div class="modal-title" id="expertEditTitle">编辑数字员工</div>
+          <span class="team-panel-badge" id="expertEditBadge">已保存</span>
+        </div>
+        <div class="team-panel-sub" id="expertEditSub"></div>
+      </div>
+      <div class="modal-header-actions">
+        <button type="submit" class="modal-btn cancel team-panel-btn-save" id="xeSaveBtn"><svg class="btn-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg><span class="btn-label">保存</span></button>
+        <button type="button" class="modal-btn cancel team-panel-btn-test" id="xeCallBtn"><svg class="btn-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6M10 3v6.2L5.2 18a2 2 0 0 0 1.7 3h10.2a2 2 0 0 0 1.7-3L14 9.2V3"/><path d="M7.5 15h9"/></svg><span class="btn-label">测试</span></button>
+        <button type="submit" class="modal-btn confirm team-panel-btn-submit" id="xeSubmitReviewBtn"><svg class="btn-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M4 16v4h16v-4"/></svg><span class="btn-label">提交审核</span></button>
+      </div>
       <button class="modal-close" id="expertEditClose" type="button" aria-label="关闭">×</button>
     </div>
-    <div class="modal-tabs" id="xeTabs">
-      <button type="button" class="modal-tab active" data-xtab="base">专家</button>
-      <button type="button" class="modal-tab" data-xtab="skills">技能</button>
-      <button type="button" class="modal-tab" data-xtab="kn">知识</button>
-      <button type="button" class="modal-tab" data-xtab="more">触发词与工作方式</button>
+    <div class="team-panel-tabs-row">
+      <div class="modal-tabs" id="xeTabs" role="tablist" aria-label="数字员工配置">
+        <button type="button" class="modal-tab active" role="tab" aria-selected="true" data-xtab="base">专家</button>
+        <button type="button" class="modal-tab" role="tab" aria-selected="false" data-xtab="skills">技能</button>
+        <button type="button" class="modal-tab" role="tab" aria-selected="false" data-xtab="kn">知识</button>
+        <button type="button" class="modal-tab" role="tab" aria-selected="false" data-xtab="more">触发词与工作方式</button>
+      </div>
+      <button type="button" class="team-panel-reset" id="xeResetBtn" aria-label="还原为已保存内容" title="还原为已保存内容"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.4-5.7"/><path d="M20 4v5h-5"/></svg></button>
     </div>
     <div class="modal-body env-config-body">
       <div class="team-pane" data-xpane="base">
@@ -75,13 +89,7 @@
         </div>
       </div>
     </div>
-    <div class="modal-footer team-modal-footer">
-      <button type="button" class="btn-link team-delete-btn hidden" id="xeDeleteBtn">删除该专家</button>
-      <div class="team-footer-spacer"></div>
-      <button type="button" class="modal-btn cancel" id="xeCancelBtn">取消</button>
-      <button type="submit" class="modal-btn cancel" id="xeSaveBtn">保存</button>
-      <button type="submit" class="modal-btn confirm" id="xeSubmitReviewBtn">提交审核</button>
-    </div>
+    <div class="modal-footer team-modal-footer hidden"><button type="button" id="xeCancelBtn">取消</button></div>
   </form>
 </div>
 

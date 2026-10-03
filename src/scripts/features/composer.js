@@ -591,8 +591,13 @@ function appendAssetCreateAgent(html,editing){
   response.innerHTML='<div class="chat-agent-identity"><img class="task-create-avatar" src="'+xav('pm')+'" alt=""><strong>'+(editing?'专家编辑助手':'专家创建智能体')+'</strong><span class="chat-agent-state">对话'+(editing?'编辑':'创建')+' · 原型</span></div>'+html;
 }
 function assetCreateQuestionHtml(question,interactive){
+  var selected=Array.isArray(question.selected)?question.selected:[];
+  var options=question.options||[];
   return '<div class="asset-ask-question" role="group" aria-label="需要补充的信息"><strong>需要确认一件事</strong><p>'+xesc(question.text)+'</p>'
-    +(interactive&&question.options?'<div class="asset-ask-options">'+question.options.map(function(option){return '<button type="button" data-asset-answer="'+xesc(option)+'">'+xesc(option)+'</button>';}).join('')+'</div>':'')
+    +(interactive&&options.length?'<div class="asset-ask-options" role="group" aria-label="可选择的数字员工">'+options.map(function(option,index){
+      var expert=EX[Object.keys(EX).find(function(id){return EX[id]?.name===option;})],on=selected.includes(option);
+      return '<button type="button" class="asset-ask-option'+(on?' is-selected':'')+'" data-asset-answer="'+xesc(option)+'" aria-pressed="'+on+'"><span class="asset-ask-option-index">'+(index+1)+'</span><span class="asset-ask-option-copy"><strong>'+xesc(option)+'</strong>'+(expert?.role?'<small>'+xesc(expert.role)+'</small>':'')+(expert?.desc?'<em>'+xesc(expert.desc)+'</em>':'')+'</span><span class="asset-ask-option-check" aria-hidden="true">'+(on?'✓':'')+'</span></button>';
+    }).join('')+'</div><button type="button" class="asset-ask-confirm" data-asset-confirm '+(selected.length?'':'disabled')+'>选择后继续</button>':'')
     +(interactive?'<small>也可以直接在下方输入回答</small>':'')+'</div>';
 }
 function builderSkillChip(){
@@ -2050,7 +2055,18 @@ export function initComposer() {
     if(assetSession){
       var draft=assetSession.assetCreate;
       var answer=event.target.closest('[data-asset-answer]');
-      if(answer){chatInput.innerHTML='';handleAssetCreateMessage(assetSession,answer.dataset.assetAnswer);refreshChatSend();return;}
+      if(answer){
+        var question=draft.question;
+        question.selected=Array.isArray(question.selected)?question.selected:[];
+        var value=answer.dataset.assetAnswer;
+        question.selected=question.selected.includes(value)?question.selected.filter(function(item){return item!==value;}):question.selected.concat(value);
+        saveChatSessions();renderAssetCreateChat(assetSession);return;
+      }
+      if(event.target.closest('[data-asset-confirm]')){
+        var picked=Array.isArray(draft.question?.selected)?draft.question.selected:[];
+        if(!picked.length)return;
+        chatInput.innerHTML='';handleAssetCreateMessage(assetSession,picked.join('、'));refreshChatSend();return;
+      }
       if(event.target.closest('[data-asset-retry]')){
         var result=commitAssetDraft(draft,'personal');
         if(result.ok){

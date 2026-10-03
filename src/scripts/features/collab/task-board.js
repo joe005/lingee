@@ -1,6 +1,6 @@
 import { CV_TASKS, CV_PROJECTS, CV_ARTIFACTS, cvCurrentUserName, cvInProject, cvProject, cvProjectInWorkspace, cvProjectName, cvSeedTaskDetails, cvPeopleInProject, setTaskRenderers } from './data.js';
 import { TEAMS } from '../expert/store.js';
-import { STAGES, xesc } from '../expert/data.js';
+import { EX, STAGES, xesc } from '../expert/data.js';
 import { cvSetProject, cvUpdateCounts } from './projects.js';
 import { tbBoardColumns, tbColumns, tbCurrentTeamId, tbIsStarted, tbLabel, tbMode, tbOwner, tbPriority, tbTaskId, tbGetSelected, tbSave, tbSetSelected, tbTeamName, tbTeamStages, tbMatchedTeam } from './tb-core.js';
 import { ensureTaskRuntime, retryTaskRuntime, runtimeArtifacts, syncTaskFromRuntime } from './runtime.js';
@@ -254,7 +254,7 @@ function stageTimelineHtml(t) {
     return '<details class="tb-stage-step tb-stage-collapse" data-state="' + state + '"><summary>'
       + '<span class="tb-stage-dot">' + (state === 'done' ? '✓' : (i + 1)) + '</span>'
       + '<span class="tb-stage-body"><span class="tb-stage-top"><b>' + xesc(sp.name) + '</b><span class="tb-stage-state">' + stateLabel + '</span></span>'
-      + '<span class="tb-stage-owner">处理人 · ' + xesc(sp.assignee || t.assignee) + (canSee ? ' · ' + outputs.length + ' 项产物' : '') + '</span></span><span class="tb-stage-chevron">›</span></summary>'
+      + '<span class="tb-stage-owner">处理人 · ' + xesc(sp.assignee || t.assignee) + ((sp.expertIds || []).length ? ' · 数字员工：' + xesc((sp.expertIds || []).map(id => EX[id]?.name || id).join('、')) : '') + (canSee ? ' · ' + outputs.length + ' 项产物' : '') + '</span></span><span class="tb-stage-chevron">›</span></summary>'
       + '<div class="tb-stage-expanded">' + (artifactBody + (canSee ? (state === 'current' ? body : stageDecisionHtml(latest)) : body || '')) + '</div></details>';
   }).join('') + '</div>';
 }
@@ -414,7 +414,7 @@ export function openTask(index, status = '待办') {
           <label>任务类型<select name="type">${options(['需求','Bug','任务','改进'],t.type)}</select></label>
           <div class="tb-aside-group-k tb-aside-group-k--ro">只读 · 系统维护</div>
           <div class="tb-inherited-field"><span>当前环节</span><b>${xesc(stageLabel(taskStageId(t)))}</b><small>评审通过后流转到下一环节</small></div>
-          ${t.stagePlan?.length ? '<div class="tb-inherited-field tb-inherited-field--stages"><span>阶段执行人</span>' + t.stagePlan.map(sp => '<div class="tb-stage-owner-row' + (sp.id === taskStageId(t) ? ' is-current' : '') + '"><b>' + xesc(sp.name) + '</b><span>' + xesc(sp.assignee) + '</span></div>').join('') + '<small>创建时按专家团覆盖的阶段分工，每人只启动并负责自己那一段</small></div>' : ''}
+          ${t.stagePlan?.length ? '<div class="tb-inherited-field tb-inherited-field--stages"><span>阶段执行人</span>' + t.stagePlan.map(sp => '<div class="tb-stage-owner-row' + (sp.id === taskStageId(t) ? ' is-current' : '') + '"><b>' + xesc(sp.name) + '</b><span>' + xesc(sp.assignee) + ((sp.expertIds || []).length ? ' · ' + xesc((sp.expertIds || []).map(id => EX[id]?.name || id).join('、')) : '') + '</span></div>').join('') + '<small>创建时按专家团阶段绑定的数字员工执行，并由项目成员负责对应环节</small></div>' : ''}
           <h3 class="tb-aside-divider">项目与协作</h3>
           <div class="tb-aside-group-k">可编辑</div>
           <label>所属项目<select name="project">${CV_PROJECTS.filter(p=>cvProjectInWorkspace(p.id)).map(p => '<option value="' + p.id + '" ' + (p.id === t.project ? 'selected' : '') + '>' + xesc(p.name) + '</option>').join('')}</select></label>

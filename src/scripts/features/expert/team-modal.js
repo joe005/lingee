@@ -16,7 +16,17 @@ import { hideAssetEditorPanel, showAssetEditorPanel } from './editor-panel.js';
 
 
 /* ---------- 专家团配置弹窗 ---------- */
-var teamModal=$('#teamModal'), teamDraft=null, teamEditingId=null, teamModalTab='info', teamStageScenarioId='feature';
+var teamModal=$('#teamModal'), teamDraft=null, teamEditingId=null, teamModalTab='info', teamStageScenarioId='feature', teamStageSelectedId='', teamEditMode=false;
+/* 面板头部的保存状态：改过任何字段就切换成「未保存」，保存或还原后回到「已保存」 */
+function setTeamPanelBadge(dirty){
+  var badge=$('#teamModalBadge'); if(!badge) return;
+  badge.textContent=dirty?'未保存':'已保存';
+  badge.classList.toggle('is-dirty',!!dirty);
+}
+function markTeamDirty(){
+  if(!teamDraft||teamDraft.preset||!teamEditMode) return;
+  setTeamPanelBadge(true);
+}
 function setTeamModalTab(which){
   teamModalTab=which||'info';
   $$('#teamModal [data-team-tab]').forEach(function(el){
@@ -33,40 +43,43 @@ function teamCmdList(d){
 }
 function openTeamModal(id){
   var selected=id?teamById(id):null;
-  if(selected&&layerOf('team',selected)==='personal'){
-    startAssetEditChat('team',id,selected.name);
-    return;
-  }
-  populateTeamModal(id);
+  if(selected)populateTeamModal(id,false);
 }
-function populateTeamModal(id){
+function populateTeamModal(id,editing){
   var t=id?teamById(id):null;
   if(!t) return;
+  teamEditMode=!!editing;
   teamEditingId=id;
   teamStageScenarioId='feature';
+  teamStageSelectedId='';
   teamDraft={name:t.name,desc:t.desc,leadId:t.leadId,members:t.members.slice(),preset:layerOf('team',t)!=='personal',
                domains:(t.domains||[]).slice(),
+               stageMembers:t.stageMembers&&typeof t.stageMembers==='object'?Object.fromEntries(Object.entries(t.stageMembers).map(function(entry){return [entry[0],Array.isArray(entry[1])?entry[1].slice():[]]})): {},
                cmds:(t.cmds&&t.cmds.length)?t.cmds.map(function(c){return c.slice()}):[['','']]};
-  $('#teamModalTitle').textContent = teamDraft.preset?t.name:'编辑专家团 · '+t.name;
+  /* 信息栏里名称就是标题（状态和 id 在它旁边），居中弹窗仍带「专家团详情 · 」前缀 */
+  $('#teamModalTitle').textContent = (!teamDraft.preset&&!teamEditMode)?'专家团详情 · '+t.name:t.name;
   /* 内置团：标题已经是名字，正文只留一句话说明，不重复摆一份只读表单；
      自建团：正常的可编辑名称 + 说明 */
-  $('#teamEditFields').classList.toggle('hidden', teamDraft.preset);
-  $('#teamViewDesc').classList.toggle('hidden', !teamDraft.preset);
+  $('#teamEditFields').classList.toggle('hidden', teamDraft.preset||!teamEditMode);
+  $('#teamViewDesc').classList.toggle('hidden', !teamDraft.preset&&teamEditMode);
   $('#teamViewDesc').textContent=teamDraft.desc;
   $('#teamName').value=teamDraft.name; $('#teamDesc').value=teamDraft.desc;
-  $('#teamSaveBtn').textContent = '保存';
+  setTeamPanelBadge(false);
+  $('#teamModalSub').textContent=t.id||'';
+  $('#teamResetBtn').hidden=!(teamEditMode&&!teamDraft.preset);
   /* 内置团最常用的动作是发起对话，主按钮给它；自建团主按钮还是保存 */
-  $('#teamSaveBtn').className = 'modal-btn '+(teamDraft.preset?'cancel':'confirm');
-  $('#teamSaveBtn').classList.toggle('hidden', teamDraft.preset);
-  $('#teamSubmitReviewBtn').classList.toggle('hidden', teamDraft.preset);
-  if(!teamDraft.preset)$('#teamSaveBtn').className='modal-btn cancel';
-  $('#teamCallBtn').className = 'modal-btn '+(teamDraft.preset?'confirm':'cancel');
+  $('#teamSaveBtn').className = 'modal-btn '+(teamDraft.preset?'cancel':'confirm')+' team-panel-btn-save';
+  $('#teamSaveBtn').classList.toggle('hidden', teamDraft.preset||!teamEditMode);
+  $('#teamSubmitReviewBtn').classList.toggle('hidden', teamDraft.preset||!teamEditMode);
+  $('#teamEditBtn').classList.toggle('hidden', teamDraft.preset||teamEditMode);
+  if(!teamDraft.preset)$('#teamSaveBtn').className='modal-btn cancel team-panel-btn-save';
+  $('#teamCallBtn').className = 'modal-btn '+(teamDraft.preset?'confirm':'cancel')+' team-panel-btn-test';
   $('#teamCallBtn').classList.toggle('hidden', !teamEditingId);
-  $('#teamDeleteBtn').classList.toggle('hidden', teamDraft.preset || !teamEditingId);
+  $('#teamDeleteBtn').classList.toggle('hidden', teamDraft.preset || !teamEditingId || !teamEditMode);
   renderTeamModal();
   setTeamModalTab('info');
   var body=$('#teamModal .modal-body'); if(body) body.scrollTop=0;
-  if(teamDraft.preset)teamModal.classList.add('show');
+  if(teamDraft.preset||!teamEditMode)teamModal.classList.add('show');
   else showAssetEditorPanel(teamModal);
 }
 function renderTeamModal(){
@@ -79,7 +92,7 @@ function renderTeamModal(){
       +(d.leadId===id?'<span class="x-badge x-badge-lead">组长</span>':'')
       +(e.ro?'<span class="x-badge x-badge-ro">只读</span>':'')
       +'</div></div>'
-      +'<div class="x-member-a">'
+      +'<div class="x-member-a'+(teamEditMode?'':' hidden')+'">'
       +(d.leadId===id?'':'<button type="button" class="x-ic" data-set-lead="'+id+'" title="设为组长">☆</button>')
       +'<button type="button" class="x-ic x-ic-dg" data-rm-member="'+id+'" title="移出">✕</button></div></div>';
   }).join('') : '<div class="x-empty-sm">还没有成员</div>';
@@ -92,36 +105,52 @@ function renderTeamModal(){
           +'</button>';
       }).join('') || '<div class="x-empty-sm">这个团还没有触发词</div>')
     : d.cmds.map(function(c,i){
-        return '<div class="x-cmd-row"><input type="text" class="x-cmd-k" data-tm-cmd="'+i+'" data-f="0" value="'+xesc(c[0])+'" placeholder="用户会怎么说，例如：帮我把这个想法做成能上线的功能" autocomplete="off">'
-          +'<button type="button" class="x-ic x-ic-dg" data-tm-rmcmd="'+i+'" title="删除">✕</button></div>';
+        return '<div class="x-cmd-row"><input type="text" class="x-cmd-k" data-tm-cmd="'+i+'" data-f="0" value="'+xesc(c[0])+'" placeholder="用户会怎么说，例如：帮我把这个想法做成能上线的功能" autocomplete="off"'+(teamEditMode?'':' readonly')+'>'
+          +'<button type="button" class="x-ic x-ic-dg'+(teamEditMode?'':' hidden')+'" data-tm-rmcmd="'+i+'" title="删除">✕</button></div>';
       }).join('');
-  $('#teamAddCmd').classList.toggle('hidden', !!d.preset);
+  $('#teamAddCmd').classList.toggle('hidden', !!d.preset||!teamEditMode);
   $('#teamCmdHint').textContent = d.preset
     ? '点任意一条就会带着这个团开一个新会话。'
     : '用户平时会怎么找这个团做事。点「发起对话」会带上第一条。';
 
   renderTeamStages();
 
-  $$('#teamMembers .x-member-a').forEach(function(a){ a.classList.toggle('hidden', !!d.preset); });
-  $('#teamAddBtn').classList.toggle('hidden', !!d.preset);
+  $$('#teamMembers .x-member-a').forEach(function(a){ a.classList.toggle('hidden', !!d.preset||!teamEditMode); });
+  $('#teamAddBtn').classList.toggle('hidden', !!d.preset||!teamEditMode);
 }
 function renderTeamStages(){
   if(!teamDraft)return;
   var scenario=TEAM_STAGE_SCENARIOS.find(function(item){return item.id===teamStageScenarioId})||TEAM_STAGE_SCENARIOS[0];
-  $('#teamStageScenarios').innerHTML=TEAM_STAGE_SCENARIOS.map(function(item){
-    var selected=item.id===scenario.id;
-    return '<button type="button" class="team-stage-scenario'+(selected?' active':'')+'" data-team-scenario="'+item.id+'" aria-pressed="'+selected+'">'
-      +'<strong>'+xesc(item.name)+'</strong><span>'+xesc(item.hint)+'</span><small>'+item.stages.length+' 个阶段</small></button>';
+  var selectedStage=scenario.stages.find(function(stage){return stage.id===teamStageSelectedId})||scenario.stages[0];
+  teamStageSelectedId=selectedStage?.id||'';
+  $('#teamStageScenarios').innerHTML='<label class="team-stage-tree-select"><span>交付路径</span><select data-team-scenario-select>'+TEAM_STAGE_SCENARIOS.map(function(item){return '<option value="'+xesc(item.id)+'"'+(item.id===scenario.id?' selected':'')+'>'+xesc(item.name)+'</option>';}).join('')+'</select></label><div class="team-stage-tree-title">阶段</div>'+scenario.stages.map(function(stage,index){
+    var selected=stage.id===teamStageSelectedId;
+    return '<button type="button" class="team-stage-tree-node'+(selected?' active':'')+'" data-team-stage="'+xesc(stage.id)+'" aria-current="'+(selected?'step':'false')+'"><span class="team-stage-tree-index">'+(index+1)+'</span><span>'+xesc(stage.name)+'</span></button>';
   }).join('');
-  $('#teamStageScenarioTitle').textContent=scenario.name;
-  $('#teamStageScenarioHint').textContent='例如：'+scenario.example;
-  $('#teamStageScenarioCount').textContent=scenario.stages.length+' 个阶段';
+  $('#teamStageScenarioTitle').textContent=selectedStage?.name||scenario.name;
+  $('#teamStageScenarioHint').textContent=selectedStage?.desc||('例如：'+scenario.example);
+  $('#teamStageScenarioCount').textContent=(selectedStage?'阶段 '+(scenario.stages.indexOf(selectedStage)+1)+' / ':'')+scenario.stages.length;
   var modes=new Set(teamDraft.members.flatMap(function(id){return EX[id]?.modes||[]}));
-  $('#teamStages').innerHTML=scenario.stages.map(function(stage,index){
-    var covered=(STAGE_MODES[stage.id]||[]).some(function(mode){return modes.has(mode)});
-    return '<div class="team-stage" role="listitem"><span class="team-stage-index">'+(index+1)+'</span><div class="team-stage-content"><strong>'+xesc(stage.name)+'</strong><p>'+xesc(stage.desc)+'</p></div>'
+  function boundMembers(stage){
+    var explicit=teamDraft.stageMembers[stage.id];
+    if(Array.isArray(explicit)&&explicit.length)return explicit.filter(function(id){return teamDraft.members.includes(id)&&EX[id]});
+    return teamDraft.members.filter(function(id){return (STAGE_MODES[stage.id]||[]).some(function(mode){return (EX[id]?.modes||[]).includes(mode);});}).slice(0,3);
+  }
+  var stage=selectedStage;
+  var covered=stage&&(STAGE_MODES[stage.id]||[]).some(function(mode){return modes.has(mode)});
+  if(!stage){$('#teamStages').innerHTML='<div class="team-stage-empty">当前路径暂无阶段</div>';return;}
+    var bound=boundMembers(stage);
+    var binding=bound.length?bound.map(function(id){
+      var expert=EX[id];
+      return '<span class="team-stage-member" title="'+xesc(expert.name)+'"><img src="'+xav(expert.k)+'" alt=""><span>'+xesc(expert.name)+'</span></span>';
+    }).join(''):'<span class="team-stage-member-empty">未绑定数字员工</span>';
+    var picker=!teamDraft.preset&&teamEditMode?'<details class="team-stage-member-picker"><summary>绑定专家 <em>'+bound.length+'</em></summary><div class="team-stage-member-options" role="group" aria-label="'+xesc(stage.name)+'绑定数字员工">'+teamDraft.members.map(function(id){
+      var expert=EX[id],selected=bound.includes(id);
+      return '<button type="button" class="team-stage-member-option'+(selected?' is-selected':'')+'" data-stage-member="'+xesc(stage.id)+'" data-stage-expert="'+xesc(id)+'" aria-pressed="'+selected+'"><img src="'+xav(expert.k)+'" alt=""><span>'+xesc(expert.name)+'</span></button>';
+    }).join('')+'</div></details>':'';
+    $('#teamStages').innerHTML='<div class="team-stage" role="listitem"><div class="team-stage-content"><strong>'+xesc(stage.name)+'</strong><p>'+xesc(stage.desc)+'</p></div>'
+      +'<div class="team-stage-members">'+binding+picker+'</div>'
       +(covered?'':'<span class="team-stage-gap" title="当前成员暂无对应工作模式">能力待补齐</span>')+'</div>';
-  }).join('');
 }
 
 /* ---------- 添加成员弹窗 ---------- */
@@ -145,14 +174,22 @@ function renderMemberList(){
 }
 export function initTeamModal() {
   document.addEventListener('lingee:asset-edit-session',function(ev){
-    if(ev.detail.kind==='team')populateTeamModal(ev.detail.id);
+    if(ev.detail.kind==='team')populateTeamModal(ev.detail.id,true);
   });
   if(teamModal){
     teamModal.addEventListener('click',function(e){
-      if(e.target===teamModal){ if(teamDraft&&!teamDraft.preset)hideAssetEditorPanel();else teamModal.classList.remove('show'); return; }
+      if(e.target===teamModal){ if(teamDraft&&!teamDraft.preset&&teamEditMode)hideAssetEditorPanel();else teamModal.classList.remove('show'); return; }
       var n;
       if(n=e.target.closest('[data-team-tab]')){ setTeamModalTab(n.getAttribute('data-team-tab')); return; }
       if(n=e.target.closest('[data-team-scenario]')){ teamStageScenarioId=n.getAttribute('data-team-scenario');renderTeamStages();return; }
+      if(n=e.target.closest('[data-team-stage]')){ teamStageSelectedId=n.getAttribute('data-team-stage');renderTeamStages();return; }
+      if(n=e.target.closest('[data-stage-member]')){
+        var stageId=n.getAttribute('data-stage-member'),expertId=n.getAttribute('data-stage-expert');
+        var current=Array.isArray(teamDraft.stageMembers[stageId])&&teamDraft.stageMembers[stageId].length?teamDraft.stageMembers[stageId].filter(function(id){return teamDraft.members.includes(id)}):teamDraft.members.filter(function(id){return (STAGE_MODES[stageId]||[]).some(function(mode){return (EX[id]?.modes||[]).includes(mode);});}).slice(0,3);
+        if(current.includes(expertId)){if(current.length===1){toast('每个阶段至少绑定一位数字员工','warning');return;}current=current.filter(function(id){return id!==expertId;});}
+        else current.push(expertId);
+        teamDraft.stageMembers[stageId]=current;markTeamDirty();renderTeamStages();return;
+      }
       if(n=e.target.closest('[data-team-cmd]')){
         if(!teamEditingId){ toast('先保存这个专家团，再对话','warning'); return; }
         teamModal.classList.remove('show');
@@ -161,7 +198,7 @@ export function initTeamModal() {
       if(n=e.target.closest('[data-tm-rmcmd]')){
         teamDraft.cmds.splice(+n.getAttribute('data-tm-rmcmd'),1);
         if(!teamDraft.cmds.length) teamDraft.cmds.push(['','']);
-        renderTeamModal(); return;
+        markTeamDirty(); renderTeamModal(); return;
       }
       if(n=e.target.closest('[data-view-expert]')){
         var vid=n.getAttribute('data-view-expert'), vex=EX[vid];
@@ -169,28 +206,42 @@ export function initTeamModal() {
         if(vex&&vex.mine) openExpertEditor(vid); else openExpertModal(vid);
         return;
       }
-      if(n=e.target.closest('[data-set-lead]')){ teamDraft.leadId=n.getAttribute('data-set-lead'); renderTeamModal(); return; }
+      if(n=e.target.closest('[data-set-lead]')){ teamDraft.leadId=n.getAttribute('data-set-lead'); markTeamDirty(); renderTeamModal(); return; }
       if(n=e.target.closest('[data-rm-member]')){
         var id=n.getAttribute('data-rm-member');
         teamDraft.members=teamDraft.members.filter(function(m){return m!==id});
         if(teamDraft.leadId===id) teamDraft.leadId=teamDraft.members[0]||null;
-        renderTeamModal(); return;
+        markTeamDirty(); renderTeamModal(); return;
       }
     });
-    $('#teamModalClose').addEventListener('click',function(){if(teamDraft&&!teamDraft.preset)hideAssetEditorPanel();else teamModal.classList.remove('show');});
-    $('#teamCancelBtn').addEventListener('click',function(){if(teamDraft&&!teamDraft.preset)hideAssetEditorPanel();else teamModal.classList.remove('show');});
-    $('#teamName').addEventListener('input',function(){ if(teamDraft.preset){ this.value=teamDraft.name; return; } teamDraft.name=this.value });
-    $('#teamDesc').addEventListener('input',function(){ if(teamDraft.preset){ this.value=teamDraft.desc; return; } teamDraft.desc=this.value });
+    $('#teamResetBtn').addEventListener('click',function(){
+      if(!teamEditingId||!teamEditMode)return;
+      populateTeamModal(teamEditingId,true);
+      toast('已还原为上次保存的内容','success');
+    });
+    $('#teamModalClose').addEventListener('click',function(){if(teamDraft&&!teamDraft.preset&&teamEditMode)hideAssetEditorPanel();else teamModal.classList.remove('show');});
+    $('#teamCancelBtn').addEventListener('click',function(){if(teamDraft&&!teamDraft.preset&&teamEditMode)hideAssetEditorPanel();else teamModal.classList.remove('show');});
+    $('#teamName').addEventListener('input',function(){ if(teamDraft.preset){ this.value=teamDraft.name; return; } teamDraft.name=this.value; markTeamDirty(); });
+    $('#teamDesc').addEventListener('input',function(){ if(teamDraft.preset){ this.value=teamDraft.desc; return; } teamDraft.desc=this.value; markTeamDirty(); });
     $('#teamAddBtn').addEventListener('click',function(){ openMemberModal() });
-    $('#teamAddCmd').addEventListener('click',function(){ teamDraft.cmds.push(['','']); renderTeamModal(); });
+    $('#teamAddCmd').addEventListener('click',function(){ teamDraft.cmds.push(['','']); markTeamDirty(); renderTeamModal(); });
     $('#teamCallBtn').addEventListener('click',function(){
       if(!teamEditingId){ toast('先保存这个专家团，再对话','warning'); return; }
-      if(teamDraft&&!teamDraft.preset)hideAssetEditorPanel();else teamModal.classList.remove('show');
+      if(teamDraft&&!teamDraft.preset&&teamEditMode)hideAssetEditorPanel();else teamModal.classList.remove('show');
       summon('team',teamEditingId);
+    });
+    $('#teamEditBtn').addEventListener('click',function(){
+      if(!teamEditingId)return;
+      teamModal.classList.remove('show');
+      startAssetEditChat('team',teamEditingId,teamDraft?.name||'');
     });
     teamModal.addEventListener('input',function(ev){
       var c=ev.target.closest('[data-tm-cmd]');
-      if(c) teamDraft.cmds[+c.getAttribute('data-tm-cmd')][+c.getAttribute('data-f')]=c.value;
+      if(c){ teamDraft.cmds[+c.getAttribute('data-tm-cmd')][+c.getAttribute('data-f')]=c.value; markTeamDirty(); }
+    });
+    teamModal.addEventListener('change',function(ev){
+      var select=ev.target.closest('[data-team-scenario-select]');
+      if(select){teamStageScenarioId=select.value;teamStageSelectedId='';renderTeamStages();}
     });
     $('#teamDeleteBtn').addEventListener('click',function(){
       var t=teamById(teamEditingId); if(!t||layerOf('team',t)!=='personal') return;
@@ -211,6 +262,11 @@ export function initTeamModal() {
       if(!t||layerOf('team',t)!=='personal') return;
       var previous=JSON.parse(JSON.stringify(t));
       t.name=name; t.desc=d.desc; t.leadId=d.leadId; t.members=d.members.slice(); t.cmds=teamCmdList(d);
+      t.stageMembers=Object.fromEntries(TEAM_STAGE_SCENARIOS.flatMap(function(item){return item.stages;}).map(function(stage){
+        var explicit=Array.isArray(d.stageMembers[stage.id])?d.stageMembers[stage.id].filter(function(id){return d.members.includes(id)&&EX[id]}):[];
+        var fallback=d.members.filter(function(id){return (STAGE_MODES[stage.id]||[]).some(function(mode){return (EX[id]?.modes||[]).includes(mode);});}).slice(0,3);
+        return [stage.id,(explicit.length?explicit:fallback).slice()];
+      }));
       t.domains=(d.domains||[]).slice();
       if(!saveTeams()){Object.assign(t,previous);toast('保存失败，编辑内容已保留，请重试','warning');return;}
       toast('已保存','success');
@@ -230,7 +286,7 @@ export function initTeamModal() {
       var id=n.getAttribute('data-toggle-member'), i=teamDraft.members.indexOf(id);
       if(i<0){ teamDraft.members.push(id); if(!teamDraft.leadId) teamDraft.leadId=id; }
       else { teamDraft.members.splice(i,1); if(teamDraft.leadId===id) teamDraft.leadId=teamDraft.members[0]||null; }
-      renderMemberList(); renderTeamModal();
+      markTeamDirty(); renderMemberList(); renderTeamModal();
     });
   }
 }

@@ -19,6 +19,16 @@
 /* ============ 项目详情 ============ */
 #view-collab #cv-proj-detail .sq-tabpane{overflow-y:auto}
 
+/* 项目任务页直接挂载任务模块，保留搜索、筛选、新建和显示设置。 */
+#view-collab #cv-proj-detail .pj-detail-main--tasks{display:flex;min-height:0;padding:0 28px 24px;background:#f7f7fa}
+#view-collab #cv-proj-detail .pj-project-tasks-host{display:flex;flex:1;min-width:0;min-height:0;overflow:hidden}
+#view-collab #cv-proj-detail .pj-project-tasks-host #view-tasks{display:flex;flex:1;min-width:0;min-height:0}
+#view-collab #cv-proj-detail .pj-project-tasks-host #view-tasks .tk-project-context{display:none}
+#view-collab #cv-proj-detail .pj-project-tasks-host #view-tasks .tk-header{display:flex;min-height:52px;padding:10px 0 8px;background:transparent}
+#view-collab #cv-proj-detail .pj-project-tasks-host #view-tasks .tk-header h2{font-size:16px}
+#view-collab #cv-proj-detail .pj-project-tasks-host #view-tasks .tk-toolbar{padding:8px 0;border-bottom:1px solid var(--divider)}
+#view-collab #cv-proj-detail .pj-project-tasks-host #view-tasks .tk-body{min-height:0}
+
 /* 项目成员页签 */
 #view-collab .pj-members-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
 #view-collab .pj-members-head>div{display:flex;align-items:baseline;gap:8px}

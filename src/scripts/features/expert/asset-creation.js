@@ -17,6 +17,31 @@ export function availableAssetMembers(){
   return EXPERTS.filter(expert=>layerVisible('expert',expert));
 }
 
+/* 用创建者已经描述的职责给出候选成员，避免再让用户凭名字猜专家。 */
+function matchedAssetMembers(text){
+  const source=String(text||'').toLocaleLowerCase();
+  const modeHints=[
+    ['测试',['验证','测试','校验','质量','验收','回归']],
+    ['实现',['开发','编码','编程','实现','搭建','构建']],
+    ['分析',['分析','需求','梳理','调研','诊断','排查']],
+    ['设计',['设计','方案','架构','规划']],
+    ['集成',['集成','接口','对接','同步']],
+    ['评审',['评审','审查','审核','检查']],
+    ['恢复',['恢复','故障','应急','修复']]
+  ];
+  const hintedModes=modeHints.filter(function(entry){return entry[1].some(function(word){return source.includes(word);});}).map(function(entry){return entry[0];});
+  return availableAssetMembers().map(function(expert,index){
+    const corpus=[expert.name,expert.role,expert.desc].concat(expert.tags||[]).join('').toLocaleLowerCase();
+    let score=0;
+    hintedModes.forEach(function(mode){if((expert.modes||[]).includes(mode))score+=5;});
+    (expert.tags||[]).forEach(function(tag){if(source.includes(String(tag).toLocaleLowerCase()))score+=3;});
+    if(source.includes(String(expert.name).toLocaleLowerCase()))score+=12;
+    if(source.includes(String(expert.role||'').toLocaleLowerCase()))score+=8;
+    if(corpus&&source.includes(corpus))score+=2;
+    return {expert,score,index};
+  }).filter(function(row){return row.score>0;}).sort(function(a,b){return b.score-a.score||a.index-b.index;}).slice(0,3).map(function(row){return row.expert;});
+}
+
 const stripPlaceholders=text=>text.replace(/\[[^\]]+\]|［[^］]+］|X{2,}|…{2,}/gi,'').trim();
 const genericRequest=text=>/^(?:请)?(?:帮我)?(?:创建|开发|新增|做)(?:一个|一位|一支)?(?:专家|数字员工|专家团)[。！!]?$/u.test(text.replace(/\s+/g,''));
 function inferredModes(text){
@@ -44,8 +69,12 @@ export function assetClarifyingQuestion(draft){
   if(!draft.desc)return {key:'purpose',text:`「${draft.name}」主要负责什么？请说一个实际任务或使用场景。`};
   if(draft.kind==='expert'&&!draft.modes.length)return {key:'modes',text:'它主要承担哪类工作？可以选择一项，也可以直接描述。',options:WORK_MODES};
   if(draft.kind==='team'&&!draft.members.length){
-    const examples=availableAssetMembers().slice(0,5).map(expert=>expert.name).join('、');
-    return {key:'members',text:`希望哪些现有数字员工加入「${draft.name}」？请直接说出名称。${examples?'例如：'+examples+'。':''}`};
+    const matches=matchedAssetMembers(draft.desc);
+    const examples=(matches.length?matches:availableAssetMembers().slice(0,5)).map(expert=>expert.name).join('、');
+    return {key:'members',text:matches.length
+      ? `根据你描述的职责，建议选择合适的数字员工加入「${draft.name}」，可多选。`
+      : `希望哪些现有数字员工加入「${draft.name}」？请直接说出名称。${examples?'例如：'+examples+'。':''}`,
+      options:matches.map(expert=>expert.name)};
   }
   return null;
 }

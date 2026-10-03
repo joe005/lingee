@@ -8,6 +8,7 @@ import { renderKnPane, resetKnPane } from './knowledge.js';
 import { expertModal, renderExpertGrid } from './library.js';
 import { TEAMS, activePick, clearPick, saveTeams } from './store.js';
 import { startAssetEditChat } from '../composer.js';
+import { summon } from './automatch.js';
 import { hideAssetEditorPanel, showAssetEditorPanel } from './editor-panel.js';
 /* 编辑已有的我的专家
    拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
@@ -37,8 +38,14 @@ function deleteMyExpert(id){
 }
 
 var expertEditModal=$('#expertEditModal'), xeDraft=null, xeEditingId=null, xeSkillKw='';
+/* 面板头部的保存状态：改过任何字段就切换成「未保存」，保存或还原后回到「已保存」 */
+function setXeBadge(dirty){
+  var badge=$('#expertEditBadge'); if(!badge) return;
+  badge.textContent=dirty?'未保存':'已保存';
+  badge.classList.toggle('is-dirty',!!dirty);
+}
 function setXeTab(which){
-  $$('#xeTabs .modal-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-xtab')===which); });
+  $$('#xeTabs .modal-tab').forEach(function(b){ var on=b.getAttribute('data-xtab')===which; b.classList.toggle('active', on); b.setAttribute('aria-selected',String(on)); });
   $$('#expertEditModal .team-pane').forEach(function(el){ el.classList.toggle('hidden', el.getAttribute('data-xpane')!==which); });
   var body=$('#expertEditModal .modal-body'); if(body) body.scrollTop=0;
 }
@@ -58,10 +65,11 @@ function populateExpertEditor(id){
        kn:(e.kn||[]).slice(),knOff:(e.knOff||[]).slice(),knDocOff:(e.knDocOff||[]).slice(),
        knUp:(e.knUp||[]).map(function(f){return {n:f.n,t:f.t,up:f.up,by:f.by}})};
   $('#expertEditTitle').textContent = '编辑数字员工';
+  $('#expertEditSub').textContent = id;
+  setXeBadge(false);
   xeSkillKw=''; $('#xeSkillSearch').value='';
   $('#xeName').value=xeDraft.name; $('#xeDesc').value=xeDraft.desc;
   $('#xeTags').value=xeDraft.tags.join('、'); $('#xeComp').value=xeDraft.comp.join('、');
-  $('#xeDeleteBtn').classList.toggle('hidden', !xeEditingId);
   setXeTab('base');
   resetKnPane(xeDraft);
   renderExpertEditor();
@@ -136,7 +144,24 @@ export function initExpertEditor() {
     $('#expertEditClose').addEventListener('click',hideAssetEditorPanel);
     $('#xeCancelBtn').addEventListener('click',hideAssetEditorPanel);
     $('#xeAddCmd').addEventListener('click',function(){ xeDraft.cmds.push(['','']); renderExpertEditor(); });
-    $('#xeDeleteBtn').addEventListener('click',function(){ if(xeEditingId){ hideAssetEditorPanel(); deleteMyExpert(xeEditingId); } });
+    $('#xeResetBtn').addEventListener('click',function(){
+      if(!xeEditingId)return;
+      populateExpertEditor(xeEditingId);
+      toast('已还原为上次保存的内容','success');
+    });
+    $('#xeCallBtn').addEventListener('click',function(){
+      if(!xeEditingId){ toast('先保存这个数字员工，再对话','warning'); return; }
+      hideAssetEditorPanel();
+      summon('expert',xeEditingId);
+    });
+    ['input','change','click'].forEach(function(type){
+      expertEditModal.addEventListener(type,function(ev){
+        if(type==='click'&&!ev.target.closest('[data-xe-av],[data-xe-mode],[data-xe-tier],[data-xe-skill-remove],[data-xe-rmcmd],#xeAddCmd'))return;
+        if(type!=='click'&&!ev.target.closest('input,textarea,select'))return;
+        if(ev.target.id==='xeSkillSearch')return;
+        setXeBadge(true);
+      });
+    });
     expertEditModal.addEventListener('click',function(ev){
       if(ev.target===expertEditModal){ hideAssetEditorPanel(); return; }
       var a=ev.target.closest('[data-xe-av]');
@@ -183,6 +208,7 @@ export function initExpertEditor() {
       var previous=MY_EXPERTS[index];MY_EXPERTS[index]=rec;
       if(!saveTeams()){MY_EXPERTS[index]=previous;toast('保存失败，编辑内容已保留，请重试','warning');return;}
       toast('已保存','success');
+      setXeBadge(false);
       rebuildExperts();
       hideAssetEditorPanel();
       document.dispatchEvent(new CustomEvent('lingee:asset-editor-saved',{detail:{kind:'expert',id:rec.id,name:rec.name}}));

@@ -8,8 +8,8 @@ import { tbSave } from './tb-core.js';
 import { renderTaskBoard, tbOpenTask, tbShowBoard } from './task-board.js';
 import { cvMayEditProject, cvRenderProjMenu, cvRenderProjectSettings, cvSetProject, cvUpdateCounts } from './projects.js';
 import { cvSwitchView } from './view.js';
-import { showView } from '../../core/view.js';
-import { openTaskDetail, tkOpenProjectTaskCreate, tkSetProjectListMode } from '../tasks-v2/index.js';
+import { setTasksEmbedded, showView } from '../../core/view.js';
+import { tkOpenProjectTaskCreate, tkSetProjectListMode } from '../tasks-v2/index.js';
 import { tkCanViewTask, tkGetPerson, tkGetTaskArtifacts, tkGetTasks } from '../tasks-v2/data.js';
 import { createDeliveryActivity } from './delivery-activity.js';
 import { renderArtifactPreview } from './run-artifacts.js';
@@ -21,6 +21,7 @@ import { recordProjectConfigAudit } from './audit-log.js';
 
 var cvProjCur='';           /* 项目详情正在看的项目 id，空 = 项目列表 */
 var cvProjectDetailTab='overview';
+var cvProjectTaskBoardEmbedded=false;
 var cvProjectDetailEditing=false;
 var cvArtifactPreviewTrigger=null;
 var cvProjectTaskReturnId='';
@@ -217,6 +218,27 @@ function cvRenderProjectArtifacts(projectId){
       :'<div class="pj-artifacts-empty">本项目还没有已产生的任务产物。任务提交产物后会显示在这里。</div>')
     +'</section><aside id="pj-artifact-preview" class="pj-artifact-preview" data-pj-preview-pane aria-label="产物预览" tabindex="-1" hidden></aside>';
 }
+/* 恢复历史项目任务挂载方式：使用同一任务页面及其已绑定的全部列表事件。 */
+function cvMountProjectTaskBoard(){
+  var board=$('#view-tasks'),main=$('#cv-proj-detail .pj-project-tasks-host');
+  if(!board||!main)return;
+  cvProjectTaskBoardEmbedded=true;
+  setTasksEmbedded(true,main);
+  board.classList.add('pj-embedded-task-view');
+  var heading=board.querySelector('.tk-header h2');if(heading)heading.textContent='项目任务';
+  tkSetProjectListMode(true,cvProjCur);
+}
+function cvRestoreProjectTaskBoard(){
+  if(!cvProjectTaskBoardEmbedded)return;
+  var board=$('#view-tasks');
+  if(board){
+    board.classList.remove('pj-embedded-task-view');
+    var heading=board.querySelector('.tk-header h2');if(heading)heading.textContent='任务';
+  }
+  setTasksEmbedded(true);
+  cvProjectTaskBoardEmbedded=false;
+  tkSetProjectListMode(false);
+}
 function cvFilterProjectArtifacts(){
   var panel=$('#cv-proj-detail'),type=panel?.querySelector('[data-pj-artifact-type]')?.value||'',visible=0;
   panel?.querySelectorAll('[data-pj-artifact-row]').forEach(function(row){var show=!type||row.dataset.pjArtifactRowType===type;row.hidden=!show;if(show){visible++;row.querySelector('.pj-artifacts-index').textContent=String(visible);}});
@@ -267,6 +289,11 @@ function cvRenderProjectDetail(resetDraft){
   var el=$('#cv-proj-detail'); if(!el) return;
   var p=cvProjectById(cvProjCur);
   if(!p){cvResetProjectListState();return;}
+  /* 重绘详情前移出任务实例，避免 innerHTML 销毁已绑定事件的 DOM。 */
+  if(cvProjectTaskBoardEmbedded){
+    if(cvProjectDetailTab==='tasks')setTasksEmbedded(true);
+    else cvRestoreProjectTaskBoard();
+  }
   var canEdit=cvMayEditProject(p),editing=canEdit&&cvProjectDetailEditing,draft=cvProjectDetailDraft?.projectId===p.id?cvProjectDetailDraft:null;
   if(!canEdit)cvProjectDetailEditing=false;
   var values=Object.assign({name:p.name||'',status:p.status||'planned',priority:p.priority||'中',owner:p.owner||'',defaultTeam:teamById(p.defaultTeam)?.id||p.defaultTeam||'',start:p.start||'',end:p.end||'',repo:p.repo||'',desc:p.desc||''},draft?.values||{});
@@ -279,8 +306,9 @@ function cvRenderProjectDetail(resetDraft){
     +(canEdit&&cvProjectDetailTab==='overview'?(editing?'<button type="submit" form="pj-project-form" class="pj-detail-save">保存</button>':'<button type="button" class="pj-detail-edit" data-pj-edit>编辑信息</button>'):'')
     +(canEdit?'<button type="button" class="pj-detail-delete" data-pj-delete>删除项目</button>':'')
     +'</div>'
-    +'<div class="pj-detail-main'+(cvProjectDetailTab==='artifacts'?' pj-detail-main--artifacts':'')+'">'
-    +(cvProjectDetailTab==='artifacts'?cvRenderProjectArtifacts(p.id):'' )
+    +'<div class="pj-detail-tabs" role="tablist" aria-label="项目详情页签">'+['overview','tasks'].map(function(tab){var labels={overview:'概览',tasks:'任务'},active=cvProjectDetailTab===tab;return '<button type="button" data-pj-detail-tab="'+tab+'" role="tab" aria-selected="'+active+'" tabindex="'+(active?'0':'-1')+'">'+labels[tab]+'</button>';}).join('')+'</div>'
+    +'<div class="pj-detail-main'+(cvProjectDetailTab==='tasks'?' pj-detail-main--tasks':'')+'">'
+    +(cvProjectDetailTab==='tasks'?'<div class="pj-project-tasks-host"></div>':'')
     +(cvProjectDetailTab==='overview'?
     '<div class="pj-info-section"><div class="pj-info-section-head"><h2>基本信息</h2></div>'
     +(editing?'<form id="pj-project-form" class="pj-info-grid" data-project-id="'+xesc(p.id)+'">':'<div class="pj-info-grid">')
@@ -299,6 +327,7 @@ function cvRenderProjectDetail(resetDraft){
     +'<div class="pj-detail-members'+(cvCanManageProject(p)?' pj-detail-members--manage':'')+'"><div class="pj-detail-members-head"><span>#</span><span>姓名</span><span>所属部门</span><span>成员属性</span>'+(cvCanManageProject(p)?'<span aria-hidden="true"></span>':'')+'</div>'+(members.length?members.map(function(person,index){var isOwner=person.name===p.owner;return '<div class="pj-detail-member"><span class="pj-detail-member-index">'+(index+1)+'</span><span class="pj-detail-member-name"><span class="pj-member-avatar pj-member-avatar--'+(index%4)+'">'+xesc(person.name[0]||'?')+'</span><b>'+xesc(person.name)+'</b></span><span class="pj-detail-member-dept">'+xesc(person.dept||'未填写部门')+'</span>'+cvProjectMemberRoleHtml(p,person,editing)+(cvCanManageProject(p)?(isOwner?'<span></span>':'<button type="button" class="pj-detail-member-remove" data-pj-member-remove="'+xesc(person.id)+'" aria-label="移除成员 '+xesc(person.name)+'">移除</button>'):'')+'</div>';}).join(''):'<div class="pj-members-empty">暂无项目成员</div>')+'</div></div>'
     :'')
     +'</div>';
+  if(cvProjectDetailTab==='tasks')cvMountProjectTaskBoard();
   cvRenderProjectMembersModal();
 }
 function cvPositionDetailOwnerResults(){
@@ -629,7 +658,7 @@ function cvOpenProjectDetail(id,tab){
   cvCloseProjectMembersModal(false);
   cvMemberPickerSelected.clear();
   cvProjCur=id;
-  cvProjectDetailTab=tab==='artifacts'?'artifacts':'overview';
+  cvProjectDetailTab=['overview','tasks'].includes(tab)?tab:'overview';
   cvProjectDetailEditing=false;cvProjectDetailDraft=null;
   cvModuleFilter='all';cvModuleView='table';
   var list=$('#cv-proj-list'),detail=$('#cv-proj-detail');
@@ -642,6 +671,7 @@ function cvOpenProjectDetail(id,tab){
   if(detail){ detail.classList.remove('hidden'); cvRenderProjectDetail(); }
 }
 function cvLeaveProjectTasks(){
+  cvRestoreProjectTaskBoard();
   if(!cvProjectTaskReturnId)return;
   cvProjectTaskReturnId='';
   $('#tkProjectContext')?.classList.add('hidden');
@@ -671,6 +701,7 @@ function cvHideProjectDetail(){
   cvResetProjectListState();
 }
 function cvResetProjectListState(){
+  cvRestoreProjectTaskBoard();
   cvCloseProjectMembersModal(false);
   cvProjectDetailDraft=null;cvDetailOwnerSelected=null;
   var pageScroll=$('#cv-members .scroll');if(pageScroll)pageScroll.classList.add('pj-list-mode');
@@ -924,6 +955,7 @@ function cvConfirmProjectMemberRemoval(){
 
 export function initCollabProjectView(){
   window.cvLeaveProjectTasks=cvLeaveProjectTasks;
+  window.cvRestoreProjectTaskBoard=cvRestoreProjectTaskBoard;
   document.addEventListener('lingee:tasks-changed',cvRenderProjectList);
   cvRenderProjectFilters();
   var projectSearch=$('#cvProjectSearch');
@@ -977,7 +1009,7 @@ export function initCollabProjectView(){
     if(tasksButton){
       var projectId=tasksButton.getAttribute('data-pj-view-tasks');
       if(!cvMyProjects().some(function(project){return project.id===projectId;}))return;
-      cvOpenProjectTasks(projectId);
+      cvOpenProjectDetail(projectId,'tasks');
       return;
     }
     var open=e.target.closest('[data-pj-open]');

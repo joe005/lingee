@@ -641,10 +641,10 @@ function listStageProgress(task) {
   return { name:stages[index]?.name || '任务处理', index:index, total:stages.length };
 }
 
-function listStatusPool() {
+function listStatusPool(ignoreProjectContext) {
   var tasks = tkGetTasks().filter(tkCanViewTask);
-  if (projectListMode && projectListProjectId) tasks = tasks.filter(function (task) { return task.project === projectListProjectId; });
-  if (!projectListMode) tasks = tasks.filter(tkParticipatesCurrentUser);
+  if (!ignoreProjectContext && projectListMode && projectListProjectId) tasks = tasks.filter(function (task) { return task.project === projectListProjectId; });
+  if (!projectListMode || ignoreProjectContext) tasks = tasks.filter(tkParticipatesCurrentUser);
   if (!state.showSubtasks) tasks = tasks.filter(function (task) { return !task.parentId; });
   return tasks;
 }
@@ -4460,17 +4460,17 @@ function initColumnResize() {
 }
 
 /* ---------- 初始化 ---------- */
-/* 协作开发菜单徽标与任务看板「待审核」列使用相同的筛选口径。 */
+/* 协作开发菜单徽标与任务页「需要我处理」页签使用相同的筛选口径。 */
 function updateCollabReviewBadge() {
   var badge = document.getElementById('collabReviewBadge');
   if (!badge) return;
-  var count = getFilteredTasks().filter(function (task) {
-    return task.status === 'in_review';
+  var count = listStatusPool(true).filter(function (task) {
+    return ['backlog', 'in_review', 'blocked'].includes(task.status);
   }).length;
   badge.textContent = String(count);
   badge.style.display = count > 0 ? '' : 'none';
-  badge.setAttribute('data-tooltip', count + ' 个任务待审核');
-  badge.setAttribute('aria-label', count + ' 个任务待审核');
+  badge.setAttribute('data-tooltip', count + ' 个任务需要处理');
+  badge.setAttribute('aria-label', count + ' 个任务需要处理');
 }
 var taskDataRenderQueued = false;
 function syncTaskDataView() {

@@ -61,7 +61,14 @@ export function tbTeamStages(team, issue) {
   const modes = {};
   (team.members || []).forEach(id => { const e = EX[id]; if (e) (e.modes || []).forEach(m => { modes[m] = true; }); });
   const covered = stages.filter(s => (STAGE_MODES[s.id] || []).some(m => modes[m]));
-  return covered.length ? covered : stages.slice();
+  const visible = covered.length ? covered : stages.slice();
+  return visible.map(stage => {
+    const explicit = Array.isArray(team.stageMembers?.[stage.id])
+      ? team.stageMembers[stage.id].filter(id => (team.members || []).includes(id) && EX[id])
+      : [];
+    const fallback = (team.members || []).filter(id => (STAGE_MODES[stage.id] || []).some(mode => (EX[id]?.modes || []).includes(mode))).slice(0, 3);
+    return { ...stage, expertIds: explicit.length ? explicit : fallback };
+  });
 }
 export function tbLabel(status) { return tbColumns.find(c => c[0] === status)?.[1] || status; }
 /* 任务是否已启动：待规划与待办视为未启动，目标与分工仍可编辑；

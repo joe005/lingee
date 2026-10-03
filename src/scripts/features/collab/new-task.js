@@ -233,11 +233,12 @@ function ntDeriveStagePlan(team, plan, fallback, issue) {
   const coverage = {};
   plan.forEach(e => { coverage[e.id] = ntStagesOfExpert(e.id).length; });
   return tbTeamStages(team, issue).map(s => {
+    const boundIds = Array.isArray(s.expertIds) ? s.expertIds : [];
     const owners = plan
-      .filter(e => (STAGE_MODES[s.id] || []).some(m => e.modes.indexOf(m) >= 0))
+      .filter(e => boundIds.length ? boundIds.includes(e.id) : (STAGE_MODES[s.id] || []).some(m => e.modes.indexOf(m) >= 0))
       .sort((a, b) => (coverage[a.id] - coverage[b.id]) || (Number(b.lead) - Number(a.lead)));
     const owner = owners[0];
-    return { id: s.id, name: s.name, assignee: (owner && owner.assignee) || fallback };
+    return { id: s.id, name: s.name, assignee: (owner && owner.assignee) || fallback, expertIds: boundIds };
   });
 }
 function ntRenderExperts() {
@@ -469,7 +470,7 @@ function cvSubmitNewTask(keepOpen) {
     if (!ntAssignee) { window.alert('请选择任务负责人'); return; }
     assignee = ntAssignee;
   }
-  if (!stagePlan) stagePlan = tbTeamStages(team, issue).map(s => ({ id: s.id, name: s.name, assignee }));
+  if (!stagePlan) stagePlan = tbTeamStages(team, issue).map(s => ({ id: s.id, name: s.name, assignee, expertIds: s.expertIds || [] }));
   const proj = CV_PROJECTS.find(p => p.id === projectId) || CV_PROJECTS[0];
   const stageActivity = expertPlan
     ? ('各专家负责人：' + expertPlan.map(e => e.name + '·' + e.assignee).join('、'))

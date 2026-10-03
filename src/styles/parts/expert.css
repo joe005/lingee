@@ -25,6 +25,9 @@
 
 /* ---- 专家团配置弹窗 ---- */
 .team-config-modal { width: min(820px, 92vw); height: min(610px, 86vh); }
+.team-config-modal .modal-header{display:flex;align-items:center;gap:12px}
+.team-config-modal .modal-header-actions{display:flex;align-items:center;gap:8px;margin-left:auto;margin-right:34px}
+.team-config-modal .modal-header-actions .modal-btn{min-height:30px;padding:0 11px;font-size:12px}
 .team-config-modal > .modal-body { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
 .team-config-modal .team-pane { flex: 1; min-height: 0; overflow-y: auto; padding: 0 2px 8px; }
 .team-config-modal .team-pane.hidden { display: none; }
@@ -448,6 +451,14 @@
 #teamModal .team-stage-intro strong{font-size:var(--tb-body-size);color:var(--text)}
 #teamModal .team-stage-intro span{font-size:var(--tb-small-size);color:var(--text-secondary);line-height:1.5}
 #teamModal .team-stage-layout{display:grid;grid-template-columns:208px minmax(0,1fr);gap:16px;align-items:start}
+#teamModal .team-stage-tree-select{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;color:var(--text-secondary);font-size:var(--tb-small-size)}
+#teamModal .team-stage-tree-select select{width:100%;padding:7px 9px;border:1px solid var(--border);border-radius:var(--tb-radius);background:var(--bg);color:var(--text);font:inherit}
+#teamModal .team-stage-tree-title{padding:0 10px 7px;color:var(--text-soft);font-size:11px;font-weight:600}
+#teamModal .team-stage-tree-node{position:relative;display:flex;align-items:center;gap:9px;width:100%;padding:9px 10px;border:0;border-left:2px solid transparent;background:transparent;color:var(--text-secondary);font:inherit;font-size:var(--tb-small-size);text-align:left;cursor:pointer}
+#teamModal .team-stage-tree-node:hover{background:var(--fill-1);color:var(--text)}
+#teamModal .team-stage-tree-node.active{border-left-color:var(--brand);background:var(--brand-fill);color:var(--brand);font-weight:600}
+#teamModal .team-stage-tree-index{display:grid;place-items:center;flex:none;width:20px;height:20px;border:1px solid var(--border);border-radius:50%;font-size:10px}
+#teamModal .team-stage-tree-node.active .team-stage-tree-index{border-color:var(--brand);background:var(--brand);color:var(--bg)}
 #teamModal .team-stage-scenarios{display:flex;flex-direction:column;gap:8px}
 #teamModal .team-stage-scenario{display:flex;flex-direction:column;align-items:flex-start;gap:4px;width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:var(--tb-radius);background:var(--bg);text-align:left;font:inherit;cursor:pointer}
 #teamModal .team-stage-scenario:hover{border-color:var(--border-focus);background:var(--fill-2)}
@@ -464,10 +475,27 @@
 #teamModal #teamStageScenarioCount{flex:none}
 #teamModal .team-stages{display:flex;flex-direction:column;padding:4px 18px}
 #teamModal .team-stage{display:flex;align-items:flex-start;gap:12px;padding:11px 0;min-width:0}
+#teamModal .team-stage-empty{padding:26px;color:var(--text-soft);font-size:var(--tb-small-size)}
 #teamModal .team-stage+.team-stage{border-top:1px solid var(--divider)}
 #teamModal .team-stage-index{display:flex;align-items:center;justify-content:center;flex:none;width:22px;height:22px;border-radius:50%;background:var(--brand-fill);color:var(--brand);font-size:var(--tb-small-size);font-weight:600}
 #teamModal .team-stage-content{min-width:0;flex:1}
 #teamModal .team-stage-content strong{display:block;color:var(--text);font-size:var(--tb-body-size);line-height:22px}
 #teamModal .team-stage-content p{margin:3px 0 0;color:var(--text-secondary);font-size:var(--tb-small-size);line-height:1.5}
+#teamModal .team-stage-members{display:flex;flex:0 1 42%;flex-direction:column;align-items:flex-end;gap:6px;min-width:180px}
+#teamModal .team-stage-member{display:inline-flex;align-items:center;gap:5px;max-width:180px;padding:4px 8px;border:1px solid var(--border);border-radius:7px;background:var(--fill-1);color:var(--text-secondary);font-size:var(--tb-small-size);line-height:18px}
+#teamModal .team-stage-member img,#teamModal .team-stage-member-option img{width:18px;height:18px;flex:none;border-radius:50%}
+#teamModal .team-stage-member span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#teamModal .team-stage-member-empty{padding:4px 0;color:var(--warning);font-size:var(--tb-small-size)}
+#teamModal .team-stage-member-picker{width:100%;max-width:230px}
+#teamModal .team-stage-member-picker summary{display:inline-flex;align-items:center;gap:5px;padding:3px 0;color:var(--brand);font-size:var(--tb-small-size);cursor:pointer;list-style:none}
+#teamModal .team-stage-member-picker summary::-webkit-details-marker{display:none}
+#teamModal .team-stage-member-picker summary:before{content:'+';display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border:1px solid currentColor;border-radius:4px;font-size:14px;line-height:14px}
+#teamModal .team-stage-member-picker[open] summary:before{content:'−'}
+#teamModal .team-stage-member-picker summary em{font-style:normal;color:var(--text-secondary)}
+#teamModal .team-stage-member-options{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:4px;padding:7px;border:1px solid var(--border);border-radius:7px;background:var(--bg)}
+#teamModal .team-stage-member-option{display:inline-flex;align-items:center;gap:4px;padding:3px 6px;border:1px solid var(--border);border-radius:999px;background:var(--bg);color:var(--text-secondary);font:inherit;font-size:var(--tb-small-size);cursor:pointer}
+#teamModal .team-stage-member-option:hover{border-color:var(--border-focus);background:var(--fill-2)}
+#teamModal .team-stage-member-option.is-selected{border-color:var(--brand);background:var(--brand-fill);color:var(--brand)}
+#teamModal .team-stage-member-option:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 #teamModal .team-stage-gap{flex:none;margin-top:2px;color:var(--warning);font-size:var(--tb-small-size)}
-@media(max-width:640px){#teamModal .team-stage-layout{grid-template-columns:1fr}#teamModal .team-stage-scenarios{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}#teamModal .team-stage-scenario{padding:9px}#teamModal .team-stage-scenario span{display:none}}
+@media(max-width:640px){#teamModal .team-stage-layout{grid-template-columns:1fr}#teamModal .team-stage-scenarios{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}#teamModal .team-stage-scenario{padding:9px}#teamModal .team-stage-scenario span{display:none}#teamModal .team-stage-members{flex-basis:100%;align-items:flex-start;min-width:0}#teamModal .team-stage-member-picker{max-width:none}#teamModal .team-stage-member-options{justify-content:flex-start}#teamModal .team-stage{flex-wrap:wrap}}

@@ -62,6 +62,7 @@ function loadTeams(){
     return {id:t.id,preset:false,ownerId:t.ownerId||'',name:t.name,by:t.by||'我创建的',desc:t.desc||'',
       domains:Array.isArray(t.domains)?t.domains:[],
       leadId:EX[t.leadId]?t.leadId:(t.members[0]||null),members:t.members.slice(),
+      stageMembers:t.stageMembers&&typeof t.stageMembers==='object'?Object.fromEntries(Object.entries(t.stageMembers).map(function(entry){return [entry[0],Array.isArray(entry[1])?entry[1].filter(function(id){return t.members.includes(id)&&EX[id]}):[]]})): {},
       cmds:(Array.isArray(t.cmds)?t.cmds:[]).filter(function(c){return Array.isArray(c)&&c[0]})};
   });
   TEAMS=PRESET_TEAMS.slice().concat(valid);
@@ -72,7 +73,7 @@ function saveTeams(){
       v:1,
       teams:TEAMS.filter(function(t){return !t.preset}).map(function(t){
         return {id:t.id,ownerId:t.ownerId||'',name:t.name,by:t.by,desc:t.desc,domains:t.domains||[],
-                leadId:t.leadId,members:t.members,cmds:t.cmds};
+                leadId:t.leadId,members:t.members,stageMembers:t.stageMembers||{},cmds:t.cmds};
       }),
       experts:MY_EXPERTS.map(function(e){
         return {id:e.id,ownerId:e.ownerId||'',k:e.k,name:e.name,desc:e.desc,tags:e.tags,skills:e.skills||[],
