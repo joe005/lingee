@@ -8,6 +8,7 @@ import { openAppDropdown } from './attach-app.js';
 
 /* ---------- Changelog / 更新日志 ---------- */
 var changelogData=[
+  {id:'75',date:'2026-10-03',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'优化',module:'专家与专家团',author:'wuhc2023',body:'优化·专家与专家团：云端数字员工和专家团默认按最近修改时间倒序排列。'},
   {id:'74',date:'2026-10-02',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理与平台管理',author:'wuhc2023',body:'功能·任务管理与平台管理：任务列表按当前处理职责与阶段评审权限展示；平台导入改为对话框选择 ZIP 并进入解析扫描流程；协作数据、任务看板与云端市场通过注入接口解耦。'},
   {id:'73',date:'2026-10-02',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'修复',module:'任务管理',author:'wuhc2023',body:'修复·任务管理：修复任务看板按当前任务上下文生成专家团阶段，确保任务阶段与任务配置一致。'},
   {id:'72',date:'2026-10-02',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'平台管理',author:'wuhc2023',body:'功能·平台管理：原厂和租户管理补齐导入简介、自动版本、审核通过/驳回、历史版本与 ZIP 导出，并按角色隔离审核权限；智能创建任务直接进入 task-builder 对话并选择项目，数字员工生成完成后点击卡片打开配置侧栏。'},
@@ -65,6 +66,7 @@ var changelogData=[
 ];
 // 每个数据条目对应的 avatar SVG 图标（与 Build_demo 的 lucide 图标一致）
 var changelogIcons={
+  '75':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M4 6h16M4 12h16M4 18h16"/><path d="m8 9 4 3 4-3"/></svg>',
   '74':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M4 12h16M12 4v16"/></svg>',
   '73':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M4 12h16M12 4v16"/></svg>',
   '72':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h6M8 17h4"/></svg>',

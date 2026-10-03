@@ -550,7 +550,13 @@ export function initPlatformAdmin(){
 
 /* 广场通过此接口读取平台已上架版本，安装与个人定义的存储独立。 */
 export function cloudCatalog(){
-  return Object.entries(meta).filter(([id,item])=>item.status==='online'&&active(id)&&availableToClient(item)).map(([id,item])=>({key:id,kind:item.kind,data:clone(active(id).data),version:active(id).version,note:active(id).note,installed:installed[id]||''}));
+  return Object.entries(meta)
+    .filter(([id,item])=>item.status==='online'&&active(id)&&availableToClient(item))
+    .sort(([aId,a],[bId,b])=>{
+      const aTime=Date.parse(a.modified)||0,bTime=Date.parse(b.modified)||0;
+      return bTime-aTime||String(bId).localeCompare(String(aId));
+    })
+    .map(([id,item])=>({key:id,kind:item.kind,data:clone(active(id).data),version:active(id).version,note:active(id).note,modified:item.modified||'',installed:installed[id]||''}));
 }
 function cloudInstallRows(id,reinstall=false){
   const rows=new Map();
