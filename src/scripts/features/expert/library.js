@@ -3,6 +3,7 @@ import { layerOf, layerVisible, layerActions, layerToolbar, handleLayerAction, a
 import { $, $$ } from '../../core/dom.js';
 import { summon } from './automatch.js';
 import { EX, EXPERTS, compChip, phraseHtml, skillInfo, tierInfo, xav, xesc } from './data.js';
+import { submitAssetForReview } from './asset-review.js';
 import { deleteMyExpert, openExpertEditor } from './editor.js';
 import { knSecHtml, resetKnDetail, saveKnDetail } from './knowledge.js';
 import { TEAMS, teamDomains } from './store.js';
@@ -119,10 +120,12 @@ function openExpertModal(id){
   $('#expertModalFoot').innerHTML=
     (layerOf('expert',e)==='personal'?'<button type="button" class="btn-link team-delete-btn" data-x-del="'+e.id+'">删除该专家</button>':'')
     +'<div class="team-footer-spacer"></div>'
+    +(layerOf('expert',e)==='personal'?'<button type="button" class="modal-btn cancel" data-x-close>取消</button>':'')
     +(layerOf('expert',e)==='personal'?'<button type="button" class="modal-btn cancel" data-x-edit="'+e.id+'">编辑</button>':'')
+    +(layerOf('expert',e)==='personal'?'<button type="button" class="modal-btn confirm" data-x-submit="'+e.id+'">提交审核</button>':'')
     +(knHtml?'<button type="button" class="modal-btn cancel hidden" id="xkDtlCancelBtn">取消</button>':'')
     +(knHtml?'<button type="button" class="modal-btn cancel hidden" id="xkDtlSaveBtn" data-x-save-kn="'+e.id+'">保存</button>':'')
-    +'<button type="button" class="modal-btn confirm" data-x-call="'+e.id+'">对话专家</button>';
+    +(layerOf('expert',e)==='personal'?'':'<button type="button" class="modal-btn confirm" data-x-call="'+e.id+'">对话专家</button>');
   $('#expertModalFoot').className='modal-footer team-modal-footer';
   expertModal.classList.add('show');
 }
@@ -166,6 +169,8 @@ export function initExpertLibrary() {
     if(e.target.closest('#xkDtlCancelBtn')){ resetKnDetail(); expertModal.classList.remove('show'); return; }
     var ed=e.target.closest('[data-x-edit]');
     if(ed){ expertModal.classList.remove('show'); openExpertEditor(ed.getAttribute('data-x-edit')); return; }
+    var sb=e.target.closest('[data-x-submit]');
+    if(sb){ if(EX[sb.getAttribute('data-x-submit')]) submitAssetForReview('expert',EX[sb.getAttribute('data-x-submit')]); return; }
     var dl=e.target.closest('[data-x-del]');
     if(dl){ deleteMyExpert(dl.getAttribute('data-x-del')); return; }
     var cl=e.target.closest('[data-x-call]');

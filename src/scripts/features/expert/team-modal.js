@@ -69,13 +69,13 @@ function populateTeamModal(id,editing){
   $('#teamResetBtn').hidden=!(teamEditMode&&!teamDraft.preset);
   /* 内置团最常用的动作是发起对话，主按钮给它；自建团主按钮还是保存 */
   $('#teamSaveBtn').className = 'modal-btn '+(teamDraft.preset?'cancel':'confirm')+' team-panel-btn-save';
+  if(!teamDraft.preset)$('#teamSaveBtn').className='modal-btn cancel team-panel-btn-save';
   $('#teamSaveBtn').classList.toggle('hidden', teamDraft.preset||!teamEditMode);
   $('#teamSubmitReviewBtn').classList.toggle('hidden', teamDraft.preset||!teamEditMode);
-  $('#teamEditBtn').classList.toggle('hidden', teamDraft.preset||teamEditMode);
-  if(!teamDraft.preset)$('#teamSaveBtn').className='modal-btn cancel team-panel-btn-save';
   $('#teamCallBtn').className = 'modal-btn '+(teamDraft.preset?'confirm':'cancel')+' team-panel-btn-test';
   $('#teamCallBtn').classList.toggle('hidden', !teamEditingId);
-  $('#teamDeleteBtn').classList.toggle('hidden', teamDraft.preset || !teamEditingId || !teamEditMode);
+  /* 个人开发的详情在底部给「删除／取消／编辑／提交审核」，和数字员工详情一致；保存和测试只在对话侧栏的编辑区 */
+  $('#teamViewFoot').classList.toggle('hidden', teamDraft.preset||teamEditMode||!teamEditingId);
   renderTeamModal();
   setTeamModalTab('info');
   var body=$('#teamModal .modal-body'); if(body) body.scrollTop=0;
@@ -233,6 +233,10 @@ export function initTeamModal() {
       teamModal.classList.remove('show');
       startAssetEditChat('team',teamEditingId,teamDraft?.name||'');
     });
+    $('#teamViewSubmitBtn').addEventListener('click',function(){
+      var t=teamById(teamEditingId); if(!t||layerOf('team',t)!=='personal')return;
+      submitAssetForReview('team',t);
+    });
     teamModal.addEventListener('input',function(ev){
       var c=ev.target.closest('[data-tm-cmd]');
       if(c){ teamDraft.cmds[+c.getAttribute('data-tm-cmd')][+c.getAttribute('data-f')]=c.value; markTeamDirty(); }
@@ -242,7 +246,7 @@ export function initTeamModal() {
       if(!window.confirm('删除专家团「'+t.name+'」？此操作不可撤销。')) return;
       set_TEAMS(TEAMS.filter(function(x){ return x.id!==t.id; }));
       if(activePick.kind==='team'&&activePick.id===t.id) clearPick();
-      hideAssetEditorPanel();
+      hideAssetEditorPanel(); teamModal.classList.remove('show');
       saveTeams(); renderExpertGrid(); renderExpertChips();
       toast('已删除「'+t.name+'」','success');
     });

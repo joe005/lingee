@@ -8,7 +8,7 @@ import { openAppDropdown } from './attach-app.js';
 
 /* ---------- Changelog / 更新日志 ---------- */
 var changelogData=[
-  {id:'77',date:'2026-10-03',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'开发区与专家团',author:'wuhc2023',body:'功能·开发区与专家团：应用、智能体、技能开发页及各页签胶囊按新设计统一样式并支持状态筛选搜索，协作开发新增页面标题，专家团交付阶段改为左树右详情并可绑定多个数字员工，项目详情新增任务页签。'},
+  {id:'77',date:'2026-10-03',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'开发区与专家团',author:'wuhc2023',body:'功能·开发区与专家团：应用、智能体、技能开发页及各页签胶囊按新设计统一样式并支持状态筛选搜索，协作开发新增页面标题，专家团交付阶段改为左树右详情并可绑定多个数字员工，项目详情新增任务页签，数字员工与专家团详情新增提交审核并直接提交所在企业，提示待企业管理员审核。'},
   {id:'76',date:'2026-10-03',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'优化',module:'登录与设置',author:'wuhc2023',body:'优化·登录与设置：协作人员姓名账号统一初始化默认密码，并在设置页展示可登录账号。'},
   {id:'75',date:'2026-10-03',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'优化',module:'专家与专家团',author:'wuhc2023',body:'优化·专家与专家团：云端数字员工和专家团默认按最近修改时间倒序排列。'},
   {id:'74',date:'2026-10-02',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理与平台管理',author:'wuhc2023',body:'功能·任务管理与平台管理：任务列表按当前处理职责与阶段评审权限展示；平台导入改为对话框选择 ZIP 并进入解析扫描流程；协作数据、任务看板与云端市场通过注入接口解耦。'},

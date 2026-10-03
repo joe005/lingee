@@ -22,13 +22,9 @@ export function submitAssetForReview(kind,item){
   if(item.ownerId&&item.ownerId!==assetOwnerKey())return;
   const choices=reviewTenants(),accountTenant=getPlatformIdentity()?.tenantId;
   if(!choices.length)return assetReviewDialog('无法提交','<p>当前账号没有可提交的企业，请联系管理员配置企业归属。</p>',null,'关闭');
-  if(accountTenant)return submitToTenant(kind,item,accountTenant);
-  assetReviewDialog('选择提交企业',`<label class="platform-import-note-label">所属企业<select id="assetReviewTenant" aria-label="选择提交企业">${choices.map(workspace=>`<option value="${xesc(workspace.id)}">${xesc(workspace.name)}</option>`).join('')}</select></label><p>个人开发内容仍会保留，审核通过后发布为所选企业的自建版本。</p>`,()=>{
-    const tenant=$('#assetReviewTenant').value;
-    if(!reviewTenants().some(workspace=>workspace.id===tenant))return assetReviewDialog('无法提交','<p>当前账号已无该企业的提交权限。</p>',null,'关闭');
-    submitToTenant(kind,item,tenant);
-  },'下一步');
-  if(choices.some(workspace=>workspace.id===cvWorkspace))$('#assetReviewTenant').value=cvWorkspace;
+  /* 个人内容本地直接运行，提交审核只会提交给所在企业，不需要再选；
+     账号绑定了企业就用该企业，否则用当前所在企业（无权限时退回第一个可用企业） */
+  submitToTenant(kind,item,accountTenant||(choices.some(workspace=>workspace.id===cvWorkspace)?cvWorkspace:choices[0].id));
 }
 function submitToTenant(kind,item,tenant){
   if(item.ownerId&&item.ownerId!==assetOwnerKey())return;
@@ -58,7 +54,7 @@ function submitToTenant(kind,item,tenant){
     const rows=reviews();if(rows.some(row=>row.kind===kind&&row.sourceId===item.id&&row.tenantId===tenant&&row.status==='pending')){$('#assetReviewError').textContent='该内容已有待审核版本';return;}
     rows.push({id:'review-'+Date.now(),kind,sourceId:item.id,name:item.name,tenantId:tenant,tenantName,author:cvCurrentUserName(),ownerId:assetOwnerKey(),status:'pending',note,bundle,at:new Date().toLocaleString('zh-CN',{hour12:false})});
     if(!store(rows)){$('#assetReviewError').textContent='保存失败，请重试';return;}
-    assetReviewDialog('提交成功','<p>等待管理平台审核。审核通过前，内容不会出现在“更多”中。</p>',null,'关闭');
+    assetReviewDialog('提交成功',`<p>「${xesc(item.name)}」已提交到 ${xesc(tenantName)}，待企业管理员审核。</p><p class="platform-dialog-note">审核通过前，内容不会出现在“更多”中，个人开发版本仍可继续使用。</p>`,null,'关闭');
   },'确认提交');
 }
 function matchingReviews({kind='',statuses=[],tenantId='',keyword=''}={}){
