@@ -121,24 +121,22 @@ function renderTeamModal(){
 function renderTeamStages(){
   if(!teamDraft)return;
   var scenario=TEAM_STAGE_SCENARIOS.find(function(item){return item.id===teamStageScenarioId})||TEAM_STAGE_SCENARIOS[0];
-  var selectedStage=scenario.stages.find(function(stage){return stage.id===teamStageSelectedId})||scenario.stages[0];
-  teamStageSelectedId=selectedStage?.id||'';
-  $('#teamStageScenarios').innerHTML='<label class="team-stage-tree-select"><span>交付路径</span><select data-team-scenario-select>'+TEAM_STAGE_SCENARIOS.map(function(item){return '<option value="'+xesc(item.id)+'"'+(item.id===scenario.id?' selected':'')+'>'+xesc(item.name)+'</option>';}).join('')+'</select></label><div class="team-stage-tree-title">阶段</div>'+scenario.stages.map(function(stage,index){
-    var selected=stage.id===teamStageSelectedId;
-    return '<button type="button" class="team-stage-tree-node'+(selected?' active':'')+'" data-team-stage="'+xesc(stage.id)+'" aria-current="'+(selected?'step':'false')+'"><span class="team-stage-tree-index">'+(index+1)+'</span><span>'+xesc(stage.name)+'</span></button>';
+  $('#teamStageScenarios').innerHTML=TEAM_STAGE_SCENARIOS.map(function(item){
+    var on=item.id===scenario.id;
+    return '<button type="button" class="team-stage-scenario'+(on?' active':'')+'" data-team-scenario="'+xesc(item.id)+'" aria-pressed="'+on+'"><strong>'+xesc(item.name)+'</strong><small>'+item.stages.length+' 个阶段</small></button>';
   }).join('');
-  $('#teamStageScenarioTitle').textContent=selectedStage?.name||scenario.name;
-  $('#teamStageScenarioHint').textContent=selectedStage?.desc||('例如：'+scenario.example);
-  $('#teamStageScenarioCount').textContent=(selectedStage?'阶段 '+(scenario.stages.indexOf(selectedStage)+1)+' / ':'')+scenario.stages.length;
+  $('#teamStageScenarioTitle').textContent=scenario.name;
+  $('#teamStageScenarioHint').textContent=scenario.hint+'，例如：'+scenario.example;
+  $('#teamStageScenarioCount').textContent=scenario.stages.length+' 个阶段';
   var modes=new Set(teamDraft.members.flatMap(function(id){return EX[id]?.modes||[]}));
   function boundMembers(stage){
     var explicit=teamDraft.stageMembers[stage.id];
     if(Array.isArray(explicit)&&explicit.length)return explicit.filter(function(id){return teamDraft.members.includes(id)&&EX[id]});
     return teamDraft.members.filter(function(id){return (STAGE_MODES[stage.id]||[]).some(function(mode){return (EX[id]?.modes||[]).includes(mode);});}).slice(0,3);
   }
-  var stage=selectedStage;
-  var covered=stage&&(STAGE_MODES[stage.id]||[]).some(function(mode){return modes.has(mode)});
-  if(!stage){$('#teamStages').innerHTML='<div class="team-stage-empty">当前路径暂无阶段</div>';return;}
+  if(!scenario.stages.length){$('#teamStages').innerHTML='<div class="team-stage-empty">当前路径暂无阶段</div>';return;}
+  $('#teamStages').innerHTML=scenario.stages.map(function(stage,index){
+    var covered=(STAGE_MODES[stage.id]||[]).some(function(mode){return modes.has(mode)});
     var bound=boundMembers(stage);
     var binding=bound.length?bound.map(function(id){
       var expert=EX[id];
@@ -148,9 +146,10 @@ function renderTeamStages(){
       var expert=EX[id],selected=bound.includes(id);
       return '<button type="button" class="team-stage-member-option'+(selected?' is-selected':'')+'" data-stage-member="'+xesc(stage.id)+'" data-stage-expert="'+xesc(id)+'" aria-pressed="'+selected+'"><img src="'+xav(expert.k)+'" alt=""><span>'+xesc(expert.name)+'</span></button>';
     }).join('')+'</div></details>':'';
-    $('#teamStages').innerHTML='<div class="team-stage" role="listitem"><div class="team-stage-content"><strong>'+xesc(stage.name)+'</strong><p>'+xesc(stage.desc)+'</p></div>'
-      +'<div class="team-stage-members">'+binding+picker+'</div>'
-      +(covered?'':'<span class="team-stage-gap" title="当前成员暂无对应工作模式">能力待补齐</span>')+'</div>';
+    return '<div class="team-stage" role="listitem"><span class="team-stage-index">'+(index+1)+'</span>'
+      +'<div class="team-stage-content"><strong>'+xesc(stage.name)+(covered?'':'<span class="team-stage-gap" title="当前成员暂无对应工作模式">能力待补齐</span>')+'</strong><p>'+xesc(stage.desc)+'</p></div>'
+      +'<div class="team-stage-members">'+binding+picker+'</div></div>';
+  }).join('');
 }
 
 /* ---------- 添加成员弹窗 ---------- */
@@ -182,7 +181,6 @@ export function initTeamModal() {
       var n;
       if(n=e.target.closest('[data-team-tab]')){ setTeamModalTab(n.getAttribute('data-team-tab')); return; }
       if(n=e.target.closest('[data-team-scenario]')){ teamStageScenarioId=n.getAttribute('data-team-scenario');renderTeamStages();return; }
-      if(n=e.target.closest('[data-team-stage]')){ teamStageSelectedId=n.getAttribute('data-team-stage');renderTeamStages();return; }
       if(n=e.target.closest('[data-stage-member]')){
         var stageId=n.getAttribute('data-stage-member'),expertId=n.getAttribute('data-stage-expert');
         var current=Array.isArray(teamDraft.stageMembers[stageId])&&teamDraft.stageMembers[stageId].length?teamDraft.stageMembers[stageId].filter(function(id){return teamDraft.members.includes(id)}):teamDraft.members.filter(function(id){return (STAGE_MODES[stageId]||[]).some(function(mode){return (EX[id]?.modes||[]).includes(mode);});}).slice(0,3);
@@ -238,10 +236,6 @@ export function initTeamModal() {
     teamModal.addEventListener('input',function(ev){
       var c=ev.target.closest('[data-tm-cmd]');
       if(c){ teamDraft.cmds[+c.getAttribute('data-tm-cmd')][+c.getAttribute('data-f')]=c.value; markTeamDirty(); }
-    });
-    teamModal.addEventListener('change',function(ev){
-      var select=ev.target.closest('[data-team-scenario-select]');
-      if(select){teamStageScenarioId=select.value;teamStageSelectedId='';renderTeamStages();}
     });
     $('#teamDeleteBtn').addEventListener('click',function(){
       var t=teamById(teamEditingId); if(!t||layerOf('team',t)!=='personal') return;
