@@ -28,6 +28,25 @@ var ACCOUNTS={
   '张利军':{pass:'lingee520',role:'owner',name:'张利军',avatar:'张'},
   '王育权':{pass:'lingee520',role:'owner',name:'王育权',avatar:'王'},
   '王工':{pass:'lingee520',role:'owner',name:'王工',avatar:'王'},
+  '李工':{pass:'lingee520',role:'owner',name:'李工',avatar:'李'},
+  '赵琳':{pass:'lingee520',role:'owner',name:'赵琳',avatar:'赵'},
+  '陈晨':{pass:'lingee520',role:'owner',name:'陈晨',avatar:'陈'},
+  '刘洋':{pass:'lingee520',role:'owner',name:'刘洋',avatar:'刘'},
+  '周杰':{pass:'lingee520',role:'owner',name:'周杰',avatar:'周'},
+  '孙明':{pass:'lingee520',role:'owner',name:'孙明',avatar:'孙'},
+  '吴芳':{pass:'lingee520',role:'owner',name:'吴芳',avatar:'吴'},
+  '郑凯':{pass:'lingee520',role:'owner',name:'郑凯',avatar:'郑'},
+  '钱涛':{pass:'lingee520',role:'owner',name:'钱涛',avatar:'钱'},
+  '宋宇':{pass:'lingee520',role:'owner',name:'宋宇',avatar:'宋'},
+  '冯远':{pass:'lingee520',role:'owner',name:'冯远',avatar:'冯'},
+  '许诺':{pass:'lingee520',role:'owner',name:'许诺',avatar:'许'},
+  '蒋雯':{pass:'lingee520',role:'owner',name:'蒋雯',avatar:'蒋'},
+  '何欣':{pass:'lingee520',role:'owner',name:'何欣',avatar:'何'},
+  '韩梅':{pass:'lingee520',role:'owner',name:'韩梅',avatar:'韩'},
+  '罗静':{pass:'lingee520',role:'owner',name:'罗静',avatar:'罗'},
+  '杨帆':{pass:'lingee520',role:'owner',name:'杨帆',avatar:'杨'},
+  '唐辉':{pass:'lingee520',role:'owner',name:'唐辉',avatar:'唐'},
+  '梁平':{pass:'lingee520',role:'owner',name:'梁平',avatar:'梁'},
   '付鹏城':{pass:'lingee520',role:'owner',name:'付鹏城',avatar:'付'},
   '陈惠琼':{pass:'lingee520',role:'owner',name:'陈惠琼',avatar:'陈'},
   '吴晓锋':{pass:'lingee520',role:'owner',name:'吴晓锋',avatar:'吴'},
@@ -51,7 +70,10 @@ var ACCOUNTS={
 /* 仅暴露可登录账号的公开资料，供协作人员选择；不包含密码和演示角色账号。 */
 var LOGIN_PEOPLE_IDS={
   'wuhc2023@gmail.com':'p22','17299999999':'p01','6686612@qq.com':'p23','66866':'p23',
-  '吴宏超':'p22','张工':'p01','部伟':'p29','张利军':'p30','王育权':'p31','王工':'p03','付鹏城':'p32',
+  '吴宏超':'p22','张工':'p01','部伟':'p29','张利军':'p30','王育权':'p31','王工':'p03','李工':'p02','赵琳':'p04',
+  '陈晨':'p05','刘洋':'p06','周杰':'p07','孙明':'p08','吴芳':'p09','郑凯':'p10','钱涛':'p11',
+  '宋宇':'p12','冯远':'p13','许诺':'p14','蒋雯':'p15','何欣':'p16','韩梅':'p17','罗静':'p18',
+  '杨帆':'p19','唐辉':'p20','梁平':'p21','付鹏城':'p32',
   '陈惠琼':'p33','吴晓锋':'p23','钟伟纯':'p35','刘鉴洲':'p36','陈谨':'p37',
   '陈来珍':'p38','暴福音':'p39','荆龙刚':'p40','梁平贤':'p41','陈瑾':'p37',
   'owner':'p22','dev':'p01','project_manager':'p04','pm':'p04','qa':'p05','ops':'p07'
@@ -65,7 +87,10 @@ export function getPlatformIdentity(){
   return null;
 }
 function getLoginPeople(){
-  return Object.keys(ACCOUNTS).filter(function(account){return account.includes('@')||/^\d{11}$/.test(account);}).map(function(account){
+  return Object.keys(ACCOUNTS).filter(function(account){
+    var personId=LOGIN_PEOPLE_IDS[account];
+    return account.includes('@')||/^\d{11}$/.test(account)||(personId&&/^p\d+$/.test(personId));
+  }).map(function(account){
     var profile=ACCOUNTS[account];
     return {id:LOGIN_PEOPLE_IDS[account]||'login:'+account,name:profile.name,account:account,
       phone:/^\d{11}$/.test(account)?account:'',email:account.includes('@')?account:''};
