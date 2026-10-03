@@ -163,7 +163,7 @@ function renderTaskStartAction() {
   if (taskDetailVersion === 'latest') {
     var task = tkGetTasks().find(function (row) { return row.id === state.drawerTaskId; });
     var action = taskHeaderAction(task);
-    placeTaskActionButton(button, action?.action === 'start' && task?.status === 'backlog');
+    placeTaskActionButton(button, action?.action === 'start' || action?.action === 'retry');
     button.hidden = !action;
     if (!action) return;
     button.dataset.taskAction = action.action;
