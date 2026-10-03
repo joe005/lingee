@@ -71,3 +71,78 @@
   .ptag{font-size:12px;color:#5a5a5a;background:#f5f5f5;padding:4px 11px;border-radius:7px;white-space:nowrap}
   @media(max-width:1160px){.apps-grid{grid-template-columns:repeat(2,1fr)}}
 
+
+  /* ============ 开发类列表页（应用/智能体/技能）：按设计稿还原 ============ */
+  :is(#view-apps,#view-agents,#view-skills){padding-top:22px}
+  :is(#view-apps,#view-agents,#view-skills):before{display:none}
+  :is(#view-apps,#view-agents,#view-skills) .apps-head{margin-bottom:20px}
+  :is(#view-apps,#view-agents,#view-skills) .apps-title{font-size:18px;letter-spacing:0}
+  :is(#view-apps,#view-agents,#view-skills) .apps-toolbar{gap:12px;flex-wrap:wrap;margin-bottom:16px}
+  :is(#view-apps,#view-agents,#view-skills) .apps-head-right{display:flex;align-items:center;gap:10px;min-width:0;margin-left:auto}
+  :is(#view-agents,#view-skills) .tabs{display:inline-flex;align-items:center;gap:4px;box-sizing:border-box;height:40px;padding:4px;border-radius:var(--asset-pill-radius);background:var(--hover)}
+  :is(#view-agents,#view-skills) .tab{box-sizing:border-box;display:flex;align-items:center;height:32px;padding:0 20px;border-radius:var(--asset-pill-radius);color:var(--text-secondary);font-size:14px;font-weight:400;line-height:1;white-space:nowrap;transition:background .15s,color .15s}
+  :is(#view-agents,#view-skills) .tab:hover{background:var(--active);color:var(--text)}
+  :is(#view-agents,#view-skills) .tab.active{background:var(--bg);color:var(--text);font-weight:500;box-shadow:var(--pill-shadow)}
+  :is(#view-apps,#view-agents,#view-skills) .apps-refresh{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;padding:0;border:0;border-radius:8px;background:transparent;color:var(--text);cursor:pointer;transition:background .15s}
+  :is(#view-apps,#view-agents,#view-skills) .apps-refresh:hover{background:var(--hover)}
+  :is(#view-apps,#view-agents,#view-skills) .apps-refresh .ic{width:17px;height:17px}
+  :is(#view-apps,#view-agents,#view-skills) .apps-search{box-sizing:border-box;width:196px;height:34px;padding:0 12px;gap:8px;border:1px solid var(--border);border-radius:10px;background:var(--bg)}
+  #view-skills .apps-search{width:208px}
+  :is(#view-apps,#view-agents,#view-skills) .apps-search:focus-within{border-color:var(--brand)}
+  :is(#view-apps,#view-agents,#view-skills) .apps-search input{order:0;min-width:0;flex:1;font-size:13px}
+  :is(#view-apps,#view-agents,#view-skills) .apps-search .ic{order:1;flex:none;width:15px;height:15px}
+  :is(#view-apps,#view-agents,#view-skills) .apps-search-clear{order:2}
+  :is(#view-apps,#view-agents,#view-skills) .btn-new{height:34px;box-sizing:border-box;padding:0 14px;gap:5px;border-radius:10px;font-size:13px;font-weight:500;white-space:nowrap;box-shadow:none}
+  :is(#view-apps,#view-agents,#view-skills) .btn-new .ic{width:14px;height:14px}
+  :is(#view-apps,#view-agents,#view-skills) .btn-new .dd-chev{width:13px;height:13px;margin-left:1px}
+  #view-skills .btn-new-outline{background:var(--bg);color:var(--brand);border:1px solid var(--brand)}
+  #view-skills .btn-new-outline:hover{background:var(--brand-fill)}
+  #view-skills .btn-tool{display:inline-flex;align-items:center;gap:6px;height:34px;box-sizing:border-box;padding:0 14px;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text);font:inherit;font-size:13px;white-space:nowrap;cursor:pointer;transition:background .15s}
+  #view-skills .btn-tool:hover{background:var(--hover)}
+  #view-skills .btn-tool .ic{width:15px;height:15px}
+  :is(#view-apps,#view-agents,#view-skills) :is(.btn-new,.btn-tool,.apps-refresh,.tab):focus-visible{outline:2px solid var(--border-focus);outline-offset:2px}
+  :is(#view-apps,#view-agents,#view-skills) .apps-new-dropdown{border-radius:12px}
+  :is(#view-apps,#view-agents,#view-skills) .apps-grid{gap:16px}
+  @media(max-width:760px){:is(#view-apps,#view-agents,#view-skills) .apps-head-right{flex:1 1 100%;flex-wrap:wrap}:is(#view-apps,#view-agents,#view-skills) .apps-search{flex:1;width:auto}}
+
+  :is(#view-apps,#view-agents,#view-skills) .app-card{box-sizing:border-box;border:0;border-radius:18px;padding:18px;background:var(--bg);box-shadow:0 0 0 1px rgba(0,0,0,.015)}
+  :is(#view-apps,#view-agents,#view-skills) .app-card:hover{box-shadow:0 6px 20px rgba(0,0,0,.06)}
+  :is(#view-apps,#view-agents,#view-skills) .card-title{font-size:15px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:22px}
+  :is(#view-apps,#view-agents,#view-skills) .card-desc{margin:0;color:var(--text-secondary);font-size:13px;line-height:1.6}
+  :is(#view-apps,#view-agents,#view-skills) .card-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+  :is(#view-apps,#view-agents) .app-card{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:12px;align-content:start;min-height:98px}
+  #view-agents .app-card{min-height:132px;grid-template-rows:1fr auto}
+  :is(#view-apps,#view-agents) .card-icon{margin-top:2px}
+  #view-apps .card-icon-app{width:38px;height:38px;border-radius:10px;background:var(--brand-fill);color:var(--brand)}
+  #view-apps .card-icon-app .ic{width:20px;height:20px}
+  #view-agents .card-icon-agent{width:30px;height:30px;margin-top:0;border-radius:50%;color:#fff}
+  #view-agents .card-icon-agent .ic{width:16px;height:16px}
+  #view-agents .card-desc{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:2px}
+  #view-agents .card-body{gap:4px}
+  #view-agents .card-tags{grid-column:1/-1;align-items:center;justify-content:space-between;margin-top:12px}
+  #view-agents .ptag{background:#f3f3f5;color:var(--text-secondary);padding:4px 10px;border-radius:8px}
+  #view-agents .card-status{font-size:12px;color:var(--text-secondary);white-space:nowrap}
+  #view-agents .app-card[data-status="已发布"] .card-status{color:var(--success)}
+  #view-agents .app-card[data-status="已驳回"] .card-status{color:var(--danger)}
+  #view-agents .card-icon-agent.tone-blue{background:linear-gradient(135deg,#7fb8ff,#4d8dff)}
+  #view-agents .card-icon-agent.tone-indigo{background:linear-gradient(135deg,#6fb7ff,#8f84ff)}
+  #view-agents .card-icon-agent.tone-purple{background:linear-gradient(135deg,#a98bff,#d66fff)}
+  #view-agents .card-icon-agent.tone-green{background:linear-gradient(135deg,#43c7e6,#2fd68a)}
+
+  #view-skills .app-card{display:flex;flex-direction:column;min-height:168px}
+  #view-skills .card-top{align-items:flex-start;gap:12px}
+  #view-skills .card-icon-skill{width:44px;height:44px;border-radius:12px;font-size:22px;font-weight:600;line-height:1}
+  #view-skills .card-title-row{padding-top:2px}
+  #view-skills .card-more{color:var(--text-secondary);padding:0 4px}
+  #view-skills .card-desc{display:block;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;margin:14px 0 0}
+  #view-skills .card-meta{display:flex;flex-direction:column;gap:12px;margin-top:auto;padding-top:16px;font-size:13px}
+  #view-skills .card-meta-row{display:flex;align-items:center;gap:6px;color:var(--text-secondary)}
+  #view-skills .card-meta-row .ic{width:15px;height:15px;color:var(--text)}
+  #view-skills .card-meta-row b{font-weight:400;color:var(--text)}
+  #view-skills .app-card[data-status="已发布"] .card-status-text{color:var(--success)}
+  #view-skills .app-card[data-status="已驳回"] .card-status-text{color:var(--danger)}
+  #view-skills .card-icon-skill.tone-green{background:#e3f8ec;color:#1fb86b}
+  #view-skills .card-icon-skill.tone-blue{background:#e9f0ff;color:#3a7bff}
+  #view-skills .card-icon-skill.tone-red{background:#ffe9e9;color:#f0465a}
+  #view-skills .card-icon-skill.tone-purple{background:#f0eaff;color:#7c5cf0}
+  #view-skills .card-icon-skill.tone-amber{background:#fff1d6;color:#f59a0c}

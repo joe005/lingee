@@ -1,5 +1,5 @@
 /* 工作区切换：标题触发、搜索列表、底部创建入口。 */
-#view-collab.cv-no-workspace>.cv-wsbar,#view-collab.cv-no-workspace>#cvTabNav,#view-collab.cv-no-workspace>#cvSubNav,#view-collab.cv-no-workspace>.cv-panel{display:none!important}
+#view-collab.cv-no-workspace>.cv-wsbar,#view-collab.cv-no-workspace>#cvTabNav,#view-collab.cv-no-workspace>#cvPageTitle,#view-collab.cv-no-workspace>#cvSubNav,#view-collab.cv-no-workspace>.cv-panel{display:none!important}
 #view-collab .cv-workspace-onboarding{display:none}
 #view-collab.cv-no-workspace .cv-workspace-onboarding:not(.hidden){display:flex;flex:1;min-height:0;align-items:center;justify-content:center;overflow:auto;box-sizing:border-box;padding:32px 20px;background:var(--fill-1)}
 #view-collab .cv-workspace-onboarding-card{width:min(100%,520px);box-sizing:border-box;padding:36px 40px;border:1px solid var(--border);border-radius:20px;background:#fff;box-shadow:0 14px 42px rgba(31,41,55,.06)}
@@ -48,8 +48,8 @@
 #view-collab .cv-wsbar :focus-visible,#view-collab .cv-ws-settings-form :focus-visible{outline:2px solid var(--brand);outline-offset:2px}
 
 /* 参考图中的浅灰胶囊页签、分组侧栏和分隔线表单。 */
-#view-collab #cvTabNav{align-self:flex-start;max-width:calc(100% - 56px);margin:6px 28px 0;padding:5px;gap:3px;overflow-x:auto;border:0;border-radius:24px;background:#f5f6f9}
-#view-collab #cvTabNav .tab-nav-item{padding:8px 16px;border:0;border-radius:20px;font-size:13px}
+#view-collab #cvTabNav{align-self:flex-start;max-width:calc(100% - 56px);margin:16px 28px 0;padding:4px;gap:4px;box-sizing:border-box;height:40px;overflow-x:auto;border:0;border-radius:var(--asset-pill-radius);background:var(--hover)}
+#view-collab #cvTabNav .tab-nav-item{flex:none;height:32px;box-sizing:border-box;padding:0 20px;border:0;border-radius:var(--asset-pill-radius);font-size:14px;line-height:1}
 #view-collab #cvTabNav .tab-nav-item--active{background:#fff;color:var(--text);box-shadow:0 1px 3px rgba(31,41,55,.06)}
 #view-collab #cvTabNav .tab-nav-item svg{display:none}
 #view-collab #cv-config .scroll{padding-top:24px}
@@ -91,3 +91,7 @@
 @media(max-width:600px){#view-collab .cv-ws-danger-card{align-items:flex-start;flex-direction:column}#view-collab .cv-ws-danger-card button{align-self:flex-end}}
 @media(prefers-reduced-motion:reduce){#view-collab .cv-wsbar .cv-proj-btn,#view-collab #cvTabNav .tab-nav-item{transition:none}}
 @media(max-width:600px){#view-collab.cv-no-workspace .cv-workspace-onboarding:not(.hidden){align-items:flex-start;padding:20px 14px}#view-collab .cv-workspace-onboarding-card{padding:28px 22px}#view-collab .cv-workspace-onboarding h1{font-size:22px}}
+
+/* 页面标题，与开发区列表页一致；项目详情自带标题，隐藏。 */
+#view-collab .cv-page-title{flex:none;margin:0;padding:22px 28px 0;color:var(--text);font-size:18px;font-weight:600;line-height:26px}
+#view-collab:has(#cv-members.active #cv-proj-detail:not(.hidden)) #cvPageTitle{display:none}

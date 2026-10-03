@@ -67,7 +67,7 @@
 /* 来源页签与搜索、新增组成同一行胶囊工具栏。 */
 #view-collab .expert-assets-toolbar{gap:16px;flex-wrap:wrap;margin-bottom:24px}
 #view-collab .expert-assets-toolbar .expert-layer-tabs{display:inline-flex;align-items:center;flex:none;flex-wrap:nowrap;gap:4px;min-height:40px;box-sizing:border-box;padding:4px;margin:0;border:0;border-radius:var(--asset-pill-radius);background:var(--hover)}
-#view-collab .expert-assets-toolbar .list-page-tab{min-height:32px;padding:6px 12px;border:0;border-radius:var(--asset-pill-radius);color:var(--text-secondary);font-size:var(--tb-body-size);line-height:20px}
+#view-collab .expert-assets-toolbar .list-page-tab{min-height:32px;padding:6px 20px;border:0;border-radius:var(--asset-pill-radius);color:var(--text-secondary);font-size:var(--tb-body-size);line-height:20px}
 #view-collab .expert-assets-toolbar .list-page-tab:hover{background:var(--active);color:var(--text)}
 #view-collab .expert-assets-toolbar .list-page-tab.active{background:var(--bg);color:var(--text);box-shadow:var(--pill-shadow)}
 #view-collab .expert-assets-toolbar .cv-head-right{gap:12px;min-width:0;flex:1;justify-content:flex-end}
@@ -83,13 +83,13 @@
 
 /* 一级区分使用与获取，二级区分来源或安装状态。 */
 #view-collab .expert-assets-toolbar .asset-primary-tabs{display:inline-flex;align-items:center;gap:4px;flex:none;box-sizing:border-box;min-height:40px;padding:4px;border-radius:var(--asset-pill-radius);background:var(--hover)}
-#view-collab .expert-assets-toolbar .asset-primary-tabs .list-page-tab{min-height:32px;padding:6px 16px;border:0;border-radius:var(--asset-pill-radius);font-size:var(--tb-body-size);color:var(--text-secondary);line-height:20px}
+#view-collab .expert-assets-toolbar .asset-primary-tabs .list-page-tab{min-height:32px;padding:6px 20px;border:0;border-radius:var(--asset-pill-radius);font-size:var(--tb-body-size);color:var(--text-secondary);line-height:20px}
 #view-collab .expert-assets-toolbar .asset-primary-tabs .list-page-tab.active{background:var(--bg);color:var(--text);box-shadow:var(--pill-shadow)}
 #view-collab .asset-primary-tabs [data-asset-total]{font-weight:inherit}
 #view-collab .asset-secondary-row{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:-8px 0 16px}
 #view-collab .asset-secondary-row .asset-source-filters{display:flex;flex-wrap:wrap;gap:8px;margin:0;padding:0;border:0;background:transparent}
-#view-collab .asset-source-filters .list-page-tab{padding:6px 16px;border:1px solid transparent;border-radius:var(--asset-pill-radius);background:transparent;color:var(--text-secondary);font-size:var(--tb-body-size)}
-#view-collab .asset-source-filters .list-page-tab.active{border-color:var(--brand);color:var(--brand);background:transparent;font-weight:600}
+#view-collab .asset-source-filters .list-page-tab{min-height:34px;box-sizing:border-box;padding:6px 20px;border:1px solid transparent;border-radius:var(--asset-pill-radius);background:transparent;color:var(--text-secondary);font-size:var(--tb-body-size)}
+#view-collab .asset-source-filters .list-page-tab.active{border-color:var(--brand);color:var(--brand);background:var(--brand-fill);font-weight:500}
 #view-collab .asset-source-filters .list-page-tab:hover{background:var(--brand-fill)}
 #view-collab .asset-source-filters .list-page-tab.active span{color:inherit}
 

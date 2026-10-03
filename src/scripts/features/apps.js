@@ -102,13 +102,13 @@ function hideCtxMenu(){
 
 export function initApps() {
   /* ---------- 我的应用 (apps view) ---------- */
-  $$('#view-apps .tab').forEach(function(t){
-    t.addEventListener('click',function(){
-      $$('#view-apps .tab').forEach(function(i){i.classList.remove('active')});
-      t.classList.add('active');
-    });
-  });
   $('.btn-new:not(.apps-new-btn)') && $('.btn-new:not(.apps-new-btn)').addEventListener('click',function(){});
+  $$('#view-apps .apps-refresh,#view-agents .apps-refresh,#view-skills .apps-refresh').forEach(function(b){
+    b.addEventListener('click',function(){ toast('已刷新'); });
+  });
+  $$('#view-skills .btn-tool').forEach(function(b){
+    b.addEventListener('click',function(){ toast(b.getAttribute('data-toast')||''); });
+  });
   $$('.app-card').forEach(function(c){
     c.addEventListener('click',function(e){
       if(e.target.closest('.card-more')){ e.stopPropagation(); toast('更多操作'); return; }
@@ -135,14 +135,23 @@ export function initApps() {
     });
   });
 
-  /* ---------- 应用开发搜索 ---------- */
-  (function(){
-    var appsSearchInput=$('#view-apps .apps-search input');
-    var appsGrid=$('#view-apps .apps-grid');
+  /* ---------- 应用/智能体/技能：页签筛选与搜索 ---------- */
+  ['#view-apps','#view-agents','#view-skills'].forEach(function(root){
+    var appsSearchInput=$(root+' .apps-search input');
+    var appsGrid=$(root+' .apps-grid');
     if(!appsSearchInput||!appsGrid) return;
+    var status='';
+    $$(root+' .tab').forEach(function(t){
+      t.addEventListener('click',function(){
+        $$(root+' .tab').forEach(function(i){i.classList.remove('active')});
+        t.classList.add('active');
+        status=t.getAttribute('data-status')||'';
+        doSearch();
+      });
+    });
     var emptyMsg=document.createElement('div');
     emptyMsg.className='apps-empty';
-    emptyMsg.innerHTML='<div class="apps-empty-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></div><div class="apps-empty-title">未找到匹配的应用</div>';
+    emptyMsg.innerHTML='<div class="apps-empty-icon"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></div><div class="apps-empty-title">未找到匹配的内容</div>';
     emptyMsg.style.display='none';
     appsGrid.appendChild(emptyMsg);
     var searchWrap=appsSearchInput.parentElement;
@@ -168,7 +177,7 @@ export function initApps() {
         var desc=($('.card-desc',c)||{}).textContent||'';
         var tags=$$('.ptag',c).map(function(t){return t.textContent.trim();}).join(' ');
         var text=(title+' '+desc+' '+tags).toLowerCase();
-        var match=!q||text.indexOf(q)>-1;
+        var match=(!q||text.indexOf(q)>-1)&&(!status||c.getAttribute('data-status')===status);
         c.style.display=match?'':'none';
         if(match) visible++;
       });
@@ -180,7 +189,7 @@ export function initApps() {
       if(composing) return;
       doSearch();
     });
-  })();
+  });
 }
 
 export function initNewAppModal() {

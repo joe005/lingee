@@ -1,52 +1,119 @@
   <div class="view hidden" id="view-skills">
     <div class="apps-head">
       <div class="apps-title">技能开发</div>
-      <button class="btn-new"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>新建</button>
     </div>
     <div class="apps-toolbar">
       <div class="tabs">
-        <div class="tab active">全部</div>
-        <div class="tab">已保存</div>
-        <div class="tab">已提交</div>
-        <div class="tab">已发布</div>
-        <div class="tab">已驳回</div>
+        <div class="tab active" data-status="">全部</div>
+        <div class="tab" data-status="待提交">待提交</div>
+        <div class="tab" data-status="审核中">审核中</div>
+        <div class="tab" data-status="已发布">已发布</div>
+        <div class="tab" data-status="已驳回">已驳回</div>
       </div>
-      <div class="apps-search">
-        <input type="text" placeholder="搜索技能">
-        <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <div class="apps-head-right">
+        <button class="apps-refresh" type="button" aria-label="刷新" title="刷新"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v5h-5"/></svg></button>
+        <div class="apps-search"><input type="text" placeholder="搜索技能"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></div>
+        <button class="btn-tool" type="button" data-toast="批量操作"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="6.5" height="6.5" rx="1.8"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.8"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.8"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.8"/></svg>批量操作</button>
+        <button class="btn-tool" type="button" data-toast="上传技能"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>上传</button>
+        <button class="btn-new btn-new-outline" type="button"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>新建</button>
       </div>
     </div>
     <div class="apps-grid">
-        <div class="app-card">
+        <div class="app-card" data-status="待提交">
           <div class="card-top">
-            <span class="card-icon" style="color:#3a7bff;background:#eef3ff"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18M3 12h18"/></svg></span>
-            <div class="card-titles">
-              <div class="card-title-row"><span class="card-title">代码审查助手</span><span class="card-more">···</span></div>
-            </div>
+            <span class="card-icon card-icon-skill tone-green">销</span>
+            <div class="card-titles"><div class="card-title-row"><span class="card-title">销售订单查询</span><span class="card-more" aria-label="更多">···</span></div></div>
           </div>
-          <div class="card-desc">自动审查代码规范性、安全漏洞和性能问题，提供修改建议</div>
-          <div class="card-tags"><span class="ptag">开发</span><span class="ptag">质量</span></div>
+          <div class="card-desc">查询销售订单列表及详情，支持按单据编号、客户、日期、状态等多条件筛选和结果汇总</div>
+          <div class="card-meta"><span class="card-meta-row"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><b>个人</b><span>未安装</span></span><span class="card-meta-row"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v16M14 10h5a1 1 0 0 1 1 1v10M3 21h18M8 8h2M8 12h2M8 16h2"/></svg><b>企业分发</b><span class="card-status-text">待提交</span></span></div>
         </div>
-        <div class="app-card">
+        <div class="app-card" data-status="待提交">
           <div class="card-top">
-            <span class="card-icon" style="color:#8b5cf6;background:#f3eefe"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 0 0 0 18M3 12h18"/></svg></span>
-            <div class="card-titles">
-              <div class="card-title-row"><span class="card-title">数据转换器</span></div>
-            </div>
+            <span class="card-icon card-icon-skill tone-blue">天</span>
+            <div class="card-titles"><div class="card-title-row"><span class="card-title">天气预报</span><span class="card-more" aria-label="更多">···</span></div></div>
           </div>
-          <div class="card-desc">支持 JSON ↔ CSV 互转、字段映射、数据清洗</div>
-          <div class="card-tags"><span class="ptag">数据</span><span class="ptag">工具</span></div>
+          <div class="card-desc">查询指定城市的当前天气和未来天气预报。当用户询问天气、温度、降雨等信息时使用</div>
+          <div class="card-meta"><span class="card-meta-row"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><b>个人</b><span>未安装</span></span><span class="card-meta-row"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v16M14 10h5a1 1 0 0 1 1 1v10M3 21h18M8 8h2M8 12h2M8 16h2"/></svg><b>企业分发</b><span class="card-status-text">待提交</span></span></div>
         </div>
-        <div class="app-card">
+        <div class="app-card" data-status="待提交">
           <div class="card-top">
-            <span class="card-icon" style="color:#ff8d42;background:#fff1e8"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18M3 12h18"/></svg></span>
-            <div class="card-titles">
-              <div class="card-title-row"><span class="card-title">文档生成器</span></div>
-            </div>
+            <span class="card-icon card-icon-skill tone-red">H</span>
+            <div class="card-titles"><div class="card-title-row"><span class="card-title">HelpDesk Ticket Progress</span><span class="card-more" aria-label="更多">···</span></div></div>
           </div>
-          <div class="card-desc">基于代码注释自动生成 API 文档和用户手册</div>
-          <div class="card-tags"><span class="ptag">文档</span><span class="ptag">效率</span></div>
+          <div class="card-desc">Displays HelpDesk ticket progress — details, assignee, status history and SLA</div>
+          <div class="card-meta"><span class="card-meta-row"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><b>个人</b><span>未安装</span></span><span class="card-meta-row"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v16M14 10h5a1 1 0 0 1 1 1v10M3 21h18M8 8h2M8 12h2M8 16h2"/></svg><b>企业分发</b><span class="card-status-text">待提交</span></span></div>
+        </div>
+        <div class="app-card" data-status="待提交">
+          <div class="card-top">
+            <span class="card-icon card-icon-skill tone-purple">H</span>
+            <div class="card-titles"><div class="card-title-row"><span class="card-title">HelpDesk Ticket List</span><span class="card-more" aria-label="更多">···</span></div></div>
+          </div>
+          <div class="card-desc">Skill for viewing HelpDesk ticket lists. Use when users ask to browse or filter tickets</div>
+          <div class="card-meta"><span class="card-meta-row"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><b>个人</b><span>未安装</span></span><span class="card-meta-row"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v16M14 10h5a1 1 0 0 1 1 1v10M3 21h18M8 8h2M8 12h2M8 16h2"/></svg><b>企业分发</b><span class="card-status-text">待提交</span></span></div>
+        </div>
+        <div class="app-card" data-status="待提交">
+          <div class="card-top">
+            <span class="card-icon card-icon-skill tone-amber">H</span>
+            <div class="card-titles"><div class="card-title-row"><span class="card-title">HelpDesk Solution Confirm Card</span><span class="card-more" aria-label="更多">···</span></div></div>
+          </div>
+          <div class="card-desc">HelpDesk Solution Confirm Card skill. Load this only when a solution needs confirmation</div>
+          <div class="card-meta"><span class="card-meta-row"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><b>个人</b><span>未安装</span></span><span class="card-meta-row"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v16M14 10h5a1 1 0 0 1 1 1v10M3 21h18M8 8h2M8 12h2M8 16h2"/></svg><b>企业分发</b><span class="card-status-text">待提交</span></span></div>
+        </div>
+        <div class="app-card" data-status="待提交">
+          <div class="card-top">
+            <span class="card-icon card-icon-skill tone-amber">H</span>
+            <div class="card-titles"><div class="card-title-row"><span class="card-title">HelpDesk Ticket Confirmation</span><span class="card-more" aria-label="更多">···</span></div></div>
+          </div>
+          <div class="card-desc">HelpDesk ticket confirmation Skill. Direct entry point for confirming new tickets</div>
+          <div class="card-meta"><span class="card-meta-row"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><b>个人</b><span>未安装</span></span><span class="card-meta-row"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v16M14 10h5a1 1 0 0 1 1 1v10M3 21h18M8 8h2M8 12h2M8 16h2"/></svg><b>企业分发</b><span class="card-status-text">待提交</span></span></div>
+        </div>
+        <div class="app-card" data-status="待提交">
+          <div class="card-top">
+            <span class="card-icon card-icon-skill tone-green">文</span>
+            <div class="card-titles"><div class="card-title-row"><span class="card-title">文档图片识别说明书</span><span class="card-more" aria-label="更多">···</span></div></div>
+          </div>
+          <div class="card-desc">从文档和图片中识别内容并自动生成软件操作说明书，支持多页文档与截图</div>
+          <div class="card-meta"><span class="card-meta-row"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><b>个人</b><span>未安装</span></span><span class="card-meta-row"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v16M14 10h5a1 1 0 0 1 1 1v10M3 21h18M8 8h2M8 12h2M8 16h2"/></svg><b>企业分发</b><span class="card-status-text">待提交</span></span></div>
+        </div>
+        <div class="app-card" data-status="待提交">
+          <div class="card-top">
+            <span class="card-icon card-icon-skill tone-red">K</span>
+            <div class="card-titles"><div class="card-title-row"><span class="card-title">kingdee-k3cloud</span><span class="card-more" aria-label="更多">···</span></div></div>
+          </div>
+          <div class="card-desc">Use this skill whenever working with Kingdee K3Cloud APIs, forms and business objects</div>
+          <div class="card-meta"><span class="card-meta-row"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><b>个人</b><span>未安装</span></span><span class="card-meta-row"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v16M14 10h5a1 1 0 0 1 1 1v10M3 21h18M8 8h2M8 12h2M8 16h2"/></svg><b>企业分发</b><span class="card-status-text">待提交</span></span></div>
+        </div>
+        <div class="app-card" data-status="待提交">
+          <div class="card-top">
+            <span class="card-icon card-icon-skill tone-purple">销</span>
+            <div class="card-titles"><div class="card-title-row"><span class="card-title">销售订单创建提交</span><span class="card-more" aria-label="更多">···</span></div></div>
+          </div>
+          <div class="card-desc">销售订单创建与提交的 Skill。当用户通过自然语言描述订单信息并要求创建、提交时使用</div>
+          <div class="card-meta"><span class="card-meta-row"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><b>个人</b><span>未安装</span></span><span class="card-meta-row"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v16M14 10h5a1 1 0 0 1 1 1v10M3 21h18M8 8h2M8 12h2M8 16h2"/></svg><b>企业分发</b><span class="card-status-text">待提交</span></span></div>
+        </div>
+        <div class="app-card" data-status="待提交">
+          <div class="card-top">
+            <span class="card-icon card-icon-skill tone-green">销</span>
+            <div class="card-titles"><div class="card-title-row"><span class="card-title">销售订单查询</span><span class="card-more" aria-label="更多">···</span></div></div>
+          </div>
+          <div class="card-desc">销售订单查询的 Skill。当用户需要查询销售订单信息、状态和明细时使用</div>
+          <div class="card-meta"><span class="card-meta-row"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><b>个人</b><span>未安装</span></span><span class="card-meta-row"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v16M14 10h5a1 1 0 0 1 1 1v10M3 21h18M8 8h2M8 12h2M8 16h2"/></svg><b>企业分发</b><span class="card-status-text">待提交</span></span></div>
+        </div>
+        <div class="app-card" data-status="已发布">
+          <div class="card-top">
+            <span class="card-icon card-icon-skill tone-amber">H</span>
+            <div class="card-titles"><div class="card-title-row"><span class="card-title">HTML报告生成</span><span class="card-more" aria-label="更多">···</span></div></div>
+          </div>
+          <div class="card-desc">Use when the user wants to CREATE or GENERATE an HTML report, dashboard or summary page</div>
+          <div class="card-meta"><span class="card-meta-row"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><b>个人</b><span>未安装</span></span><span class="card-meta-row"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v16M14 10h5a1 1 0 0 1 1 1v10M3 21h18M8 8h2M8 12h2M8 16h2"/></svg><b>企业分发</b><span class="card-status-text">已发布</span></span></div>
+        </div>
+        <div class="app-card" data-status="已发布">
+          <div class="card-top">
+            <span class="card-icon card-icon-skill tone-purple">K</span>
+            <div class="card-titles"><div class="card-title-row"><span class="card-title">KBC 客户合同查询</span><span class="card-more" aria-label="更多">···</span></div></div>
+          </div>
+          <div class="card-desc">查询KBC客户合同信息。当用户查询客户合同、合同金额、履约状态等信息时使用</div>
+          <div class="card-meta"><span class="card-meta-row"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg><b>个人</b><span>未安装</span></span><span class="card-meta-row"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v16M14 10h5a1 1 0 0 1 1 1v10M3 21h18M8 8h2M8 12h2M8 16h2"/></svg><b>企业分发</b><span class="card-status-text">已发布</span></span></div>
         </div>
     </div>
   </div>
-

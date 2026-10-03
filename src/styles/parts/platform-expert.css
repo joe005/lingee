@@ -25,13 +25,13 @@
 .platform-dialog:has(.platform-install-target) .platform-dialog-actions{margin-top:24px;padding-top:16px;border-top:1px solid var(--border)}
 .platform-card-status.pending{color:#b47a25}.platform-card:has(.platform-card-status.pending) .platform-card-version{color:#a76d1b;background:#fff5df}.platform-import-note-label{display:flex;flex-direction:column;gap:7px;margin-top:16px;color:#42536b;font-size:13px;font-weight:600}.platform-import-note-label span{color:#bd3d43}.platform-import-note-label textarea{border:1px solid #d2dbe8;border-radius:8px;padding:9px 11px;font:inherit;font-weight:400;resize:vertical;color:#334155}.platform-history{grid-template-columns:48px minmax(120px,1fr) 120px 52px}
 .platform-view .platform-readonly{margin:0;padding:10px 14px;border:1px solid var(--border-focus);border-radius:8px;background:var(--brand-fill);color:var(--text-secondary);font-size:13px}
-.platform-view .platform-tabs{align-self:flex-start;gap:4px;max-width:100%;overflow-x:auto;padding:5px;border:0;border-radius:999px;background:var(--hover)}
-.platform-view .platform-tabs button{flex:none;border:0;border-radius:999px;padding:9px 18px;color:var(--text-secondary);font-size:15px;white-space:nowrap}
+.platform-view .platform-tabs{align-self:flex-start;gap:4px;max-width:100%;overflow-x:auto;box-sizing:border-box;height:40px;padding:4px;border:0;border-radius:999px;background:var(--hover)}
+.platform-view .platform-tabs button{flex:none;border:0;border-radius:999px;height:32px;padding:0 20px;color:var(--text-secondary);font-size:14px;line-height:1;white-space:nowrap}
 .platform-view .platform-tabs button.on{border:0;background:var(--bg);box-shadow:var(--pill-shadow);color:var(--text)}
 .platform-view .platform-status-tabs{display:flex;gap:6px;overflow-x:auto}
-.platform-view .platform-status-tabs button{display:inline-flex;align-items:center;gap:5px;flex:none;border:1px solid transparent;border-radius:999px;background:none;padding:8px 14px;color:var(--text-secondary);font:inherit;font-size:14px;cursor:pointer;white-space:nowrap}
+.platform-view .platform-status-tabs button{display:inline-flex;align-items:center;gap:5px;flex:none;border:1px solid transparent;border-radius:999px;background:none;height:34px;box-sizing:border-box;padding:0 20px;color:var(--text-secondary);font:inherit;font-size:14px;cursor:pointer;white-space:nowrap}
 .platform-view .platform-status-tabs button:hover{color:var(--text)}
-.platform-view .platform-status-tabs button.on{border-color:var(--brand);background:var(--bg);color:var(--brand);font-weight:600}
+.platform-view .platform-status-tabs button.on{border-color:var(--brand);background:var(--brand-fill);color:var(--brand);font-weight:500}
 .platform-view .platform-status-count--alert{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;box-sizing:border-box;border-radius:999px;background:var(--danger);color:var(--bg);font-size:11px;font-weight:600}
 .platform-view .platform-tabs button:focus-visible,.platform-view .platform-status-tabs button:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}
 .platform-view .platform-card-status.draft,.platform-view .platform-card-status.pending{color:var(--warning)}
