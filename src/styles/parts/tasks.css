@@ -1748,3 +1748,20 @@ td.niu-plan-empty{padding:18px 0;text-align:center;color:var(--text-soft);font-s
 .tk-import-reqs-title{font-size:14px;font-weight:600;color:var(--text);margin:0 0 10px}
 .tk-import-reqs-list{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:5px}
 .tk-import-reqs-list li{font-size:13px;color:var(--text-secondary);line-height:1.5}
+
+/* 任务页签：与专家、专家团的来源筛选一致，使用描边胶囊；工具栏与列表同底色、同边距。 */
+#view-tasks:not(.tk-project-list-mode) .tk-toolbar{padding:16px 28px 6px;border-bottom:0}
+#view-tasks.tk-list-mode:not(.tk-project-list-mode) .tk-toolbar{background:var(--fill-1)}
+#view-tasks:not(.tk-project-list-mode) .tk-toolbar .tk-view-bar{height:34px;gap:8px}
+#view-tasks:not(.tk-project-list-mode) .tk-view-tabs{gap:8px}
+#view-tasks:not(.tk-project-list-mode) .tk-view-tabs .list-page-tab{gap:6px;height:34px;box-sizing:border-box;padding:0 16px;border:1px solid transparent;border-radius:var(--asset-pill-radius);background:transparent;color:var(--text-secondary);font-size:var(--tb-body-size);font-weight:400}
+#view-tasks:not(.tk-project-list-mode) .tk-view-tabs .list-page-tab:hover{background:var(--hover);color:var(--text)}
+#view-tasks:not(.tk-project-list-mode) .tk-view-tabs .list-page-tab.active{border-color:var(--brand);background:var(--brand-fill);color:var(--brand);font-weight:500}
+#view-tasks:not(.tk-project-list-mode) .tk-view-tabs .tk-list-tab-count,
+#view-tasks:not(.tk-project-list-mode) .tk-view-tabs .list-page-tab.active .tk-list-tab-count{min-width:0;height:auto;padding:0;border-radius:0;background:transparent;color:inherit;font-size:inherit;font-weight:inherit}
+#view-tasks:not(.tk-project-list-mode) :is(.tk-display-btn,.tk-view-add,.tk-view-overflow-btn){width:34px;height:34px;padding:0;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text-secondary)}
+#view-tasks:not(.tk-project-list-mode) :is(.tk-display-btn,.tk-view-add,.tk-view-overflow-btn):hover{background:var(--hover);color:var(--text)}
+#view-tasks:not(.tk-project-list-mode) :is(.tk-display-btn,.tk-view-add,.tk-view-overflow-btn):focus-visible{outline:2px solid var(--border-focus);outline-offset:2px}
+#view-tasks:not(.tk-project-list-mode) .tk-list .tk-list-scroll{padding:6px 28px 24px}
+#view-tasks:not(.tk-project-list-mode) .tk-list .tk-table td.tk-list-card-cell{border-radius:12px}
+@media(max-width:620px){#view-tasks:not(.tk-project-list-mode) .tk-toolbar{padding:12px 12px 4px}#view-tasks:not(.tk-project-list-mode) .tk-list .tk-list-scroll{padding:4px 10px 12px}}
