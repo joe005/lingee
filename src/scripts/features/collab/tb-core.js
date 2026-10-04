@@ -49,9 +49,9 @@ export function tbMatchExperts(t) {
     if (names.length) return names;
   }
   /* 没有绑智能体团队时，按任务类型/关键词退化为角色建议 */
-  if (/Bug|修复|错误|异常|失败/.test(t.type + t.title)) return ['架构专家', '开发专家', '测试专家'];
-  if (/需求|方案|设计/.test(t.type + t.title)) return ['需求专家', '架构专家'];
-  return ['开发专家'];
+  if (/Bug|修复|错误|异常|失败/.test(t.type + t.title)) return ['架构设计', '开发实现', '测试验证'];
+  if (/需求|方案|设计/.test(t.type + t.title)) return ['需求分析', '架构设计'];
+  return ['开发实现'];
 }
 export function tbPriority(t) { return t.priority || (t.type === 'Bug' ? '高' : '中'); }
 /* 智能体团队实际能覆盖到的阶段：按团内成员的工作模式，交叉 STAGE_MODES 过滤。 */

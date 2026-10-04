@@ -29,6 +29,19 @@ function retiredSeed(item){
   return (item.editor==='平台初始数据'&&retiredSeedKeys.has(id))
     ||(retiredDemoTeams.has(id)&&['平台初始数据','租户示例数据'].includes(item.editor));
 }
+const SEED_DEMO_UPDATES=[
+  ['expert','cosmic-product-manager','演示更新：补充需求边界与验收条件梳理。','验收条件'],
+  ['expert','general-app-development-expert','演示更新：增强问题定位与回归验证。','问题定位'],
+  ['team','cosmic-app-dev','演示更新：需求智能体升级，并优化交付分工。','交付分工'],
+  ['team','general-app-dev','演示更新：开发智能体升级，并强化质量收口。','质量收口']
+];
+function seedDemoData(kind,base,note,extraTag){
+  const data=clone(base);
+  data.desc=`${data.desc.replace(/[。.]$/,'')}；${note.replace(/^演示更新：/,'').replace(/。$/,'')}。`;
+  const field=kind==='team'?'domains':'tags';
+  data[field]=[...new Set([...(data[field]||[]),extraTag])];
+  return data;
+}
 let meta={},versions={},installed={},tab='expert',statusTab='all',dialogConfirm=null;
 function seed(){
   meta=read(META_KEY,{});versions=read(VERSION_KEY,{});installed=read(INSTALL_KEY,{});
@@ -53,8 +66,16 @@ function seed(){
     const id=key(kind,item.id);
     const snapshot=clone(item);
     if(meta[id]){
-      if(meta[id].editor==='平台初始数据'&&versions[id]?.length===1&&versions[id][0].author==='Lingee'&&JSON.stringify(versions[id][0].data)!==JSON.stringify(snapshot)){
-        versions[id][0].data=snapshot;changed=true;
+      /* 未被人工改动的原厂种子（含演示版本）跟随代码里的标品定义刷新快照。 */
+      const history=versions[id]||[];
+      if(meta[id].editor==='平台初始数据'&&history.length&&history.every(row=>['Lingee','Lingee 演示'].includes(row.author))){
+        const demo=SEED_DEMO_UPDATES.find(([k,i])=>k===kind&&i===item.id);
+        for(const row of history){
+          const data=row.author==='Lingee'?snapshot:demo?seedDemoData(kind,snapshot,demo[2],demo[3]):null;
+          if(!data)continue;
+          if(row.author==='Lingee 演示'&&row.note!==demo[2]){row.note=demo[2];changed=true;}
+          if(JSON.stringify(row.data)!==JSON.stringify(data)){row.data=clone(data);changed=true;}
+        }
       }
       continue;
     }
@@ -79,20 +100,27 @@ function seed(){
   /* 租户管理演示数据只在缺失时补齐，不覆盖已有导入或审核结果。 */
   const tenantId='ws-build',tenantName=cvWorkspaceName(tenantId);
   const tenantExperts=[
-    ['build-requirements','业务需求专家','software-product-manager','梳理租户业务流程、需求边界和验收标准。'],
-    ['build-delivery','交付实施专家','software-team-lead','协调租户项目的实施计划、成员分工与交付验收。']
+    ['build-requirements','业务需求','software-product-manager','梳理租户业务流程、需求边界和验收标准。'],
+    ['build-delivery','交付实施','software-team-lead','协调租户项目的实施计划、成员分工与交付验收。']
   ];
   for(const [slug,name,baseId,desc] of tenantExperts){
     const base=originals.expert.find(item=>item.id===baseId);if(!base)continue;
     const id=`tenant-${tenantId}-${slug}`,itemKey=key('expert',id);
+    const data={...clone(base),id,name,desc,source:'tenant',tenantId,by:tenantName};
     if(meta[itemKey]){
-      const row=versions[itemKey]?.[0];
-      if(meta[itemKey].editor==='租户示例数据'&&row&&!row.data.skills?.length&&base.skills?.length){row.data.skills=clone(base.skills);changed=true;}
+      /* 未被租户改动的示例数据跟随代码刷新；1.1.0 演示版本只多一句说明。 */
+      const history=versions[itemKey]||[];
+      if(meta[itemKey].editor==='租户示例数据'&&history.every(row=>row.author===tenantName)){
+        history.forEach((row,index)=>{
+          const next=index===0?data:{...clone(data),desc:data.desc+' 支持最新企业交付规范。'};
+          if(index===0&&row.note!=='租户示例智能体'){row.note='租户示例智能体';changed=true;}
+          if(JSON.stringify(row.data)!==JSON.stringify(next)){row.data=clone(next);changed=true;}
+        });
+      }
       continue;
     }
-    const data={...clone(base),id,name,desc,source:'tenant',tenantId,by:tenantName};
     meta[itemKey]={kind:'expert',id,source:'tenant',tenantId,status:'online',activeVersion:'1.0.0',pendingVersion:'',modified:now(),editor:'租户示例数据'};
-    versions[itemKey]=[{version:'1.0.0',data,note:'租户示例专家',at:now(),author:tenantName}];changed=true;
+    versions[itemKey]=[{version:'1.0.0',data,note:'租户示例智能体',at:now(),author:tenantName}];changed=true;
   }
   /* 企业自建示例展示租户管理上架后，客户端获取最新发布版本。 */
   const tenantMemberIds=tenantExperts.map(([slug])=>`tenant-${tenantId}-${slug}`);
@@ -104,25 +132,21 @@ function seed(){
     item.activeVersion='1.1.0';item.modified=now();changed=true;
   }
   const demoTeamId=`tenant-${tenantId}-enterprise-delivery`,demoTeamKey=key('team',demoTeamId);
+  const demoTeamDesc='使用租户管理中最新上架的需求与交付智能体，协同完成企业项目交付。';
+  if(meta[demoTeamKey]?.editor==='租户示例数据')for(const row of versions[demoTeamKey]||[]){
+    if(row.author===tenantName&&row.data.desc!==demoTeamDesc){row.data.desc=demoTeamDesc;changed=true;}
+  }
   if(!meta[demoTeamKey]&&tenantMemberIds.every(id=>meta[key('expert',id)])){
-    const data={id:demoTeamId,name:'企业交付智能体团队',source:'tenant',tenantId,by:tenantName,preset:true,desc:'使用租户管理中最新上架的需求与交付专家，协同完成企业项目交付。',members:tenantMemberIds,leadId:tenantMemberIds[0],domains:['企业交付','团队协作'],cmds:[]};
+    const data={id:demoTeamId,name:'企业交付智能体团队',source:'tenant',tenantId,by:tenantName,preset:true,desc:demoTeamDesc,members:tenantMemberIds,leadId:tenantMemberIds[0],domains:['企业交付','团队协作'],cmds:[]};
     meta[demoTeamKey]={kind:'team',id:demoTeamId,source:'tenant',tenantId,status:'online',activeVersion:'1.1.0',pendingVersion:'',modified:now(),editor:'租户示例数据'};
     versions[demoTeamKey]=[{version:'1.0.0',data:clone(data),note:'企业交付智能体团队初始版本。',at:now(),author:tenantName},{version:'1.1.0',data:clone(data),note:'演示更新：获取最新上架成员，补充企业协作说明。',at:now(),author:tenantName}];
     changed=true;
   }
   /* 已安装的 1.0.0 保持不变；尚未改动的原厂种子发布 1.1.0 演示版本。 */
-  for(const [kind,id,note,extraTag] of [
-    ['expert','cosmic-product-manager','演示更新：补充需求边界与验收条件梳理。','验收条件'],
-    ['expert','general-app-development-expert','演示更新：增强问题定位与回归验证。','问题定位'],
-    ['team','cosmic-app-dev','演示更新：需求专家升级，并优化交付分工。','交付分工'],
-    ['team','general-app-dev','演示更新：开发专家升级，并强化质量收口。','质量收口']
-  ]){
+  for(const [kind,id,note,extraTag] of SEED_DEMO_UPDATES){
     const itemKey=key(kind,id),item=meta[itemKey],history=versions[itemKey];
     if(item?.editor!=='平台初始数据'||item.status!=='online'||item.activeVersion!=='1.0.0'||item.pendingVersion||history?.length!==1||history[0].version!=='1.0.0')continue;
-    const data=clone(history[0].data);
-    data.desc=`${data.desc.replace(/[。.]$/,'')}；${note.replace(/^演示更新：/,'').replace(/。$/,'')}。`;
-    const field=kind==='team'?'domains':'tags';
-    data[field]=[...new Set([...(data[field]||[]),extraTag])];
+    const data=seedDemoData(kind,history[0].data,note,extraTag);
     history.push({version:'1.1.0',data,note,at:now(),author:'Lingee 演示'});
     item.activeVersion='1.1.0';item.modified=now();changed=true;
   }
@@ -294,7 +318,7 @@ function toggleStatus(id){
     assetReviewClose();renderCards();
   },'确认');
 }
-function cleanName(fileName){return fileName.replace(/\.zip$/i,'').replace(/[-_]v?\d+(?:\.\d+)*$/i,'').replace(/[-_]+/g,' ').trim()||'未命名专家';}
+function cleanName(fileName){return fileName.replace(/\.zip$/i,'').replace(/[-_]v?\d+(?:\.\d+)*$/i,'').replace(/[-_]+/g,' ').trim()||'未命名智能体';}
 function stableId(raw){const base=String(raw).toLowerCase().replace(/\.zip$/,'').replace(/[-_]v?\d+(?:\.\d+)*$/,'');const ascii=base.replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');if(ascii.length>=3)return ascii.slice(0,64);let hash=2166136261;for(const char of base){hash^=char.charCodeAt(0);hash=Math.imul(hash,16777619);}return 'import-'+(hash>>>0).toString(36);}
 function textValue(value){return typeof value==='string'?value:typeof value==='object'&&value?value.zh||value.en||'':'';}
 function normalizePackage(kind,id,manifest,file,tenantId=''){
@@ -312,7 +336,7 @@ function normalizePackage(kind,id,manifest,file,tenantId=''){
     delete data.memberRefs;
     return data;
   }
-  return {...clone(previous),id,name,desc,role:textValue(manifest.role)||previous.role||'专家',by:'Lingee 内置',k:previous.k||'eng',tags:Array.isArray(manifest.tags)?manifest.tags:previous.tags||[],modes:Array.isArray(manifest.modes)?manifest.modes:previous.modes||[],skills:Array.isArray(manifest.skills)?manifest.skills:previous.skills||[],comp:previous.comp||[],cmds:previous.cmds||[],tier:previous.tier||'auto',ro:!!previous.ro,rolePrompt:textValue(manifest.rolePrompt||manifest.systemPrompt)||previous.rolePrompt||''};
+  return {...clone(previous),id,name,desc,role:textValue(manifest.role)||previous.role||'智能体',by:'Lingee 内置',k:previous.k||'eng',tags:Array.isArray(manifest.tags)?manifest.tags:previous.tags||[],modes:Array.isArray(manifest.modes)?manifest.modes:previous.modes||[],skills:Array.isArray(manifest.skills)?manifest.skills:previous.skills||[],comp:previous.comp||[],cmds:previous.cmds||[],tier:previous.tier||'auto',ro:!!previous.ro,rolePrompt:textValue(manifest.rolePrompt||manifest.systemPrompt)||previous.rolePrompt||''};
 }
 /* 只读取 ZIP 中一个小型 JSON 清单；没有统一清单时仍可按文件名演示导入。 */
 async function inspectZip(file){

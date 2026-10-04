@@ -125,7 +125,7 @@ export function tkProjectsForCurrentUser() {
 }
 
 export const TK_AGENTS = [
-  { id: 'a1', name: '代码审查专家', avatar: 'C', color: '#495dff' },
+  { id: 'a1', name: '代码审查', avatar: 'C', color: '#495dff' },
   { id: 'a2', name: '需求分析专家', avatar: 'R', color: '#08a040' },
   { id: 'a3', name: '测试验证专家', avatar: 'T', color: '#ff8d42' },
 ];
@@ -452,7 +452,7 @@ const TK_COSMIC_WUXF_TASKS = [
       { from:'in_progress', to:'blocked', time:'2026-09-29 15:42:00', authorId:'p23' },
     ],
     blockedRun:{
-      agentName:'元模型开发专家', teamName:'苍穹应用开发智能体团队', failedAt:'2026-09-29 15:42', duration:'2分11秒',
+      agentName:'元模型开发', teamName:'苍穹应用开发智能体团队', failedAt:'2026-09-29 15:42', duration:'2分11秒',
       reason:'增量扫描发现重复 EntryId，继续写入可能覆盖现有控件元数据。',
       next:'清理冲突记录并确认局部覆盖优先级后重新执行扫描。',
       steps:[['读取增量变更','已识别本批次新增与修改的控件定义。'],['合并局部覆盖','发现两条记录使用相同 EntryId。'],['执行写入前校验','为避免覆盖现有数据，已中止本次写入。']],
