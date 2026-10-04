@@ -58,7 +58,23 @@ function submitToTenant(kind,item,tenant){
   },'确认提交');
 }
 function matchingReviews({kind='',statuses=[],tenantId='',keyword=''}={}){
-  return reviews().filter(row=>(!kind||row.kind===kind)&&(!statuses.length||statuses.includes(row.status))&&(!tenantId||row.tenantId===tenantId)&&(!keyword||`${row.name} ${row.author} ${row.tenantName}`.toLowerCase().includes(keyword)));
+  /* 已驳回只在没有更新的提交时展示；重新提交后，旧驳回只留在历史版本里 */
+  const all=reviews();
+  return all.filter((row,index)=>row.status!=='rejected'||!all.slice(index+1).some(later=>later.kind===row.kind&&later.sourceId===row.sourceId&&later.tenantId===row.tenantId))
+    .filter(row=>(!kind||row.kind===kind)&&(!statuses.length||statuses.includes(row.status))&&(!tenantId||row.tenantId===tenantId)&&(!keyword||`${row.name} ${row.author} ${row.tenantName}`.toLowerCase().includes(keyword)));
+}
+/* 被驳回的审核单没有生成发布版本，把它们作为一条事件并入对应资产的历史版本 */
+const stamp=()=>new Date().toLocaleString('zh-CN',{hour12:false});
+const timeOf=value=>{const t=Date.parse(String(value||'').replace(/-/g,'/'));return Number.isNaN(t)?0:t;};
+export function rejectedReviewEntries(kind,assetId){
+  return reviews().filter(row=>row.status==='rejected'&&row.bundle.some(item=>item.kind===kind&&item.data.id===assetId))
+    .map(row=>({rejected:true,version:row.version||'',reason:row.reason||'',reviewer:row.reviewer||'',submitter:row.author||'',submitNote:row.note||'',at:row.rejectedAt||row.at||''}));
+}
+/* published：已发布版本（带原始下标，导出按下标取）；返回按时间从新到旧的历史行 */
+export function mergeVersionHistory(published,rejected,renderPublished){
+  const rows=published.map((entry,index)=>({time:timeOf(entry.at),html:renderPublished(entry,index)}))
+    .concat(rejected.map(entry=>({time:timeOf(entry.at),html:`<div class="platform-history platform-history--rejected"><strong>${entry.version?'V'+xesc(entry.version):'审核'}</strong><span><b class="platform-history-tag">已驳回</b>${xesc(entry.reason||'未填写原因')}${entry.submitter?`<em>提交人：${xesc(entry.submitter)}${entry.submitNote?' · '+xesc(entry.submitNote):''}</em>`:''}</span><small>${xesc(entry.at)}${entry.reviewer?' · '+xesc(entry.reviewer):''}</small><span></span></div>`})));
+  return rows.sort((a,b)=>b.time-a.time).map(row=>row.html).join('');
 }
 export function countAssetReviews(options){return matchingReviews(options).length;}
 export function renderAssetReviewCards(keyword,{kind='',statuses=[],tenantId=''}={}){
@@ -82,7 +98,8 @@ export function openAssetReview(id,onChange){
     if(!$('#assetRejectFields').hidden){
       const reason=$('#assetRejectReason').value.trim();
       if(!reason){$('#assetReviewError').textContent='请填写驳回原因';$('#assetRejectReason').focus();return;}
-      request.status='rejected';request.reason=reason;request.reviewer=cvCurrentUserName();
+      request.status='rejected';request.reason=reason;request.reviewer=cvCurrentUserName();request.rejectedAt=stamp();
+      const target=request.bundle.find(entry=>entry.kind===request.kind)?.data;if(target)request.version=nextReviewVersion(request.kind,target.id);
       if(!store(rows)){$('#assetReviewError').textContent='保存失败，请重试';return;}
       assetReviewClose();onChange();return;
     }
@@ -98,8 +115,8 @@ export function openAssetReview(id,onChange){
   $('#platformDialogBody').querySelectorAll('[data-review-history]').forEach(button=>button.addEventListener('click',()=>{
     if(!canViewPlatformReview(row))return;
     const item=row.bundle.find(entry=>entry.data.id===button.dataset.reviewHistory);if(!item)return;
-    const history=reviewVersionHistory(item.kind,item.data.id).reverse();
-    assetReviewDialog(item.data.name+' · 历史版本',history.length?history.map((entry,index)=>`<div class="platform-history"><strong>V${entry.version}</strong><span>${xesc(entry.note)}</span><small>${xesc(entry.at)}</small><button type="button" class="platform-link" data-review-history-export="${index}">导出</button></div>`).join(''):'<p>暂无历史版本，首次审核通过后生成发布记录。</p>',()=>openAssetReview(id,onChange),'返回详情');
+    const history=reviewVersionHistory(item.kind,item.data.id).reverse(),rejected=rejectedReviewEntries(item.kind,item.data.id);
+    assetReviewDialog(item.data.name+' · 历史版本',history.length||rejected.length?mergeVersionHistory(history,rejected,(entry,index)=>`<div class="platform-history"><strong>V${entry.version}</strong><span>${xesc(entry.note)}</span><small>${xesc(entry.at)}</small><button type="button" class="platform-link" data-review-history-export="${index}">导出</button></div>`):'<p>暂无历史版本，首次审核通过后生成发布记录。</p>',()=>openAssetReview(id,onChange),'返回详情');
     $('#platformDialogBody').querySelectorAll('[data-review-history-export]').forEach(exportButton=>exportButton.addEventListener('click',()=>{
       if(!canViewPlatformReview(row))return;
       const entry=history[Number(exportButton.dataset.reviewHistoryExport)];if(entry)exportReviewSnapshot(item.kind,entry.data,entry.version,entry.note);

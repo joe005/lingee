@@ -1,4 +1,4 @@
-import { REVIEW_KEY, countAssetReviews, renderAssetReviewCards, openAssetReview } from './asset-review.js';
+import { REVIEW_KEY, countAssetReviews, renderAssetReviewCards, openAssetReview, rejectedReviewEntries, mergeVersionHistory } from './asset-review.js';
 import { cvWorkspace, cvWorkspaceName, cvCanAccessWorkspace, cvCurrentUserName } from '../collab/data.js';
 import { $, $$ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
@@ -183,13 +183,13 @@ function renderCards(){
   const assets=Object.entries(meta).filter(([id,item])=>inScope(item)&&!!latest(id));
   const reviewCount=(kind,statuses)=>countAssetReviews({kind,statuses,tenantId});
   for(const kind of ['expert','team']){
-    const count=assets.filter(([,item])=>item.kind===kind).length+reviewCount(kind,['pending']);
+    const count=assets.filter(([,item])=>item.kind===kind).length+reviewCount(kind,['pending','rejected']);
     $(`[data-platform-type-count="${kind}"]`).textContent=`(${count})`;
   }
   const selected=assets.filter(([,item])=>item.kind===tab);
   const counts={
-    all:selected.length+reviewCount(tab,['pending']),
-    draft:selected.filter(([,item])=>visibleStatus(item)==='draft').length,
+    all:selected.length+reviewCount(tab,['pending','rejected']),
+    draft:selected.filter(([,item])=>visibleStatus(item)==='draft').length+reviewCount(tab,['rejected']),
     review:selected.filter(([,item])=>visibleStatus(item)==='review').length+reviewCount(tab,['pending']),
     online:selected.filter(([,item])=>visibleStatus(item)==='online').length,
     offline:selected.filter(([,item])=>visibleStatus(item)==='offline').length
@@ -208,7 +208,7 @@ function renderCards(){
     const status=visibleStatus(m);
     return `<button type="button" class="app-card x-card platform-card" data-platform-card="${xesc(id)}"><div class="card-top">${face}<div class="card-titles"><div class="card-title-row"><span class="card-title">${xesc(d.name)}</span></div><div class="x-sub">${source} · ${team?'专家团 · '+(d.members||[]).length+' 位专家':xesc(d.role||'专家')}</div></div><span class="platform-card-version">V${row.version}${m.pendingVersion&&m.reviewSubmitted?' 待审核':''}</span></div><div class="card-desc">${xesc(d.desc||'暂无简介')}</div><div class="card-tags">${tags.slice(0,3).map(value=>`<span class="ptag">${xesc(value)}</span>`).join('')}</div><div class="platform-card-meta"><span class="platform-card-status ${status}">${status==='draft'?'草稿':status==='review'?'待审核':status==='offline'?'已下架':'已上架'}</span><time title="${xesc(row.at)}">更新于 ${xesc(updated)}</time></div></button>`;
   }).join('');
-  const reviewStatuses=statusTab==='all'?['pending']:statusTab==='review'?['pending']:[];
+  const reviewStatuses=statusTab==='all'?['pending','rejected']:statusTab==='review'?['pending']:statusTab==='draft'?['rejected']:[];
   const reviewCards=reviewStatuses.length?renderAssetReviewCards(kw,{kind:tab,statuses:reviewStatuses,tenantId}):'';
   $('#platformList').innerHTML=cards+reviewCards||`<div class="platform-empty">暂无符合条件的${tab==='team'?'专家团':platformExpertName()}。</div>`;
 }
@@ -234,8 +234,8 @@ function chooseDraftAvatar(id){
 }
 function showHistory(id){
   if(!inScope(meta[id]))return;
-  const rows=(versions[id]||[]).slice().reverse();
-  assetReviewDialog(`${label(id)} · 历史版本`,rows.map(row=>`<div class="platform-history"><strong>V${row.version}</strong><span>${xesc(row.note)}</span><small>${xesc(row.at)}</small><button type="button" class="platform-link" data-platform-export="${xesc(id)}" data-platform-version="${row.version}">导出</button></div>`).join('')+'<p class="platform-dialog-note">版本只读；再次导入同一编码的 ZIP 按主版本、次版本或修订号递增。</p>',null,'关闭');
+  const rows=(versions[id]||[]).slice().reverse(),rejected=rejectedReviewEntries(meta[id].kind,meta[id].id);
+  assetReviewDialog(`${label(id)} · 历史版本`,mergeVersionHistory(rows,rejected,row=>`<div class="platform-history"><strong>V${row.version}</strong><span>${xesc(row.note)}</span><small>${xesc(row.at)}</small><button type="button" class="platform-link" data-platform-export="${xesc(id)}" data-platform-version="${row.version}">导出</button></div>`)+'<p class="platform-dialog-note">版本只读；再次导入同一编码的 ZIP 按主版本、次版本或修订号递增。</p>',null,'关闭');
 }
 function crc32(bytes){
   let crc=-1;for(const byte of bytes){crc^=byte;for(let i=0;i<8;i++)crc=(crc>>>1)^((crc&1)?0xedb88320:0);}return (crc^-1)>>>0;

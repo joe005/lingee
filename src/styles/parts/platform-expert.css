@@ -126,3 +126,6 @@
 #platformDialog [data-platform-avatar-key].on{border-color:var(--brand)}
 #platformDialog [data-platform-avatar-key]:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 #platformDialog #assetRejectFields[hidden]{display:none}
+
+.platform-dialog .platform-history--rejected strong{color:var(--danger)}.platform-dialog .platform-history--rejected span{min-width:0;overflow-wrap:anywhere}.platform-dialog .platform-history-tag{display:inline-block;margin-right:8px;padding:0 6px;border-radius:4px;background:var(--danger-bg);color:var(--danger);font-size:12px;font-weight:500}.platform-dialog .platform-history--rejected em{display:block;margin-top:2px;color:var(--text-secondary);font-size:12px;font-style:normal}
+.platform-view .platform-card-status.rejected{color:var(--danger)}
