@@ -173,7 +173,7 @@ function refreshAccess(){
   $('#platformImport').classList.toggle('hidden',!editable);
   renderCards();
 }
-export function assetReviewDialog(title,body,onConfirm,confirmText='确认'){$('#assetRejectButton')?.remove();$('#platformDialogTitle').textContent=title;$('#platformDialogBody').innerHTML=body;$('#platformDialogConfirm').textContent=confirmText;$('#platformDialogConfirm').disabled=false;dialogConfirm=onConfirm;$('#platformDialog').classList.remove('hidden');}
+export function assetReviewDialog(title,body,onConfirm,confirmText='确认'){$('#assetRejectButton')?.remove();$('#platformDialogTitle').textContent=title;$('#platformDialogBody').innerHTML=body;$('#platformDialogConfirm').textContent=confirmText;$('#platformDialogConfirm').disabled=false;/* 确认按钮本身只是关闭时，不再重复显示取消 */$('#platformDialogCancel').classList.toggle('hidden',!onConfirm);dialogConfirm=onConfirm;$('#platformDialog').classList.remove('hidden');}
 export function assetReviewClose(){$('#platformDialog').classList.add('hidden');dialogConfirm=null;}
 function renderCards(){
   decorateClient();
