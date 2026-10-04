@@ -80,6 +80,14 @@ var LOGIN_PEOPLE_IDS={
 };
 export function getLoginPersonId(){ return LOGIN_PEOPLE_IDS[getAuthedUser()] || ''; }
 export function getLoginAccount(){ return getAuthedUser() || ''; }
+/* 受限菜单只授权给张工：原厂管理、租户管理（云端），以及协作开发的「项目」「设置」页签。
+   其他账号不显示入口，直接用地址或旧链接打开也会被退回默认页面。 */
+var RESTRICTED_MENU_PERSON_ID='p01';
+export function canAccessRestrictedMenus(){ return getLoginPersonId()===RESTRICTED_MENU_PERSON_ID; }
+function applyRestrictedMenuAccess(){
+  var allowed=canAccessRestrictedMenus();
+  document.querySelectorAll('[data-platform-nav],#cvTabNav [data-cvview="members"],#cvTabNav [data-cvview="config"]').forEach(function(item){ item.classList.toggle('hidden',!allowed); });
+}
 export function getPlatformIdentity(){
   var personId=getLoginPersonId();
   if(personId==='p22')return {role:'factory',tenantId:''};
@@ -118,6 +126,7 @@ function applyRoleUser(r){
     var nb=nm&&nm.parentNode;
     if(nb){ tag=document.createElement('span'); tag.id='userRoleTag'; tag.className='user-role-tag'; nb.insertBefore(tag,nm.nextSibling); }
   }
+  applyRestrictedMenuAccess();
   if(tag) tag.textContent=r.label;
 }
 
@@ -138,6 +147,7 @@ function applyUserInfo(user){
     if(nb){ tag=document.createElement('span'); tag.id='userRoleTag'; tag.className='user-role-tag'; nb.insertBefore(tag,nm.nextSibling); }
   }
   var platformRole=getPlatformIdentity()?.role;
+  applyRestrictedMenuAccess();
   if(tag) tag.textContent=platformRole==='tenant'?'租户管理员':platformRole==='factory'?'原厂管理员':(DEMO_ROLES.filter(function(r){return r.id===acc.role;})[0]||{}).label||'管理员';
 }
 /* 登录框登录后仍留在 DOM 里，Chrome 会把整页当登录页，

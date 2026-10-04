@@ -266,6 +266,8 @@ function renderChatSessions() {
   var mySessions = chatSessions.filter(isMyChatSession);
   var ungrouped = mySessions.filter(function (session) { return !projectId(session) && (!query || session.title.toLowerCase().includes(query)); });
   section.hidden = !ungrouped.length;
+  /* 搜索时自动展开，保证结果可见 */
+  section.classList.toggle('searching', !!query);
   list.innerHTML = ungrouped.map(sessionHtml).join('');
   var groups = new Map();
   mySessions.forEach(function (session) {
@@ -2030,7 +2032,26 @@ function initTaskMention(ed) {
   });
 }
 
+var RECENT_CHATS_COLLAPSED_KEY = 'lingee-recent-chats-collapsed-v1';
+function initRecentChatsToggle() {
+  var section = document.getElementById('chatSessionSection');
+  var toggle = document.getElementById('chatSessionToggle');
+  if (!section || !toggle) return;
+  var collapsed = false;
+  try { collapsed = localStorage.getItem(RECENT_CHATS_COLLAPSED_KEY) === '1'; } catch (_) {}
+  function apply() {
+    section.classList.toggle('collapsed', collapsed);
+    toggle.setAttribute('aria-expanded', String(!collapsed));
+  }
+  apply();
+  toggle.addEventListener('click', function () {
+    collapsed = !collapsed;
+    try { localStorage.setItem(RECENT_CHATS_COLLAPSED_KEY, collapsed ? '1' : '0'); } catch (_) {}
+    apply();
+  });
+}
 export function initComposer() {
+  initRecentChatsToggle();
   $('#chatTaskProjectSelect').addEventListener('change',function(event){
     var session=chatSessions.find(function(row){return row.id===activeSessionId&&row.taskCreate;});
     var projectId=event.target.value;

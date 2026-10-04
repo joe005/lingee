@@ -7,6 +7,7 @@ import { cvRenderExperts } from './experts.js';
 import { cvIsWorkspaceAdmin, cvSyncUrl, cvSyncWorkspacePermissions } from './projects.js';
 import { xesc } from '../expert/data.js';
 import { renderExpertGrid } from '../expert/library.js';
+import { canAccessRestrictedMenus } from '../login.js';
 /* 协作开发：视图与页签切换
    拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
    由 main.js 按拆分前的原始顺序调用。 */
@@ -76,6 +77,7 @@ function cvSwitchView(name){
   if(name==='config-perm') name='config';   /* 人员已并入设置左导航 */
   if(window.cvLeaveProjectTasks)window.cvLeaveProjectTasks();
   cvSyncWorkspacePermissions();
+  if((name==='members'||name==='config') && !canAccessRestrictedMenus()) name='tasks';   /* 项目、设置仅张工可进 */
   if(name==='config' && !cvIsWorkspaceAdmin()) name='tasks';   /* 设置仅工作区管理员可进 */
   if(name==='tasks'){
     setTasksEmbedded(true);

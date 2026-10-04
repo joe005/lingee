@@ -6,7 +6,7 @@ import { appendAssistantMessage, appendUserMessage, messagesList, restoreChatSes
 import { dsNavEl, renderOverview } from '../features/design/index.js';
 import { stripBase } from '../core/base-path.js';
 import { openChangelog } from '../features/changelog.js';
-import { getPlatformIdentity } from '../features/login.js';
+import { canAccessRestrictedMenus, getPlatformIdentity } from '../features/login.js';
 /* 启动路由：从路径 / 旧链接 / localStorage 还原视图
    拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
    由 main.js 按拆分前的原始顺序调用。 */
@@ -61,7 +61,7 @@ export function initRoute() {
     }
   }else if(dsViewParam==='changelog'){
     openChangelog();
-  }else if(dsViewParam && dsViewParam!=='newtask'){
+  }else if(dsViewParam && dsViewParam!=='newtask' && !(dsViewParam==='platform' && !canAccessRestrictedMenus())){
     showView(dsViewParam);
     if(dsViewParam==='skills') setNavActive('技能开发');
     else if(dsViewParam==='agents') setNavActive('智能体开发');
