@@ -5,6 +5,8 @@ import { appDd, appDisplayName, chatAppDd, fullAppData, selectApp, selectChatApp
 import { syncTogglePreviewBtn } from './chat.js';
 import { appendAssistantMessage, appendUserMessage, messagesList, simulateAIResponse } from './composer.js';
 import { renderModeTag } from './expert/chips.js';
+import { teamById } from './expert/store.js';
+import surveyAppHtml from '../../artifacts/survey-app.html?raw';
 /* 应用开发：卡片、搜索、新建下拉、新建应用弹窗、右键菜单
    拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
    由 main.js 按拆分前的原始顺序调用。 */
@@ -100,6 +102,31 @@ function hideCtxMenu(){
   ctxTarget=null;
 }
 
+/* ---------- 问卷调研应用：演示开发会话与本地预览 ---------- */
+var SURVEY_APP_NAME='问卷调研系统';
+var SURVEY_APP_URL='https://apps.lingee.com/survey';
+var SURVEY_DEV_STEPS=[
+  ['需求设计','17 条需求、验收条件和非目标，评审一次通过'],
+  ['系统设计','问卷、题目、答卷、发放批次 4 张主表；分析任务异步计算'],
+  ['开发实现','12 种题型、逻辑跳转、多渠道发放、自动分析报告'],
+  ['测试与审查','48 条用例全部通过，移动端矩阵题错位已修复'],
+  ['部署上线','已发布到生产环境，首个调研回收 1,286 份']
+];
+function surveyAppEsc(v){ return String(v).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+function renderSurveyDevConversation(){
+  messagesList.replaceChildren();
+  appendUserMessage('做一个问卷调研系统：支持问卷设计、企业微信和二维码发放、回收进度监控，回收后自动出分析报告。');
+  var response=appendAssistantMessage(teamById('general-app-dev'));
+  response.innerHTML='<div class="work-steps"><div class="work-step done final-step bare"><div class="markdown-content">'
+    +'<p>问卷调研系统已开发完成并部署上线，右侧是正在运行的应用。</p><ol>'
+    +SURVEY_DEV_STEPS.map(function(step){return '<li><strong>'+surveyAppEsc(step[0])+'</strong>：'+surveyAppEsc(step[1])+'</li>';}).join('')
+    +'</ol><p>访问地址：<code>'+surveyAppEsc(SURVEY_APP_URL)+'</code></p></div></div></div>';
+}
+function openSurveyAppPreview(frame,urlInput){
+  if(frame) frame.src=URL.createObjectURL(new Blob([surveyAppHtml],{type:'text/html'}));
+  if(urlInput) urlInput.value=SURVEY_APP_URL;
+}
+
 export function initApps() {
   /* ---------- 我的应用 (apps view) ---------- */
   $('.btn-new:not(.apps-new-btn)') && $('.btn-new:not(.apps-new-btn)').addEventListener('click',function(){});
@@ -124,8 +151,11 @@ export function initApps() {
       var frame=document.getElementById('chatPreviewFrame');
       var urlInput=document.getElementById('previewUrlText');
       var url='https://feature.kingdee.com:1026/feature_vb';
-      if(frame) frame.src=url;
-      if(urlInput) urlInput.value=url;
+      if(name===SURVEY_APP_NAME){ renderSurveyDevConversation(); openSurveyAppPreview(frame,urlInput); }
+      else{
+        if(frame) frame.src=url;
+        if(urlInput) urlInput.value=url;
+      }
       if(view) view.classList.add('preview-open');
       if(typeof syncTogglePreviewBtn==='function') syncTogglePreviewBtn();
       try{localStorage.setItem('chatPreviewOpen','1')}catch(err){}

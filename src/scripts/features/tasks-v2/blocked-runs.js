@@ -10,6 +10,7 @@ const BLOCKED_RUNS = {
   40: { agent:'cosmic-workflow', duration:'1分57秒', reason:'SLA 规则引擎依赖的调度集群尚未完成扩容审批。', next:'调度集群扩容完成后重试倒计时和超时升级验证。', steps:[['加载 SLA 时效配置','已匹配四档优先级的响应与解决时效。'],['检查预警与升级节点','已定义提前 15 分钟预警及超时升级规则。'],['启动定时调度验证','集群容量不足且扩容审批未完成，未启动定时任务。']] },
   46: { agent:'cosmic-api', duration:'1分34秒', reason:'HR 系统开放 API 尚未提供，无法抽取花名册和考勤数据。', next:'待 HR API 开通后重试字段映射与首次全量抽取。', steps:[['检查 ETL 字段映射','已整理花名册、考勤、薪酬和绩效字段。'],['准备清洗与异常队列','已定义空值、越界和编码不匹配规则。'],['连接 HR 开放 API','接口排期未到，抽取阶段暂停。']] },
   63: { agent:'software-qa-engineer', duration:'3分12秒', reason:'任务列表按状态排序时复现偶发乱序，回归验证未通过。', next:'请检查排序稳定性与状态变更后的列表重排，再运行回归测试。', steps:[['构造多状态任务样本','已覆盖待开始、执行中、待审核和阻塞状态。'],['切换状态排序并刷新','发现同状态任务顺序偶发变化。'],['运行回归断言','排序结果与预期不一致，保留复现记录并标记失败。']] },
+  1304: { agent:'general-app-development-expert', duration:'2分36秒', reason:'企业微信应用尚未开通「发送应用消息」权限，催办提醒无法推送。', next:'请管理员在企业微信后台为问卷应用开通消息权限后重新执行。', steps:[['统计回收进度','已按部门汇总应答率，识别 6 个低于 60% 的部门。'],['生成催办名单','已生成 214 位未作答人员的提醒名单。'],['调用企业微信消息接口','接口返回无权限（errcode 48002），停止推送，避免重复提醒。']] },
 };
 
 export function createDemoBlockedRun(task) {
@@ -17,7 +18,7 @@ export function createDemoBlockedRun(task) {
   var content = BLOCKED_RUNS[task.id];
   if (!content) return null;
   var project = CV_PROJECTS.find(function (row) { return row.id === task.project; });
-  var team = TEAMS.find(function (row) { return row.id === task.teamId || project?.defaultTeam; });
+  var team = TEAMS.find(function (row) { return row.id === (task.teamId || project?.defaultTeam); });
   var expertId = team?.members.includes(content.agent) ? content.agent : team?.leadId;
   var expert = EXPERTS.find(function (row) { return row.id === expertId; });
   return {

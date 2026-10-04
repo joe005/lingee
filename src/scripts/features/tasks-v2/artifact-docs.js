@@ -2,7 +2,7 @@
    正文由 blocks 组成：p 段落、ul/ol 列表、table 表格、code 代码、note 提示。 */
 
 var RESOURCE_WORDS = [
-  ['采购订单', 'purchase-orders'], ['订单', 'orders'], ['供应商', 'suppliers'], ['入库', 'inbound-receipts'],
+  ['答卷', 'survey-responses'], ['问卷', 'surveys'], ['采购订单', 'purchase-orders'], ['订单', 'orders'], ['供应商', 'suppliers'], ['入库', 'inbound-receipts'],
   ['出库', 'outbound-orders'], ['库存', 'inventory'], ['盘点', 'stocktakes'], ['报表', 'reports'],
   ['审批', 'approvals'], ['合同', 'contracts'], ['发票', 'invoices'], ['付款', 'payments'],
   ['报销', 'expense-claims'], ['费用', 'expenses'], ['预算', 'budgets'], ['客户', 'customers'],

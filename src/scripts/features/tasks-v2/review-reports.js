@@ -35,6 +35,13 @@ const REVIEW_REPORT_CONTENT = {
     'cosmic-api':'核对消息回传的幂等键、重试与重复事件处理。',
     'software-qa-engineer':'走查正常完成、失败重试、人工接管和审核退回四类场景。',
   } },
+  1302: { summary:'问卷设计器已完成 12 种题型、逻辑跳转和多端预览，上一轮驳回的移动端矩阵题错位已修复。', evidence:['交付单选、多选、矩阵、量表、排序等 12 种题型的配置与预览样例。','复测 3 层逻辑跳转、必答校验和移动端矩阵题横向滚动，全部通过。'], review:'请确认题目上限 200 道及逻辑跳转最多 3 层的限制。', agentResults:{
+    'general-app-team-lead':'把题型、逻辑跳转、预览拆成 3 个切片，汇总各切片的验证证据。',
+    'general-app-product-expert':'核对 12 种题型的配置项与验收条件，补齐必答和跳转规则。',
+    'general-app-architecture-expert':'确认问卷结构以 JSON Schema 存储，题型扩展不改表结构。',
+    'general-app-development-expert':'实现题型组件、跳转引擎与预览，修复移动端矩阵题错位。',
+    'general-app-qa-expert':'回归 48 条用例，覆盖桌面端、移动端和跳转死循环检测。',
+  } },
 };
 
 const ROLE_RESULTS = {
@@ -56,7 +63,7 @@ export function createDemoReviewReport(task) {
   var content = REVIEW_REPORT_CONTENT[task.id];
   if (!content || task.status !== 'in_review') return null;
   var project = CV_PROJECTS.find(function (row) { return row.id === task.project; });
-  var team = TEAMS.find(function (row) { return row.id === task.teamId || project?.defaultTeam; });
+  var team = TEAMS.find(function (row) { return row.id === (task.teamId || project?.defaultTeam); });
   if (!team) return null;
   return {
     teamName:team.name,
@@ -85,7 +92,7 @@ const RUN_STAGE_HINTS = [
 
 export function getDemoRunHeader(task) {
   var project = CV_PROJECTS.find(function (row) { return row.id === task.project; });
-  var team = TEAMS.find(function (row) { return row.id === task.teamId || project?.defaultTeam; });
+  var team = TEAMS.find(function (row) { return row.id === (task.teamId || project?.defaultTeam); });
   if (!team) return null;
   var status = task.status;
   if (status === 'planned' || status === 'backlog') return { stage:'等待启动', agentName:'尚未分派', tone:'idle' };

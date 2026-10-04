@@ -5,11 +5,11 @@ import { taskExecutionStages } from '../tasks-v2/task-execution.js';
 import { $ } from '../../core/dom.js'; // 模块自检将模板插值的 $ 识别为跨模块符号。
 
 const PHASE_OWNERS = {
-  requirements:['software-product-manager','software-team-lead'],
-  design:['software-architect','cosmic-workflow','cosmic-api','software-team-lead'],
+  requirements:['software-product-manager','general-app-product-expert','software-team-lead'],
+  design:['software-architect','general-app-architecture-expert','cosmic-workflow','cosmic-api','software-team-lead'],
   planning:['software-team-lead','software-architect'],
-  implementation:['cosmic-form','cosmic-workflow','cosmic-report','cosmic-plugin','cosmic-api','frontend-engineer','software-engineer'],
-  verification:['software-qa-engineer','software-product-manager','software-team-lead'],
+  implementation:['cosmic-form','cosmic-workflow','cosmic-report','cosmic-plugin','cosmic-api','frontend-engineer','software-engineer','general-app-development-expert'],
+  verification:['software-qa-engineer','general-app-qa-expert','software-product-manager','software-team-lead'],
   delivery:['software-team-lead','software-architect'],
 };
 
@@ -27,6 +27,9 @@ function implementationOwner(title, team) {
             : ['cosmic-form','software-engineer','frontend-engineer'];
   return preferences.find(id => team.members.includes(id));
 }
+
+/* 自定义执行计划的阶段 id 是 s1…s6，按阶段名称对应到交付阶段，再选认领该阶段的智能体。 */
+const PHASE_BY_STAGE_NAME = {'需求分析':'requirements','方案设计':'design','实现规划':'planning','编码实现':'implementation','测试验证':'verification','部署交付':'delivery'};
 
 function ownerFor(stageId, title, team) {
   const preferred = stageId === 'implementation' ? implementationOwner(title, team) : null;
@@ -76,7 +79,7 @@ export function createDeliveryActivity(task, project, options = {}) {
   const hours = ['09:40','10:25','11:10','13:45','15:05','16:20'];
   stages.forEach((stage, index) => {
     if (index >= completedCount && index !== activeIndex) return;
-    const expert = ownerFor(stage.id, title, team);
+    const expert = ownerFor(PHASE_BY_STAGE_NAME[stage.name] || stage.id, title, team);
     let detail = stage.desc || detailFor(stage.id, task, project, team);
     let state = 'done';
     if (index === activeIndex) {

@@ -2531,11 +2531,13 @@ function taskStatusActivityEvents(task, activity) {
   function add(from, to, time, author) {
     transitions.push({ type:'status', time:time, entry:{ from:from, to:to, author:author } });
   }
-  if (lastExpert && ['in_review','done'].includes(initialStatus)) {
+  /* 预置任务自带状态历史时以历史为准，不再补同一目标状态的推断记录。 */
+  var recorded = new Set((task.statusHistory || []).map(function (change) { return change.to; }));
+  if (lastExpert && ['in_review','done'].includes(initialStatus) && !recorded.has('in_review')) {
     add('in_progress', 'in_review', task.reviewReport?.completedAt || task.createDate + ' 16:40', lastExpert.author);
   }
-  if (initialStatus === 'done') add('in_review', 'done', task.createDate + ' 17:00', assignee);
-  if (initialStatus === 'blocked' && lastExpert) add('in_progress', 'blocked', lastExpert.time, lastExpert.author);
+  if (initialStatus === 'done' && !recorded.has('done')) add('in_review', 'done', task.createDate + ' 17:00', assignee);
+  if (initialStatus === 'blocked' && lastExpert && !recorded.has('blocked')) add('in_progress', 'blocked', lastExpert.time, lastExpert.author);
   if (initialStatus === 'cancelled') add('backlog', 'cancelled', task.createDate + ' 09:16', creator);
   (task.statusHistory || []).forEach(function (change) {
     add(change.from, change.to, change.time, tkGetPerson(change.authorId).name);

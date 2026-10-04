@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>问卷调研</title>
+<style>
+:root{--brand:#495dff;--brand-soft:#eef0ff;--text:#1d2129;--muted:#6b7280;--line:#e8eaf0;--bg:#f6f7fb;--card:#fff;--ok:#08a040;--ok-soft:#e8f7ee;--warn:#d97706;--warn-soft:#fff4e0;--bad:#e04a3a;--bad-soft:#fdecea}
+*{box-sizing:border-box}
+body{margin:0;font:13px/1.5 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--text);background:var(--bg)}
+.app{display:flex;min-height:100vh}
+.nav{width:168px;flex:none;background:#fff;border-right:1px solid var(--line);padding:16px 10px}
+.logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;padding:0 8px 16px}
+.logo i{width:24px;height:24px;border-radius:7px;background:var(--brand);display:grid;place-items:center;color:#fff;font-style:normal;font-size:13px}
+.nav button{display:flex;width:100%;align-items:center;gap:8px;border:0;background:none;padding:8px 10px;border-radius:8px;color:var(--muted);font:inherit;cursor:pointer;text-align:left}
+.nav button.on{background:var(--brand-soft);color:var(--brand);font-weight:600}
+.nav button:hover:not(.on){background:var(--bg)}
+.main{flex:1;min-width:0;padding:20px 24px 32px}
+.head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.head h1{font-size:18px;margin:0}
+.pill{font-size:12px;padding:2px 8px;border-radius:999px;background:var(--ok-soft);color:var(--ok);font-weight:600}
+.head .sp{flex:1}
+.btn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 12px;font:inherit;cursor:pointer}
+.btn.pri{background:var(--brand);border-color:var(--brand);color:#fff}
+.tabs{display:flex;gap:20px;border-bottom:1px solid var(--line);margin-bottom:16px}
+.tabs button{border:0;background:none;padding:8px 0;font:inherit;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent}
+.tabs button.on{color:var(--text);font-weight:600;border-color:var(--brand)}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.kpi small{color:var(--muted)}
+.kpi b{display:block;font-size:24px;margin-top:4px;font-variant-numeric:tabular-nums}
+.kpi em{font-style:normal;font-size:12px;color:var(--ok)}
+.grid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0}
+.card h3{margin:0 0 12px;font-size:14px}
+.bars{display:grid;gap:10px}
+.bar{display:grid;grid-template-columns:72px minmax(0,1fr) 44px;align-items:center;gap:10px}
+.bar span{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.track{height:10px;background:var(--bg);border-radius:6px;overflow:hidden}
+.track i{display:block;height:100%;border-radius:6px;background:var(--brand)}
+.track i.w{background:var(--warn)}
+.bar b{text-align:right;font-variant-numeric:tabular-nums}
+.dist{display:flex;height:22px;border-radius:6px;overflow:hidden;margin:6px 0 10px}
+.dist i{display:block}
+.legend{display:flex;flex-wrap:wrap;gap:10px;color:var(--muted);font-size:12px}
+.legend span::before{content:"";display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px;background:var(--c)}
+.insight{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.insight li{display:flex;gap:8px;padding:8px 10px;border-radius:8px;background:var(--bg)}
+.insight li b{flex:none;font-size:11px;padding:1px 6px;border-radius:4px;height:fit-content}
+.tag-ok{background:var(--ok-soft);color:var(--ok)}
+.tag-warn{background:var(--warn-soft);color:var(--warn)}
+.tag-bad{background:var(--bad-soft);color:var(--bad)}
+.words{display:flex;flex-wrap:wrap;gap:6px}
+.words span{padding:3px 10px;border-radius:999px;background:var(--brand-soft);color:var(--brand)}
+.words span.l{font-size:15px;font-weight:600}
+.full{grid-column:1/-1}
+.q{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px;background:#fff}
+.q.on{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+.q p{margin:0 0 8px;font-weight:600}
+.q label{display:inline-flex;align-items:center;gap:6px;margin:0 16px 6px 0;color:var(--muted)}
+.q .jump{font-size:12px;color:var(--brand);background:var(--brand-soft);padding:2px 8px;border-radius:6px;display:inline-block;margin-top:4px}
+.types{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.types span{border:1px solid var(--line);border-radius:8px;padding:8px;text-align:center;color:var(--muted)}
+.list{display:grid;gap:8px}
+.row{display:grid;grid-template-columns:minmax(0,1fr) 90px 90px 70px;gap:12px;align-items:center;padding:12px 14px;background:#fff;border:1px solid var(--line);border-radius:10px}
+.row small{display:block;color:var(--muted)}
+.hidden{display:none}
+@media (max-width:760px){.nav{display:none}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.grid{grid-template-columns:1fr}.row{grid-template-columns:minmax(0,1fr) 80px}.row .opt{display:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="nav">
+    <div class="logo"><i>问</i>问卷调研</div>
+    <button class="on" type="button">我的问卷</button>
+    <button type="button">模板库</button>
+    <button type="button">发放记录</button>
+    <button type="button">数据分析</button>
+    <button type="button">设置</button>
+  </aside>
+  <main class="main">
+    <div class="head">
+      <h1>2026 员工满意度调研</h1><span class="pill">回收中</span>
+      <span class="sp"></span>
+      <button class="btn" type="button">导出 PDF</button>
+      <button class="btn pri" type="button">发放问卷</button>
+    </div>
+    <div class="tabs" role="tablist">
+      <button class="on" type="button" data-tab="analysis">数据分析</button>
+      <button type="button" data-tab="design">问卷设计</button>
+      <button type="button" data-tab="list">全部问卷</button>
+    </div>
+
+    <section data-panel="analysis">
+      <div class="kpis">
+        <div class="kpi"><small>已回收</small><b>1,286</b><em>目标 1,500</em></div>
+        <div class="kpi"><small>回收率</small><b>85.7%</b><em>↑ 较去年 +31%</em></div>
+        <div class="kpi"><small>整体满意度</small><b>4.2<small> / 5</small></b><em>↑ 0.3</em></div>
+        <div class="kpi"><small>平均作答</small><b>6分12秒</b><em>32 题</em></div>
+      </div>
+      <div class="grid">
+        <div class="card">
+          <h3>各部门回收率</h3>
+          <div class="bars">
+            <div class="bar"><span>研发中心</span><div class="track"><i style="width:94%"></i></div><b>94%</b></div>
+            <div class="bar"><span>产品部</span><div class="track"><i style="width:91%"></i></div><b>91%</b></div>
+            <div class="bar"><span>市场部</span><div class="track"><i style="width:88%"></i></div><b>88%</b></div>
+            <div class="bar"><span>财务部</span><div class="track"><i style="width:86%"></i></div><b>86%</b></div>
+            <div class="bar"><span>客户服务</span><div class="track"><i style="width:79%"></i></div><b>79%</b></div>
+            <div class="bar"><span>生产制造</span><div class="track"><i class="w" style="width:58%"></i></div><b>58%</b></div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>满意度分布</h3>
+          <div class="dist">
+            <i style="width:38%;background:#08a040"></i><i style="width:34%;background:#7ccf9a"></i><i style="width:17%;background:#d4d8e2"></i><i style="width:8%;background:#f5b25c"></i><i style="width:3%;background:#e04a3a"></i>
+          </div>
+          <div class="legend">
+            <span style="--c:#08a040">非常满意 38%</span><span style="--c:#7ccf9a">满意 34%</span><span style="--c:#d4d8e2">一般 17%</span><span style="--c:#f5b25c">不满意 8%</span><span style="--c:#e04a3a">非常不满意 3%</span>
+          </div>
+          <h3 style="margin-top:16px">开放题高频词</h3>
+          <div class="words"><span class="l">培训机会</span><span>弹性办公</span><span class="l">晋升通道</span><span>食堂</span><span>跨部门协作</span><span>工具效率</span></div>
+        </div>
+        <div class="card full">
+          <h3>AI 分析结论</h3>
+          <ul class="insight">
+            <li><b class="tag-ok">优势</b>团队氛围与直属主管支持得分最高（4.5），连续两年保持领先。</li>
+            <li><b class="tag-warn">关注</b>生产制造回收率仅 58%，一线员工缺少企业微信入口，建议补充二维码张贴。</li>
+            <li><b class="tag-bad">改进</b>「晋升通道清晰度」得分 3.1，为全卷最低，与开放题高频词一致。</li>
+            <li><b class="tag-ok">建议</b>Q4 推出季度培训计划，并在 12 月用同一模板做一次复测对比。</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section data-panel="design" class="hidden">
+      <div class="grid">
+        <div>
+          <div class="q"><p>1. 你所在的部门</p><label><input type="radio" disabled>研发中心</label><label><input type="radio" disabled>产品部</label><label><input type="radio" disabled>生产制造</label><label><input type="radio" disabled>其他</label></div>
+          <div class="q on"><p>2. 总体而言，你对目前的工作满意吗？</p><label><input type="radio" disabled>非常满意</label><label><input type="radio" disabled>满意</label><label><input type="radio" disabled>一般</label><label><input type="radio" disabled>不满意</label><div class="jump">逻辑跳转：选「不满意」→ 跳到第 3 题</div></div>
+          <div class="q"><p>3. 最希望改进的方面（最多选 3 项）</p><label><input type="checkbox" disabled>晋升通道</label><label><input type="checkbox" disabled>培训机会</label><label><input type="checkbox" disabled>薪酬福利</label><label><input type="checkbox" disabled>办公环境</label></div>
+          <div class="q"><p>4. 请为以下方面打分（矩阵量表）</p><label>团队氛围 ★★★★★</label><label>直属主管支持 ★★★★★</label><label>工具效率 ★★★★☆</label></div>
+        </div>
+        <div class="card">
+          <h3>题型</h3>
+          <div class="types"><span>单选</span><span>多选</span><span>矩阵</span><span>量表</span><span>排序</span><span>填空</span><span>评分</span><span>下拉</span><span>日期</span><span>文件上传</span><span>NPS</span><span>分页</span></div>
+          <h3 style="margin-top:16px">设置</h3>
+          <ul class="insight"><li>匿名作答 · 开启</li><li>每人限答 1 次</li><li>截止：2026-10-10 18:00</li></ul>
+        </div>
+      </div>
+    </section>
+
+    <section data-panel="list" class="hidden">
+      <div class="list">
+        <div class="row"><div><b>2026 员工满意度调研</b><small>人力资源部 · 32 题</small></div><span class="pill">回收中</span><span>1,286 份</span><span class="opt">查看</span></div>
+        <div class="row"><div><b>Q3 客户满意度回访</b><small>客户服务 · 18 题</small></div><span class="pill" style="background:#eef0ff;color:#495dff">已结束</span><span>642 份</span><span class="opt">查看</span></div>
+        <div class="row"><div><b>新员工入职培训评估</b><small>培训中心 · 12 题</small></div><span class="pill" style="background:#eef0ff;color:#495dff">已结束</span><span>87 份</span><span class="opt">查看</span></div>
+        <div class="row"><div><b>办公环境改善意见征集</b><small>行政部 · 10 题</small></div><span class="pill" style="background:#f1f2f5;color:#6b7280">草稿</span><span>—</span><span class="opt">编辑</span></div>
+      </div>
+    </section>
+  </main>
+</div>
+<script>
+document.querySelectorAll('[data-tab]').forEach(function(tab){
+  tab.addEventListener('click',function(){
+    document.querySelectorAll('[data-tab]').forEach(function(t){t.classList.toggle('on',t===tab);});
+    document.querySelectorAll('[data-panel]').forEach(function(p){p.classList.toggle('hidden',p.getAttribute('data-panel')!==tab.getAttribute('data-tab'));});
+  });
+});
+</script>
+</body>
+</html>

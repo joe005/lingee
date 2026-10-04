@@ -467,6 +467,154 @@ const TK_COSMIC_WUXF_TASKS = [
 ];
 TK_TASKS.push(...TK_COSMIC_WUXF_TASKS);
 
+/* 问卷调研系统建设：演示汇报的贯穿场景，覆盖已完成、待审核（含一次驳回）、执行中、阻塞、待开始和待规划。 */
+const TK_SURVEY_TASKS = [
+  { id:1300, code:'T1001300', title:'问卷调研需求梳理与验收标准', status:'done', priority:'high', assignee:'p04', createdBy:'p22', project:'survey', labels:['需求'], issueType:'需求', createDate:'2026-09-07', dueDate:'2026-09-14',
+    desc:'梳理问卷调研全流程需求：问卷设计、发放、回收、分析四个环节；明确首期范围与非目标（不做付费问卷和外部样本采购）；每条需求附可观察的验收条件。',
+    executionStageId:'s6',
+    statusHistory:[
+      { from:'backlog', to:'in_progress', time:'2026-09-07 10:00:00', authorId:'p22' },
+      { from:'in_progress', to:'in_review', time:'2026-09-12 16:20:00', authorId:'p04' },
+      { from:'in_review', to:'done', time:'2026-09-14 11:05:00', authorId:'p22' },
+    ],
+    executionPlan:[
+      { id:'s1', workType:'需求分析', title:'需求分析', description:'访谈业务方，确认四个环节的目标与痛点', assigneeId:'p04', status:'done' },
+      { id:'s2', workType:'方案设计', title:'方案设计', description:'划定首期范围与非目标', assigneeId:'p03', status:'done' },
+      { id:'s3', workType:'实现规划', title:'实现规划', description:'拆分需求清单与优先级', assigneeId:'p03', status:'done' },
+      { id:'s4', workType:'编码实现', title:'编码实现', description:'编写需求文档与验收条件', assigneeId:'p04', status:'done' },
+      { id:'s5', workType:'测试验证', title:'测试验证', description:'逐条核对验收条件可观察、可测量', assigneeId:'p05', status:'done' },
+      { id:'s6', workType:'部署交付', title:'部署交付', description:'需求评审并归档', assigneeId:'p22', status:'done' },
+    ] },
+  { id:1301, code:'T1001301', title:'问卷系统技术方案设计', status:'done', priority:'high', assignee:'p03', createdBy:'p22', project:'survey', labels:['需求'], issueType:'需求', createDate:'2026-09-14', dueDate:'2026-09-25',
+    desc:'设计问卷系统技术方案：问卷结构以 JSON Schema 存储，题型扩展不改表结构；答卷按问卷分区存储；分析任务异步计算；企业微信、短信、链接三种发放通道统一封装。',
+    executionStageId:'s6',
+    statusHistory:[
+      { from:'backlog', to:'in_progress', time:'2026-09-15 09:30:00', authorId:'p03' },
+      { from:'in_progress', to:'in_review', time:'2026-09-23 17:10:00', authorId:'p03' },
+      { from:'in_review', to:'done', time:'2026-09-25 10:00:00', authorId:'p22' },
+    ],
+    executionPlan:[
+      { id:'s1', workType:'需求分析', title:'需求分析', description:'确认非功能要求：并发、样本量与数据安全', assigneeId:'p03', status:'done' },
+      { id:'s2', workType:'方案设计', title:'方案设计', description:'设计模块边界与数据模型', assigneeId:'p03', status:'done' },
+      { id:'s3', workType:'实现规划', title:'实现规划', description:'规划接口与开发顺序', assigneeId:'p02', status:'done' },
+      { id:'s4', workType:'编码实现', title:'编码实现', description:'输出方案文档与接口契约', assigneeId:'p03', status:'done' },
+      { id:'s5', workType:'测试验证', title:'测试验证', description:'评审方案风险与预案', assigneeId:'p05', status:'done' },
+      { id:'s6', workType:'部署交付', title:'部署交付', description:'方案评审通过并归档', assigneeId:'p22', status:'done' },
+    ] },
+  { id:1302, code:'T1001302', title:'问卷设计器：题型、逻辑跳转与预览', status:'in_review', priority:'high', assignee:'p22', createdBy:'p22', project:'survey', labels:['需求'], issueType:'需求', createDate:'2026-09-25', dueDate:'2026-10-09',
+    desc:'实现问卷设计器：支持单选、多选、矩阵、量表、排序等 12 种题型；支持按答案逻辑跳转（最多 3 层）与必答校验；桌面端与移动端实时预览。',
+    executionStageId:'s5',
+    statusHistory:[
+      { from:'backlog', to:'in_progress', time:'2026-09-25 14:00:00', authorId:'p22' },
+      { from:'in_progress', to:'in_review', time:'2026-09-30 16:10:00', authorId:'p01' },
+      { from:'in_progress', to:'in_review', time:'2026-10-03 15:40:00', authorId:'p01' },
+    ],
+    comments:[
+      { kind:'flow', authorId:'p22', createdAt:'2026-10-01 10:20:00', fromStatus:'in_review', fromAssignee:'p22', status:'in_progress', assignee:'p01', text:'驳回：移动端矩阵题横向显示错位，请修复后重新提交。' },
+    ],
+    executionPlan:[
+      { id:'s1', workType:'需求分析', title:'需求分析', description:'确认 12 种题型与跳转规则', assigneeId:'p04', status:'done' },
+      { id:'s2', workType:'方案设计', title:'方案设计', description:'设计题型组件与跳转引擎', assigneeId:'p03', status:'done' },
+      { id:'s3', workType:'实现规划', title:'实现规划', description:'拆分题型、跳转、预览三个切片', assigneeId:'p02', status:'done' },
+      { id:'s4', workType:'编码实现', title:'编码实现', description:'实现设计器与多端预览', assigneeId:'p01', status:'done' },
+      { id:'s5', workType:'测试验证', title:'测试验证', description:'审核题型、跳转与移动端显示', assigneeId:'p22', status:'review' },
+      { id:'s6', workType:'部署交付', title:'部署交付', description:'发布到测试环境', assigneeId:'p07', status:'pending' },
+    ] },
+  { id:1303, code:'T1001303', title:'多渠道发放：链接、二维码与企业微信', status:'in_progress', priority:'high', assignee:'p01', createdBy:'p22', project:'survey', labels:['需求'], issueType:'需求', createDate:'2026-09-26', dueDate:'2026-10-12',
+    desc:'实现问卷多渠道发放：生成公开链接与二维码；按组织架构选择企业微信推送对象；支持定时发放与匿名作答；同一人防重复作答。',
+    executionStageId:'s4',
+    statusHistory:[
+      { from:'backlog', to:'in_progress', time:'2026-09-27 09:40:00', authorId:'p22' },
+    ],
+    executionPlan:[
+      { id:'s1', workType:'需求分析', title:'需求分析', description:'确认发放渠道与防重规则', assigneeId:'p04', status:'done' },
+      { id:'s2', workType:'方案设计', title:'方案设计', description:'设计发放批次与渠道适配层', assigneeId:'p03', status:'done' },
+      { id:'s3', workType:'实现规划', title:'实现规划', description:'规划渠道接入顺序', assigneeId:'p02', status:'done' },
+      { id:'s4', workType:'编码实现', title:'编码实现', description:'实现链接、二维码与企业微信推送', assigneeId:'p01', status:'running' },
+      { id:'s5', workType:'测试验证', title:'测试验证', description:'验证匿名、定时与防重复作答', assigneeId:'p05', status:'pending' },
+      { id:'s6', workType:'部署交付', title:'部署交付', description:'上线发放服务', assigneeId:'p07', status:'pending' },
+    ] },
+  { id:1304, code:'T1001304', title:'回收进度监控与催办提醒', status:'blocked', priority:'medium', assignee:'p22', createdBy:'p22', project:'survey', labels:['需求'], issueType:'需求', createDate:'2026-09-28', dueDate:'2026-10-14',
+    desc:'实时展示回收进度与各部门应答率；低于阈值的部门自动生成催办名单并通过企业微信提醒。阻塞原因：企业微信应用尚未开通发送消息权限。',
+    executionStageId:'s4',
+    statusHistory:[
+      { from:'backlog', to:'in_progress', time:'2026-09-29 10:00:00', authorId:'p22' },
+      { from:'in_progress', to:'blocked', time:'2026-10-02 14:12:00', authorId:'p02' },
+    ],
+    executionPlan:[
+      { id:'s1', workType:'需求分析', title:'需求分析', description:'确认应答率口径与催办阈值', assigneeId:'p04', status:'done' },
+      { id:'s2', workType:'方案设计', title:'方案设计', description:'设计进度统计与提醒策略', assigneeId:'p03', status:'done' },
+      { id:'s3', workType:'实现规划', title:'实现规划', description:'规划统计与推送步骤', assigneeId:'p02', status:'done' },
+      { id:'s4', workType:'编码实现', title:'编码实现', description:'实现催办推送，等待企业微信权限', assigneeId:'p22', status:'blocked' },
+      { id:'s5', workType:'测试验证', title:'测试验证', description:'验证提醒频率与免打扰规则', assigneeId:'p05', status:'pending' },
+      { id:'s6', workType:'部署交付', title:'部署交付', description:'上线监控看板', assigneeId:'p07', status:'pending' },
+    ] },
+  { id:1305, code:'T1001305', title:'自动分析报告：交叉分析与图表', status:'in_progress', priority:'high', assignee:'p03', createdBy:'p22', project:'survey', labels:['需求'], issueType:'需求', createDate:'2026-09-30', dueDate:'2026-10-16',
+    desc:'回收结束后自动生成分析报告：题目分布、部门交叉分析、开放题关键词归纳与改进建议；报告可在线查看并导出 PDF。',
+    executionStageId:'s2',
+    statusHistory:[
+      { from:'backlog', to:'in_progress', time:'2026-10-01 09:15:00', authorId:'p22' },
+    ],
+    executionPlan:[
+      { id:'s1', workType:'需求分析', title:'需求分析', description:'确认报告结构与交叉分析维度', assigneeId:'p04', status:'done' },
+      { id:'s2', workType:'方案设计', title:'方案设计', description:'设计分析任务与图表模板', assigneeId:'p03', status:'running' },
+      { id:'s3', workType:'实现规划', title:'实现规划', description:'规划异步计算与导出步骤', assigneeId:'p02', status:'pending' },
+      { id:'s4', workType:'编码实现', title:'编码实现', description:'实现报告生成与 PDF 导出', assigneeId:'p01', status:'pending' },
+      { id:'s5', workType:'测试验证', title:'测试验证', description:'核对统计口径与大样本耗时', assigneeId:'p05', status:'pending' },
+      { id:'s6', workType:'部署交付', title:'部署交付', description:'上线分析服务', assigneeId:'p07', status:'pending' },
+    ] },
+  { id:1306, code:'T1001306', title:'问卷模板库与一键复用', status:'backlog', priority:'medium', assignee:'p22', createdBy:'p22', project:'survey', labels:['需求'], issueType:'需求', createDate:'2026-10-02', dueDate:'2026-10-20',
+    desc:'把已发布的问卷沉淀为模板：员工满意度、客户满意度、培训评估等；新建问卷时可一键套用并修改，模板按部门共享。',
+    executionStageId:'s1',
+    executionPlan:[
+      { id:'s1', workType:'需求分析', title:'需求分析', description:'确认模板分类与共享范围', assigneeId:'p22', status:'pending' },
+      { id:'s2', workType:'方案设计', title:'方案设计', description:'设计模板存储与版本', assigneeId:'p03', status:'pending' },
+      { id:'s3', workType:'实现规划', title:'实现规划', description:'规划模板库开发步骤', assigneeId:'p02', status:'pending' },
+      { id:'s4', workType:'编码实现', title:'编码实现', description:'实现模板库与一键套用', assigneeId:'p01', status:'pending' },
+      { id:'s5', workType:'测试验证', title:'测试验证', description:'验证套用后的独立修改', assigneeId:'p05', status:'pending' },
+      { id:'s6', workType:'部署交付', title:'部署交付', description:'上线模板库', assigneeId:'p07', status:'pending' },
+    ] },
+  { id:1307, code:'T1001307', title:'答卷数据导出与权限控制', status:'backlog', priority:'medium', assignee:'p04', createdBy:'p22', project:'survey', labels:['需求'], issueType:'需求', createDate:'2026-10-02', dueDate:'2026-10-22',
+    desc:'答卷支持导出 Excel；按角色控制可见范围：创建人看全部，部门负责人只看本部门，匿名问卷不展示作答人。',
+    executionStageId:'s1',
+    executionPlan:[
+      { id:'s1', workType:'需求分析', title:'需求分析', description:'确认导出字段与权限矩阵', assigneeId:'p04', status:'pending' },
+      { id:'s2', workType:'方案设计', title:'方案设计', description:'设计行级权限与脱敏规则', assigneeId:'p03', status:'pending' },
+      { id:'s3', workType:'实现规划', title:'实现规划', description:'规划导出与权限步骤', assigneeId:'p02', status:'pending' },
+      { id:'s4', workType:'编码实现', title:'编码实现', description:'实现导出与权限控制', assigneeId:'p01', status:'pending' },
+      { id:'s5', workType:'测试验证', title:'测试验证', description:'验证匿名与跨部门访问', assigneeId:'p05', status:'pending' },
+      { id:'s6', workType:'部署交付', title:'部署交付', description:'上线导出功能', assigneeId:'p07', status:'pending' },
+    ] },
+  { id:1308, code:'T1001308', title:'首个调研：2026 员工满意度问卷', status:'done', priority:'medium', assignee:'p04', createdBy:'p22', project:'survey', labels:['需求'], issueType:'需求', createDate:'2026-09-20', dueDate:'2026-10-02',
+    desc:'用新系统完成首个真实调研：2026 员工满意度问卷，共 32 题，覆盖 1,500 人，7 天内回收并输出分析报告。',
+    executionStageId:'s6',
+    statusHistory:[
+      { from:'backlog', to:'in_progress', time:'2026-09-21 09:00:00', authorId:'p04' },
+      { from:'in_progress', to:'in_review', time:'2026-09-30 17:30:00', authorId:'p04' },
+      { from:'in_review', to:'done', time:'2026-10-02 10:10:00', authorId:'p22' },
+    ],
+    executionPlan:[
+      { id:'s1', workType:'需求分析', title:'需求分析', description:'确认调研目标与对象', assigneeId:'p04', status:'done' },
+      { id:'s2', workType:'方案设计', title:'方案设计', description:'套用满意度模板并调整题目', assigneeId:'p04', status:'done' },
+      { id:'s3', workType:'实现规划', title:'实现规划', description:'排定发放与回收时间', assigneeId:'p04', status:'done' },
+      { id:'s4', workType:'编码实现', title:'编码实现', description:'发布问卷并跟踪回收', assigneeId:'p04', status:'done' },
+      { id:'s5', workType:'测试验证', title:'测试验证', description:'核对样本与统计口径', assigneeId:'p05', status:'done' },
+      { id:'s6', workType:'部署交付', title:'部署交付', description:'审核分析报告并发布', assigneeId:'p22', status:'done' },
+    ] },
+  { id:1309, code:'T1001309', title:'问卷系统上线部署与验收', status:'planned', priority:'high', assignee:'p07', createdBy:'p22', project:'survey', labels:['需求'], issueType:'需求', createDate:'2026-10-03', dueDate:'2026-10-30',
+    desc:'完成生产环境部署、数据备份与监控告警配置；组织业务验收并发布使用说明。',
+    executionStageId:'s1',
+    executionPlan:[
+      { id:'s1', workType:'需求分析', title:'需求分析', description:'确认部署环境与验收计划', assigneeId:'p07', status:'pending' },
+      { id:'s2', workType:'方案设计', title:'方案设计', description:'设计备份与监控方案', assigneeId:'p03', status:'pending' },
+      { id:'s3', workType:'实现规划', title:'实现规划', description:'规划上线步骤与回滚预案', assigneeId:'p07', status:'pending' },
+      { id:'s4', workType:'编码实现', title:'编码实现', description:'执行部署与配置', assigneeId:'p07', status:'pending' },
+      { id:'s5', workType:'测试验证', title:'测试验证', description:'组织业务验收', assigneeId:'p05', status:'pending' },
+      { id:'s6', workType:'部署交付', title:'部署交付', description:'发布上线', assigneeId:'p22', status:'pending' },
+    ] },
+];
+TK_TASKS.push(...TK_SURVEY_TASKS);
+
 /* ---------- 工具函数：根据 id 查名称 ---------- */
 export function tkGetStatusName(id) {
   var s = TK_STATUSES.find(function (x) { return x.id === id; });
@@ -510,7 +658,7 @@ function taskMinuteNow() {
   return now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) + ' '
     + pad(now.getHours()) + ':' + pad(now.getMinutes());
 }
-var _tasks = TK_TASKS.map(function (t) {
+function tkSeedTask(t) {
   var people = tkPeopleInProject(t.project).filter(function (person) { return TK_DEMO_PERSON_IDS.includes(person.id); });
   return Object.assign({
     initialStatus:t.status,
@@ -524,7 +672,8 @@ var _tasks = TK_TASKS.map(function (t) {
     blockedRun: createDemoBlockedRun(t),
     completedRun: createDemoCompletedRun(t),
   }, t);
-});
+}
+var _tasks = TK_TASKS.map(tkSeedTask);
 const TASKS_STORAGE_KEY = 'lingee_tasks_v2';
 try {
   var savedTasks = JSON.parse(localStorage.getItem(TASKS_STORAGE_KEY) || 'null');
@@ -588,6 +737,15 @@ try {
     return !(task.project === 'cosmic-app-dev' && task.status === 'in_review' && TK_COSMIC_REVIEW_TRIM_CODES.has(task.code));
   });
   if (_tasks.length !== reviewTrimBefore) persistTasks();
+} catch (e) { /* 本地存储不可用时保留内存数据 */ }
+/* 问卷调研演示任务：已缓存任务的浏览器按编号补种一次，不覆盖已流转的任务。 */
+try {
+  if (!localStorage.getItem('lingee_tasks_survey_v1')) {
+    var surveyCodes = new Set(_tasks.map(function (task) { return task.code; }));
+    var surveyAdds = TK_SURVEY_TASKS.filter(function (task) { return !surveyCodes.has(task.code); }).map(tkSeedTask);
+    if (surveyAdds.length) { _tasks.push(...surveyAdds); persistTasks(); }
+    localStorage.setItem('lingee_tasks_survey_v1', '1');
+  }
 } catch (e) { /* 本地存储不可用时保留内存数据 */ }
 function persistTasks() {
   localStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(_tasks));

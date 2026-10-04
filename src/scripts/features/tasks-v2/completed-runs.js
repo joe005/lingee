@@ -17,6 +17,9 @@ const COMPLETED_RUNS = {
   65: { agent:'frontend-engineer', duration:'1分59秒', result:'任务来源标签样式已统一，列表和详情显示一致。', steps:[['盘点来源标签','覆盖 Jira、TAPD、飞书、API 和对话自建。'],['应用统一视觉','统一颜色、间距与截断规则。'],['核对页面展示','任务列表和详情面板均通过视觉检查。']] },
   68: { agent:'software-qa-engineer', duration:'2分41秒', result:'项目列表翻页不再重复展示数据，分页回归通过。', steps:[['构造跨页项目样本','覆盖首页、末页和筛选后分页。'],['验证去重逻辑','翻页后项目 ID 无重复，顺序保持稳定。'],['完成回归','切换筛选和返回上一页的场景通过。']] },
   72: { agent:'software-engineer', duration:'2分23秒', result:'模块自检脚本已交付，能够检查模块导入导出关系。', steps:[['扫描源码模块','收集入口和特性模块的导入导出声明。'],['运行自检命令','npm run check 成功输出检查结果。'],['验证错误反馈','缺失导出与只读绑定赋值均能定位报错。']] },
+  1300: { agent:'general-app-product-expert', duration:'3分18秒', result:'问卷调研需求与验收标准已确认，覆盖设计、发放、回收、分析四个环节。', steps:[['访谈记录整理','从 5 场业务访谈中提炼 23 条需求，合并重复项后保留 17 条。'],['划定范围与非目标','首期不做付费问卷和外部样本采购。'],['补齐验收标准','每条需求附可观察的验收条件，评审一次通过。']] },
+  1301: { agent:'general-app-architecture-expert', duration:'4分05秒', result:'技术方案评审通过：问卷结构用 JSON Schema，答卷按问卷分区存储，分析异步计算。', steps:[['梳理模块边界','拆为问卷设计、发放、回收、分析、权限五个模块。'],['设计数据模型','问卷、题目、答卷、发放批次四张主表及索引。'],['评审风险','识别企业微信权限与大样本分析耗时两项风险并给出预案。']] },
+  1308: { agent:'general-app-team-lead', duration:'2分52秒', result:'2026 员工满意度调研问卷已发布，共 32 题，回收 1,286 份，自动生成分析报告。', steps:[['套用问卷模板','基于「员工满意度」模板调整 6 道题。'],['发放与回收','企业微信推送 1,500 人，7 天回收率 85.7%。'],['生成分析报告','输出满意度分布、部门对比和 5 条改进建议。']] },
 };
 
 export function createDemoCompletedRun(task) {
@@ -24,7 +27,7 @@ export function createDemoCompletedRun(task) {
   var content = COMPLETED_RUNS[task.id];
   if (!content) return null;
   var project = CV_PROJECTS.find(function (row) { return row.id === task.project; });
-  var team = TEAMS.find(function (row) { return row.id === task.teamId || project?.defaultTeam; });
+  var team = TEAMS.find(function (row) { return row.id === (task.teamId || project?.defaultTeam); });
   var expertId = team?.members.includes(content.agent) ? content.agent : team?.leadId;
   var expert = EXPERTS.find(function (row) { return row.id === expertId; });
   return {
