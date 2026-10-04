@@ -8,6 +8,7 @@ import { openAppDropdown } from './attach-app.js';
 
 /* ---------- Changelog / 更新日志 ---------- */
 var changelogData=[
+  {id:'79',date:'2026-10-04',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'wuhc2023',body:'功能·任务管理：已开始或已经历阶段的任务不再允许删除（菜单置灰并提示原因，批量删除仅处理可删除项），任务详情暂不支持新发评论、子任务和复制。'},
   {id:'78',date:'2026-10-04',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'平台管理',author:'wuhc2023',body:'功能·平台管理：审核驳回记入该资产的历史版本（含原因、审核人、时间和提交说明），已驳回的审核单在草稿和全部中展示，管理员可直接查看驳回原因。'},
   {id:'77',date:'2026-10-03',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'开发区与专家团',author:'wuhc2023',body:'功能·开发区与专家团：应用、智能体、技能开发页及各页签胶囊按新设计统一样式并支持状态筛选搜索，协作开发新增页面标题，专家团交付阶段改为左树右详情并可绑定多个数字员工，项目详情新增任务页签，数字员工与专家团详情新增提交审核并直接提交所在企业，提示待企业管理员审核。'},
   {id:'76',date:'2026-10-03',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'优化',module:'登录与设置',author:'wuhc2023',body:'优化·登录与设置：协作人员姓名账号统一初始化默认密码，并在设置页展示可登录账号。'},
@@ -69,6 +70,7 @@ var changelogData=[
 ];
 // 每个数据条目对应的 avatar SVG 图标（与 Build_demo 的 lucide 图标一致）
 var changelogIcons={
+  '79':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><circle cx="7" cy="8" r="3"/><path d="M2 20v-2a5 5 0 0 1 10 0v2M14 11h8M18 7v8"/></svg>',
   '78':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><circle cx="7" cy="8" r="3"/><path d="M2 20v-2a5 5 0 0 1 10 0v2M14 11h8M18 7v8"/></svg>',
   '77':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><circle cx="7" cy="8" r="3"/><path d="M2 20v-2a5 5 0 0 1 10 0v2M14 11h8M18 7v8"/></svg>',
   '76':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><circle cx="7" cy="8" r="3"/><path d="M2 20v-2a5 5 0 0 1 10 0v2M14 11h8M18 7v8"/></svg>',

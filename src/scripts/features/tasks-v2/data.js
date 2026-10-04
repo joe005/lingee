@@ -664,9 +664,22 @@ export function tkUpdateTask(id, patch) {
   }
   return t;
 }
+/* 只有从未开始、也没经历过任何阶段的任务可以删除；已开始或已流转的任务要保留执行记录。 */
+export const TK_DELETE_BLOCKED_REASON = '任务已开始或已经历阶段，不能删除';
+export function tkCanDeleteTask(task) {
+  if (!task) return false;
+  if (task.status !== 'backlog') return false;
+  if ((task.executionPlan || []).some(function (stage) { return stage && stage.status && stage.status !== 'pending'; })) return false;
+  if ((task.statusHistory || []).length) return false;
+  return !(task.comments || []).some(function (comment) { return comment?.kind === 'flow'; });
+}
+/* 返回是否真的删除；不满足条件时保持原样 */
 export function tkDeleteTask(id) {
+  var task = _tasks.find(function (x) { return x.id === id; });
+  if (!tkCanDeleteTask(task)) return false;
   _tasks = _tasks.filter(function (x) { return x.id !== id; });
   persistTasks();
+  return true;
 }
 export function tkGetViews() { return _views; }
 export function tkAddView(name, config) {

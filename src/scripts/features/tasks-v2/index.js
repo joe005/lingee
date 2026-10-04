@@ -76,7 +76,7 @@ import {
   TK_VIEWS, TK_FILTER_FIELDS, TK_OPERATORS, TK_TASKS, tkCurrentUserId, tkPeopleInProject, tkProjectsForCurrentUser,
   tkParticipatesCurrentUser, tkIsProjectOwner,
   tkGetTaskArtifacts,
-  tkGetTasks, tkSetTasks, tkAddTask, tkUpdateTask, tkDeleteTask,
+  tkGetTasks, tkSetTasks, tkAddTask, tkUpdateTask, tkDeleteTask, tkCanDeleteTask, TK_DELETE_BLOCKED_REASON,
   tkGetViews, tkAddView, tkDeleteView, tkRenameView,
   tkGetStatusName, tkGetPriorityName, tkGetPerson, tkGetProjectName,
   tkGetStatusObj, tkGetPriorityObj,
@@ -407,12 +407,14 @@ function showCardMenu(taskId, anchorEl, detailOnly) {
   };
   menu.innerHTML = ''
     + (detailOnly || anchorEl.closest('.tk-card') || !tkCanStartTask(tkGetTasks().find(function (task) { return task.id === Number(taskId); })) ? '' : '<div class="tk-card-menu-item" data-card-task="' + taskId + '" data-card-action="chat">' + (taskStartLegacy ? TASK_START_CHAT_ICON : TASK_START_PLAY_ICON) + '<span>' + (taskStartLegacy ? '发起会话' : '开始执行') + '</span></div>')
-    + (detailOnly ? '' : '<div class="tk-card-menu-item" data-card-task="' + taskId + '" data-card-action="subtask">' + itemSvg.subtask + '<span>创建子任务</span></div>')
-    + '<div class="tk-card-menu-item" data-card-task="' + taskId + '" data-card-action="copy">' + itemSvg.copy + '<span>复制</span></div>'
-    + '<div class="tk-card-menu-item danger" data-card-task="' + taskId + '" data-card-action="delete">' + itemSvg.delete + '<span>删除</span></div>';
+    + (detailOnly ? '' : '<div class="tk-card-menu-item" data-card-task="' + taskId + '" data-card-action="copy">' + itemSvg.copy + '<span>复制</span></div>')
+    + (tkCanDeleteTask(tkGetTasks().find(function (task) { return task.id === Number(taskId); }))
+      ? '<div class="tk-card-menu-item danger" data-card-task="' + taskId + '" data-card-action="delete">' + itemSvg.delete + '<span>删除</span></div>'
+      : '<div class="tk-card-menu-item danger is-disabled" aria-disabled="true" title="' + TK_DELETE_BLOCKED_REASON + '" data-card-task="' + taskId + '" data-card-action="delete">' + itemSvg.delete + '<span>删除</span></div>');
   document.body.appendChild(menu);
   menu.querySelectorAll('[data-card-action]').forEach(function(item) {
     item.addEventListener('click', function() {
+      if (item.getAttribute('aria-disabled') === 'true') { toast(TK_DELETE_BLOCKED_REASON, 'warning'); return; }
       var act = item.getAttribute('data-card-action');
       var aid = parseInt(item.getAttribute('data-card-task'), 10);
       handleCardAction(act, aid);
@@ -444,6 +446,7 @@ function confirmTaskStageApproval(task, reopenDrawer, onApproved) {
 function confirmDeleteTask(taskId) {
   var task = tkGetTasks().find(function (item) { return item.id === Number(taskId); });
   if (!task) return;
+  if (!tkCanDeleteTask(task)) { toast(TK_DELETE_BLOCKED_REASON, 'warning'); return; }
   showTaskConfirm('确定删除任务「' + task.title + '」吗？', function () {
     if (state.drawerTaskId === task.id) closeDrawer();
     tkDeleteTask(task.id);
@@ -2660,32 +2663,6 @@ function renderTaskComments(t) {
     + agentStageHtml + commentsHtml + (systemEvents.length ? renderTaskSystemFeedGroup(systemEvents, false) : '') + '</div>';
 }
 
-function renderTaskCommentComposer() {
-  return '<div class="tk-comment-composer" aria-label="发表评论">'
-    + '<textarea class="tk-comment-composer-input" rows="2" placeholder="留下评论… 使用 @ 提及人员、智能体或专家团成员" aria-label="评论内容" aria-autocomplete="list" aria-controls="tkMentionPanel"></textarea>'
-    + '<div class="tk-comment-composer-foot">'
- + '<button type="button" class="tk-comment-composer-attach" data-action="comment-attach" aria-label="添加任务附件" title="添加任务附件"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></button>'
-      + '<button type="button" class="tk-comment-composer-send" data-action="comment-send" aria-label="发送评论" title="发送评论" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 7-7 7 7M12 5v14"/></svg></button>'
-    + '</div></div>';
-}
-
-function sendTaskComment() {
-  if (!state.drawerTaskId) return;
-  var task = tkGetTasks().find(function (row) { return row.id === state.drawerTaskId; });
-  var input = els.tkDrawerBody.querySelector('.tk-comment-composer-input');
-  var text = input?.value.trim();
-  if (!task || !text) return;
-  var newComments = (task.comments || []).concat({
-    kind:'comment', authorId:tkCurrentUserId(), createdAt:taskCommentTimestamp(),
-    status:task.status, assignee:task.assignee, text:text,
-  });
-  tkUpdateTask(task.id, { comments: newComments });
-  closeMentionPanel();
-  render();
-  openDrawer(task.id);
-  els.tkDrawerBody.querySelector('.tk-comment-composer-input')?.focus();
-}
-
 /* 流转操作记录：kind 为 'flow'；历史数据没有 kind，用 assignee 字段识别。 */
 function isFlowRecord(entry) {
   return entry && (entry.kind === 'flow' || (!entry.kind && entry.assignee));
@@ -2771,10 +2748,8 @@ function openDrawer(taskId) {
           '</div>' +
           '<div class="tk-attach-list" id="tkAttachList"></div>' +
         '</div>' +
-        renderSubtasksSection(t) +
         '<div class="tk-drawer-comments"><div class="tk-drawer-comments-head"><div class="tk-drawer-comments-title">动态</div></div>' +
           renderTaskComments(t) +
-          renderTaskCommentComposer() +
         '</div>' +
       '</div>' +
       '<div class="tk-drawer-tab-content" data-tab-content="changelog" hidden>' +
@@ -3465,10 +3440,6 @@ function bindEvents() {
   els.tkDrawerBody.addEventListener('input', function (e) {
     if (!e.target.matches('textarea')) return;
     var ta = e.target;
-    if (ta.classList.contains('tk-comment-composer-input')) {
-      var send = els.tkDrawerBody.querySelector('.tk-comment-composer-send');
-      if (send) send.disabled = !ta.value.trim();
-    }
     var pos = ta.selectionStart;
     var text = ta.value.substring(0, pos);
     var atPos = text.lastIndexOf('@');
@@ -3480,11 +3451,6 @@ function bindEvents() {
   });
   els.tkDrawerBody.addEventListener('keydown', function (e) {
     if (e.isComposing || e.keyCode === 229) return;
-    if (e.target.matches('.tk-comment-composer-input') && (e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-      e.preventDefault();
-      sendTaskComment();
-      return;
-    }
     if (!mentionPanel || !mentionPanel.classList.contains('show')) return;
     if (!e.target.matches('textarea')) return;
     if (e.key === 'ArrowDown') {
@@ -3542,14 +3508,9 @@ function bindEvents() {
       }
       return;
     }
-    if (e.target.closest('[data-action="comment-send"]')) { sendTaskComment(); return; }
     if (e.target.closest('[data-action="blocked-retry"]')) {
       var retryTask = tkGetTasks().find(function (row) { return row.id === state.drawerTaskId; });
       if (retryTask?.blockedRun) retryBlockedTask(retryTask);
-      return;
-    }
-    if (e.target.closest('[data-action="comment-attach"]')) {
-      els.tkDrawerBody.querySelector('#tkAttachInput')?.click();
       return;
     }
     var labelRemove = e.target.closest('[data-label-remove]');
@@ -4009,13 +3970,15 @@ function bindEvents() {
       if (action === 'delete') {
         var delCount = state.selectedIds.size;
         if (!delCount) return;
-        var ids = Array.from(state.selectedIds);
-        showTaskConfirm('确定删除选中的 ' + delCount + ' 个任务吗？', function () {
+        var ids = Array.from(state.selectedIds).filter(function (id) { return tkCanDeleteTask(tkGetTasks().find(function (task) { return task.id === id; })); });
+        var blocked = delCount - ids.length;
+        if (!ids.length) { hidePopover(); toast('所选任务均已开始或已经历阶段，不能删除', 'warning'); return; }
+        showTaskConfirm('确定删除选中的 ' + ids.length + ' 个任务吗？' + (blocked ? '另有 ' + blocked + ' 个已开始或已经历阶段的任务不会被删除。' : ''), function () {
           ids.forEach(function (id) { tkDeleteTask(id); });
           state.selectedIds.clear();
           hidePopover();
           render();
-          toast('成功删除 ' + delCount + ' 个任务', 'success');
+          toast('成功删除 ' + ids.length + ' 个任务' + (blocked ? '，' + blocked + ' 个不可删除已保留' : ''), 'success');
         });
       }
     });

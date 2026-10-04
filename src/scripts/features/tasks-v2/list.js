@@ -108,7 +108,6 @@ function showCardMenu(taskId, anchorEl, detailOnly) {
   };
   menu.innerHTML = ''
     + (detailOnly || anchorEl.closest('.tk-card') || !tkCanStartTask(tkGetTasks().find(function (task) { return task.id === Number(taskId); })) ? '' : '<div class="tk-card-menu-item" data-card-task="' + taskId + '" data-card-action="chat">' + (taskStartLegacy ? TASK_START_CHAT_ICON : TASK_START_PLAY_ICON) + '<span>' + (taskStartLegacy ? '发起会话' : '开始任务') + '</span></div>')
-    + (detailOnly ? '' : '<div class="tk-card-menu-item" data-card-task="' + taskId + '" data-card-action="subtask">' + itemSvg.subtask + '<span>创建子任务</span></div>')
     + '<div class="tk-card-menu-item" data-card-task="' + taskId + '" data-card-action="copy">' + itemSvg.copy + '<span>复制</span></div>'
     + '<div class="tk-card-menu-item danger" data-card-task="' + taskId + '" data-card-action="delete">' + itemSvg.delete + '<span>删除</span></div>';
   document.body.appendChild(menu);
@@ -144,7 +143,7 @@ function startTaskExec(taskId) {
 
 function handleCardAction(act, aid) {
   if (act === 'chat') { startTaskExec(aid); }
-  else if (act === 'delete') { tkDeleteTask(aid); render(); toast('删除成功', 'success'); }
+  else if (act === 'delete') { if (tkDeleteTask(aid)) { render(); toast('删除成功', 'success'); } else toast('任务已开始或已经历阶段，不能删除', 'warning'); }
   else if (act === 'copy') {
     var src = tkGetTasks().find(function(x){return x.id===aid;});
     if (src) { tkAddTask(Object.assign({}, src, {labels:(src.labels||[]).slice(), createDate:new Date().toISOString().slice(0,10)})); render(); toast('复制成功', 'success'); }
@@ -1414,8 +1413,8 @@ $$('[data-bulk]').forEach(function (btn) {
         return;
       }
       if (action === 'delete') {
-        var delCount = taskViewState.selectedIds.size;
-        taskViewState.selectedIds.forEach(function (id) { tkDeleteTask(id); });
+        var delCount = 0;
+        taskViewState.selectedIds.forEach(function (id) { if (tkDeleteTask(id)) delCount++; });
         taskViewState.selectedIds.clear();
         hidePopover();
         render();
@@ -1499,7 +1498,7 @@ els.tkBoardScroll.addEventListener('click', function (e) {
       var aid = cardAct.getAttribute('data-card-task');
       var act = cardAct.getAttribute('data-card-action');
       if (act === 'chat') { startTaskExec(parseInt(aid, 10)); }
-      else if (act === 'delete') { tkDeleteTask(aid); render(); }
+      else if (act === 'delete') { if (tkDeleteTask(aid)) render(); else toast('任务已开始或已经历阶段，不能删除', 'warning'); }
       else if (act === 'copy') { var src = tkGetTasks().find(function(x){return x.id==aid;}); if (src) { var c = Object.assign({}, src, {id: Date.now(), code: 'T' + String(1000000 + Date.now() % 1000000)}); tkAddTask(c); render(); } }
       else if (act === 'subtask') { openTaskModal(null, parseInt(aid, 10)); document.querySelectorAll('.tk-card-menu').forEach(function(m){m.remove();}); return; }
       document.querySelectorAll('.tk-card-menu').forEach(function(m){m.remove();});
@@ -1589,7 +1588,7 @@ els.tkListBody.addEventListener('click', function (e) {
       var aid2 = cardAct2.getAttribute('data-card-task');
       var act2 = cardAct2.getAttribute('data-card-action');
       if (act2 === 'chat') { startTaskExec(parseInt(aid2, 10)); }
-      else if (act2 === 'delete') { tkDeleteTask(aid2); render(); }
+      else if (act2 === 'delete') { if (tkDeleteTask(aid2)) render(); else toast('任务已开始或已经历阶段，不能删除', 'warning'); }
       else if (act2 === 'copy') { var src2 = tkGetTasks().find(function(x){return x.id==aid2;}); if (src2) { var c2 = Object.assign({}, src2, {id: Date.now(), code: 'T' + String(1000000 + Date.now() % 1000000)}); tkAddTask(c2); render(); } }
       else if (act2 === 'subtask') { openTaskModal(null, parseInt(aid2, 10)); document.querySelectorAll('.tk-card-menu').forEach(function(m){m.remove();}); return; }
       document.querySelectorAll('.tk-card-menu').forEach(function(m){m.remove();});
