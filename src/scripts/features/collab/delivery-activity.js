@@ -1,4 +1,4 @@
-/* 项目与任务管理共用的本地交付过程样例；优先使用任务选择的专家团。 */
+/* 项目与任务管理共用的本地交付过程样例；优先使用任务选择的智能体团队。 */
 import { EXPERTS, PRESET_TEAMS } from '../expert/data.js';
 import { TEAMS } from '../expert/store.js';
 import { taskExecutionStages } from '../tasks-v2/task-execution.js';

@@ -29,7 +29,7 @@ export function createDemoCompletedRun(task) {
   var expert = EXPERTS.find(function (row) { return row.id === expertId; });
   return {
     agentName:expert?.name || team?.name || '任务智能体',
-    teamName:team?.name || '专家团',
+    teamName:team?.name || '智能体团队',
     completedAt:task.createDate + ' 16:40',
     duration:content.duration,
     result:content.result,

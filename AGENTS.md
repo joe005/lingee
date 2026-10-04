@@ -34,7 +34,7 @@ Consult the wiki when working on features, debugging, or onboarding to a new are
 
 ### 需求文档同步
 
-`docs/README.md` 是功能需求文档入口，按模块维护：登录权限、任务、项目协作、数字员工与专家团、管理平台、设置。新增或修改页面交互时，同一提交必须同步更新对应模块文档；只改样式且不改变交互时可不更新。文档只记录目标、入口、主要状态、关键流程和原型边界，保持简洁；专题演示或历史说明放在现有独立文档中，不复制到模块文档。
+`docs/README.md` 是功能需求文档入口，按模块维护：登录权限、任务、项目协作、智能体与智能体团队、管理平台、设置。新增或修改页面交互时，同一提交必须同步更新对应模块文档；只改样式且不改变交互时可不更新。文档只记录目标、入口、主要状态、关键流程和原型边界，保持简洁；专题演示或历史说明放在现有独立文档中，不复制到模块文档。
 
 提交代码时检查对应 `docs/*.md` 是否同步；若本次修改没有对应交互变化，在提交说明中注明“文档无需更新”。
 
@@ -89,8 +89,8 @@ skill 入口未出现在可用列表时，直接读取上述文件执行；验�
   `src/styles/parts/collab/*workbench*.css`、`src/scripts/features/collab/` 的任务模块。
 - 项目：`src/views/collab/projects.html`、`src/modals/collab/projects.html`、
   `src/styles/parts/collab/*projects*.css`、`project-view.js` 与 `projects.js`。
-- 专家与专家团：各自的 `src/views/collab/` 片段；专家卡片样式在
-  `src/styles/parts/collab/*experts*.css`，专家团列表复用 `apps` 样式及
+- 专家与智能体团队：各自的 `src/views/collab/` 片段；专家卡片样式在
+  `src/styles/parts/collab/*experts*.css`，智能体团队列表复用 `apps` 样式及
   `src/scripts/features/expert/` 模块。
 - 设置：`src/views/collab/settings.html`、`src/modals/collab/settings.html`、
   `src/styles/parts/collab/*settings*.css`、`persons.js`、`config.js`。历史团队数据迁移保留在 `squads.js`。

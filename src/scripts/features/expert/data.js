@@ -1,9 +1,9 @@
-/* 专家 / 专家团：内置数据、能力项字典、开工输入
+/* 专家 / 智能体团队：内置数据、能力项字典、开工输入
    拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
    由 main.js 按拆分前的原始顺序调用。 */
 
 /* ============================================================
-   专家 / 专家团
+   专家 / 智能体团队
    数据取自 lingee-build/packages/opencode/builtin-experts/
    技能名取自 packages/opencode/builtin-skills/
    ============================================================ */
@@ -65,7 +65,7 @@ function skillCatalog(){
 
 var EXPERTS=[
   {id:'software-team-lead',k:'lead',name:'软件团队负责人',role:'交付负责人',by:'Lingee 内置',
-   desc:'协调范围、分工、集成、风险与交付闭环，是专家团里唯一能开 kickoff 与做最终集成确认的角色。',
+   desc:'协调范围、分工、集成、风险与交付闭环，是智能体团队里唯一能开 kickoff 与做最终集成确认的角色。',
    tags:['交付管理','团队协调'],modes:['分析','设计','集成','评审','验证','恢复'],
    comp:['delivery.orchestration · principal','delivery.integration · advanced'],
    skills:['delivery-planner','integration-review'],
@@ -187,8 +187,8 @@ function setBuiltinExperts(items){ BUILTIN_EXPERTS=items; rebuildExperts(); }
 var AV_KEYS=['lead','pm','arch','eng','qa','cr','sec','ana','fe','ux','form','flow','rpt','plug','api'];
 var WORK_MODES=['分析','设计','实现','集成','评审','验证','恢复'];
 
-/* ---------- 专家团流程阶段 ----------
-   专家团沿这条流程推进交付：requirements / design / planning /
+/* ---------- 智能体团队流程阶段 ----------
+   智能体团队沿这条流程推进交付：requirements / design / planning /
    implementation / verification / delivery，各阶段由对应工作模式的成员认领。 */
 var STAGES=[
   {id:'requirements',name:'需求分析',desc:'明确目标、范围与验收条件'},
@@ -207,7 +207,7 @@ var STAGE_MODES={
   verification:['验证'],
   delivery:['集成']
 };
-/* 同一专家团可按问题类型采用不同交付路径；阶段 id 沿用任务执行层的能力映射。 */
+/* 同一智能体团队可按问题类型采用不同交付路径；阶段 id 沿用任务执行层的能力映射。 */
 var TEAM_STAGE_SCENARIOS=[
   {id:'feature',name:'功能开发',hint:'新需求、功能建设',example:'新增一项业务功能',stages:STAGES},
   {id:'bug',name:'缺陷修复',hint:'错误、异常、回归问题',example:'修复审批提交失败',stages:[
@@ -311,7 +311,7 @@ function compChip(v){
     +(c.level?'<i class="ptag-lv lv-'+xesc(c.lv)+'">'+xesc(c.level)+'</i>':'')+'</span>';
 }
 var PRESET_TEAMS=[
-  {id:'cosmic-app-dev',preset:true,name:'苍穹应用开发专家团',by:'Lingee 内置',
+  {id:'cosmic-app-dev',preset:true,name:'苍穹应用开发智能体团队',by:'Lingee 内置',
    desc:'面向苍穹应用完整交付，覆盖需求、表单、流程、报表、二开插件、接口与质量验证。',
    domains:['苍穹应用','表单','工作流','报表','集成'],
    leadId:'cosmic-team-lead',
@@ -319,7 +319,7 @@ var PRESET_TEAMS=[
    cmds:[['帮我在苍穹上做一套请假申请，从单据到审批','表单、流程、报表、接口一体化交付'],
          ['这个业务要在苍穹落地，帮我出方案并实现','先出需求规格，再按依赖拆分实现与验证'],
          ['苍穹单据、流程和报表都要改，帮我排一下','按依赖顺序编排配置、二开与验证任务']]},
-  {id:'general-app-dev',preset:true,name:'通用应用开发专家团',by:'Lingee 内置',
+  {id:'general-app-dev',preset:true,name:'通用应用开发智能体团队',by:'Lingee 内置',
    desc:'面向 Web 与通用业务应用，覆盖产品、架构、体验、前后端实现、测试与集成交付。',
    domains:['通用应用','Web','前端','产品设计'],
    leadId:'general-app-team-lead',

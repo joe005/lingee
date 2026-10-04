@@ -7,11 +7,11 @@
 | 登录与权限 | [01-login-permission.md](01-login-permission.md) | 登录页、账号菜单 |
 | 任务 | [02-tasks.md](02-tasks.md) | 协作开发 → 任务 |
 | 项目与协作 | [03-projects-collaboration.md](03-projects-collaboration.md) | 协作开发 → 项目、设置 |
-| 数字员工与专家团 | [04-experts-and-teams.md](04-experts-and-teams.md) | 协作开发 → 数字员工、专家团 |
+| 智能体与智能体团队 | [04-experts-and-teams.md](04-experts-and-teams.md) | 协作开发 → 智能体、智能体团队 |
 | 管理平台 | [05-platform-management.md](05-platform-management.md) | 原厂管理（云端）、租户管理（云端） |
 | 设置 | [06-settings.md](06-settings.md) | 协作开发 → 设置 |
 
-专题说明：专家团领域模型见 [expert-team-spec.md](expert-team-spec.md)，演示步骤见 [专家团演示场景.md](专家团演示场景.md) 和 [smart-site-demo-script.md](smart-site-demo-script.md)。
+专题说明：智能体团队领域模型见 [expert-team-spec.md](expert-team-spec.md)，演示步骤见 [智能体团队演示场景.md](智能体团队演示场景.md) 和 [smart-site-demo-script.md](smart-site-demo-script.md)。
 
 ## 更新规则
 

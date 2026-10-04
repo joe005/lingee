@@ -42,7 +42,7 @@ function renderExpertGrid(){
     });
     html=rows.map(function(t){
       return '<div class="app-card x-card" data-team="'+t.id+'">'
-        +'<button type="button" class="x-call" data-call-team="'+t.id+'" title="对话这个专家团">对话</button>'
+        +'<button type="button" class="x-call" data-call-team="'+t.id+'" title="对话这个智能体团队">对话</button>'
         +'<div class="card-top">'+facesHtml(t.members,4)
         +'<div class="card-titles"><div class="card-title-row"><span class="card-title">'+xesc(t.name)+'</span>'+assetSourceBadge('team',t)
         +'</div>'
