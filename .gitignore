@@ -48,3 +48,4 @@ serve-preview.mjs
 !.dev.vars.example
 .env*
 !.env.example
+design-ref/

@@ -6,7 +6,7 @@
     mask-image:linear-gradient(135deg,transparent 45%,#000);opacity:.55;pointer-events:none;z-index:0}
   #view-apps>*,#view-skills>*,#view-agents>*,#view-experts>*{max-width:1100px;width:100%}
   .apps-head{display:flex;align-items:center;justify-content:space-between;position:relative;z-index:2;margin-bottom:22px}
-  .apps-title{font-size:23px;font-weight:600;color:#0f0f0f;letter-spacing:.5px}
+  .apps-title{font-size:23px;font-weight:600;color:var(--text-title);letter-spacing:.5px}
   .apps-head-right{display:flex;align-items:center;gap:10px}
   .btn-new{display:flex;align-items:center;gap:7px;background:#495dff;color:#fff;border:none;
     padding:9px 12px;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;flex:none;
@@ -43,7 +43,7 @@
   .tabs{display:flex;gap:2px}
   .tab{padding:8px 16px;border-radius:10px;color:#595959;font-size:14px;cursor:pointer;font-weight:500}
   .tab:hover{background:#f0f0f0}
-  .tab.active{background:#fff;color:#0f0f0f;box-shadow:var(--pill-shadow)}
+  .tab.active{background:#fff;color:var(--text-title);box-shadow:var(--pill-shadow)}
   .apps-search input{border:none;outline:none;background:none;font-size:14px;color:var(--text);width:100%}
   .apps-search input::placeholder{color:var(--text-soft)}
   .apps-search .ic{width:16px;height:16px;color:var(--text-soft)}

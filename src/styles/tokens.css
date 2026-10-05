@@ -76,6 +76,22 @@
   /* ---- 圆角 ---- */
   --r-xl: 16px;
   --asset-pill-radius: 999px; /* 智能体与智能体团队工具栏的胶囊控件 */
+
+  /* ---- 目标视觉（Figma「开发-研发协同」）：灰画布 + 无边框白卡 ----
+     新页面和改版页面使用；旧页面逐页迁移，不批量替换。
+     阴影、圆角按截图估算，拿到 Figma 变量后校准 */
+  --canvas-bg: #f7f7fa;          /* 内容区画布 */
+  --nav-bg: #f1f1f6;             /* 侧栏 */
+  --nav-active: #e3e3e7;         /* 侧栏选中项 */
+  --segment-track: #ededf0;      /* 分段页签底槽 */
+  --text-title: #0f0f0f;         /* 页面标题、Hero */
+  --tag-bg: #f6f6f6;             /* 白卡上的灰标签 */
+  --overlay: rgba(0, 0, 0, 0.46);/* 弹窗遮罩 */
+  --card-shadow: 0 1px 3px rgba(20, 20, 50, 0.05);
+  --r-card: 20px;
+  --r-modal: 24px;
+  --control-h: 36px;             /* 主按钮、搜索框、选择芯片 */
+  --control-h-sm: 32px;          /* 分段页签、单行输入框 */
 }
 
 :root {
