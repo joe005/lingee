@@ -21,9 +21,9 @@ export function assetTagsHtml(values){
   const tags=[...new Set((values||[]).filter(Boolean))];
   return tags.length?`<div class="card-tags">${tags.slice(0,4).map(tag=>`<span class="ptag">${xesc(tag)}</span>`).join('')}${tags.length>4?`<span class="ptag">+${tags.length-4}</span>`:''}</div>`:'';
 }
-export function assetModesHtml(values){
-  const modes=[...new Set((values||[]).filter(Boolean))];
-  return modes.length?`<div class="x-modes" title="可承担 ${xesc(modes.join(' / '))}"><span class="x-modes-k">可承担</span>${modes.slice(0,3).map(mode=>`<span class="x-mode">${xesc(mode)}</span>`).join('')}${modes.length>3?`<span class="x-mode x-mode-more">+${modes.length-3}</span>`:''}</div>`:'';
+/* 卡片上不再展示「可承担的工作」；保留函数供各页面调用，统一返回空 */
+export function assetModesHtml(){
+  return '';
 }
 export function teamWorkModes(team,lookup=id=>EX[id]){
   return [...new Set((team.members||[]).flatMap(id=>lookup(id)?.modes||[]))];

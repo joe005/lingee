@@ -16,6 +16,7 @@
   --text-secondary: #767676;
   --text-muted: rgba(0, 0, 0, 0.64);
   --text-soft: #b8b8b8;
+  --text-label: #8a8a8a;         /* 管理板块：字段标签文字 */
 
   /* ---- 背景与填充 ---- */
   --bg: #ffffff;
@@ -40,6 +41,8 @@
   --review-border: #e8c88e;
   --danger: #e04a3a;
   --danger-bg: #fff1f0;
+  --blue-bg: #e8f0fe;            /* 管理板块：信息类标签底色 */
+  --purple-bg: #f1eafe;          /* 管理板块：紫色标签底色 */
   --dot-blue: #4d89ff;
   --task-done-icon: #0f92f7;
   --dot-orange: #ff8d42;
@@ -94,4 +97,4 @@
   --tb-detail-primary-width: 120px;
 }
 
-:root{--asset-expert-card-height:208px;--asset-card-title-size:13px;}
+:root{--asset-expert-card-height:208px;--asset-expert-card-height-compact:176px;--asset-card-title-size:13px;}

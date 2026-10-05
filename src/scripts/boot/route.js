@@ -7,6 +7,7 @@ import { dsNavEl, renderOverview } from '../features/design/index.js';
 import { stripBase } from '../core/base-path.js';
 import { openChangelog } from '../features/changelog.js';
 import { canAccessRestrictedMenus, getPlatformIdentity } from '../features/login.js';
+import { setMgrPendingRoute } from '../features/manager/nav.js';
 /* 启动路由：从路径 / 旧链接 / localStorage 还原视图
    拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
    由 main.js 按拆分前的原始顺序调用。 */
@@ -19,7 +20,7 @@ var _pathParts=stripBase(location.pathname).replace(/^\/+|\/+$/g,'').split('/');
 var _origSearch=location.search;
 /* showView() 对认不出的名字会把九个视图全部隐藏（线上曾因此登录后一片空白），
    所以路径段必须先过白名单，认不出就按「没指定」处理，走默认/localStorage 恢复 */
-var VIEW_NAMES=['home','newtask','chat','apps','collab','skills','agents','settings','design','experts','tasks','changelog','inbox','platform'];
+var VIEW_NAMES=['home','newtask','chat','apps','collab','skills','agents','settings','design','experts','tasks','changelog','inbox','platform','manager','work'];
 var _seg=_pathParts[0]||'';
 var dsViewParam=VIEW_NAMES.indexOf(_seg)>=0 ? _seg : '';
 var dsSearch;
@@ -61,6 +62,13 @@ export function initRoute() {
     }
   }else if(dsViewParam==='changelog'){
     openChangelog();
+  }else if(dsViewParam==='work'){
+    /* 工作板块的页签与菜单在 initWork 里按视图是否可见还原 */
+    showView('work');
+  }else if(dsViewParam==='manager'){
+    /* 管理板块最后才初始化，这里先显示视图并记下要打开的菜单和项目 */
+    showView('manager');
+    setMgrPendingRoute(new URLSearchParams(_origSearch));
   }else if(dsViewParam && dsViewParam!=='newtask' && !(dsViewParam==='platform' && !canAccessRestrictedMenus())){
     showView(dsViewParam);
     if(dsViewParam==='skills') setNavActive('技能开发');

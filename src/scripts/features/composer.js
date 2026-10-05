@@ -1381,6 +1381,8 @@ function createArtifactCard(){
   function openPreview(){
     var view=document.getElementById('view-chat');
     var frame=document.getElementById('chatPreviewFrame');
+    var side=document.getElementById('chatPreviewSide');
+    if(side) side.classList.remove('is-browser');
     if(frame){
       var html=billTemplateWithTokens;
       var blob=new Blob([html],{type:'text/html'});
@@ -1749,9 +1751,13 @@ export function sendComposerText(text){
 var chatInput=$('#chatInput');
 var chatSendBtn=$('#chatSendBtn');
 function refreshChatSend(){ chatSendBtn.classList.toggle('active', builderInputText().length>0); }
+/* 演示流程（如智能体开发）可临时接管会话发送；返回 true 表示已处理 */
+var chatSendInterceptor=null;
+export function setChatSendInterceptor(fn){ chatSendInterceptor=typeof fn==='function'?fn:null; }
 function chatDoSend(){
   var t=builderInputText();
   if(!t){ chatInput.focus(); return; }
+  if(chatSendInterceptor&&chatSendInterceptor(t)){ chatInput.innerHTML=''; refreshChatSend(); return; }
   var assetEditing=chatSessions.find(function(row){return row.id===activeSessionId&&row.assetEdit;});
   if(assetEditing){
     var edit=assetEditing.assetEdit;

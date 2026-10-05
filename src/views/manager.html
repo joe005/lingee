@@ -1,0 +1,280 @@
+<!-- ===================== 管理 ===================== -->
+<!-- 管理板块：本次复刻演示范围为「项目」列表与项目详情。
+     决策中心 / AI组织 等菜单保留入口，点击提示不在演示范围（见 features/manager/nav.js）。 -->
+<div class="view hidden" id="view-manager">
+<div class="mgr-panel" id="mgr-panel-projects" data-mgr-panel="projects">
+
+  <!-- 项目列表（对齐管理原型复刻：标题+副标题+新建按钮、管理项目卡片栅格、底部问灵基） -->
+  <div id="mgrProjList">
+    <div class="mgr-projects-head">
+      <div class="mgr-projects-heading">
+        <h1>项目</h1>
+      </div>
+      <div class="mgr-projects-actions"><button type="button" class="mgr-btn mgr-btn--primary" id="mgrProjNew">＋ 新建项目</button></div>
+    </div>
+    <p class="mgr-projects-sub">全部在跑的管理项目。卡片上是它当前的目标、风险与待决策，点进去是项目详情。</p>
+    <div class="mgr-scroll">
+      <div class="mgr-wrap">
+        <div class="mgr-mgrid" id="mgrProjCards"></div>
+      </div>
+    </div>
+    <div class="mgr-pd-ask mgr-list-ask">
+      <textarea id="mgrListAskInput" rows="2" placeholder="问灵基：哪个项目要出问题了？" aria-label="问灵基"></textarea>
+      <div class="mgr-pd-ask-bar">
+        <span class="mgr-pd-ask-hint">Enter 发送，Shift + Enter 换行</span>
+        <button type="button" class="mgr-pd-ask-send" id="mgrListAskSend" aria-label="发送"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5"/><path d="m5 12 7-7 7 7"/></svg></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 项目详情：计划与任务工作台 -->
+  <div id="mgrProjDetail" class="hidden">
+    <div class="mgr-scroll">
+      <div class="mgr-wrap">
+        <nav class="mgr-breadcrumb" aria-label="项目路径">
+          <button type="button" class="mgr-breadcrumb-back" data-mgr-proj-back>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>项目
+          </button>
+          <span class="mgr-breadcrumb-sep" aria-hidden="true">/</span>
+          <span id="mgrProjCrumbName"></span>
+        </nav>
+        <div class="mgr-proj-head">
+          <h1 id="mgrProjDetailName"></h1>
+          <span id="mgrProjDetailTags"></span>
+          <div class="mgr-proj-head-actions">
+            <button type="button" class="mgr-btn mgr-btn--primary" data-mgr-invite>邀请成员</button>
+            <button type="button" class="mgr-icon-btn" data-mgr-members aria-label="项目成员" data-tooltip="项目成员">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </button>
+            <button type="button" class="mgr-icon-btn" data-mgr-settings aria-label="项目设置" data-tooltip="项目设置">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </button>
+            <div class="mgr-proj-more">
+              <button type="button" class="mgr-icon-btn" data-mgr-proj-more aria-haspopup="menu" aria-expanded="false" aria-label="更多项目操作" data-tooltip="更多">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+              </button>
+              <div class="mgr-proj-more-menu" role="menu" hidden>
+                <button type="button" role="menuitem" data-mgr-proj-rename>重命名项目</button>
+                <button type="button" role="menuitem" class="is-danger" data-mgr-proj-delete>删除项目</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mgr-pd-layout">
+          <!-- 主栏：计划与任务 / 动态 -->
+          <section class="mgr-card mgr-pd-main">
+            <div class="mgr-pd-tabs">
+              <div class="mgr-pd-tablist" role="tablist" aria-label="项目详情页签">
+                <button type="button" class="mgr-pd-tab active" data-pdtab="plan" role="tab" aria-selected="true">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>计划与任务
+                </button>
+                <button type="button" class="mgr-pd-tab" data-pdtab="feed" role="tab" aria-selected="false">动态</button>
+              </div>
+              <div class="mgr-pd-views" id="mgrPdViews" role="tablist" aria-label="任务视图">
+                <button type="button" class="mgr-pd-view active" data-pdview="list">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg>列表
+                </button>
+                <button type="button" class="mgr-pd-view" data-pdview="milestone">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 21V4"/><path d="M6 4h12l-2.5 4L18 12H6"/></svg>里程碑
+                </button>
+                <button type="button" class="mgr-pd-view" data-pdview="gantt">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 6h10M8 12h12M4 18h8"/></svg>甘特图
+                </button>
+              </div>
+            </div>
+            <!-- 计划与任务（工具栏与表格由 features/manager/plan.js 渲染） -->
+            <div id="mgrPdPlanPane"></div>
+            <!-- 动态 -->
+            <div id="mgrPdFeedPane" class="hidden"></div>
+          </section>
+          <!-- 右栏 -->
+          <aside class="mgr-pd-rail" id="mgrPdRail"></aside>
+        </div>
+      </div>
+    </div>
+    <!-- 底部问灵基输入条（演示）：固定在详情底部，不随内容滚动 -->
+    <div class="mgr-pd-ask">
+      <textarea id="mgrPdAskInput" rows="2" placeholder="问灵基：就「计划与任务」这个模块提问" aria-label="问灵基"></textarea>
+      <div class="mgr-pd-ask-bar">
+        <span class="mgr-pd-ask-hint">Enter 发送，Shift + Enter 换行</span>
+        <button type="button" class="mgr-pd-ask-send" id="mgrPdAskSend" aria-label="发送"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5"/><path d="m5 12 7-7 7 7"/></svg></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 议题弹窗 -->
+  <div class="sync-overlay mgr-modal" id="mgrIssuesOverlay" style="display:none" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="mgrIssuesTitle">
+    <div class="sync-modal mgr-railmodal">
+      <div class="sync-modal__header mgr-projedit-header">
+        <span class="mgr-projedit-title" id="mgrIssuesTitle">议题</span>
+        <button type="button" class="sync-modal__close mgr-projedit-close" data-mgr-issues-close aria-label="关闭议题弹窗">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="sync-modal__body" id="mgrIssuesBody"></div>
+    </div>
+  </div>
+
+  <!-- 知识库弹窗（复用知识库页签渲染） -->
+  <div class="sync-overlay mgr-modal" id="mgrKbOverlay" style="display:none" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="mgrKbTitle">
+    <div class="sync-modal mgr-railmodal">
+      <div class="sync-modal__header mgr-projedit-header">
+        <span class="mgr-projedit-title" id="mgrKbTitle">项目知识库</span>
+        <button type="button" class="sync-modal__close mgr-projedit-close" data-mgr-kb-close aria-label="关闭知识库弹窗">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="sync-modal__body" id="mgrKbBody"></div>
+    </div>
+  </div>
+
+  <!-- 任务详情浮层（右侧滑入）：执行概览/任务描述/执行阶段/任务关系/进展记录 -->
+  <div class="mgr-taskpanel-wrap hidden" id="mgrTaskPanelWrap">
+    <aside class="mgr-taskpanel" role="dialog" aria-modal="false" aria-label="任务详情">
+      <header class="mgr-taskpanel-head">
+        <span class="mgr-taskpanel-title">任务详情</span>
+        <button type="button" class="mgr-projedit-close" data-mgr-taskpanel-close aria-label="关闭任务详情">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </header>
+      <div class="mgr-taskpanel-body" id="mgrTaskPanelBody"></div>
+    </aside>
+  </div>
+
+  <!-- 新建任务弹窗（对齐管理原型：核心信息 / 补充信息；研发任务可编辑执行阶段） -->
+  <div class="sync-overlay mgr-modal" id="mgrTaskNewOverlay" style="display:none" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="mgrTnTitle">
+    <div class="sync-modal mgr-tasknew-modal">
+      <div class="sync-modal__header mgr-projedit-header">
+        <span class="mgr-projedit-title">新建任务</span>
+        <button type="button" class="sync-modal__close mgr-projedit-close" data-mgr-tntask-close aria-label="关闭新建任务弹窗">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="sync-modal__body mgr-tasknew-body">
+        <div class="mgr-tntabs" role="tablist" aria-label="新建任务页签">
+          <button type="button" class="mgr-tntab active" data-mgr-tntab="core" role="tab" aria-selected="true">核心信息</button>
+          <button type="button" class="mgr-tntab" data-mgr-tntab="extra" role="tab" aria-selected="false">补充信息</button>
+        </div>
+        <!-- 核心信息 -->
+        <div id="mgrTnCore">
+          <div class="mgr-tn-field" id="mgrTnTypeField">
+            <label>任务类型</label>
+            <div class="mgr-tn-type" role="radiogroup" aria-label="任务类型">
+              <button type="button" class="mgr-tn-type-item active" data-mgr-tntype="general">通用任务</button>
+              <button type="button" class="mgr-tn-type-item" data-mgr-tntype="rd">研发任务</button>
+            </div>
+          </div>
+          <div class="mgr-tn-field">
+            <input type="text" id="mgrTnTitle" maxlength="80" placeholder="请输入任务名">
+          </div>
+          <div class="mgr-tn-field">
+            <textarea id="mgrTnDesc" rows="4" placeholder="说明任务背景、工作内容与期望结果。"></textarea>
+            <div class="mgr-tn-desc-tools">
+              <button type="button" class="mgr-tn-tool" data-mgr-tn-tool="附件">＋ 附件</button>
+              <button type="button" class="mgr-tn-tool" data-mgr-tn-tool="智能体">◎ 选择智能体</button>
+              <button type="button" class="mgr-tn-tool" data-mgr-tn-tool="模型">✦ 选择模型</button>
+            </div>
+          </div>
+          <div class="mgr-tn-row">
+            <div class="mgr-tn-pop-wrap">
+              <button type="button" class="mgr-tn-chipbtn" id="mgrTnCollabBtn" aria-haspopup="listbox" aria-expanded="false">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0 1 14 0v1"/></svg>
+                <span>添加协作人</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+              </button>
+              <div class="mgr-tn-pop" id="mgrTnCollabPopup" hidden></div>
+            </div>
+            <button type="button" id="mgrTnDue" class="mgr-tn-chipbtn mgr-tn-date" data-mgr-date data-placeholder="计划时间" data-value="" aria-label="计划时间" aria-haspopup="dialog" aria-expanded="false"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg><span data-mgr-date-text>计划时间</span></button>
+            <div class="mgr-tn-pop-wrap">
+              <button type="button" class="mgr-tn-chipbtn" id="mgrTnAiBtn" data-ai="off" aria-haspopup="menu" aria-expanded="false">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                <span>AI 验收</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+              </button>
+              <div class="mgr-tn-pop mgr-tn-ai-menu" id="mgrTnAiMenu" hidden>
+                <button type="button" data-mgr-tn-ai="on">开启 AI 验收</button>
+                <button type="button" data-mgr-tn-ai="off">关闭 AI 验收</button>
+              </div>
+            </div>
+          </div>
+          <div class="mgr-tn-field">
+            <textarea id="mgrTnAccept" rows="2" placeholder="请输入定性验收标准，例如：交付材料完整，结论清晰，并经项目负责人确认。"></textarea>
+          </div>
+          <!-- 研发任务：执行阶段（可编辑） -->
+          <!-- 研发任务：执行计划（对齐开发板块新建任务的执行计划表：执行阶段 / 自动审核 / 执行人） -->
+          <div class="mgr-tn-rd" id="mgrTnRdPane" hidden>
+            <div class="mgr-tn-rd-head">执行计划 <small id="mgrTnPlanHint">按交付智能体团队的交付路径选择阶段，智能体按阶段自动匹配</small></div>
+            <table class="mgr-tn-plan-table">
+              <colgroup><col class="mgr-tn-col-index"><col><col class="mgr-tn-col-review"><col class="mgr-tn-col-owner"><col class="mgr-tn-col-action"></colgroup>
+              <thead><tr><th>序号</th><th>执行阶段</th><th>自动审核</th><th>执行人</th><th><button type="button" class="mgr-tn-plan-add" id="mgrTnStageAdd">＋ 添加节点</button></th></tr></thead>
+              <tbody id="mgrTnStages"></tbody>
+            </table>
+          </div>
+        </div>
+        <!-- 补充信息 -->
+        <div id="mgrTnExtra" hidden>
+          <div class="mgr-tn-grid">
+            <div class="mgr-tn-field">
+              <label>父任务</label>
+              <div class="mgr-tn-withbtn"><select id="mgrTnParent"><option value="">无（挂在本项目根任务下）</option></select><span class="mgr-tn-choose">选择</span></div>
+            </div>
+            <div class="mgr-tn-field">
+              <label>议题</label>
+              <select><option>不关联议题</option></select>
+            </div>
+          </div>
+          <div class="mgr-tn-grid">
+            <div class="mgr-tn-field">
+              <label>产物归档目录</label>
+              <select id="mgrTnDir"></select>
+            </div>
+            <div class="mgr-tn-field">
+              <label>任务启动方式</label>
+              <select id="mgrTnExec"></select>
+            </div>
+          </div>
+          <div class="mgr-tn-field">
+            <label>前序任务</label>
+            <div class="mgr-tn-withbtn"><select id="mgrTnPre"><option value="">无（不设前序）</option></select><span class="mgr-tn-choose">选择</span></div>
+          </div>
+          <div class="mgr-tn-field mgr-tn-ms-row">
+            <label for="mgrTnMs">是否里程碑</label>
+            <input type="checkbox" id="mgrTnMs" class="mgr-tn-switch" aria-label="是否里程碑">
+            <span id="mgrTnMsLabel">否</span>
+          </div>
+          <div class="mgr-tn-field">
+            <label>任务关联指标（选填）</label>
+            <select id="mgrTnKpi"></select>
+          </div>
+          <div class="mgr-tn-field">
+            <label>子任务 <span id="mgrTnSubCount">0</span></label>
+            <div id="mgrTnSubs"></div>
+            <button type="button" class="mgr-tn-sub-add" id="mgrTnSubAdd">＋ 添加子任务</button>
+          </div>
+        </div>
+      </div>
+      <div class="sync-modal__footer mgr-projedit-footer">
+        <button type="button" class="sync-modal__btn sync-modal__btn--ghost" data-mgr-tntask-close>取消</button>
+        <button type="button" class="sync-modal__btn sync-modal__btn--ghost" id="mgrTnSave">保存任务</button>
+        <button type="button" class="sync-modal__btn sync-modal__btn--primary" id="mgrTnSaveStart">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m13 2-9 12h7l-1 8 9-12h-7z"/></svg>
+          保存并启动
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 智能体团队维护弹窗（复用智能体团队页签渲染，内部为 智能体团队/智能体 两个并列页签） -->
+  <div class="sync-overlay mgr-modal" id="mgrTeamOverlay" style="display:none" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="mgrTeamTitle">
+    <div class="sync-modal mgr-railmodal">
+      <div class="sync-modal__header mgr-projedit-header">
+        <span class="mgr-projedit-title" id="mgrTeamTitle">智能体团队与项目智能体</span>
+        <button type="button" class="sync-modal__close mgr-projedit-close" data-mgr-team-close aria-label="关闭智能体团队弹窗">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="sync-modal__body" id="mgrTeamBody"></div>
+    </div>
+  </div>
+</div>
+</div>

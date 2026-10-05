@@ -2,6 +2,7 @@
 import { CV_PROJECTS } from '../collab/data.js';
 import { TEAMS } from '../expert/store.js';
 import { EXPERTS } from '../expert/data.js';
+import { tkProjectById } from './data.js';
 
 const REVIEW_REPORT_CONTENT = {
   2: { summary:'供应商评级模型已形成可评审方案，五项指标、权重和评级边界均已明确。', evidence:['交付《评级指标与权重说明》及 A/B/C/D 分档样例。','完成缺失数据、周期切换和权重调整的验算。'], review:'请确认五项指标权重及低样本供应商的评级规则。' },
@@ -62,7 +63,7 @@ const ROLE_RESULTS = {
 export function createDemoReviewReport(task) {
   var content = REVIEW_REPORT_CONTENT[task.id];
   if (!content || task.status !== 'in_review') return null;
-  var project = CV_PROJECTS.find(function (row) { return row.id === task.project; });
+  var project = tkProjectById(task.project);
   var team = TEAMS.find(function (row) { return row.id === (task.teamId || project?.defaultTeam); });
   if (!team) return null;
   return {
@@ -91,7 +92,7 @@ const RUN_STAGE_HINTS = [
 ];
 
 export function getDemoRunHeader(task) {
-  var project = CV_PROJECTS.find(function (row) { return row.id === task.project; });
+  var project = tkProjectById(task.project);
   var team = TEAMS.find(function (row) { return row.id === (task.teamId || project?.defaultTeam); });
   if (!team) return null;
   var status = task.status;

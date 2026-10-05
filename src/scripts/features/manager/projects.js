@@ -1,0 +1,524 @@
+import { $ } from '../../core/dom.js';
+import { toast } from '../../core/toast.js';
+import { cvCurrentUserName } from '../collab/data.js';
+import { tkBranchNameError } from '../tasks-v2/git-branch.js';
+import {
+  mgrAddProject, mgrCanManageProject, mgrRenameError, mgrRenameProject, mgrSetProjectRepo, mgrCurrentPersonId, mgrDeleteProject, mgrExpert, mgrExpertList, mgrProjectById,
+  mgrProjectProgress, mgrProjectTasks, mgrProjects, mgrTeam, mgrTeams,
+} from './data.js';
+import { renderDetail, resetDetailTab } from './detail.js';
+import { closeTaskPanel, resetPlanState } from './plan.js';
+import { mgrEsc, mgrTag } from './utils.js';
+/* 管理 · 项目：管理项目卡片栅格、进入 / 返回项目详情、新建项目弹窗。 */
+
+var openProjectId = null;
+var onRouteChange = function () {};
+
+var CARD_CHEVRON = '<svg class="mgr-mcard-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>';
+
+/* 新建项目模板：选中开发类模板时需要 Git 地址与交付智能体团队 */
+var TEMPLATES = [
+  { id: 'blank', name: '空白', goal: '' },
+  { id: 'general-dev', name: '通用开发', dev: true, team: 'general-app-dev', goal: '按通用应用开发路径完成功能开发、联调与交付' },
+  { id: 'cosmic-dev', name: '苍穹项目开发', dev: true, team: 'cosmic-app-dev', goal: '按苍穹应用开发智能体团队交付路径完成需求、开发与验证' },
+  { id: 'budget', name: '预算目标制定', goal: '围绕年度预算目标拆解编制任务，按里程碑推进并沉淀编制产物' },
+  { id: 'month', name: '月度经营分析', goal: '按月归集经营数据，输出差异归因与改进建议' },
+  { id: 'ceo', name: 'CEO月度会议', goal: '围绕 CEO 月度会议组织议题收集、材料准备与决议跟进' },
+  { id: 'adhoc', name: '临时决策会', goal: '为临时性决策快速组织背景调研与方案对比' },
+  { id: 'ar', name: '应收改善', goal: '压降应收账期，建立回款跟进机制' },
+  { id: 'inv', name: '库存周转优化', goal: '提升库存周转率，清理长龄库存并优化补货参数' },
+];
+var pickedTemplate = 'blank';
+var pickedExperts = [];
+var expertQuery = '';
+
+/* ---------- 列表 ---------- */
+function cardHtml(p) {
+  var tags = p.mgrOk
+    ? mgrTag('运行正常', 'done')
+    : (p.mgrRisk ? mgrTag(p.mgrRisk + ' 处风险', 'danger') : '') + (p.mgrDecide ? mgrTag(p.mgrDecide + ' 件待决策', 'warning') : '');
+  var progress = mgrProjectProgress(p).percent;
+  return '<div class="mgr-mcard" data-mgr-project="' + mgrEsc(p.id) + '" role="button" tabindex="0" aria-label="查看项目：' + mgrEsc(p.name) + '">' +
+    '<div class="mgr-mcard-head"><h3 class="mgr-mcard-title">' + mgrEsc(p.name) + '</h3>' + CARD_CHEVRON + '</div>' +
+    '<p class="mgr-mcard-desc">' + mgrEsc(p.desc) + '</p>' +
+    '<div class="mgr-mcard-foot"><span class="mgr-mcard-tags">' + tags + '</span><span class="mgr-mcard-progress">进度 ' + progress + '%</span></div></div>';
+}
+function renderList() {
+  var list = mgrProjects();
+  $('#mgrProjCards').innerHTML = list.length
+    ? list.map(cardHtml).join('')
+    : '<div class="mgr-empty">还没有管理项目，点右上角「＋ 新建项目」创建。</div>';
+}
+function showList() {
+  openProjectId = null;
+  closeTaskPanel();
+  $('#mgrProjDetail').classList.add('hidden');
+  $('#mgrProjList').classList.remove('hidden');
+  renderList();
+  onRouteChange();
+}
+function openProject(id) {
+  var p = mgrProjectById(id);
+  if (!p) { toast('未找到该项目'); return false; }
+  openProjectId = id;
+  resetDetailTab();
+  resetPlanState();
+  toggleMoreMenu(false);
+  closeTaskPanel();
+  $('#mgrProjList').classList.add('hidden');
+  $('#mgrProjDetail').classList.remove('hidden');
+  $('#mgrProjCrumbName').textContent = p.name;
+  renderDetail(p);
+  var scroll = $('#mgrProjDetail .mgr-scroll');
+  if (scroll) scroll.scrollTop = 0;
+  onRouteChange();
+  return true;
+}
+
+/* ---------- 新建项目弹窗 ---------- */
+function currentTemplate() { return TEMPLATES.find(function (t) { return t.id === pickedTemplate; }); }
+function renderTemplates() {
+  $('#mgrPeTplChips').innerHTML = TEMPLATES.map(function (t) {
+    var on = pickedTemplate === t.id;
+    return '<button type="button" class="mgr-pe-tpl' + (on ? ' active' : '') + '" data-mgr-pe-tpl="' + mgrEsc(t.id) + '" role="radio" aria-checked="' + on + '">' + mgrEsc(t.name) + '</button>';
+  }).join('');
+}
+function syncDevExtra() {
+  var tpl = currentTemplate();
+  $('#mgrPeDevExtra').hidden = !(tpl && tpl.dev);
+  $('#mgrPeRepoError').hidden = true;
+  $('#mgrPeBranchError').hidden = true;
+  $('#mgrPeTeamError').hidden = true;
+}
+function pickTemplate(id) {
+  pickedTemplate = id;
+  var tpl = currentTemplate();
+  if (tpl && tpl.goal) $('#mgrPeGoal').value = tpl.goal;
+  if (tpl && tpl.dev && tpl.team) $('#mgrPeTeam').value = tpl.team;
+  renderTemplates();
+  syncDevExtra();
+}
+function syncSubtabs(showGoal) {
+  $('#mgrPeGoal').hidden = !showGoal;
+  $('#mgrPeInstruction').hidden = showGoal;
+  document.querySelectorAll('[data-mgr-pe-subtab]').forEach(function (b) {
+    var on = (b.getAttribute('data-mgr-pe-subtab') === 'goal') === showGoal;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-selected', String(on));
+  });
+}
+function renderPickedExperts() {
+  $('#mgrPeExpertChips').innerHTML = '<span class="mgr-pe-expert-chip is-fixed" title="内置项目管理智能体，默认启用">项目管理智能体</span>' +
+    pickedExperts.filter(mgrExpert).map(function (id) {
+      var name = mgrExpert(id).name;
+      return '<span class="mgr-pe-expert-chip">' + mgrEsc(name) + '<button type="button" class="mgr-pe-expert-remove" data-mgr-pe-expert-remove="' + mgrEsc(id) +
+        '" aria-label="移除智能体 ' + mgrEsc(name) + '">×</button></span>';
+    }).join('');
+}
+/* 候选智能体：所选交付团队的成员优先，否则列出全部智能体（最多 40 个） */
+function expertCandidates() {
+  var team = mgrTeam($('#mgrPeTeam').value);
+  var ids = ((team && team.members) || []).filter(function (id) { return mgrExpert(id) && !pickedExperts.includes(id); });
+  if (!ids.length) {
+    mgrExpertList().forEach(function (e) { if (!pickedExperts.includes(e.id) && ids.length < 40) ids.push(e.id); });
+  }
+  var q = expertQuery.trim().toLocaleLowerCase();
+  return q ? ids.filter(function (id) { return mgrExpert(id).name.toLocaleLowerCase().includes(q); }) : ids;
+}
+function renderExpertOptions() {
+  var ids = expertCandidates();
+  $('.mgr-pe-expert-options', $('#mgrPeExpertPopup')).innerHTML = ids.length
+    ? ids.map(function (id) {
+      var e = mgrExpert(id);
+      return '<button type="button" class="mgr-pe-expert-option" role="option" data-mgr-pe-expert-pick="' + mgrEsc(id) + '">' + mgrEsc(e.name) +
+        '<small>' + mgrEsc(e.role || '智能体') + '</small></button>';
+    }).join('')
+    : '<div class="mgr-pe-owner-empty">没有匹配的智能体</div>';
+}
+function toggleExpertPopup(open) {
+  var popup = $('#mgrPeExpertPopup');
+  var show = open === undefined ? popup.hidden : open;
+  if (show) {
+    expertQuery = '';
+    popup.innerHTML = '<input type="search" id="mgrPeExpertSearch" placeholder="搜索智能体" aria-label="搜索智能体" autocomplete="off"><div class="mgr-pe-expert-options"></div>';
+    renderExpertOptions();
+  }
+  popup.hidden = !show;
+  $('#mgrPeExpertAdd').setAttribute('aria-expanded', String(show));
+  if (show) $('#mgrPeExpertSearch').focus();
+}
+function selectedBaseBranch() {
+  var v = $('#mgrPeBaseBranch').value;
+  return (v === '__custom' ? $('#mgrPeBaseBranchCustom').value : v).trim();
+}
+function openProjectNew() {
+  var overlay = $('#mgrProjEditOverlay');
+  pickedTemplate = 'blank';
+  pickedExperts = [];
+  renderTemplates();
+  $('#mgrPeName').value = '';
+  $('#mgrPeGoal').value = '';
+  $('#mgrPeInstruction').value = '';
+  $('#mgrPeRepo').value = '';
+  $('#mgrPeBaseBranch').value = 'main';
+  $('#mgrPeBaseBranchCustom').value = '';
+  $('#mgrPeBaseBranchCustom').hidden = true;
+  $('#mgrPeTeam').innerHTML = '<option value="">请选择交付智能体团队</option>' + mgrTeams().map(function (t) {
+    return '<option value="' + mgrEsc(t.id) + '">' + mgrEsc(t.name) + '</option>';
+  }).join('');
+  syncSubtabs(true);
+  syncDevExtra();
+  renderPickedExperts();
+  toggleExpertPopup(false);
+  overlay.style.display = 'flex';
+  overlay.setAttribute('aria-hidden', 'false');
+  $('#mgrPeName').focus();
+}
+function closeProjectNew() {
+  var overlay = $('#mgrProjEditOverlay');
+  overlay.style.display = 'none';
+  overlay.setAttribute('aria-hidden', 'true');
+}
+function repoCode(repo, id) {
+  var m = String(repo || '').match(/\/([^/]+?)(?:\.git)?\/?$/);
+  return (m ? m[1] : id).replace(/[^a-zA-Z0-9-]/g, '-').toUpperCase();
+}
+function submitProjectNew() {
+  var name = $('#mgrPeName').value.trim();
+  var goal = $('#mgrPeGoal').value.trim();
+  var repo = $('#mgrPeRepo').value.trim();
+  var teamId = $('#mgrPeTeam').value;
+  var tpl = currentTemplate();
+  var dev = !!(tpl && tpl.dev);
+  if (!name) { toast('请填写项目名称', 'error'); $('#mgrPeName').focus(); return; }
+  if (dev && !mgrTeam(teamId)) {
+    $('#mgrPeTeamError').hidden = false;
+    toast('开发类项目必须选择交付智能体团队', 'error');
+    $('#mgrPeTeam').focus();
+    return;
+  }
+  $('#mgrPeTeamError').hidden = true;
+  if (dev && !repo) {
+    $('#mgrPeRepoError').hidden = false;
+    toast('开发类项目必须填写 Git 地址', 'error');
+    $('#mgrPeRepo').focus();
+    return;
+  }
+  $('#mgrPeRepoError').hidden = true;
+  var baseBranch = selectedBaseBranch();
+  var branchErr = dev ? tkBranchNameError(baseBranch) : '';
+  if (branchErr) {
+    var be = $('#mgrPeBranchError');
+    be.textContent = branchErr;
+    be.hidden = false;
+    toast(branchErr, 'error');
+    ($('#mgrPeBaseBranchCustom').hidden ? $('#mgrPeBaseBranch') : $('#mgrPeBaseBranchCustom')).focus();
+    return;
+  }
+  $('#mgrPeBranchError').hidden = true;
+  var id = 'proj-' + Date.now();
+  var me = mgrCurrentPersonId();
+  var project = {
+    id: id, name: name, desc: goal || name + '（管理板块创建）', goal: goal,
+    instruction: $('#mgrPeInstruction').value.trim(),
+    dot: ['blue', 'orange', 'green'][mgrProjects().length % 3],
+    containsRd: dev, space: 'manage',
+    defaultTeam: dev ? teamId : '', teamIds: dev && teamId ? [teamId] : [],
+    status: 'planned', priority: '中', owner: cvCurrentUserName() || '未指定',
+    repo: dev ? repo : '', baseBranch: dev ? baseBranch : '', code: repoCode(repo, id),
+    start: '', end: '', milestones: [], members: me ? [me] : [],
+    projectExperts: pickedExperts.slice(), updatedAt: Date.now(),
+  };
+  if (!mgrAddProject(project)) { toast('项目保存失败，请重试', 'error'); return; }
+  closeProjectNew();
+  toast('已创建项目：' + mgrEsc(name) + (tpl ? '（' + mgrEsc(tpl.name) + '）' : ''), 'success');
+  if (!openProjectId) renderList();
+}
+
+function initProjectNewModal() {
+  var overlay = $('#mgrProjEditOverlay');
+  overlay.addEventListener('click', function (e) {
+    var t = e.target;
+    if (t === overlay || t.closest('[data-mgr-projedit-close]')) { closeProjectNew(); return; }
+    var tplBtn = t.closest('[data-mgr-pe-tpl]');
+    if (tplBtn) { pickTemplate(tplBtn.getAttribute('data-mgr-pe-tpl')); return; }
+    var sub = t.closest('[data-mgr-pe-subtab]');
+    if (sub) { syncSubtabs(sub.getAttribute('data-mgr-pe-subtab') === 'goal'); return; }
+    var rm = t.closest('[data-mgr-pe-expert-remove]');
+    if (rm) {
+      var rid = rm.getAttribute('data-mgr-pe-expert-remove');
+      pickedExperts = pickedExperts.filter(function (x) { return x !== rid; });
+      renderPickedExperts();
+      toggleExpertPopup(false);
+      return;
+    }
+    var pick = t.closest('[data-mgr-pe-expert-pick]');
+    if (pick) {
+      var pid = pick.getAttribute('data-mgr-pe-expert-pick');
+      if (mgrExpert(pid) && !pickedExperts.includes(pid)) pickedExperts = pickedExperts.concat(pid);
+      renderPickedExperts();
+      toggleExpertPopup(false);
+      return;
+    }
+    if (t.closest('#mgrPeExpertAdd')) { toggleExpertPopup(); return; }
+    if (!t.closest('.mgr-pe-expert-add-wrap')) toggleExpertPopup(false);
+  });
+  overlay.addEventListener('input', function (e) {
+    if (e.target.id === 'mgrPeBaseBranchCustom') $('#mgrPeBranchError').hidden = true;
+    if (e.target.id === 'mgrPeExpertSearch') { expertQuery = e.target.value; renderExpertOptions(); }
+  });
+  overlay.addEventListener('change', function (e) {
+    if (e.target.id === 'mgrPeTeam') { $('#mgrPeTeamError').hidden = true; toggleExpertPopup(false); }
+    if (e.target.id === 'mgrPeBaseBranch') {
+      var custom = $('#mgrPeBaseBranchCustom');
+      custom.hidden = e.target.value !== '__custom';
+      $('#mgrPeBranchError').hidden = true;
+      if (!custom.hidden) custom.focus();
+    }
+  });
+  overlay.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') { e.stopPropagation(); closeProjectNew(); }
+  });
+  $('#mgrPeSubmit').addEventListener('click', submitProjectNew);
+}
+
+/* ---------- 删除项目 ----------
+   规则与协作开发一致：负责人（或系统管理员）才能删，项目下有任务（含已完成）时不能删。 */
+var pendingDelete = null;
+
+function toggleMoreMenu(open) {
+  var btn = $('[data-mgr-proj-more]');
+  var menu = $('#mgrProjDetail .mgr-proj-more-menu');
+  if (!btn || !menu) return;
+  var show = open === undefined ? menu.hidden : open;
+  menu.hidden = !show;
+  btn.setAttribute('aria-expanded', String(show));
+}
+function deleteBlockReason(p) {
+  if (!mgrCanManageProject(p)) return '只有项目负责人或系统管理员可以删除项目';
+  var n = mgrProjectTasks(p.id).length;
+  if (n) return '项目下还有 ' + n + ' 项任务，不能删除（含已完成任务）';
+  return '';
+}
+function requestDelete(trigger) {
+  var p = mgrProjectById(openProjectId);
+  if (!p) return;
+  var reason = deleteBlockReason(p);
+  if (reason) { toast(reason, 'warning'); return; }
+  pendingDelete = { projectId: p.id, trigger: trigger || null };
+  $('#mgrProjDeleteMessage').textContent = '删除「' + p.name + '」后不可恢复，项目下的议题会一并删除，确定删除？';
+  var overlay = $('#mgrProjDeleteOverlay');
+  overlay.style.display = 'flex';
+  overlay.setAttribute('aria-hidden', 'false');
+  overlay.querySelector('[data-mgr-delete-cancel]').focus();
+}
+function closeDelete(restoreFocus) {
+  var overlay = $('#mgrProjDeleteOverlay');
+  var trigger = pendingDelete && pendingDelete.trigger;
+  overlay.style.display = 'none';
+  overlay.setAttribute('aria-hidden', 'true');
+  pendingDelete = null;
+  if (restoreFocus !== false && trigger && trigger.isConnected) trigger.focus();
+}
+function confirmDelete() {
+  if (!pendingDelete) return;
+  var p = mgrProjectById(pendingDelete.projectId);
+  if (!p) { closeDelete(false); toast('项目已不存在', 'warning'); showList(); return; }
+  /* 弹窗打开期间任务或权限可能已变化，确认时再查一次 */
+  if (deleteBlockReason(p)) { closeDelete(false); toast('项目权限或任务已变化，请重新检查', 'warning'); return; }
+  if (!mgrDeleteProject(p.id)) { toast('删除失败，请重试', 'error'); return; }
+  closeDelete(false);
+  showList();
+  toast('项目已删除', 'success');
+}
+/* ---------- 重命名项目 ---------- */
+var renameTrigger = null;
+function requestRename(trigger) {
+  var p = mgrProjectById(openProjectId);
+  if (!p) return;
+  if (!mgrCanManageProject(p)) { toast('只有项目负责人或系统管理员可以重命名项目', 'warning'); return; }
+  renameTrigger = trigger || null;
+  var input = $('#mgrProjRenameInput');
+  input.value = p.name;
+  setRenameError('');
+  var overlay = $('#mgrProjRenameOverlay');
+  overlay.style.display = 'flex';
+  overlay.setAttribute('aria-hidden', 'false');
+  input.focus();
+  input.select();
+}
+function setRenameError(msg) {
+  var err = $('#mgrProjRenameError');
+  err.textContent = msg;
+  err.hidden = !msg;
+  $('#mgrProjRenameInput').setAttribute('aria-invalid', String(!!msg));
+}
+function closeRename(restoreFocus) {
+  var overlay = $('#mgrProjRenameOverlay');
+  overlay.style.display = 'none';
+  overlay.setAttribute('aria-hidden', 'true');
+  if (restoreFocus !== false && renameTrigger && renameTrigger.isConnected) renameTrigger.focus();
+  renameTrigger = null;
+}
+function confirmRename() {
+  var p = mgrProjectById(openProjectId);
+  if (!p) { closeRename(false); toast('项目已不存在', 'warning'); return; }
+  var name = $('#mgrProjRenameInput').value;
+  if (name.trim() === p.name) { closeRename(); return; }
+  var err = mgrRenameError(p, name);
+  if (err) { setRenameError(err); $('#mgrProjRenameInput').focus(); return; }
+  if (!mgrRenameProject(p, name)) { setRenameError('保存失败，请重试'); return; }
+  $('#mgrProjCrumbName').textContent = p.name;
+  closeRename();
+  toast('项目已重命名', 'success');
+}
+function initProjectRename() {
+  var overlay = $('#mgrProjRenameOverlay');
+  overlay.addEventListener('click', function (e) {
+    if (e.target.closest('[data-mgr-rename-confirm]')) { confirmRename(); return; }
+    if (e.target === overlay || e.target.closest('[data-mgr-rename-cancel]')) closeRename();
+  });
+  overlay.addEventListener('input', function (e) { if (e.target.id === 'mgrProjRenameInput') setRenameError(''); });
+  overlay.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeRename(); return; }
+    if (e.key === 'Enter' && e.target.id === 'mgrProjRenameInput' && !e.isComposing) { e.preventDefault(); confirmRename(); }
+  });
+}
+
+/* ---------- 项目设置 · 代码仓库 ---------- */
+var BASE_PRESETS = ['main', 'master', 'develop'];
+var repoTrigger = null;
+function setRepoError(msg) {
+  var el = $('#mgrRepoError');
+  el.textContent = msg;
+  el.hidden = !msg;
+}
+function syncRepoCustom() {
+  var custom = $('#mgrRepoBaseCustom');
+  custom.hidden = $('#mgrRepoBase').value !== '__custom';
+  return custom;
+}
+function openRepoSettings(trigger) {
+  var p = mgrProjectById(openProjectId);
+  if (!p) return;
+  if (!mgrCanManageProject(p)) { toast('只有项目负责人或系统管理员可以修改项目设置', 'warning'); return; }
+  repoTrigger = trigger || null;
+  $('#mgrRepoUrl').value = p.repo || '';
+  var base = p.baseBranch || 'main';
+  var preset = BASE_PRESETS.includes(base);
+  $('#mgrRepoBase').value = preset ? base : '__custom';
+  $('#mgrRepoBaseCustom').value = preset ? '' : base;
+  syncRepoCustom();
+  $('#mgrRepoUrlRequired').hidden = !p.containsRd;
+  setRepoError('');
+  var overlay = $('#mgrProjRepoOverlay');
+  overlay.style.display = 'flex';
+  overlay.setAttribute('aria-hidden', 'false');
+  $('#mgrRepoUrl').focus();
+}
+function closeRepoSettings(restoreFocus) {
+  var overlay = $('#mgrProjRepoOverlay');
+  overlay.style.display = 'none';
+  overlay.setAttribute('aria-hidden', 'true');
+  if (restoreFocus !== false && repoTrigger && repoTrigger.isConnected) repoTrigger.focus();
+  repoTrigger = null;
+}
+function saveRepoSettings() {
+  var p = mgrProjectById(openProjectId);
+  if (!p) { closeRepoSettings(false); toast('项目已不存在', 'warning'); return; }
+  var repo = $('#mgrRepoUrl').value.trim();
+  var baseSel = $('#mgrRepoBase').value;
+  var base = (baseSel === '__custom' ? $('#mgrRepoBaseCustom').value : baseSel).trim();
+  if (!repo && p.containsRd) { setRepoError('包含研发任务的项目必须填写 Git 地址'); $('#mgrRepoUrl').focus(); return; }
+  var err = repo ? tkBranchNameError(base) : '';
+  if (err) { setRepoError(err); (baseSel === '__custom' ? $('#mgrRepoBaseCustom') : $('#mgrRepoBase')).focus(); return; }
+  if (!mgrSetProjectRepo(p, repo, base)) { setRepoError('保存失败，请重试'); return; }
+  closeRepoSettings();
+  toast(repo ? '代码仓库已保存，基准分支：' + mgrEsc(base) : '已清除代码仓库', 'success');
+}
+function initRepoSettings() {
+  var overlay = $('#mgrProjRepoOverlay');
+  overlay.addEventListener('click', function (e) {
+    if (e.target.closest('[data-mgr-repo-confirm]')) { saveRepoSettings(); return; }
+    if (e.target === overlay || e.target.closest('[data-mgr-repo-cancel]')) closeRepoSettings();
+  });
+  overlay.addEventListener('change', function (e) {
+    if (e.target.id !== 'mgrRepoBase') return;
+    setRepoError('');
+    var custom = syncRepoCustom();
+    if (!custom.hidden) custom.focus();
+  });
+  overlay.addEventListener('input', function () { setRepoError(''); });
+  overlay.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeRepoSettings(); return; }
+    if (e.key === 'Enter' && e.target.tagName === 'INPUT' && !e.isComposing) { e.preventDefault(); saveRepoSettings(); }
+  });
+}
+
+function initProjectDelete() {
+  var overlay = $('#mgrProjDeleteOverlay');
+  overlay.addEventListener('click', function (e) {
+    if (e.target.closest('[data-mgr-delete-confirm]')) { confirmDelete(); return; }
+    if (e.target === overlay || e.target.closest('[data-mgr-delete-cancel]')) closeDelete();
+  });
+  overlay.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeDelete(); return; }
+    if (e.key !== 'Tab') return;
+    var cancel = overlay.querySelector('[data-mgr-delete-cancel]');
+    var ok = overlay.querySelector('[data-mgr-delete-confirm]');
+    if (e.shiftKey && document.activeElement === cancel) { e.preventDefault(); ok.focus(); }
+    else if (!e.shiftKey && document.activeElement === ok) { e.preventDefault(); cancel.focus(); }
+  });
+  document.addEventListener('click', function (e) {
+    if (!e.target.closest('#mgrProjDetail .mgr-proj-more')) toggleMoreMenu(false);
+  });
+}
+
+export function initManagerProjects(routeChanged) {
+  if (routeChanged) onRouteChange = routeChanged;
+  initProjectNewModal();
+  initProjectDelete();
+  initProjectRename();
+  initRepoSettings();
+  var panel = $('#mgr-panel-projects');
+  panel.addEventListener('click', function (e) {
+    var t = e.target;
+    if (t.closest('[data-mgr-proj-back]')) { showList(); return; }
+    if (t.closest('#mgrProjNew')) { openProjectNew(); return; }
+    if (t.closest('[data-mgr-proj-more]')) { toggleMoreMenu(); return; }
+    var settings = t.closest('[data-mgr-settings]');
+    if (settings) { openRepoSettings(settings); return; }
+    if (t.closest('[data-mgr-proj-rename]')) { toggleMoreMenu(false); requestRename($('[data-mgr-proj-more]')); return; }
+    var del = t.closest('[data-mgr-proj-delete]');
+    if (del) { toggleMoreMenu(false); requestDelete($('[data-mgr-proj-more]')); return; }
+    if (t.closest('#mgrListAskSend')) {
+      var input = $('#mgrListAskInput');
+      var q = input.value.trim();
+      if (!q) { toast('先输入想问的问题'); return; }
+      input.value = '';
+      toast('已收到提问（演示）：「' + mgrEsc(q) + '」，AI 会基于项目上下文作答');
+      return;
+    }
+    var card = t.closest('#mgrProjCards [data-mgr-project]');
+    if (card) openProject(card.getAttribute('data-mgr-project'));
+  });
+  panel.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && e.target.closest && e.target.closest('#mgrProjDetail .mgr-proj-more')) {
+      toggleMoreMenu(false);
+      $('[data-mgr-proj-more]').focus();
+      return;
+    }
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    if (e.target.id === 'mgrListAskInput') {
+      if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); $('#mgrListAskSend').click(); }
+      return;
+    }
+    var card = e.target.closest && e.target.closest('#mgrProjCards [data-mgr-project]');
+    if (card) { e.preventDefault(); openProject(card.getAttribute('data-mgr-project')); }
+  });
+  renderList();
+}
+
+function openProjectId_() { return openProjectId; }
+
+export { openProject, openProjectId_ as currentProjectId, openProjectNew, showList };

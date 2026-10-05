@@ -38,6 +38,10 @@ import { _authedUser } from './features/login.js';
 import { withBase } from './core/base-path.js';
 import { initAnalytics } from './features/analytics.js';
 import { initPlatformAdmin } from './features/expert/platform-admin.js';
+import { initManager } from './features/manager/index.js';
+import { initManagerData } from './features/manager/data.js';
+import { initWork } from './features/work/index.js';
+import { initAgentDemo } from './features/agent-demo.js';
 
 /* 产物预览与应用共用同一份设计令牌 */
 const billTemplateWithTokens = billTemplate.replace(
@@ -94,10 +98,14 @@ initCollabProjects();             /* 6287  features/collab/projects.js */
 initPersonPicker();
 initCollabConfig();               /* 6370  features/collab/config.js */
 initCollab();                     /* 6445  features/collab/index.js */
+initManagerData();                /* 管理项目先注册给任务模块：管理板块新建的开发任务在开发板块可见 */
 initTasksV2();                    /* 任务管理 v2 */
 initInbox();                      /* 系统通知收件箱 */
 initAnalytics();                  /* 用户行为分析看板 */
 initPlatformAdmin();              /* 平台专家管理原型与本地更新 */
+initManager();                    /* 管理板块：项目列表与项目详情 */
+initWork();                       /* 工作板块：新任务首屏与历史对话 */
+initAgentDemo();                  /* 智能体开发演示：对话创建、沙箱测试、提交与 Work 使用 */
 
 /* 全局 ESC 关闭弹窗：找到最上层的可见 overlay，触发其关闭按钮点击 */
 document.addEventListener('keydown', function (e) {

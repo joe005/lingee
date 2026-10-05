@@ -1,0 +1,425 @@
+/* 工作板块：侧栏「工作」菜单与历史对话、新任务首屏。
+   选择器限定在 #workNav / #view-work 内，不影响其他页面。 */
+
+/* 切到「工作」页签时，侧栏只保留工作菜单 */
+.sb-scroll.is-work > :not(#workNav) {
+  display: none;
+}
+#workNav {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding-bottom: 8px;
+}
+#workNav.hidden {
+  display: none;
+}
+
+/* 历史对话 / 定时任务 页签 */
+#workNav .work-hist-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 14px 4px 6px 12px;
+}
+#workNav .work-hist-tabs {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+#workNav .work-hist-tab {
+  position: relative;
+  padding: 4px 0 6px;
+  border: none;
+  background: none;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+#workNav .work-hist-tab:hover {
+  color: var(--text);
+}
+#workNav .work-hist-tab.active {
+  color: var(--text);
+  font-weight: 600;
+}
+#workNav .work-hist-tab.active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--text);
+}
+#workNav .work-hist-search {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+#workNav .work-hist-search:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+#workNav .work-hist-search .ic {
+  width: 16px;
+  height: 16px;
+}
+#workNav .work-hist-tab:focus-visible,
+#workNav .work-hist-search:focus-visible,
+#workNav .work-hist-item:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 1px;
+}
+#workNav .work-hist-searchrow {
+  margin: 0 8px 6px 12px;
+}
+#workNav .work-hist-searchrow[hidden] {
+  display: none;
+}
+#workNav .work-hist-searchrow input {
+  box-sizing: border-box;
+  width: 100%;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--border-hover);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 12.5px;
+}
+#workNav .work-hist-searchrow input:focus {
+  outline: none;
+  border-color: var(--brand);
+}
+#workNav .work-hist-group {
+  margin: 6px 0 2px 12px;
+  color: var(--text-soft);
+  font-size: 11px;
+}
+#workNav .work-hist-item {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+#workNav .work-hist-item:hover {
+  background: var(--hover);
+}
+#workNav .work-hist-empty {
+  padding: 18px 12px;
+  color: var(--text-soft);
+  font-size: 12px;
+  text-align: center;
+}
+
+/* 主区：新任务首屏 */
+#view-work {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  background: var(--bg);
+}
+#view-work.hidden {
+  display: none;
+}
+#view-work .work-stage {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 100%;
+  padding: 48px 32px 64px;
+}
+#view-work .work-hero {
+  margin: 0 0 28px;
+  color: var(--text);
+  font-family: "Songti SC", "Noto Serif SC", "Source Han Serif SC", STSong, serif;
+  font-size: 44px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-align: center;
+}
+#view-work .work-modes {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  box-sizing: border-box;
+  height: 40px;
+  padding: 4px;
+  margin-bottom: 14px;
+  border-radius: var(--asset-pill-radius);
+  background: var(--hover);
+}
+#view-work .work-mode {
+  box-sizing: border-box;
+  height: 32px;
+  padding: 0 20px;
+  border: none;
+  border-radius: var(--asset-pill-radius);
+  background: none;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+}
+#view-work .work-mode:hover {
+  background: var(--active);
+  color: var(--text);
+}
+#view-work .work-mode.active {
+  background: var(--bg);
+  color: var(--text);
+  font-weight: 500;
+  box-shadow: var(--pill-shadow);
+}
+#view-work .work-mode:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 1px;
+}
+
+/* 输入框外层灰色托盘：下方放分组选择 */
+#view-work .work-box {
+  box-sizing: border-box;
+  width: min(860px, 100%);
+  padding-bottom: 6px;
+  border-radius: 26px;
+  background: var(--hover);
+}
+#view-work .work-composer {
+  position: relative;
+  padding: 18px 20px 12px;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: var(--bg);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.05);
+}
+#view-work .work-box:focus-within .work-composer {
+  border-color: var(--border-focus);
+}
+#view-work .work-composer textarea {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 52px;
+  max-height: 180px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 15px;
+  line-height: 1.6;
+  resize: none;
+}
+#view-work .work-composer textarea:focus {
+  outline: none;
+}
+#view-work .work-composer textarea::placeholder {
+  color: var(--text-soft);
+}
+#view-work .work-composer-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+}
+#view-work .work-spacer {
+  flex: 1;
+}
+#view-work .work-icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 10px;
+  background: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+#view-work .work-icon-btn:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+#view-work .work-send {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--brand);
+  color: #fff;
+  cursor: pointer;
+}
+#view-work .work-send:hover:not(:disabled) {
+  background: var(--brand-hover);
+}
+#view-work .work-send:disabled {
+  background: var(--hover);
+  color: var(--text-soft);
+  cursor: not-allowed;
+}
+#view-work .work-icon-btn:focus-visible,
+#view-work .work-send:focus-visible,
+#view-work .work-dd-btn:focus-visible,
+#view-work .work-chip:focus-visible,
+#view-work .work-dd-opt:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 1px;
+}
+
+/* 下拉：选择智能体 / 模型 / 分组 */
+#view-work .work-dd {
+  position: relative;
+}
+#view-work .work-dd-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 10px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+#view-work .work-dd-btn:hover,
+#view-work .work-dd-btn[aria-expanded="true"] {
+  background: var(--hover);
+}
+#view-work .work-dd-btn--ghost {
+  color: var(--text-secondary);
+}
+#view-work .work-dd-btn--ghost:hover,
+#view-work .work-dd-btn--ghost[aria-expanded="true"] {
+  background: var(--active);
+}
+#view-work .work-dd-menu {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 200px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  box-shadow: var(--menu-shadow);
+}
+#view-work .work-dd-menu[hidden] {
+  display: none;
+}
+#view-work .work-dd-menu--right {
+  left: auto;
+  right: 0;
+}
+#view-work .work-dd-menu--up {
+  top: auto;
+  bottom: calc(100% + 6px);
+}
+#view-work .work-dd-opt {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+#view-work .work-dd-opt small {
+  color: var(--text-soft);
+  font-size: 11.5px;
+}
+#view-work .work-dd-opt:hover {
+  background: var(--hover);
+}
+#view-work .work-dd-opt[aria-selected="true"] {
+  background: var(--brand-fill);
+  color: var(--brand);
+}
+#view-work .work-group-row {
+  display: flex;
+  padding: 6px 12px 0;
+}
+
+/* 快捷入口 */
+#view-work .work-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 22px;
+  max-width: 860px;
+}
+#view-work .work-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  box-shadow: var(--pill-shadow);
+}
+#view-work .work-chip:hover {
+  background: var(--fill-1);
+  border-color: var(--border-hover);
+}
+@media (max-width: 720px) {
+  #view-work .work-hero {
+    font-size: 32px;
+  }
+  #view-work .work-stage {
+    padding: 32px 16px 48px;
+  }
+}

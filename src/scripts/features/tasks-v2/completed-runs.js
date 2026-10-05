@@ -2,6 +2,7 @@
 import { CV_PROJECTS } from '../collab/data.js';
 import { TEAMS } from '../expert/store.js';
 import { EXPERTS } from '../expert/data.js';
+import { tkProjectById } from './data.js';
 
 const COMPLETED_RUNS = {
   6: { agent:'cosmic-workflow', duration:'4分12秒', result:'黑白名单录入、批量导入及下单拦截规则已交付并通过验收。', steps:[['配置名单维护流程','完成单条录入、Excel 导入预览与审批留痕。'],['验证采购规则','黑名单下单拦截与白名单绿色通道均通过场景检查。'],['提交验收结果','记录导入校验与名单变更用例，交付上线样例。']] },
@@ -26,7 +27,7 @@ export function createDemoCompletedRun(task) {
   if (task.status !== 'done') return null;
   var content = COMPLETED_RUNS[task.id];
   if (!content) return null;
-  var project = CV_PROJECTS.find(function (row) { return row.id === task.project; });
+  var project = tkProjectById(task.project);
   var team = TEAMS.find(function (row) { return row.id === (task.teamId || project?.defaultTeam); });
   var expertId = team?.members.includes(content.agent) ? content.agent : team?.leadId;
   var expert = EXPERTS.find(function (row) { return row.id === expertId; });

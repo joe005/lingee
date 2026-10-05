@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>员工满意度分析助手</title>
+<style>
+:root{--brand:#495dff;--brand-soft:#eef0ff;--text:#1d2129;--muted:#6b7280;--line:#e8eaf0;--bg:#f6f7fb;--card:#fff;--ok:#08a040;--ok-soft:#e8f7ee;--warn:#d97706;--warn-soft:#fff4e0}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;font:13px/1.6 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--text);background:#fbfbfd}
+button,input,textarea,select{font:inherit;color:inherit}
+.top{position:sticky;top:0;z-index:2;background:#fbfbfd;padding:18px 20px 0}
+.head{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.name{min-width:0;flex:1}
+.name h1{margin:0;font-size:17px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.name p{margin:2px 0 0;color:var(--muted);font-size:12px}
+.pill{font-size:12px;font-weight:500;padding:1px 8px;border-radius:6px;background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+.pill.review{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.pill.ok{background:var(--ok-soft);color:var(--ok);border-color:transparent}
+.acts{display:flex;gap:8px}
+.btn{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 14px;border-radius:8px;border:1px solid var(--brand);background:#fff;color:var(--brand);cursor:pointer;font-weight:500}
+.btn:hover{background:var(--brand-soft)}
+.btn.pri{background:var(--brand);color:#fff}
+.btn.pri:hover{filter:brightness(1.06);background:var(--brand)}
+.btn:disabled{cursor:default;opacity:.55;filter:none}
+.btn svg{width:15px;height:15px}
+.btn:focus-visible,.tab:focus-visible,.switch:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.banner{margin-top:12px;display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;background:var(--ok-soft);color:#05622a}
+.banner b{font-weight:600}
+.banner .sp{flex:1}
+.banner .btn{height:28px;border-color:var(--ok);color:var(--ok)}
+.tabs{display:flex;gap:4px;margin-top:14px;padding:4px;background:#f0f1f5;border-radius:10px;width:fit-content;max-width:100%;overflow:auto}
+.tab{border:0;background:none;padding:6px 16px;border-radius:8px;cursor:pointer;color:var(--muted);white-space:nowrap}
+.tab.on{background:#fff;color:var(--text);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+.body{padding:14px 20px 28px}
+.pane[hidden]{display:none}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:12px}
+.sec{font-size:15px;font-weight:600;margin:18px 0 10px}
+.grid2{display:grid;grid-template-columns:56px minmax(0,1fr) 160px;gap:12px;align-items:start}
+.avatar{width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#5ad4a0,#2fb37a);color:#fff;display:grid;place-items:center;font-weight:700;font-size:18px}
+.field label{display:block;color:var(--muted);font-size:12px;margin-bottom:4px}
+.field label b{color:#e04a3a;font-weight:400}
+.field .box{border:1px solid var(--line);border-radius:8px;padding:7px 10px;background:#fff;min-height:34px}
+.field textarea.box{width:100%;resize:vertical;min-height:96px;line-height:1.6}
+.full{grid-column:2/-1}
+.row{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.row:first-child{border-top:0;padding-top:0}
+.row .t{flex:1;min-width:0}
+.row .t b{display:block;font-weight:500}
+.row .t span{color:var(--muted);font-size:12px}
+.switch{width:36px;height:20px;border-radius:999px;border:0;background:#d0d4de;position:relative;cursor:pointer;padding:0;flex:none}
+.switch::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .15s}
+.switch[aria-checked="true"]{background:var(--brand)}
+.switch[aria-checked="true"]::after{left:18px}
+.log-ver{display:flex;align-items:center;gap:8px;font-weight:500}
+.log-ver i{width:9px;height:9px;border-radius:50%;border:2px solid var(--warn);display:inline-block}
+.log-ver em{font-style:normal;color:var(--warn);font-weight:600}
+.log-ver em.ok{color:var(--ok)}
+.log-ver small{color:var(--muted);font-weight:400}
+.log{margin:8px 0 0;padding:10px 14px;list-style:none;background:var(--bg);border-radius:8px}
+.log li{padding:3px 0;color:#3b4252;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prompt{white-space:pre-wrap;margin:0;font:12.5px/1.75 ui-monospace,SFMono-Regular,Menlo,monospace;color:#2b3140}
+.skill{display:flex;gap:10px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.skill:first-of-type{border-top:0;padding-top:0}
+.skill .ic{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;font-weight:700;background:var(--brand-soft);color:var(--brand);flex:none}
+.skill .t{flex:1;min-width:0}
+.skill .t b{display:block;font-weight:500}
+.skill .t span{color:var(--muted);font-size:12px}
+.tag{font-size:12px;color:var(--muted);padding:1px 8px;border-radius:6px;background:var(--bg);flex:none}
+.kb{display:flex;gap:12px;align-items:center;padding:12px;border-radius:10px;background:var(--bg);margin-bottom:10px}
+.kb .ic{width:36px;height:36px;border-radius:9px;display:grid;place-items:center;background:#fff;color:var(--brand);font-weight:700;flex:none}
+.kb .t{flex:1;min-width:0}
+.kb .t b{display:block;font-weight:500}
+.kb .t span{color:var(--muted);font-size:12px}
+.note{color:var(--muted);font-size:12px;margin:8px 0 0}
+.mask{position:fixed;inset:0;background:rgba(20,24,40,.35);display:grid;place-items:center;padding:16px;z-index:10}
+.dialog{width:min(460px,100%);background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.18)}
+.dialog h2{margin:0;padding:16px 20px 4px;font-size:15px}
+.dialog .dbody{padding:8px 20px 0;display:grid;gap:10px}
+.dialog .kv{display:grid;grid-template-columns:72px minmax(0,1fr);gap:8px;color:var(--text)}
+.dialog .kv span{color:var(--muted)}
+.dialog textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 10px;resize:vertical;min-height:72px}
+.dialog .foot{display:flex;justify-content:flex-end;gap:8px;padding:16px 20px}
+.toast{position:fixed;top:12px;left:50%;transform:translateX(-50%);background:#fff;border:1px solid var(--line);box-shadow:0 6px 20px rgba(0,0,0,.12);border-radius:8px;padding:8px 14px;display:flex;gap:8px;align-items:center;z-index:11;white-space:nowrap}
+.toast i{width:16px;height:16px;border-radius:50%;background:var(--ok);color:#fff;display:grid;place-items:center;font-style:normal;font-size:11px}
+@media (max-width:640px){.grid2{grid-template-columns:48px minmax(0,1fr)}.full{grid-column:1/-1}}
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="head">
+    <div class="name">
+      <h1>员工满意度分析助手 <span class="pill" id="state">已保存</span></h1>
+      <p>survey-satisfaction-analyst</p>
+    </div>
+    <div class="acts">
+      <button class="btn" type="button" id="save"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>保存</button>
+      <button class="btn" type="button" id="test"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6M10 3v6.2L5.2 18a2 2 0 0 0 1.7 3h10.2a2 2 0 0 0 1.7-3L14 9.2V3"/><path d="M7.5 15h9"/></svg>测试</button>
+      <button class="btn pri" type="button" id="submit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M4 16v4h16v-4"/></svg><span id="submitLabel">提交</span></button>
+    </div>
+  </div>
+  <div class="banner" id="approved" hidden><b>审核通过</b><span>已发布到 Work，人力资源部和部门负责人可直接使用</span><span class="sp"></span><button class="btn" type="button" id="goWork">在 Work 中使用</button></div>
+  <div class="tabs" role="tablist" aria-label="智能体配置">
+    <button class="tab on" type="button" role="tab" aria-selected="true" data-tab="basic">基础信息</button>
+    <button class="tab" type="button" role="tab" aria-selected="false" data-tab="role">角色设定</button>
+    <button class="tab" type="button" role="tab" aria-selected="false" data-tab="skills">技能配置</button>
+    <button class="tab" type="button" role="tab" aria-selected="false" data-tab="kb">知识</button>
+  </div>
+</div>
+
+<div class="body">
+  <section class="pane" data-pane="basic">
+    <div class="card">
+      <div class="grid2">
+        <div class="avatar" aria-hidden="true">析</div>
+        <div class="field"><label>名称 <b>*</b></label><div class="box">员工满意度分析助手</div></div>
+        <div class="field"><label>分类</label><div class="box">人力</div></div>
+        <div class="field full"><label>功能描述 <b>*</b></label><textarea class="box" aria-label="功能描述">基于问卷调研系统的答卷数据，回答回收率和满意度相关问题，定位低回收率部门与低分题目，每周一推送部门分析报告。</textarea></div>
+      </div>
+    </div>
+    <div class="sec">模型策略</div>
+    <div class="card">
+      <div class="row"><div class="t"><b>允许切换模型</b><span>使用者可在对话中自行切换模型等级</span></div><button class="switch" type="button" role="switch" aria-checked="true" aria-label="允许切换模型"></button></div>
+      <div class="row"><div class="t"><b>默认模型等级</b><span>自动匹配，平衡性能与成本</span></div><span>自动</span></div>
+    </div>
+    <div class="sec">更新日志</div>
+    <div class="card">
+      <div class="log-ver">V1.0.0 <i aria-hidden="true"></i><em id="logState">未发布</em><small>3 条编辑</small></div>
+      <ul class="log" id="log">
+        <li>10-05 10:52 · 创建智能体</li>
+        <li>10-05 10:52 · 挂载技能：问卷数据读取、满意度指标口径、分析报告生成</li>
+        <li>10-05 10:52 · 绑定知识：问卷调研系统 · 答卷库</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="pane" data-pane="role" hidden>
+    <div class="card"><pre class="prompt"># 身份
+你是人力资源部的员工满意度分析助手，服务于人力资源部和各部门负责人。
+
+## 职责
+1. 回答回收率、满意度、题目得分等问题，口径以「满意度指标口径」为准
+2. 定位回收率偏低的部门和得分偏低的题目，并说明可能原因
+3. 汇总开放题高频词，给出改进建议
+4. 每周一 09:00 生成并推送部门分析报告
+
+## 原则
+- 不返回个人答卷，样本少于 5 份的分组不展示
+- 部门负责人只能查看本部门汇总
+- 结论基于问卷数据，推测性观点需明确标注</pre></div>
+  </section>
+
+  <section class="pane" data-pane="skills" hidden>
+    <div class="card">
+      <div class="skill"><span class="ic">读</span><div class="t"><b>问卷数据读取</b><span>接入问卷调研系统答卷库，按问卷、部门、题目取数</span></div><span class="tag">技能开发</span><button class="switch" type="button" role="switch" aria-checked="true" aria-label="启用问卷数据读取"></button></div>
+      <div class="skill"><span class="ic">口</span><div class="t"><b>满意度指标口径</b><span>回收率、满意度、题目得分的计算规则</span></div><span class="tag">技能开发</span><button class="switch" type="button" role="switch" aria-checked="true" aria-label="启用满意度指标口径"></button></div>
+      <div class="skill"><span class="ic">报</span><div class="t"><b>分析报告生成</b><span>部门对比、变化原因、开放题高频词</span></div><span class="tag">技能开发</span><button class="switch" type="button" role="switch" aria-checked="true" aria-label="启用分析报告生成"></button></div>
+    </div>
+  </section>
+
+  <section class="pane" data-pane="kb" hidden>
+    <div class="card">
+      <div class="kb"><span class="ic">问</span><div class="t"><b>问卷调研系统 · 答卷库</b><span>2026 员工满意度调研 · 1,286 份答卷 · 32 题 · 6 个部门 · 实时同步</span></div><span class="tag">业务数据</span></div>
+      <div class="kb"><span class="ic">文</span><div class="t"><b>满意度指标口径说明.docx</b><span>人力资源部 · 2026-09-20 更新</span></div><span class="tag">文档</span></div>
+      <p class="note">数据权限继承问卷调研系统：部门负责人仅能查看本部门汇总。</p>
+    </div>
+  </section>
+</div>
+
+<div class="mask" id="mask" hidden>
+  <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgTitle">
+    <h2 id="dlgTitle">提交审核</h2>
+    <div class="dbody">
+      <div class="kv"><span>版本</span><div>V1.0.0</div></div>
+      <div class="kv"><span>发布到</span><div>Work · 智能体</div></div>
+      <div class="kv"><span>使用范围</span><div>人力资源部、部门负责人</div></div>
+      <label class="kv"><span>版本说明</span><textarea id="note">首个版本：基于问卷答卷数据回答满意度问题，定位低回收率部门，每周一推送部门分析报告。</textarea></label>
+    </div>
+    <div class="foot"><button class="btn" type="button" id="cancel">取消</button><button class="btn pri" type="button" id="confirm">确认提交</button></div>
+  </div>
+</div>
+<div class="toast" id="toast" hidden><i>✓</i><span id="toastText"></span></div>
+
+<script>
+(function(){
+  var $=function(s){return document.querySelector(s)};
+  var state='saved';
+  function post(type){try{parent.postMessage({type:'lingee-survey-agent',action:type},'*')}catch(e){}}
+  function toast(t){$('#toastText').textContent=t;$('#toast').hidden=false;clearTimeout(toast.t);toast.t=setTimeout(function(){$('#toast').hidden=true},2400)}
+  document.querySelectorAll('.tab').forEach(function(b){b.addEventListener('click',function(){
+    document.querySelectorAll('.tab').forEach(function(x){var on=x===b;x.classList.toggle('on',on);x.setAttribute('aria-selected',on)});
+    document.querySelectorAll('.pane').forEach(function(p){p.hidden=p.dataset.pane!==b.dataset.tab});
+  })});
+  document.querySelectorAll('.switch').forEach(function(s){s.addEventListener('click',function(){s.setAttribute('aria-checked',s.getAttribute('aria-checked')!=='true')})});
+  $('#save').addEventListener('click',function(){toast('已保存')});
+  $('#test').addEventListener('click',function(){post('test')});
+  $('#submit').addEventListener('click',function(){if(state==='saved'){$('#mask').hidden=false;$('#confirm').focus()}});
+  function close(){$('#mask').hidden=true;$('#submit').focus()}
+  $('#cancel').addEventListener('click',close);
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('#mask').hidden)close()});
+  function setState(s){
+    state=s;
+    var pill=$('#state');pill.className='pill'+(s==='review'?' review':s==='published'?' ok':'');
+    pill.textContent=s==='review'?'审核中':s==='published'?'已发布':'已保存';
+    $('#submitLabel').textContent=s==='review'?'审核中':s==='published'?'已发布':'提交';
+    $('#submit').disabled=s!=='saved';
+    var ls=$('#logState');ls.textContent=s==='review'?'审核中':s==='published'?'已发布':'未发布';ls.classList.toggle('ok',s==='published');
+  }
+  $('#confirm').addEventListener('click',function(){
+    var c=$('#confirm');c.disabled=true;c.textContent='提交中…';
+    setTimeout(function(){
+      $('#mask').hidden=true;c.disabled=false;c.textContent='确认提交';
+      setState('review');post('submitted');toast('已提交审核，审核通过后可在 Work 使用');
+      var li=document.createElement('li');li.textContent='10-05 10:58 · 提交审核：'+$('#note').value.trim().slice(0,24)+'…';$('#log').appendChild(li);
+      /* 原型：租户管理员审核通过的过程不在这里展示，稍后自动通过 */
+      setTimeout(function(){
+        setState('published');$('#approved').hidden=false;post('approved');
+        var li2=document.createElement('li');li2.textContent='10-05 11:02 · 审核通过，发布到 Work';$('#log').appendChild(li2);
+      },2600);
+    },700);
+  });
+  $('#goWork').addEventListener('click',function(){post('work')});
+  window.addEventListener('message',function(e){if(e.data&&e.data.type==='lingee-survey-agent-state')setState(e.data.state)});
+})();
+</script>
+</body>
+</html>

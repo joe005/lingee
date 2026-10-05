@@ -46,8 +46,20 @@ export function tkSyncPeople() {
     if (task.createdBy && !CV_MEMBERS.some(function (person) { return person.id === task.createdBy; })) task.createdBy = '';
   });
 }
+/* 其他板块（管理）的项目：不进入协作开发的项目列表，但其下任务与开发板块共用任务数据，
+   开发板块按项目查找名称、成员与可见范围时一并识别。由提供方在任务模块初始化前注册。 */
+var externalProjects = function () { return []; };
+export function tkSetExternalProjects(provider) {
+  if (typeof provider === 'function') externalProjects = provider;
+}
+function tkAllProjects() { return CV_PROJECTS.concat(externalProjects() || []); }
+export function tkProjectById(id) {
+  if (!id) return undefined;
+  return CV_PROJECTS.find(function (row) { return row.id === id; })
+    || (externalProjects() || []).find(function (row) { return row.id === id; });
+}
 export function tkPeopleInProject(projectId) {
-  var project = CV_PROJECTS.find(function (row) { return row.id === projectId; });
+  var project = tkProjectById(projectId);
   if (!project) return [];
   var members = cvPeopleInProject(project);
   var owner = CV_MEMBERS.find(function (person) { return person.name === project.owner; });
@@ -67,6 +79,25 @@ export function tkCurrentStageHandlerId(task) {
     || task.executionPlan.find(function (row) { return row.status !== 'done'; })
     || task.executionPlan[0];
   return stage?.assigneeId || '';
+}
+/* 任务页签按人员分配：默认只列出与我当前相关的任务——
+   当前阶段由我处理，或我负责的阶段已经做完（归入「已完成」）。
+   项目负责人通过「负责人 → 全部」筛选查看项目全部任务。 */
+export function tkIsMyCurrentStage(task) {
+  var me = tkCurrentUserId();
+  return !!me && !!task && task.status !== 'done' && task.status !== 'cancelled' && tkCurrentStageHandlerId(task) === me;
+}
+/* 我负责的阶段已完成：任务整体完成，或流转到他人处理的后续阶段 */
+export function tkIsMyStageDone(task) {
+  var me = tkCurrentUserId();
+  if (!me || !task || task.status === 'cancelled') return false;
+  var plan = Array.isArray(task.executionPlan) ? task.executionPlan : [];
+  if (!plan.length) return task.status === 'done' && task.assignee === me;
+  var didStage = plan.some(function (stage) { return stage && stage.status === 'done' && stage.assigneeId === me; });
+  return didStage && (task.status === 'done' || tkCurrentStageHandlerId(task) !== me);
+}
+export function tkInMyTaskList(task) {
+  return tkIsMyCurrentStage(task) || tkIsMyStageDone(task);
 }
 export function tkCanStartTask(task) {
   var me = tkCurrentUserId();
@@ -114,11 +145,11 @@ export function tkCanViewTask(task) {
    通过筛选「负责人」的「全部」选项查看所有人，普通成员不显示该选项。 */
 export function tkIsProjectOwner() {
   var me = CV_MEMBERS.find(function (person) { return person.id === tkCurrentUserId(); });
-  return !!me && CV_PROJECTS.some(function (project) { return project.owner === me.name; });
+  return !!me && tkAllProjects().some(function (project) { return project.owner === me.name; });
 }
 export function tkProjectsForCurrentUser() {
   var userId = tkCurrentUserId();
-  return userId ? CV_PROJECTS.filter(function (project) {
+  return userId ? tkAllProjects().filter(function (project) {
     return (project.members || []).includes(userId)
       || CV_MEMBERS.some(function (person) { return person.id === userId && project.owner === person.name; });
   }) : [];
@@ -631,7 +662,7 @@ export function tkGetPerson(id) {
   return member ? { id:member.id, name:member.name, avatar:member.name.slice(0, 1), color:'#495dff' } : { id: id, name: '未分配', avatar: '?', color: '#b8b8b8' };
 }
 export function tkGetProjectName(id) {
-  var p = TK_PROJECTS.find(function (x) { return x.id === id; });
+  var p = tkProjectById(id);
   return p ? p.name : id;
 }
 export function tkGetStatusObj(id) {

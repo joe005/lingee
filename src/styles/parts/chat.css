@@ -365,6 +365,12 @@
   .preview-tab{padding:0;display:flex;align-items:center;height:100%;font-size:13px;color:#767676;cursor:pointer;font-weight:500;transition:color .15s;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
   .preview-tab:hover{color:var(--text)}
   .preview-tab.active{color:#495dff;border-bottom-color:#495dff} /* 选中用主题色 */
+  /* 通用应用与智能体：右侧是打开系统链接的内置浏览器，不显示苍穹的表单/列表/实体等页签 */
+  .preview-browser-title{display:none;align-self:center;font-size:13px;font-weight:500;color:var(--text)}
+  .chat-preview-side.is-browser .preview-tabs{display:none}
+  .chat-preview-side.is-browser .preview-browser-title{display:block}
+  /* 智能体编辑面板占满右侧，自带标题与操作区 */
+  .chat-preview-side.is-editor .preview-header,.chat-preview-side.is-editor .preview-nav{display:none}
   .preview-close{border:none;background:none;cursor:pointer;color:var(--text-muted);border-radius:6px;flex:none;width:26px;height:26px;display:flex;align-items:center;justify-content:center;padding:0;align-self:center;transition:background .15s,color .15s}
   .preview-close svg{width:15px;height:15px}
   .preview-close:hover{background:var(--hover);color:var(--text)}

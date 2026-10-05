@@ -16,7 +16,7 @@
   var b=p.replace(/[^/]*$/,'').replace(/\/+$/,'');
   if(b){if(p===b)p='/';else if(p.indexOf(b+'/')===0)p=p.slice(b.length)||'/';}
   var seg=p.replace(/^\/+|\/+$/g,'').split('/')[0]||'';
-  var VN=['home','newtask','chat','apps','collab','skills','agents','settings','design','experts','tasks','changelog','inbox','platform'];var NP=[];
+  var VN=['home','newtask','chat','apps','collab','skills','agents','settings','design','experts','tasks','changelog','inbox','platform','manager','work'];var NP=[];
   var v='';
   if(VN.indexOf(seg)>=0)v=seg;
   else{var ov=new URLSearchParams(location.search).get('view');
@@ -44,6 +44,8 @@
   html[data-initial-view="changelog"] #view-changelog,
   html[data-initial-view="inbox"] #view-inbox{display:flex!important}
   html[data-initial-view="platform"] #view-platform{display:flex!important}
+  html[data-initial-view="manager"] #view-manager{display:flex!important}
+  html[data-initial-view="work"] #view-work{display:flex!important}
 </style>
 </head>
 <body>
@@ -69,6 +71,8 @@
 <!--#include "src/views/design.html" -->
 <!--#include "src/views/analytics.html" -->
 <!--#include "src/views/changelog.html" -->
+<!--#include "src/views/manager.html" -->
+<!--#include "src/views/work.html" -->
   </main>
 
 <!--#include "src/views/overlays.html" -->
@@ -88,6 +92,7 @@
 <!--#include "src/modals/source-app-menu.html" -->
 <!--#include "src/modals/shortcut.html" -->
 <!--#include "src/modals/collab.html" -->
+<!--#include "src/modals/manager.html" -->
 <div class="cv-scope">
 <!--#include "src/modals/new-task.html" -->
 <!--#include "src/modals/split-task.html" -->

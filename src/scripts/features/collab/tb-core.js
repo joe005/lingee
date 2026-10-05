@@ -1,6 +1,6 @@
 import { CV_TASKS, CV_PROJECTS } from './data.js';
 import { TEAMS } from '../expert/store.js';
-import { EX, STAGE_MODES, teamStageScenario } from '../expert/data.js';
+import { EX, stageExperts, teamStageScenario } from '../expert/data.js';
 import { toast } from '../../core/toast.js';
 /* 任务看板共享核心：列定义、当前任务、状态持久化与派生工具
    task-board / new-task / task-chat 三个模块共用，避免彼此循环依赖。 */
@@ -54,21 +54,13 @@ export function tbMatchExperts(t) {
   return ['开发实现'];
 }
 export function tbPriority(t) { return t.priority || (t.type === 'Bug' ? '高' : '中'); }
-/* 智能体团队实际能覆盖到的阶段：按团内成员的工作模式，交叉 STAGE_MODES 过滤。 */
+/* 智能体团队实际能覆盖到的阶段：团内成员有匹配该阶段能力项的智能体（每阶段最多 2 位）。 */
 export function tbTeamStages(team, issue) {
   const stages = teamStageScenario(issue).stages;
   if (!team) return stages.slice();
-  const modes = {};
-  (team.members || []).forEach(id => { const e = EX[id]; if (e) (e.modes || []).forEach(m => { modes[m] = true; }); });
-  const covered = stages.filter(s => (STAGE_MODES[s.id] || []).some(m => modes[m]));
-  const visible = covered.length ? covered : stages.slice();
-  return visible.map(stage => {
-    const explicit = Array.isArray(team.stageMembers?.[stage.id])
-      ? team.stageMembers[stage.id].filter(id => (team.members || []).includes(id) && EX[id])
-      : [];
-    const fallback = (team.members || []).filter(id => (STAGE_MODES[stage.id] || []).some(mode => (EX[id]?.modes || []).includes(mode))).slice(0, 3);
-    return { ...stage, expertIds: explicit.length ? explicit : fallback };
-  });
+  const withExperts = stages.map(stage => ({ ...stage, expertIds: stageExperts(stage.id, team.members || [], team.stageMembers?.[stage.id]) }));
+  const covered = withExperts.filter(s => s.expertIds.length);
+  return covered.length ? covered : withExperts;
 }
 export function tbLabel(status) { return tbColumns.find(c => c[0] === status)?.[1] || status; }
 /* 任务是否已启动：待规划与待办视为未启动，目标与分工仍可编辑；

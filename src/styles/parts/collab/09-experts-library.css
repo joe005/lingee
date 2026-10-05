@@ -102,6 +102,13 @@
 #view-collab #cv-experts .x-card .card-desc{flex:0 0 42px;min-height:0;-webkit-line-clamp:2;margin:10px 0 8px}
 #view-collab #cv-experts .x-card .card-tags{flex:none;max-height:26px;overflow:hidden;margin-top:0}
 #view-collab #cv-experts .x-card .x-modes{flex:none;margin-top:8px}
+/* 「我的智能体」卡片没有底部操作区（也不再展示可承担的工作），高度收紧；市场卡片仍留出安装按钮的位置 */
+#view-collab #cv-experts .apps-grid:not(.asset-cloud-grid) .x-card{height:var(--asset-expert-card-height-compact);min-height:var(--asset-expert-card-height-compact)}
+/* 智能体团队卡片：描述固定两行槽位，标签行在各卡片上对齐；底部操作区（自建团队）贴底 */
+#view-collab #cv-teams .x-card .card-top{flex:none}
+#view-collab #cv-teams .x-card .card-desc{flex:0 0 42px;min-height:0;-webkit-line-clamp:2;margin:10px 0 8px}
+#view-collab #cv-teams .x-card .card-tags{flex:none;margin-top:0}
+#view-collab #cv-teams .x-card .expert-layer-footer{margin-top:auto}
 
 /* 标题、来源、版本在一行内保留，长名称省略。 */
 #view-collab #cv-experts .x-card .card-title-row{flex-wrap:nowrap;min-width:0;gap:6px}

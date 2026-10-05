@@ -127,6 +127,14 @@ function openSurveyAppPreview(frame,urlInput){
   if(urlInput) urlInput.value=SURVEY_APP_URL;
 }
 
+/* 通用应用用内置浏览器预览系统链接；苍穹应用保留表单/列表/实体等页签 */
+function setPreviewBrowserMode(on){
+  var side=document.getElementById('chatPreviewSide');
+  if(side) side.classList.toggle('is-browser',on);
+  var previewTab=$('.preview-tab[data-tab="preview"]');
+  if(on&&previewTab&&!previewTab.classList.contains('active')) previewTab.click();
+}
+
 export function initApps() {
   /* ---------- 我的应用 (apps view) ---------- */
   $('.btn-new:not(.apps-new-btn)') && $('.btn-new:not(.apps-new-btn)').addEventListener('click',function(){});
@@ -139,6 +147,7 @@ export function initApps() {
   $$('.app-card').forEach(function(c){
     c.addEventListener('click',function(e){
       if(e.target.closest('.card-more')){ e.stopPropagation(); toast('更多操作'); return; }
+      if(c.hasAttribute('data-agent')) return; /* 演示智能体由 agent-demo.js 打开 */
       var name=$('.card-title',c).textContent.trim();
       showView('chat');
       setNavActive('新会话');
@@ -151,6 +160,7 @@ export function initApps() {
       var frame=document.getElementById('chatPreviewFrame');
       var urlInput=document.getElementById('previewUrlText');
       var url='https://feature.kingdee.com:1026/feature_vb';
+      setPreviewBrowserMode(name===SURVEY_APP_NAME);
       if(name===SURVEY_APP_NAME){ renderSurveyDevConversation(); openSurveyAppPreview(frame,urlInput); }
       else{
         if(frame) frame.src=url;

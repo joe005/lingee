@@ -30,3 +30,6 @@
 @import './parts/shared-list-page.css';
 @import './parts/inbox.css';
 @import './parts/platform-expert.css';
+@import './parts/manager.css';
+@import './parts/work.css';
+@import './parts/agent-demo.css';

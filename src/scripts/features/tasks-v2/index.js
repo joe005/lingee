@@ -9,7 +9,7 @@ import { TASK_SESSION_STATUS, tkAddTaskSession, tkGetMySessions, tkLatestStageSe
 import { cvSwitchView } from '../collab/view.js';
 /* T00 结构拆分：index。保留原交互；事件在 init* 中按原顺序注册。 */
 import { initTaskDetailPreferences, initTaskDetailWidth, initTaskDetailEvents, initTaskDetailSubtaskEvents, initTaskDetailGlobalEvents } from './issue-detail.js';
-import { tkCanStartTask, tkCanViewTask, tkIsHandledByMe, tkWasTaskHandler, tkEnsureWorkspaceDemoTasks, tkPruneOrphanTasks, tkSyncPeople } from './data.js';
+import { tkCanStartTask, tkCanViewTask, tkIsHandledByMe, tkInMyTaskList, tkIsMyStageDone, tkWasTaskHandler, tkEnsureWorkspaceDemoTasks, tkPruneOrphanTasks, tkSyncPeople, tkProjectById } from './data.js';
 import { taskViewState } from './ui-state.js';
 import { initTaskListDisplayEvents, initTaskListFilterEvents, initTaskListRowEvents } from './list.js';
 import { initTaskCreateEvents } from './create.js';
@@ -97,8 +97,9 @@ var DEFAULT_LIST_FIELD_ORDER = LIST_FIELDS.map(function(field) { return field.id
    其余未完成任务（AI 执行中或等待他人处理）归入执行中。 */
 var LIST_STATUS_TABS = [
   { id:'needs', name:'需要我处理', match:function (task) { return taskNeedsMyAction(task); } },
-  { id:'running', name:'执行中', match:function (task) { return task.status !== 'done' && task.status !== 'cancelled' && !taskNeedsMyAction(task); } },
-  { id:'done', name:'已完成', match:function (task) { return task.status === 'done'; } },
+  { id:'running', name:'执行中', match:function (task) { return task.status !== 'done' && task.status !== 'cancelled' && !taskNeedsMyAction(task) && !tkIsMyStageDone(task); } },
+  /* 已完成：任务整体完成，或我负责的阶段已做完（后续阶段由他人处理） */
+  { id:'done', name:'已完成', match:function (task) { return task.status === 'done' || tkIsMyStageDone(task); } },
 ];
 var state = {
   layout: 'board', viewMode: 'slide', scope: 'all', groupBy: 'status', sortBy: 'updatedAt', sortDir: 'desc',
@@ -292,7 +293,7 @@ function openTaskConversationWithTask(taskId, origin, autoSend) {
   if (t && autoSend) { startTaskConversationRun(t, origin || 'start'); return; }
   openTaskConversation();
   if (!t) return;
-  var project = CV_PROJECTS.find(function(p){ return p.id === t.project; });
+  var project = tkProjectById(t.project);
   var teamId = t.teamId || (project && project.defaultTeam);
   if (teamId) { set_activePick({kind:'team', id:teamId, auto:false}); renderExpertChips(); }
   setComposerTaskReference(t.id);
@@ -301,7 +302,7 @@ function openTaskConversationWithTask(taskId, origin, autoSend) {
 
 /* 「开始执行」直接发起会话并进入运行中：沿用任务智能体团队与开场指令，不再跳输入框等手动发送 */
 function startTaskConversationRun(task, origin) {
-  var project = CV_PROJECTS.find(function(p){ return p.id === task.project; });
+  var project = tkProjectById(task.project);
   var teamId = task.teamId || (project && project.defaultTeam);
   if (teamId) { set_activePick({kind:'team', id:teamId, auto:false}); renderExpertChips(); }
   setComposerTaskReference(task.id);
@@ -537,9 +538,9 @@ function getFilteredTasks(skipField) {
   var tasks = tkGetTasks();
   tasks = tasks.filter(tkCanViewTask);
   if (projectListMode && projectListProjectId) tasks = tasks.filter(function (task) { return task.project === projectListProjectId; });
-  /* 默认仅显示自己参与的任务；筛选了「负责人」（含全部选项）后按筛选查看他人任务。
-     skipField 供筛选菜单计数复用：预览「负责人」选项时按放开参与过滤后的口径计数。 */
-  if (!projectListMode && skipField !== 'assignee' && !state.filters.some(function (f) { return f.field === 'assignee'; })) tasks = tasks.filter(tkParticipatesCurrentUser);
+  /* 默认仅显示当前阶段由自己处理的任务；筛选了「负责人」（含全部选项）后按筛选查看他人任务。
+     skipField 供筛选菜单计数复用：预览「负责人」选项时按放开默认过滤后的口径计数。 */
+  if (!projectListMode && skipField !== 'assignee' && !state.filters.some(function (f) { return f.field === 'assignee'; })) tasks = tasks.filter(tkInMyTaskList);
   var scope = state.scope;
   if (scope === 'members') tasks = tasks.filter(function (t) { return !t.assignee || t.assignee.charAt(0) !== 'a'; });
   else if (scope === 'agents') tasks = tasks.filter(function (t) { return t.assignee && t.assignee.charAt(0) === 'a'; });
@@ -651,7 +652,9 @@ function listStageProgress(task) {
 function listStatusPool(ignoreProjectContext) {
   var tasks = tkGetTasks().filter(tkCanViewTask);
   if (!ignoreProjectContext && projectListMode && projectListProjectId) tasks = tasks.filter(function (task) { return task.project === projectListProjectId; });
-  if (!projectListMode || ignoreProjectContext) tasks = tasks.filter(tkParticipatesCurrentUser);
+  /* 与列表同口径：默认只算当前阶段由我处理的任务，负责人筛选了「全部」等人员时放开 */
+  var byAssignee = state.filters.some(function (f) { return f.field === 'assignee'; });
+  if ((!projectListMode || ignoreProjectContext) && !byAssignee) tasks = tasks.filter(tkInMyTaskList);
   if (!state.showSubtasks) tasks = tasks.filter(function (task) { return !task.parentId; });
   return tasks;
 }
@@ -757,7 +760,7 @@ function renderCard(t, opts) {
   var spacer = !hasChildren ? '<span class="tk-card-spacer"></span>' : '';
   var childBadge = hasChildren ? '<span class="tk-card-child-count"' + (isCollapsed ? '' : ' style="visibility:hidden"') + '>' + childCount + '</span>' : '';
   var extraCls = (depth ? ' tk-card--child' : '') + (hasChildren ? ' tk-card--parent' : '');
-  var project = CV_PROJECTS.find(function(r){ return r.id === t.project; });
+  var project = tkProjectById(t.project);
   var team = (function(){ var tid = t.teamId || (project && project.defaultTeam); return TEAMS.find(function(tm){ return tm.id === tid; }); })();
   var isBacklog = t.status === 'backlog';
   var teamAvatarHtml, footExtraHtml;
@@ -1308,7 +1311,7 @@ function openTaskModal(taskId, parentId) {
   fillSelects();
   state.editingTaskId = null;
   state.editingParentId = parentId || null;
-  els.tkModalTitle.textContent = parentId ? '新增子任务' : (projectListMode ? '新建任务 · '+(CV_PROJECTS.find(function(project){return project.id===projectListProjectId;})?.name||'项目') : '新建任务');
+  els.tkModalTitle.textContent = parentId ? '新增子任务' : (projectListMode ? '新建任务 · '+(tkProjectById(projectListProjectId)?.name||'项目') : '新建任务');
   tkMcSetMode('manual');
   if (els.tkMcAgentPrompt) els.tkMcAgentPrompt.value = '';
   els.tkFormTitle.value = '';
@@ -1317,7 +1320,7 @@ function openTaskModal(taskId, parentId) {
   els.tkFormPriority.value = 'medium';
   els.tkFormProject.insertAdjacentHTML('afterbegin','<option value="">请选择所属项目 *</option>');
   els.tkFormProject.value = projectListMode ? projectListProjectId : '';
-  set_activePick({kind:'team', id: CV_PROJECTS.find(function (project) { return project.id === els.tkFormProject.value; })?.defaultTeam || TEAMS[0]?.id || '', auto:false}); renderExpertChips();
+  set_activePick({kind:'team', id: tkProjectById(els.tkFormProject.value)?.defaultTeam || TEAMS[0]?.id || '', auto:false}); renderExpertChips();
   refreshFormAssignees(tkCurrentUserId());
   els.tkFormDue.value = '';
   ['tkFormStatus','tkFormAssignee','tkFormDue'].forEach(function(fid){ var el=document.getElementById(fid); if(el) el.hidden=true; });
@@ -1338,7 +1341,7 @@ function openTaskModal(taskId, parentId) {
     var parent = tkGetTasks().find(function (x) { return x.id === parentId; });
     if (parent) {
       els.tkFormProject.value = parent.project;
-      set_activePick({kind:'team', id: parent.teamId || CV_PROJECTS.find(function (project) { return project.id === parent.project; })?.defaultTeam || TEAMS[0]?.id || '', auto:false}); renderExpertChips();
+      set_activePick({kind:'team', id: parent.teamId || tkProjectById(parent.project)?.defaultTeam || TEAMS[0]?.id || '', auto:false}); renderExpertChips();
       refreshFormAssignees(parent.assignee);
       els.tkFormPriority.value = parent.priority;
     }
@@ -1681,7 +1684,7 @@ function setMentionIndex(index) {
 function createMentionPanel(textarea, query) {
   mentionTextarea = textarea;
   var mentionTask = tkGetTasks().find(function (task) { return task.id === state.drawerTaskId; });
-  var project = CV_PROJECTS.find(function (row) { return row.id === mentionTask?.project; });
+  var project = tkProjectById(mentionTask?.project);
   var teamId = mentionTask?.teamId || project?.defaultTeam;
   var team = TEAMS.find(function (row) { return row.id === teamId; })
     || PRESET_TEAMS.find(function (row) { return row.id === teamId; });
@@ -2435,7 +2438,7 @@ function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml,
   var currentState = latest?.state || (task.status === 'cancelled' ? 'cancelled' : 'pending');
   var activeRun = currentState === 'running' ? getDemoStageRun(task, latest) : null;
   var currentIndex = task.status === 'done' || task.status === 'cancelled' ? -1 : Math.max(0,plannedStages.findIndex(function (stage) { return stage.id === task.executionStageId; }));
-  var project = CV_PROJECTS.find(function (row) { return row.id === task.project; });
+  var project = tkProjectById(task.project);
   var teamId = task.teamId || project?.defaultTeam;
   var team = TEAMS.find(function (row) { return row.id === teamId; }) || PRESET_TEAMS.find(function (row) { return row.id === teamId; });
   var currentDetail = latest ? latest.stage + ' · ' + latest.author : '尚未分派执行专家';
@@ -2629,7 +2632,7 @@ function renderAgentStageComment(task, entry) {
 }
 function renderTaskComments(t) {
   var comments = t.comments || [];
-  var project = CV_PROJECTS.find(function (row) { return row.id === t.project; });
+  var project = tkProjectById(t.project);
   var activity = createDeliveryActivity(t, project, {
     creator:tkGetPerson(t.createdBy).name,
     blockedReason:t.blockedRun?.reason,
@@ -3269,7 +3272,7 @@ function bindEvents() {
   });
   els.tkFormProject.addEventListener('change', function () {
     refreshFormAssignees(tkCurrentUserId());
-    set_activePick({kind:'team', id: CV_PROJECTS.find(function (project) { return project.id === els.tkFormProject.value; })?.defaultTeam || TEAMS[0]?.id || '', auto:false}); renderExpertChips();
+    set_activePick({kind:'team', id: tkProjectById(els.tkFormProject.value)?.defaultTeam || TEAMS[0]?.id || '', auto:false}); renderExpertChips();
   });
   var moreDD = document.getElementById('tkMcMoreFields');
   if (moreDD) {

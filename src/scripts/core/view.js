@@ -36,7 +36,7 @@ function applyMode(mode,fromChip){
 }
 
 /* ---------- view switching ---------- */
-var viewHome=$('#view-home'), viewNew=$('#view-newtask'), viewChat=$('#view-chat'), viewApps=$('#view-apps'), viewSkills=$('#view-skills'), viewAgents=$('#view-agents'), viewCollab=$('#view-collab'), viewDesign=$('#view-design'), viewSettings=$('#view-settings'), viewAnalytics=$('#view-analytics'), viewTasks=$('#view-tasks'), viewChangelog=$('#view-changelog'), viewInbox=$('#view-inbox'), viewPlatform=$('#view-platform');
+var viewHome=$('#view-home'), viewNew=$('#view-newtask'), viewChat=$('#view-chat'), viewApps=$('#view-apps'), viewSkills=$('#view-skills'), viewAgents=$('#view-agents'), viewCollab=$('#view-collab'), viewDesign=$('#view-design'), viewSettings=$('#view-settings'), viewAnalytics=$('#view-analytics'), viewTasks=$('#view-tasks'), viewChangelog=$('#view-changelog'), viewInbox=$('#view-inbox'), viewPlatform=$('#view-platform'), viewManager=$('#view-manager'), viewWork=$('#view-work');
 var tasksStandaloneParent=viewTasks.parentNode, tasksStandaloneNext=viewTasks.nextSibling;
 function setTasksEmbedded(embedded, container){
   var target=embedded ? (container||$('#cv-tasks-current')) : tasksStandaloneParent;
@@ -74,6 +74,8 @@ function showView(which){
   viewChangelog.classList.toggle('hidden', which!=='changelog');
   viewInbox.classList.toggle('hidden', which!=='inbox');
   viewPlatform.classList.toggle('hidden', which!=='platform');
+  viewManager.classList.toggle('hidden', which!=='manager');
+  viewWork.classList.toggle('hidden', which!=='work');
   $('.sidebar').classList.toggle('hidden', which==='design');
   closeAll(null);
   if(which!=='design') setUrlState('/'+which);

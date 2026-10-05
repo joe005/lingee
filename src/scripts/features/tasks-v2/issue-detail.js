@@ -3,7 +3,7 @@ import { cvSwitchView } from '../collab/view.js';
 /* T00 结构拆分：issue-detail。保留原交互；事件在 init* 中按原顺序注册。 */
 import { els, taskViewState, setTaskViewState } from './ui-state.js';
 import { showView, setNavActive, input } from '../../core/view.js';
-import { tkGetTasks, tkPeopleInProject, TK_PEOPLE, TK_AGENTS, TK_LABELS, tkUpdateTask, tkGetStatusObj, tkGetPerson, tkGetStatusName, tkProjectsForCurrentUser, tkCanStartTask, tkCanViewTask, TK_STATUSES, TK_PRIORITIES, tkDeleteTask, tkAddTask, tkCurrentUserId } from './data.js';
+import { tkGetTasks, tkPeopleInProject, TK_PEOPLE, TK_AGENTS, TK_LABELS, tkUpdateTask, tkGetStatusObj, tkGetPerson, tkGetStatusName, tkProjectsForCurrentUser, tkCanStartTask, tkCanViewTask, TK_STATUSES, TK_PRIORITIES, tkDeleteTask, tkAddTask, tkCurrentUserId, tkProjectById } from './data.js';
 import { escapeHtml, stClass, filterAssigneeOptions, chooseFirstAssignee } from './ui-utils.js';
 import { render, showCardMenu, hidePopover, displayChoiceMenu, closeDisplayChoiceMenu, closeFilterPanel, closeViewMenu, closeFieldSettings } from './list.js';
 import { toast } from '../../core/toast.js';
@@ -14,6 +14,15 @@ import { renderExpertChips } from '../expert/chips.js';
 import { setComposerTaskReference, sendComposerText } from '../composer.js';
 import { tkAddTaskSession, tkTaskSessionOpeningMessage } from './task-sessions.js';
 import { taskStageHandoffPatch } from './task-execution.js';
+import { tkTaskBranch } from './git-branch.js';
+
+/* 代码分支：项目配置了 Git 仓库与基准分支时显示任务分支及其拉取 / 合并状态 */
+function renderTaskBranchRow(t) {
+  var info = tkTaskBranch(t);
+  if (!info) return '';
+  return '<div class="tk-prop-row"><span>代码分支</span><span class="tk-prop-val" title="' + escapeHtml(info.repo + ' · ' + info.state.hint) + '">'
+    + escapeHtml(info.branch) + ' → ' + escapeHtml(info.base) + ' · ' + escapeHtml(info.state.label) + '</span></div>';
+}
 
 var drawerPreferredWidth = null;
 
@@ -56,7 +65,7 @@ function openTaskConversationWithTask(taskId, autoSend) {
   if (t) tkAddTaskSession(t, 'start', t.executionStageId || null);
   closeDrawer();
   if (t && autoSend) {
-    var project = CV_PROJECTS.find(function(p){ return p.id === t.project; });
+    var project = tkProjectById(t.project);
     var teamId = t.teamId || (project && project.defaultTeam);
     if (teamId) { set_activePick({kind:'team', id:teamId, auto:false}); renderExpertChips(); }
     setComposerTaskReference(t.id);
@@ -66,7 +75,7 @@ function openTaskConversationWithTask(taskId, autoSend) {
   }
   openTaskConversation();
   if (!t) return;
-  var project = CV_PROJECTS.find(function(p){ return p.id === t.project; });
+  var project = tkProjectById(t.project);
   var teamId = t.teamId || (project && project.defaultTeam);
   if (teamId) { set_activePick({kind:'team', id:teamId, auto:false}); renderExpertChips(); }
   setComposerTaskReference(t.id);
@@ -554,6 +563,7 @@ function openDrawer(taskId) {
         propPicker('优先级', t.priority, priOpts) +
         propPicker('截止日期', t.dueDate, null, true) +
         '<div class="tk-prop-row"><span>标签</span>' + renderTaskLabelTrigger(t) + '</div>' +
+        renderTaskBranchRow(t) +
       '</div>' +
       '<div class="tk-prop-row"><span>创建者</span><span class="tk-prop-val">' + escapeHtml(creator.name) + '</span></div>' +
       '<div class="tk-prop-row"><span>创建时间</span><span class="tk-prop-val">' + escapeHtml(t.createdAt || t.createDate) + '</span></div>' +
