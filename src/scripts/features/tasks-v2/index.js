@@ -24,6 +24,7 @@ import { setComposerTaskReference } from '../composer.js';
 import { showView, input, setNavActive } from '../../core/view.js';
 import { toast } from '../../core/toast.js';
 import { applyTaskListFieldSettings, renderTaskListTreeNodes, taskListVisibleColumnCount } from './list-template.js';
+import { taskListKind, taskNeedsMyAction } from './list-kind.js';
 import { getDemoPreRun, getDemoStageRun } from './run-feedback.js';
 import { CV_PROJECTS } from '../collab/data.js';
 import { createDeliveryActivity } from '../collab/delivery-activity.js';
@@ -92,10 +93,12 @@ var LIST_FIELDS = [
   { id:'desc', name:'描述' },
 ];
 var DEFAULT_LIST_FIELD_ORDER = LIST_FIELDS.map(function(field) { return field.id; });
+/* 页签按「轮到谁」划分：需要我处理＝当前阶段由我开始／验收／回答提问／重试；
+   其余未完成任务（AI 执行中或等待他人处理）归入执行中。 */
 var LIST_STATUS_TABS = [
-  { id:'needs', name:'需要我处理', statuses:['backlog','in_review','blocked'] },
-  { id:'running', name:'执行中', statuses:['in_progress'] },
-  { id:'done', name:'已完成', statuses:['done'] },
+  { id:'needs', name:'需要我处理', match:function (task) { return taskNeedsMyAction(task); } },
+  { id:'running', name:'执行中', match:function (task) { return task.status !== 'done' && task.status !== 'cancelled' && !taskNeedsMyAction(task); } },
+  { id:'done', name:'已完成', match:function (task) { return task.status === 'done'; } },
 ];
 var state = {
   layout: 'board', viewMode: 'slide', scope: 'all', groupBy: 'status', sortBy: 'updatedAt', sortDir: 'desc',
@@ -136,13 +139,12 @@ var TASK_START_PLAY_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill
 var TASK_START_CHAT_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>';
 var taskStartLegacy = false;
 
+/* 详情主操作与列表卡片同一口径：只有轮到当前登录人时才出现，操作按任务状态变化。 */
 function taskHeaderAction(task) {
   if (!task) return null;
-  return {
-    planned:{label:'加入待开始',action:'queue'},
-    backlog:{label:'交给AI执行',action:'start'},
-    blocked:{label:'重试执行',action:'retry'},
-  }[task.status] || null;
+  if (task.status === 'planned') return {label:'加入待开始',action:'queue'};
+  var info = taskListKind(task);
+  return info.primary ? {label:info.action === 'review' ? '前往确认' : info.label, action:info.action} : null;
 }
 
 function placeTaskActionButton(button, atBottom) {
@@ -163,7 +165,7 @@ function renderTaskStartAction() {
   if (taskDetailVersion === 'latest') {
     var task = tkGetTasks().find(function (row) { return row.id === state.drawerTaskId; });
     var action = taskHeaderAction(task);
-    placeTaskActionButton(button, action?.action === 'start' || action?.action === 'retry');
+    placeTaskActionButton(button, !!action && action.action !== 'queue');
     button.hidden = !action;
     if (!action) return;
     button.dataset.taskAction = action.action;
@@ -346,6 +348,8 @@ function handleTaskHeaderAction() {
   } else if (action === 'start') {
     startTaskExecution(task.id);
   } else if (action === 'retry') retryBlockedTask(task);
+  else if (action === 'review') openListReviewPreview(task.id, els.tkDrawerChat);
+  else if (action === 'reply') { closeDrawer(); openTaskStatusConversation(task); }
 }
 function returnToTaskDetail(task) {
   var taskView = document.getElementById('view-tasks');
@@ -641,7 +645,7 @@ function listStageProgress(task) {
   var index = stages.findIndex(function (stage) { return stage.id === task.executionStageId; });
   if (task.status === 'done') index = stages.length - 1;
   else if (index < 0) index = 0;
-  return { name:stages[index]?.name || '任务处理', index:index, total:stages.length };
+  return { name:stages[index]?.name || '任务处理', index:index, total:stages.length, stages:stages };
 }
 
 function listStatusPool(ignoreProjectContext) {
@@ -654,7 +658,7 @@ function listStatusPool(ignoreProjectContext) {
 
 function filterListStatus(tasks) {
   var tab = LIST_STATUS_TABS.find(function (item) { return item.id === state.listStatusTab; }) || LIST_STATUS_TABS[0];
-  return tasks.filter(function (task) { return tab.statuses.includes(task.status); });
+  return tasks.filter(tab.match);
 }
 
 /* ---------- 分组 ---------- */
@@ -704,7 +708,7 @@ function renderViewBar() {
   if (listMode) {
     var pool = listStatusPool();
     els.tkViewTabs.innerHTML = LIST_STATUS_TABS.map(function (tab) {
-      var count = pool.filter(function (task) { return tab.statuses.includes(task.status); }).length;
+      var count = pool.filter(tab.match).length;
       var active = tab.id === state.listStatusTab;
       return '<button type="button" class="list-page-tab' + (active ? ' active' : '') + '" data-list-status="' + tab.id + '" role="tab" aria-selected="' + active + '"><span class="list-page-tab-name">' + tab.name + '</span><span class="tk-list-tab-count">' + count + '</span></button>';
     }).join('');
@@ -2436,6 +2440,7 @@ function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml,
   var team = TEAMS.find(function (row) { return row.id === teamId; }) || PRESET_TEAMS.find(function (row) { return row.id === teamId; });
   var currentDetail = latest ? latest.stage + ' · ' + latest.author : '尚未分派执行专家';
   var latestLayout = taskDetailVersion === 'latest';
+  var kindInfo = taskListKind(task);
   var feedback = activeRun ? renderTaskRunFeedback(activeRun)
     : latest ? '<div class="tk-exec-feedback-line is-' + currentState + '"><span class="tk-exec-feedback-icon" aria-hidden="true">' + renderTaskRunIndicator(currentState === 'blocked' ? 'failed' : 'completed') + '</span>'
       + '<p>' + escapeHtml(currentState === 'blocked' ? task.blockedRun?.reason || latest.text : currentState === 'review' ? task.reviewReport?.review || latest.text : task.completedRun?.result || latest.text) + '</p>'
@@ -2467,8 +2472,15 @@ function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml,
         return session.stageId === stage.id || (!session.stageId && isCurrent);
       }) : [];
       if (!latestLayout) return '<li class="tk-feed-stage is-' + state + (isCurrent ? ' is-current' : '') + '" aria-label="' + escapeHtml(stage.name + '，处理人' + assignee + '，' + label) + '"' + (isCurrent ? ' aria-current="step"' : '') + '><span class="tk-feed-stage-mark" aria-hidden="true"></span><span class="tk-feed-stage-name">' + escapeHtml(stage.name) + '</span><span class="tk-feed-stage-assignee" title="处理人：' + escapeHtml(assignee) + '">处理人 <b>' + escapeHtml(assignee) + '</b></span><span class="tk-feed-stage-state">' + label + '</span>' + (isCurrent ? '<span class="tk-feed-stage-current-tag">当前</span>' : '') + '</li>';
+      var stageAction = isCurrent && kindInfo.primary ? {
+        start:{attr:'data-stage-start', label:'交给AI执行'}, review:{attr:'data-stage-review', label:'前往确认'},
+        reply:{attr:'data-stage-answer', label:'回答提问'}, retry:{attr:'data-stage-retry', label:'重新执行'},
+      }[kindInfo.action] : null;
+      var stageActionHtml = stageAction
+        ? '<button type="button" class="tk-feed-stage-review-btn" ' + stageAction.attr + '="' + task.id + '" aria-label="' + stageAction.label + '：' + escapeHtml(stage.name) + '">' + stageAction.label + '</button>' : '';
       var actions = (task.status === 'blocked' && state === 'blocked'
           ? '<span class="tk-feed-stage-review-actions"><button type="button" class="tk-feed-stage-review-btn" data-stage-view-session aria-label="查看' + escapeHtml(stage.name) + '的会话详情与执行异常">查看会话</button></span>' : '')
+        + (stageActionHtml ? '<span class="tk-feed-stage-review-actions">' + stageActionHtml + '</span>' : '')
         + (hasDetail && !inReviewStage ? '<button type="button" class="tk-feed-stage-expand" data-stage-detail-toggle aria-expanded="false" aria-controls="' + detailId + '" aria-label="展开' + escapeHtml(stage.name) + '的产物"><span>查看产物</span><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m6 3 5 5-5 5"/></svg></button>' : '');
       var sessionsHtml = state !== 'done' && stageSessions.length ? '<div class="tk-feed-stage-sessions" aria-label="' + escapeHtml(stage.name) + '的会话">'
           + '<button type="button" class="tk-feed-stage-sessions-toggle" data-stage-sessions-toggle aria-expanded="' + isCurrent + '" aria-controls="' + sessionListId + '">会话 ' + stageSessions.length + '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m6 3 5 5-5 5"/></svg></button>'
@@ -2478,12 +2490,12 @@ function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml,
       var detailHtml = hasDetail ? '<div class="tk-feed-stage-detail" id="' + detailId + '"' + (inReviewStage ? '' : ' hidden') + '><div class="tk-delivery-artifacts"><div class="tk-artifacts-list">' + stageArtifacts.map(renderTaskArtifact).join('') + '</div></div></div>' : '';
       return '<tr class="tk-feed-stage-row is-' + state + (isCurrent ? ' is-current' : '') + (sessionsHtml ? ' has-extra' : '') + '"' + (isCurrent ? ' aria-current="step"' : '') + '>'
         + '<td class="tk-stage-cell-mark"><span class="tk-feed-stage-mark" aria-hidden="true"></span></td>'
-        + '<th scope="row" class="tk-feed-stage-name">' + escapeHtml(stage.name) + '</th>'
-        + '<td class="tk-feed-stage-expert">' + (showExpert ? '<span class="tk-feed-stage-expert-content" title="执行专家：' + escapeHtml(entry.author) + '"><img src="' + escapeHtml(xav(expert?.k)) + '" alt=""><span>' + escapeHtml(entry.author) + '</span></span>' : '') + '</td>'
-        + '<td class="tk-feed-stage-assignee" title="处理人：' + escapeHtml(assignee) + '">处理人 <b>' + escapeHtml(assignee) + '</b></td>'
-        + '<td class="tk-stage-cell-state">' + (isCurrent && state === 'running' && task.status === 'in_progress'
+        + '<th scope="row" class="tk-feed-stage-main" colspan="4"><div class="tk-feed-stage-line"><span class="tk-feed-stage-name">' + escapeHtml(stage.name) + '</span>'
+        + (isCurrent && state === 'running' && task.status === 'in_progress'
           ? '<button type="button" class="tk-feed-stage-state tk-feed-stage-state-action" data-stage-submit="' + escapeHtml(stage.id) + '" aria-label="' + escapeHtml(stage.name) + '执行完成，转为待审核" title="点击模拟 Agent 完成">' + label + '</button>'
-          : '<span class="tk-feed-stage-state">' + label + '</span>') + '</td>'
+          : '<span class="tk-feed-stage-state">' + label + '</span>') + '</div>'
+        + '<div class="tk-feed-stage-meta">' + (showExpert ? '<span class="tk-feed-stage-expert-content" title="执行专家：' + escapeHtml(entry.author) + '"><img src="' + escapeHtml(xav(expert?.k)) + '" alt=""><span>' + escapeHtml(entry.author) + '</span></span><span class="tk-feed-stage-meta-sep" aria-hidden="true">·</span>' : '')
+        + '<span class="tk-feed-stage-assignee" title="处理人：' + escapeHtml(assignee) + '">处理人 <b>' + escapeHtml(assignee) + '</b></span></div></th>'
         + '<td class="tk-stage-cell-actions">' + actions + '</td></tr>'
         + (sessionsHtml || detailHtml ? '<tr class="tk-feed-stage-extra is-' + state + (isCurrent ? ' is-current' : '') + '"' + (sessionsHtml || inReviewStage ? '' : ' hidden') + '><td colspan="6">' + sessionsHtml + detailHtml + '</td></tr>' : '');
     }).join('') + (latestLayout ? '</tbody></table></div>' : '</ol>')
@@ -2834,6 +2846,12 @@ function openDrawer(taskId) {
   });
 }
 
+/* 「查看产物」：打开详情并展开各阶段已产出的文档，直接定位到执行计划。 */
+function openDrawerArtifacts(taskId) {
+  openDrawer(taskId);
+  els.tkDrawerBody.querySelectorAll('[data-stage-detail-toggle][aria-expanded="false"]').forEach(function (button) { button.click(); });
+  els.tkDrawerBody.querySelector('.tk-feed-stage-table')?.scrollIntoView({ block:'start' });
+}
 function closeDrawer() {
   closeDocPreview();
   closeTaskLabelPicker();
@@ -3485,6 +3503,15 @@ function bindEvents() {
           toast(submitted.stage.name + (submitted.autoReviewed ? '已自动审核并流转' : '已完成，等待审核'), 'success');
         }
       }
+      return;
+    }
+    var stageActionButton = e.target.closest('[data-stage-start],[data-stage-review],[data-stage-answer],[data-stage-retry]');
+    if (stageActionButton && sessionTask) {
+      /* 阶段行的按钮与详情底部主操作同源：轮到我时才渲染，点击后走同一条处理链路 */
+      if (stageActionButton.hasAttribute('data-stage-start')) startTaskExecution(sessionTask.id);
+      else if (stageActionButton.hasAttribute('data-stage-review')) openListReviewPreview(sessionTask.id, stageActionButton);
+      else if (stageActionButton.hasAttribute('data-stage-answer')) { closeDrawer(); openTaskStatusConversation(sessionTask); }
+      else retryBlockedTask(sessionTask);
       return;
     }
     var stageSession = e.target.closest('[data-stage-session-open]');
@@ -4177,9 +4204,13 @@ function bindEvents() {
     if (listActionBtn) {
       var listAction = listActionBtn.getAttribute('data-list-task-action');
       var listTaskId = parseInt(listActionBtn.getAttribute('data-list-task-id'), 10);
-      if (listAction === 'preview') openListReviewPreview(listTaskId, listActionBtn);
+      var listTask = tkGetTasks().find(function (row) { return row.id === listTaskId; });
+      if (listAction === 'review') openListReviewPreview(listTaskId, listActionBtn);
       else if (listAction === 'start') startTaskExecution(listTaskId, {skipHandlerCheck:true});
-      else if (listAction === 'retry') retryBlockedTask(tkGetTasks().find(function (row) { return row.id === listTaskId; }), true);
+      else if (listAction === 'retry') retryBlockedTask(listTask, true);
+      else if (listAction === 'reply') { if (listTask) { closeDrawer(); openTaskStatusConversation(listTask); } }
+      else if (listAction === 'artifacts') openDrawerArtifacts(listTaskId);
+      else openDrawer(listTaskId);
       return;
     }
     var toggleBtn = e.target.closest('[data-tk-toggle]');
@@ -4429,9 +4460,7 @@ function initColumnResize() {
 function updateCollabReviewBadge() {
   var badge = document.getElementById('collabReviewBadge');
   if (!badge) return;
-  var count = listStatusPool(true).filter(function (task) {
-    return ['backlog', 'in_review', 'blocked'].includes(task.status);
-  }).length;
+  var count = listStatusPool(true).filter(taskNeedsMyAction).length;
   badge.textContent = String(count);
   badge.style.display = count > 0 ? '' : 'none';
   badge.setAttribute('data-tooltip', count + ' 个任务需要处理');

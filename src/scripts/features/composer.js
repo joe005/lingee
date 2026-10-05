@@ -245,6 +245,14 @@ export function taskConversationNeedsReply(task) {
     return Number(session.taskId) === task.id && isMyChatSession(session) && !!session.demoQuestion && !session.demoQuestion.answer;
   });
 }
+/* 任务列表「待回答」卡片提示用：返回当前等待用户回答的 AI 提问文本，没有则为空串。 */
+export function taskConversationQuestion(task) {
+  if (task?.status !== 'in_progress') return '';
+  var session = chatSessions.find(function (row) {
+    return Number(row.taskId) === task.id && isMyChatSession(row) && !!row.demoQuestion && !row.demoQuestion.answer;
+  });
+  return session ? String(session.demoQuestion.text || '') : '';
+}
 function renderChatSessions() {
   seedCosmicDemoSessions();
   var list = document.getElementById('chatSessionList');
