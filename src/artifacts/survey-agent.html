@@ -26,6 +26,20 @@ button,input,textarea,select{font:inherit;color:inherit}
 .btn:disabled{cursor:default;opacity:.55;filter:none}
 .btn svg{width:15px;height:15px}
 .btn:focus-visible,.tab:focus-visible,.switch:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.dd{position:relative}
+.menu{position:absolute;top:36px;right:0;min-width:132px;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.12);padding:4px;z-index:5}
+.menu button{display:flex;width:100%;align-items:center;gap:8px;border:0;background:none;padding:7px 10px;border-radius:6px;cursor:pointer;text-align:left}
+.menu button:hover,.menu button:focus-visible{background:var(--bg);outline:none}
+.menu svg{width:15px;height:15px;color:var(--muted)}
+.tabs-row{display:flex;align-items:center;gap:8px;margin-top:14px}
+.tabs-row .tabs{margin-top:0}
+.icon-btn{margin-left:auto;width:30px;height:30px;border:0;background:none;border-radius:8px;display:grid;place-items:center;color:var(--muted);cursor:pointer}
+.icon-btn:hover{background:var(--bg);color:var(--text)}
+.icon-btn svg{width:17px;height:17px}
+.field select.box{width:100%;appearance:none;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 10px center;padding-right:28px}
+.dialog .desc{margin:0;color:#3b4252}
+.dialog .changes{margin:0;padding:10px 12px 10px 28px;background:var(--bg);border-radius:8px;color:#3b4252}
+.dialog .changes li{margin:2px 0}
 .banner{margin-top:12px;display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;background:var(--ok-soft);color:#05622a}
 .banner b{font-weight:600}
 .banner .sp{flex:1}
@@ -96,17 +110,23 @@ button,input,textarea,select{font:inherit;color:inherit}
     </div>
     <div class="acts">
       <button class="btn" type="button" id="save"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>保存</button>
-      <button class="btn" type="button" id="test"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6M10 3v6.2L5.2 18a2 2 0 0 0 1.7 3h10.2a2 2 0 0 0 1.7-3L14 9.2V3"/><path d="M7.5 15h9"/></svg>测试</button>
+      <div class="dd">
+        <button class="btn" type="button" id="test" aria-haspopup="menu" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6M10 3v6.2L5.2 18a2 2 0 0 0 1.7 3h10.2a2 2 0 0 0 1.7-3L14 9.2V3"/><path d="M7.5 15h9"/></svg>测试<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:12px;height:12px"><path d="m6 9 6 6 6-6"/></svg></button>
+        <div class="menu" id="testMenu" role="menu" hidden>
+          <button type="button" role="menuitem" data-test="local"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>本地测试</button>
+          <button type="button" role="menuitem" data-test="cloud"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 18a4.5 4.5 0 0 1-.5-9 6 6 0 0 1 11.5 1.5A3.75 3.75 0 0 1 17.5 18z"/></svg>云端测试</button>
+        </div>
+      </div>
       <button class="btn pri" type="button" id="submit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M4 16v4h16v-4"/></svg><span id="submitLabel">提交</span></button>
     </div>
   </div>
   <div class="banner" id="approved" hidden><b>审核通过</b><span>已发布到 Work，人力资源部和部门负责人可直接使用</span><span class="sp"></span><button class="btn" type="button" id="goWork">在 Work 中使用</button></div>
-  <div class="tabs" role="tablist" aria-label="智能体配置">
+  <div class="tabs-row"><div class="tabs" role="tablist" aria-label="智能体配置">
     <button class="tab on" type="button" role="tab" aria-selected="true" data-tab="basic">基础信息</button>
     <button class="tab" type="button" role="tab" aria-selected="false" data-tab="role">角色设定</button>
     <button class="tab" type="button" role="tab" aria-selected="false" data-tab="skills">技能配置</button>
     <button class="tab" type="button" role="tab" aria-selected="false" data-tab="kb">知识</button>
-  </div>
+  </div><button class="icon-btn" type="button" id="refresh" aria-label="刷新配置" title="刷新"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v5h-5"/></svg></button></div>
 </div>
 
 <div class="body">
@@ -115,22 +135,22 @@ button,input,textarea,select{font:inherit;color:inherit}
       <div class="grid2">
         <div class="avatar" aria-hidden="true">析</div>
         <div class="field"><label>名称 <b>*</b></label><div class="box">员工满意度分析助手</div></div>
-        <div class="field"><label>分类</label><div class="box">人力</div></div>
+        <div class="field"><label for="domain">领域</label><select class="box" id="domain"><option>人力资源</option><option>财务</option><option>销售</option><option>供应链</option><option>行政</option><option>法务</option><option>IT</option><option>通用</option></select></div>
         <div class="field full"><label>功能描述 <b>*</b></label><textarea class="box" aria-label="功能描述">基于问卷调研系统的答卷数据，回答回收率和满意度相关问题，定位低回收率部门与低分题目，每周一推送部门分析报告。</textarea></div>
       </div>
     </div>
     <div class="sec">模型策略</div>
     <div class="card">
       <div class="row"><div class="t"><b>允许切换模型</b><span>使用者可在对话中自行切换模型等级</span></div><button class="switch" type="button" role="switch" aria-checked="true" aria-label="允许切换模型"></button></div>
-      <div class="row"><div class="t"><b>默认模型等级</b><span>自动匹配，平衡性能与成本</span></div><span>自动</span></div>
+      <div class="row"><div class="t"><b>默认模型等级</b><span>自动匹配，平衡性能与成本</span></div><select class="box" aria-label="默认模型等级" style="width:auto;border:1px solid var(--line);border-radius:8px;padding:4px 8px;background:#fff"><option>自动</option><option>快速</option><option>专家</option><option>极致</option></select></div>
     </div>
     <div class="sec">更新日志</div>
     <div class="card">
-      <div class="log-ver">V1.0.0 <i aria-hidden="true"></i><em id="logState">未发布</em><small>3 条编辑</small></div>
+      <div class="log-ver">V1.0.0 <i aria-hidden="true"></i><em id="logState">未发布修改</em><small id="logCount">3 条编辑</small></div>
       <ul class="log" id="log">
-        <li>10-05 10:52 · 创建智能体</li>
-        <li>10-05 10:52 · 挂载技能：问卷数据读取、满意度指标口径、分析报告生成</li>
-        <li>10-05 10:52 · 绑定知识：问卷调研系统 · 答卷库</li>
+        <li>2026-10-05 10:52 · 张工 · 创建智能体</li>
+        <li>2026-10-05 10:52 · 张工 · 新增技能「问卷数据读取、满意度指标口径、分析报告生成」</li>
+        <li>2026-10-05 10:52 · 张工 · 知识范围调整：新增关联 问卷调研系统 · 答卷库</li>
       </ul>
     </div>
   </section>
@@ -170,12 +190,11 @@ button,input,textarea,select{font:inherit;color:inherit}
 
 <div class="mask" id="mask" hidden>
   <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dlgTitle">
-    <h2 id="dlgTitle">提交审核</h2>
+    <h2 id="dlgTitle">提交上架审核</h2>
     <div class="dbody">
-      <div class="kv"><span>版本</span><div>V1.0.0</div></div>
-      <div class="kv"><span>发布到</span><div>Work · 智能体</div></div>
-      <div class="kv"><span>使用范围</span><div>人力资源部、部门负责人</div></div>
-      <label class="kv"><span>版本说明</span><textarea id="note">首个版本：基于问卷答卷数据回答满意度问题，定位低回收率部门，每周一推送部门分析报告。</textarea></label>
+      <p class="desc">当前为生产环境的智能体上架操作，提交后将转交后台管理员审核，审核通过后正式生效。确认提交？</p>
+      <div class="kv"><span>版本</span><div>V1.0.0 · 初始版本</div></div>
+      <ul class="changes" aria-label="本次变更"><li>创建智能体</li><li>新增技能「问卷数据读取、满意度指标口径、分析报告生成」</li><li>知识范围调整：新增关联 问卷调研系统 · 答卷库</li></ul>
     </div>
     <div class="foot"><button class="btn" type="button" id="cancel">取消</button><button class="btn pri" type="button" id="confirm">确认提交</button></div>
   </div>
@@ -194,29 +213,33 @@ button,input,textarea,select{font:inherit;color:inherit}
   })});
   document.querySelectorAll('.switch').forEach(function(s){s.addEventListener('click',function(){s.setAttribute('aria-checked',s.getAttribute('aria-checked')!=='true')})});
   $('#save').addEventListener('click',function(){toast('已保存')});
-  $('#test').addEventListener('click',function(){post('test')});
+  var menu=$('#testMenu');
+  function setMenu(open){menu.hidden=!open;$('#test').setAttribute('aria-expanded',open)}
+  $('#test').addEventListener('click',function(e){e.stopPropagation();setMenu(menu.hidden)});
+  menu.addEventListener('click',function(e){var b=e.target.closest('[data-test]');if(!b)return;setMenu(false);post(b.dataset.test==='cloud'?'test-cloud':'test-local')});
+  document.addEventListener('click',function(e){if(!e.target.closest('.dd'))setMenu(false)});
+  $('#refresh').addEventListener('click',function(){toast('已刷新')});
   $('#submit').addEventListener('click',function(){if(state==='saved'){$('#mask').hidden=false;$('#confirm').focus()}});
   function close(){$('#mask').hidden=true;$('#submit').focus()}
   $('#cancel').addEventListener('click',close);
-  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('#mask').hidden)close()});
+  document.addEventListener('keydown',function(e){if(e.key!=='Escape')return;if(!$('#mask').hidden)close();if(!menu.hidden){setMenu(false);$('#test').focus()}});
   function setState(s){
     state=s;
     var pill=$('#state');pill.className='pill'+(s==='review'?' review':s==='published'?' ok':'');
-    pill.textContent=s==='review'?'审核中':s==='published'?'已发布':'已保存';
-    $('#submitLabel').textContent=s==='review'?'审核中':s==='published'?'已发布':'提交';
+    pill.textContent=s==='review'?'已提交':s==='published'?'已发布':'已保存';
+    $('#submitLabel').textContent=s==='review'?'已提交':s==='published'?'已发布':'提交';
     $('#submit').disabled=s!=='saved';
-    var ls=$('#logState');ls.textContent=s==='review'?'审核中':s==='published'?'已发布':'未发布';ls.classList.toggle('ok',s==='published');
+    var ls=$('#logState');ls.textContent=s==='review'?'审核中':s==='published'?'最新':'未发布修改';ls.classList.toggle('ok',s==='published');$('#logCount').hidden=s!=='saved';
   }
   $('#confirm').addEventListener('click',function(){
     var c=$('#confirm');c.disabled=true;c.textContent='提交中…';
     setTimeout(function(){
       $('#mask').hidden=true;c.disabled=false;c.textContent='确认提交';
-      setState('review');post('submitted');toast('已提交审核，审核通过后可在 Work 使用');
-      var li=document.createElement('li');li.textContent='10-05 10:58 · 提交审核：'+$('#note').value.trim().slice(0,24)+'…';$('#log').appendChild(li);
+      setState('review');post('submitted');toast('提交成功，请等待管理员审核');
       /* 原型：租户管理员审核通过的过程不在这里展示，稍后自动通过 */
       setTimeout(function(){
         setState('published');$('#approved').hidden=false;post('approved');
-        var li2=document.createElement('li');li2.textContent='10-05 11:02 · 审核通过，发布到 Work';$('#log').appendChild(li2);
+        var li2=document.createElement('li');li2.textContent='2026-10-05 11:02 · 管理员 · 审核通过，发布到 Work';$('#log').appendChild(li2);
       },2600);
     },700);
   });

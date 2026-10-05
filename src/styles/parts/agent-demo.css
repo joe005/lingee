@@ -53,3 +53,8 @@
 #view-chat .ad-rate{display:inline-block;vertical-align:middle;width:72px;height:6px;border-radius:4px;background:var(--fill-2);margin-right:8px;overflow:hidden}
 #view-chat .ad-rate i{display:block;height:100%;background:var(--brand);border-radius:4px}
 #view-chat .ad-table tr.is-low .ad-rate i{background:var(--warning)}
+#view-chat .ad-meta{display:flex;align-items:center;gap:10px}
+#view-chat .ad-actions{display:inline-flex;gap:10px;color:var(--text-muted)}
+#view-chat .ad-actions svg{width:16px;height:16px}
+#view-chat .ad-test-hint{text-align:center;font-size:13px;color:var(--text-secondary);margin:4px auto 12px;display:grid;gap:4px}
+#view-chat .ad-test-hint p{margin:0}

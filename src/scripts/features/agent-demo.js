@@ -17,6 +17,10 @@ var internalNav = false;
 function esc(v) { return String(v ?? '').replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 var ROBOT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V4.5"/><circle cx="12" cy="3.5" r="1"/><path d="M9 14h.01M15 14h.01"/></svg>';
 var CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>';
+var ACTIONS = '<span class="ad-actions" aria-hidden="true">'
+  + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>'
+  + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v5h-5"/></svg>'
+  + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></span>';
 var CHEVRON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>';
 
 /* ---------- 会话外壳：标题、徽标、输入框附件 ---------- */
@@ -115,7 +119,7 @@ function openBuilder() {
   enterChat('builder');
   setChannel('dev');
   setNavActive('智能体开发');
-  setComposer({ builder: true, expert: '智能体开发专家', placeholder: '描述要创建或修改的智能体，输入 / 调用技能或命令' });
+  setComposer({ builder: true, expert: '智能体开发专家', placeholder: '布置开发任务，输入 / 调用技能或命令' });
   if (demo.created && demo.builderNodes) {
     setTitle('创建' + AGENT);
     messagesList.replaceChildren.apply(messagesList, demo.builderNodes);
@@ -169,7 +173,7 @@ function finishBuild(box) {
     + '<li><strong>原则</strong>：不返回个人答卷，样本少于 5 份不展示；部门负责人只看本部门汇总</li></ul>'
     + '<div class="ad-agent-card" role="button" tabindex="0" data-ad-open-editor><span class="ad-agent-icon">' + ROBOT + '</span><span class="ad-agent-copy"><strong>' + AGENT + '</strong><small>查看并编辑智能体配置</small></span>'
     + '<button type="button" class="ad-test-btn" data-ad-test>本地测试</button>' + CHEVRON + '</div>'
-    + '<div class="ad-meta">Build · 智能体开发专家 · 18s</div>';
+    + '<div class="ad-meta">' + ACTIONS + 'Build · 智能体开发专家 · 18s</div>';
   box.appendChild(body);
   demo.created = true;
   demo.building = false;
@@ -179,15 +183,18 @@ function finishBuild(box) {
 }
 
 /* ---------- ② 测试：Console 沙箱 ---------- */
-function openTest() {
+/* 本地测试在本机运行；云端测试推送到 Console 沙箱，标题带「Console沙箱」 */
+function openTest(kind) {
   if (demo.mode === 'builder') demo.builderNodes = Array.from(messagesList.childNodes);
   enterChat('test');
-  setTitle('测试 · ' + AGENT, '<span class="ad-sandbox">Console沙箱</span><button type="button" class="ad-back-btn" data-ad-back>返回编辑</button>');
+  setTitle('测试 · ' + AGENT, (kind === 'cloud' ? '<span class="ad-sandbox">Console沙箱</span>' : '') + '<button type="button" class="ad-back-btn" data-ad-back>返回主会话</button>');
   clearMessages();
   closeSidePanel();
   setComposer({ agentChip: true, placeholder: '请输入指令测试当前智能体的运行效果' });
-  var intro = assistantBlock();
-  intro.innerHTML = '<p class="ad-muted">沙箱使用问卷调研系统的真实答卷数据，测试对话不会出现在 Work 中。</p>';
+  var hint = document.createElement('div');
+  hint.className = 'ad-test-hint';
+  hint.innerHTML = '<p>测试不触碰生产数据，测试会话关键信息会同步到智能体开发会话</p><p class="ad-muted">向智能体发送消息开始测试</p>';
+  messagesList.appendChild(hint);
   chatInput()?.focus();
 }
 var DEPTS = [['研发中心', 320, 301], ['产品部', 180, 164], ['市场部', 210, 185], ['财务部', 120, 103], ['客户服务', 260, 205], ['生产制造', 410, 238]];
@@ -199,6 +206,7 @@ function deptTable() {
     }).join('') + '</tbody></table></div>';
 }
 function answerTest(text) {
+  $('.ad-test-hint', messagesList)?.querySelector('.ad-muted')?.remove();
   userBubble(text);
   var box = assistantBlock();
   box.innerHTML = '<div class="ad-thinking"><span class="ad-spinner" aria-hidden="true"></span>正在调用技能…</div>';
@@ -222,7 +230,7 @@ function openWorkChat() {
   setTitle('员工满意度分析');
   clearMessages();
   closeSidePanel();
-  setComposer({ agentChip: true, agentChipCaret: true, placeholder: '问我问题或者布置任务，输入 @ 唤起技能或选择智能体' });
+  setComposer({ agentChip: true, agentChipCaret: true, placeholder: '问我问题或者布置任务，输入@唤起技能或选择智能体' });
   chatInput()?.focus();
 }
 function answerWork(text) {
@@ -231,7 +239,9 @@ function answerWork(text) {
   box.innerHTML = '<div class="ad-thinking"><span class="ad-spinner" aria-hidden="true"></span>深度思考中…</div>';
   setTimeout(function () {
     box.innerHTML = '<div class="ad-step-line ad-muted-line"><span>深度思考</span>' + CHEVRON + '<span class="ad-muted">6s</span></div>'
-      + '<div class="ad-step-line">' + CHECK + '<span>任务完成</span><span class="ad-muted">调用 2 个技能 · 问卷数据读取、分析报告生成</span>' + CHEVRON + '</div>'
+      + '<div class="ad-step-line">' + CHECK + '<span>任务完成</span><span class="ad-muted">调用 1 个技能</span>' + CHEVRON + '</div>'
+      + '<div class="markdown-content"><p>我来读取生产制造部门的答卷数据和回收情况。</p></div>'
+      + '<div class="ad-step-line">' + CHECK + '<span>任务完成</span><span class="ad-muted">调用 1 个工具</span>' + CHEVRON + '</div>'
       + '<div class="markdown-content"><p>生产制造部门本次应答 410 人，回收 238 份，回收率 <strong>58%</strong>，是六个部门中最低的。主要原因：</p><ul>'
       + '<li><strong>触达不足</strong>：一线员工占比高，企业微信覆盖率仅 62%，多数人没收到问卷链接</li>'
       + '<li><strong>时间冲突</strong>：发放时间与三班倒交接重叠，夜班员工应答率仅 41%</li></ul>'
@@ -240,7 +250,7 @@ function answerWork(text) {
       + '<tr><td>我有足够的培训机会</td><td>3.1</td><td class="is-down">-0.6</td></tr>'
       + '<tr><td>排班安排合理</td><td>3.2</td><td class="is-down">-0.5</td></tr></tbody></table></div>'
       + '<p><strong>建议优先做</strong>：车间张贴二维码并由班组长代发，回收期第 3 天自动催办；部门分析报告已生成，下周一 09:00 推送给部门负责人。</p></div>'
-      + '<div class="ad-meta">10-05 11:05 · 共消耗 ⚡ 3.20</div>';
+      + '<div class="ad-meta">10-05 11:05' + ACTIONS + '共消耗 ⚡ 3.20</div>';
     scrollChatBottom();
   }, 1900);
 }
@@ -281,7 +291,7 @@ export function initAgentDemo() {
   $('#view-agents .app-card[data-agent="survey-satisfaction"]')?.addEventListener('click', openBuilder);
   messagesList.addEventListener('click', function (e) {
     if (!demo.mode) return;
-    if (e.target.closest('[data-ad-test]')) { e.stopPropagation(); openTest(); return; }
+    if (e.target.closest('[data-ad-test]')) { e.stopPropagation(); openTest('local'); return; }
     if (e.target.closest('[data-ad-open-editor]')) openEditor(false);
   });
   messagesList.addEventListener('keydown', function (e) {
@@ -296,8 +306,9 @@ export function initAgentDemo() {
   window.addEventListener('message', function (e) {
     var d = e.data;
     if (!d || d.type !== 'lingee-survey-agent' || !demo.mode) return;
-    if (d.action === 'test') openTest();
+    if (d.action === 'test-local' || d.action === 'test-cloud') openTest(d.action === 'test-cloud' ? 'cloud' : 'local');
     else if (d.action === 'submitted') { demo.status = 'review'; syncAgentCard(); }
+    /* 原型：管理员审核在租户管理完成，这里模拟审核通过 */
     else if (d.action === 'approved') { demo.status = 'published'; syncAgentCard(); toast('「' + AGENT + '」审核通过，已发布到 Work', 'success'); }
     else if (d.action === 'work') openWorkChat();
   });
