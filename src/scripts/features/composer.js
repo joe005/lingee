@@ -18,7 +18,7 @@ import { taskExecutorTeam } from './expert/task-team.js';
 import { set__prevWishW } from './sidebar.js';
 import { CV_MEMBERS, CV_PROJECTS } from './collab/data.js';
 import { tbTeamStages } from './collab/tb-core.js';
-import { tkAddTask, tkCanStartTask, tkCurrentStageHandlerId, tkCurrentUserId, tkGetTasks, tkGetTaskArtifacts, tkPeopleInProject, tkProjectsForCurrentUser } from './tasks-v2/data.js';
+import { tkAddTask, tkCanStartTask, tkCurrentStageHandlerId, tkCurrentUserId, tkGetProjectName, tkGetTasks, tkGetTaskArtifacts, tkPeopleInProject, tkProjectsForCurrentUser } from './tasks-v2/data.js';
 import { defaultStageAssigneeId } from './tasks-v2/stage-owner.js';
 import { openIssueCount, requirementPoints } from './tasks-v2/artifact-docs.js';
 import { renderArtifactPreview } from './collab/run-artifacts.js';
@@ -265,7 +265,8 @@ function renderChatSessions() {
     var task = tkGetTasks().find(function (row) { return row.id === Number(session.taskId); });
     return session.projectId || task?.project || '';
   }
-  function projectName(id) { return CV_PROJECTS.find(function (project) { return project.id === id; })?.name || id; }
+  /* 含管理板块建的项目（研发任务写入开发板块，项目在管理板块） */
+  function projectName(id) { return tkGetProjectName(id); }
   function sessionHtml(session) {
     var running = session.demoState === 'running' || session.exchanges.some(function (exchange) { return !exchange.done && !exchange.waiting; });
     var waiting = session.demoState === 'question' && !session.demoQuestion?.answer || session.exchanges.some(function (exchange) { return !!exchange.waiting; });
