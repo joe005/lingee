@@ -13,7 +13,7 @@
 | 管理 | [07-manager.md](07-manager.md) | 侧栏「管理」页签 → 项目 |
 | 工作 | [08-work.md](08-work.md) | 侧栏「工作」页签 → 新任务 |
 
-专题说明：智能体团队领域模型见 [expert-team-spec.md](expert-team-spec.md)，演示步骤见 [智能体团队演示场景.md](智能体团队演示场景.md) 、[smart-site-demo-script.md](smart-site-demo-script.md) 和 [设备运维演示场景.md](设备运维演示场景.md)。
+专题说明：智能体团队领域模型见 [expert-team-spec.md](expert-team-spec.md)，演示步骤见 [智能体团队演示场景.md](智能体团队演示场景.md) 、[smart-site-demo-script.md](smart-site-demo-script.md)、[设备运维演示场景.md](设备运维演示场景.md) 和 [CIO演示场景.md](CIO演示场景.md)。
 
 ## 更新规则
 
