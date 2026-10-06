@@ -1,7 +1,7 @@
 import { $ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
 import {
-  TASK_STATUSES, mgrAddIssue, mgrCreateDevTask, mgrCreateTask, mgrCurrentPersonId, mgrExpert, mgrHasSessionPerm, mgrIsDevTask,
+  TASK_STATUSES, mgrAddIssue, mgrCanDeleteTask, mgrCanManageProject, mgrCreateDevTask, mgrDeleteTask, mgrCreateTask, mgrCurrentPersonId, mgrExpert, mgrHasSessionPerm, mgrIsDevTask,
   mgrPersonName, mgrProjectById, mgrProjectMembers, mgrProjectTasks, mgrRelatedTask, mgrSaveTasks, mgrSetSessionPerm, mgrTaskById,
   mgrTaskKey, mgrTeam,
 } from './data.js';
@@ -114,6 +114,17 @@ function filteredTasks(project) {
   return list;
 }
 
+/* 删除入口：未开始的任务，且当前用户是项目负责人 / 系统管理员或任务创建人 */
+function canDeleteTaskHere(task) {
+  var project = mgrProjectById(task.project);
+  if (!project || !mgrCanDeleteTask(task)) return false;
+  return mgrCanManageProject(project) || (!!task.createdBy && task.createdBy === mgrCurrentPersonId());
+}
+function deleteMenuItem(task, key) {
+  return canDeleteTaskHere(task)
+    ? '<button type="button" role="menuitem" class="mgr-menu-danger" data-mgr-task-delete="' + mgrEsc(key) + '">删除任务</button>' : '';
+}
+
 /* ---------- 列表视图 ---------- */
 function taskRowHtml(task, canOpenSession) {
   var p = progressOf(task);
@@ -134,7 +145,8 @@ function taskRowHtml(task, canOpenSession) {
     (menuOpen
       ? '<div class="mgr-row-menu" role="menu">' +
         (canOpenSession && mgrIsDevTask(task) ? '<button type="button" role="menuitem" data-mgr-task-open="' + mgrEsc(key) + '">在开发板块打开任务</button>' : '') +
-        '<button type="button" role="menuitem" data-mgr-task-issue="' + mgrEsc(key) + '">升级为议题</button></div>'
+        '<button type="button" role="menuitem" data-mgr-task-issue="' + mgrEsc(key) + '">升级为议题</button>' +
+        deleteMenuItem(task, key) + '</div>'
       : '') +
     '</td></tr>';
 }
@@ -341,6 +353,54 @@ function rerenderPlan() {
   if (!pane || pane.classList.contains('hidden')) return;
   var project = currentPlanProject();
   if (project) pane.innerHTML = planWorkspaceHtml(project);
+  floatRowMenu();
+}
+/* 行菜单浮在卡片之上：卡片有 overflow 裁剪，菜单改为按「···」按钮的位置固定定位，靠右对齐，空间不够时向上展开 */
+function floatRowMenu() {
+  var menu = document.querySelector('#mgrPdPlanPane .mgr-row-menu');
+  if (!menu) return;
+  var btn = menu.parentElement.querySelector('.mgr-row-more');
+  var rect = btn.getBoundingClientRect();
+  menu.style.position = 'fixed';
+  menu.style.right = 'auto';
+  menu.style.left = Math.max(8, rect.right - menu.offsetWidth) + 'px';
+  var below = rect.bottom + 4;
+  menu.style.top = (below + menu.offsetHeight > window.innerHeight - 8 ? Math.max(8, rect.top - 4 - menu.offsetHeight) : below) + 'px';
+}
+function closeRowMenu() {
+  if (openRowMenu === null) return;
+  openRowMenu = null;
+  rerenderPlan();
+}
+
+/* ---------- 删除未开始的任务 ---------- */
+var pendingTaskDelete = null;
+function requestTaskDelete(key, trigger) {
+  var task = mgrTaskById(key);
+  if (!task || !canDeleteTaskHere(task)) { toast('只有未开始的任务可以删除，且需项目负责人或任务创建人操作', 'warning'); return; }
+  pendingTaskDelete = { key: String(key), trigger: trigger || null };
+  $('#mgrTaskDeleteMessage').textContent = '删除「' + task.title + '」后不可恢复，确定删除？';
+  var overlay = $('#mgrTaskDeleteOverlay');
+  overlay.style.display = 'flex';
+  overlay.setAttribute('aria-hidden', 'false');
+  overlay.querySelector('[data-mgr-task-delete-cancel]').focus();
+}
+function closeTaskDelete() {
+  var overlay = $('#mgrTaskDeleteOverlay');
+  overlay.style.display = 'none';
+  overlay.setAttribute('aria-hidden', 'true');
+  pendingTaskDelete = null;
+}
+function confirmTaskDelete() {
+  if (!pendingTaskDelete) return;
+  var task = mgrTaskById(pendingTaskDelete.key);
+  closeTaskDelete();
+  if (!task || !canDeleteTaskHere(task)) { toast('任务状态已变化，不能删除', 'warning'); rerenderPlan(); return; }
+  if (!mgrDeleteTask(task)) { toast('删除失败，请重试', 'error'); return; }
+  closeTaskPanel();
+  openRowMenu = null;
+  rerenderPlan();
+  toast('任务已删除', 'success');
 }
 /* 搜索时重绘会替换输入框，保留焦点与光标 */
 function rerenderKeepSearchFocus() {
@@ -442,7 +502,8 @@ function taskPanelHtml(task) {
     '<div class="mgr-tp-more"><button type="button" class="mgr-tp-more-btn" data-mgr-tp-more aria-haspopup="menu" aria-expanded="false" aria-label="更多操作">···</button>' +
     '<div class="mgr-tp-more-menu" role="menu" hidden>' +
     (mgrIsDevTask(task) ? '<button type="button" role="menuitem" data-mgr-task-open="' + id + '">在开发板块打开任务</button>' : '') +
-    '<button type="button" role="menuitem" data-mgr-task-issue="' + id + '">升级为议题</button></div></div></div>';
+    '<button type="button" role="menuitem" data-mgr-task-issue="' + id + '">升级为议题</button>' +
+    deleteMenuItem(task, id) + '</div></div></div>';
 }
 function openTaskPanel(id) {
   openTaskId = String(id);
@@ -822,8 +883,31 @@ function initTaskNewModal() {
   });
 }
 
+function initTaskDeleteModal() {
+  var overlay = $('#mgrTaskDeleteOverlay');
+  if (!overlay) return;
+  overlay.addEventListener('click', function (e) {
+    if (e.target.closest('[data-mgr-task-delete-confirm]')) { confirmTaskDelete(); return; }
+    if (e.target === overlay || e.target.closest('[data-mgr-task-delete-cancel]')) closeTaskDelete();
+  });
+  overlay.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeTaskDelete(); return; }
+    if (e.key !== 'Tab') return;
+    var cancel = overlay.querySelector('[data-mgr-task-delete-cancel]');
+    var ok = overlay.querySelector('[data-mgr-task-delete-confirm]');
+    if (e.shiftKey && document.activeElement === cancel) { e.preventDefault(); ok.focus(); }
+    else if (!e.shiftKey && document.activeElement === ok) { e.preventDefault(); cancel.focus(); }
+  });
+}
+
 export function initManagerPlan() {
   initTaskNewModal();
+  initTaskDeleteModal();
+  /* 固定定位的行菜单不随页面滚动，滚动或缩放时收起 */
+  window.addEventListener('resize', closeRowMenu);
+  document.addEventListener('scroll', function (e) {
+    if (openRowMenu !== null && !(e.target.closest && e.target.closest('.mgr-row-menu'))) closeRowMenu();
+  }, true);
   var panel = $('#mgr-panel-projects');
   if (!panel) return;
   panel.addEventListener('click', function (e) {
@@ -845,6 +929,13 @@ export function initManagerPlan() {
       var rid = rowMenu.getAttribute('data-mgr-row-menu');
       openRowMenu = openRowMenu === rid ? null : rid;
       rerenderPlan();
+      return;
+    }
+    var delBtn = t.closest('[data-mgr-task-delete]');
+    if (delBtn) {
+      openRowMenu = null;
+      rerenderPlan();
+      requestTaskDelete(delBtn.getAttribute('data-mgr-task-delete'), delBtn);
       return;
     }
     var issueBtn = t.closest('[data-mgr-task-issue]');

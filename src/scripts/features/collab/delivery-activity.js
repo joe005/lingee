@@ -11,6 +11,7 @@ const PHASE_OWNERS = {
   implementation:['cosmic-form','cosmic-workflow','cosmic-report','cosmic-plugin','cosmic-api','frontend-engineer','software-engineer','general-app-development-expert'],
   verification:['software-qa-engineer','general-app-qa-expert','software-product-manager','software-team-lead'],
   delivery:['software-team-lead','software-architect'],
+  agent:['agent-development-expert'],
 };
 
 function implementationOwner(title, team) {
@@ -29,7 +30,7 @@ function implementationOwner(title, team) {
 }
 
 /* 自定义执行计划的阶段 id 是 s1…s6，按阶段名称对应到交付阶段，再选认领该阶段的智能体。 */
-const PHASE_BY_STAGE_NAME = {'需求分析':'requirements','方案设计':'design','实现规划':'planning','编码实现':'implementation','测试验证':'verification','部署交付':'delivery'};
+const PHASE_BY_STAGE_NAME = {'需求分析':'requirements','方案设计':'design','架构设计':'design','开发实现':'implementation','智能体开发':'agent','实现规划':'planning','编码实现':'implementation','测试验证':'verification','部署交付':'delivery'};
 
 function ownerFor(stageId, title, team) {
   const preferred = stageId === 'implementation' ? implementationOwner(title, team) : null;

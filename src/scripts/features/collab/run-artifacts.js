@@ -22,9 +22,23 @@ export function renderIssueArtifacts(task) {
     }).join('') + '</div></section>';
 }
 
+/* 网站产物（format 为 html）：有地址的显示浏览器外框和地址栏，页面在沙箱 iframe 里运行，可直接操作 */
+export function isWebsiteArtifact(artifact) {
+  return !!artifact && artifact.format === 'html' && typeof artifact.content === 'string';
+}
+export function renderWebsitePreview(artifact) {
+  var title = artifact.docTitle || '网站预览';
+  var frame = '<iframe class="tk-site-frame" sandbox="allow-scripts" title="' + escapeHtml(title) + '" srcdoc="' + escapeHtml(artifact.content) + '"></iframe>';
+  if (!artifact.url) return '<div class="tk-site-preview">' + frame + '</div>';
+  return '<div class="tk-site-preview"><div class="tk-site-bar"><span class="tk-site-dots" aria-hidden="true"><i></i><i></i><i></i></span>' +
+    '<span class="tk-site-url" title="' + escapeHtml(artifact.url) + '">' + escapeHtml(artifact.url) + '</span>' +
+    '<span class="tk-site-badge">已部署</span></div>' + frame + '</div>';
+}
+
 // 供工作详情和审核面板共用；只渲染传入快照，不读写别页 DOM。
 export function renderArtifactPreview(artifact, headingTag = 'strong') {
   if (!artifact) return '';
+  if (isWebsiteArtifact(artifact)) return renderWebsitePreview(artifact);
   if (typeof artifact.content === 'string') return '<pre>' + escapeHtml(artifact.content) + '</pre>';
   var tag = headingTag === 'h2' ? 'h2' : 'strong';
   return (artifact.sections || []).map(function (section) {

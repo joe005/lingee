@@ -82,6 +82,14 @@
     <div class="sync-modal__footer mgr-delete-footer"><button type="button" class="sync-modal__btn sync-modal__btn--ghost" data-mgr-delete-cancel>取消</button><button type="button" class="sync-modal__btn mgr-delete-confirm" data-mgr-delete-confirm>删除</button></div>
   </div>
 </div>
+<!-- 管理 · 删除未开始的任务确认 -->
+<div class="sync-overlay mgr-modal" id="mgrTaskDeleteOverlay" style="display:none" aria-hidden="true">
+  <div class="sync-modal mgr-delete-modal" role="alertdialog" aria-modal="true" aria-labelledby="mgrTaskDeleteTitle" aria-describedby="mgrTaskDeleteMessage" tabindex="-1">
+    <div class="sync-modal__header mgr-delete-header"><span class="mgr-delete-warning" aria-hidden="true">!</span><div class="mgr-delete-title" id="mgrTaskDeleteTitle">删除任务</div></div>
+    <div class="sync-modal__body mgr-delete-body"><p id="mgrTaskDeleteMessage">删除后不可恢复，确定删除？</p></div>
+    <div class="sync-modal__footer mgr-delete-footer"><button type="button" class="sync-modal__btn sync-modal__btn--ghost" data-mgr-task-delete-cancel>取消</button><button type="button" class="sync-modal__btn mgr-delete-confirm" data-mgr-task-delete-confirm>删除</button></div>
+  </div>
+</div>
 <!-- 管理 · 项目成员：搜索灵基人员多选、设置项目角色；人员与开发板块共用同一份人员数据 -->
 <div class="sync-overlay mgr-modal" id="mgrMembersOverlay" style="display:none" aria-hidden="true">
   <div class="sync-modal mgr-pm-modal mgr-pm-members-modal" role="dialog" aria-modal="true" aria-labelledby="mgrMembersHeading" tabindex="-1">

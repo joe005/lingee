@@ -283,7 +283,7 @@ function initProjectNewModal() {
 }
 
 /* ---------- 删除项目 ----------
-   规则与协作开发一致：负责人（或系统管理员）才能删，项目下有任务（含已完成）时不能删。 */
+   仅负责人（或系统管理员）可删；不校验项目下已有任务，删除时任务一并清理。 */
 var pendingDelete = null;
 
 function toggleMoreMenu(open) {
@@ -296,8 +296,6 @@ function toggleMoreMenu(open) {
 }
 function deleteBlockReason(p) {
   if (!mgrCanManageProject(p)) return '只有项目负责人或系统管理员可以删除项目';
-  var n = mgrProjectTasks(p.id).length;
-  if (n) return '项目下还有 ' + n + ' 项任务，不能删除（含已完成任务）';
   return '';
 }
 function requestDelete(trigger) {
@@ -306,7 +304,7 @@ function requestDelete(trigger) {
   var reason = deleteBlockReason(p);
   if (reason) { toast(reason, 'warning'); return; }
   pendingDelete = { projectId: p.id, trigger: trigger || null };
-  $('#mgrProjDeleteMessage').textContent = '删除「' + p.name + '」后不可恢复，项目下的议题会一并删除，确定删除？';
+  $('#mgrProjDeleteMessage').textContent = '删除「' + p.name + '」后不可恢复，项目下的任务（' + mgrProjectTasks(p.id).length + ' 项）和议题会一并删除，确定删除？';
   var overlay = $('#mgrProjDeleteOverlay');
   overlay.style.display = 'flex';
   overlay.setAttribute('aria-hidden', 'false');
@@ -325,7 +323,7 @@ function confirmDelete() {
   var p = mgrProjectById(pendingDelete.projectId);
   if (!p) { closeDelete(false); toast('项目已不存在', 'warning'); showList(); return; }
   /* 弹窗打开期间任务或权限可能已变化，确认时再查一次 */
-  if (deleteBlockReason(p)) { closeDelete(false); toast('项目权限或任务已变化，请重新检查', 'warning'); return; }
+  if (deleteBlockReason(p)) { closeDelete(false); toast('项目权限已变化，请重新检查', 'warning'); return; }
   if (!mgrDeleteProject(p.id)) { toast('删除失败，请重试', 'error'); return; }
   closeDelete(false);
   showList();

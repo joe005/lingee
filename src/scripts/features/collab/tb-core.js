@@ -1,6 +1,6 @@
 import { CV_TASKS, CV_PROJECTS } from './data.js';
 import { TEAMS } from '../expert/store.js';
-import { EX, stageExperts, teamStageScenario } from '../expert/data.js';
+import { EX, stageExperts, teamFeatureStages, teamStageScenario } from '../expert/data.js';
 import { toast } from '../../core/toast.js';
 /* 任务看板共享核心：列定义、当前任务、状态持久化与派生工具
    task-board / new-task / task-chat 三个模块共用，避免彼此循环依赖。 */
@@ -56,7 +56,8 @@ export function tbMatchExperts(t) {
 export function tbPriority(t) { return t.priority || (t.type === 'Bug' ? '高' : '中'); }
 /* 智能体团队实际能覆盖到的阶段：团内成员有匹配该阶段能力项的智能体（每阶段最多 2 位）。 */
 export function tbTeamStages(team, issue) {
-  const stages = teamStageScenario(issue).stages;
+  const scenario = teamStageScenario(issue);
+  const stages = scenario.id === 'feature' ? teamFeatureStages(team) : scenario.stages;
   if (!team) return stages.slice();
   const withExperts = stages.map(stage => ({ ...stage, expertIds: stageExperts(stage.id, team.members || [], team.stageMembers?.[stage.id]) }));
   const covered = withExperts.filter(s => s.expertIds.length);

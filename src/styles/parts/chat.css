@@ -182,6 +182,8 @@
   .chat-doc-viewer-close:hover{background:var(--hover);color:var(--text)}
   .chat-doc-viewer-body{flex:1;min-height:0;overflow:auto;padding:24px 28px 60px}
   .chat-artifact-markdown{max-width:900px;margin:0 auto;color:var(--text);font-size:14px;line-height:1.8;overflow-wrap:anywhere}
+  .chat-artifact-markdown:has(.tk-site-preview){max-width:none}
+  .chat-artifact-markdown .tk-site-frame{height:calc(100vh - 200px);min-height:480px}
   .chat-artifact-markdown h1{margin:0 0 28px;padding-bottom:14px;border-bottom:1px solid var(--divider);font-size:25px;font-weight:700;line-height:1.4;letter-spacing:-.015em}
   .chat-artifact-markdown .tk-artifact-section{margin:0 0 32px}
   .chat-artifact-markdown .tk-artifact-section h2{margin:0 0 14px;font-size:20px;font-weight:650;line-height:1.45;color:var(--text)}

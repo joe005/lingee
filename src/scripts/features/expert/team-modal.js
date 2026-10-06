@@ -4,7 +4,7 @@ import { $, $$ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
 import { summon } from './automatch.js';
 import { renderExpertChips } from './chips.js';
-import { EX, EXPERTS, STAGE_EXPERT_MAX, TEAM_STAGE_SCENARIOS, stageExperts, xav, xesc } from './data.js';
+import { EX, EXPERTS, STAGE_EXPERT_MAX, TEAM_STAGE_SCENARIOS, stageExperts, teamFeatureStages, xav, xesc } from './data.js';
 import { openExpertEditor } from './editor.js';
 import { openExpertModal, renderExpertGrid } from './library.js';
 import { TEAMS, activePick, clearPick, saveTeams, set_TEAMS, teamById } from './store.js';
@@ -52,7 +52,7 @@ function populateTeamModal(id,editing){
   teamEditingId=id;
   teamStageScenarioId='feature';
   teamStageSelectedId='';
-  teamDraft={name:t.name,desc:t.desc,leadId:t.leadId,members:t.members.slice(),preset:layerOf('team',t)!=='personal',
+  teamDraft={name:t.name,desc:t.desc,leadId:t.leadId,members:t.members.slice(),stages:t.stages,preset:layerOf('team',t)!=='personal',
                domains:(t.domains||[]).slice(),
                stageMembers:t.stageMembers&&typeof t.stageMembers==='object'?Object.fromEntries(Object.entries(t.stageMembers).map(function(entry){return [entry[0],Array.isArray(entry[1])?entry[1].slice():[]]})): {},
                cmds:(t.cmds&&t.cmds.length)?t.cmds.map(function(c){return c.slice()}):[['','']]};
@@ -119,8 +119,11 @@ function renderTeamModal(){
   $('#teamAddBtn').classList.toggle('hidden', !!d.preset||!teamEditMode);
 }
 /* 可选阶段（如智能体开发）：成员里有匹配的智能体才出现，否则不显示、也不算能力缺口 */
+function scenarioStages(item){
+  return item.id==='feature'?teamFeatureStages(teamDraft):item.stages;
+}
 function visibleStages(item){
-  return item.stages.filter(function(stage){
+  return scenarioStages(item).filter(function(stage){
     return !stage.optional||stageExperts(stage.id,teamDraft.members,teamDraft.stageMembers[stage.id]).length>0;
   });
 }
@@ -265,7 +268,7 @@ export function initTeamModal() {
       if(!t||layerOf('team',t)!=='personal') return;
       var previous=JSON.parse(JSON.stringify(t));
       t.name=name; t.desc=d.desc; t.leadId=d.leadId; t.members=d.members.slice(); t.cmds=teamCmdList(d);
-      t.stageMembers=Object.fromEntries(TEAM_STAGE_SCENARIOS.flatMap(function(item){return item.stages;}).map(function(stage){
+      t.stageMembers=Object.fromEntries(TEAM_STAGE_SCENARIOS.flatMap(function(item){return scenarioStages(item);}).map(function(stage){
         return [stage.id,stageExperts(stage.id,d.members,d.stageMembers[stage.id])];
       }));
       t.domains=(d.domains||[]).slice();

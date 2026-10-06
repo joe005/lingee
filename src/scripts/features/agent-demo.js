@@ -183,9 +183,13 @@ function finishBuild(box) {
 }
 
 /* ---------- ② 测试：Console 沙箱 ---------- */
-/* 本地测试在本机运行；云端测试推送到 Console 沙箱，标题带「Console沙箱」 */
+/* 本地测试在开发板块本机运行；云端测试跳转到工作板块，在 Console 沙箱里运行，标题带「Console沙箱」 */
 function openTest(kind) {
   if (demo.mode === 'builder') demo.builderNodes = Array.from(messagesList.childNodes);
+  if (kind === 'cloud') {
+    setChannel('work');
+    $$('#workNav .work-nav-item').forEach(function (n) { n.classList.toggle('active', n.getAttribute('data-work-nav') === 'new'); });
+  }
   enterChat('test');
   setTitle('测试 · ' + AGENT, (kind === 'cloud' ? '<span class="ad-sandbox">Console沙箱</span>' : '') + '<button type="button" class="ad-back-btn" data-ad-back>返回主会话</button>');
   clearMessages();
@@ -289,6 +293,11 @@ export function initAgentDemo() {
   syncAgentCard();
   $('#view-agents .btn-new')?.addEventListener('click', function () { demo.created ? openBuilder() : (demo.builderNodes = null, openBuilder()); });
   $('#view-agents .app-card[data-agent="survey-satisfaction"]')?.addEventListener('click', openBuilder);
+  /* 任务里的「智能体开发」阶段开始执行：直接进入智能体开发界面 */
+  document.addEventListener('lingee:agent-dev-open', function () {
+    if (!demo.created) demo.builderNodes = null;
+    openBuilder();
+  });
   messagesList.addEventListener('click', function (e) {
     if (!demo.mode) return;
     if (e.target.closest('[data-ad-test]')) { e.stopPropagation(); openTest('local'); return; }

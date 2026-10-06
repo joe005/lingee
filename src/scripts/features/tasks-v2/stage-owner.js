@@ -1,6 +1,8 @@
 const STAGE_ROLES = {
   '需求分析': 'product',
   '方案设计': 'development',
+  '架构设计': 'development',
+  '开发实现': 'development',
   '实现规划': 'development',
   '编码实现': 'development',
   '智能体开发': 'development',

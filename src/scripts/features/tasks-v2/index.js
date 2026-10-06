@@ -28,7 +28,7 @@ import { taskListKind, taskNeedsMyAction } from './list-kind.js';
 import { getDemoPreRun, getDemoStageRun } from './run-feedback.js';
 import { CV_PROJECTS } from '../collab/data.js';
 import { createDeliveryActivity } from '../collab/delivery-activity.js';
-import { renderArtifactBlocks } from '../collab/run-artifacts.js';
+import { isWebsiteArtifact, renderArtifactBlocks, renderWebsitePreview } from '../collab/run-artifacts.js';
 import { AV_KEYS, EX, EXPERTS, PRESET_TEAMS, xav } from '../expert/data.js';
 import { TEAMS, activePick, set_activePick } from '../expert/store.js';
 import { renderExpertChips } from '../expert/chips.js';
@@ -332,6 +332,13 @@ function startTaskExecution(taskId, options) {
   if (!started.ok) { if (started.message) toast(started.message, 'warning'); else openDrawer(taskId); return; }
   scheduleTaskStageStartedNotice(taskId, started.stage?.id);
   render();
+  /* 「智能体开发」阶段直接进入智能体开发界面（对话创建智能体、编辑、测试、提交），不走通用任务会话 */
+  if (started.stage?.name === '智能体开发') {
+    closeDrawer();
+    document.dispatchEvent(new CustomEvent('lingee:agent-dev-open', { detail: { taskId: taskId } }));
+    toast('已进入智能体开发，请在会话中创建并测试智能体', 'success');
+    return;
+  }
   openTaskConversationWithTask(taskId, 'start', true);
   toast('已进入' + (started.stage?.name || '当前节点') + '，会话已发起并运行中', 'success');
 }
@@ -1992,7 +1999,7 @@ function renderDocPreviewContent(artifact) {
         '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
       '</button>' +
     '</div>' +
-    '<div class="tk-doc-preview-body">' + renderArtifactDocument(artifact) + '</div>';
+    '<div class="tk-doc-preview-body' + (isWebsiteArtifact(artifact) ? ' is-website' : '') + '">' + (isWebsiteArtifact(artifact) ? renderWebsitePreview(artifact) : renderArtifactDocument(artifact)) + '</div>';
 }
 function renderArtifactDocument(artifact) {
   var meta = [
@@ -2041,7 +2048,7 @@ function renderReviewArtifactPreview(artifact) {
   var format = artifactFormat(artifact);
   var fileName = artifact.fileName || artifact.name || artifact.docTitle || artifact.type;
   if (format === 'html' && typeof artifact.content === 'string') {
-    return '<article class="tk-list-review-file-preview"><div class="tk-list-review-file-head"><strong>' + escapeHtml(fileName) + '</strong><span>HTML 预览</span></div><div class="tk-list-review-html-frame"><iframe sandbox title="' + escapeHtml(fileName) + '" srcdoc="' + escapeHtml(artifact.content) + '"></iframe></div></article>';
+    return '<article class="tk-list-review-file-preview"><div class="tk-list-review-file-head"><strong>' + escapeHtml(fileName) + '</strong><span>HTML 预览</span></div><div class="tk-list-review-html-frame"><iframe sandbox' + (artifact.url ? '="allow-scripts"' : '') + ' title="' + escapeHtml(fileName) + '" srcdoc="' + escapeHtml(artifact.content) + '"></iframe></div></article>';
   }
   if (format === 'code') {
     return '<article class="tk-list-review-file-preview"><div class="tk-list-review-file-head"><strong>' + escapeHtml(fileName) + '</strong><span>' + escapeHtml(artifact.language || '代码') + '</span></div><pre class="tk-list-review-code"><code>' + escapeHtml(artifact.content || '') + '</code></pre></article>';
@@ -2481,9 +2488,8 @@ function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml,
       }[kindInfo.action] : null;
       var stageActionHtml = stageAction
         ? '<button type="button" class="tk-feed-stage-review-btn" ' + stageAction.attr + '="' + task.id + '" aria-label="' + stageAction.label + '：' + escapeHtml(stage.name) + '">' + stageAction.label + '</button>' : '';
-      var actions = (task.status === 'blocked' && state === 'blocked'
-          ? '<span class="tk-feed-stage-review-actions"><button type="button" class="tk-feed-stage-review-btn" data-stage-view-session aria-label="查看' + escapeHtml(stage.name) + '的会话详情与执行异常">查看会话</button></span>' : '')
-        + (stageActionHtml ? '<span class="tk-feed-stage-review-actions">' + stageActionHtml + '</span>' : '')
+      /* 已阻塞节点不单设「查看会话」，会话和执行异常在节点下方的会话列表里展开查看 */
+      var actions = (stageActionHtml ? '<span class="tk-feed-stage-review-actions">' + stageActionHtml + '</span>' : '')
         + (hasDetail && !inReviewStage ? '<button type="button" class="tk-feed-stage-expand" data-stage-detail-toggle aria-expanded="false" aria-controls="' + detailId + '" aria-label="展开' + escapeHtml(stage.name) + '的产物"><span>查看产物</span><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m6 3 5 5-5 5"/></svg></button>' : '');
       var sessionsHtml = state !== 'done' && stageSessions.length ? '<div class="tk-feed-stage-sessions" aria-label="' + escapeHtml(stage.name) + '的会话">'
           + '<button type="button" class="tk-feed-stage-sessions-toggle" data-stage-sessions-toggle aria-expanded="' + isCurrent + '" aria-controls="' + sessionListId + '">会话 ' + stageSessions.length + '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m6 3 5 5-5 5"/></svg></button>'

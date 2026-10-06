@@ -10,7 +10,7 @@ import { cvMayEditProject, cvRenderProjMenu, cvRenderProjectSettings, cvSetProje
 import { cvSwitchView } from './view.js';
 import { setTasksEmbedded, showView } from '../../core/view.js';
 import { tkOpenProjectTaskCreate, tkSetProjectListMode } from '../tasks-v2/index.js';
-import { tkCanViewTask, tkGetPerson, tkGetTaskArtifacts, tkGetTasks } from '../tasks-v2/data.js';
+import { tkCanViewTask, tkGetPerson, tkGetTaskArtifacts, tkGetTasks, tkPruneOrphanTasks } from '../tasks-v2/data.js';
 import { createDeliveryActivity } from './delivery-activity.js';
 import { renderArtifactPreview } from './run-artifacts.js';
 import { TEAMS, teamById } from '../expert/store.js';
@@ -401,10 +401,6 @@ function cvDeleteCurrentProject(){
   var project=cvProjectById(cvProjCur);
   if(!project)return;
   if(!cvMayEditProject(project)){toast('只有项目负责人可以删除项目','warning');return;}
-  if(tkGetTasks().some(function(task){return task.project===project.id;})
-    || CV_TASKS.some(function(task){return task.project===project.id;})){
-    toast('项目下还有任务，不能删除（含已完成任务）','warning');return;
-  }
   var overlay=$('#cv-project-delete-overlay');
   if(!overlay)return;
   cvPendingProjectDeletion={projectId:project.id,trigger:document.activeElement};
@@ -416,12 +412,13 @@ function cvConfirmProjectDeletion(){
   if(!pending)return;
   var project=cvProjectById(pending.projectId);
   if(!project){cvCloseProjectDeleteModal(false);toast('项目已不存在','warning');return;}
-  if(!cvMayEditProject(project)
-    || tkGetTasks().some(function(task){return task.project===project.id;})
-    || CV_TASKS.some(function(task){return task.project===project.id;})){
-    cvCloseProjectDeleteModal(false);toast('项目权限或任务已变化，请重新检查','warning');return;
+  if(!cvMayEditProject(project)){
+    cvCloseProjectDeleteModal(false);toast('项目权限已变化，请重新检查','warning');return;
   }
   if(!cvDeleteProjectRecord(project.id)){toast('删除失败，请重试','error');return;}
+  /* 不校验已有任务，任务随项目一并清理 */
+  for(var i=CV_TASKS.length-1;i>=0;i--)if(CV_TASKS[i].project===project.id)CV_TASKS.splice(i,1);
+  tkPruneOrphanTasks([project.id]);
   cvCloseProjectDeleteModal(false);
   if(cvProjectTaskReturnId===project.id)cvProjectTaskReturnId='';
   if(cvProject===project.id)cvSetProject('');

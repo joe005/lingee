@@ -1,7 +1,7 @@
 import { CV_MEMBERS, cvCurrentUserName, cvPersonById } from '../collab/data.js';
 import { EX, EXPERTS } from '../expert/data.js';
 import { TEAMS, teamById } from '../expert/store.js';
-import { tkAddTask, tkCurrentStageHandlerId, tkGetTasks, tkSetTasks, tkSetExternalProjects } from '../tasks-v2/data.js';
+import { tkAddTask, tkCanDeleteTask, tkCurrentStageHandlerId, tkDeleteTask, tkGetTasks, tkPruneOrphanTasks, tkSetTasks, tkSetExternalProjects } from '../tasks-v2/data.js';
 /* 管理板块数据：管理项目、项目任务、议题、项目知识库。
    与协作开发的项目 / 任务数据分开存放，避免管理项目出现在开发板块的项目列表里；
    人员、智能体与智能体团队直接复用协作开发和专家模块的基础数据。 */
@@ -260,8 +260,8 @@ function mgrProjectInvite(project, regenerate) {
   };
 }
 
-/* 删除项目及其议题；演示项目记入已删除清单，避免下次从种子恢复。
-   调用方先确认项目下已无任务。 */
+/* 删除项目及其议题、任务（管理任务与开发板块任务）；演示项目记入已删除清单，避免下次从种子恢复。
+   不校验项目下是否还有任务，任务随项目一并清理。 */
 function mgrDeleteProject(id) {
   var index = PROJECTS.findIndex(function (p) { return p.id === id; });
   if (index < 0) return false;
@@ -271,6 +271,10 @@ function mgrDeleteProject(id) {
   PROJECTS.splice(index, 1);
   var ok = mgrSaveProjects() && (removed.custom || writeJson(DELETED_KEY, deleted.concat(id)));
   if (!ok) { PROJECTS.splice(index, 0, removed); mgrSaveProjects(); return false; }
+  TASKS = TASKS.filter(function (t) { return t.project !== id; });
+  mgrSaveTasks();
+  tkPruneOrphanTasks([id]);
+  document.dispatchEvent(new Event('lingee:tasks-changed'));
   ISSUES = ISSUES.filter(function (i) { return i.projectId !== id; });
   writeJson(ISSUES_KEY, ISSUES.filter(function (i) { return i.custom; }));
   document.dispatchEvent(new CustomEvent('lingee:mgr-projects-changed', { detail: { deleted: id } }));
@@ -305,6 +309,36 @@ function mgrCreateDevTask(fields) {
   var task = tkAddTask(Object.assign({ priority: 'medium', desc: '', labels: [], collaborators: [] }, fields));
   document.dispatchEvent(new Event('lingee:tasks-changed'));
   return task;
+}
+/* 未开始的任务可删除：通用任务为待规划 / 待开始且没有状态流转；研发任务沿用开发板块的删除规则。
+   删除后清掉其他任务对它的父任务、前序引用。 */
+function mgrCanDeleteTask(task) {
+  if (!task) return false;
+  if (mgrIsDevTask(task)) return tkCanDeleteTask(task);
+  return ['planned', 'backlog'].indexOf(task.status) >= 0 && !(task.statusHistory || []).length;
+}
+function mgrDeleteTask(task) {
+  if (!mgrCanDeleteTask(task)) return false;
+  var id = task.id;
+  function unlink(list) {
+    list.forEach(function (t) {
+      if (t.parentId != null && String(t.parentId) === String(id)) t.parentId = '';
+      if (t.preTaskId != null && String(t.preTaskId) === String(id)) t.preTaskId = '';
+    });
+  }
+  if (mgrIsDevTask(task)) {
+    if (!tkDeleteTask(id)) return false;
+    var devTasks = tkGetTasks();
+    unlink(devTasks);
+    tkSetTasks(devTasks);
+  } else {
+    var before = TASKS;
+    TASKS = TASKS.filter(function (t) { return t !== task; });
+    unlink(TASKS);
+    if (!mgrSaveTasks()) { TASKS = before; return false; }
+  }
+  document.dispatchEvent(new Event('lingee:tasks-changed'));
+  return true;
 }
 function mgrSaveTasks() { return writeJson(TASKS_KEY, { seq: taskSeq, tasks: TASKS }); }
 function mgrCreateTask(fields) {
@@ -459,7 +493,7 @@ export function initManagerData() {
 }
 
 export {
-  TASK_STATUSES, mgrAddIssue, mgrAddProject, mgrCanManageProject, mgrCreateTask, mgrDeleteProject, mgrCurrentPersonId, mgrExpert, mgrExpertList,
+  TASK_STATUSES, mgrAddIssue, mgrAddProject, mgrCanManageProject, mgrCanDeleteTask, mgrCreateTask, mgrDeleteProject, mgrDeleteTask, mgrCurrentPersonId, mgrExpert, mgrExpertList,
   MEMBER_ROLES, mgrHasSessionPerm, mgrMemberOpenTasks, mgrMemberRole, mgrMemberRoleLabel, mgrPersonName, mgrProjectPeople,
   mgrProjectInvite, mgrRenameError, mgrRenameProject, mgrSetProjectMembers, mgrSetProjectRepo, mgrProjectById, mgrProjectIssues, mgrProjectKnowledge, mgrProjectMembers,
   mgrCreateDevTask, mgrIsDevTask, mgrProjectProgress, mgrProjectTasks, mgrProjects, mgrRelatedTask, mgrSaveProjects, mgrSaveTasks, mgrSetSessionPerm,

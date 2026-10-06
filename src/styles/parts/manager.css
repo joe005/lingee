@@ -1262,7 +1262,7 @@
   position: absolute;
   right: 0;
   top: calc(100% + 4px);
-  z-index: 9;
+  z-index: 60;
   min-width: 170px;
   background: var(--bg);
   border: 1px solid var(--border);
@@ -1290,6 +1290,13 @@
 #view-manager .mgr-row-menu button:focus-visible {
   outline: 2px solid var(--border-focus);
   outline-offset: -2px;
+}
+#view-manager .mgr-row-menu .mgr-menu-danger,
+#view-manager .mgr-tp-more-menu .mgr-menu-danger {
+  color: var(--danger);
+}
+.mgr-scope #mgrTaskDeleteOverlay {
+  z-index: 240;
 }
 #view-manager .mgr-ms-row td {
   padding: 8px 10px;

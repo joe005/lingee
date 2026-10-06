@@ -229,6 +229,16 @@ var TEAM_STAGE_SCENARIOS=[
     {id:'delivery',name:'方案交付',desc:'交付结论、依据与后续建议'}
   ]}
 ];
+/* 通用应用开发智能体团队的交付路径：5 个阶段（架构设计、开发实现沿用 design / implementation 的能力映射） */
+var GENERAL_APP_STAGES=[
+  {id:'requirements',name:'需求分析',desc:'明确目标、范围与验收条件'},
+  {id:'design',name:'架构设计',desc:'设计系统架构、模块边界、接口与数据模型'},
+  {id:'implementation',name:'开发实现',desc:'实现前后端功能并完成针对性自测'},
+  {id:'agent',name:'智能体开发',desc:'开发智能体、技能与业务组件，绑定知识与工具'},
+  {id:'verification',name:'测试验证',desc:'独立验证验收行为与回归影响'}
+];
+/* 功能开发场景的阶段：团队自带交付路径（如通用应用开发 5 阶段）时用团队的，否则用通用路径 */
+function teamFeatureStages(team){ return team&&Array.isArray(team.stages)&&team.stages.length?team.stages:FEATURE_STAGES; }
 function teamStageScenario(issue){
   var type=String(issue?.type||issue?.issueType||''),title=String(issue?.title||'');
   if(/Bug|缺陷|故障/i.test(type))return TEAM_STAGE_SCENARIOS[1];
@@ -386,6 +396,7 @@ var PRESET_TEAMS=[
    desc:'面向 Web 与通用业务应用，覆盖产品、架构、体验、前后端实现、测试与集成交付。',
    domains:['通用应用','Web','前端','产品设计'],
    leadId:'general-app-team-lead',
+   stages:GENERAL_APP_STAGES,
    members:['general-app-team-lead','general-app-product-expert','general-app-architecture-expert','general-app-development-expert','general-app-qa-expert','agent-development-expert'],
    cmds:[['帮我把购物车支持优惠券做成能上线的功能','从需求、设计、实现到验收走完整闭环'],
          ['做一个业务管理 Web 应用','产品、架构、体验与工程协同交付'],
@@ -399,4 +410,4 @@ export function initExpertData() {
 /* MY_EXPERTS 由其它模块写回；import 绑定只读，所以走这个 setter */
 export function set_MY_EXPERTS(v){ MY_EXPERTS=v; return v; }
 
-export { AV_KEYS, EX, EXPERTS, MODEL_TIERS, MY_EXPERTS, PRESET_TEAMS, STAGE_COMP, STAGE_EXPERT_MAX, STAGE_MODES, STAGES, TEAM_STAGE_SCENARIOS, WORK_MODES, askFor, compChip, parseComp, pendingInputs, phraseHtml, rebuildExperts, setBuiltinExperts, skillCatalog, skillInfo, stageById, stageExperts, teamStageScenario, tierInfo, xav, xesc };
+export { teamFeatureStages, AV_KEYS, EX, EXPERTS, MODEL_TIERS, MY_EXPERTS, PRESET_TEAMS, STAGE_COMP, STAGE_EXPERT_MAX, STAGE_MODES, STAGES, TEAM_STAGE_SCENARIOS, WORK_MODES, askFor, compChip, parseComp, pendingInputs, phraseHtml, rebuildExperts, setBuiltinExperts, skillCatalog, skillInfo, stageById, stageExperts, teamStageScenario, tierInfo, xav, xesc };
