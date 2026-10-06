@@ -132,13 +132,49 @@ var EQUIPMENT_AGENT_NAME='设备故障诊断助手';
 function renderEquipmentAppConversation(){
   messagesList.replaceChildren();
   appendUserMessage('打开设备巡检维修系统，看一下上线后的运行情况。');
-  var response=appendAssistantMessage(teamById('general-app-dev'));
+  var response=appendAssistantMessage(teamById('cosmic-app-dev'));
   response.innerHTML='<div class="work-steps"><div class="work-step done final-step bare"><div class="markdown-content">'
-    +'<p>设备巡检维修系统由协作开发项目「设备巡检维修系统建设」交付，右侧是正在运行的系统。</p><ol>'
+    +'<p>设备巡检维修系统由协作开发项目「设备巡检维修系统建设」交付，建在金蝶 ERP 的元数据上，右侧是正在运行的系统；表单、列表、实体、插件页签是它的元数据。</p><ol>'
     +'<li><strong>设备台账与扫码巡检</strong>：126 台设备已生成二维码</li>'
     +'<li><strong>故障报修与维修记录</strong>：42 条用例全部通过，维修记录归入设备履历</li>'
     +'<li><strong>MCP 服务</strong>：设备档案和维修记录通过 MCP 服务 <code>equipment-ops</code> 只读开放，供智能体调用</li>'
     +'</ol><p>访问地址：<code>'+surveyAppEsc(EQUIPMENT_APP_URL)+'</code></p></div></div></div>';
+}
+/* 设备巡检维修系统的元数据页签：列表 / 实体 / 插件换成本系统的元数据；打开其他应用时还原默认示例 */
+var EQ_DOC='<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M8 13h8M8 17h5"/></svg>';
+var EQ_ON='<span class="plugin-check"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>';
+var EQ_OFF='<span class="plugin-check off"></span>';
+var EQ_ENTITIES=[['维修记录',8],['报修单',10],['设备档案',9],['维修组',4]];
+var EQ_FIELDS=[['维修单号','billno','单据编号',1],['设备','equipment','基础资料',1],['故障现象','symptom','多行文本',1],['故障原因','cause','文本',1],['更换零件','parts','基础资料',0],['维修耗时','hours','小数',0],['维修人','repairer','人员',1],['完成时间','finishtime','日期时间',1]];
+var EQ_PLUGINS=[['表单插件','kd.eqp.repair.RepairBillFormPlugin','扫码带出设备档案，校验必填与照片',1],['操作插件','kd.eqp.repair.RepairDispatchPlugin','提交报修时按设备类型派给维修组',1],['操作插件','kd.eqp.repair.RepairRecordAuditPlugin','维修完成后写入设备履历',1],['列表插件','kd.eqp.repair.RepairListPlugin','按设备、类型、日期过滤维修记录',1],['接口插件','kd.eqp.repair.QueryRepairRecordsApi','只读查询维修记录，供智能体技能调用',1]];
+var EQ_ROWS=[['WX-2026-0912','3 号注塑机','温度波动 ±12℃','热电偶接线松动','热电偶 K 型','王师傅','2026-09-12'],['WX-2026-0920','1 号空压机','排气压力不足','进气滤芯堵塞','进气滤芯','李师傅','2026-09-20'],['WX-2026-0926','5 号数控机床','主轴异响','润滑不足','—','王师傅','2026-09-26'],['WX-2026-1002','2 号注塑机','射胶不稳','止逆环磨损','止逆环','赵师傅','2026-10-02'],['WX-2026-1004','4 号冲床','滑块异响','导轨润滑不足','—','赵师傅','2026-10-04']];
+var eqMetaSaved=null;
+function setEquipmentMeta(on){
+  var entity=$('#previewBodyEntity'), plugin=$('#previewBodyPlugin'), list=$('#previewBodyList');
+  if(!entity||!plugin||!list) return;
+  var title=$('.list-title',list), headRow=$('.list-table thead tr',list), tbody=$('#listBody');
+  /* 表头只换复选框之后的列，保留全选框及其监听 */
+  function headCols(){ return headRow ? [].slice.call(headRow.children,1) : []; }
+  if(on&&!eqMetaSaved){
+    eqMetaSaved={entity:entity.innerHTML,plugin:plugin.innerHTML,title:title&&title.textContent,cols:headCols().map(function(th){return th.outerHTML;}).join(''),tbody:tbody&&tbody.innerHTML};
+    entity.innerHTML='<div class="entity-layout"><div class="entity-left">'
+      +EQ_ENTITIES.map(function(e,i){return '<div class="entity-left-item'+(i?'':' active')+'">'+EQ_DOC+'<span class="entity-left-name">'+e[0]+'</span><span class="entity-left-count">'+e[1]+'字段</span></div>';}).join('')
+      +'</div><div class="entity-right"><table class="entity-table"><thead><tr><th>字段名称</th><th>字段标识</th><th>字段类型</th><th>是否必录</th></tr></thead><tbody>'
+      +EQ_FIELDS.map(function(f){return '<tr><td>'+f[0]+'</td><td class="code">'+f[1]+'</td><td>'+f[2]+'</td><td>'+(f[3]?EQ_ON:EQ_OFF)+'</td></tr>';}).join('')
+      +'</tbody></table></div></div>';
+    plugin.innerHTML='<table class="plugin-table"><thead><tr><th>插件类型</th><th>类名</th><th>描述</th><th>是否启用</th></tr></thead><tbody>'
+      +EQ_PLUGINS.map(function(p){return '<tr><td class="type">'+p[0]+'</td><td class="code">'+p[1]+'</td><td>'+p[2]+'</td><td>'+(p[3]?EQ_ON:EQ_OFF)+'</td></tr>';}).join('')
+      +'</tbody></table>';
+    if(title) title.textContent='维修记录';
+    if(headRow){ headCols().forEach(function(th){th.remove();}); headRow.insertAdjacentHTML('beforeend','<th>维修单号</th><th>设备</th><th>故障现象</th><th>故障原因</th><th>更换零件</th><th>维修人</th><th>完成时间</th>'); }
+    if(tbody) tbody.innerHTML=EQ_ROWS.map(function(r){return '<tr data-id="'+r[0]+'"><td class="list-cb"><input type="checkbox"></td><td class="c-code">'+r[0]+'</td><td>'+r.slice(1).join('</td><td>')+'</td></tr>';}).join('');
+  }else if(!on&&eqMetaSaved){
+    entity.innerHTML=eqMetaSaved.entity; plugin.innerHTML=eqMetaSaved.plugin;
+    if(title) title.textContent=eqMetaSaved.title;
+    if(headRow){ headCols().forEach(function(th){th.remove();}); headRow.insertAdjacentHTML('beforeend',eqMetaSaved.cols); }
+    if(tbody) tbody.innerHTML=eqMetaSaved.tbody;
+    eqMetaSaved=null;
+  }
 }
 /* 6.2 智能体开发会话：左侧是 agent-builder 的交付摘要，右侧打开智能体配置面板，在面板里提交 */
 var AGENT_ICON='<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V4.5M9 14h.01M15 14h.01"/></svg>';
@@ -226,6 +262,7 @@ export function initApps() {
       var urlInput=document.getElementById('previewUrlText');
       var url='https://feature.kingdee.com:1026/feature_vb';
       setPreviewBrowserMode(name===SURVEY_APP_NAME);
+      setEquipmentMeta(name===EQUIPMENT_APP_NAME);
       if(name===SURVEY_APP_NAME){ renderSurveyDevConversation(); openSurveyAppPreview(frame,urlInput); }
       else if(name===EQUIPMENT_APP_NAME){
         renderEquipmentAppConversation();

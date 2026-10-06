@@ -6,11 +6,11 @@ import { taskExecutionStages } from '../tasks-v2/task-execution.js';
 import { $ } from '../../core/dom.js'; // 模块自检将模板插值的 $ 识别为跨模块符号。
 
 const PHASE_OWNERS = {
-  requirements:['software-product-manager','general-app-product-expert','software-team-lead'],
-  design:['software-architect','general-app-architecture-expert','cosmic-workflow','cosmic-api','software-team-lead'],
+  requirements:['software-product-manager','general-app-product-expert','cosmic-product-manager','software-team-lead'],
+  design:['software-architect','general-app-architecture-expert','cosmic-architect','cosmic-workflow','cosmic-api','software-team-lead'],
   planning:['software-team-lead','software-architect'],
-  implementation:['cosmic-form','cosmic-workflow','cosmic-report','cosmic-plugin','cosmic-api','frontend-engineer','software-engineer','general-app-development-expert'],
-  verification:['software-qa-engineer','general-app-qa-expert','software-product-manager','software-team-lead'],
+  implementation:['cosmic-metadata-expert','cosmic-form','cosmic-workflow','cosmic-report','cosmic-plugin','cosmic-api','frontend-engineer','software-engineer','general-app-development-expert','cosmic-software-engineer'],
+  verification:['software-qa-engineer','general-app-qa-expert','cosmic-qa-engineer','software-product-manager','software-team-lead'],
   delivery:['software-team-lead','software-architect'],
   agent:['agent-development-expert'],
 };
@@ -27,7 +27,7 @@ function implementationOwner(title, team) {
           : /页面|列表|侧边栏|标签|交互|原型/.test(title)
             ? ['frontend-engineer','cosmic-form','software-engineer']
             : ['cosmic-form','software-engineer','frontend-engineer'];
-  return preferences.find(id => team.members.includes(id));
+  return ['cosmic-metadata-expert'].concat(preferences).find(id => team.members.includes(id));
 }
 
 /* 自定义执行计划的阶段 id 是 s1…s6，按阶段名称对应到交付阶段，再选认领该阶段的智能体。 */

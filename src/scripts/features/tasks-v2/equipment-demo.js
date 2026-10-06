@@ -124,11 +124,22 @@ export function equipmentArtifactDocs(task, people) {
 function repairArtifacts(task, P) {
   return [
     {
-      id:'implementation', stageId:'implementation', type:'开发成果', docTitle:'故障报修与维修记录 · 功能预览',
-      summary:'扫码报修、自动派工与设备维修履历', docNo:'DEV-' + task.code, version:'v1.0.0-rc1', status:'待验收', reviewer:P.owner,
+      id:'implementation', stageId:'implementation', type:'开发成果', docTitle:'故障报修与维修记录 · 元数据清单',
+      summary:'实体、表单、列表与插件元数据，扫码报修、自动派工与设备维修履历', docNo:'DEV-' + task.code, version:'v1.0.0-rc1', status:'待验收', reviewer:P.owner,
       date:'2026-10-04 14:30', author:P.dev,
       sections:[
-        { heading:'1. 功能页面', blocks:[
+        { heading:'1. 元数据清单', blocks:[
+          { table:{ head:['类型', '编码', '名称', '说明'], rows:[
+            ['实体', 'eqp_repair_order', '报修单', '设备、故障现象、照片、优先级、派工组'],
+            ['实体', 'eqp_repair_record', '维修记录', '故障原因、更换零件、耗时、维修人，关联设备履历'],
+            ['表单', 'eqp_repair_bill', '扫码报修', '扫码带出设备信息，必填校验与照片上传'],
+            ['列表', 'eqp_repair_list', '维修记录列表', '按设备、类型、日期筛选，汇总成设备履历'],
+            ['插件', 'RepairDispatchPlugin', '自动派工', '按设备类型派给注塑、空压、数控维修组'],
+            ['接口', 'queryRepairRecords', '查询维修记录', '只读，供智能体技能调用，权限沿用 ERP'],
+          ] } },
+          { note:'由苍穹元数据智能体按元数据契约生成与校验，没有手写页面代码；字段类型、必填与权限都在元数据里约束。' },
+        ] },
+        { heading:'2. 功能页面', blocks:[
           { app:{
             title:'维修记录', subtitle:'设备巡检维修系统 · 设备履历',
             stats:[['本月报修','38'],['平均修复','2.6 小时'],['待处理','4']],
@@ -143,7 +154,7 @@ function repairArtifacts(task, P) {
           } },
           { note:'维修记录按设备汇总成履历，同时开放「查询维修记录」接口，供智能体技能调用。' },
         ] },
-        { heading:'2. 已实现能力', blocks:[
+        { heading:'3. 已实现能力', blocks:[
           { table:{ head:['能力', '交互结果'], rows:[
             ['扫码报修', '扫设备二维码自动带出设备信息，填写现象并拍照'],
             ['自动派工', '按设备类型派给注塑、空压、数控三个维修组'],
