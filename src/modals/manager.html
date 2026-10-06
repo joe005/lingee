@@ -1,0 +1,191 @@
+<!-- 管理板块弹窗容器（.mgr-scope 提供弹窗内的按钮与标签样式） -->
+<div class="mgr-scope" id="mgrModals">
+<!-- 管理 · 新建项目弹窗：项目新建统筹到管理板块。
+     2026-10 评审决议：项目层面不区分 通用/研发 类型——开发属性由模板表达：
+     选中「通用开发 / 苍穹项目开发」模板时展开 Git 地址（必录）与交付智能体团队
+     （默认 通用应用开发智能体团队 / 苍穹应用开发智能体团队）；其余交互对齐管理原型
+     （模板 chips、目标/项目指令页签、项目智能体 chips + 添加）。
+     负责人默认当前登录用户、成员默认创建人，弹窗内不再设置周期与优先级。
+     命名：项目级协作者称「项目智能体」，基础资料为「智能体/智能体团队」。
+     顶层沿用 .sync-overlay（display:none→flex），ESC 关闭命中 main.js 既有选择器。 -->
+<div class="sync-overlay mgr-modal" id="mgrProjEditOverlay" style="display:none" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="mgrProjEditTitle">
+  <div class="sync-modal mgr-projedit-modal">
+    <div class="sync-modal__header mgr-projedit-header">
+      <span class="mgr-projedit-title" id="mgrProjEditTitle">新建项目</span>
+      <button type="button" class="sync-modal__close mgr-projedit-close" data-mgr-projedit-close aria-label="关闭新建项目弹窗">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="sync-modal__body mgr-projedit-body">
+      <form id="mgrProjEditForm" autocomplete="off" novalidate>
+        <div class="mgr-pe-field">
+          <label id="mgrPeTplLabel">模板</label>
+          <div class="mgr-pe-tpl-chips" id="mgrPeTplChips" role="radiogroup" aria-labelledby="mgrPeTplLabel"></div>
+        </div>
+        <div class="mgr-pe-field">
+          <label for="mgrPeName">项目名称 <b aria-hidden="true">*</b></label>
+          <input type="text" id="mgrPeName" maxlength="60" placeholder="例如：重点物料采购降本与保供" required>
+        </div>
+        <div class="mgr-pe-field">
+          <div class="mgr-pe-subtabs" role="tablist" aria-label="项目目标与指令">
+            <button type="button" class="mgr-pe-subtab active" data-mgr-pe-subtab="goal" role="tab" aria-selected="true">目标</button>
+            <button type="button" class="mgr-pe-subtab" data-mgr-pe-subtab="instruction" role="tab" aria-selected="false">项目指令</button>
+          </div>
+          <textarea id="mgrPeGoal" rows="3" maxlength="300" placeholder="为什么建立这个项目，需要达成什么经营结果"></textarea>
+          <textarea id="mgrPeInstruction" rows="3" maxlength="300" placeholder="项目内所有对话共同遵循的全局指令（演示）" hidden></textarea>
+        </div>
+        <div class="mgr-pe-field">
+          <label id="mgrPeExpertsLabel">项目智能体 <small>项目内可调用的智能体，可增删</small></label>
+          <div class="mgr-pe-expert-chips" id="mgrPeExpertChips" aria-labelledby="mgrPeExpertsLabel"></div>
+          <div class="mgr-pe-expert-add-wrap">
+            <button type="button" class="mgr-pe-expert-add" id="mgrPeExpertAdd" aria-haspopup="listbox" aria-expanded="false">＋ 添加</button>
+            <div class="mgr-pe-expert-popup" id="mgrPeExpertPopup" role="listbox" hidden></div>
+          </div>
+        </div>
+        <div class="mgr-pe-field mgr-pe-rd-field" id="mgrPeDevExtra" hidden>
+          <div class="mgr-pe-dev-head">开发交付信息 <small>该模板按交付智能体团队路径生成研发任务阶段</small></div>
+          <div class="mgr-pe-field">
+            <label for="mgrPeRepo">Git 地址与基准分支 <b aria-hidden="true">*</b></label>
+            <div class="mgr-repo-row">
+              <input type="text" id="mgrPeRepo" inputmode="url" placeholder="https://git.example.com/org/repo.git">
+              <label class="mgr-repo-branch"><svg class="mgr-repo-branch-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="8" r="2"/><path d="M6 7v10"/><path d="M18 10c0 4-6 3-12 7"/></svg><select id="mgrPeBaseBranch" aria-label="基准分支" aria-describedby="mgrPeBranchHint">
+                  <option value="main">main</option>
+                  <option value="master">master</option>
+                  <option value="develop">develop</option>
+                  <option value="__custom">其他分支…</option>
+                </select></label>
+              <input type="text" id="mgrPeBaseBranchCustom" class="mgr-repo-branch-custom" placeholder="分支名，如 release/2026" aria-label="自定义基准分支" autocomplete="off" hidden>
+            </div>
+            <p class="mgr-repo-hint" id="mgrPeBranchHint">任务从基准分支拉取开发分支，审核通过后合并回基准分支</p>
+            <p class="mgr-pe-error" id="mgrPeRepoError" hidden>开发类项目必须填写 Git 地址</p>
+            <p class="mgr-pe-error" id="mgrPeBranchError" hidden></p>
+          </div>
+          <div class="mgr-pe-field">
+            <label for="mgrPeTeam">交付智能体团队 <b aria-hidden="true">*</b></label>
+            <select id="mgrPeTeam"><option value="">请选择交付智能体团队</option></select>
+            <p class="mgr-pe-error" id="mgrPeTeamError" hidden>开发类项目必须选择交付智能体团队，用于按阶段生成研发任务</p>
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="sync-modal__footer mgr-projedit-footer">
+      <button type="button" class="sync-modal__btn sync-modal__btn--ghost" data-mgr-projedit-close>取消</button>
+      <button type="button" class="sync-modal__btn sync-modal__btn--primary" id="mgrPeSubmit">创建项目</button>
+    </div>
+  </div>
+</div>
+<!-- 管理 · 删除项目确认：项目下无任务且为负责人或系统管理员时才会打开 -->
+<div class="sync-overlay mgr-modal" id="mgrProjDeleteOverlay" style="display:none" aria-hidden="true">
+  <div class="sync-modal mgr-delete-modal" role="alertdialog" aria-modal="true" aria-labelledby="mgrProjDeleteTitle" aria-describedby="mgrProjDeleteMessage" tabindex="-1">
+    <div class="sync-modal__header mgr-delete-header"><span class="mgr-delete-warning" aria-hidden="true">!</span><div class="mgr-delete-title" id="mgrProjDeleteTitle">删除该项目</div></div>
+    <div class="sync-modal__body mgr-delete-body"><p id="mgrProjDeleteMessage">删除后不可恢复，确定删除？</p></div>
+    <div class="sync-modal__footer mgr-delete-footer"><button type="button" class="sync-modal__btn sync-modal__btn--ghost" data-mgr-delete-cancel>取消</button><button type="button" class="sync-modal__btn mgr-delete-confirm" data-mgr-delete-confirm>删除</button></div>
+  </div>
+</div>
+<!-- 管理 · 删除未开始的任务确认 -->
+<div class="sync-overlay mgr-modal" id="mgrTaskDeleteOverlay" style="display:none" aria-hidden="true">
+  <div class="sync-modal mgr-delete-modal" role="alertdialog" aria-modal="true" aria-labelledby="mgrTaskDeleteTitle" aria-describedby="mgrTaskDeleteMessage" tabindex="-1">
+    <div class="sync-modal__header mgr-delete-header"><span class="mgr-delete-warning" aria-hidden="true">!</span><div class="mgr-delete-title" id="mgrTaskDeleteTitle">删除任务</div></div>
+    <div class="sync-modal__body mgr-delete-body"><p id="mgrTaskDeleteMessage">删除后不可恢复，确定删除？</p></div>
+    <div class="sync-modal__footer mgr-delete-footer"><button type="button" class="sync-modal__btn sync-modal__btn--ghost" data-mgr-task-delete-cancel>取消</button><button type="button" class="sync-modal__btn mgr-delete-confirm" data-mgr-task-delete-confirm>删除</button></div>
+  </div>
+</div>
+<!-- 管理 · 项目成员：搜索灵基人员多选、设置项目角色；人员与开发板块共用同一份人员数据 -->
+<div class="sync-overlay mgr-modal" id="mgrMembersOverlay" style="display:none" aria-hidden="true">
+  <div class="sync-modal mgr-pm-modal mgr-pm-members-modal" role="dialog" aria-modal="true" aria-labelledby="mgrMembersHeading" tabindex="-1">
+    <div class="sync-modal__header mgr-pm-members-modal-header">
+      <div class="mgr-pm-members-modal-heading">
+        <div class="sync-modal__title" id="mgrMembersHeading">项目成员</div>
+        <div class="mgr-pm-members-modal-project" id="mgrMembersProjectName"></div>
+      </div>
+      <button type="button" class="sync-modal__close" data-mgr-members-close aria-label="关闭项目成员弹窗"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="sync-modal__body mgr-pm-members-modal-body">
+      <div class="mgr-pm-member-search-row" id="mgrMemberSearchRow">
+        <label class="mgr-pm-member-search-field" for="mgrMemberSearch">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg>
+          <input id="mgrMemberSearch" type="search" placeholder="搜索人员姓名、手机号或邮箱" autocomplete="off" aria-controls="mgrMemberPicker" aria-expanded="false">
+        </label>
+        <button type="button" class="mgr-pm-member-add-btn" id="mgrMemberAdd" disabled>添加</button>
+      </div>
+      <div class="mgr-pm-members-heading">
+        <h2>已选成员</h2><span id="mgrMembersCount">共 0 人</span>
+      </div>
+      <div class="mgr-pm-members-table-head"><span>姓名</span><span>所属部门</span><span>角色</span><span></span></div>
+      <div id="mgrMembersList"></div>
+    </div>
+    <div class="sync-modal__footer mgr-pm-members-modal-footer"><button type="button" class="sync-modal__btn sync-modal__btn--ghost" data-mgr-members-close>取消</button><button type="button" class="sync-modal__btn sync-modal__btn--primary" data-mgr-members-confirm>保存</button></div>
+  </div>
+</div>
+<!-- 管理 · 移除项目成员确认 -->
+<div class="sync-overlay mgr-modal mgr-pm-member-remove-overlay" id="mgrMemberRemoveOverlay" style="display:none" aria-hidden="true">
+  <div class="sync-modal mgr-pm-remove-modal mgr-pm-member-remove-modal" role="alertdialog" aria-modal="true" aria-labelledby="mgrMemberRemoveTitle" aria-describedby="mgrMemberRemoveMessage" tabindex="-1">
+    <div class="sync-modal__header"><div class="sync-modal__title" id="mgrMemberRemoveTitle">移除项目成员</div></div>
+    <div class="sync-modal__body"><p id="mgrMemberRemoveMessage"></p><p class="mgr-pm-member-remove-note">移除后，该成员将不再属于此项目；不会删除其灵基账号，开发板块的人员数据保持不变。</p></div>
+    <div class="sync-modal__footer"><button type="button" class="sync-modal__btn sync-modal__btn--ghost" data-mgr-remove-cancel>取消</button><button type="button" class="sync-modal__btn mgr-pm-member-remove-confirm" data-mgr-remove-confirm>确认移除</button></div>
+  </div>
+</div>
+<!-- 管理 · 重命名项目 -->
+<div class="sync-overlay mgr-modal" id="mgrProjRenameOverlay" style="display:none" aria-hidden="true">
+  <div class="sync-modal mgr-pm-remove-modal mgr-rename-modal" role="dialog" aria-modal="true" aria-labelledby="mgrProjRenameTitle" tabindex="-1">
+    <div class="sync-modal__header"><div class="sync-modal__title" id="mgrProjRenameTitle">重命名项目</div></div>
+    <div class="sync-modal__body">
+      <label class="mgr-rename-label" for="mgrProjRenameInput">项目名称 <b aria-hidden="true">*</b></label>
+      <input type="text" id="mgrProjRenameInput" class="mgr-rename-input" maxlength="60" autocomplete="off" aria-describedby="mgrProjRenameError" required>
+      <p class="mgr-rename-error" id="mgrProjRenameError" hidden></p>
+    </div>
+    <div class="sync-modal__footer"><button type="button" class="sync-modal__btn sync-modal__btn--ghost" data-mgr-rename-cancel>取消</button><button type="button" class="sync-modal__btn sync-modal__btn--primary" data-mgr-rename-confirm>保存</button></div>
+  </div>
+</div>
+<!-- 管理 · 项目设置：代码仓库与基准分支 -->
+<div class="sync-overlay mgr-modal" id="mgrProjRepoOverlay" style="display:none" aria-hidden="true">
+  <div class="sync-modal mgr-pm-remove-modal mgr-rename-modal mgr-repo-modal" role="dialog" aria-modal="true" aria-labelledby="mgrProjRepoTitle" tabindex="-1">
+    <div class="sync-modal__header"><div class="sync-modal__title" id="mgrProjRepoTitle">代码仓库</div></div>
+    <div class="sync-modal__body">
+      <label class="mgr-rename-label" for="mgrRepoUrl">Git 地址与基准分支 <b aria-hidden="true" id="mgrRepoUrlRequired">*</b></label>
+      <div class="mgr-repo-row">
+        <input type="text" id="mgrRepoUrl" class="mgr-rename-input" inputmode="url" placeholder="https://git.example.com/org/repo.git" autocomplete="off">
+        <label class="mgr-repo-branch"><svg class="mgr-repo-branch-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="8" r="2"/><path d="M6 7v10"/><path d="M18 10c0 4-6 3-12 7"/></svg><select id="mgrRepoBase" aria-label="基准分支">
+            <option value="main">main</option>
+                  <option value="master">master</option>
+                  <option value="develop">develop</option>
+                  <option value="__custom">其他分支…</option>
+          </select></label>
+        <input type="text" id="mgrRepoBaseCustom" class="mgr-rename-input mgr-repo-branch-custom" placeholder="分支名，如 release/2026" aria-label="自定义基准分支" autocomplete="off" hidden>
+      </div>
+      <p class="mgr-repo-hint">任务从基准分支拉取开发分支，审核通过后合并回基准分支；修改后，尚未合并的任务分支按新的基准分支合并。</p>
+      <p class="mgr-rename-error" id="mgrRepoError" hidden></p>
+    </div>
+    <div class="sync-modal__footer"><button type="button" class="sync-modal__btn sync-modal__btn--ghost" data-mgr-repo-cancel>取消</button><button type="button" class="sync-modal__btn sync-modal__btn--primary" data-mgr-repo-confirm>保存</button></div>
+  </div>
+</div>
+<!-- 管理 · 邀请成员：生成邀请链接，复制后发给同事；主动维护人员请用详情页的「项目成员」 -->
+<div class="sync-overlay mgr-modal" id="mgrInviteOverlay" style="display:none" aria-hidden="true">
+  <div class="sync-modal mgr-pm-remove-modal mgr-invite-modal" role="dialog" aria-modal="true" aria-labelledby="mgrInviteTitle" tabindex="-1">
+    <div class="sync-modal__header mgr-invite-header">
+      <span class="mgr-invite-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg></span>
+      <div class="mgr-invite-heading">
+        <div class="sync-modal__title" id="mgrInviteTitle">邀请成员</div>
+        <div class="mgr-invite-sub">加入「<span id="mgrInviteProject"></span>」</div>
+      </div>
+    </div>
+    <div class="sync-modal__body mgr-invite-body">
+      <label class="mgr-invite-label" for="mgrInviteLink">邀请链接</label>
+      <div class="mgr-invite-row">
+        <input type="text" id="mgrInviteLink" class="mgr-invite-input" readonly aria-describedby="mgrInviteMeta">
+        <button type="button" class="mgr-invite-copy" id="mgrInviteCopy" data-mgr-invite-copy>复制链接</button>
+      </div>
+      <div class="mgr-invite-meta" id="mgrInviteMeta">
+        <span id="mgrInviteExpire"></span>
+        <button type="button" class="mgr-invite-reset" data-mgr-invite-reset><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>重新生成</button>
+      </div>
+      <ul class="mgr-invite-notes">
+        <li>把链接发给同事，对方打开后即可申请加入项目。</li>
+        <li>重新生成后，旧链接立即失效。</li>
+        <li>要直接添加人员、设置角色或移除成员，请使用标题右侧的「项目成员」。</li>
+      </ul>
+    </div>
+    <div class="sync-modal__footer mgr-invite-footer"><button type="button" class="sync-modal__btn sync-modal__btn--ghost" data-mgr-invite-close>关闭</button></div>
+  </div>
+</div>
+</div>

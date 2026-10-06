@@ -10,6 +10,8 @@
 | 智能体与智能体团队 | [04-experts-and-teams.md](04-experts-and-teams.md) | 协作开发 → 智能体、智能体团队 |
 | 管理平台 | [05-platform-management.md](05-platform-management.md) | 原厂管理（云端）、租户管理（云端） |
 | 设置 | [06-settings.md](06-settings.md) | 协作开发 → 设置 |
+| 管理 | [07-manager.md](07-manager.md) | 侧栏「管理」页签 → 项目 |
+| 工作 | [08-work.md](08-work.md) | 侧栏「工作」页签 → 新任务 |
 
 专题说明：智能体团队领域模型见 [expert-team-spec.md](expert-team-spec.md)，演示步骤见 [智能体团队演示场景.md](智能体团队演示场景.md) 、[smart-site-demo-script.md](smart-site-demo-script.md) 和 [设备运维演示场景.md](设备运维演示场景.md)。
 

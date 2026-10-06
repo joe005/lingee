@@ -1,0 +1,44 @@
+/* 工作 · 智能体对话页（src/views/work-chat.html）：在工作首页选择已发布的智能体后提问 */
+
+  .wc-header{display:flex;align-items:center;height:40px;padding:0 20px;flex:none;border-bottom:1px solid var(--border)}
+  .wc-title{margin:0;font-size:15px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .wc-messages{flex:1;min-height:0;overflow-y:auto;padding:40px 20px}
+  .wc-empty{margin:18vh auto 0;text-align:center}
+  .wc-empty-title{font-size:22px;font-weight:600;color:var(--text)}
+  .wc-empty-desc{margin-top:8px;font-size:14px;color:var(--text-secondary)}
+  .wc-composer-wrap{width:min(900px,calc(100% - 40px));margin:0 auto;padding:0 0 12px;flex:none}
+  .wc-composer{max-width:none}
+  .wc-input{min-height:48px;max-height:120px;overflow-y:auto;padding:2px 4px 18px;font-size:15px;color:var(--text);outline:none}
+  .wc-input:empty:before{content:attr(data-placeholder);color:var(--text-soft);pointer-events:none}
+  .wc-disclaimer{margin-top:8px;text-align:center;font-size:12px;color:var(--text-soft)}
+  #wcSend:not(:disabled){background:var(--brand-active);color:var(--bg)}
+  #wcSend:disabled{cursor:default}
+  #wcSend:focus-visible,.wc-agent-chip:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+
+  .wc-agent-dd{position:relative}
+  .wc-agent-chip{display:inline-flex;align-items:center;gap:5px;height:30px;padding:0 10px;border:0;border-radius:8px;background:transparent;color:var(--text-secondary);font:inherit;font-size:13px;font-weight:500;cursor:pointer}
+  .wc-agent-chip:hover{background:var(--hover)}
+  .wc-agent-chip.is-set{background:var(--brand-fill);color:var(--brand)}
+  .wc-agent-chip .ic{width:15px;height:15px}
+  .wc-agent-chip .caret{width:13px;height:13px}
+  .wc-agent-menu{position:absolute;left:0;bottom:calc(100% + 6px);z-index:30;width:300px;padding:6px;border:1px solid var(--border);border-radius:12px;background:var(--bg);box-shadow:0 8px 24px rgba(0,0,0,.12)}
+  .wc-agent-menu[hidden]{display:none}
+  .wc-agent-option{display:flex;flex-direction:column;gap:2px;width:100%;padding:8px 10px;border:0;border-radius:8px;background:transparent;font:inherit;text-align:left;cursor:pointer}
+  .wc-agent-option strong{font-size:13px;font-weight:500;color:var(--text)}
+  .wc-agent-option span{font-size:12px;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .wc-agent-option:hover,.wc-agent-option:focus-visible{background:var(--hover);outline:none}
+  .wc-agent-option[aria-selected="true"]{background:var(--brand-fill)}
+
+  /* 回答：思考与技能调用摘要 → 正文 → 时间 */
+  .wc-trace{display:flex;flex-direction:column;gap:8px;margin-bottom:10px;font-size:13px;color:var(--text-secondary)}
+  .wc-trace-row{display:flex;align-items:center;gap:6px}
+  .wc-trace-row .ic{width:15px;height:15px}
+  .wc-trace-row strong{font-weight:500;color:var(--text)}
+  .wc-trace-row.is-running .ic{color:var(--brand);animation:wc-spin .9s linear infinite}
+  @keyframes wc-spin{to{transform:rotate(360deg)}}
+  .wc-trace-skills{display:flex;flex-wrap:wrap;gap:6px}
+  .wc-trace-skill{padding:2px 8px;border-radius:6px;background:var(--fill-1);border:1px solid var(--border);font-size:12px;color:var(--text-secondary)}
+  .wc-refs{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:12px;font-size:12px;color:var(--text-secondary)}
+  .wc-ref{padding:2px 8px;border-radius:6px;background:var(--brand-fill);color:var(--brand)}
+  .wc-answer-meta{margin-top:10px;font-size:12px;color:var(--text-soft)}
+  @media (prefers-reduced-motion:reduce){.wc-trace-row.is-running .ic{animation:none}}

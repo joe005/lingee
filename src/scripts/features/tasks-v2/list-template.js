@@ -1,4 +1,5 @@
 import { tkGetPerson, tkGetPriorityObj, tkGetProjectName, tkGetStatusObj } from './data.js';
+import { taskListKind } from './list-kind.js';
 
 /* 任务列表的共用行模板与列设置。任务页和项目详情挂载同一个列表实例，
    排序、折叠、选择、快捷新建及详情事件均由任务页的控制器处理。 */
@@ -41,29 +42,36 @@ function renderTaskListRow(t, opts, context) {
       + '<td class="tk-col-actions"><button class="tk-card-more" data-card-more="' + t.id + '" data-tooltip="更多操作" aria-label="更多操作"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button></td></tr>';
   }
   var progress = context.listStageProgress(t);
-  var progressDots = Array.from({ length:progress.total }, function (_, index) {
-    var progressState = index < progress.index || t.status === 'done' && index < progress.total - 1 ? ' is-done' : index === progress.index ? ' is-current' : '';
-    return '<span class="tk-list-progress-dot' + progressState + '"></span>';
+  var info = taskListKind(t);
+  var e = context.escapeHtml;
+  var steps = (progress.stages || []).map(function (stage, index) {
+    var row = Array.isArray(t.executionPlan) ? t.executionPlan.find(function (item) { return item.id === stage.id; }) : null;
+    var done = t.status === 'done' || row?.status === 'done' || index < progress.index;
+    var stepState = done ? ' is-complete' : index === progress.index ? ' is-current' : ' is-pending';
+    return '<span class="tk-list-stage-step' + stepState + '" title="' + e(stage.name) + '"><span>' + e(stage.name) + '</span><i aria-hidden="true"></i></span>';
   }).join('');
-  var cardStatusName = { backlog:'待交给AI执行', in_review:'待验收' }[t.status] || st.name;
-  var listAction = t.status === 'backlog'
-    ? '<button type="button" class="tk-list-action-btn" data-list-task-action="start" data-list-task-id="' + t.id + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3-1.6 4.4L6 9l4.4 1.6L12 15l1.6-4.4L18 9l-4.4-1.6L12 3Z"/><path d="m5 15-.8 2.2L2 18l2.2.8L5 21l.8-2.2L8 18l-2.2-.8L5 15Z"/></svg><span>交给AI执行</span></button>'
-    : t.status === 'in_review'
-      ? '<button type="button" class="tk-list-action-btn" data-list-task-action="preview" data-list-task-id="' + t.id + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg><span>查看验收产物</span></button>'
-      : t.status === 'blocked'
-        ? '<button type="button" class="tk-list-action-btn" data-list-task-action="retry" data-list-task-id="' + t.id + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 11a8.1 8.1 0 1 0-2.4 5.7"/><path d="M20 4v7h-7"/></svg><span>重新执行</span></button>'
-        : '';
+  var stageHtml = steps
+    ? '<div class="tk-list-stage-progress" role="progressbar" aria-label="当前任务阶段：' + e(progress.name) + '" aria-valuemin="1" aria-valuemax="' + progress.total + '" aria-valuenow="' + (progress.index + 1) + '">'
+      + '<div class="tk-list-stage-summary' + (t.status === 'done' ? ' is-done' : '') + '"><span>' + e(progress.name) + '</span><b>' + (progress.index + 1) + '/' + progress.total + '</b></div>'
+      + '<div class="tk-list-stage-track">' + steps + '</div></div>'
+    : '<span class="tk-list-stage-empty">—</span>';
+  var descText = String(t.desc || '').replace(/\s+/g, ' ');
+  var hintTitle = info.hint + (descText ? '：' + descText : '');
+  var actionButton = '<button type="button" class="tk-list-action-btn' + (info.primary ? ' is-primary' : '') + '" data-list-task-action="' + info.action + '" data-list-task-id="' + t.id + '" aria-label="' + e(info.label + '：' + t.title) + '">' + e(info.label) + '</button>';
+  var typeTag = t.issueType
+    ? '<span class="tk-list-card-label tk-list-card-type" data-type="' + e(t.issueType) + '" title="任务类型：' + e(t.issueType) + '">' + e(t.issueType) + '</span>' : '';
+  var priorityTag = pri.name
+    ? '<span class="tk-list-card-label tk-list-priority" data-priority="' + e(t.priority) + '" title="优先级：' + e(pri.name) + '">' + e(pri.name) + '优先级</span>' : '';
   return '<tr class="tk-row tk-list-card-row' + sel + (context.drawerTaskId === t.id ? ' detail-active' : '') + (depth ? ' tk-row--child' : '') + (hasChildren ? ' tk-row--parent' : '') + '" data-task-id="' + t.id + '" data-depth="' + depth + '" tabindex="0">'
-    + '<td class="tk-list-card-cell" colspan="11"><div class="tk-list-card">'
-    + '<div class="tk-list-card-main"><div class="tk-list-card-meta"><span class="tk-list-status" data-status="' + context.escapeHtml(t.status) + '">' + context.escapeHtml(cardStatusName) + '</span><span>' + context.escapeHtml(t.code) + '</span><i>·</i><span>' + context.escapeHtml(tkGetProjectName(t.project)) + '</span></div>'
-    + '<div class="tk-list-card-title"><strong>' + context.escapeHtml(t.title) + '</strong>' + toggle + childBadge + '</div>'
-    + '<p class="tk-list-card-desc" title="' + context.escapeHtml(String(t.desc || '').replace(/\s+/g, ' ')) + '">' + context.escapeHtml(t.desc || '暂无任务描述') + '</p>'
-    + '<div class="tk-list-card-foot">'
-    + '<span class="tk-list-card-label tk-list-card-type" data-type="' + context.escapeHtml(t.issueType || '') + '" title="任务类型：' + context.escapeHtml(t.issueType || '未设置') + '" aria-label="任务类型：' + context.escapeHtml(t.issueType || '未设置') + '">' + context.escapeHtml(t.issueType || '未设置') + '</span>'
-    + '<span class="tk-list-card-label tk-list-priority" data-priority="' + context.escapeHtml(t.priority) + '" title="优先级：' + context.escapeHtml(pri.name) + '" aria-label="优先级：' + context.escapeHtml(pri.name) + '">优先级：' + context.escapeHtml(pri.name) + '</span>'
-    + '</div></div>'
-    + '<div class="tk-list-stage"><strong>' + context.escapeHtml(progress.name) + '</strong><div class="tk-list-progress-row"><div class="tk-list-progress">' + progressDots + '</div><span class="tk-list-progress-count">' + (progress.index + 1) + '/' + progress.total + '</span></div></div>'
-    + '<div class="tk-list-card-actions">' + listAction + '</div>'
+    + '<td class="tk-list-card-cell" colspan="11"><div class="tk-list-card tk-list-card--' + info.kind + '">'
+    + '<div class="tk-list-card-main"><div class="tk-list-card-meta"><span class="tk-list-status" data-kind="' + info.kind + '">' + e(info.badge) + '</span><span class="tk-list-card-code">' + e(t.code) + '</span>'
+    + (t.project ? '<span class="tk-list-card-project">' + e(tkGetProjectName(t.project)) + '</span>' : '') + '</div>'
+    + '<div class="tk-list-card-title"><button type="button" class="tk-list-card-title-btn" title="' + e(t.title) + '">' + e(t.title) + '</button>' + toggle + childBadge + '</div>'
+    + '<p class="tk-list-card-desc" title="' + e(hintTitle) + '"><span class="tk-list-card-hint-lead">' + e(info.hint) + '</span>' + (descText ? '<span class="tk-list-card-hint-desc">' + e(descText) + '</span>' : '') + '</p>'
+    + (typeTag || priorityTag ? '<div class="tk-list-card-foot">' + typeTag + priorityTag + '</div>' : '')
+    + '</div>'
+    + '<div class="tk-list-stage">' + stageHtml + '</div>'
+    + '<div class="tk-list-card-actions">' + actionButton + '</div>'
     + '</div></td></tr>';
 }
 

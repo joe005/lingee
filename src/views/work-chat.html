@@ -1,0 +1,35 @@
+  <!-- ===================== 工作 · 智能体对话（在工作首页选择已发布的智能体提问后进入） ===================== -->
+  <div class="view hidden" id="view-work-chat">
+    <div class="wc-header"><h1 class="wc-title" id="wcTitle">新任务</h1></div>
+    <div class="wc-messages" id="wcMessages">
+      <div class="messages-list" id="wcMessagesList">
+        <div class="wc-empty" id="wcEmpty">
+          <div class="wc-empty-title">有什么可以帮你？</div>
+          <div class="wc-empty-desc">选择智能体后直接提问，智能体会调用它的技能来回答。</div>
+        </div>
+      </div>
+    </div>
+    <div class="wc-composer-wrap">
+      <div class="composer wc-composer">
+        <div class="wc-input" id="wcInput" contenteditable="true" role="textbox" aria-multiline="true" aria-label="输入问题" data-placeholder="问我问题或者布置任务，输入 @ 唤起技能或选择智能体"></div>
+        <div class="composer-bar">
+          <button type="button" class="round-btn" aria-label="添加附件" data-tooltip="添加附件"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+          <div class="wc-agent-dd" id="wcAgentDd">
+            <button type="button" class="wc-agent-chip" id="wcAgentChip" aria-haspopup="listbox" aria-expanded="false" aria-controls="wcAgentMenu">
+              <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V4.5M9 14h.01M15 14h.01"/></svg>
+              <span id="wcAgentName">选择智能体</span>
+              <svg class="ic caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+            <div class="wc-agent-menu" id="wcAgentMenu" role="listbox" aria-label="选择智能体" hidden>
+              <button type="button" class="wc-agent-option" role="option" aria-selected="false" data-agent="设备故障诊断助手"><strong>设备故障诊断助手</strong><span>先查维修记录，再按老师傅的经验给排查步骤</span></button>
+              <button type="button" class="wc-agent-option" role="option" aria-selected="false" data-agent="问卷调研助手"><strong>问卷调研助手</strong><span>设计问卷、安排发放、生成分析结论</span></button>
+              <button type="button" class="wc-agent-option" role="option" aria-selected="false" data-agent="费报智能体"><strong>费报智能体</strong><span>查询和填写费用报销单</span></button>
+            </div>
+          </div>
+          <span class="spacer"></span>
+          <button type="button" class="send-btn" id="wcSend" aria-label="发送" disabled><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+        </div>
+      </div>
+      <div class="wc-disclaimer">内容由 AI 生成，请注意甄别</div>
+    </div>
+  </div>

@@ -28,6 +28,13 @@ app/
 
 # 部署产物
 deploy-bundle/
+dist/
+node_modules.nosync/
+
+# 本地演示与导出产物（保留已跟踪的任务状态流程文件）
+outputs/*
+!outputs/task-state-flow.html
+!outputs/task-state-flow.svg
 
 # 临时与备份（历史存档另行保留）
 *.bak
@@ -41,3 +48,4 @@ serve-preview.mjs
 !.dev.vars.example
 .env*
 !.env.example
+design-ref/

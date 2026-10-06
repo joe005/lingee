@@ -1,6 +1,6 @@
 /* T00 结构拆分：list。保留原交互；事件在 init* 中按原顺序注册。 */
 import { taskViewState, els, LIST_FIELDS, DEFAULT_LIST_FIELD_ORDER } from './ui-state.js';
-import { tkGetViews, tkGetTasks, TK_PEOPLE, tkProjectsForCurrentUser, tkDeleteTask, tkAddTask, tkCurrentUserId, tkCanStartTask, tkCanViewTask, tkParticipatesCurrentUser, tkWasTaskHandler, TK_STATUSES, tkGetPerson, tkGetProjectName, TK_PRIORITIES, tkGetPriorityObj, TK_FILTER_FIELDS, TK_OPERATORS, tkSyncPeople, tkPeopleInProject, TK_LABELS, tkAddView, tkUpdateTask, tkDeleteView, tkRenameView, TK_PROJECTS, tkGetStatusObj } from './data.js';
+import { tkGetViews, tkGetTasks, TK_PEOPLE, tkProjectsForCurrentUser, tkDeleteTask, tkAddTask, tkCurrentUserId, tkCanStartTask, tkCanViewTask, tkInMyTaskList, tkParticipatesCurrentUser, tkWasTaskHandler, TK_STATUSES, tkGetPerson, tkGetProjectName, TK_PRIORITIES, tkGetPriorityObj, TK_FILTER_FIELDS, TK_OPERATORS, tkSyncPeople, tkPeopleInProject, TK_LABELS, tkAddView, tkUpdateTask, tkDeleteView, tkRenameView, TK_PROJECTS, tkGetStatusObj, tkProjectById } from './data.js';
 import { TEAMS } from '../expert/store.js';
 import { AV_KEYS, EX, EXPERTS, xav } from '../expert/data.js';
 import { createDeliveryActivity } from '../collab/delivery-activity.js';
@@ -165,7 +165,7 @@ function getFilteredTasks(skipField) {
   var tasks = tkGetTasks();
   tasks = tasks.filter(tkCanViewTask);
   if (projectListMode && projectListProjectId) tasks = tasks.filter(function (task) { return task.project === projectListProjectId; });
-  if (skipField !== 'assignee' && !taskViewState.filters.some(function (f) { return f.field === 'assignee'; })) tasks = tasks.filter(tkParticipatesCurrentUser);
+  if (skipField !== 'assignee' && !taskViewState.filters.some(function (f) { return f.field === 'assignee'; })) tasks = tasks.filter(tkInMyTaskList);
   var scope = taskViewState.scope;
   if (scope === 'members') tasks = tasks.filter(function (t) { return !t.assignee || t.assignee.charAt(0) !== 'a'; });
   else if (scope === 'agents') tasks = tasks.filter(function (t) { return t.assignee && t.assignee.charAt(0) === 'a'; });
@@ -396,7 +396,7 @@ function renderCard(t, opts) {
   var spacer = !hasChildren ? '<span class="tk-card-spacer"></span>' : '';
   var childBadge = hasChildren ? '<span class="tk-card-child-count"' + (isCollapsed ? '' : ' style="visibility:hidden"') + '>' + childCount + '</span>' : '';
   var extraCls = (depth ? ' tk-card--child' : '') + (hasChildren ? ' tk-card--parent' : '');
-  var project = TK_PROJECTS.find(function(r){ return r.id === t.project; });
+  var project = tkProjectById(t.project);
   var team = (function(){ var tid = t.teamId || (project && project.defaultTeam); return TEAMS.find(function(tm){ return tm.id === tid; }); })();
   var isBacklog = t.status === 'backlog';
   var teamAvatarHtml, footExtraHtml;

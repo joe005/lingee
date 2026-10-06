@@ -1,7 +1,6 @@
-import { $, $$ } from '../core/dom.js';
-import { toast } from '../core/toast.js';
-/* 工作模式：侧边栏「工作」页签，选择已发布的智能体直接提问（对齐 Lingee 工作页）
-   与「开发」页签互斥：切到工作时隐藏开发导航和所有开发视图，只显示 #view-work。
+import { $, $$ } from '../../core/dom.js';
+import { setUrlState, showView } from '../../core/view.js';
+/* 工作 · 智能体对话：在工作首页（work/index.js）选中已发布的智能体发送后进入，页内也可切换智能体继续提问。
    回答为本地模拟；设备故障诊断助手按 6.2 演示场景给出先查维修记录、再按经验排查的回答。 */
 
 var DIAG_AGENT = '设备故障诊断助手';
@@ -15,49 +14,40 @@ var ICON_DONE = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="current
 
 function esc(v) { return String(v).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 
-function setMode(work) {
-  $('.sidebar').classList.toggle('is-work', work);
-  $('#sbWork').hidden = !work;
-  $('.main').classList.toggle('is-work', work);
-  $('#view-work').hidden = !work;
-  if (!work) closeMenu(false);
-}
-
-function inputText() { return ($('#workInput').textContent || '').trim(); }
-function syncSend() { $('#workSend').disabled = busy || !inputText(); }
+function inputText() { return ($('#wcInput').textContent || '').trim(); }
+function syncSend() { $('#wcSend').disabled = busy || !inputText(); }
 
 function closeMenu(focusChip) {
-  var menu = $('#workAgentMenu');
+  var menu = $('#wcAgentMenu');
   if (menu.hidden) return;
   menu.hidden = true;
-  $('#workAgentChip').setAttribute('aria-expanded', 'false');
-  if (focusChip) $('#workAgentChip').focus();
+  $('#wcAgentChip').setAttribute('aria-expanded', 'false');
+  if (focusChip) $('#wcAgentChip').focus();
 }
 function openMenu() {
-  var menu = $('#workAgentMenu');
+  var menu = $('#wcAgentMenu');
   menu.hidden = false;
-  $('#workAgentChip').setAttribute('aria-expanded', 'true');
-  (menu.querySelector('[aria-selected="true"]') || menu.querySelector('.work-agent-option')).focus();
+  $('#wcAgentChip').setAttribute('aria-expanded', 'true');
+  (menu.querySelector('[aria-selected="true"]') || menu.querySelector('.wc-agent-option')).focus();
 }
 function selectAgent(name) {
   agent = name;
-  $('#workAgentName').textContent = name || '选择智能体';
-  $('#workAgentChip').classList.toggle('is-set', !!name);
-  $$('.work-agent-option').forEach(function (opt) { opt.setAttribute('aria-selected', opt.getAttribute('data-agent') === name ? 'true' : 'false'); });
+  $('#wcAgentName').textContent = name || '选择智能体';
+  $('#wcAgentChip').classList.toggle('is-set', !!name);
+  $$('.wc-agent-option').forEach(function (opt) { opt.setAttribute('aria-selected', opt.getAttribute('data-agent') === name ? 'true' : 'false'); });
 }
 
 function resetConversation() {
   clearTimeout(timer);
   busy = false;
-  var list = $('#workMessagesList');
+  var list = $('#wcMessagesList');
   list.replaceChildren();
   var empty = document.createElement('div');
-  empty.className = 'work-empty';
-  empty.innerHTML = '<div class="work-empty-title">有什么可以帮你？</div><div class="work-empty-desc">选择智能体后直接提问，智能体会调用它的技能来回答。</div>';
+  empty.className = 'wc-empty';
+  empty.innerHTML = '<div class="wc-empty-title">有什么可以帮你？</div><div class="wc-empty-desc">选择智能体后直接提问，智能体会调用它的技能来回答。</div>';
   list.appendChild(empty);
-  $('#workTitle').textContent = '新任务';
-  $('#workInput').textContent = '';
-  $$('.sb-work-history-item').forEach(function (b) { b.classList.remove('active'); });
+  $('#wcTitle').textContent = '新任务';
+  $('#wcInput').textContent = '';
   syncSend();
 }
 
@@ -89,31 +79,31 @@ function send() {
   var q = inputText();
   if (!q || busy) return;
   busy = true;
-  var list = $('#workMessagesList');
-  if ($('.work-empty', list)) list.replaceChildren();
-  $('#workTitle').textContent = q.length > 24 ? q.slice(0, 24) + '…' : q;
+  var list = $('#wcMessagesList');
+  if ($('.wc-empty', list)) list.replaceChildren();
+  $('#wcTitle').textContent = q.length > 24 ? q.slice(0, 24) + '…' : q;
   var user = document.createElement('div');
   user.className = 'message user';
   user.innerHTML = '<div class="message-content"><p>' + esc(q) + '</p></div>';
   list.appendChild(user);
-  $('#workInput').textContent = '';
+  $('#wcInput').textContent = '';
   syncSend();
   var msg = document.createElement('div');
   msg.className = 'message assistant';
-  msg.innerHTML = '<div class="message-content"><div class="work-trace" role="status"><div class="work-trace-row is-running">' + ICON_LOAD + '<span>深度思考中…</span></div></div><div class="markdown-content"></div></div>';
+  msg.innerHTML = '<div class="message-content"><div class="wc-trace" role="status"><div class="wc-trace-row is-running">' + ICON_LOAD + '<span>深度思考中…</span></div></div><div class="markdown-content"></div></div>';
   list.appendChild(msg);
-  var scroller = $('#workMessages');
+  var scroller = $('#wcMessages');
   scroller.scrollTop = scroller.scrollHeight;
   var reply = answerFor(agent, q);
   timer = setTimeout(function () {
     var skills = reply.skills.length;
-    $('.work-trace', msg).innerHTML = '<div class="work-trace-row">' + ICON_THINK + '<span>深度思考 · 3s</span></div>'
-      + '<div class="work-trace-row">' + ICON_DONE + '<strong>任务完成</strong><span>' + (skills ? '调用 ' + skills + ' 个技能' + (reply.mcp ? '，经 MCP 读取「' + esc(reply.mcp) + '」' : '') : '直接回答') + '</span></div>'
-      + (skills ? '<div class="work-trace-skills">' + reply.skills.map(function (s) { return '<span class="work-trace-skill">' + esc(s) + '</span>'; }).join('') + '</div>' : '');
+    $('.wc-trace', msg).innerHTML = '<div class="wc-trace-row">' + ICON_THINK + '<span>深度思考 · 3s</span></div>'
+      + '<div class="wc-trace-row">' + ICON_DONE + '<strong>任务完成</strong><span>' + (skills ? '调用 ' + skills + ' 个技能' + (reply.mcp ? '，经 MCP 读取「' + esc(reply.mcp) + '」' : '') : '直接回答') + '</span></div>'
+      + (skills ? '<div class="wc-trace-skills">' + reply.skills.map(function (s) { return '<span class="wc-trace-skill">' + esc(s) + '</span>'; }).join('') + '</div>' : '');
     $('.markdown-content', msg).innerHTML = reply.html
-      + (reply.refs ? '<div class="work-refs"><span>参考</span>' + reply.refs.map(function (r) { return '<span class="work-ref">' + esc(r) + '</span>'; }).join('') + '</div>' : '');
+      + (reply.refs ? '<div class="wc-refs"><span>参考</span>' + reply.refs.map(function (r) { return '<span class="wc-ref">' + esc(r) + '</span>'; }).join('') + '</div>' : '');
     var meta = document.createElement('div');
-    meta.className = 'work-answer-meta';
+    meta.className = 'wc-answer-meta';
     meta.textContent = nowLabel() + (agent ? ' · ' + agent : '');
     $('.message-content', msg).appendChild(meta);
     scroller.scrollTop = scroller.scrollHeight;
@@ -122,43 +112,46 @@ function send() {
   }, 1600);
 }
 
-export function initWork() {
-  if (!$('#view-work')) return;
-  document.addEventListener('lingee:seg-mode', function (e) { setMode(e.detail === '工作'); });
-  $$('.sb-work-item').forEach(function (item) {
-    item.addEventListener('click', function () {
-      if (item.getAttribute('data-work-nav') === 'new') { resetConversation(); $('#workInput').focus(); return; }
-      toast(item.textContent.trim() + '：演示原型暂未开放');
-    });
-  });
-  $$('.sb-work-history-item').forEach(function (item) {
-    item.addEventListener('click', function () { toast('历史对话「' + item.textContent.trim() + '」为演示数据'); });
-  });
-  var input = $('#workInput');
+/* 已发布、可在工作中提问的智能体（与对话页的智能体菜单一致） */
+export var WORK_CHAT_AGENTS = ['设备故障诊断助手', '问卷调研助手', '费报智能体'];
+
+/* 从工作首页进入：带上选中的智能体和问题，直接发送 */
+export function openWorkChat(name, question) {
+  showView('work-chat');
+  setUrlState('/work');
+  resetConversation();
+  selectAgent(name || '');
+  if (question) { $('#wcInput').textContent = question; syncSend(); send(); }
+  else $('#wcInput').focus();
+}
+
+export function initWorkChat() {
+  if (!$('#view-work-chat')) return;
+  var input = $('#wcInput');
   input.addEventListener('input', function () { if (!inputText()) input.innerHTML = ''; syncSend(); });
   input.addEventListener('keydown', function (e) {
     if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); send(); }
   });
-  $('#workSend').addEventListener('click', send);
-  $('#workAgentChip').addEventListener('click', function (e) {
+  $('#wcSend').addEventListener('click', send);
+  $('#wcAgentChip').addEventListener('click', function (e) {
     e.stopPropagation();
-    if ($('#workAgentMenu').hidden) openMenu(); else closeMenu(false);
+    if ($('#wcAgentMenu').hidden) openMenu(); else closeMenu(false);
   });
-  $('#workAgentMenu').addEventListener('click', function (e) {
-    var opt = e.target.closest('.work-agent-option');
+  $('#wcAgentMenu').addEventListener('click', function (e) {
+    var opt = e.target.closest('.wc-agent-option');
     if (!opt) return;
     e.stopPropagation();
     selectAgent(opt.getAttribute('data-agent'));
     closeMenu(false);
     input.focus();
   });
-  $('#workAgentMenu').addEventListener('keydown', function (e) {
-    var opts = $$('.work-agent-option');
+  $('#wcAgentMenu').addEventListener('keydown', function (e) {
+    var opts = $$('.wc-agent-option');
     var i = opts.indexOf(document.activeElement);
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
       e.preventDefault();
       opts[(i + (e.key === 'ArrowDown' ? 1 : opts.length - 1)) % opts.length].focus();
     } else if (e.key === 'Escape') { e.stopPropagation(); closeMenu(true); }
   });
-  document.addEventListener('click', function (e) { if (!e.target.closest('#workAgentDd')) closeMenu(false); });
+  document.addEventListener('click', function (e) { if (!e.target.closest('#wcAgentDd')) closeMenu(false); });
 }

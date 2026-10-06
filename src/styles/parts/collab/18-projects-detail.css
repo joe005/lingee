@@ -20,7 +20,7 @@
 #view-collab #cv-proj-detail .sq-tabpane{overflow-y:auto}
 
 /* 项目任务页直接挂载任务模块，保留搜索、筛选、新建和显示设置。 */
-#view-collab #cv-proj-detail .pj-detail-main--tasks{display:flex;min-height:0;padding:0 28px 24px;background:#f7f7fa}
+#view-collab #cv-proj-detail .pj-detail-main--tasks{display:flex;min-height:0;padding:0 28px 24px;background:var(--canvas-bg)}
 #view-collab #cv-proj-detail .pj-project-tasks-host{display:flex;flex:1;min-width:0;min-height:0;overflow:hidden}
 #view-collab #cv-proj-detail .pj-project-tasks-host #view-tasks{display:flex;flex:1;min-width:0;min-height:0}
 #view-collab #cv-proj-detail .pj-project-tasks-host #view-tasks .tk-project-context{display:none}
@@ -107,8 +107,8 @@
 #view-collab .art-c-ops{display:flex;gap:6px}
 
 /* ============ 项目详情：平铺的项目资料与成员 ============ */
-#view-collab #cv-members .scroll:not(.pj-list-mode){min-height:0;overflow:hidden;padding:0;background:#f7f7fa}
-#view-collab #cv-proj-detail{position:relative;flex:1;min-width:0;min-height:0;display:flex;flex-direction:column;background:#f7f7fa}
+#view-collab #cv-members .scroll:not(.pj-list-mode){min-height:0;overflow:hidden;padding:0;background:var(--canvas-bg)}
+#view-collab #cv-proj-detail{position:relative;flex:1;min-width:0;min-height:0;display:flex;flex-direction:column;background:var(--canvas-bg)}
 #view-collab #cv-proj-detail .pj-crumb{box-sizing:border-box;display:flex;align-items:center;gap:8px;min-width:0;min-height:56px;flex:none;padding:10px 28px 14px}
 #view-collab #cv-proj-detail .pj-crumb-sep{color:var(--text-soft)}
 #view-collab #cv-proj-detail .pj-crumb-name{min-width:0;overflow:hidden;color:var(--text);font-size:13px;font-weight:500;text-overflow:ellipsis;white-space:nowrap}
@@ -474,8 +474,8 @@
 
 /* 项目详情顶部页签与产物双栏。 */
 #view-collab #cv-proj-detail .pj-crumb{min-height:56px;padding-block:12px}
-#view-collab #cv-proj-detail .pj-detail-tabs{position:relative;z-index:2;min-height:52px;box-sizing:border-box;align-items:center;padding:0 28px 10px;background:#f7f7fa}
-#view-collab #cv-proj-detail .pj-detail-main--artifacts{gap:0;padding:0;background:#f7f7fa}
+#view-collab #cv-proj-detail .pj-detail-tabs{position:relative;z-index:2;min-height:52px;box-sizing:border-box;align-items:center;padding:0 28px 10px;background:var(--canvas-bg)}
+#view-collab #cv-proj-detail .pj-detail-main--artifacts{gap:0;padding:0;background:var(--canvas-bg)}
 #view-collab #cv-proj-detail .pj-detail-main--artifacts.has-preview{overflow:visible}
 #view-collab #cv-proj-detail:has(.pj-detail-main--artifacts.has-preview) .pj-crumb,
 #view-collab #cv-proj-detail:has(.pj-detail-main--artifacts.has-preview) .pj-detail-tabs,
@@ -492,11 +492,11 @@
 #view-collab #cv-proj-detail .pj-artifacts-file-icon{width:23px;height:27px;color:var(--brand)}
 #view-collab #cv-proj-detail .pj-artifacts-name{gap:6px}
 #view-collab #cv-proj-detail .pj-artifacts-name a{font-size:12px}
-#view-collab #cv-proj-detail .pj-artifact-preview{position:absolute;inset:0 0 0 auto;box-sizing:border-box;width:50%;height:100%;margin:0;padding:16px 24px 20px;border-left:1px solid var(--border);background:#f7f7fa}
+#view-collab #cv-proj-detail .pj-artifact-preview{position:absolute;inset:0 0 0 auto;box-sizing:border-box;width:50%;height:100%;margin:0;padding:16px 24px 20px;border-left:1px solid var(--border);background:var(--canvas-bg)}
 #view-collab #cv-proj-detail .pj-artifact-pane-label{flex:none;min-height:34px;color:var(--text);font-size:14px;font-weight:600}
 #view-collab #cv-proj-detail .pj-artifact-preview-head{padding:0 0 14px;border:0}
 #view-collab #cv-proj-detail .pj-artifact-preview-body{border-radius:12px;background:#fff;padding:28px 36px}
-#view-collab #cv-proj-detail .pj-artifact-preview.is-fullscreen{width:100%;padding:24px;background:#f7f7fa}
+#view-collab #cv-proj-detail .pj-artifact-preview.is-fullscreen{width:100%;padding:24px;background:var(--canvas-bg)}
 #view-collab #cv-proj-detail:has(.pj-detail-main--artifacts.has-preview) .pj-detail-delete{position:absolute;top:12px;right:24px;z-index:3}
 #cvModals .pj-members-modal{width:min(920px,calc(100vw - 32px));max-height:min(690px,88vh)}
 #cvModals .pj-members-modal-header{padding:24px 26px 0}

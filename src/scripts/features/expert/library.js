@@ -65,9 +65,7 @@ function renderExpertGrid(){
         +'<div class="x-sub">'+xesc([e.role,e.by].filter(Boolean).join(' · '))+'</div></div></div>'
         +'<div class="card-desc">'+xesc(e.desc)+'</div>'
         +'<div class="card-tags">'+e.tags.slice(0,3).map(function(t){return '<span class="ptag">'+xesc(t)+'</span>'}).join('')+'</div>'
-        +'<div class="x-modes" title="可承担 '+xesc(e.modes.join(' / '))+'"><span class="x-modes-k">可承担</span>'
-        +e.modes.slice(0,3).map(function(m){return '<span class="x-mode">'+xesc(m)+'</span>'}).join('')
-        +(e.modes.length>3?'<span class="x-mode x-mode-more">+'+(e.modes.length-3)+'</span>':'')+'</div></div>';
+        +'</div>';
     }).join('');
   }
   expertGrid.innerHTML = html || '<div class="x-empty">没有匹配的结果</div>';
@@ -97,7 +95,6 @@ function openExpertModal(id){
       +'<svg class="x-cmd-go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H7l-4 3v-6.5A8 8 0 0 1 11 4h2a8 8 0 0 1 8 8z"/></svg>'
       +'</button>'}).join('')+'</div>':'')
     +'<div class="x-sec"><div class="x-sec-t">能力项</div><div class="x-chips">'+e.comp.map(compChip).join('')+'</div></div>'
-    +'<div class="x-sec"><div class="x-sec-t">可承担的工作</div><div class="x-chips">'+e.modes.map(function(m){return '<span class="ptag">'+xesc(m)+'</span>'}).join('')+'</div></div>'
     +'<div class="x-sec"><div class="x-sec-t">模型级别</div><div class="x-chips">'+tierChip(e.tier)+'</div></div>';
 
   var skills=e.skills||[];

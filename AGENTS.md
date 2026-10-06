@@ -50,6 +50,16 @@ Consult the wiki when working on features, debugging, or onboarding to a new are
 skill 入口未出现在可用列表时，直接读取上述文件执行；验证仍遵守本文件的
 「开发后验证方式」，不得因设计任务自动启动浏览器。
 
+### 项目级设计规范
+
+新增或修改原型界面前，必须先读取根目录的 [DESIGN.md](DESIGN.md)，并将其作为
+AI 编程代理的项目级视觉与交互依据。实现时以 `src/styles/tokens.css`、目标页面
+当前实现和共享组件为最终事实来源；若规范与现有源码不一致，先修正规范或明确
+本次局部例外，不得自行引入另一套视觉体系。只修改文档、数据逻辑或服务配置时，
+不要求读取 DESIGN.md。DESIGN.md 只写令牌、刻度和组件索引，改界面的流程写在上面的
+skill 里，两处不重复；改 `tokens.css` 时同步改 DESIGN.md 色值表，`npm run check`
+会比对两者。
+
 ### 源码结构（2026-09-16 拆分后）
 
 原来的单文件 `src/scripts/main.js`（6515 行）与 `index.html`（2310 行）已按
@@ -61,7 +71,7 @@ skill 入口未出现在可用列表时，直接读取上述文件执行；验�
    原始顺序调用；入口里的行号注释指向拆分前的位置
 3. 跨模块写共享状态要走 `set_xxx()`——ES 的 import 绑定只读
 
-改完跑 `npm run check`（模块自检）再跑 `npm run build`。
+改完跑 `npm run check`（模块自检与设计规范自检）再跑 `npm run build`。
 
 ### 全工程的页面隔离与多人协作
 

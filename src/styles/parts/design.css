@@ -50,7 +50,7 @@
   .ds-back-btn:hover{background:var(--hover)}
   .ds-back-btn .ic{width:18px;height:18px}
 
-  .ds-hero h1{font-size:32px;font-weight:700;letter-spacing:-.3px;color:#0f0f0f;margin-bottom:8px}
+  .ds-hero h1{font-size:32px;font-weight:700;letter-spacing:-.3px;color:var(--text-title);margin-bottom:8px}
   .ds-hero-desc{font-size:14px;color:var(--text-muted);line-height:1.6;max-width:620px}
 
 

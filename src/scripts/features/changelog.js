@@ -8,10 +8,12 @@ import { openAppDropdown } from './attach-app.js';
 
 /* ---------- Changelog / 更新日志 ---------- */
 var changelogData=[
+  {id:'84',date:'2026-10-06',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'wuhc2023',body:'功能·任务管理：通用应用开发智能体团队的交付路径固定为 5 个阶段，“智能体开发”阶段开始后直接进入智能体开发界面，“开发实现”产物提供可操作的网站预览；新增需求、架构、开发、测试、部署五个角色登录账号，并支持删除未开始的任务和不校验已有任务的项目删除。'},
+  {id:'83',date:'2026-10-05',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'智能体开发',author:'wuhc2023',body:'功能·智能体开发：智能体配置补充本地/云端测试、提交上架审核确认、领域与模型选择、更新日志及 Work 对话中的技能与工具调用展示，并同步完善问卷调研演示脚本。'},
   {id:'82',date:'2026-10-04',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'协作开发',author:'liangpingxian',body:'功能·协作开发：新增“问卷调研系统建设”演示场景，项目、任务、应用开发、技能和智能体开发页预置问卷数据，执行计划按阶段显示对应智能体。'},
   {id:'81',date:'2026-10-04',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'登录与权限',author:'wuhc2023',body:'功能·登录与权限：原厂管理、租户管理（云端）入口和协作开发的“项目”“设置”页签仅张工可见，其他账号不显示且不能直接打开；侧栏“最近会话”支持折叠收起。'},
   {id:'80',date:'2026-10-04',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'优化',module:'全局',author:'wuhc2023',body:'优化·全局：界面与需求文档统一术语，“数字员工”改称“智能体”，“专家团”改称“智能体团队”。'},
-  {id:'79',date:'2026-10-04',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'wuhc2023',body:'功能·任务管理：已开始或已经历阶段的任务不再允许删除（菜单置灰并提示原因，批量删除仅处理可删除项），任务详情暂不支持新发评论、子任务和复制。'},
+  {id:'79',date:'2026-10-04',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'wuhc2023',body:'功能·任务管理：已开始或已经历阶段的任务不再允许删除（菜单置灰并提示原因，批量删除仅处理可删除项），任务详情暂不支持新发评论、子任务和复制；任务列表页签与卡片按“轮到谁”展示，卡片提示和按钮随状态变化，详情底部主操作与执行计划行按钮同步调整。'},
   {id:'78',date:'2026-10-04',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'平台管理',author:'wuhc2023',body:'功能·平台管理：审核驳回记入该资产的历史版本（含原因、审核人、时间和提交说明），已驳回的审核单在草稿和全部中展示，管理员可直接查看驳回原因。'},
   {id:'77',date:'2026-10-03',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'开发区与专家团',author:'wuhc2023',body:'功能·开发区与专家团：应用、智能体、技能开发页及各页签胶囊按新设计统一样式并支持状态筛选搜索，协作开发新增页面标题，专家团交付阶段改为左树右详情并可绑定多个数字员工，项目详情新增任务页签，数字员工与专家团详情新增提交审核并直接提交所在企业，提示待企业管理员审核。'},
   {id:'76',date:'2026-10-03',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'优化',module:'登录与设置',author:'wuhc2023',body:'优化·登录与设置：协作人员姓名账号统一初始化默认密码，并在设置页展示可登录账号。'},
@@ -73,6 +75,8 @@ var changelogData=[
 ];
 // 每个数据条目对应的 avatar SVG 图标（与 Build_demo 的 lucide 图标一致）
 var changelogIcons={
+  '84':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V4.5M9 14h.01M15 14h.01"/></svg>',
+  '83':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V4.5M9 14h.01M15 14h.01"/></svg>',
   '82':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 14 2 2 4-4"/></svg>',
   '81':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><circle cx="7" cy="8" r="3"/><path d="M2 20v-2a5 5 0 0 1 10 0v2M14 11h8M18 7v8"/></svg>',
   '80':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><circle cx="7" cy="8" r="3"/><path d="M2 20v-2a5 5 0 0 1 10 0v2M14 11h8M18 7v8"/></svg>',

@@ -205,11 +205,16 @@ var STAGE_MODES={
   planning:['设计'],
   implementation:['实现'],
   verification:['验证'],
-  delivery:['集成']
+  delivery:['集成'],
+  agent:['实现']
 };
 /* 同一智能体团队可按问题类型采用不同交付路径；阶段 id 沿用任务执行层的能力映射。 */
+/* 功能开发路径：在编码实现之后可插入「智能体开发」阶段（开发智能体、技能与业务组件）。
+   optional 表示成员里没有对应能力时该阶段不出现，不算能力缺口。 */
+var AGENT_STAGE={id:'agent',name:'智能体开发',desc:'开发智能体、技能与业务组件，绑定知识与工具',optional:true};
+var FEATURE_STAGES=STAGES.slice(0,4).concat([AGENT_STAGE],STAGES.slice(4));
 var TEAM_STAGE_SCENARIOS=[
-  {id:'feature',name:'功能开发',hint:'新需求、功能建设',example:'新增一项业务功能',stages:STAGES},
+  {id:'feature',name:'功能开发',hint:'新需求、功能建设',example:'新增一项业务功能',stages:FEATURE_STAGES},
   {id:'bug',name:'缺陷修复',hint:'错误、异常、回归问题',example:'修复审批提交失败',stages:[
     {id:'requirements',name:'问题定位',desc:'复现问题，确认影响范围和根因'},
     {id:'design',name:'修复方案',desc:'确定最小修复范围及兼容处理'},
@@ -224,6 +229,16 @@ var TEAM_STAGE_SCENARIOS=[
     {id:'delivery',name:'方案交付',desc:'交付结论、依据与后续建议'}
   ]}
 ];
+/* 通用应用开发智能体团队的交付路径：5 个阶段（架构设计、开发实现沿用 design / implementation 的能力映射） */
+var GENERAL_APP_STAGES=[
+  {id:'requirements',name:'需求分析',desc:'明确目标、范围与验收条件'},
+  {id:'design',name:'架构设计',desc:'设计系统架构、模块边界、接口与数据模型'},
+  {id:'implementation',name:'开发实现',desc:'实现前后端功能并完成针对性自测'},
+  {id:'agent',name:'智能体开发',desc:'开发智能体、技能与业务组件，绑定知识与工具'},
+  {id:'verification',name:'测试验证',desc:'独立验证验收行为与回归影响'}
+];
+/* 功能开发场景的阶段：团队自带交付路径（如通用应用开发 5 阶段）时用团队的，否则用通用路径 */
+function teamFeatureStages(team){ return team&&Array.isArray(team.stages)&&team.stages.length?team.stages:FEATURE_STAGES; }
 function teamStageScenario(issue){
   var type=String(issue?.type||issue?.issueType||''),title=String(issue?.title||'');
   if(/Bug|缺陷|故障/i.test(type))return TEAM_STAGE_SCENARIOS[1];
@@ -257,7 +272,23 @@ var COMP_NAMES={
   'application-security':'应用安全','filesystem-safety':'文件系统安全',
   'software.analysis':'源码分析','design.interaction':'交互设计',
   'cosmic.form-design':'苍穹表单设计','cosmic.workflow':'苍穹工作流',
-  'cosmic.report':'苍穹报表','cosmic.plugin':'苍穹二开插件','cosmic.integration':'苍穹集成'
+  'cosmic.report':'苍穹报表','cosmic.plugin':'苍穹二开插件','cosmic.integration':'苍穹集成',
+  'api.zero-code':'零代码接口','api.custom':'自定义接口','api.extension':'接口扩展','api.verification':'接口验证',
+  'architecture.boundaries-and-layering':'边界与分层','architecture.contracts-and-integration':'契约与集成',
+  'architecture.data-and-migration':'数据与迁移','architecture.reliability-and-operability':'可靠性与可运维性',
+  'contract-design':'契约设计','delivery.task-orchestration':'任务编排',
+  'domain.authorization-semantics':'权限语义','domain.business-rules':'业务规则',
+  'domain.calculation-semantics':'计算语义','domain.modeling':'领域建模',
+  'engineering.diagnosis':'问题诊断','engineering.vertical-slice':'纵向切片',
+  'kwc.component-dev':'前端组件开发','kwc.controller-dev':'前端控制器开发','kwc.deploy':'前端部署',
+  'kwc.page-dev':'前端页面开发','kwc.project-init':'前端工程初始化',
+  'metadata.api':'元数据接口','metadata.modeling':'元数据建模','metadata.modification':'元数据修改',
+  'metadata.ui':'元数据界面','metadata.verification':'元数据验证',
+  'plugin.codegen':'插件代码生成','plugin.implementation':'插件实现',
+  'product.baseline':'产品基线','product.baseline-review':'产品基线评审',
+  'quality.defect-reproduction':'缺陷复现','quality.performance-capacity':'性能与容量','quality.test-construction':'测试构建',
+  'ui.prototype':'界面原型',
+  'agent.development':'智能体开发','agent.skill-development':'技能开发','agent.component-development':'业务组件开发'
 };
 var COMP_LEVELS={principal:'资深',advanced:'精通',practitioner:'熟练',awareness:'了解'};
 
@@ -303,19 +334,61 @@ var COMP_RANK={principal:4,advanced:3,practitioner:2,awareness:1};
 function parseComp(v){
   var p=String(v==null?'':v).split('\u00b7');
   var id=(p[0]||'').trim(), lv=(p[1]||'').trim();
-  return {id:id,name:COMP_NAMES[id]||id,lv:lv,level:COMP_LEVELS[lv]||lv,rank:COMP_RANK[lv]||0};
+  /* 字典没覆盖的机器标识不直接摆出来（界面不出现英文），统一显示为「专项能力」，原串仍留在 id 里 */
+  var isMachineId=/^[A-Za-z][A-Za-z0-9._-]*$/.test(id);
+  return {id:id,name:COMP_NAMES[id]||(isMachineId?'专项能力':id),lv:lv,level:COMP_LEVELS[lv]||lv,rank:COMP_RANK[lv]||0};
 }
 function compChip(v){
   var c=(v&&typeof v==='object')?v:parseComp(v);
   return '<span class="ptag ptag-comp" title="'+xesc(c.id)+'">'+xesc(c.name)
     +(c.level?'<i class="ptag-lv lv-'+xesc(c.lv)+'">'+xesc(c.level)+'</i>':'')+'</span>';
 }
+
+/* ---------- 交付阶段 ↔ 能力项 ----------
+   每个阶段由「能力项」匹配的智能体承担，而不是按工作模式笼统过滤：
+   阶段列出它看重的能力项（前缀匹配，越靠前越重要），按成员在这些能力上的等级打分，
+   每个阶段最多 2 位，通常 1 位；第二位要和第一位差距不大才入选。 */
+var STAGE_EXPERT_MAX=2;
+var STAGE_COMP={
+  requirements:['product.requirements','product.baseline','product.','domain.business-rules','software.analysis'],
+  design:['architecture.system-design','architecture.','domain.modeling','metadata.modeling','design.','ui.','cosmic.form-design','contract-design'],
+  planning:['delivery.task-orchestration','delivery.orchestration','architecture.boundaries-and-layering'],
+  implementation:['engineering.implementation','engineering.vertical-slice','engineering.','plugin.','kwc.','api.','metadata.','cosmic.'],
+  verification:['quality.verification','quality.','implementation-correctness','concurrent-commit-model','contract-design','application-security','filesystem-safety','api.verification','metadata.verification'],
+  delivery:['delivery.integration','engineering.integration','kwc.deploy','architecture.reliability','cosmic.integration'],
+  agent:['agent.development','agent.']
+};
+function stageScore(expert,stageId){
+  var pats=STAGE_COMP[stageId]||[];
+  var total=0;
+  ((expert&&expert.comp)||[]).forEach(function(v){
+    var c=parseComp(v), best=0;
+    pats.forEach(function(p,i){
+      if(c.id===p||(p.charAt(p.length-1)==='.'&&c.id.indexOf(p)===0)||(c.id.indexOf(p+'.')===0)||(c.id.indexOf(p+'-')===0)) best=Math.max(best,c.rank*(pats.length-i));
+    });
+    total+=best;
+  });
+  return total;
+}
+/* 阶段承担的智能体：有人工绑定（explicit）就用绑定的（最多 2 位），否则按能力项匹配 */
+function stageExperts(stageId,memberIds,explicit){
+  var members=(memberIds||[]).filter(function(id){return EX[id];});
+  var bound=(Array.isArray(explicit)?explicit:[]).filter(function(id){return members.indexOf(id)>=0;});
+  if(bound.length) return bound.slice(0,STAGE_EXPERT_MAX);
+  var ranked=members.map(function(id,i){return {id:id,i:i,score:stageScore(EX[id],stageId)};})
+    .filter(function(x){return x.score>0;})
+    .sort(function(a,b){return (b.score-a.score)||(a.i-b.i);});
+  if(!ranked.length) return [];
+  var out=[ranked[0].id];
+  if(ranked[1]&&ranked[1].score>=ranked[0].score*0.6) out.push(ranked[1].id);
+  return out.slice(0,STAGE_EXPERT_MAX);
+}
 var PRESET_TEAMS=[
   {id:'cosmic-app-dev',preset:true,name:'苍穹应用开发智能体团队',by:'Lingee 内置',
-   desc:'面向苍穹应用完整交付，覆盖需求、表单、流程、报表、二开插件、接口与质量验证。',
+   desc:'面向苍穹应用完整交付，覆盖需求、表单、流程、报表、二开插件、接口、智能体开发与质量验证。',
    domains:['苍穹应用','表单','工作流','报表','集成'],
    leadId:'cosmic-team-lead',
-   members:['cosmic-team-lead','cosmic-product-manager','cosmic-architect','cosmic-metadata-expert','cosmic-software-engineer','cosmic-api-engineer','kwc-frontend-engineer','cosmic-ui-designer','cosmic-qa-engineer','cosmic-code-reviewer'],
+   members:['cosmic-team-lead','cosmic-product-manager','cosmic-architect','cosmic-metadata-expert','cosmic-software-engineer','cosmic-api-engineer','kwc-frontend-engineer','cosmic-ui-designer','cosmic-qa-engineer','cosmic-code-reviewer','agent-development-expert'],
    cmds:[['帮我在苍穹上做一套请假申请，从单据到审批','表单、流程、报表、接口一体化交付'],
          ['这个业务要在苍穹落地，帮我出方案并实现','先出需求规格，再按依赖拆分实现与验证'],
          ['苍穹单据、流程和报表都要改，帮我排一下','按依赖顺序编排配置、二开与验证任务']]},
@@ -323,6 +396,7 @@ var PRESET_TEAMS=[
    desc:'面向 Web 与通用业务应用，覆盖产品、架构、体验、前后端实现、测试与集成交付。',
    domains:['通用应用','Web','前端','产品设计'],
    leadId:'general-app-team-lead',
+   stages:GENERAL_APP_STAGES,
    members:['general-app-team-lead','general-app-product-expert','general-app-architecture-expert','general-app-development-expert','general-app-qa-expert','agent-development-expert'],
    cmds:[['帮我把购物车支持优惠券做成能上线的功能','从需求、设计、实现到验收走完整闭环'],
          ['做一个业务管理 Web 应用','产品、架构、体验与工程协同交付'],
@@ -336,4 +410,4 @@ export function initExpertData() {
 /* MY_EXPERTS 由其它模块写回；import 绑定只读，所以走这个 setter */
 export function set_MY_EXPERTS(v){ MY_EXPERTS=v; return v; }
 
-export { AV_KEYS, EX, EXPERTS, MODEL_TIERS, MY_EXPERTS, PRESET_TEAMS, STAGE_MODES, STAGES, TEAM_STAGE_SCENARIOS, WORK_MODES, askFor, compChip, parseComp, pendingInputs, phraseHtml, rebuildExperts, setBuiltinExperts, skillCatalog, skillInfo, stageById, teamStageScenario, tierInfo, xav, xesc };
+export { teamFeatureStages, AV_KEYS, EX, EXPERTS, MODEL_TIERS, MY_EXPERTS, PRESET_TEAMS, STAGE_COMP, STAGE_EXPERT_MAX, STAGE_MODES, STAGES, TEAM_STAGE_SCENARIOS, WORK_MODES, askFor, compChip, parseComp, pendingInputs, phraseHtml, rebuildExperts, setBuiltinExperts, skillCatalog, skillInfo, stageById, stageExperts, teamStageScenario, tierInfo, xav, xesc };

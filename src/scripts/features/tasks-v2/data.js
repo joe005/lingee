@@ -7,6 +7,9 @@ import { createDemoReviewReport } from './review-reports.js';
 import { createDemoBlockedRun } from './blocked-runs.js';
 import { createDemoCompletedRun } from './completed-runs.js';
 import { buildTaskArtifactDocs } from './artifact-docs.js';
+import surveyAppHtml from '../../../artifacts/survey-app.html?raw';
+import helpdeskAppHtml from '../../../artifacts/helpdesk-app.html?raw';
+import { buildSitePreviewHtml, sitePreviewTheme } from './site-preview.js';
 
 /* ---------- 常量定义 ---------- */
 export const TK_STATUSES = [
@@ -47,8 +50,20 @@ export function tkSyncPeople() {
     if (task.createdBy && !CV_MEMBERS.some(function (person) { return person.id === task.createdBy; })) task.createdBy = '';
   });
 }
+/* 其他板块（管理）的项目：不进入协作开发的项目列表，但其下任务与开发板块共用任务数据，
+   开发板块按项目查找名称、成员与可见范围时一并识别。由提供方在任务模块初始化前注册。 */
+var externalProjects = function () { return []; };
+export function tkSetExternalProjects(provider) {
+  if (typeof provider === 'function') externalProjects = provider;
+}
+function tkAllProjects() { return CV_PROJECTS.concat(externalProjects() || []); }
+export function tkProjectById(id) {
+  if (!id) return undefined;
+  return CV_PROJECTS.find(function (row) { return row.id === id; })
+    || (externalProjects() || []).find(function (row) { return row.id === id; });
+}
 export function tkPeopleInProject(projectId) {
-  var project = CV_PROJECTS.find(function (row) { return row.id === projectId; });
+  var project = tkProjectById(projectId);
   if (!project) return [];
   var members = cvPeopleInProject(project);
   var owner = CV_MEMBERS.find(function (person) { return person.name === project.owner; });
@@ -68,6 +83,25 @@ export function tkCurrentStageHandlerId(task) {
     || task.executionPlan.find(function (row) { return row.status !== 'done'; })
     || task.executionPlan[0];
   return stage?.assigneeId || '';
+}
+/* 任务页签按人员分配：默认只列出与我当前相关的任务——
+   当前阶段由我处理，或我负责的阶段已经做完（归入「已完成」）。
+   项目负责人通过「负责人 → 全部」筛选查看项目全部任务。 */
+export function tkIsMyCurrentStage(task) {
+  var me = tkCurrentUserId();
+  return !!me && !!task && task.status !== 'done' && task.status !== 'cancelled' && tkCurrentStageHandlerId(task) === me;
+}
+/* 我负责的阶段已完成：任务整体完成，或流转到他人处理的后续阶段 */
+export function tkIsMyStageDone(task) {
+  var me = tkCurrentUserId();
+  if (!me || !task || task.status === 'cancelled') return false;
+  var plan = Array.isArray(task.executionPlan) ? task.executionPlan : [];
+  if (!plan.length) return task.status === 'done' && task.assignee === me;
+  var didStage = plan.some(function (stage) { return stage && stage.status === 'done' && stage.assigneeId === me; });
+  return didStage && (task.status === 'done' || tkCurrentStageHandlerId(task) !== me);
+}
+export function tkInMyTaskList(task) {
+  return tkIsMyCurrentStage(task) || tkIsMyStageDone(task);
 }
 export function tkCanStartTask(task) {
   var me = tkCurrentUserId();
@@ -115,11 +149,11 @@ export function tkCanViewTask(task) {
    通过筛选「负责人」的「全部」选项查看所有人，普通成员不显示该选项。 */
 export function tkIsProjectOwner() {
   var me = CV_MEMBERS.find(function (person) { return person.id === tkCurrentUserId(); });
-  return !!me && CV_PROJECTS.some(function (project) { return project.owner === me.name; });
+  return !!me && tkAllProjects().some(function (project) { return project.owner === me.name; });
 }
 export function tkProjectsForCurrentUser() {
   var userId = tkCurrentUserId();
-  return userId ? CV_PROJECTS.filter(function (project) {
+  return userId ? tkAllProjects().filter(function (project) {
     return (project.members || []).includes(userId)
       || CV_MEMBERS.some(function (person) { return person.id === userId && project.owner === person.name; });
   }) : [];
@@ -136,6 +170,45 @@ export const TK_PROJECTS = CV_PROJECTS;
 export const TK_LABELS = ['需求', '缺陷'];
 
 /* 任务详情中的 AI 产物，内容随任务标题、描述与项目成员变化。 */
+/* 阶段产物按标准阶段（requirements / design / implementation …）生成；任务执行计划的节点 ID 可能是 s1…s6
+   或自定义，这里按阶段名把产物归到对应的计划节点，详情里才能在该阶段下查看产物。 */
+var ARTIFACT_PHASE_BY_NAME = { '需求分析':'requirements', '方案设计':'design', '架构设计':'design', '编码实现':'implementation', '开发实现':'implementation', '测试验证':'verification', '部署交付':'delivery' };
+function tkArtifactStageId(task, phaseId) {
+  var plan = task.executionPlan;
+  if (!Array.isArray(plan) || !plan.length || plan.some(function (stage) { return stage.id === phaseId; })) return phaseId;
+  var hit = plan.find(function (stage) { return ARTIFACT_PHASE_BY_NAME[stage.title || stage.workType] === phaseId || ARTIFACT_PHASE_BY_NAME[stage.workType] === phaseId; });
+  return hit ? hit.id : phaseId;
+}
+/* 应用开发（通用应用开发智能体团队）的「开发实现」产物是部署后的网站，可直接预览和操作。
+   问卷类项目用问卷调研演示应用，工单类项目用工单管理系统演示应用；其他项目按业务主题（工单、采购、报销、库存…）生成演示网站，
+   没有命中主题时用任务产物里的演示列表数据。 */
+function tkWebsiteArtifact(task, doc) {
+  if (doc.id !== 'implementation') return null;
+  var project = tkProjectById(task.project);
+  var teamId = task.teamId || (project && project.defaultTeam) || (project && project.teamIds && project.teamIds[0]);
+  if (teamId !== 'general-app-dev' && teamId !== 'kingdee-secondary-dev') return null;
+  var name = (project && project.name) || '应用';
+  var base = {
+    id: 'implementation', stageId: doc.stageId, type: '网站预览', format: 'html', fileName: String(task.code || 'task').toLowerCase() + '-site.html',
+    docTitle: name + ' · 网站预览', summary: '开发完成后部署的可访问网站，可直接操作页面',
+  };
+  if (/问卷|调研|调查/.test(name + ' ' + (task.title || ''))) {
+    return Object.assign(base, { url: 'https://apps.lingee.com/survey', content: surveyAppHtml });
+  }
+  /* 工单类项目用工单管理系统演示应用（与应用开发里的「工单管理系统」同一份页面） */
+  if (/工单|服务台|客服|SLA/.test(name + ' ' + (task.title || ''))) {
+    return Object.assign(base, { url: 'https://apps.lingee.com/helpdesk', content: helpdeskAppHtml });
+  }
+  var appBlock = null;
+  (doc.sections || []).forEach(function (section) {
+    (section.blocks || []).forEach(function (block) { if (block.app && !appBlock) appBlock = block.app; });
+  });
+  var theme = sitePreviewTheme(name, task);
+  return Object.assign(base, {
+    url: 'https://apps.lingee.com/' + theme.slug,
+    content: buildSitePreviewHtml({ projectName: name, task: task, pageTitle: task.title, app: appBlock }),
+  });
+}
 export function tkGetTaskArtifacts(task) {
   var projectPeople = tkPeopleInProject(task.project);
   function nameAt(i, fallbackId) { return (projectPeople[i] || tkGetPerson(fallbackId)).name; }
@@ -146,11 +219,13 @@ export function tkGetTaskArtifacts(task) {
     test: nameAt(3, task.assignee),
     owner: tkGetPerson(task.createdBy || task.assignee).name,
   };
-  var docs = buildTaskArtifactDocs({ task: task, projectName: tkGetProjectName(task.project), people: people });
+  var docs = buildTaskArtifactDocs({ task: task, projectName: tkGetProjectName(task.project), people: people })
+    .map(function (doc) { return tkWebsiteArtifact(task, doc) || doc; });
   /* 演示任务的定制产物按 id 覆盖通用产物 */
   var custom = equipmentArtifactDocs(task, people);
   if (custom) docs = docs.filter(function (doc) { return !custom.some(function (row) { return row.id === doc.id; }); }).concat(custom);
-  return docs.concat(task.executionArtifacts || []);
+  return docs.map(function (doc) { return Object.assign({}, doc, { stageId: tkArtifactStageId(task, doc.stageId) }); })
+    .concat(task.executionArtifacts || []);
 }
 
 /* ---------- 视图配置 ---------- */
@@ -615,6 +690,34 @@ const TK_SURVEY_TASKS = [
       { id:'s6', workType:'部署交付', title:'部署交付', description:'发布上线', assigneeId:'p22', status:'pending' },
     ] },
 ];
+/* 通用应用开发智能体团队的交付路径是 5 个阶段：需求分析、架构设计、开发实现、智能体开发、测试验证。
+   旧的 6 阶段执行计划（含实现规划、部署交付）转换成新路径：方案设计→架构设计，编码实现→开发实现，
+   实现规划、部署交付并入相邻阶段，新增智能体开发（开发实现完成后视为已完成）。 */
+function tkToGeneralAppPlan(task) {
+  var plan = task.executionPlan;
+  if (!Array.isArray(plan) || plan.length !== 6) return task;
+  var by = {};
+  plan.forEach(function (stage) { by[stage.title || stage.workType] = stage; });
+  var req = by['需求分析'], design = by['方案设计'], impl = by['编码实现'], test = by['测试验证'];
+  if (!req || !design || !impl || !test || !by['实现规划'] || !by['部署交付']) return task;
+  var agentDone = impl.status === 'done' && test.status !== 'pending';
+  var idMap = {};
+  idMap[req.id] = 's1'; idMap[design.id] = 's2'; idMap[by['实现规划'].id] = 's3'; idMap[impl.id] = 's3'; idMap[test.id] = 's5'; idMap[by['部署交付'].id] = 's5';
+  function stage(id, name, src, desc, status) {
+    return { id: id, workType: name, title: name, description: desc || src.description, assigneeId: src.assigneeId, status: status || src.status };
+  }
+  task.executionPlan = [
+    stage('s1', '需求分析', req),
+    stage('s2', '架构设计', design),
+    stage('s3', '开发实现', impl),
+    stage('s4', '智能体开发', impl, '开发并配置与本任务相关的智能体、技能与知识', agentDone ? 'done' : 'pending'),
+    stage('s5', '测试验证', test),
+  ];
+  if (task.executionStageId) task.executionStageId = idMap[task.executionStageId] || 's1';
+  (task.executionArtifacts || []).forEach(function (artifact) { if (artifact.stageId && idMap[artifact.stageId]) artifact.stageId = idMap[artifact.stageId]; });
+  return task;
+}
+TK_SURVEY_TASKS.forEach(tkToGeneralAppPlan);
 TK_TASKS.push(...TK_SURVEY_TASKS);
 TK_TASKS.push(...TK_EQUIPMENT_TASKS);
 
@@ -634,7 +737,7 @@ export function tkGetPerson(id) {
   return member ? { id:member.id, name:member.name, avatar:member.name.slice(0, 1), color:'#495dff' } : { id: id, name: '未分配', avatar: '?', color: '#b8b8b8' };
 }
 export function tkGetProjectName(id) {
-  var p = TK_PROJECTS.find(function (x) { return x.id === id; });
+  var p = tkProjectById(id);
   return p ? p.name : id;
 }
 export function tkGetStatusObj(id) {
@@ -757,6 +860,21 @@ try {
     var equipmentAdds = TK_EQUIPMENT_TASKS.filter(function (task) { return !equipmentCodes.has(task.code); }).map(tkSeedTask);
     if (equipmentAdds.length) { _tasks.push(...equipmentAdds); persistTasks(); }
     localStorage.setItem('lingee_tasks_equipment_v1', '1');
+  }
+} catch (e) { /* 本地存储不可用时保留内存数据 */ }
+/* 问卷调研项目已缓存的任务：一次性转换为通用应用开发的 5 阶段执行计划 */
+try {
+  if (!localStorage.getItem('lingee_tasks_general_app_5stage_v1')) {
+    var planChanged = false;
+    _tasks.forEach(function (task) {
+      if (task.project === 'survey' && Array.isArray(task.executionPlan) && task.executionPlan.length === 6) {
+        var before = task.executionPlan;
+        tkToGeneralAppPlan(task);
+        if (task.executionPlan !== before) planChanged = true;
+      }
+    });
+    if (planChanged) persistTasks();
+    localStorage.setItem('lingee_tasks_general_app_5stage_v1', '1');
   }
 } catch (e) { /* 本地存储不可用时保留内存数据 */ }
 function persistTasks() {

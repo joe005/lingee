@@ -1,6 +1,6 @@
 /* 新版任务界面原型。复用当前任务数据；执行计划只在当前页面会话中保存。 */
 import { escapeHtml } from './ui-utils.js';
-import { TK_STATUSES, tkAddTask, tkCurrentUserId, tkGetTasks, tkPeopleInProject, tkProjectsForCurrentUser, tkUpdateTask } from './data.js';
+import { TK_STATUSES, tkAddTask, tkCurrentUserId, tkGetTasks, tkPeopleInProject, tkProjectsForCurrentUser, tkUpdateTask, tkProjectById } from './data.js';
 import { CV_MEMBERS, CV_PROJECTS } from '../collab/data.js';
 import { defaultStageAssigneeId } from './stage-owner.js';
 import { tbTeamStages } from '../collab/tb-core.js';
@@ -152,12 +152,12 @@ function setDefaultStageOwner(projectId) {
 }
 
 /* 执行计划的执行阶段选项：项目对应智能体团队的每个交付阶段一项，逐个预置、不重复。 */
-const projectTeamOf = projectId => TEAMS.find(item => item.id === CV_PROJECTS.find(project => project.id === projectId)?.defaultTeam) || null;
+const projectTeamOf = projectId => TEAMS.find(item => item.id === tkProjectById(projectId)?.defaultTeam) || null;
 const planStageOptions = projectId => tbTeamStages(projectTeamOf(projectId), currentTask()).map(stage => ({ name: stage.name, desc: stage.desc || '' }));
 
 /* 默认执行计划：按项目成员角色预选每个阶段的执行人；同角色多人先选第一人。 */
 function defaultPlanStages(projectId) {
-  const project = CV_PROJECTS.find(item => item.id === projectId);
+  const project = tkProjectById(projectId);
   const people = tkPeopleInProject(projectId);
   return planStageOptions(projectId).map(stage => ({
     id: crypto.randomUUID(), workType: stage.name, title: stage.name, description: stage.desc,
@@ -342,7 +342,7 @@ function createTask() {
     if (!task) { toast('未找到任务', 'warning'); closeOverlays(); return; }
     const patch = { title, desc: description, issueType,
       priority: byId('niuPriority').value, assignee: owner, project };
-    if (project !== task.project) patch.teamId = CV_PROJECTS.find(item => item.id === project)?.defaultTeam || '';
+    if (project !== task.project) patch.teamId = tkProjectById(project)?.defaultTeam || '';
     if (!planLocked() && JSON.stringify(draftStages) !== initialPlanSnapshot) {
       patch.executionPlan = draftStages.map(stage => ({ ...stage }));
       patch.planStatus = 'draft';
@@ -357,7 +357,7 @@ function createTask() {
   tkAddTask({
     title, desc: description, issueType,
     status: 'backlog', priority: byId('niuPriority').value, dueDate: copiedTaskFields?.dueDate || '',
-    assignee: owner, createdBy: tkCurrentUserId(), project, teamId: CV_PROJECTS.find(item => item.id === project)?.defaultTeam || '', labels: copiedTaskFields?.labels || [], module: copiedTaskFields?.module || '',
+    assignee: owner, createdBy: tkCurrentUserId(), project, teamId: tkProjectById(project)?.defaultTeam || '', labels: copiedTaskFields?.labels || [], module: copiedTaskFields?.module || '',
     executionPlan: draftStages.map(stage => ({ ...stage })),
     planStatus: 'draft',
   });
@@ -430,7 +430,7 @@ function addStage() {
   const used = new Set(draftStages.map(stage => stage.workType));
   const next = planStageOptions(task.project).find(stage => !used.has(stage.name));
   if (!next) { toast('智能体团队的交付阶段已全部加入执行计划', 'warning'); return; }
-  draftStages.push({ id: crypto.randomUUID(), workType: next.name, title: next.name, description: next.desc, assigneeId: defaultStageAssigneeId(CV_PROJECTS.find(project => project.id === task.project), tkPeopleInProject(task.project), CV_MEMBERS, next.name), status: 'pending' });
+  draftStages.push({ id: crypto.randomUUID(), workType: next.name, title: next.name, description: next.desc, assigneeId: defaultStageAssigneeId(tkProjectById(task.project), tkPeopleInProject(task.project), CV_MEMBERS, next.name), status: 'pending' });
   draftConfirmed = false;
   renderPlan();
   const list = byId(activePlanScope === 'create' ? 'niuCreateStageList' : 'niuStageList');
@@ -511,7 +511,7 @@ export function initNewIssueUI(renderCallback, detailCallback) {
     stage.workType = select.value;
     stage.title = select.value;
     if (updateDescription) stage.description = stageOptions.find(row => row.name === select.value)?.desc || '';
-    stage.assigneeId = defaultStageAssigneeId(CV_PROJECTS.find(project => project.id === currentTask()?.project), tkPeopleInProject(currentTask()?.project), CV_MEMBERS, select.value);
+    stage.assigneeId = defaultStageAssigneeId(tkProjectById(currentTask()?.project), tkPeopleInProject(currentTask()?.project), CV_MEMBERS, select.value);
     draftConfirmed = false;
     renderPlan();
   });

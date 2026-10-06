@@ -61,6 +61,12 @@ var ACCOUNTS={
   /* tag：演示人员的身份标签，覆盖按角色显示的标签 */
   '周建国':{pass:'lingee520',role:'owner',name:'周建国',avatar:'周',tag:'设备主管'},
   '陈志远':{pass:'lingee520',role:'owner',name:'陈志远',avatar:'陈',tag:'维修工程师'},
+  /* 角色人员账号（账号 = 姓名，对应协作开发里的需求/架构/开发/测试/部署成员） */
+  '需求':{pass:'lingee520',role:'pm',name:'需求',avatar:'需'},
+  '架构':{pass:'lingee520',role:'dev',name:'架构',avatar:'架'},
+  '开发':{pass:'lingee520',role:'dev',name:'开发',avatar:'开'},
+  '测试':{pass:'lingee520',role:'qa',name:'测试',avatar:'测'},
+  '部署':{pass:'lingee520',role:'ops',name:'部署',avatar:'部'},
   /* 虚拟账号（按角色） */
   'owner':{pass:'lingee520',role:'owner',name:'吴宏超',avatar:'吴'},
   'project_manager':{pass:'lingee520',role:'pm',name:'赵琳',avatar:'赵'},
@@ -79,6 +85,7 @@ var LOGIN_PEOPLE_IDS={
   '杨帆':'p19','唐辉':'p20','梁平':'p21','付鹏城':'p32',
   '陈惠琼':'p33','吴晓锋':'p23','钟伟纯':'p35','刘鉴洲':'p36','陈谨':'p37',
   '陈来珍':'p38','暴福音':'p39','荆龙刚':'p40','梁平贤':'p41','周建国':'p42','陈志远':'p43','陈瑾':'p37',
+  '需求':'p24','架构':'p25','开发':'p26','测试':'p27','部署':'p28',
   'owner':'p22','dev':'p01','project_manager':'p04','pm':'p04','qa':'p05','ops':'p07'
 };
 export function getLoginPersonId(){ return LOGIN_PEOPLE_IDS[getAuthedUser()] || ''; }

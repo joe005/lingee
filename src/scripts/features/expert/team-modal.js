@@ -4,7 +4,7 @@ import { $, $$ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
 import { summon } from './automatch.js';
 import { renderExpertChips } from './chips.js';
-import { EX, EXPERTS, STAGE_MODES, TEAM_STAGE_SCENARIOS, xav, xesc } from './data.js';
+import { EX, EXPERTS, STAGE_EXPERT_MAX, TEAM_STAGE_SCENARIOS, stageExperts, teamFeatureStages, xav, xesc } from './data.js';
 import { openExpertEditor } from './editor.js';
 import { openExpertModal, renderExpertGrid } from './library.js';
 import { TEAMS, activePick, clearPick, saveTeams, set_TEAMS, teamById } from './store.js';
@@ -52,7 +52,7 @@ function populateTeamModal(id,editing){
   teamEditingId=id;
   teamStageScenarioId='feature';
   teamStageSelectedId='';
-  teamDraft={name:t.name,desc:t.desc,leadId:t.leadId,members:t.members.slice(),preset:layerOf('team',t)!=='personal',
+  teamDraft={name:t.name,desc:t.desc,leadId:t.leadId,members:t.members.slice(),stages:t.stages,preset:layerOf('team',t)!=='personal',
                domains:(t.domains||[]).slice(),
                stageMembers:t.stageMembers&&typeof t.stageMembers==='object'?Object.fromEntries(Object.entries(t.stageMembers).map(function(entry){return [entry[0],Array.isArray(entry[1])?entry[1].slice():[]]})): {},
                cmds:(t.cmds&&t.cmds.length)?t.cmds.map(function(c){return c.slice()}):[['','']]};
@@ -118,26 +118,34 @@ function renderTeamModal(){
   $$('#teamMembers .x-member-a').forEach(function(a){ a.classList.toggle('hidden', !!d.preset||!teamEditMode); });
   $('#teamAddBtn').classList.toggle('hidden', !!d.preset||!teamEditMode);
 }
+/* 可选阶段（如智能体开发）：成员里有匹配的智能体才出现，否则不显示、也不算能力缺口 */
+function scenarioStages(item){
+  return item.id==='feature'?teamFeatureStages(teamDraft):item.stages;
+}
+function visibleStages(item){
+  return scenarioStages(item).filter(function(stage){
+    return !stage.optional||stageExperts(stage.id,teamDraft.members,teamDraft.stageMembers[stage.id]).length>0;
+  });
+}
 function renderTeamStages(){
   if(!teamDraft)return;
   var scenario=TEAM_STAGE_SCENARIOS.find(function(item){return item.id===teamStageScenarioId})||TEAM_STAGE_SCENARIOS[0];
   $('#teamStageScenarios').innerHTML=TEAM_STAGE_SCENARIOS.map(function(item){
     var on=item.id===scenario.id;
-    return '<button type="button" class="team-stage-scenario'+(on?' active':'')+'" data-team-scenario="'+xesc(item.id)+'" aria-pressed="'+on+'"><strong>'+xesc(item.name)+'</strong><small>'+item.stages.length+' 个阶段</small></button>';
+    return '<button type="button" class="team-stage-scenario'+(on?' active':'')+'" data-team-scenario="'+xesc(item.id)+'" aria-pressed="'+on+'"><strong>'+xesc(item.name)+'</strong><small>'+visibleStages(item).length+' 个阶段</small></button>';
   }).join('');
   $('#teamStageScenarioTitle').textContent=scenario.name;
   $('#teamStageScenarioHint').textContent=scenario.hint+'，例如：'+scenario.example;
-  $('#teamStageScenarioCount').textContent=scenario.stages.length+' 个阶段';
-  var modes=new Set(teamDraft.members.flatMap(function(id){return EX[id]?.modes||[]}));
+  var stages=visibleStages(scenario);
+  $('#teamStageScenarioCount').textContent=stages.length+' 个阶段';
   function boundMembers(stage){
-    var explicit=teamDraft.stageMembers[stage.id];
-    if(Array.isArray(explicit)&&explicit.length)return explicit.filter(function(id){return teamDraft.members.includes(id)&&EX[id]});
-    return teamDraft.members.filter(function(id){return (STAGE_MODES[stage.id]||[]).some(function(mode){return (EX[id]?.modes||[]).includes(mode);});}).slice(0,3);
+    /* 每个阶段 1~2 位：有人工绑定用绑定的，否则按能力项匹配 */
+    return stageExperts(stage.id,teamDraft.members,teamDraft.stageMembers[stage.id]);
   }
-  if(!scenario.stages.length){$('#teamStages').innerHTML='<div class="team-stage-empty">当前路径暂无阶段</div>';return;}
-  $('#teamStages').innerHTML=scenario.stages.map(function(stage,index){
-    var covered=(STAGE_MODES[stage.id]||[]).some(function(mode){return modes.has(mode)});
+  if(!stages.length){$('#teamStages').innerHTML='<div class="team-stage-empty">当前路径暂无阶段</div>';return;}
+  $('#teamStages').innerHTML=stages.map(function(stage,index){
     var bound=boundMembers(stage);
+    var covered=bound.length>0;
     var binding=bound.length?bound.map(function(id){
       var expert=EX[id];
       return '<span class="team-stage-member" title="'+xesc(expert.name)+'"><img src="'+xav(expert.k)+'" alt=""><span>'+xesc(expert.name)+'</span></span>';
@@ -147,7 +155,7 @@ function renderTeamStages(){
       return '<button type="button" class="team-stage-member-option'+(selected?' is-selected':'')+'" data-stage-member="'+xesc(stage.id)+'" data-stage-expert="'+xesc(id)+'" aria-pressed="'+selected+'"><img src="'+xav(expert.k)+'" alt=""><span>'+xesc(expert.name)+'</span></button>';
     }).join('')+'</div></details>':'';
     return '<div class="team-stage" role="listitem"><span class="team-stage-index">'+(index+1)+'</span>'
-      +'<div class="team-stage-content"><strong>'+xesc(stage.name)+(covered?'':'<span class="team-stage-gap" title="当前成员暂无对应工作模式">能力待补齐</span>')+'</strong><p>'+xesc(stage.desc)+'</p></div>'
+      +'<div class="team-stage-content"><strong>'+xesc(stage.name)+(covered?'':'<span class="team-stage-gap" title="当前成员没有匹配该阶段的能力项">能力待补齐</span>')+'</strong><p>'+xesc(stage.desc)+'</p></div>'
       +'<div class="team-stage-members">'+binding+picker+'</div></div>';
   }).join('');
 }
@@ -168,7 +176,7 @@ function renderMemberList(){
       +(on?'<span class="x-badge x-badge-lead">已加入</span>':'')
       +(e.ro?'<span class="x-badge x-badge-ro">只读</span>':'')+'</span>'
       +'<span class="x-mrow-d">'+xesc(e.desc)+'</span>'
-      +'<span class="x-mrow-m">'+e.modes.join(' / ')+'</span></span></button>';
+      +'</span></button>';
   }).join('') : '<div class="x-empty-sm">没有匹配的专家</div>';
 }
 export function initTeamModal() {
@@ -183,9 +191,9 @@ export function initTeamModal() {
       if(n=e.target.closest('[data-team-scenario]')){ teamStageScenarioId=n.getAttribute('data-team-scenario');renderTeamStages();return; }
       if(n=e.target.closest('[data-stage-member]')){
         var stageId=n.getAttribute('data-stage-member'),expertId=n.getAttribute('data-stage-expert');
-        var current=Array.isArray(teamDraft.stageMembers[stageId])&&teamDraft.stageMembers[stageId].length?teamDraft.stageMembers[stageId].filter(function(id){return teamDraft.members.includes(id)}):teamDraft.members.filter(function(id){return (STAGE_MODES[stageId]||[]).some(function(mode){return (EX[id]?.modes||[]).includes(mode);});}).slice(0,3);
+        var current=stageExperts(stageId,teamDraft.members,teamDraft.stageMembers[stageId]);
         if(current.includes(expertId)){if(current.length===1){toast('每个阶段至少绑定一位智能体','warning');return;}current=current.filter(function(id){return id!==expertId;});}
-        else current.push(expertId);
+        else{if(current.length>=STAGE_EXPERT_MAX){toast('每个阶段最多绑定 '+STAGE_EXPERT_MAX+' 位智能体，请先取消一位','warning');return;}current.push(expertId);}
         teamDraft.stageMembers[stageId]=current;markTeamDirty();renderTeamStages();return;
       }
       if(n=e.target.closest('[data-team-cmd]')){
@@ -260,10 +268,8 @@ export function initTeamModal() {
       if(!t||layerOf('team',t)!=='personal') return;
       var previous=JSON.parse(JSON.stringify(t));
       t.name=name; t.desc=d.desc; t.leadId=d.leadId; t.members=d.members.slice(); t.cmds=teamCmdList(d);
-      t.stageMembers=Object.fromEntries(TEAM_STAGE_SCENARIOS.flatMap(function(item){return item.stages;}).map(function(stage){
-        var explicit=Array.isArray(d.stageMembers[stage.id])?d.stageMembers[stage.id].filter(function(id){return d.members.includes(id)&&EX[id]}):[];
-        var fallback=d.members.filter(function(id){return (STAGE_MODES[stage.id]||[]).some(function(mode){return (EX[id]?.modes||[]).includes(mode);});}).slice(0,3);
-        return [stage.id,(explicit.length?explicit:fallback).slice()];
+      t.stageMembers=Object.fromEntries(TEAM_STAGE_SCENARIOS.flatMap(function(item){return scenarioStages(item);}).map(function(stage){
+        return [stage.id,stageExperts(stage.id,d.members,d.stageMembers[stage.id])];
       }));
       t.domains=(d.domains||[]).slice();
       if(!saveTeams()){Object.assign(t,previous);toast('保存失败，编辑内容已保留，请重试','warning');return;}

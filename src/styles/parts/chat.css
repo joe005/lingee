@@ -182,6 +182,8 @@
   .chat-doc-viewer-close:hover{background:var(--hover);color:var(--text)}
   .chat-doc-viewer-body{flex:1;min-height:0;overflow:auto;padding:24px 28px 60px}
   .chat-artifact-markdown{max-width:900px;margin:0 auto;color:var(--text);font-size:14px;line-height:1.8;overflow-wrap:anywhere}
+  .chat-artifact-markdown:has(.tk-site-preview){max-width:none}
+  .chat-artifact-markdown .tk-site-frame{height:calc(100vh - 200px);min-height:480px}
   .chat-artifact-markdown h1{margin:0 0 28px;padding-bottom:14px;border-bottom:1px solid var(--divider);font-size:25px;font-weight:700;line-height:1.4;letter-spacing:-.015em}
   .chat-artifact-markdown .tk-artifact-section{margin:0 0 32px}
   .chat-artifact-markdown .tk-artifact-section h2{margin:0 0 14px;font-size:20px;font-weight:650;line-height:1.45;color:var(--text)}
@@ -365,6 +367,12 @@
   .preview-tab{padding:0;display:flex;align-items:center;height:100%;font-size:13px;color:#767676;cursor:pointer;font-weight:500;transition:color .15s;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
   .preview-tab:hover{color:var(--text)}
   .preview-tab.active{color:#495dff;border-bottom-color:#495dff} /* 选中用主题色 */
+  /* 通用应用与智能体：右侧是打开系统链接的内置浏览器，不显示苍穹的表单/列表/实体等页签 */
+  .preview-browser-title{display:none;align-self:center;font-size:13px;font-weight:500;color:var(--text)}
+  .chat-preview-side.is-browser .preview-tabs{display:none}
+  .chat-preview-side.is-browser .preview-browser-title{display:block}
+  /* 智能体编辑面板占满右侧，自带标题与操作区 */
+  .chat-preview-side.is-editor .preview-header,.chat-preview-side.is-editor .preview-nav{display:none}
   .preview-close{border:none;background:none;cursor:pointer;color:var(--text-muted);border-radius:6px;flex:none;width:26px;height:26px;display:flex;align-items:center;justify-content:center;padding:0;align-self:center;transition:background .15s,color .15s}
   .preview-close svg{width:15px;height:15px}
   .preview-close:hover{background:var(--hover);color:var(--text)}

@@ -10,7 +10,7 @@ npm run dev          # 开发服务器（固定 5199 端口），使用浏览器
 npm run dev:shared   # 开发服务器，启用本机 SQLite 共享数据
 npm run preview      # 4173 端口实时预览，源码修改后自动更新
 npm run preview:build # 4174 端口预览 dist 构建产物，需先运行 build
-npm run check        # 模块自检：import/export 是否对得上
+npm run check        # 模块自检（import/export 是否对得上）+ DESIGN.md 与 tokens.css 一致性
 npm run build        # 产出 dist/index.html（零外链单文件）
 npm run format       # 格式化 src
 ```
@@ -74,8 +74,12 @@ src/
 │     ├─ expert/              专家与智能体团队：data / store / library /
 │     │                       automatch / editor / knowledge /
 │     │                       team-modal / chips
-│     └─ collab/              协作开发：data / view / tasks / reviews /
-│                             chat / experts / projects / config / index
+│     ├─ collab/              协作开发：data / view / tasks / reviews /
+│     │                       chat / experts / projects / config / index
+│     ├─ manager/             管理板块：data / plan / detail / projects /
+│                             nav / index（视图 views/manager.html，
+│                             弹窗 modals/manager.html，样式 parts/manager.css）
+│     └─ work/                工作板块：index（视图 views/work.html，样式 parts/work.css）
 └─ artifacts/
    └─ purchase-order.html     单据产物模板，经 ?raw 导入
 ```

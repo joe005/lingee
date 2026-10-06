@@ -49,7 +49,7 @@
 #view-collab .pj-board-col-dot{width:8px;height:8px;border-radius:50%;flex:none}
 #view-collab .pj-board-col-body{display:flex;flex-direction:column;gap:10px;min-height:60px}
 #view-collab .pj-board-col-empty{padding:24px 12px;border:1px dashed var(--border);border-radius:8px;text-align:center;color:var(--text-soft);font-size:12px}
-#view-collab #cv-proj-list:not(.is-list){flex:1;padding:20px 24px 28px;container-type:inline-size;background:#f7f7fa}
+#view-collab #cv-proj-list:not(.is-list){flex:1;padding:20px 24px 28px;container-type:inline-size;background:var(--canvas-bg)}
 #view-collab .pj-card{display:flex;flex-direction:column;min-width:0;min-height:210px;border:1px solid var(--border);border-radius:20px;background:var(--bg);box-shadow:0 1px 2px rgba(0,0,0,.03);transition:border-color .16s,box-shadow .16s}
 #view-collab .pj-card:hover{border-color:var(--border-hover);box-shadow:0 7px 20px rgba(0,0,0,.08)}
 #view-collab .pj-card-main{display:flex;flex:1;min-width:0;flex-direction:column;padding:20px 18px 12px;cursor:pointer}

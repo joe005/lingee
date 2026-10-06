@@ -9,7 +9,7 @@ import { TASK_SESSION_STATUS, tkAddTaskSession, tkGetMySessions, tkLatestStageSe
 import { cvSwitchView } from '../collab/view.js';
 /* T00 结构拆分：index。保留原交互；事件在 init* 中按原顺序注册。 */
 import { initTaskDetailPreferences, initTaskDetailWidth, initTaskDetailEvents, initTaskDetailSubtaskEvents, initTaskDetailGlobalEvents } from './issue-detail.js';
-import { tkCanStartTask, tkCanViewTask, tkIsHandledByMe, tkWasTaskHandler, tkEnsureWorkspaceDemoTasks, tkPruneOrphanTasks, tkSyncPeople } from './data.js';
+import { tkCanStartTask, tkCanViewTask, tkIsHandledByMe, tkInMyTaskList, tkIsMyStageDone, tkWasTaskHandler, tkEnsureWorkspaceDemoTasks, tkPruneOrphanTasks, tkSyncPeople, tkProjectById } from './data.js';
 import { taskViewState } from './ui-state.js';
 import { initTaskListDisplayEvents, initTaskListFilterEvents, initTaskListRowEvents } from './list.js';
 import { initTaskCreateEvents } from './create.js';
@@ -24,13 +24,13 @@ import { setComposerTaskReference } from '../composer.js';
 import { showView, input, setNavActive } from '../../core/view.js';
 import { toast } from '../../core/toast.js';
 import { applyTaskListFieldSettings, renderTaskListTreeNodes, taskListVisibleColumnCount } from './list-template.js';
+import { taskListKind, taskNeedsMyAction } from './list-kind.js';
 import { getDemoPreRun, getDemoStageRun } from './run-feedback.js';
-import { CV_PROJECTS } from '../collab/data.js';
 import { createDeliveryActivity } from '../collab/delivery-activity.js';
 import { taskExecutorTeam } from '../expert/task-team.js';
 import { mountAgentConfig, unmountAgentConfig } from '../agent-config.js';
 import { agentCardByName, openAgentSubmit } from '../agent-submit.js';
-import { renderArtifactBlocks } from '../collab/run-artifacts.js';
+import { isWebsiteArtifact, renderArtifactBlocks, renderWebsitePreview } from '../collab/run-artifacts.js';
 import { AV_KEYS, EX, EXPERTS, PRESET_TEAMS, xav } from '../expert/data.js';
 import { TEAMS, activePick, set_activePick } from '../expert/store.js';
 import { renderExpertChips } from '../expert/chips.js';
@@ -95,10 +95,13 @@ var LIST_FIELDS = [
   { id:'desc', name:'描述' },
 ];
 var DEFAULT_LIST_FIELD_ORDER = LIST_FIELDS.map(function(field) { return field.id; });
+/* 页签按「轮到谁」划分：需要我处理＝当前阶段由我开始／验收／回答提问／重试；
+   其余未完成任务（AI 执行中或等待他人处理）归入执行中。 */
 var LIST_STATUS_TABS = [
-  { id:'needs', name:'需要我处理', statuses:['backlog','in_review','blocked'] },
-  { id:'running', name:'执行中', statuses:['in_progress'] },
-  { id:'done', name:'已完成', statuses:['done'] },
+  { id:'needs', name:'需要我处理', match:function (task) { return taskNeedsMyAction(task); } },
+  { id:'running', name:'执行中', match:function (task) { return task.status !== 'done' && task.status !== 'cancelled' && !taskNeedsMyAction(task) && !tkIsMyStageDone(task); } },
+  /* 已完成：任务整体完成，或我负责的阶段已做完（后续阶段由他人处理） */
+  { id:'done', name:'已完成', match:function (task) { return task.status === 'done' || tkIsMyStageDone(task); } },
 ];
 var state = {
   layout: 'board', viewMode: 'slide', scope: 'all', groupBy: 'status', sortBy: 'updatedAt', sortDir: 'desc',
@@ -139,13 +142,12 @@ var TASK_START_PLAY_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill
 var TASK_START_CHAT_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>';
 var taskStartLegacy = false;
 
+/* 详情主操作与列表卡片同一口径：只有轮到当前登录人时才出现，操作按任务状态变化。 */
 function taskHeaderAction(task) {
   if (!task) return null;
-  return {
-    planned:{label:'加入待开始',action:'queue'},
-    backlog:{label:'交给AI执行',action:'start'},
-    blocked:{label:'重试执行',action:'retry'},
-  }[task.status] || null;
+  if (task.status === 'planned') return {label:'加入待开始',action:'queue'};
+  var info = taskListKind(task);
+  return info.primary ? {label:info.action === 'review' ? '前往确认' : info.label, action:info.action} : null;
 }
 
 function placeTaskActionButton(button, atBottom) {
@@ -166,7 +168,7 @@ function renderTaskStartAction() {
   if (taskDetailVersion === 'latest') {
     var task = tkGetTasks().find(function (row) { return row.id === state.drawerTaskId; });
     var action = taskHeaderAction(task);
-    placeTaskActionButton(button, action?.action === 'start' || action?.action === 'retry');
+    placeTaskActionButton(button, !!action && action.action !== 'queue');
     button.hidden = !action;
     if (!action) return;
     button.dataset.taskAction = action.action;
@@ -301,7 +303,7 @@ function openTaskConversationWithTask(taskId, origin, autoSend) {
   if (t && autoSend) { startTaskConversationRun(t, origin || 'start'); return; }
   openTaskConversation();
   if (!t) return;
-  var project = CV_PROJECTS.find(function(p){ return p.id === t.project; });
+  var project = tkProjectById(t.project);
   pickTaskExecutor(t, project);
   setComposerTaskReference(t.id);
   input.focus();
@@ -309,7 +311,7 @@ function openTaskConversationWithTask(taskId, origin, autoSend) {
 
 /* 「开始执行」直接发起会话并进入运行中：沿用任务智能体团队与开场指令，不再跳输入框等手动发送 */
 function startTaskConversationRun(task, origin) {
-  var project = CV_PROJECTS.find(function(p){ return p.id === task.project; });
+  var project = tkProjectById(task.project);
   pickTaskExecutor(task, project);
   setComposerTaskReference(task.id);
   setNavActive('新会话');
@@ -338,6 +340,13 @@ function startTaskExecution(taskId, options) {
   if (!started.ok) { if (started.message) toast(started.message, 'warning'); else openDrawer(taskId); return; }
   scheduleTaskStageStartedNotice(taskId, started.stage?.id);
   render();
+  /* 「智能体开发」阶段直接进入智能体开发界面（对话创建智能体、编辑、测试、提交），不走通用任务会话 */
+  if (started.stage?.name === '智能体开发') {
+    closeDrawer();
+    document.dispatchEvent(new CustomEvent('lingee:agent-dev-open', { detail: { taskId: taskId } }));
+    toast('已进入智能体开发，请在会话中创建并测试智能体', 'success');
+    return;
+  }
   openTaskConversationWithTask(taskId, 'start', true);
   toast('已进入' + (started.stage?.name || '当前节点') + '，会话已发起并运行中', 'success');
 }
@@ -355,6 +364,8 @@ function handleTaskHeaderAction() {
   } else if (action === 'start') {
     startTaskExecution(task.id);
   } else if (action === 'retry') retryBlockedTask(task);
+  else if (action === 'review') openListReviewPreview(task.id, els.tkDrawerChat);
+  else if (action === 'reply') { closeDrawer(); openTaskStatusConversation(task); }
 }
 function returnToTaskDetail(task) {
   var taskView = document.getElementById('view-tasks');
@@ -542,9 +553,9 @@ function getFilteredTasks(skipField) {
   var tasks = tkGetTasks();
   tasks = tasks.filter(tkCanViewTask);
   if (projectListMode && projectListProjectId) tasks = tasks.filter(function (task) { return task.project === projectListProjectId; });
-  /* 默认仅显示自己参与的任务；筛选了「负责人」（含全部选项）后按筛选查看他人任务。
-     skipField 供筛选菜单计数复用：预览「负责人」选项时按放开参与过滤后的口径计数。 */
-  if (!projectListMode && skipField !== 'assignee' && !state.filters.some(function (f) { return f.field === 'assignee'; })) tasks = tasks.filter(tkParticipatesCurrentUser);
+  /* 默认仅显示当前阶段由自己处理的任务；筛选了「负责人」（含全部选项）后按筛选查看他人任务。
+     skipField 供筛选菜单计数复用：预览「负责人」选项时按放开默认过滤后的口径计数。 */
+  if (!projectListMode && skipField !== 'assignee' && !state.filters.some(function (f) { return f.field === 'assignee'; })) tasks = tasks.filter(tkInMyTaskList);
   var scope = state.scope;
   if (scope === 'members') tasks = tasks.filter(function (t) { return !t.assignee || t.assignee.charAt(0) !== 'a'; });
   else if (scope === 'agents') tasks = tasks.filter(function (t) { return t.assignee && t.assignee.charAt(0) === 'a'; });
@@ -650,20 +661,22 @@ function listStageProgress(task) {
   var index = stages.findIndex(function (stage) { return stage.id === task.executionStageId; });
   if (task.status === 'done') index = stages.length - 1;
   else if (index < 0) index = 0;
-  return { name:stages[index]?.name || '任务处理', index:index, total:stages.length };
+  return { name:stages[index]?.name || '任务处理', index:index, total:stages.length, stages:stages };
 }
 
 function listStatusPool(ignoreProjectContext) {
   var tasks = tkGetTasks().filter(tkCanViewTask);
   if (!ignoreProjectContext && projectListMode && projectListProjectId) tasks = tasks.filter(function (task) { return task.project === projectListProjectId; });
-  if (!projectListMode || ignoreProjectContext) tasks = tasks.filter(tkParticipatesCurrentUser);
+  /* 与列表同口径：默认只算当前阶段由我处理的任务，负责人筛选了「全部」等人员时放开 */
+  var byAssignee = state.filters.some(function (f) { return f.field === 'assignee'; });
+  if ((!projectListMode || ignoreProjectContext) && !byAssignee) tasks = tasks.filter(tkInMyTaskList);
   if (!state.showSubtasks) tasks = tasks.filter(function (task) { return !task.parentId; });
   return tasks;
 }
 
 function filterListStatus(tasks) {
   var tab = LIST_STATUS_TABS.find(function (item) { return item.id === state.listStatusTab; }) || LIST_STATUS_TABS[0];
-  return tasks.filter(function (task) { return tab.statuses.includes(task.status); });
+  return tasks.filter(tab.match);
 }
 
 /* ---------- 分组 ---------- */
@@ -713,7 +726,7 @@ function renderViewBar() {
   if (listMode) {
     var pool = listStatusPool();
     els.tkViewTabs.innerHTML = LIST_STATUS_TABS.map(function (tab) {
-      var count = pool.filter(function (task) { return tab.statuses.includes(task.status); }).length;
+      var count = pool.filter(tab.match).length;
       var active = tab.id === state.listStatusTab;
       return '<button type="button" class="list-page-tab' + (active ? ' active' : '') + '" data-list-status="' + tab.id + '" role="tab" aria-selected="' + active + '"><span class="list-page-tab-name">' + tab.name + '</span><span class="tk-list-tab-count">' + count + '</span></button>';
     }).join('');
@@ -762,7 +775,7 @@ function renderCard(t, opts) {
   var spacer = !hasChildren ? '<span class="tk-card-spacer"></span>' : '';
   var childBadge = hasChildren ? '<span class="tk-card-child-count"' + (isCollapsed ? '' : ' style="visibility:hidden"') + '>' + childCount + '</span>' : '';
   var extraCls = (depth ? ' tk-card--child' : '') + (hasChildren ? ' tk-card--parent' : '');
-  var project = CV_PROJECTS.find(function(r){ return r.id === t.project; });
+  var project = tkProjectById(t.project);
   var team = taskExecutorTeam(t, project);
   var isBacklog = t.status === 'backlog';
   var teamAvatarHtml, footExtraHtml;
@@ -1313,7 +1326,7 @@ function openTaskModal(taskId, parentId) {
   fillSelects();
   state.editingTaskId = null;
   state.editingParentId = parentId || null;
-  els.tkModalTitle.textContent = parentId ? '新增子任务' : (projectListMode ? '新建任务 · '+(CV_PROJECTS.find(function(project){return project.id===projectListProjectId;})?.name||'项目') : '新建任务');
+  els.tkModalTitle.textContent = parentId ? '新增子任务' : (projectListMode ? '新建任务 · '+(tkProjectById(projectListProjectId)?.name||'项目') : '新建任务');
   tkMcSetMode('manual');
   if (els.tkMcAgentPrompt) els.tkMcAgentPrompt.value = '';
   els.tkFormTitle.value = '';
@@ -1322,7 +1335,7 @@ function openTaskModal(taskId, parentId) {
   els.tkFormPriority.value = 'medium';
   els.tkFormProject.insertAdjacentHTML('afterbegin','<option value="">请选择所属项目 *</option>');
   els.tkFormProject.value = projectListMode ? projectListProjectId : '';
-  set_activePick({kind:'team', id: CV_PROJECTS.find(function (project) { return project.id === els.tkFormProject.value; })?.defaultTeam || TEAMS[0]?.id || '', auto:false}); renderExpertChips();
+  set_activePick({kind:'team', id: tkProjectById(els.tkFormProject.value)?.defaultTeam || TEAMS[0]?.id || '', auto:false}); renderExpertChips();
   refreshFormAssignees(tkCurrentUserId());
   els.tkFormDue.value = '';
   ['tkFormStatus','tkFormAssignee','tkFormDue'].forEach(function(fid){ var el=document.getElementById(fid); if(el) el.hidden=true; });
@@ -1343,7 +1356,7 @@ function openTaskModal(taskId, parentId) {
     var parent = tkGetTasks().find(function (x) { return x.id === parentId; });
     if (parent) {
       els.tkFormProject.value = parent.project;
-      set_activePick({kind:'team', id: parent.teamId || CV_PROJECTS.find(function (project) { return project.id === parent.project; })?.defaultTeam || TEAMS[0]?.id || '', auto:false}); renderExpertChips();
+      set_activePick({kind:'team', id: parent.teamId || tkProjectById(parent.project)?.defaultTeam || TEAMS[0]?.id || '', auto:false}); renderExpertChips();
       refreshFormAssignees(parent.assignee);
       els.tkFormPriority.value = parent.priority;
     }
@@ -1686,7 +1699,7 @@ function setMentionIndex(index) {
 function createMentionPanel(textarea, query) {
   mentionTextarea = textarea;
   var mentionTask = tkGetTasks().find(function (task) { return task.id === state.drawerTaskId; });
-  var project = CV_PROJECTS.find(function (row) { return row.id === mentionTask?.project; });
+  var project = tkProjectById(mentionTask?.project);
   var team = mentionTask ? taskExecutorTeam(mentionTask, project) : null;
   var teamIds = new Set(team?.members || []);
   var people = (mentionTask ? tkPeopleInProject(mentionTask.project) : TK_PEOPLE).filter(function (row) { return mentionMatches(row, query); });
@@ -1992,7 +2005,7 @@ function renderDocPreviewContent(artifact) {
         '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
       '</button>' +
     '</div>' +
-    '<div class="tk-doc-preview-body">' + renderArtifactDocument(artifact) + '</div>';
+    '<div class="tk-doc-preview-body' + (isWebsiteArtifact(artifact) ? ' is-website' : '') + '">' + (isWebsiteArtifact(artifact) ? renderWebsitePreview(artifact) : renderArtifactDocument(artifact)) + '</div>';
 }
 function renderArtifactDocument(artifact) {
   var meta = [
@@ -2041,7 +2054,7 @@ function renderReviewArtifactPreview(artifact) {
   var format = artifactFormat(artifact);
   var fileName = artifact.fileName || artifact.name || artifact.docTitle || artifact.type;
   if (format === 'html' && typeof artifact.content === 'string') {
-    return '<article class="tk-list-review-file-preview"><div class="tk-list-review-file-head"><strong>' + escapeHtml(fileName) + '</strong><span>HTML 预览</span></div><div class="tk-list-review-html-frame"><iframe sandbox title="' + escapeHtml(fileName) + '" srcdoc="' + escapeHtml(artifact.content) + '"></iframe></div></article>';
+    return '<article class="tk-list-review-file-preview"><div class="tk-list-review-file-head"><strong>' + escapeHtml(fileName) + '</strong><span>HTML 预览</span></div><div class="tk-list-review-html-frame"><iframe sandbox' + (artifact.url ? '="allow-scripts"' : '') + ' title="' + escapeHtml(fileName) + '" srcdoc="' + escapeHtml(artifact.content) + '"></iframe></div></article>';
   }
   if (format === 'code') {
     return '<article class="tk-list-review-file-preview"><div class="tk-list-review-file-head"><strong>' + escapeHtml(fileName) + '</strong><span>' + escapeHtml(artifact.language || '代码') + '</span></div><pre class="tk-list-review-code"><code>' + escapeHtml(artifact.content || '') + '</code></pre></article>';
@@ -2474,10 +2487,11 @@ function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml,
   var currentState = latest?.state || (task.status === 'cancelled' ? 'cancelled' : 'pending');
   var activeRun = currentState === 'running' ? getDemoStageRun(task, latest) : null;
   var currentIndex = task.status === 'done' || task.status === 'cancelled' ? -1 : Math.max(0,plannedStages.findIndex(function (stage) { return stage.id === task.executionStageId; }));
-  var project = CV_PROJECTS.find(function (row) { return row.id === task.project; });
+  var project = tkProjectById(task.project);
   var team = taskExecutorTeam(task, project);
   var currentDetail = latest ? latest.stage + ' · ' + latest.author : '尚未分派执行专家';
   var latestLayout = taskDetailVersion === 'latest';
+  var kindInfo = taskListKind(task);
   var feedback = activeRun ? renderTaskRunFeedback(activeRun)
     : latest ? '<div class="tk-exec-feedback-line is-' + currentState + '"><span class="tk-exec-feedback-icon" aria-hidden="true">' + renderTaskRunIndicator(currentState === 'blocked' ? 'failed' : 'completed') + '</span>'
       + '<p>' + escapeHtml(currentState === 'blocked' ? task.blockedRun?.reason || latest.text : currentState === 'review' ? task.reviewReport?.review || latest.text : task.completedRun?.result || latest.text) + '</p>'
@@ -2509,8 +2523,14 @@ function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml,
         return session.stageId === stage.id || (!session.stageId && isCurrent);
       }) : [];
       if (!latestLayout) return '<li class="tk-feed-stage is-' + state + (isCurrent ? ' is-current' : '') + '" aria-label="' + escapeHtml(stage.name + '，处理人' + assignee + '，' + label) + '"' + (isCurrent ? ' aria-current="step"' : '') + '><span class="tk-feed-stage-mark" aria-hidden="true"></span><span class="tk-feed-stage-name">' + escapeHtml(stage.name) + '</span><span class="tk-feed-stage-assignee" title="处理人：' + escapeHtml(assignee) + '">处理人 <b>' + escapeHtml(assignee) + '</b></span><span class="tk-feed-stage-state">' + label + '</span>' + (isCurrent ? '<span class="tk-feed-stage-current-tag">当前</span>' : '') + '</li>';
-      var actions = (task.status === 'blocked' && state === 'blocked'
-          ? '<span class="tk-feed-stage-review-actions"><button type="button" class="tk-feed-stage-review-btn" data-stage-view-session aria-label="查看' + escapeHtml(stage.name) + '的会话详情与执行异常">查看会话</button></span>' : '')
+      var stageAction = isCurrent && kindInfo.primary ? {
+        start:{attr:'data-stage-start', label:'交给AI执行'}, review:{attr:'data-stage-review', label:'前往确认'},
+        reply:{attr:'data-stage-answer', label:'回答提问'}, retry:{attr:'data-stage-retry', label:'重新执行'},
+      }[kindInfo.action] : null;
+      var stageActionHtml = stageAction
+        ? '<button type="button" class="tk-feed-stage-review-btn" ' + stageAction.attr + '="' + task.id + '" aria-label="' + stageAction.label + '：' + escapeHtml(stage.name) + '">' + stageAction.label + '</button>' : '';
+      /* 已阻塞节点不单设「查看会话」，会话和执行异常在节点下方的会话列表里展开查看 */
+      var actions = (stageActionHtml ? '<span class="tk-feed-stage-review-actions">' + stageActionHtml + '</span>' : '')
         + (hasDetail && !inReviewStage ? '<button type="button" class="tk-feed-stage-expand" data-stage-detail-toggle aria-expanded="false" aria-controls="' + detailId + '" aria-label="展开' + escapeHtml(stage.name) + '的产物"><span>查看产物</span><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m6 3 5 5-5 5"/></svg></button>' : '');
       var sessionsHtml = state !== 'done' && stageSessions.length ? '<div class="tk-feed-stage-sessions" aria-label="' + escapeHtml(stage.name) + '的会话">'
           + '<button type="button" class="tk-feed-stage-sessions-toggle" data-stage-sessions-toggle aria-expanded="' + isCurrent + '" aria-controls="' + sessionListId + '">会话 ' + stageSessions.length + '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m6 3 5 5-5 5"/></svg></button>'
@@ -2520,12 +2540,12 @@ function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml,
       var detailHtml = hasDetail ? '<div class="tk-feed-stage-detail" id="' + detailId + '"' + (inReviewStage ? '' : ' hidden') + '><div class="tk-delivery-artifacts"><div class="tk-artifacts-list">' + stageArtifacts.map(renderTaskArtifact).join('') + '</div></div></div>' : '';
       return '<tr class="tk-feed-stage-row is-' + state + (isCurrent ? ' is-current' : '') + (sessionsHtml ? ' has-extra' : '') + '"' + (isCurrent ? ' aria-current="step"' : '') + '>'
         + '<td class="tk-stage-cell-mark"><span class="tk-feed-stage-mark" aria-hidden="true"></span></td>'
-        + '<th scope="row" class="tk-feed-stage-name">' + escapeHtml(stage.name) + '</th>'
-        + '<td class="tk-feed-stage-expert">' + (showExpert ? '<span class="tk-feed-stage-expert-content" title="执行专家：' + escapeHtml(entry.author) + '"><img src="' + escapeHtml(xav(expert?.k)) + '" alt=""><span>' + escapeHtml(entry.author) + '</span></span>' : '') + '</td>'
-        + '<td class="tk-feed-stage-assignee" title="处理人：' + escapeHtml(assignee) + '">处理人 <b>' + escapeHtml(assignee) + '</b></td>'
-        + '<td class="tk-stage-cell-state">' + (isCurrent && state === 'running' && task.status === 'in_progress'
+        + '<th scope="row" class="tk-feed-stage-main" colspan="4"><div class="tk-feed-stage-line"><span class="tk-feed-stage-name">' + escapeHtml(stage.name) + '</span>'
+        + (isCurrent && state === 'running' && task.status === 'in_progress'
           ? '<button type="button" class="tk-feed-stage-state tk-feed-stage-state-action" data-stage-submit="' + escapeHtml(stage.id) + '" aria-label="' + escapeHtml(stage.name) + '执行完成，转为待审核" title="点击模拟 Agent 完成">' + label + '</button>'
-          : '<span class="tk-feed-stage-state">' + label + '</span>') + '</td>'
+          : '<span class="tk-feed-stage-state">' + label + '</span>') + '</div>'
+        + '<div class="tk-feed-stage-meta">' + (showExpert ? '<span class="tk-feed-stage-expert-content" title="执行专家：' + escapeHtml(entry.author) + '"><img src="' + escapeHtml(xav(expert?.k)) + '" alt=""><span>' + escapeHtml(entry.author) + '</span></span><span class="tk-feed-stage-meta-sep" aria-hidden="true">·</span>' : '')
+        + '<span class="tk-feed-stage-assignee" title="处理人：' + escapeHtml(assignee) + '">处理人 <b>' + escapeHtml(assignee) + '</b></span></div></th>'
         + '<td class="tk-stage-cell-actions">' + actions + '</td></tr>'
         + (sessionsHtml || detailHtml ? '<tr class="tk-feed-stage-extra is-' + state + (isCurrent ? ' is-current' : '') + '"' + (sessionsHtml || inReviewStage ? '' : ' hidden') + '><td colspan="6">' + sessionsHtml + detailHtml + '</td></tr>' : '');
     }).join('') + (latestLayout ? '</tbody></table></div>' : '</ol>')
@@ -2659,7 +2679,7 @@ function renderAgentStageComment(task, entry) {
 }
 function renderTaskComments(t) {
   var comments = t.comments || [];
-  var project = CV_PROJECTS.find(function (row) { return row.id === t.project; });
+  var project = tkProjectById(t.project);
   var activity = createDeliveryActivity(t, project, {
     creator:tkGetPerson(t.createdBy).name,
     blockedReason:t.blockedRun?.reason,
@@ -2876,6 +2896,12 @@ function openDrawer(taskId) {
   });
 }
 
+/* 「查看产物」：打开详情并展开各阶段已产出的文档，直接定位到执行计划。 */
+function openDrawerArtifacts(taskId) {
+  openDrawer(taskId);
+  els.tkDrawerBody.querySelectorAll('[data-stage-detail-toggle][aria-expanded="false"]').forEach(function (button) { button.click(); });
+  els.tkDrawerBody.querySelector('.tk-feed-stage-table')?.scrollIntoView({ block:'start' });
+}
 function closeDrawer() {
   closeDocPreview();
   closeTaskLabelPicker();
@@ -3293,7 +3319,7 @@ function bindEvents() {
   });
   els.tkFormProject.addEventListener('change', function () {
     refreshFormAssignees(tkCurrentUserId());
-    set_activePick({kind:'team', id: CV_PROJECTS.find(function (project) { return project.id === els.tkFormProject.value; })?.defaultTeam || TEAMS[0]?.id || '', auto:false}); renderExpertChips();
+    set_activePick({kind:'team', id: tkProjectById(els.tkFormProject.value)?.defaultTeam || TEAMS[0]?.id || '', auto:false}); renderExpertChips();
   });
   var moreDD = document.getElementById('tkMcMoreFields');
   if (moreDD) {
@@ -3527,6 +3553,15 @@ function bindEvents() {
           toast(submitted.stage.name + (submitted.autoReviewed ? '已自动审核并流转' : '已完成，等待审核'), 'success');
         }
       }
+      return;
+    }
+    var stageActionButton = e.target.closest('[data-stage-start],[data-stage-review],[data-stage-answer],[data-stage-retry]');
+    if (stageActionButton && sessionTask) {
+      /* 阶段行的按钮与详情底部主操作同源：轮到我时才渲染，点击后走同一条处理链路 */
+      if (stageActionButton.hasAttribute('data-stage-start')) startTaskExecution(sessionTask.id);
+      else if (stageActionButton.hasAttribute('data-stage-review')) openListReviewPreview(sessionTask.id, stageActionButton);
+      else if (stageActionButton.hasAttribute('data-stage-answer')) { closeDrawer(); openTaskStatusConversation(sessionTask); }
+      else retryBlockedTask(sessionTask);
       return;
     }
     var stageSession = e.target.closest('[data-stage-session-open]');
@@ -4219,9 +4254,13 @@ function bindEvents() {
     if (listActionBtn) {
       var listAction = listActionBtn.getAttribute('data-list-task-action');
       var listTaskId = parseInt(listActionBtn.getAttribute('data-list-task-id'), 10);
-      if (listAction === 'preview') openListReviewPreview(listTaskId, listActionBtn);
+      var listTask = tkGetTasks().find(function (row) { return row.id === listTaskId; });
+      if (listAction === 'review') openListReviewPreview(listTaskId, listActionBtn);
       else if (listAction === 'start') startTaskExecution(listTaskId, {skipHandlerCheck:true});
-      else if (listAction === 'retry') retryBlockedTask(tkGetTasks().find(function (row) { return row.id === listTaskId; }), true);
+      else if (listAction === 'retry') retryBlockedTask(listTask, true);
+      else if (listAction === 'reply') { if (listTask) { closeDrawer(); openTaskStatusConversation(listTask); } }
+      else if (listAction === 'artifacts') openDrawerArtifacts(listTaskId);
+      else openDrawer(listTaskId);
       return;
     }
     var toggleBtn = e.target.closest('[data-tk-toggle]');
@@ -4471,9 +4510,7 @@ function initColumnResize() {
 function updateCollabReviewBadge() {
   var badge = document.getElementById('collabReviewBadge');
   if (!badge) return;
-  var count = listStatusPool(true).filter(function (task) {
-    return ['backlog', 'in_review', 'blocked'].includes(task.status);
-  }).length;
+  var count = listStatusPool(true).filter(taskNeedsMyAction).length;
   badge.textContent = String(count);
   badge.style.display = count > 0 ? '' : 'none';
   badge.setAttribute('data-tooltip', count + ' 个任务需要处理');

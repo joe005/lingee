@@ -321,14 +321,40 @@ export function initSidebarIcons() {
   }
 }
 
+/* ---------- 频道页签（工作 / 管理 / 开发） ----------
+   「管理」时侧栏只显示管理菜单（#mgrNav），其余页签显示开发导航 */
+var currentChannel='dev';
+var lastDevNav=null;
+function setChannel(seg){
+  if(currentChannel==='dev' && seg!=='dev'){
+    lastDevNav=$('.sb-scroll .nav-item.active:not(.mgr-nav-item):not(.work-nav-item)');
+  }
+  currentChannel=seg;
+  $$('.seg-item').forEach(function(i){ i.classList.toggle('active', i.getAttribute('data-seg')===seg); });
+  $('.sb-scroll').classList.toggle('is-manage', seg==='manage');
+  $('.sb-scroll').classList.toggle('is-work', seg==='work');
+  var mgrNav=$('#mgrNav');
+  if(mgrNav) mgrNav.classList.toggle('hidden', seg!=='manage');
+  var workNav=$('#workNav');
+  if(workNav) workNav.classList.toggle('hidden', seg!=='work');
+}
+
 export function initSegmentedTabs() {
-  /* ---------- segmented tabs (工作 / 开发) ---------- */
   $$('.seg-item').forEach(function(s){
     s.addEventListener('click',function(){
-      $$('.seg-item').forEach(function(i){i.classList.remove('active')});
-      s.classList.add('active');
-      /* 工作 / 开发切换由 work.js 处理导航和视图 */
-      document.dispatchEvent(new CustomEvent('lingee:seg-mode',{detail:s.textContent.trim()}));
+      var seg=s.getAttribute('data-seg')||'dev';
+      if(seg===currentChannel && seg!=='manage') return;
+      var restore=lastDevNav;
+      setChannel(seg);
+      if(seg==='work'){
+        document.dispatchEvent(new CustomEvent('lingee:work-open'));
+      }else if(seg==='manage'){
+        document.dispatchEvent(new CustomEvent('lingee:mgr-open'));
+      }else{
+        /* 回到开发页签时恢复离开前的菜单，没有则回到新会话 */
+        var nav=restore&&!restore.hidden ? restore : $('.sb-scroll .nav-item');
+        if(nav) nav.click();
+      }
     });
   });
 
@@ -392,4 +418,4 @@ export function initProjectActions(){
   });
 }
 
-export { _prevWishW, closeUserMenu, filterSidebar, sbCollapseIcon, sbSearch, sbSearchIcon, sbSearchInput };
+export { _prevWishW, closeUserMenu, filterSidebar, sbCollapseIcon, sbSearch, sbSearchIcon, sbSearchInput, setChannel };

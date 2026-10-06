@@ -1,7 +1,7 @@
 /* 阻塞任务的本地演示运行记录；步骤和失败原因均为模拟数据。 */
-import { CV_PROJECTS } from '../collab/data.js';
 import { taskExecutorTeam } from '../expert/task-team.js';
 import { EXPERTS } from '../expert/data.js';
+import { tkProjectById } from './data.js';
 
 const BLOCKED_RUNS = {
   4: { agent:'cosmic-api', duration:'2分18秒', reason:'ERP 测试账套缺少期初余额，借贷平衡校验未通过。', next:'请运维补齐测试账套后重新执行增量拉取。', steps:[['读取 ERP 总账接口定义','已确认多账套、币种及科目编码映射。'],['拉取测试账套数据','已取得总账明细，发现期初余额记录缺失。'],['执行落库前校验','借贷余额不平，停止同步以避免写入错误报表数据。']] },
@@ -17,7 +17,7 @@ export function createDemoBlockedRun(task) {
   if (task.status !== 'blocked') return null;
   var content = BLOCKED_RUNS[task.id];
   if (!content) return null;
-  var project = CV_PROJECTS.find(function (row) { return row.id === task.project; });
+  var project = tkProjectById(task.project);
   var team = taskExecutorTeam(task, project);
   var expertId = team?.members.includes(content.agent) ? content.agent : team?.leadId;
   var expert = EXPERTS.find(function (row) { return row.id === expertId; });
