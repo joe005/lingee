@@ -58,6 +58,9 @@ var ACCOUNTS={
   '暴福音':{pass:'lingee520',role:'owner',name:'暴福音',avatar:'暴'},
   '荆龙刚':{pass:'lingee520',role:'owner',name:'荆龙刚',avatar:'荆'},
   '梁平贤':{pass:'lingee520',role:'owner',name:'梁平贤',avatar:'梁'},
+  /* tag：演示人员的身份标签，覆盖按角色显示的标签 */
+  '周建国':{pass:'lingee520',role:'owner',name:'周建国',avatar:'周',tag:'设备主管'},
+  '陈志远':{pass:'lingee520',role:'owner',name:'陈志远',avatar:'陈',tag:'维修工程师'},
   /* 虚拟账号（按角色） */
   'owner':{pass:'lingee520',role:'owner',name:'吴宏超',avatar:'吴'},
   'project_manager':{pass:'lingee520',role:'pm',name:'赵琳',avatar:'赵'},
@@ -75,7 +78,7 @@ var LOGIN_PEOPLE_IDS={
   '宋宇':'p12','冯远':'p13','许诺':'p14','蒋雯':'p15','何欣':'p16','韩梅':'p17','罗静':'p18',
   '杨帆':'p19','唐辉':'p20','梁平':'p21','付鹏城':'p32',
   '陈惠琼':'p33','吴晓锋':'p23','钟伟纯':'p35','刘鉴洲':'p36','陈谨':'p37',
-  '陈来珍':'p38','暴福音':'p39','荆龙刚':'p40','梁平贤':'p41','陈瑾':'p37',
+  '陈来珍':'p38','暴福音':'p39','荆龙刚':'p40','梁平贤':'p41','周建国':'p42','陈志远':'p43','陈瑾':'p37',
   'owner':'p22','dev':'p01','project_manager':'p04','pm':'p04','qa':'p05','ops':'p07'
 };
 export function getLoginPersonId(){ return LOGIN_PEOPLE_IDS[getAuthedUser()] || ''; }
@@ -148,7 +151,7 @@ function applyUserInfo(user){
   }
   var platformRole=getPlatformIdentity()?.role;
   applyRestrictedMenuAccess();
-  if(tag) tag.textContent=platformRole==='tenant'?'租户管理员':platformRole==='factory'?'原厂管理员':(DEMO_ROLES.filter(function(r){return r.id===acc.role;})[0]||{}).label||'管理员';
+  if(tag) tag.textContent=platformRole==='tenant'?'租户管理员':platformRole==='factory'?'原厂管理员':acc.tag||(DEMO_ROLES.filter(function(r){return r.id===acc.role;})[0]||{}).label||'管理员';
 }
 /* 登录框登录后仍留在 DOM 里，Chrome 会把整页当登录页，
    往搜索框之类的文本框推荐保存的账号。禁用掉就不再是自动填充来源。 */

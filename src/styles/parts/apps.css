@@ -146,3 +146,32 @@
   #view-skills .card-icon-skill.tone-red{background:#ffe9e9;color:#f0465a}
   #view-skills .card-icon-skill.tone-purple{background:#f0eaff;color:#7c5cf0}
   #view-skills .card-icon-skill.tone-amber{background:#fff1d6;color:#f59a0c}
+
+  /* 智能体开发：卡片「⋯」菜单与提交上架审核确认 */
+  #view-agents .app-card{position:relative}
+  #view-agents .agent-card-more{position:absolute;top:14px;right:14px;display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;padding:0;border:0;border-radius:8px;background:transparent;color:var(--text-secondary);cursor:pointer;opacity:0;transition:opacity .15s,background .15s}
+  #view-agents .app-card:hover .agent-card-more,#view-agents .agent-card-more[aria-expanded="true"],#view-agents .agent-card-more:focus-visible{opacity:1}
+  #view-agents .agent-card-more:hover{background:var(--hover);color:var(--text)}
+  #view-agents .agent-card-more:focus-visible{outline:2px solid var(--border-focus);outline-offset:1px}
+  #view-agents .agent-card-more .ic{width:16px;height:16px}
+  .agent-card-menu{position:fixed;z-index:420;min-width:132px;padding:6px;border:1px solid var(--border);border-radius:12px;background:var(--bg);box-shadow:0 8px 24px rgba(0,0,0,.12)}
+  .agent-card-menu[hidden]{display:none}
+  .agent-card-menu-item{display:flex;align-items:center;gap:8px;width:100%;height:34px;padding:0 10px;border:0;border-radius:8px;background:transparent;color:var(--text);font:inherit;font-size:13px;text-align:left;cursor:pointer}
+  .agent-card-menu-item:hover,.agent-card-menu-item:focus-visible{background:var(--hover);outline:none}
+  .agent-card-menu-item .ic{width:15px;height:15px;color:var(--text-secondary)}
+  .agent-card-menu-item.is-danger:hover,.agent-card-menu-item.is-danger:hover .ic{background:var(--danger-bg);color:var(--danger)}
+  .agent-card-menu-item[hidden]{display:none}
+  .agent-submit-overlay{position:fixed;inset:0;z-index:9100;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.32)}
+  .agent-submit-overlay[hidden]{display:none}
+  .agent-submit-card{width:400px;max-width:calc(100vw - 32px);padding:24px 24px 20px;border-radius:16px;background:var(--bg);box-shadow:0 16px 48px rgba(0,0,0,.18)}
+  .agent-submit-head{display:flex;align-items:center;gap:10px}
+  .agent-submit-icon{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:var(--brand);color:#fff;font-size:12px;font-weight:700}
+  .agent-submit-title{font-size:16px;font-weight:600;color:var(--text)}
+  .agent-submit-desc{margin:10px 0 0 28px;font-size:14px;line-height:1.8;color:var(--text)}
+  .agent-submit-foot{display:flex;justify-content:flex-end;gap:12px;margin-top:28px}
+  .agent-submit-cancel,.agent-submit-ok{height:34px;padding:0 16px;border-radius:8px;font:inherit;font-size:14px;cursor:pointer}
+  .agent-submit-cancel{border:0;background:transparent;color:var(--text)}
+  .agent-submit-cancel:hover{background:var(--hover)}
+  .agent-submit-ok{border:0;background:var(--brand);color:#fff}
+  .agent-submit-ok:hover{background:var(--brand-hover)}
+  :is(.agent-submit-cancel,.agent-submit-ok):focus-visible{outline:2px solid var(--border-focus);outline-offset:2px}

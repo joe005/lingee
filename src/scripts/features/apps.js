@@ -3,10 +3,13 @@ import { toast } from '../core/toast.js';
 import { applyMode, navItems, setNavActive, showView } from '../core/view.js';
 import { appDd, appDisplayName, chatAppDd, fullAppData, selectApp, selectChatApp } from './attach-app.js';
 import { syncTogglePreviewBtn } from './chat.js';
-import { appendAssistantMessage, appendUserMessage, messagesList, simulateAIResponse } from './composer.js';
+import { closeAgentConfig, openAgentConfig } from './agent-config.js';
+import { appendAssistantMessage, appendUserMessage, messagesList, resetChatForStandalone, simulateAIResponse } from './composer.js';
 import { renderModeTag } from './expert/chips.js';
 import { teamById } from './expert/store.js';
 import surveyAppHtml from '../../artifacts/survey-app.html?raw';
+import equipmentAppHtml from '../../artifacts/equipment-app.html?raw';
+import helpdeskAppHtml from '../../artifacts/helpdesk-app.html?raw';
 /* 应用开发：卡片、搜索、新建下拉、新建应用弹窗、右键菜单
    拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
    由 main.js 按拆分前的原始顺序调用。 */
@@ -122,6 +125,66 @@ function renderSurveyDevConversation(){
     +SURVEY_DEV_STEPS.map(function(step){return '<li><strong>'+surveyAppEsc(step[0])+'</strong>：'+surveyAppEsc(step[1])+'</li>';}).join('')
     +'</ol><p>访问地址：<code>'+surveyAppEsc(SURVEY_APP_URL)+'</code></p></div></div></div>';
 }
+/* ---------- 设备巡检维修：6.1 系统预览与 6.2 诊断助手使用 ---------- */
+var EQUIPMENT_APP_NAME='设备巡检维修系统';
+var EQUIPMENT_APP_URL='https://apps.lingee.com/equipment';
+var EQUIPMENT_AGENT_NAME='设备故障诊断助手';
+function renderEquipmentAppConversation(){
+  messagesList.replaceChildren();
+  appendUserMessage('打开设备巡检维修系统，看一下上线后的运行情况。');
+  var response=appendAssistantMessage(teamById('general-app-dev'));
+  response.innerHTML='<div class="work-steps"><div class="work-step done final-step bare"><div class="markdown-content">'
+    +'<p>设备巡检维修系统由协作开发项目「设备巡检维修系统建设」交付，右侧是正在运行的系统。</p><ol>'
+    +'<li><strong>设备台账与扫码巡检</strong>：126 台设备已生成二维码</li>'
+    +'<li><strong>故障报修与维修记录</strong>：42 条用例全部通过，维修记录归入设备履历</li>'
+    +'<li><strong>MCP 服务</strong>：设备档案和维修记录通过 MCP 服务 <code>equipment-ops</code> 只读开放，供智能体调用</li>'
+    +'</ol><p>访问地址：<code>'+surveyAppEsc(EQUIPMENT_APP_URL)+'</code></p></div></div></div>';
+}
+/* 6.2 智能体开发会话：左侧是 agent-builder 的交付摘要，右侧打开智能体配置面板，在面板里提交 */
+var AGENT_ICON='<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V4.5M9 14h.01M15 14h.01"/></svg>';
+function renderEquipmentAgentConversation(){
+  messagesList.replaceChildren();
+  appendUserMessage('@agent-builder 帮我做一个设备故障诊断助手。维修工程师报上设备编号和故障现象，先查这台设备的档案和最近的维修记录，再按我的经验给排查步骤。');
+  var response=appendAssistantMessage(null);
+  response.innerHTML='<div class="work-steps"><div class="work-step done final-step bare"><div class="markdown-content">'
+    +'<p>设备故障诊断助手已创建完成，3 个真实故障测试全部通过。以下是交付摘要：</p>'
+    +'<p><strong>智能体配置</strong></p><ul>'
+    +'<li>标识符：<code>equipment-diagnosis-assistant</code>，显示名：设备故障诊断助手</li>'
+    +'<li>领域：通用，可见性：全公司</li></ul>'
+    +'<p><strong>角色定位</strong></p>'
+    +'<p>工厂里的设备维修老师傅，按周建国的排障经验帮设备部的维修工程师排查注塑机、空压机、数控机床故障；先查记录再下判断，最近换过的零件优先怀疑，涉及高压电先提醒断电挂牌。</p>'
+    +'<p><strong>技能与 MCP</strong></p><ul>'
+    +'<li>通过 MCP 连接协作开发交付的「设备巡检维修系统」（<code>equipment-ops</code>，只读）</li>'
+    +'<li>「查询设备档案」：按设备编号读取型号、位置和当前状态</li>'
+    +'<li>「查询维修记录」：读取近 12 个月的维修原因、更换零件和维修人，只读不改</li></ul>'
+    +'<p><strong>知识</strong></p><ul><li>已上传「空压机保养规程」作为内置知识；其它排障手册可在知识页上传附件</li></ul>'
+    +'</div></div></div>';
+  var card=document.createElement('div');
+  card.className='artifact-card';
+  card.innerHTML='<div class="artifact-preview">'+AGENT_ICON+'</div>'
+    +'<div class="artifact-info"><div class="artifact-title">'+surveyAppEsc(EQUIPMENT_AGENT_NAME)+'</div><div class="artifact-desc">查看并编辑智能体配置</div></div>'
+    +'<button type="button" class="agent-config-card-test"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>本地测试</button>'
+    +'<div class="artifact-action"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>';
+  card.addEventListener('click',function(e){
+    if(e.target.closest('.agent-config-card-test')){ toast('已进入本地测试：'+EQUIPMENT_AGENT_NAME); return; }
+    openAgentConfig(EQUIPMENT_AGENT_NAME);
+  });
+  response.querySelector('.final-step').appendChild(card);
+}
+/* ---------- 工单管理系统：客户服务工单平台交付的运行预览 ---------- */
+var HELPDESK_APP_NAME='工单管理系统';
+var HELPDESK_APP_URL='https://apps.lingee.com/helpdesk';
+function renderHelpdeskAppConversation(){
+  messagesList.replaceChildren();
+  appendUserMessage('打开工单管理系统，看一下上线后的运行情况。');
+  var response=appendAssistantMessage(teamById('general-app-dev'));
+  response.innerHTML='<div class="work-steps"><div class="work-step done final-step bare"><div class="markdown-content">'
+    +'<p>工单管理系统由协作开发项目「客户服务工单平台」交付，右侧是正在运行的系统。</p><ol>'
+    +'<li><strong>提交工单</strong>：按分类和优先级提交，附件支持截图和日志</li>'
+    +'<li><strong>SLA 与派单</strong>：按优先级自动给出响应和解决时限，工单自动派给处理人</li>'
+    +'<li><strong>我的工单与常见问题</strong>：跟踪处理进度、评价已解决工单，常见问题先自助排查</li>'
+    +'</ol><p>访问地址：<code>'+surveyAppEsc(HELPDESK_APP_URL)+'</code></p></div></div></div>';
+}
 function openSurveyAppPreview(frame,urlInput){
   if(frame) frame.src=URL.createObjectURL(new Blob([surveyAppHtml],{type:'text/html'}));
   if(urlInput) urlInput.value=SURVEY_APP_URL;
@@ -140,6 +203,8 @@ export function initApps() {
     c.addEventListener('click',function(e){
       if(e.target.closest('.card-more')){ e.stopPropagation(); toast('更多操作'); return; }
       var name=$('.card-title',c).textContent.trim();
+      resetChatForStandalone();
+      closeAgentConfig();
       showView('chat');
       setNavActive('新会话');
       var titleEl=$('#chatTitle');
@@ -152,6 +217,21 @@ export function initApps() {
       var urlInput=document.getElementById('previewUrlText');
       var url='https://feature.kingdee.com:1026/feature_vb';
       if(name===SURVEY_APP_NAME){ renderSurveyDevConversation(); openSurveyAppPreview(frame,urlInput); }
+      else if(name===EQUIPMENT_APP_NAME){
+        renderEquipmentAppConversation();
+        if(frame) frame.src=URL.createObjectURL(new Blob([equipmentAppHtml],{type:'text/html'}));
+        if(urlInput) urlInput.value=EQUIPMENT_APP_URL;
+      }
+      else if(name===HELPDESK_APP_NAME){
+        renderHelpdeskAppConversation();
+        if(frame) frame.src=URL.createObjectURL(new Blob([helpdeskAppHtml],{type:'text/html'}));
+        if(urlInput) urlInput.value=HELPDESK_APP_URL;
+      }
+      else if(name===EQUIPMENT_AGENT_NAME){
+        renderEquipmentAgentConversation();
+        openAgentConfig(name);
+        return;
+      }
       else{
         if(frame) frame.src=url;
         if(urlInput) urlInput.value=url;

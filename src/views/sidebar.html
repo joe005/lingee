@@ -106,6 +106,22 @@
       </div>
     </div>
 
+    <!-- 工作模式：使用已发布的智能体和技能（对齐 Lingee 工作页），与开发模式的导航互斥显示 -->
+    <div class="sb-work" id="sbWork" hidden>
+      <button type="button" class="nav-item sb-work-item active" data-work-nav="new"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v5h-5"/></svg>新任务</button>
+      <button type="button" class="nav-item sb-work-item" data-work-nav="schedule"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M10 2h4"/></svg>定时任务</button>
+      <button type="button" class="nav-item sb-work-item" data-work-nav="agents"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V4.5M9 14h.01M15 14h.01"/></svg>智能体</button>
+      <button type="button" class="nav-item sb-work-item" data-work-nav="skills"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m9 12 2 2 4-4"/></svg>技能</button>
+      <button type="button" class="nav-item sb-work-item" data-work-nav="discover"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg>发现</button>
+      <div class="sb-work-label">历史对话</div>
+      <div class="sb-work-history" id="sbWorkHistory">
+        <button type="button" class="sb-work-history-item">本周点检计划汇总</button>
+        <button type="button" class="sb-work-history-item">空压机保养提醒</button>
+        <button type="button" class="sb-work-history-item">查询 9 月维修工单</button>
+        <button type="button" class="sb-work-history-item">备件库存预警</button>
+      </div>
+    </div>
+
     <div class="sb-foot">
       <div class="user-wrap">
         <div class="user" id="userBtn" tabindex="0" role="button" aria-haspopup="true" aria-expanded="false">

@@ -1,6 +1,7 @@
 /* 项目与任务管理共用的本地交付过程样例；优先使用任务选择的智能体团队。 */
 import { EXPERTS, PRESET_TEAMS } from '../expert/data.js';
 import { TEAMS } from '../expert/store.js';
+import { taskExecutorTeam } from '../expert/task-team.js';
 import { taskExecutionStages } from '../tasks-v2/task-execution.js';
 import { $ } from '../../core/dom.js'; // 模块自检将模板插值的 $ 识别为跨模块符号。
 
@@ -63,7 +64,8 @@ function normalizedStatus(status) {
 export function createDeliveryActivity(task, project, options = {}) {
   const oldTeamAlias = {'kingdee-saas-implementation':'cosmic-app-dev','kingdee-secondary-dev':'general-app-dev'};
   const teamId = oldTeamAlias[task.teamId || project?.defaultTeam] || task.teamId || project?.defaultTeam;
-  const team = TEAMS.find(item => item.id === teamId)
+  const team = (task.expertId && taskExecutorTeam(task, project))
+    || TEAMS.find(item => item.id === teamId)
     || PRESET_TEAMS.find(item => item.id === teamId)
     || {id:'task-ai',name:'AI 助手',members:EXPERTS[0] ? [EXPERTS[0].id] : [],leadId:EXPERTS[0]?.id};
   const status = normalizedStatus(task.status);

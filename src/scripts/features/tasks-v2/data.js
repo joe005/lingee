@@ -1,5 +1,6 @@
 /* 任务管理 v2 —— 模拟数据与状态
    纯前端原型，所有数据本地维护。 */
+import { TK_EQUIPMENT_TASKS, equipmentArtifactDocs } from './equipment-demo.js';
 import { CV_MEMBERS, CV_PROJECTS, CV_TASKS, cvCurrentUserName, cvPeopleInProject } from '../collab/data.js';
 import { getLoginPersonId } from '../login.js';
 import { createDemoReviewReport } from './review-reports.js';
@@ -26,7 +27,7 @@ export const TK_PRIORITIES = [
 ];
 
 /* 演示任务只使用项目中已有的七位人员；姓名和身份始终来自项目人员主数据。 */
-const TK_DEMO_PERSON_IDS = ['p22', 'p01', 'p02', 'p03', 'p04', 'p05', 'p07'];
+const TK_DEMO_PERSON_IDS = ['p22', 'p01', 'p02', 'p03', 'p04', 'p05', 'p07', 'p42'];
 const TK_PERSON_COLORS = ['#495dff', '#08a040', '#e04a3a', '#7858f9', '#c06010', '#0891b2', '#d76794'];
 export const TK_PEOPLE = [];
 export function tkSyncPeople() {
@@ -138,17 +139,18 @@ export const TK_LABELS = ['需求', '缺陷'];
 export function tkGetTaskArtifacts(task) {
   var projectPeople = tkPeopleInProject(task.project);
   function nameAt(i, fallbackId) { return (projectPeople[i] || tkGetPerson(fallbackId)).name; }
-  return buildTaskArtifactDocs({
-    task: task,
-    projectName: tkGetProjectName(task.project),
-    people: {
-      product: nameAt(0, task.createdBy),
-      dev: nameAt(1, task.assignee),
-      arch: nameAt(2, task.assignee),
-      test: nameAt(3, task.assignee),
-      owner: tkGetPerson(task.createdBy || task.assignee).name,
-    },
-  }).concat(task.executionArtifacts || []);
+  var people = {
+    product: nameAt(0, task.createdBy),
+    dev: nameAt(1, task.assignee),
+    arch: nameAt(2, task.assignee),
+    test: nameAt(3, task.assignee),
+    owner: tkGetPerson(task.createdBy || task.assignee).name,
+  };
+  var docs = buildTaskArtifactDocs({ task: task, projectName: tkGetProjectName(task.project), people: people });
+  /* 演示任务的定制产物按 id 覆盖通用产物 */
+  var custom = equipmentArtifactDocs(task, people);
+  if (custom) docs = docs.filter(function (doc) { return !custom.some(function (row) { return row.id === doc.id; }); }).concat(custom);
+  return docs.concat(task.executionArtifacts || []);
 }
 
 /* ---------- 视图配置 ---------- */
@@ -614,6 +616,7 @@ const TK_SURVEY_TASKS = [
     ] },
 ];
 TK_TASKS.push(...TK_SURVEY_TASKS);
+TK_TASKS.push(...TK_EQUIPMENT_TASKS);
 
 /* ---------- 工具函数：根据 id 查名称 ---------- */
 export function tkGetStatusName(id) {
@@ -745,6 +748,15 @@ try {
     var surveyAdds = TK_SURVEY_TASKS.filter(function (task) { return !surveyCodes.has(task.code); }).map(tkSeedTask);
     if (surveyAdds.length) { _tasks.push(...surveyAdds); persistTasks(); }
     localStorage.setItem('lingee_tasks_survey_v1', '1');
+  }
+} catch (e) { /* 本地存储不可用时保留内存数据 */ }
+/* 设备巡检维修演示任务：同样按编号补种一次。 */
+try {
+  if (!localStorage.getItem('lingee_tasks_equipment_v1')) {
+    var equipmentCodes = new Set(_tasks.map(function (task) { return task.code; }));
+    var equipmentAdds = TK_EQUIPMENT_TASKS.filter(function (task) { return !equipmentCodes.has(task.code); }).map(tkSeedTask);
+    if (equipmentAdds.length) { _tasks.push(...equipmentAdds); persistTasks(); }
+    localStorage.setItem('lingee_tasks_equipment_v1', '1');
   }
 } catch (e) { /* 本地存储不可用时保留内存数据 */ }
 function persistTasks() {

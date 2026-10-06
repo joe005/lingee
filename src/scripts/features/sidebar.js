@@ -327,7 +327,8 @@ export function initSegmentedTabs() {
     s.addEventListener('click',function(){
       $$('.seg-item').forEach(function(i){i.classList.remove('active')});
       s.classList.add('active');
-      toast(s.textContent.trim());
+      /* 工作 / 开发切换由 work.js 处理导航和视图 */
+      document.dispatchEvent(new CustomEvent('lingee:seg-mode',{detail:s.textContent.trim()}));
     });
   });
 

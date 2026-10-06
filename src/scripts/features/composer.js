@@ -14,6 +14,7 @@ import { hideAssetEditorPanel, renderAssetCreationPanel } from './expert/editor-
 import { renderExpertGrid, set_teamLayer } from './expert/library.js';
 import { cvRenderExperts, set_cvExpertLayer } from './collab/experts.js';
 import { activePick, pickValid, set_activePick, teamById } from './expert/store.js';
+import { taskExecutorTeam } from './expert/task-team.js';
 import { set__prevWishW } from './sidebar.js';
 import { CV_MEMBERS, CV_PROJECTS } from './collab/data.js';
 import { tbTeamStages } from './collab/tb-core.js';
@@ -1109,6 +1110,13 @@ function clearChatTaskSide() {
   renderChatTaskSide();
   renderChatSessions();
 }
+/* 从应用/智能体卡片打开独立演示对话：脱离上一个任务会话并收起产物预览 */
+export function resetChatForStandalone() {
+  clearChatTaskSide();
+  closeChatDocViewer();
+  chatViewerTabs = [];
+  chatViewerActiveKey = null;
+}
 var chatDocViewerCloseTimer = null;
 var chatViewerTabs = [];
 var chatViewerActiveKey = null;
@@ -1335,6 +1343,7 @@ function appendUserMessage(text){
 
 function resolveChatTeam(session, task){
   var project = CV_PROJECTS.find(function (row) { return row.id === (task?.project || session?.projectId); });
+  if (task?.expertId) return taskExecutorTeam(task, project);
   return teamById(task?.teamId || '') || teamById(project?.defaultTeam || '') || teamById(session?.teamId || '');
 }
 function teamAvatarHtml(team){
@@ -1575,6 +1584,8 @@ function buildTaskResultText(task){
     verification:['验证主流程、边界条件与权限场景','复测异常输入和失败恢复路径','汇总缺陷、回归结果与验收结论'],
     delivery:['核对交付文件、部署配置和接口清单','整理上线验证步骤与回滚说明','汇总已知限制和后续维护事项'],
   }[stageSemantic(stage.name) || stage.id] || ['核对当前阶段的目标与交付边界','按任务描述完成执行和自检','整理可审核的阶段产物'];
+  /* 任务可按阶段覆盖要点（如交付智能体的「提交上架」） */
+  if (task.stageNotes?.[stage.id]) details=task.stageNotes[stage.id];
   return '我已读取任务「'+task.title+'」的说明。'+(core ? '本次重点是：'+core+'。' : '')+'接下来按「'+(stage.name||'当前阶段')+'」的目标整理交付内容。\n\n'
     +'**'+(stage.name||'当前阶段')+'要点说明：**\n'
     +details.map(function (item) { return '- '+item; }).join('\n')

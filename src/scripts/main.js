@@ -11,6 +11,9 @@ import { initViewSwitch, initSidebarNav, initHomeCards } from './core/view.js';
 import { initPreview, initHistoryPanel } from './features/chat.js';
 import { initEnvConfig, initEnvAuth, initEnvDisconnect } from './features/env.js';
 import { initApps, initNewAppModal, initAppsNewDropdown } from './features/apps.js';
+import { initAgentSubmit } from './features/agent-submit.js';
+import { initAgentConfig } from './features/agent-config.js';
+import { initWork } from './features/work.js';
 import { initComposer, initPlusMenu } from './features/composer.js';
 import { initPromptEnhance } from './features/prompt-enhance.js';
 import { initTestParam } from './boot/test-param.js';
@@ -64,6 +67,9 @@ initEnvDisconnect();              /* 1614  features/env.js */
 initSidebarIcons();               /* 2061  features/sidebar.js */
 initSidebarNav();                 /* 2180  core/view.js */
 initApps();                       /* 2208  features/apps.js */
+initAgentSubmit();                /* 智能体开发：卡片菜单与提交上架审核 */
+initAgentConfig();                /* 智能体开发：会话右侧的智能体配置面板 */
+initWork();                       /* 工作模式：选择智能体提问 */
 initSegmentedTabs();              /* 2289  features/sidebar.js */
 initProjectActions();             /* 项目操作下拉（打开文件夹/重命名/删除） */
 initComposer();                   /* 2312  features/composer.js */

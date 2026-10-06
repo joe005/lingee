@@ -11,7 +11,7 @@
 | 管理平台 | [05-platform-management.md](05-platform-management.md) | 原厂管理（云端）、租户管理（云端） |
 | 设置 | [06-settings.md](06-settings.md) | 协作开发 → 设置 |
 
-专题说明：智能体团队领域模型见 [expert-team-spec.md](expert-team-spec.md)，演示步骤见 [智能体团队演示场景.md](智能体团队演示场景.md) 和 [smart-site-demo-script.md](smart-site-demo-script.md)。
+专题说明：智能体团队领域模型见 [expert-team-spec.md](expert-team-spec.md)，演示步骤见 [智能体团队演示场景.md](智能体团队演示场景.md) 、[smart-site-demo-script.md](smart-site-demo-script.md) 和 [设备运维演示场景.md](设备运维演示场景.md)。
 
 ## 更新规则
 

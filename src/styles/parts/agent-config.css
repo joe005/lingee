@@ -1,0 +1,147 @@
+/* 智能体开发：会话右侧的智能体配置面板（src/views/agent-config.html）
+   打开时 #view-chat 带 .agent-config-open，预览区其它内容让位给配置面板 */
+  #view-chat.agent-config-open .chat-preview-side > :not(.agent-config){display:none}
+  #view-chat.agent-config-open .chat-preview-side{background:var(--fill-1)}
+  .agent-config{display:flex;flex-direction:column;flex:1;min-height:0;padding:20px 24px 0}
+  .agent-config[hidden]{display:none}
+  .agent-config-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+  .agent-config-title{min-width:0}
+  .agent-config-name-row{display:flex;align-items:center;gap:8px;min-width:0}
+  .agent-config-name{margin:0;font-size:16px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .agent-config-status{flex:none;padding:1px 8px;border:1px solid var(--border-hover);border-radius:6px;font-size:12px;line-height:18px;color:var(--text-secondary);background:var(--bg)}
+  .agent-config-status.is-submitted{border-color:transparent;background:var(--brand-fill);color:var(--brand)}
+  .agent-config-id{margin-top:4px;font-size:12px;color:var(--text-secondary)}
+  .agent-config-actions{display:flex;gap:8px;flex:none}
+  .agent-config-btn{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 14px;border:1px solid var(--brand);border-radius:8px;background:var(--bg);color:var(--brand);font:inherit;font-size:13px;font-weight:500;cursor:pointer}
+  .agent-config-btn .ic{width:15px;height:15px}
+  .agent-config-btn:hover{background:var(--brand-fill)}
+  .agent-config-btn.is-primary{background:var(--brand);color:var(--bg)}
+  .agent-config-btn.is-primary:hover{background:var(--brand-hover)}
+  .agent-config-btn:disabled{border-color:var(--border-hover);background:var(--fill-1);color:var(--text-soft);cursor:not-allowed}
+  .agent-config-btn:focus-visible,.agent-config-tab:focus-visible,.agent-config-switch:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+
+  .agent-config-tabbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:20px}
+  .agent-config-tabs{display:flex;gap:2px;padding:3px;border-radius:12px;background:var(--hover)}
+  .agent-config-tab{height:32px;padding:0 16px;border:0;border-radius:9px;background:transparent;color:var(--text-secondary);font:inherit;font-size:14px;cursor:pointer}
+  .agent-config-tab:hover{color:var(--text)}
+  .agent-config-tab.active{background:var(--bg);color:var(--text);font-weight:600;box-shadow:var(--pill-shadow)}
+
+  .agent-config-body{flex:1;min-height:0;overflow-y:auto;margin:0 -24px;padding:16px 24px 24px}
+  .agent-config-pane[hidden]{display:none}
+  .agent-config-card{border-radius:12px;background:var(--bg);padding:16px}
+  .agent-config-section{margin:20px 0 10px;font-size:15px;font-weight:600;color:var(--text)}
+
+  .agent-config-basic{display:flex;gap:16px}
+  .agent-config-avatar{width:40px;height:40px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--brand-fill);color:var(--brand)}
+  .agent-config-avatar .ic{width:20px;height:20px}
+  .agent-config-fields{flex:1;min-width:0;display:flex;flex-direction:column;gap:12px}
+  .agent-config-field-row{display:flex;gap:12px}
+  .agent-config-field{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+  .agent-config-field.is-narrow{flex:0 0 32%}
+  .agent-config-label{font-size:13px;color:var(--text-secondary)}
+  .agent-config-label em{font-style:normal;color:var(--danger);margin-left:2px}
+  .agent-config-input{width:100%;box-sizing:border-box;padding:8px 12px;border:1px solid var(--border-hover);border-radius:8px;background:var(--bg);color:var(--text);font:inherit;font-size:14px;line-height:1.5;resize:none}
+  .agent-config-input:focus{outline:none;border-color:var(--brand)}
+
+  .agent-config-list{padding:4px 16px}
+  .agent-config-item{display:flex;align-items:center;gap:12px;padding:12px 0}
+  .agent-config-item + .agent-config-item{border-top:1px solid var(--divider)}
+  .agent-config-item > div:first-child,.agent-config-item-main{flex:1;min-width:0}
+  .agent-config-item-title{font-size:14px;color:var(--text)}
+  .agent-config-item-desc{margin-top:2px;font-size:12px;line-height:1.5;color:var(--text-secondary)}
+  .agent-config-ver{margin-left:6px;font-size:12px;color:var(--text-secondary)}
+  .agent-config-value{font-size:14px;color:var(--text)}
+  .agent-config-switch{position:relative;width:36px;height:20px;flex:none;border:0;border-radius:10px;background:var(--border-hover);cursor:pointer;transition:background .15s}
+  .agent-config-switch::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--bg);transition:transform .15s}
+  .agent-config-switch[aria-checked="true"]{background:var(--brand)}
+  .agent-config-switch[aria-checked="true"]::after{transform:translateX(16px)}
+  .agent-config-empty{font-size:14px;color:var(--text-secondary)}
+
+  /* 测试下拉、刷新 */
+  .agent-config-dd{position:relative}
+  .agent-config-btn .agent-config-caret{width:13px;height:13px;margin-left:-2px}
+  .agent-config-menu{position:absolute;right:0;top:calc(100% + 4px);z-index:30;min-width:120px;padding:6px;border:1px solid var(--border);border-radius:10px;background:var(--bg);box-shadow:0 8px 24px rgba(0,0,0,.12)}
+  .agent-config-menu[hidden]{display:none}
+  .agent-config-menu-item{display:block;width:100%;height:32px;padding:0 10px;border:0;border-radius:7px;background:transparent;color:var(--text);font:inherit;font-size:13px;text-align:left;cursor:pointer}
+  .agent-config-menu-item:hover,.agent-config-menu-item:focus-visible{background:var(--hover);outline:none}
+  .agent-config-icon-btn{width:30px;height:30px;flex:none;border:0;border-radius:8px;background:transparent;color:var(--text-secondary);display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .agent-config-icon-btn:hover{background:var(--hover);color:var(--text)}
+  .agent-config-icon-btn .ic{width:16px;height:16px}
+  .agent-config-icon-btn:focus-visible,.agent-config-tool:focus-visible,.agent-config-kb-file:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+
+  /* 基础信息：模型等级、更新日志 */
+  .agent-config-model{display:inline-flex;align-items:center;gap:6px;color:var(--text)}
+  .agent-config-model .ic{width:16px;height:16px}
+  .agent-config-model select{border:0;background:transparent;color:var(--text);font:inherit;font-size:14px;cursor:pointer}
+  .agent-config-log{padding:16px}
+  .agent-config-log-head{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--text)}
+  .agent-config-log-head strong{font-weight:500}
+  .agent-config-log-state{display:inline-flex;align-items:center;gap:5px;color:var(--warning)}
+  .agent-config-log-state::before{content:"";width:8px;height:8px;border:2px solid currentColor;border-radius:50%;box-sizing:border-box}
+  .agent-config-log-state.is-submitted{color:var(--brand)}
+  .agent-config-log-count{font-size:12px;color:var(--text-secondary)}
+  .agent-config-log-list{margin:10px 0 0;padding:4px 16px;list-style:none;border-radius:8px;background:var(--fill-1)}
+  .agent-config-log-list li{padding:8px 0;font-size:13px;color:var(--text)}
+  .agent-config-log-list li + li{border-top:1px solid var(--divider)}
+  .agent-config-log-list time{margin-right:10px;color:var(--text-secondary)}
+
+  /* 角色设定 */
+  .agent-config-role{display:block;min-height:440px;padding:14px 16px;border-color:var(--border);border-radius:12px;font-size:13px;line-height:1.75;resize:vertical}
+  .agent-config-hint{margin:8px 0 0;font-size:12px;color:var(--text-secondary)}
+
+  /* 技能配置 */
+  .agent-config-toolbar{display:flex;align-items:center;gap:8px;margin-bottom:14px}
+  .agent-config-tool{display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 12px;border:0;border-radius:8px;background:var(--bg);color:var(--text);font:inherit;font-size:13px;cursor:pointer}
+  .agent-config-tool:hover{background:var(--hover)}
+  .agent-config-tool .ic{width:15px;height:15px}
+  .agent-config-section.is-first{margin-top:0}
+  .agent-config-letter{width:36px;height:36px;flex:none;border-radius:9px;display:flex;align-items:center;justify-content:center;background:var(--brand-fill);color:var(--brand);font-size:15px;font-weight:700}
+  .agent-config-letter.is-mcp{background:var(--success-bg);color:var(--success)}
+  .agent-config-letter .ic{width:18px;height:18px}
+  .agent-config-meta{display:inline-flex;align-items:center;gap:6px;margin-left:8px;font-size:12px;color:var(--text-secondary);font-weight:400}
+  .agent-config-meta i{width:1px;height:10px;background:var(--border-hover)}
+  .agent-config-meta b{font-weight:400}
+  .agent-config-ok{color:var(--success)}
+  .agent-config-item-title{font-weight:500}
+  .agent-config-item-desc code,.agent-config-tools code{padding:1px 6px;border-radius:5px;background:var(--fill-1);border:1px solid var(--border);font-size:12px}
+  .agent-config-tools{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+
+  /* 知识 */
+  .agent-config-search{display:flex;align-items:center;gap:6px;margin-left:auto;width:240px;max-width:45%;height:32px;padding:0 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text-secondary)}
+  .agent-config-search .ic{width:15px;height:15px;flex:none}
+  .agent-config-search input{flex:1;min-width:0;border:0;outline:none;background:transparent;font:inherit;font-size:13px;color:var(--text)}
+  .agent-config-search:focus-within{border-color:var(--brand)}
+  .agent-config-kb{display:grid;grid-template-columns:minmax(180px,240px) 1fr;gap:16px;min-height:420px}
+  .agent-config-kb-tree{padding:12px 8px;border-radius:12px;background:var(--bg);min-width:0}
+  .agent-config-kb-label{margin:4px 8px 6px;font-size:12px;color:var(--text-secondary)}
+  .agent-config-kb-label:not(:first-child){margin-top:16px}
+  .agent-config-kb-folder,.agent-config-kb-file{display:flex;align-items:center;gap:8px;width:100%;padding:8px;border:0;border-radius:8px;background:transparent;color:var(--text);font:inherit;font-size:13px;text-align:left}
+  .agent-config-kb-folder{background:var(--fill-1)}
+  .agent-config-kb-folder .ic,.agent-config-kb-file .ic{width:16px;height:16px;flex:none;color:var(--text-secondary)}
+  .agent-config-kb-folder span,.agent-config-kb-file span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .agent-config-kb-folder em,.agent-config-kb-file em{flex:none;font-style:normal;font-size:12px;color:var(--text-secondary)}
+  .agent-config-kb-file{cursor:pointer}
+  .agent-config-kb-file:hover{background:var(--hover)}
+  .agent-config-kb-file[aria-selected="true"]{background:var(--brand-fill)}
+  .agent-config-kb-file.is-parsing em{color:var(--brand)}
+  .agent-config-kb-empty{padding:4px 8px;font-size:12px;color:var(--text-soft)}
+  .agent-config-kb-preview{min-width:0;padding:20px;border-radius:12px;background:var(--bg)}
+  .agent-config-kb-none{height:100%;min-height:300px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--text-soft);font-size:13px}
+  .agent-config-kb-none .ic{width:40px;height:40px}
+  .agent-config-kb-title{margin:0;font-size:15px;font-weight:600;color:var(--text)}
+  .agent-config-kb-sub{margin-top:4px;font-size:12px;color:var(--text-secondary)}
+  .agent-config-kb-note{margin-top:12px;padding:8px 12px;border-radius:8px;background:var(--success-bg);color:var(--success);font-size:12px}
+  .agent-config-kb-table{width:100%;margin-top:14px;border-collapse:collapse;font-size:12px;color:var(--text)}
+  .agent-config-kb-table th,.agent-config-kb-table td{padding:8px;border-bottom:1px solid var(--divider);text-align:left;vertical-align:top}
+  .agent-config-kb-table th{color:var(--text-secondary);font-weight:500;background:var(--fill-1)}
+
+  /* 会话里的智能体卡片：本地测试按钮 */
+  .agent-config-card-test{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 10px;border:1px solid var(--border-hover);border-radius:7px;background:var(--bg);color:var(--text);font:inherit;font-size:12px;cursor:pointer;flex:none}
+  .agent-config-card-test:hover{background:var(--hover)}
+  .agent-config-card-test .ic{width:14px;height:14px}
+  @media (prefers-reduced-motion:reduce){.agent-config-switch,.agent-config-switch::after{transition:none}}
+
+  /* 协作开发任务的产物预览里嵌入配置面板：在面板里提交即完成任务的测试验证与提交上架 */
+  .tk-doc-preview-body.has-agent-config{padding:0;background:var(--fill-1)}
+  .agent-config.is-embedded{padding:16px 20px 0}
+  .agent-config.is-embedded .agent-config-body{overflow:visible;margin:0 -20px;padding:16px 20px 24px}

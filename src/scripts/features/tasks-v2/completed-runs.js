@@ -1,6 +1,6 @@
 /* 已完成任务的本地演示运行记录；内容不代表真实执行。 */
 import { CV_PROJECTS } from '../collab/data.js';
-import { TEAMS } from '../expert/store.js';
+import { taskExecutorTeam } from '../expert/task-team.js';
 import { EXPERTS } from '../expert/data.js';
 
 const COMPLETED_RUNS = {
@@ -19,6 +19,9 @@ const COMPLETED_RUNS = {
   72: { agent:'software-engineer', duration:'2分23秒', result:'模块自检脚本已交付，能够检查模块导入导出关系。', steps:[['扫描源码模块','收集入口和特性模块的导入导出声明。'],['运行自检命令','npm run check 成功输出检查结果。'],['验证错误反馈','缺失导出与只读绑定赋值均能定位报错。']] },
   1300: { agent:'general-app-product-expert', duration:'3分18秒', result:'问卷调研需求与验收标准已确认，覆盖设计、发放、回收、分析四个环节。', steps:[['访谈记录整理','从 5 场业务访谈中提炼 23 条需求，合并重复项后保留 17 条。'],['划定范围与非目标','首期不做付费问卷和外部样本采购。'],['补齐验收标准','每条需求附可观察的验收条件，评审一次通过。']] },
   1301: { agent:'general-app-architecture-expert', duration:'4分05秒', result:'技术方案评审通过：问卷结构用 JSON Schema，答卷按问卷分区存储，分析异步计算。', steps:[['梳理模块边界','拆为问卷设计、发放、回收、分析、权限五个模块。'],['设计数据模型','问卷、题目、答卷、发放批次四张主表及索引。'],['评审风险','识别企业微信权限与大样本分析耗时两项风险并给出预案。']] },
+  1500: { agent:'general-app-product-expert', duration:'2分56秒', result:'设备巡检需求与验收标准已确认，覆盖巡检、报修、维修记录三个环节。', steps:[['整理设备部访谈','从 3 场访谈中提炼 15 条需求。'],['划定首期范围','覆盖注塑、空压、数控三类 126 台设备。'],['补齐验收标准','每条需求附可观察的验收条件，评审一次通过。']] },
+  1501: { agent:'general-app-architecture-expert', duration:'3分40秒', result:'技术方案评审通过：五个核心对象，设备二维码作为统一入口，维修记录开放查询接口。', steps:[['梳理核心对象','设备、巡检计划、巡检记录、报修单、维修记录。'],['设计扫码入口','每台设备一码，扫码按角色打开巡检或报修。'],['预留智能体接口','维修记录提供只读查询接口，供技能调用。']] },
+  1502: { agent:'general-app-development-expert', duration:'4分18秒', result:'设备台账与扫码巡检已交付，126 台设备二维码生成完毕。', steps:[['建立设备台账','导入 126 台设备的型号、位置和责任人。'],['实现扫码巡检','按设备类型加载巡检项，异常项拍照留证。'],['验证转报修','巡检异常一键转报修，测试环境验证通过。']] },
   1308: { agent:'general-app-team-lead', duration:'2分52秒', result:'2026 员工满意度调研问卷已发布，共 32 题，回收 1,286 份，自动生成分析报告。', steps:[['套用问卷模板','基于「员工满意度」模板调整 6 道题。'],['发放与回收','企业微信推送 1,500 人，7 天回收率 85.7%。'],['生成分析报告','输出满意度分布、部门对比和 5 条改进建议。']] },
 };
 
@@ -27,7 +30,7 @@ export function createDemoCompletedRun(task) {
   var content = COMPLETED_RUNS[task.id];
   if (!content) return null;
   var project = CV_PROJECTS.find(function (row) { return row.id === task.project; });
-  var team = TEAMS.find(function (row) { return row.id === (task.teamId || project?.defaultTeam); });
+  var team = taskExecutorTeam(task, project);
   var expertId = team?.members.includes(content.agent) ? content.agent : team?.leadId;
   var expert = EXPERTS.find(function (row) { return row.id === expertId; });
   return {

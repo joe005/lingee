@@ -1,6 +1,6 @@
 /* 待审核任务的本地演示报告。成员名称始终取智能体团队主数据，报告内容不代表真实执行。 */
 import { CV_PROJECTS } from '../collab/data.js';
-import { TEAMS } from '../expert/store.js';
+import { taskExecutorTeam } from '../expert/task-team.js';
 import { EXPERTS } from '../expert/data.js';
 
 const REVIEW_REPORT_CONTENT = {
@@ -42,6 +42,16 @@ const REVIEW_REPORT_CONTENT = {
     'general-app-development-expert':'实现题型组件、跳转引擎与预览，修复移动端矩阵题错位。',
     'general-app-qa-expert':'回归 48 条用例，覆盖桌面端、移动端和跳转死循环检测。',
   } },
+  1503: { summary:'故障报修与维修记录已完成：扫码报修、按设备类型自动派工、维修记录归入设备履历，并通过 MCP 服务开放设备档案和维修记录查询。', evidence:['交付报修单、派工规则、维修记录与设备履历四个页面的可操作样例。','42 条用例全部通过，覆盖扫码带出设备、30 秒内派工到组、维修必填原因与零件、弱网不丢单。'], review:'请确认派工规则按注塑、空压、数控三个维修组划分。', agentResults:{
+    'general-app-team-lead':'把报修、派工、维修记录拆成 3 个切片，汇总各切片的验证证据。',
+    'general-app-product-expert':'核对报修字段与维修履历的验收条件，补齐必填规则。',
+    'general-app-architecture-expert':'确认维修记录按设备归档，并通过 MCP 服务为智能体只读开放设备档案和维修记录。',
+    'general-app-development-expert':'实现扫码报修、自动派工、维修记录与设备履历页面。',
+    'general-app-qa-expert':'回归 42 条用例，覆盖派工时效、必填校验和弱网提交。',
+  } },
+  1506: { summary:'设备故障诊断助手已按周师傅的经验配置完成，挂载「查询设备档案」「查询维修记录」两个技能，通过 MCP 连接设备巡检维修系统，3 个真实故障测试全部符合经验。', evidence:['由对话生成基础信息、角色设定、技能配置和知识四项配置，没有编写代码。','测试 3 号注塑机 E21、1 号空压机压力不足、5 号数控机床主轴异响，回答均先引用维修记录再给排查顺序。'], review:'请周师傅确认排查顺序，通过后提交上架审核。', agentResults:{
+    'agent-development-expert':'把口述经验整理成排查规则，生成智能体配置，挂载技能、连接 MCP、上传手册并完成测试。',
+  } },
 };
 
 const ROLE_RESULTS = {
@@ -63,7 +73,7 @@ export function createDemoReviewReport(task) {
   var content = REVIEW_REPORT_CONTENT[task.id];
   if (!content || task.status !== 'in_review') return null;
   var project = CV_PROJECTS.find(function (row) { return row.id === task.project; });
-  var team = TEAMS.find(function (row) { return row.id === (task.teamId || project?.defaultTeam); });
+  var team = taskExecutorTeam(task, project);
   if (!team) return null;
   return {
     teamName:team.name,
@@ -92,7 +102,7 @@ const RUN_STAGE_HINTS = [
 
 export function getDemoRunHeader(task) {
   var project = CV_PROJECTS.find(function (row) { return row.id === task.project; });
-  var team = TEAMS.find(function (row) { return row.id === (task.teamId || project?.defaultTeam); });
+  var team = taskExecutorTeam(task, project);
   if (!team) return null;
   var status = task.status;
   if (status === 'planned' || status === 'backlog') return { stage:'等待启动', agentName:'尚未分派', tone:'idle' };

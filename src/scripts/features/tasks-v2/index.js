@@ -14,7 +14,7 @@ import { taskViewState } from './ui-state.js';
 import { initTaskListDisplayEvents, initTaskListFilterEvents, initTaskListRowEvents } from './list.js';
 import { initTaskCreateEvents } from './create.js';
 import { initNewIssueUI, openNewIssueCreate, openNewIssueCopy } from './new-issue-ui.js';
-import { reviewTaskStage, scheduleTaskStageStartedNotice, startTaskStage, submitTaskStage, taskExecutionStages, taskStageHandoffPatch } from './task-execution.js';
+import { approveAndSubmitAgent, isAgentSubmitStep, reviewTaskStage, scheduleTaskStageStartedNotice, startTaskStage, submitTaskStage, taskExecutionStages, taskStageHandoffPatch } from './task-execution.js';
 import { initTaskConfirm, showTaskConfirm, showTaskStageConfirm } from './confirm.js';
 import { initTkFormExpertPicker } from './expert-picker.js';
 
@@ -27,6 +27,9 @@ import { applyTaskListFieldSettings, renderTaskListTreeNodes, taskListVisibleCol
 import { getDemoPreRun, getDemoStageRun } from './run-feedback.js';
 import { CV_PROJECTS } from '../collab/data.js';
 import { createDeliveryActivity } from '../collab/delivery-activity.js';
+import { taskExecutorTeam } from '../expert/task-team.js';
+import { mountAgentConfig, unmountAgentConfig } from '../agent-config.js';
+import { agentCardByName, openAgentSubmit } from '../agent-submit.js';
 import { renderArtifactBlocks } from '../collab/run-artifacts.js';
 import { AV_KEYS, EX, EXPERTS, PRESET_TEAMS, xav } from '../expert/data.js';
 import { TEAMS, activePick, set_activePick } from '../expert/store.js';
@@ -268,7 +271,7 @@ function cacheEls() {
     'tkSaveViewOverlay','tkSaveViewClose','tkSaveViewCancel','tkSaveViewConfirm','tkSaveViewName','tkSaveViewVisibility','tkSaveViewScope','tkSaveViewLayout','tkSaveViewSummary',
     'tkManageViewsOverlay','tkManageViewsClose','tkManageViewsCancel','tkManageList',
     'tkBulkStatusMenu','tkBulkAssigneeMenu',
-    'tkListReviewOverlay','tkListReviewClose','tkListReviewTitle','tkListReviewMeta','tkListReviewTabs','tkListReviewCount','tkListReviewBody','tkListReviewRevise','tkListReviewApprove',
+    'tkListReviewOverlay','tkListReviewClose','tkListReviewTitle','tkListReviewMeta','tkListReviewTabs','tkListReviewCount','tkListReviewBody','tkListReviewRevise','tkListReviewApprove','tkListReviewHint',
     'tkImportOverlay','tkImportClose','tkImportCancel','tkImportConfirm','tkImportProject','tkImportDropZone','tkImportFileInput','tkImportFileBar','tkImportFileName','tkImportFileSize','tkImportFileRemove','tkImportPreview','tkImportPreviewLabel','tkImportPreviewHint','tkImportTableHead','tkImportTableBody','tkImportError','tkImportErrorMsg','tkDownloadTplBtn',
   ];
   ids.forEach(function (id) { els[id] = document.getElementById(id); });
@@ -282,6 +285,14 @@ function openTaskConversation() {
   showView('newtask');
   setNavActive('新会话');
 }
+/* 会话执行方跟随任务：指定了单个智能体就选它，否则选任务或项目的智能体团队 */
+function pickTaskExecutor(task, project) {
+  var teamId = task.teamId || (project && project.defaultTeam);
+  if (task.expertId) set_activePick({kind:'expert', id:task.expertId, auto:false});
+  else if (teamId) set_activePick({kind:'team', id:teamId, auto:false});
+  else return;
+  renderExpertChips();
+}
 /* origin 省略时按「开始执行」登记会话；传 null 表示继续已有会话，不再登记。 */
 function openTaskConversationWithTask(taskId, origin, autoSend) {
   var t = tkGetTasks().find(function (x) { return x.id === taskId; });
@@ -291,8 +302,7 @@ function openTaskConversationWithTask(taskId, origin, autoSend) {
   openTaskConversation();
   if (!t) return;
   var project = CV_PROJECTS.find(function(p){ return p.id === t.project; });
-  var teamId = t.teamId || (project && project.defaultTeam);
-  if (teamId) { set_activePick({kind:'team', id:teamId, auto:false}); renderExpertChips(); }
+  pickTaskExecutor(t, project);
   setComposerTaskReference(t.id);
   input.focus();
 }
@@ -300,8 +310,7 @@ function openTaskConversationWithTask(taskId, origin, autoSend) {
 /* 「开始执行」直接发起会话并进入运行中：沿用任务智能体团队与开场指令，不再跳输入框等手动发送 */
 function startTaskConversationRun(task, origin) {
   var project = CV_PROJECTS.find(function(p){ return p.id === task.project; });
-  var teamId = task.teamId || (project && project.defaultTeam);
-  if (teamId) { set_activePick({kind:'team', id:teamId, auto:false}); renderExpertChips(); }
+  pickTaskExecutor(task, project);
   setComposerTaskReference(task.id);
   setNavActive('新会话');
   sendComposerText(tkTaskSessionOpeningMessage(task, origin, task.executionStageId || null));
@@ -754,7 +763,7 @@ function renderCard(t, opts) {
   var childBadge = hasChildren ? '<span class="tk-card-child-count"' + (isCollapsed ? '' : ' style="visibility:hidden"') + '>' + childCount + '</span>' : '';
   var extraCls = (depth ? ' tk-card--child' : '') + (hasChildren ? ' tk-card--parent' : '');
   var project = CV_PROJECTS.find(function(r){ return r.id === t.project; });
-  var team = (function(){ var tid = t.teamId || (project && project.defaultTeam); return TEAMS.find(function(tm){ return tm.id === tid; }); })();
+  var team = taskExecutorTeam(t, project);
   var isBacklog = t.status === 'backlog';
   var teamAvatarHtml, footExtraHtml;
   if (isBacklog) {
@@ -1678,9 +1687,7 @@ function createMentionPanel(textarea, query) {
   mentionTextarea = textarea;
   var mentionTask = tkGetTasks().find(function (task) { return task.id === state.drawerTaskId; });
   var project = CV_PROJECTS.find(function (row) { return row.id === mentionTask?.project; });
-  var teamId = mentionTask?.teamId || project?.defaultTeam;
-  var team = TEAMS.find(function (row) { return row.id === teamId; })
-    || PRESET_TEAMS.find(function (row) { return row.id === teamId; });
+  var team = mentionTask ? taskExecutorTeam(mentionTask, project) : null;
   var teamIds = new Set(team?.members || []);
   var people = (mentionTask ? tkPeopleInProject(mentionTask.project) : TK_PEOPLE).filter(function (row) { return mentionMatches(row, query); });
   var members = (team?.members || []).map(function (id) { return EXPERTS.find(function (row) { return row.id === id; }); })
@@ -2048,6 +2055,8 @@ function reviewArtifactSamples(task, artifacts) {
     var format = artifactFormat(artifact);
     return Object.assign({}, artifact, { format:format, fileName:artifactFileName(artifact, stem + '-review', index + 1) });
   });
+  /* 交付智能体的任务只看真实产物（测试报告），不补示例文件 */
+  if (task.deliversAgent && normalized.length) return normalized;
   var formats = new Set(normalized.map(artifactFormat));
   if (!formats.has('md')) normalized.unshift({
     id:'review-md-' + task.id, stageId:task.executionStageId, format:'md', fileName:stem + '-验收说明.md', type:'Markdown 文档',
@@ -2092,6 +2101,11 @@ function renderListReviewPreview() {
     return '<button type="button" class="tk-list-review-tab' + (selected ? ' is-active' : '') + '" role="tab" aria-selected="' + selected + '" data-list-review-artifact="' + escapeHtml(artifact.id) + '"><img src="' + artifactIcon(artifact) + '" alt=""><span>' + escapeHtml(artifact.fileName || artifact.docTitle || artifact.type) + '</span><small>' + escapeHtml(artifactFormatLabel(artifact)) + '</small></button>';
   }).join('');
   els.tkListReviewBody.innerHTML = active ? renderReviewArtifactPreview(active) : '<div class="tk-list-review-empty">当前阶段暂无可预览产物</div>';
+  var agentSubmit = isAgentSubmitStep(task);
+  els.tkListReviewApprove.textContent = agentSubmit ? '通过并提交上架' : '通过验收';
+  els.tkListReviewHint.textContent = agentSubmit
+    ? '测试通过后直接提交「' + task.deliversAgent + '」上架审核，管理员审核通过后正式生效。'
+    : '请核对产物内容。需要调整时可返回任务会话继续修改。';
   els.tkListReviewBody.scrollTop = 0;
 }
 function openListReviewPreview(taskId, trigger) {
@@ -2105,6 +2119,19 @@ function openListReviewPreview(taskId, trigger) {
   els.tkListReviewClose.focus({ preventScroll:true });
 }
 function initListReviewPreviewEvents() {
+  /* 智能体在配置面板或验收页提交后，交付它的任务一并完成测试验证与提交上架 */
+  document.addEventListener('lingee:agent-submitted', function (e) {
+    var name = e.detail?.name;
+    var changed = false;
+    var refreshId = null;
+    tkGetTasks().filter(function (task) { return task.deliversAgent === name && isAgentSubmitStep(task); }).forEach(function (task) {
+      if (approveAndSubmitAgent(task).ok) { changed = true; if (state.drawerTaskId === task.id && els.tkDrawer.classList.contains('show')) refreshId = task.id; }
+    });
+    if (!changed) return;
+    render();
+    /* 详情抽屉开着时刷新状态与执行计划；openDrawer 会重绘产物预览并重新挂上配置面板（保留编辑状态） */
+    if (refreshId != null) openDrawer(refreshId);
+  });
   if (els.tkListReviewOverlay.parentNode !== document.body) document.body.appendChild(els.tkListReviewOverlay);
   els.tkListReviewClose.addEventListener('click', function () { closeListReviewPreview(true); });
   els.tkListReviewOverlay.addEventListener('click', function (event) {
@@ -2123,10 +2150,18 @@ function initListReviewPreviewEvents() {
   });
   els.tkListReviewApprove.addEventListener('click', function () {
     var task = tkGetTasks().find(function (row) { return row.id === listReviewPreviewTaskId; });
+    if (isAgentSubmitStep(task)) {
+      /* 测试通过 + 提交上架合为一步：复用智能体开发的「提交上架审核」确认 */
+      var card = agentCardByName(task.deliversAgent);
+      if (!card) { toast('未找到智能体：' + task.deliversAgent, 'warning'); return; }
+      openAgentSubmit(card, { returnFocus: els.tkListReviewApprove, onDone: function () { closeListReviewPreview(false); } });
+      return;
+    }
     confirmTaskStageApproval(task, false, function () { closeListReviewPreview(false); });
   });
   document.addEventListener('keydown', function (event) {
     if (els.tkListReviewOverlay.hidden || event.defaultPrevented) return;
+    if (document.getElementById('agentSubmitOverlay')?.hidden === false) return;
     if (event.key === 'Escape') { event.preventDefault(); closeListReviewPreview(true); return; }
     if (event.key !== 'Tab') return;
     var focusable = Array.from(els.tkListReviewOverlay.querySelectorAll('button:not([disabled]),[href],input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])')).filter(function (node) { return !node.hidden && node.offsetParent !== null; });
@@ -2175,7 +2210,14 @@ function renderDocPreviewPanel() {
   if (!artifact) { closeDocPreview(); return; }
   var panel = docPreviewPanel();
   clearTimeout(docPreviewCloseTimer);
+  unmountAgentConfig();
   panel.innerHTML = renderDocPreviewContent(artifact);
+  /* 智能体类开发成果直接打开智能体配置面板（与智能体开发会话同一份） */
+  if (artifact.agentConfig) {
+    var agentHost = panel.querySelector('.tk-doc-preview-body');
+    agentHost.classList.add('has-agent-config');
+    mountAgentConfig(agentHost, artifact.agentConfig);
+  }
   panel.dataset.artifactId = artifact.id;
   panel.querySelector('.tk-doc-preview-body').scrollTop = 0;
   panel.classList.add('show');
@@ -2221,6 +2263,7 @@ function expandDrawerForDocPreview(panel) {
   }
 }
 function closeDocPreview() {
+  unmountAgentConfig();
   docPreviewTabs = [];
   docPreviewActiveId = null;
   var panel = els.tkDrawerBody.querySelector(':scope > #tkDocPreview');
@@ -2432,8 +2475,7 @@ function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml,
   var activeRun = currentState === 'running' ? getDemoStageRun(task, latest) : null;
   var currentIndex = task.status === 'done' || task.status === 'cancelled' ? -1 : Math.max(0,plannedStages.findIndex(function (stage) { return stage.id === task.executionStageId; }));
   var project = CV_PROJECTS.find(function (row) { return row.id === task.project; });
-  var teamId = task.teamId || project?.defaultTeam;
-  var team = TEAMS.find(function (row) { return row.id === teamId; }) || PRESET_TEAMS.find(function (row) { return row.id === teamId; });
+  var team = taskExecutorTeam(task, project);
   var currentDetail = latest ? latest.stage + ' · ' + latest.author : '尚未分派执行专家';
   var latestLayout = taskDetailVersion === 'latest';
   var feedback = activeRun ? renderTaskRunFeedback(activeRun)

@@ -105,6 +105,23 @@ export function scheduleTaskStageStartedNotice(taskId, stageId) {
   pendingStageReviews.set(taskId, timer);
 }
 
+/* 交付智能体的任务：测试验证通过后直接提交上架，后续由管理员审核，「提交上架」阶段随之完成。 */
+export function isAgentSubmitStep(task) {
+  if (!task?.deliversAgent || task.status !== 'in_review') return false;
+  var stages = taskExecutionStages(task);
+  var index = stages.findIndex(function (stage) { return stage.id === task.executionStageId; });
+  return index >= 0 && index === stages.length - 2;
+}
+export function approveAndSubmitAgent(task) {
+  if (!isAgentSubmitStep(task)) return {ok:false};
+  var reviewed = reviewTaskStage(task, true);
+  if (!reviewed.ok) return reviewed;
+  var current = tkGetTasks().find(function (row) { return row.id === task.id; });
+  var last = taskExecutionStages(current).slice(-1)[0];
+  tkUpdateTask(task.id, {status:'done', executionStageId:last.id, executionPlan:stagePlan(current, last.id, 'done'), assigneeHistory:current.assigneeHistory});
+  return {ok:true, stage:reviewed.stage, done:true};
+}
+
 function flowTimestamp() {
   var now = new Date();
   function pad(value) { return String(value).padStart(2, '0'); }
@@ -144,5 +161,7 @@ export function reviewTaskStage(task, approved) {
     if (artifacts.length) patch.executionArtifacts = artifacts;
   }
   tkUpdateTask(task.id, patch);
+  /* 交付智能体的任务：「提交上架」阶段通过后，智能体开发里的对应智能体同步为已提交 */
+  if (approved && !next && task.deliversAgent) document.dispatchEvent(new CustomEvent('lingee:agent-delivered', {detail:{name:task.deliversAgent}}));
   return {ok:true, stage:stage, next:approved ? next : null, done:approved && !next};
 }

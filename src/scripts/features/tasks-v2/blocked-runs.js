@@ -1,6 +1,6 @@
 /* 阻塞任务的本地演示运行记录；步骤和失败原因均为模拟数据。 */
 import { CV_PROJECTS } from '../collab/data.js';
-import { TEAMS } from '../expert/store.js';
+import { taskExecutorTeam } from '../expert/task-team.js';
 import { EXPERTS } from '../expert/data.js';
 
 const BLOCKED_RUNS = {
@@ -18,7 +18,7 @@ export function createDemoBlockedRun(task) {
   var content = BLOCKED_RUNS[task.id];
   if (!content) return null;
   var project = CV_PROJECTS.find(function (row) { return row.id === task.project; });
-  var team = TEAMS.find(function (row) { return row.id === (task.teamId || project?.defaultTeam); });
+  var team = taskExecutorTeam(task, project);
   var expertId = team?.members.includes(content.agent) ? content.agent : team?.leadId;
   var expert = EXPERTS.find(function (row) { return row.id === expertId; });
   return {

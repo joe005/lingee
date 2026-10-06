@@ -52,7 +52,9 @@ function renderExpertChips(){
     var label=$('#'+pfx+'ExpertLabel'), faces=$('#'+pfx+'ExpertFaces');
     var dd=$('#'+pfx+'ExpertDropdown');
     if(pfx==='chat' && dd?.classList.contains('task-team-locked')){
-      var lockedTeam=teamById(dd.dataset.lockedTeamId);
+      /* 单智能体执行的任务锁定为「expert:<id>」，按该智能体显示 */
+      var lockedId=dd.dataset.lockedTeamId||'', soloId=lockedId.indexOf('expert:')===0 ? lockedId.slice(7) : '';
+      var lockedTeam=soloId ? (EX[soloId] ? {name:EX[soloId].name,members:[soloId]} : null) : teamById(lockedId);
       if(label) label.textContent=lockedTeam?.name || '未配置智能体团队';
       if(faces) faces.innerHTML=lockedTeam ? lockedTeam.members.slice(0,3).map(function(i){ return EX[i] ? '<img src="'+xav(EX[i].k)+'" alt="">' : ''; }).join('') : '';
       dd.querySelector('[data-chip]')?.classList.toggle('muted', !lockedTeam);

@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>工单管理系统</title>
+<style>
+:root{--brand:#495dff;--brand-soft:#eef0ff;--text:#1d2129;--muted:#6b7280;--line:#e8eaf0;--bg:#f6f7fb;--card:#fff;--ok:#08a040;--ok-soft:#e8f7ee;--warn:#d97706;--warn-soft:#fff4e0;--bad:#e04a3a;--bad-soft:#fdecea}
+*{box-sizing:border-box}
+body{margin:0;font:13px/1.5 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--text);background:var(--bg)}
+.app{display:flex;min-height:100vh}
+.nav{width:168px;flex:none;background:#fff;border-right:1px solid var(--line);padding:16px 10px}
+.logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;padding:0 8px 16px}
+.logo i{width:24px;height:24px;border-radius:7px;background:var(--brand);display:grid;place-items:center;color:#fff;font-style:normal;font-size:13px}
+.nav button{display:flex;width:100%;align-items:center;gap:8px;border:0;background:none;padding:8px 10px;border-radius:8px;color:var(--muted);font:inherit;cursor:pointer;text-align:left}
+.nav button.on{background:var(--brand-soft);color:var(--brand);font-weight:600}
+.nav button:hover:not(.on){background:var(--bg)}
+.nav button em{margin-left:auto;font-style:normal;font-size:11px;padding:0 6px;border-radius:999px;background:var(--bad-soft);color:var(--bad)}
+.main{flex:1;min-width:0;padding:20px 24px 32px}
+.head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.head h1{font-size:18px;margin:0}
+.pill{font-size:12px;padding:2px 8px;border-radius:999px;background:var(--ok-soft);color:var(--ok);font-weight:600;white-space:nowrap}
+.pill.brand{background:var(--brand-soft);color:var(--brand)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.gray{background:#f1f2f5;color:var(--muted)}
+.head .sp{flex:1}
+.btn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 12px;font:inherit;cursor:pointer}
+.btn.pri{background:var(--brand);border-color:var(--brand);color:#fff}
+.btn:focus-visible,.chip:focus-visible,.seg button:focus-visible,.nav button:focus-visible,.tabs button:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.tabs{display:flex;gap:20px;border-bottom:1px solid var(--line);margin-bottom:16px}
+.tabs button{border:0;background:none;padding:8px 0;font:inherit;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent}
+.tabs button.on{color:var(--text);font-weight:600;border-color:var(--brand)}
+.grid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0}
+.card h3{margin:0 0 12px;font-size:14px;display:flex;align-items:center;gap:8px}
+.card h3 small{margin-left:auto;font-weight:400;color:var(--muted);font-size:12px}
+.field{margin-bottom:12px}
+.field>label{display:block;font-weight:600;margin-bottom:6px}
+.field>label i{color:var(--bad);font-style:normal;margin-left:2px}
+.input{border:1px solid var(--line);border-radius:8px;padding:7px 10px;background:#fff;min-height:34px}
+.input.area{min-height:64px;color:var(--text)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:3px 10px;font:inherit;color:var(--muted);cursor:pointer}
+.chip.on{border-color:var(--brand);background:var(--brand-soft);color:var(--brand);font-weight:600}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;border-left:1px solid var(--line);background:#fff;padding:5px 14px;font:inherit;color:var(--muted);cursor:pointer}
+.seg button:first-child{border-left:0}
+.seg button.on{background:var(--bad-soft);color:var(--bad);font-weight:600}
+.row2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+.files{display:flex;flex-wrap:wrap;gap:6px}
+.files span{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:8px;background:var(--bg);color:var(--muted);font-size:12px}
+.files span b{color:var(--text);font-weight:500}
+.sla{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:var(--brand-soft);color:var(--brand);font-size:12px;margin-bottom:12px}
+.tickets{display:grid;gap:8px}
+.ticket{padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.ticket .t{display:flex;align-items:center;gap:8px}
+.ticket .t b{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ticket small{display:block;color:var(--muted);margin-top:2px}
+.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.kpi{background:var(--bg);border-radius:10px;padding:8px 10px}
+.kpi small{color:var(--muted);font-size:12px}
+.kpi b{display:block;font-size:18px;font-variant-numeric:tabular-nums}
+.list{display:grid;gap:8px}
+.lrow{display:grid;grid-template-columns:110px minmax(0,1fr) 72px 72px;gap:12px;align-items:center;padding:12px 14px;background:#fff;border:1px solid var(--line);border-radius:10px}
+.lrow small{display:block;color:var(--muted)}
+.faq{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.faq li{padding:10px 12px;border-radius:8px;background:#fff;border:1px solid var(--line)}
+.faq li small{display:block;color:var(--muted)}
+.hidden{display:none}
+@media (max-width:760px){.nav{display:none}.grid,.row2{grid-template-columns:1fr}.lrow{grid-template-columns:minmax(0,1fr) 72px}.lrow .opt{display:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="nav">
+    <div class="logo"><i>工</i>工单管理系统</div>
+    <button class="on" type="button">提交工单</button>
+    <button type="button">我的工单<em>3</em></button>
+    <button type="button">工单处理</button>
+    <button type="button">SLA 规则</button>
+    <button type="button">统计分析</button>
+    <button type="button">设置</button>
+  </aside>
+  <main class="main">
+    <div class="head">
+      <h1>提交工单</h1><span class="pill brand">IT 服务台</span>
+      <span class="sp"></span>
+      <button class="btn" type="button">存为草稿</button>
+      <button class="btn pri" type="button">提交工单</button>
+    </div>
+    <div class="tabs" role="tablist">
+      <button class="on" type="button" data-tab="new">新建工单</button>
+      <button type="button" data-tab="mine">我的工单（3）</button>
+      <button type="button" data-tab="faq">常见问题</button>
+    </div>
+
+    <section data-panel="new">
+      <div class="grid">
+        <div class="card">
+          <div class="field"><label>标题<i>*</i></label><div class="input">VPN 连接后无法访问内网 OA 系统</div></div>
+          <div class="field"><label>分类<i>*</i></label>
+            <div class="chips" role="radiogroup" aria-label="分类">
+              <button class="chip on" type="button" role="radio" aria-checked="true">IT 故障</button>
+              <button class="chip" type="button" role="radio" aria-checked="false">账号权限</button>
+              <button class="chip" type="button" role="radio" aria-checked="false">硬件设备</button>
+              <button class="chip" type="button" role="radio" aria-checked="false">网络问题</button>
+              <button class="chip" type="button" role="radio" aria-checked="false">软件安装</button>
+              <button class="chip" type="button" role="radio" aria-checked="false">其他</button>
+            </div>
+          </div>
+          <div class="field"><label>优先级<i>*</i></label>
+            <div class="seg" role="radiogroup" aria-label="优先级">
+              <button type="button" role="radio" aria-checked="false">紧急</button>
+              <button class="on" type="button" role="radio" aria-checked="true">高</button>
+              <button type="button" role="radio" aria-checked="false">中</button>
+              <button type="button" role="radio" aria-checked="false">低</button>
+            </div>
+          </div>
+          <div class="field"><label>描述<i>*</i></label><div class="input area">今天 9:30 起，VPN 显示已连接，但打开 OA 提示「无法访问此网站」，重启电脑后仍然不行，影响审批处理。</div></div>
+          <div class="field" style="margin-bottom:0"><label>附件</label>
+            <div class="files"><span>截图 <b>oa-error.png</b></span><span>日志 <b>vpn-client.log</b></span><span>+ 上传截图或日志</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>预计响应<small>按「高」优先级 SLA</small></h3>
+          <div class="sla">提交后 30 分钟内响应，4 小时内解决</div>
+          <div class="kpis">
+            <div class="kpi"><small>处理中</small><b>2</b></div>
+            <div class="kpi"><small>待评价</small><b>1</b></div>
+            <div class="kpi"><small>本月解决</small><b>6</b></div>
+          </div>
+          <h3>我的工单</h3>
+          <div class="tickets">
+            <div class="ticket"><div class="t"><b>申请财务系统报表权限</b><span class="pill warn">处理中</span></div><small>账号权限 · 中 · 张工 处理中</small></div>
+            <div class="ticket"><div class="t"><b>会议室投屏无信号</b><span class="pill warn">处理中</span></div><small>硬件设备 · 高 · 已派单给 李工</small></div>
+            <div class="ticket"><div class="t"><b>安装 Visio 2021</b><span class="pill">已解决</span></div><small>软件安装 · 低 · 待你评价</small></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section data-panel="mine" class="hidden">
+      <div class="list">
+        <div class="lrow"><span>T-20261005-031</span><div><b>申请财务系统报表权限</b><small>账号权限 · 中</small></div><span class="pill warn">处理中</span><span class="opt">查看</span></div>
+        <div class="lrow"><span>T-20261004-017</span><div><b>会议室投屏无信号</b><small>硬件设备 · 高</small></div><span class="pill warn">处理中</span><span class="opt">查看</span></div>
+        <div class="lrow"><span>T-20261002-008</span><div><b>安装 Visio 2021</b><small>软件安装 · 低</small></div><span class="pill">已解决</span><span class="opt">评价</span></div>
+      </div>
+    </section>
+
+    <section data-panel="faq" class="hidden">
+      <ul class="faq">
+        <li><b>VPN 已连接但打不开内网系统？</b><small>先在 VPN 客户端切换到「全局模式」，仍不行请提交「IT 故障」工单并附客户端日志。</small></li>
+        <li><b>如何申请系统权限？</b><small>选择「账号权限」分类，注明系统名称和所需角色，审批后自动开通。</small></li>
+        <li><b>工单多久会有人处理？</b><small>按优先级 SLA 响应：紧急 15 分钟、高 30 分钟、中 2 小时、低 1 个工作日。</small></li>
+      </ul>
+    </section>
+  </main>
+</div>
+<script>
+document.querySelectorAll('[data-tab]').forEach(function(tab){
+  tab.addEventListener('click',function(){
+    document.querySelectorAll('[data-tab]').forEach(function(t){t.classList.toggle('on',t===tab);});
+    document.querySelectorAll('[data-panel]').forEach(function(p){p.classList.toggle('hidden',p.getAttribute('data-panel')!==tab.getAttribute('data-tab'));});
+  });
+});
+document.querySelectorAll('[role="radiogroup"]').forEach(function(group){
+  group.querySelectorAll('button').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      group.querySelectorAll('button').forEach(function(b){var on=b===btn;b.classList.toggle('on',on);b.setAttribute('aria-checked',String(on));});
+    });
+  });
+});
+</script>
+</body>
+</html>
