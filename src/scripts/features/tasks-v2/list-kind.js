@@ -29,11 +29,11 @@ export function taskListKind(task) {
     return { kind:'start', badge:'待开始', hint:'轮到你开始执行' + quoted, action:'start', label:'交给AI执行', primary:true, needsMe:true };
   }
   if (status === 'in_review' && mine) {
-    return { kind:'review', badge:'待确认', hint:'智能体团队已提交' + quoted + '产物，等待你确认', action:'review', label:'查看并验收产物', primary:true, needsMe:true };
+    return { kind:'review', badge:'待审核', hint:'智能体团队已提交' + quoted + '产物，等待你确认', action:'review', label:'查看并验收产物', primary:true, needsMe:true };
   }
-  if (status === 'in_progress' && taskConversationNeedsReply(task)) {
+  if (status === 'in_progress' && taskConversationNeedsReply(task, true)) {
     var question = taskConversationQuestion(task);
-    return { kind:'question', badge:'待回答', hint:'AI 正在等你回答' + (question ? '：' + question : ''), action:'reply', label:'回答提问', primary:true, needsMe:true };
+    return { kind:'question', badge:'待回答', hint:'AI 正在等你回答' + (question ? '：' + question : ''), action:mine ? 'reply' : 'detail', label:mine ? '回答提问' : '查看详情', primary:mine, needsMe:mine };
   }
   if (status === 'blocked') {
     var blockedHint = (quoted ? quoted + '执行受阻' : '执行受阻') + (reason ? '：' + reason : '');
@@ -42,7 +42,7 @@ export function taskListKind(task) {
       : { kind:'blocked', badge:'已阻塞', hint:blockedHint, action:'detail', label:'查看详情', needsMe:false };
   }
   if (status === 'backlog' || status === 'in_review') {
-    return { kind:'waiting', badge:'待' + waitingName + (status === 'in_review' ? '确认' : '开始'), hint:'当前阶段' + quoted + '由' + waitingName + '处理', action:'detail', label:'查看详情', needsMe:false };
+    return { kind:status === 'in_review' ? 'review' : 'waiting', badge:status === 'in_review' ? '待审核' : '待开始', hint:'当前阶段' + quoted + '由' + waitingName + '处理', action:'detail', label:'查看详情', needsMe:false };
   }
   if (status === 'in_progress') {
     return { kind:'running', badge:'AI执行中', hint:'智能体团队正在执行' + quoted, action:'detail', label:'查看详情', needsMe:false };

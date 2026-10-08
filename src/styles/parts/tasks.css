@@ -115,7 +115,7 @@
 .tk-display-group-row>span:first-child,.tk-display-section label,.tk-display-section-label,.tk-display-switch-row>span:first-child{font-size:12px;font-weight:500;color:var(--text-secondary)}
 .tk-display-choice.tk-flow-field-value{box-sizing:border-box;width:128px;height:28px;min-width:0;padding:4px 9px;font-size:12px}
 .tk-display-choice-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tk-display-choice-menu{min-width:128px}
+.tk-display-choice-menu{min-width:128px;overscroll-behavior:contain}
 .tk-display-choice-option{width:100%;border:0;background:transparent;text-align:left;cursor:pointer;font-family:inherit}
 .tk-display-choice-option.active{color:var(--brand);background:var(--brand-fill)}
 .tk-display-choice-option:focus-visible{outline:2px solid var(--border-focus);outline-offset:-2px}
@@ -333,12 +333,13 @@
 .tk-list-card-project::before{content:"·";margin-right:8px}
 .tk-list-status{flex:none;display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;background:var(--fill-1);color:var(--text-secondary);font-size:11px;font-weight:600;line-height:1.5}
 .tk-list-status[data-kind="start"],.tk-list-status[data-kind="running"]{background:var(--brand-fill);color:var(--brand)}
-.tk-list-status[data-kind="review"],.tk-list-status[data-kind="question"]{background:var(--warning-bg);color:var(--warning)}
+.tk-list-status[data-kind="review"]{background:var(--warning-bg);color:var(--warning)}
+.tk-list-status[data-kind="question"]{background:var(--brand-fill);color:var(--brand)}
 .tk-list-status[data-kind="blocked"]{background:var(--danger-bg);color:var(--danger)}
 .tk-list-status[data-kind="done"]{background:var(--success-bg);color:var(--success)}
 .tk-list-card-title{display:flex;align-items:center;gap:6px;min-width:0}
 .tk-list-card-title-btn{min-width:0;max-width:100%;padding:0;border:0;background:none;overflow:hidden;color:var(--text);font:inherit;font-size:15px;font-weight:600;line-height:1.45;text-align:left;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
-.tk-list-card-title-btn:hover{color:var(--brand)}
+.tk-list-card-title-btn:hover{color:var(--text)}
 .tk-list-card-title-btn:focus-visible{outline:2px solid var(--border-focus);outline-offset:2px;border-radius:4px}
 .tk-list-card-desc{margin:0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-secondary);font-size:13px;line-height:1.5}
 .tk-list-card-hint-desc{color:var(--text-soft)}
@@ -357,11 +358,12 @@
 .tk-list-stage-summary>span{overflow:hidden;text-overflow:ellipsis;color:var(--text);font-weight:500}
 .tk-list-stage-summary>b{flex:none;color:var(--text-soft);font-size:10px;font-weight:500;font-variant-numeric:tabular-nums}
 .tk-list-stage-summary.is-done>span{color:var(--success)}
-.tk-list-stage-track{display:flex;min-width:0;padding:0 2px}
-.tk-list-stage-step{position:relative;display:flex;min-width:0;flex:1;align-items:center;justify-content:center}
+.tk-list-stage-track{display:flex;min-width:0;padding:0}
+.tk-list-stage-step{position:relative;display:flex;min-width:0;flex:1;align-items:center;justify-content:flex-start}
+.tk-list-stage-step:last-child{flex:0 0 8px}
 .tk-list-stage-step>span{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
-.tk-list-stage-step>i{position:relative;z-index:1;display:block;width:7px;height:7px;box-sizing:border-box;border:1.5px solid var(--border-hover);border-radius:50%;background:var(--bg)}
-.tk-list-stage-step::after{content:"";position:absolute;z-index:0;left:calc(50% + 3.5px);top:3px;width:calc(100% - 7px);height:1px;background:var(--border)}
+.tk-list-stage-step>i{position:relative;z-index:1;display:block;width:8px;height:8px;box-sizing:border-box;border:2px solid var(--border-hover);border-radius:50%;background:var(--bg)}
+.tk-list-stage-step::after{content:"";position:absolute;z-index:0;left:8px;top:3px;width:calc(100% - 8px);height:2px;background:var(--border)}
 .tk-list-stage-step:last-child::after{display:none}
 .tk-list-stage-step.is-complete>i{border-color:var(--success);background:var(--success)}
 .tk-list-stage-step.is-complete::after{background:var(--success)}
@@ -1795,3 +1797,60 @@ td.niu-plan-empty{padding:18px 0;text-align:center;color:var(--text-soft);font-s
 @media(max-width:620px){#view-tasks:not(.tk-project-list-mode) .tk-toolbar{padding:12px 12px 4px}#view-tasks:not(.tk-project-list-mode) .tk-list .tk-list-scroll{padding:4px 10px 12px}}
 
 .tk-card-menu-item.is-disabled{opacity:.45;cursor:not-allowed}.tk-card-menu-item.is-disabled:hover{background:transparent}
+
+/* 新建任务下拉沿用全站线性 caret 与白底菜单。 */
+.niu-create .niu-person-trigger.is-placeholder>span:first-child{color:var(--text-soft)}
+.niu-create .niu-select-caret{width:14px;height:14px;flex:none;color:var(--text-secondary)}
+.niu-create .niu-custom-select-source{display:none}
+.niu-create .niu-select-trigger>span:first-child{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.niu-person-popup{box-sizing:border-box;border:1px solid var(--border);border-radius:12px;background:var(--bg);box-shadow:var(--menu-shadow);padding:4px;color:var(--text)}
+.niu-person-popup input{height:36px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:14px}
+.niu-person-popup input::placeholder{color:var(--text-soft);opacity:1}
+.niu-person-popup input:hover{border-color:var(--border-hover)}
+.niu-person-popup input:focus{border-color:var(--border-focus);outline:none;box-shadow:none}
+.niu-person-popup button{min-height:32px;padding:8px 12px;gap:8px;border-radius:8px;color:var(--text);font-size:14px;font-weight:400}
+.niu-person-popup button:hover{background:var(--hover)}
+.niu-person-popup button[aria-selected=true]{background:var(--brand-fill)}
+.niu-person-popup button:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}
+.niu-person-popup button>span:first-child{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.niu-person-popup button b,.niu-person-popup button svg{flex:none;margin-left:auto;color:var(--brand)}
+.niu-person-popup p{color:var(--text-secondary)}
+
+.niu-create .niu-create-writing .niu-field .niu-invalid,.niu-create .niu-create-properties .niu-field .niu-invalid{border-color:var(--danger);box-shadow:none}
+.niu-create .niu-create-writing .niu-field .niu-invalid:focus,.niu-create .niu-create-properties .niu-field .niu-invalid:focus{border-color:var(--danger);box-shadow:0 0 0 2px var(--danger-bg)}
+
+/* 任务表单与属性菜单的统一规格。 */
+.niu-plan .niu-select-caret,.niu-stage-owner .niu-select-caret{width:14px;height:14px;flex:none;color:var(--text-secondary)}
+.niu-create-stage-table select.niu-custom-select-source,.niu-plan select.niu-custom-select-source{display:none}
+.niu-create-stage-table .niu-select-trigger,.niu-create-stage-table .niu-stage-owner{display:flex;align-items:center;justify-content:space-between;box-sizing:border-box;width:100%;min-width:0;height:32px;min-height:32px;padding:4px 8px;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--text);font-size:13px;font-weight:400}
+.niu-create-stage-table .niu-select-trigger:hover,.niu-create-stage-table .niu-stage-owner:hover{border-color:var(--border-hover);background:var(--hover)}
+.niu-plan .niu-select-trigger>span:first-child{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.niu-plan .niu-select-trigger{font-size:13px}
+.niu-select-trigger:disabled,.niu-stage-owner:disabled{opacity:.5;cursor:not-allowed}
+.niu-create-stage-table .niu-select-trigger:focus-visible,.niu-create-stage-table .niu-stage-owner:focus-visible,.niu-plan .niu-select-trigger:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+td.niu-plan-empty{color:var(--text-secondary)}
+.niu-stage-inline-field>span,.niu-stage-fields label>span,.niu-stage-label,.niu-stage-choice button,.niu-stage-continuous{font-size:12px}
+.tk-prop-menu{border-radius:12px}
+.tk-prop-menu-item{box-sizing:border-box;min-height:32px;padding:8px 12px;border-radius:8px;font-size:14px;line-height:1.4}
+.niu-create .niu-create-writing .niu-field :is(input,textarea):focus,.niu-create .niu-create-properties .niu-field :is(select,.niu-person-trigger):focus,.niu-smart-fields .niu-field :is(select,textarea):focus{border-color:var(--border-focus);box-shadow:none}
+.niu-create .niu-create-writing .niu-field :is(input,textarea):focus-visible,.niu-create .niu-create-properties .niu-person-trigger:focus-visible,.niu-person-popup input:focus-visible,.niu-plan .niu-person-trigger:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+.niu-create .niu-create-writing .niu-field .niu-invalid:focus,.niu-create .niu-create-properties .niu-field .niu-invalid:focus{border-color:var(--danger);box-shadow:0 0 0 2px var(--danger-bg)}
+
+/* 表单聚焦仅改变边框颜色，避免外圈与光晕叠加。 */
+.niu-create .niu-create-writing .niu-field :is(input,textarea):focus,
+.niu-create .niu-create-writing .niu-field :is(input,textarea):focus-visible,
+.niu-create .niu-create-properties .niu-field :is(select,.niu-person-trigger):focus,
+.niu-create .niu-create-properties .niu-field :is(select,.niu-person-trigger):focus-visible,
+.niu-smart-fields .niu-field :is(select,textarea):focus,
+.niu-smart-fields .niu-field :is(select,textarea):focus-visible,
+.niu-person-popup input:focus,
+.niu-person-popup input:focus-visible{border-color:var(--brand);outline:none;box-shadow:none}
+.niu-create .niu-create-writing .niu-field .niu-invalid:focus,
+.niu-create .niu-create-writing .niu-field .niu-invalid:focus-visible,
+.niu-create .niu-create-properties .niu-field .niu-invalid:focus,
+.niu-create .niu-create-properties .niu-field .niu-invalid:focus-visible{border-color:var(--danger);outline:none;box-shadow:none}
+
+.tk-card-status{display:inline-flex;align-items:center;flex:none;padding:2px 8px;border-radius:4px;background:var(--fill-1);color:var(--text-secondary);font-size:12px;line-height:1.4}
+.tk-card-status[data-kind=review]{background:var(--warning-bg);color:var(--warning)}
+.tk-card-status[data-kind=question]{background:var(--brand-fill);color:var(--brand)}
+.tk-card-status[data-kind=blocked]{background:var(--danger-bg);color:var(--danger)}

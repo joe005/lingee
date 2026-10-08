@@ -8,7 +8,7 @@ import { openAppDropdown } from './attach-app.js';
 
 /* ---------- Changelog / 更新日志 ---------- */
 var changelogData=[
-  {id:'85',date:'2026-10-08',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'Joe',body:'功能·任务管理：恢复任务新建入口并默认聚焦标题，统一列表验收的会话跳转，支持在已有阻塞会话中重试并输出产物卡片。'},
+  {id:'85',date:'2026-10-08',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'Joe',body:'功能·任务管理：完善任务新建与必填校验、统一下拉和状态标签，支持已有阻塞会话重试，将人工审核、阻塞与待回复任务归入待我处理，限制他人任务查看权限并记住看板与列表选择。'},
   {id:'84',date:'2026-10-06',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'wuhc2023',body:'功能·任务管理：通用应用开发智能体团队的交付路径固定为 5 个阶段，“智能体开发”阶段开始后直接进入智能体开发界面，“开发实现”产物提供可操作的网站预览；新增需求、架构、开发、测试、部署五个角色登录账号，并支持删除未开始的任务和不校验已有任务的项目删除。'},
   {id:'83',date:'2026-10-05',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'智能体开发',author:'wuhc2023',body:'功能·智能体开发：智能体配置补充本地/云端测试、提交上架审核确认、领域与模型选择、更新日志及 Work 对话中的技能与工具调用展示，并同步完善问卷调研演示脚本。'},
   {id:'82',date:'2026-10-04',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'协作开发',author:'liangpingxian',body:'功能·协作开发：新增“问卷调研系统建设”演示场景，项目、任务、应用开发、技能和智能体开发页预置问卷数据，执行计划按阶段显示对应智能体。'},

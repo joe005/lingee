@@ -242,9 +242,9 @@ export function restoreChatSession() {
   }
   return true;
 }
-export function taskConversationNeedsReply(task) {
+export function taskConversationNeedsReply(task, includeOthers = false) {
   return task?.status === 'in_progress' && chatSessions.some(function (session) {
-    return Number(session.taskId) === task.id && isMyChatSession(session) && !!session.demoQuestion && !session.demoQuestion.answer;
+    return Number(session.taskId) === task.id && (includeOthers || isMyChatSession(session)) && !!session.demoQuestion && !session.demoQuestion.answer;
   });
 }
 /* 任务列表「待回答」卡片提示用：返回当前等待用户回答的 AI 提问文本，没有则为空串。 */
