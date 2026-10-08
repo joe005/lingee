@@ -534,3 +534,25 @@
 #view-chat .task-builder-skill{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;font-weight:500}
 #view-chat .task-builder-divider{height:18px;width:1px;background:var(--border-focus)}
 #view-chat.task-builder-session #chatExpertDropdown{display:none}
+
+/* 任务会话的待回答面板：与输入框对齐，长问题在面板内滚动。 */
+#view-chat .chat-task-question-panel{box-sizing:border-box;width:min(900px,calc(100% - 40px));margin:0 auto 12px;flex:none;max-height:35vh;overflow-y:auto;border:1px solid var(--border);border-radius:12px;background:var(--bg)}
+#view-chat .chat-task-question-panel-inner{padding:16px;display:flex;flex-direction:column;gap:12px}
+#view-chat .chat-task-question-panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:14px;color:var(--text)}
+#view-chat .chat-task-question-panel-head>span{font-size:12px;color:var(--text-secondary);white-space:nowrap}
+#view-chat .chat-task-question-panel-inner>p{margin:0;font-size:14px;line-height:1.6;color:var(--text);overflow-wrap:anywhere}
+#view-chat .chat-task-question-options{display:flex;flex-direction:column;gap:8px}
+#view-chat .chat-task-question-options>button{display:flex;align-items:flex-start;gap:12px;width:100%;min-height:36px;box-sizing:border-box;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font:inherit;font-size:13px;line-height:1.6;text-align:left;cursor:pointer;overflow-wrap:anywhere;transition:background .15s,border-color .15s}
+#view-chat .chat-task-question-options>button:hover{background:var(--hover);border-color:var(--border-hover)}
+#view-chat .chat-task-question-options>button:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+#view-chat .chat-task-question-options>button>span{display:inline-flex;align-items:center;justify-content:center;flex:none;width:24px;height:24px;border-radius:6px;background:var(--brand-fill);color:var(--brand);font-size:12px}
+#view-chat .chat-task-question-panel-inner>small{font-size:12px;line-height:1.6;color:var(--text-secondary)}
+
+/* 会话分栏拖窄时优先压缩团队名称，操作图标保持可达。 */
+#view-chat .composer-bar{min-width:0}
+#view-chat .composer-bar>button,#view-chat .composer-bar>.dropdown:not(#chatExpertDropdown){flex-shrink:0}
+#view-chat #chatExpertDropdown{flex:0 1 auto;min-width:0}
+#view-chat #chatExpertDropdown>.chip{min-width:0;max-width:100%;box-sizing:border-box}
+#view-chat #chatExpertFaces,#view-chat #chatExpertDropdown .caret{flex-shrink:0}
+#view-chat #chatExpertLabel{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#view-chat .composer-bar>.spacer{min-width:0}

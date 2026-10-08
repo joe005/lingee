@@ -215,6 +215,8 @@ function isMyChatSession(session) {
 }
 function activeChatSessionKey() { return ACTIVE_CHAT_SESSION_KEY + ':' + (tkCurrentUserId() || 'guest'); }
 function rememberActiveChatSession(sessionId) {
+  var session = chatSessions.find(function (row) { return row.id === sessionId; });
+  if (session && !session.viewed) { session.viewed = true; saveChatSessions(); }
   try {
     if (sessionId) localStorage.setItem(activeChatSessionKey(), sessionId);
     else localStorage.removeItem(activeChatSessionKey());
@@ -269,7 +271,7 @@ function renderChatSessions() {
     var running = session.demoState === 'running' || session.exchanges.some(function (exchange) { return !exchange.done && !exchange.waiting; });
     var waiting = session.demoState === 'question' && !session.demoQuestion?.answer || session.exchanges.some(function (exchange) { return !!exchange.waiting; });
     var state = session.demoState === 'blocked' ? 'red' : running ? 'blue' : waiting || session.demoState === 'review' ? 'orange' : 'green';
-    return '<button type="button" class="chat-session-entry' + (session.id === activeSessionId ? ' active' : '') + '" data-chat-session="' + session.id + '"><span class="dot ' + state + '"></span><span class="txt">' + escapeHtml(String(session.title)) + '</span></button>';
+    return '<button type="button" class="chat-session-entry' + (session.id === activeSessionId ? ' active' : '') + '" data-chat-session="' + session.id + '">' + (session.viewed ? '' : '<span class="dot ' + state + '"></span>') + '<span class="txt">' + escapeHtml(String(session.title)) + '</span></button>';
   }
   var mySessions = chatSessions.filter(isMyChatSession);
   var ungrouped = mySessions.filter(function (session) { return !projectId(session) && (!query || session.title.toLowerCase().includes(query)); });

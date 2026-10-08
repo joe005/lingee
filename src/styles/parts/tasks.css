@@ -249,7 +249,7 @@
 .tk-card-team-avatars .tk-card-team-avatar{width:20px;height:20px;margin-right:-6px;border:1.5px solid var(--bg)}
 .tk-card-team-avatars-more{display:grid;place-items:center;flex:none;width:20px;height:20px;margin-right:-6px;border:1.5px solid var(--bg);border-radius:50%;background:var(--fill-1);color:var(--text-secondary);font-size:9px;font-weight:600}
 .tk-card-stage{font-size:11px;color:var(--text-secondary);white-space:nowrap}
-.tk-card-title{font-size:13px;color:var(--text);line-height:1.4;margin-bottom:6px;word-break:break-word}
+.tk-card-title{font-size:14px;color:var(--text);line-height:1.4;margin-bottom:6px;word-break:break-word}
 .tk-card-description{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;color:var(--text-secondary);font-size:11px;line-height:1.4;margin-bottom:6px}
 .tk-card-project,.tk-card-child-progress{font-size:10px;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:92px}
 .tk-card-labels{display:flex;flex-wrap:wrap;gap:3px}
