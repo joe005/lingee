@@ -38,7 +38,7 @@ export function taskListKind(task) {
   if (status === 'blocked') {
     var blockedHint = (quoted ? quoted + '执行受阻' : '执行受阻') + (reason ? '：' + reason : '');
     return mine
-      ? { kind:'blocked', badge:'已阻塞', hint:blockedHint, action:'retry', label:'重新执行', primary:true, needsMe:true }
+      ? { kind:'blocked', badge:'已阻塞', hint:blockedHint, action:'retry', label:'重试', primary:true, needsMe:true }
       : { kind:'blocked', badge:'已阻塞', hint:blockedHint, action:'detail', label:'查看详情', needsMe:false };
   }
   if (status === 'backlog' || status === 'in_review') {

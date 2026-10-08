@@ -309,11 +309,11 @@
 .tk-inline-cancel{padding:6px 14px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text-secondary);font-size:13px;cursor:pointer;white-space:nowrap}
 .tk-inline-cancel:hover{background:var(--hover)}
 
-/* 任务页聚焦状态浏览：页签与显示设置同排，去掉搜索、筛选和新建。 */
+/* 任务页聚焦状态浏览：页签、显示设置与新建同排，隐藏搜索和筛选。 */
 #view-tasks:not(.tk-project-list-mode) .tk-toolbar{justify-content:flex-end;flex-wrap:nowrap}
 #view-tasks:not(.tk-project-list-mode) .tk-toolbar .tk-view-bar{height:30px;min-width:0;flex:1 1 auto;padding:0}
 #view-tasks:not(.tk-project-list-mode) .tk-toolbar .tk-view-tabs{min-width:0}
-#view-tasks:not(.tk-project-list-mode) .tk-tools-left,#view-tasks:not(.tk-project-list-mode) .tk-toolbar-new-group,#view-tasks:not(.tk-project-list-mode) .tk-filter-chips{display:none}
+#view-tasks:not(.tk-project-list-mode) .tk-tools-left,#view-tasks:not(.tk-project-list-mode) .tk-filter-chips{display:none}
 #view-tasks.tk-project-list-mode #tkViewBar{display:none}
 .tk-list-tab-count{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:18px;padding:0 5px;border-radius:9px;background:var(--fill-1);color:var(--text-secondary);font-size:11px;font-weight:500;font-variant-numeric:tabular-nums;box-sizing:border-box}
 .list-page-tab.active .tk-list-tab-count{background:var(--brand-fill);color:var(--brand)}
@@ -506,7 +506,7 @@ body.tk-col-resizing{user-select:none;cursor:col-resize}
 .tk-row-desc{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-secondary);font-size:12px}
 
 .tk-row-code{font-size:12px;color:var(--text);font-weight:500}
-.tk-row-status{display:inline-flex;align-items:center;gap:4px;font-size:12px}
+.tk-row-status{display:inline-flex;align-items:center;gap:4px;font-size:13px}
 .tk-row-status .tk-st-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 .tk-row-priority{font-size:12px}
 .tk-row-assignee{display:flex;align-items:center;gap:6px}

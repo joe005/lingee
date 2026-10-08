@@ -4,12 +4,12 @@ import { initMyWork } from '../collab/my-work.js';
 import { initWorkItemDetail, renderWorkItemDetail } from '../collab/work-item-detail.js';
 import { initReviewCenter, renderReviewCenter } from '../collab/review-center.js';
 import { openIssueDetail } from './issue-detail.js';
-import { openTaskExceptionHistory, openTaskSessionHistory, openTaskStatusConversation, sendComposerText, taskConversationNeedsReply } from '../composer.js';
+import { continueBlockedTaskConversation, openTaskExceptionHistory, openTaskSessionHistory, openTaskStatusConversation, sendComposerText, taskConversationNeedsReply } from '../composer.js';
 import { TASK_SESSION_STATUS, tkAddTaskSession, tkGetMySessions, tkLatestStageSession, tkTaskSessionTitle, tkTaskSessionOpeningMessage } from './task-sessions.js';
 import { cvSwitchView } from '../collab/view.js';
 /* T00 结构拆分：index。保留原交互；事件在 init* 中按原顺序注册。 */
 import { initTaskDetailPreferences, initTaskDetailWidth, initTaskDetailEvents, initTaskDetailSubtaskEvents, initTaskDetailGlobalEvents } from './issue-detail.js';
-import { tkCanStartTask, tkCanViewTask, tkIsHandledByMe, tkInMyTaskList, tkIsMyStageDone, tkWasTaskHandler, tkEnsureWorkspaceDemoTasks, tkPruneOrphanTasks, tkSyncPeople, tkProjectById } from './data.js';
+import { tkCurrentStageHandlerId, tkCanStartTask, tkCanViewTask, tkIsHandledByMe, tkInMyTaskList, tkIsMyStageDone, tkWasTaskHandler, tkEnsureWorkspaceDemoTasks, tkPruneOrphanTasks, tkSyncPeople, tkProjectById } from './data.js';
 import { taskViewState } from './ui-state.js';
 import { initTaskListDisplayEvents, initTaskListFilterEvents, initTaskListRowEvents } from './list.js';
 import { initTaskCreateEvents } from './create.js';
@@ -309,21 +309,18 @@ function startTaskConversationRun(task, origin) {
   setNavActive('新会话');
   sendComposerText(tkTaskSessionOpeningMessage(task, origin, task.executionStageId || null));
 }
-function retryBlockedTask(task, openConversation) {
+function retryBlockedTask(task) {
   if (task?.status !== 'blocked') return;
+  if (tkCurrentStageHandlerId(task) !== tkCurrentUserId()) { toast('仅当前阶段处理人可重试', 'warning'); return; }
+  closeDrawer();
+  openTaskStatusConversation(task);
   tkUpdateTask(task.id, { status:'in_progress', comments:(task.comments || []).concat({
     kind:'comment', authorId:tkCurrentUserId(), createdAt:taskCommentTimestamp(),
     status:'in_progress', assignee:task.assignee, text:'已提交重试，保留上次失败运行记录。',
   }) });
-  if (openConversation) {
-    render();
-    openTaskConversationWithTask(task.id, 'retry', true);
-    toast('已重新执行，正在进入任务会话', 'success');
-    return;
-  }
   tkAddTaskSession(task, 'retry', task.executionStageId);
   render();
-  openDrawer(task.id);
+  continueBlockedTaskConversation(tkGetTasks().find(function (row) { return row.id === task.id; }));
 }
 function startTaskExecution(taskId, options) {
   var task = tkGetTasks().find(function (row) { return row.id === taskId; });
@@ -789,6 +786,7 @@ function renderCard(t, opts) {
   var needsReply = taskConversationNeedsReply(t);
   var cardAction = isBacklog ? '<button type="button" class="tk-card-action tk-card-action--primary" data-card-play="' + t.id + '"' + (tkCanStartTask(t) ? '' : ' aria-disabled="true" title="仅当前阶段处理人可开始"') + '>开始</button>'
     : t.status === 'in_review' ? '<button type="button" class="tk-card-action tk-card-action--primary" data-card-review="' + t.id + '">确认</button>'
+    : t.status === 'blocked' && tkCurrentStageHandlerId(t) === tkCurrentUserId() ? '<button type="button" class="tk-card-action tk-card-action--primary" data-card-retry="' + t.id + '">重试</button>'
     : needsReply ? '<button type="button" class="tk-card-action" data-card-session="' + t.id + '">回复</button>' : '';
   return '<div class="tk-card' + sel + extraCls + '" draggable="true" data-task-id="' + t.id + '">'
     + '<button class="tk-card-more" data-card-more="' + t.id + '" data-tooltip="更多操作" aria-label="更多操作"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button>'
@@ -4170,6 +4168,8 @@ function bindEvents() {
       return;
     }
     var sessionBtn = e.target.closest('[data-card-session]');
+    var retryBtn = e.target.closest('[data-card-retry]');
+    if (retryBtn) { retryBlockedTask(tkGetTasks().find(function (task) { return task.id === Number(retryBtn.getAttribute('data-card-retry')); })); return; }
     if (sessionBtn) { openBoardTaskSession(tkGetTasks().find(function (task) { return task.id === Number(sessionBtn.getAttribute('data-card-session')); })); return; }
     var moreBtnB = e.target.closest('[data-card-more]');
     if (moreBtnB) { showCardMenu(moreBtnB.getAttribute('data-card-more'), moreBtnB); return; }
@@ -4214,7 +4214,7 @@ function bindEvents() {
       var listAction = listActionBtn.getAttribute('data-list-task-action');
       var listTaskId = parseInt(listActionBtn.getAttribute('data-list-task-id'), 10);
       var listTask = tkGetTasks().find(function (row) { return row.id === listTaskId; });
-      if (listAction === 'review') openListReviewPreview(listTaskId, listActionBtn);
+      if (listAction === 'review') openBoardTaskSession(listTask);
       else if (listAction === 'start') startTaskExecution(listTaskId, {skipHandlerCheck:true});
       else if (listAction === 'retry') retryBlockedTask(listTask, true);
       else if (listAction === 'reply') { if (listTask) { closeDrawer(); openTaskStatusConversation(listTask); } }

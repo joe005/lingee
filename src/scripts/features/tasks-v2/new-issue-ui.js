@@ -203,7 +203,7 @@ function setCreateMode(mode) {
   if (!smart) {
     byId('niuCreateHeading').textContent = editingTaskId === null ? '新建任务' : '编辑任务';
     setWizardStep('info');
-    byId(selectedProjectId ? 'niuTitle' : 'niuProjectTrigger').focus();
+    byId('niuTitle').focus();
     return;
   }
   byId('niuInfoPane').hidden = true;

@@ -771,13 +771,13 @@ function openChatSession(sessionId) {
       var result = createFinalResult(false);
       result.querySelector('.markdown-content').innerHTML = renderMarkdown(demoExchangeText(session, task, exchange));
       timeline.appendChild(result);
-      if (session.demoState === 'blocked') {
+      if (session.demoState === 'blocked' || exchange.failure) {
         var failure = document.createElement('div');
         failure.className = 'task-exception-error';
-        failure.innerHTML = '<strong>执行失败</strong><p>' + escapeHtml(session.demoFailure || 'AI 点数不足，无法继续解析扩展属性锁定规则。补充点数后可重试本阶段。') + '</p>';
+        failure.innerHTML = '<strong>执行失败</strong><p>' + escapeHtml(exchange.failure || session.demoFailure || 'AI 点数不足，无法继续解析扩展属性锁定规则。补充点数后可重试本阶段。') + '</p>';
         result.appendChild(failure);
       }
-      if (task && session.demoArtifact) {
+      if (task && session.demoArtifact && !exchange.failure) {
         var artifact = taskStageArtifact(task);
         if (artifact) result.appendChild(createChatResultArtifactCard(task, artifact));
       }
@@ -811,6 +811,16 @@ function openChatSession(sessionId) {
     appendUserMessage(exchange.prompt);
     if (exchange.waiting) { appendAskCard(pendingInputs(exchange.prompt)); return; }
     var response = appendAssistantMessage(resolveChatTeam(session, task));
+    if (exchange.failure) {
+      var failedResult = createFinalResult(false);
+      failedResult.querySelector('.markdown-content').innerHTML = renderMarkdown(exchange.response || '上次执行未完成。');
+      var failure = document.createElement('div');
+      failure.className = 'task-exception-error';
+      failure.innerHTML = '<strong>执行失败</strong><p>' + escapeHtml(exchange.failure) + '</p>';
+      failedResult.appendChild(failure);
+      response.appendChild(failedResult);
+      return;
+    }
     simulateAIResponse(response, !!exchange.done, task, exchange.prompt, function () { finishSessionExchange(session.id, index); });
     renderChatStageEndMarkers(session, index, false);
   });
@@ -876,6 +886,22 @@ export function openTaskStatusConversation(task) {
     return;
   }
   openChatSession(session.id);
+}
+export function continueBlockedTaskConversation(task) {
+  var session = chatSessions.find(function (row) { return row.id === activeSessionId && Number(row.taskId) === task.id; });
+  if (!session) return;
+  session.exchanges.forEach(function (exchange) { exchange.failure = session.demoFailure || task.blockedRun?.reason || '本次执行失败'; });
+  session.demoState = 'running';
+  session.demoArtifact = false;
+  saveChatSessions();
+  var prompt = '重试';
+  activeResponseRun++;
+  var exchangeIndex = addSessionExchange(prompt);
+  appendUserMessage(prompt);
+  var response = appendAssistantMessage(resolveChatTeam(session, task));
+  simulateAIResponse(response, false, task, prompt, function () { finishSessionExchange(session.id, exchangeIndex); });
+  renderChatTaskSide();
+  scrollChatBottom();
 }
 function renderTaskQuestion(session, task) {
   var question = session.demoQuestion;
