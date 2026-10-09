@@ -41,7 +41,7 @@ function projectTeams(p) {
 function currentProject() { return detailProjectId ? mgrProjectById(detailProjectId) : null; }
 
 /* ---------- 右栏 ---------- */
-/* AI 贡献：智能体团队完成的任务占比、节省人天（演示口径）与交付周期对比 */
+/* AI 贡献：AI 代码生成率、AI 提交占比、阶段一次审核通过率，均来自任务的代码与审核记录 */
 function aiCardHtml(p) {
   var ai = mgrAiContribution(p);
   if (!ai) return '';
@@ -50,9 +50,9 @@ function aiCardHtml(p) {
   };
   return '<div class="mgr-rail-card mgr-ai-card"><span class="mgr-rail-head"><span class="mgr-rail-title">' +
     '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z"/></svg>AI 贡献</span></span>' +
-    '<div class="mgr-ai-stats">' + stat(ai.percent + '%', '智能体完成', '任务 ' + ai.done + ' / ' + ai.total + ' 由智能体团队完成') +
-    stat('约 ' + ai.savedDays, '节省人天', '相对人工的估算值') +
-    (ai.weeks ? stat(ai.weeks + ' 周', '交付周期', '同类系统以往约 ' + ai.baselineWeeks + ' 周') : '') + '</div></div>';
+    '<div class="mgr-ai-stats">' + stat(ai.codeRate + '%', 'AI 代码生成', '合入代码 ' + ai.lines + ' 行，其中 ' + ai.aiLines + ' 行由智能体生成') +
+    stat(ai.commitRate + '%', 'AI 提交占比', '代码提交 ' + ai.commits + ' 次，其中 ' + ai.aiCommits + ' 次由智能体发起') +
+    stat(ai.passRate + '%', '一次审核通过', '已审核阶段 ' + ai.stages + ' 个，按首次审核是否通过统计') + '</div></div>';
 }
 function railHtml(p) {
   var progress = mgrProjectProgress(p);

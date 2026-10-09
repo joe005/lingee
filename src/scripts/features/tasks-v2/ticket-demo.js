@@ -64,6 +64,12 @@ function buildTask(row) {
     createDate, dueDate, createdAt: createDate + ' 09:30', updatedAt: (doneDate || '2026-10-08') + ' 16:00',
     executionStageId: CURRENT_STAGE[status], statusHistory: history, executionPlan: plan(status),
   };
+  /* 代码与审核统计（演示数据）：合入代码行数与其中 AI 生成的行数、提交次数与其中智能体发起的次数、阶段审核被退回次数 */
+  if (status === 'done' || status === 'in_review') {
+    const lines = 600 + (id % 7) * 180;
+    const commits = 6 + (id % 4) * 2;
+    task.codeStats = { lines, aiLines: Math.round(lines * (0.72 + (id % 5) * 0.03)), commits, aiCommits: commits - (id % 3 === 0 ? 2 : 1), rejects: [1602, 1606, 1613].includes(id) ? 1 : 0 };
+  }
   if (status === 'done') {
     task.completedRun = {
       agentName: '通用应用开发', teamName: TEAM_NAME, completedAt: doneDate + ' 11:20', duration,
@@ -92,3 +98,5 @@ function buildTask(row) {
 }
 
 export const TK_TICKET_TASKS = ROWS.map(buildTask);
+/* 已缓存任务的浏览器没有 codeStats，按编号回查演示统计 */
+export const TK_TICKET_CODE_STATS = Object.fromEntries(TK_TICKET_TASKS.filter(function (t) { return t.codeStats; }).map(function (t) { return [t.code, t.codeStats]; }));
