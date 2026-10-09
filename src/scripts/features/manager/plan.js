@@ -460,7 +460,7 @@ function taskPanelHtml(task) {
     var expert = mgrExpert(s.expertId);
     return '<div class="mgr-task-stage-item"><div class="mgr-task-stage is-' + st.cls + '"><span class="mgr-task-stage-index">' +
       String(i + 1).padStart(2, '0') + '</span><div class="mgr-task-stage-main"><strong>' + mgrEsc(s.title || s.workType) +
-      '</strong><span class="mgr-task-stage-meta">' + mgrEsc(mgrPersonName(s.assigneeId)) + (expert ? ' · 智能体 ' + mgrEsc(expert.name) : '') +
+      '</strong><span class="mgr-task-stage-meta">' + (expert ? '智能体「' + mgrEsc(expert.name) + '」执行' : mgrEsc(mgrPersonName(s.assigneeId))) +
       '</span></div><span class="mgr-task-stage-state st-' + st.cls + '"><i aria-hidden="true">' + st.icon + '</i>' + st.label + '</span></div></div>';
   }).join('');
   var pre = mgrRelatedTask(task, task.preTaskId);
@@ -604,7 +604,7 @@ function renderStages() {
       (agents.length ? '<span class="mgr-tn-plan-agents" title="' + mgrEsc(agents.join('、')) + '">智能体：' + mgrEsc(agents.join('、')) + '</span>' : '') + '</td>' +
       '<td><label class="mgr-tn-review-switch"><input type="checkbox" data-mgr-tn-stage-review="' + mgrEsc(st.id) + '" aria-label="第 ' + n + ' 节点自动审核"' +
       (st.requiresConfirmation === false ? ' checked' : '') + '><span aria-hidden="true"></span></label></td>' +
-      '<td><select data-mgr-tn-stage-owner="' + mgrEsc(st.id) + '" aria-label="第 ' + n + ' 节点执行人">' + owners + '</select></td>' +
+      '<td><select data-mgr-tn-stage-owner="' + mgrEsc(st.id) + '" aria-label="第 ' + n + ' 节点审核人">' + owners + '</select></td>' +
       '<td><button type="button" class="mgr-tn-stage-remove" data-mgr-tn-stage-remove="' + mgrEsc(st.id) + '" aria-label="移除第 ' + n + ' 节点">×</button></td></tr>';
   }).join('');
 }
@@ -636,15 +636,8 @@ function syncRdPane() {
   var on = !!(rd && rd.classList.contains('active'));
   var pane = $('#mgrTnRdPane');
   if (pane) pane.hidden = !on;
-  /* 研发任务保存后只分配给第一阶段执行人，不在这里启动执行，由执行人在开发板块开始 */
-  var start = $('#mgrTnSaveStart');
-  if (start) start.hidden = on;
-  var save = $('#mgrTnSave');
-  if (save) {
-    save.textContent = on ? '保存并分配' : '保存任务';
-    save.classList.toggle('sync-modal__btn--primary', on);
-    save.classList.toggle('sync-modal__btn--ghost', !on);
-  }
+  /* 研发任务由执行计划驱动：隐藏附件 / 协作人 / 计划时间 / AI 验收 / 验收标准 */
+  $('#mgrTnCore').classList.toggle('is-rd', on);
 }
 function syncSubCount() {
   var box = $('#mgrTnSubs');
@@ -742,7 +735,7 @@ function sameStoreId(key, dev) {
   if (isDevKey !== dev) return null;
   return Number(isDevKey ? key.slice(2) : key);
 }
-function saveTaskNew(start) {
+function saveTaskNew() {
   var project = currentPlanProject();
   if (!project) { toast('请先打开项目详情', 'warning'); return; }
   var rd = !!document.querySelector('[data-mgr-tntype="rd"].active');
@@ -750,7 +743,7 @@ function saveTaskNew(start) {
   if (!title) { toast('请输入任务名', 'error'); $('#mgrTnTitle').focus(); return; }
   var stages = rd ? collectStages() : [];
   if (rd && !stages.length) { toast('研发任务至少保留一个执行阶段', 'error'); return; }
-  if (rd && stages.some(function (st) { return !st.assigneeId; })) { toast('请为每个执行阶段选择执行人', 'error'); return; }
+  if (rd && stages.some(function (st) { return !st.assigneeId; })) { toast('请为每个执行阶段选择审核人', 'error'); return; }
   var members = mgrProjectMembers(project);
   var collaborators = checkedCollaborators();
   var me = mgrCurrentPersonId();
@@ -763,7 +756,7 @@ function saveTaskNew(start) {
     title: title,
     desc: $('#mgrTnDesc').value.trim(),
     issueType: rd ? '研发任务' : '通用任务',
-    status: !rd && start ? 'in_progress' : 'backlog',
+    status: 'backlog',
     dueDate: mgrDateGet($('#mgrTnDue')),
     assignee: assignee,
     createdBy: me,
@@ -789,7 +782,7 @@ function saveTaskNew(start) {
   mgrSaveTasks();
   closeTaskNew();
   document.dispatchEvent(new Event('lingee:mgr-tasks-changed'));
-  if (!rd) { toast(start ? '任务已创建并置为进行中' : '任务已创建', 'success'); return; }
+  if (!rd) { toast('任务已创建', 'success'); return; }
   toast('研发任务已分配给「' + mgrPersonName(assignee) + '」，待其在开发板块「任务」中开始执行', 'success');
 }
 
@@ -857,8 +850,7 @@ function initTaskNewModal() {
       syncSubCount();
       return;
     }
-    if (t.closest('#mgrTnSave')) { saveTaskNew(false); return; }
-    if (t.closest('#mgrTnSaveStart')) { saveTaskNew(true); return; }
+    if (t.closest('#mgrTnSave')) { saveTaskNew(); return; }
     if (!t.closest('.mgr-tn-pop-wrap')) {
       $('#mgrTnCollabPopup').hidden = true;
       $('#mgrTnAiMenu').hidden = true;
@@ -1033,4 +1025,4 @@ export function initManagerPlan() {
   document.addEventListener('lingee:mgr-perm-changed', rerenderPlan);
 }
 
-export { closeTaskPanel, planWorkspaceHtml, resetPlanState, statusTag };
+export { closeTaskPanel, openTaskPanel, planWorkspaceHtml, resetPlanState, statusTag };

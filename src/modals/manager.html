@@ -50,8 +50,15 @@
             <p class="mgr-pe-error" id="mgrPeBranchError" hidden></p>
           </div>
           <div class="mgr-pe-field">
-            <label for="mgrPeTeam">智能体团队 <b aria-hidden="true">*</b></label>
-            <select id="mgrPeTeam"><option value="">请选择智能体团队</option></select>
+            <label id="mgrPeTeamLabel" for="mgrPeTeamBtn">智能体团队 <b aria-hidden="true">*</b></label>
+            <div class="mgr-dd" id="mgrPeTeamDd">
+              <select id="mgrPeTeam" class="mgr-dd-native" tabindex="-1" aria-hidden="true"></select>
+              <button type="button" class="mgr-dd-trigger" id="mgrPeTeamBtn" aria-haspopup="listbox" aria-expanded="false" aria-controls="mgrPeTeamPop" aria-labelledby="mgrPeTeamLabel mgrPeTeamText">
+                <span id="mgrPeTeamText"></span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+              </button>
+              <div class="mgr-dd-pop" id="mgrPeTeamPop" role="listbox" aria-labelledby="mgrPeTeamLabel" hidden></div>
+            </div>
             <p class="mgr-pe-error" id="mgrPeTeamError" hidden>开发类项目必须选择智能体团队，用于按阶段生成研发任务</p>
           </div>
         </div>

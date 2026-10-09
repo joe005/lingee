@@ -16,6 +16,44 @@ var DELETED_KEY = 'lingee-manager-deleted-projects-v1';
    mgrRisk / mgrDecide / mgrOk 是卡片上的风险、待决策与「运行正常」标记，
    mgrProgress 是卡片与概览共用的进度百分比。 */
 var SEED_PROJECTS = [
+  /* CIO 演示项目：由项目管理员赵琳立项，通用应用开发智能体团队 4 周交付；进度由任务完成数计算 */
+  {
+    id: 'ticket-mgmt', name: '工单管理系统',
+    desc: '4 周上线客户服务工单管理系统：工单提交、自动派单、SLA 时效、统计报表与企业微信集成，替代原有手工台账。',
+    goal: '4 周内（10 月 16 日前）上线工单管理系统，覆盖提交、派单、SLA、统计与企业微信集成；历史工单全部迁移，全程留痕可审计',
+    mgrRisk: 1, mgrDecide: 1, status: 'in_progress', priority: '高', owner: '赵琳',
+    dot: 'blue', start: '2026-09-21', end: '2026-10-16',
+    containsRd: true, defaultTeam: 'general-app-dev', teamIds: ['general-app-dev'],
+    repo: 'https://gitlab.kingdee.com/helpdesk', baseBranch: 'main', adminIds: ['p04'],
+    projectExperts: ['general-app-development-expert', 'software-qa-engineer'],
+    expertPerms: { 'general-app-development-expert': { chat: true, read: true, write: true }, 'software-qa-engineer': { chat: true, read: true, write: false } },
+    milestones: [
+      { name: '需求与方案确认', date: '2026-09-25' },
+      { name: '核心功能联调完成', date: '2026-10-09' },
+      { name: '系统上线', date: '2026-10-16' },
+    ],
+    members: ['p04', 'p24', 'p25', 'p26', 'p27', 'p01', 'p22'],
+  },
+  {
+    id: 'crm-portal', name: '客户门户改造',
+    desc: '把客户自助查询、服务申请和订单跟踪整合到统一门户，减少人工转接。',
+    mgrOk: true, mgrProgress: 61, status: 'in_progress', priority: '中', owner: '梁平',
+    dot: 'green', start: '2026-09-07', end: '2026-10-30',
+    containsRd: true, defaultTeam: 'general-app-dev', teamIds: ['general-app-dev'],
+    repo: 'https://gitlab.kingdee.com/customer-portal', baseBranch: 'main', adminIds: ['p21'],
+    milestones: [{ name: '门户一期上线', date: '2026-10-30' }],
+    members: ['p21', 'p24', 'p26', 'p27', 'p22'],
+  },
+  {
+    id: 'purchase-collab', name: '采购协同应用',
+    desc: '供应商在线报价、对账和发票协同，采购员在一个应用里完成询比价。',
+    mgrOk: true, mgrProgress: 38, status: 'in_progress', priority: '中', owner: '吴芳',
+    dot: 'green', start: '2026-09-28', end: '2026-11-13',
+    containsRd: true, defaultTeam: 'general-app-dev', teamIds: ['general-app-dev'],
+    repo: 'https://gitlab.kingdee.com/purchase-collab', baseBranch: 'main', adminIds: ['p09'],
+    milestones: [{ name: '报价与对账上线', date: '2026-11-13' }],
+    members: ['p09', 'p24', 'p26', 'p27', 'p22'],
+  },
   {
     id: 'mgmt-budget', name: '2027 预算目标制定与编制',
     desc: '9 月底前确定 2027 年度经营目标（增长与利润）并快速达成共识；12 月 15 日前完成预算编制、审议与下达。',
@@ -111,6 +149,21 @@ var SEED_PROJECTS = [
 /* ---------- 项目任务（演示数据，按里程碑挂靠） ---------- */
 var SEED_TASKS = [
   {
+    project: 'crm-portal',
+    rows: [
+      { title: '统一登录与客户身份打通', milestone: 0, status: 'done', assignee: 'p26', dueDate: '2026-09-25' },
+      { title: '订单跟踪页', milestone: 0, status: 'in_progress', assignee: 'p26', dueDate: '2026-10-15' },
+      { title: '服务申请表单与流转', milestone: 0, status: 'backlog', assignee: 'p24', dueDate: '2026-10-22' },
+    ],
+  },
+  {
+    project: 'purchase-collab',
+    rows: [
+      { title: '供应商报价单设计', milestone: 0, status: 'done', assignee: 'p24', dueDate: '2026-10-08' },
+      { title: '对账与发票核对', milestone: 0, status: 'backlog', assignee: 'p26', dueDate: '2026-11-06' },
+    ],
+  },
+  {
     project: 'mgmt-budget',
     rows: [
       { title: '一上目标差异分析：为什么超了 1.2 个点', milestone: 0, status: 'done', assignee: 'p04', dueDate: '2026-09-18' },
@@ -140,7 +193,18 @@ var TASK_STATUSES = [
 ];
 
 /* 项目知识库：任务产物上报归档后的条目；管理演示项目暂无归档 */
-var KNOWLEDGE = [];
+var KNOWLEDGE = [
+  { id: 'kb-ticket-1', projectId: 'ticket-mgmt', title: '工单管理系统需求规格说明书', type: '需求文档', summary: '覆盖工单提交、分类、派单、SLA、统计与企业微信集成的验收条件，共 42 条，均可观察。', archivedAt: '2026-09-24 17:20', archivedBy: '赵琳', agent: '通用应用开发', sourceTaskId: 'tk1600', vectorIndexed: true },
+  { id: 'kb-ticket-2', projectId: 'ticket-mgmt', title: '工单管理系统架构设计', type: '设计文档', summary: '分层架构、数据模型与规则引擎方案；派单算法依赖调度集群。', archivedAt: '2026-09-25 16:05', archivedBy: '赵琳', agent: '通用应用开发', sourceTaskId: 'tk1602', vectorIndexed: true },
+  { id: 'kb-ticket-3', projectId: 'ticket-mgmt', title: '工单管理系统（网站预览）', type: '网站预览', summary: '可运行的工单管理系统：提交、列表、详情、SLA 倒计时与统计报表。', archivedAt: '2026-10-07 18:30', archivedBy: '赵琳', agent: '通用应用开发', sourceTaskId: 'tk1605', vectorIndexed: false },
+  { id: 'kb-ticket-4', projectId: 'ticket-mgmt', title: '性能压测与安全扫描报告', type: '测试报告', summary: '并发 500 压测通过，接口鉴权与越权扫描无高危问题。', archivedAt: '2026-10-08 15:40', archivedBy: '陈晨', agent: '通用应用开发', sourceTaskId: 'tk1620', vectorIndexed: true },
+];
+
+/* 议题：风险与待决策事项。kind=risk 的议题关联任务（taskKey），CIO 可在议题里批准 / 驳回 */
+var SEED_ISSUES = [
+  { id: 'pi-ticket-1', projectId: 'ticket-mgmt', title: '调度集群扩容待审批，自动派单算法无法压测上线', status: '待处理', from: '智能体 通用应用开发 · 风险上报', time: '10/8 14:12', kind: 'risk', taskKey: 'tk1610', impact: '影响里程碑「系统上线」（10 月 16 日），需 CIO 审批集群扩容' },
+  { id: 'pi-ticket-2', projectId: 'ticket-mgmt', title: '历史工单迁移的字段映射口径确认', status: '已批准', from: '项目管理员 赵琳', time: '10/5 10:20', kind: 'decision', decision: { by: '吴宏超', at: '2026-10-05 15:30', text: '同意按「新分类」映射，保留旧编号作追溯字段' } },
+];
 
 var PROJECTS = [];
 var TASKS = [];
@@ -328,7 +392,7 @@ function mgrDeleteProject(id) {
   tkPruneOrphanTasks([id]);
   document.dispatchEvent(new Event('lingee:tasks-changed'));
   ISSUES = ISSUES.filter(function (i) { return i.projectId !== id; });
-  writeJson(ISSUES_KEY, ISSUES.filter(function (i) { return i.custom; }));
+  saveIssues();
   document.dispatchEvent(new CustomEvent('lingee:mgr-projects-changed', { detail: { deleted: id } }));
   return true;
 }
@@ -437,9 +501,64 @@ function mgrAddIssue(projectId, title, from) {
   if (!projectId || !title) return null;
   var issue = { id: 'pi-' + Date.now(), projectId: projectId, title: title, status: '待处理', from: from || '', time: '刚刚浮出', custom: true };
   ISSUES.push(issue);
-  writeJson(ISSUES_KEY, ISSUES.filter(function (i) { return i.custom; }));
+  saveIssues();
   document.dispatchEvent(new Event('lingee:mgr-issues-changed'));
   return issue;
+}
+/* 只持久化用户新增或处理过的议题，演示议题每次从种子恢复 */
+function saveIssues() {
+  return writeJson(ISSUES_KEY, ISSUES.filter(function (i) { return i.custom || i.touched; }));
+}
+/* CIO 在议题里批准 / 驳回：写入决策记录；批准关联的风险议题时，被阻塞的任务恢复执行，卡片上的风险与待决策标记同步减少 */
+function mgrDecideIssue(issueId, approve) {
+  var issue = ISSUES.find(function (i) { return i.id === issueId; });
+  if (!issue || issue.status !== '待处理') return null;
+  var project = mgrProjectById(issue.projectId);
+  var stamp = nowStamp() + ':00';
+  var me = mgrCurrentPersonId();
+  issue.status = approve ? '已批准' : '已驳回';
+  issue.decision = { by: mgrPersonName(me), at: stamp, text: approve ? '同意' + (issue.kind === 'risk' ? '，任务恢复执行' : '') : '驳回，需重新评估' };
+  issue.touched = true;
+  var task = issue.taskKey ? mgrTaskById(issue.taskKey) : null;
+  if (approve && task && task.status === 'blocked') {
+    task.status = 'in_progress';
+    task.statusHistory = (task.statusHistory || []).concat({ from: 'blocked', to: 'in_progress', time: stamp, authorId: me });
+    task.executionPlan = (task.executionPlan || []).map(function (st) { return st.status === 'blocked' ? Object.assign({}, st, { status: 'running' }) : st; });
+    task.blockedRun = null;
+    task.updatedAt = nowStamp();
+    if (mgrIsDevTask(task)) tkSetTasks(tkGetTasks()); else mgrSaveTasks();
+  }
+  if (project) {
+    if (project.mgrDecide) project.mgrDecide -= 1;
+    if (approve && issue.kind === 'risk' && project.mgrRisk) project.mgrRisk -= 1;
+    if (!project.mgrRisk && !project.mgrDecide) project.mgrOk = true;
+    project.updatedAt = Date.now();
+    mgrSaveProjects();
+  }
+  saveIssues();
+  document.dispatchEvent(new Event('lingee:mgr-issues-changed'));
+  document.dispatchEvent(new Event('lingee:mgr-tasks-changed'));
+  document.dispatchEvent(new CustomEvent('lingee:mgr-projects-changed', { detail: { decided: issue.projectId } }));
+  return issue;
+}
+
+/* ---------- AI 贡献（项目概览） ----------
+   研发任务由智能体团队按阶段交付：完成占比按任务完成数，节省人天按每个已交付任务相对人工的估算值（演示口径），
+   周期与同类系统以往的 12 周对比。没有已完成的研发任务时不显示。 */
+var AI_SAVED_DAYS_PER_TASK = 7.2;
+var BASELINE_WEEKS = 12;
+function mgrAiContribution(project) {
+  if (!project || !project.containsRd) return null;
+  var all = mgrProjectTasks(project.id).filter(function (t) { return t.status !== 'cancelled'; });
+  var ai = all.filter(function (t) { return mgrIsDevTask(t) && Array.isArray(t.executionPlan) && t.executionPlan.length; });
+  if (!ai.length) return null;
+  var done = ai.filter(function (t) { return t.status === 'done'; }).length;
+  if (!done) return null;
+  var weeks = project.start && project.end ? Math.max(1, Math.ceil((new Date(project.end) - new Date(project.start)) / 604800000)) : 0;
+  return {
+    percent: Math.round((done / all.length) * 100), done: done, total: all.length,
+    savedDays: Math.round(done * AI_SAVED_DAYS_PER_TASK), weeks: weeks, baselineWeeks: BASELINE_WEEKS,
+  };
 }
 
 /* ---------- 知识库 ---------- */
@@ -539,13 +658,31 @@ export function initManagerData() {
 
   normalizeDevTasks();
 
+  ISSUES = SEED_ISSUES.map(function (i) { return Object.assign({}, i); });
   var savedIssues = readJson(ISSUES_KEY);
-  ISSUES = Array.isArray(savedIssues) ? savedIssues : [];
+  if (Array.isArray(savedIssues)) {
+    savedIssues.forEach(function (i) {
+      var at = ISSUES.findIndex(function (x) { return x.id === i.id; });
+      if (at >= 0) ISSUES[at] = i; else ISSUES.push(i);
+    });
+  }
+  /* 新增的演示项目：已缓存任务的浏览器补种一次通用任务 */
+  try {
+    if (!localStorage.getItem('lingee-manager-seed-portal-v1')) {
+      var have = new Set(TASKS.map(function (t) { return t.project; }));
+      SEED_TASKS.filter(function (g) { return (g.project === 'crm-portal' || g.project === 'purchase-collab') && !have.has(g.project); }).forEach(function (group) {
+        group.rows.slice().reverse().forEach(function (row) {
+          mgrCreateTask(Object.assign({ issueType: '通用任务', priority: 'medium', project: group.project, createdBy: row.assignee }, row));
+        });
+      });
+      localStorage.setItem('lingee-manager-seed-portal-v1', '1');
+    }
+  } catch (e) { /* 本地存储不可用时忽略 */ }
   tkSetExternalProjects(function () { return PROJECTS; });
 }
 
 export {
-  TASK_STATUSES, mgrAddIssue, mgrAddProject, mgrCanManageProject, mgrCanDeleteTask, mgrCreateTask, mgrDeleteProject, mgrDeleteTask, mgrCurrentPersonId, mgrExpert, mgrExpertList,
+  TASK_STATUSES, mgrAddIssue, mgrAiContribution, mgrDecideIssue, mgrAddProject, mgrCanManageProject, mgrCanDeleteTask, mgrCreateTask, mgrDeleteProject, mgrDeleteTask, mgrCurrentPersonId, mgrExpert, mgrExpertList,
   MEMBER_ROLES, mgrHasSessionPerm, mgrMemberOpenTasks, mgrMemberRole, mgrMemberRoleLabel, mgrPersonName, mgrProjectPeople,
   mgrAddProjectMembers, mgrSetMemberLevel, mgrSetProjectExperts, mgrRenameError, mgrRenameProject, mgrSetProjectMembers, mgrSetProjectRepo, mgrSetProjectText, mgrProjectById, mgrProjectIssues, mgrProjectKnowledge, mgrProjectMembers,
   mgrCreateDevTask, mgrIsDevTask, mgrProjectProgress, mgrProjectTasks, mgrProjects, mgrRelatedTask, mgrSaveProjects, mgrSaveTasks, mgrSetSessionPerm,

@@ -1,12 +1,12 @@
 import { $ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
-import { TASK_STATUSES, mgrPersonName, mgrProjectKnowledge, mgrProjectTasks, mgrTaskKey } from './data.js';
+import { TASK_STATUSES, mgrIsDevTask, mgrPersonName, mgrProjectIssues, mgrProjectKnowledge, mgrProjectTasks, mgrTaskKey, mgrTeam } from './data.js';
 import { mgrEsc } from './utils.js';
 /* 管理 · 项目动态：活动流。由任务创建、状态变更和知识库归档汇总成时间线，
    可按来源（人工 / 智能体 / 风险 / 系统）、任务、关键动作和关键词过滤。 */
 
 var SOURCES = [['all', '全部'], ['human', '人工'], ['agent', '智能体'], ['risk', '风险'], ['system', '系统']];
-var ACTIONS = ['任务创建', '任务状态变更', '知识库归档'];
+var ACTIONS = ['任务创建', '任务状态变更', '阶段完成', '风险决策', '知识库归档'];
 var MAX_ITEMS = 60;
 
 var sourceFilter = 'all';
@@ -24,6 +24,15 @@ function stamp(v) {
   var m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:[ T](\d{1,2}:\d{2}))?/);
   return m ? Number(m[2]) + '/' + Number(m[3]) + (m[4] ? ' ' + m[4] : '') : s;
 }
+function agentName(p) {
+  var team = mgrTeam(p.defaultTeam);
+  return team ? team.name : '智能体团队';
+}
+function formatTime(ms) {
+  var d = new Date(ms);
+  var pad = function (n) { return String(n).padStart(2, '0'); };
+  return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':00';
+}
 function taskChip(t) { return (t.code || '') + ' | ' + t.title; }
 
 function collect(p) {
@@ -35,12 +44,38 @@ function collect(p) {
       actor: t.createdBy ? mgrPersonName(t.createdBy) : '系统任务', taskKey: key, task: taskChip(t),
       text: '创建任务：' + taskChip(t),
     });
-    (t.statusHistory || []).forEach(function (h) {
+    var history = t.statusHistory || [];
+    history.forEach(function (h) {
+      var person = h.authorId ? mgrPersonName(h.authorId) : '';
+      /* 人工：开始执行、审核通过；智能体：提交产物待审核；阻塞记为风险 */
+      var source = h.to === 'blocked' ? 'risk' : h.from === 'in_progress' && h.to === 'in_review' ? 'agent' : person && (h.to === 'in_progress' || h.to === 'done') ? 'human' : 'system';
       items.push({
-        time: String(h.time || ''), action: '任务状态变更', source: h.to === 'blocked' ? 'risk' : 'system', tone: h.to === 'blocked' ? 'risk' : 'system',
-        actor: '系统任务', taskKey: key, task: taskChip(t),
+        time: String(h.time || ''), action: '任务状态变更', source: source, tone: source === 'agent' ? 'kb' : source === 'human' ? 'create' : source,
+        actor: source === 'agent' ? agentName(p) : person || '系统任务', taskKey: key, task: taskChip(t),
         text: '任务状态变更：' + taskChip(t) + '（' + statusName(h.from) + ' → ' + statusName(h.to) + '）',
       });
+    });
+    /* 智能体按阶段完成：在开始执行与提交待审核之间均匀分布 */
+    var start = history.find(function (h) { return h.to === 'in_progress'; });
+    var submit = history.find(function (h) { return h.to === 'in_review'; });
+    var doneStages = mgrIsDevTask(t) && Array.isArray(t.executionPlan) ? t.executionPlan.filter(function (st) { return st.status === 'done'; }) : [];
+    if (start && submit && doneStages.length) {
+      var t0 = Date.parse(String(start.time).replace(' ', 'T')), t1 = Date.parse(String(submit.time).replace(' ', 'T'));
+      if (!isNaN(t0) && !isNaN(t1) && t1 > t0) {
+        doneStages.forEach(function (st, n) {
+          items.push({
+            time: formatTime(t0 + ((t1 - t0) * (n + 1)) / (doneStages.length + 1)), action: '阶段完成', source: 'agent', tone: 'kb',
+            actor: agentName(p), taskKey: key, task: taskChip(t), text: '完成「' + (st.title || st.workType) + '」阶段：' + taskChip(t),
+          });
+        });
+      }
+    }
+  });
+  mgrProjectIssues(p.id).forEach(function (i) {
+    if (!i.decision) return;
+    items.push({
+      time: String(i.decision.at || ''), action: '风险决策', source: 'human', tone: 'create', actor: i.decision.by || '决策人',
+      taskKey: i.taskKey || '', task: '', text: i.status + '：「' + i.title + '」，' + i.decision.text,
     });
   });
   mgrProjectKnowledge(p.id).forEach(function (k) {

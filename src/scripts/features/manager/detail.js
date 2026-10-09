@@ -1,13 +1,13 @@
 import { $ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
 import {
-  mgrProjectProgress, mgrExpert, mgrExpertList, mgrHasSessionPerm, mgrPersonName, mgrProjectById, mgrProjectIssues, mgrProjectKnowledge,
+  mgrAiContribution, mgrCanManageProject, mgrDecideIssue, mgrProjectProgress, mgrExpert, mgrExpertList, mgrHasSessionPerm, mgrPersonName, mgrProjectById, mgrProjectIssues, mgrProjectKnowledge,
   mgrSaveProjects, mgrTaskById, mgrTeam, mgrTeams,
 } from './data.js';
 import { feedHtml, initManagerFeed, resetFeed } from './feed.js';
 import { openInvite } from './invite.js';
 import { openMembers } from './members.js';
-import { planWorkspaceHtml } from './plan.js';
+import { openTaskPanel, planWorkspaceHtml } from './plan.js';
 import { mgrEsc, mgrTag } from './utils.js';
 /* 管理 · 项目详情：标题与标签、计划与任务 / 动态页签、右栏（议题 / 项目概览 / 知识库 / 智能体团队），
    以及右栏打开的议题、知识库、智能体团队维护弹窗。 */
@@ -20,6 +20,18 @@ var detailProjectId = null;
 
 var CHEVRON = '<svg class="mgr-rail-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>';
 
+var railCollapsed = false;
+function syncRailCollapse() {
+  var layout = document.querySelector('.mgr-pd-layout');
+  var btn = $('#mgrPdRailToggle');
+  if (layout) layout.classList.toggle('is-rail-collapsed', railCollapsed);
+  if (btn) {
+    btn.setAttribute('aria-expanded', String(!railCollapsed));
+    btn.setAttribute('aria-label', railCollapsed ? '展开右侧栏' : '收起右侧栏');
+    btn.setAttribute('data-tooltip', railCollapsed ? '展开右侧栏' : '收起右侧栏');
+  }
+}
+
 function projectStatusName(p) {
   return { planned: '规划中', in_progress: '进行中', paused: '已暂停', completed: '已完成', cancelled: '已取消' }[p.status] || '规划中';
 }
@@ -30,6 +42,19 @@ function projectTeams(p) {
 function currentProject() { return detailProjectId ? mgrProjectById(detailProjectId) : null; }
 
 /* ---------- 右栏 ---------- */
+/* AI 贡献：智能体团队完成的任务占比、节省人天（演示口径）与交付周期对比 */
+function aiCardHtml(p) {
+  var ai = mgrAiContribution(p);
+  if (!ai) return '';
+  var stat = function (value, label, tip) {
+    return '<div class="mgr-ai-stat" title="' + mgrEsc(tip) + '"><strong>' + value + '</strong><span>' + label + '</span></div>';
+  };
+  return '<div class="mgr-rail-card mgr-ai-card"><span class="mgr-rail-head"><span class="mgr-rail-title">' +
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z"/></svg>AI 贡献</span></span>' +
+    '<div class="mgr-ai-stats">' + stat(ai.percent + '%', '智能体完成', '任务 ' + ai.done + ' / ' + ai.total + ' 由智能体团队完成') +
+    stat('约 ' + ai.savedDays, '节省人天', '相对人工的估算值') +
+    (ai.weeks ? stat(ai.weeks + ' 周', '交付周期', '同类系统以往约 ' + ai.baselineWeeks + ' 周') : '') + '</div></div>';
+}
 function railHtml(p) {
   var progress = mgrProjectProgress(p);
   var issues = mgrProjectIssues(p.id);
@@ -42,11 +67,11 @@ function railHtml(p) {
   var members = p.members || [];
   var row = function (k, v) { return '<div class="mgr-detail-row"><span class="mgr-detail-key">' + k + '</span><span class="mgr-detail-value">' + v + '</span></div>'; };
   return '<div class="mgr-rail-card"><button type="button" class="mgr-rail-head" data-mgr-open-issues><span class="mgr-rail-title">' +
-    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>议题</span>' +
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="6.5" r="3.5"/><circle cx="6.5" cy="17" r="3.5"/><circle cx="17.5" cy="17" r="3.5"/><path d="M9.2 14.5 10.5 9.5M14.8 14.5 13.5 9.5M10 17h4"/></svg>议题</span>' +
     '<span class="mgr-rail-meta">' + issues.length + ' 条' + (pendingIssues ? ' <em class="mgr-rail-badge">' + pendingIssues + ' 待处理</em>' : '') + '</span>' + CHEVRON + '</button></div>' +
 
     '<div class="mgr-rail-card"><span class="mgr-rail-head"><span class="mgr-rail-title">' +
-    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 6"/><path d="M9 9h.01M15 15h.01"/></svg>项目概览</span></span>' +
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/><path d="m16 8 5-5M17 3h4v4"/></svg>项目概览</span></span>' +
     '<p class="mgr-rail-goal">' + mgrEsc(p.goal || p.desc || '—') + '</p>' +
     row('负责人', mgrEsc(p.owner)) +
     row('周期', (p.start || p.end ? mgrEsc(p.start || '—') + ' ~ ' + mgrEsc(p.end || '—') : '<span class="mgr-footnote">未设置</span>')) +
@@ -62,25 +87,40 @@ function railHtml(p) {
       return '<span class="mgr-avatar" title="' + mgrEsc(name) + '">' + mgrEsc((name || '?').slice(0, 1)) + '</span>';
     }).join('') + (members.length > 8 ? '<span class="mgr-avatar mgr-avatar--more">+' + (members.length - 8) + '</span>' : '') + '</div></div>' +
 
+    aiCardHtml(p) +
+
     '<div class="mgr-rail-card"><button type="button" class="mgr-rail-head" data-mgr-open-kb><span class="mgr-rail-title">' +
-    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>知识库</span>' +
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="7" rx="2"/><rect x="3" y="14" width="18" height="7" rx="2"/><path d="M7 6.5h.01M7 17.5h.01"/></svg>知识库</span>' +
     '<span class="mgr-rail-meta">' + docs.length + ' 项</span>' + CHEVRON + '</button>' +
-    (docs.slice(0, 2).map(function (d) { return '<span class="mgr-rail-doc" title="' + mgrEsc(d.title) + '">' + mgrEsc(d.title) + '</span>'; }).join('') ||
+    (docs.slice(0, 1).map(function (d) { return '<span class="mgr-rail-doc" title="' + mgrEsc(d.title) + '">' + mgrEsc(d.title) + '</span>'; }).join('') ||
       '<span class="mgr-rail-doc mgr-rail-doc--empty">暂无归档产物</span>') +
     '<span class="mgr-rail-foot"><label class="mgr-perm-switch"><input type="checkbox" data-mgr-session-perm' + (mgrHasSessionPerm() ? ' checked' : '') +
     '><span>会话权限（演示）</span></label></span></div>' +
 
     '<div class="mgr-rail-card"><span class="mgr-rail-head"><span class="mgr-rail-title">' +
-    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>智能体团队</span>' +
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>智能体团队</span>' +
     '<button type="button" class="mgr-link-btn" data-mgr-open-team>管理</button></span>' +
     (teams.length
       ? teams.map(function (t) { return '<span class="mgr-rail-doc" title="' + mgrEsc(t.name) + '">' + mgrEsc(t.name) + (p.defaultTeam === t.id ? ' · 主' : '') + '</span>'; }).join('')
       : '<span class="mgr-rail-doc mgr-rail-doc--empty">未绑定交付智能体团队</span>') +
-    '<span class="mgr-rail-doc">' + (experts.length
-      ? '项目智能体 ' + experts.length + ' 位：' + experts.slice(0, 3).map(function (id) { return mgrEsc(mgrExpert(id).name); }).join('、') + (experts.length > 3 ? ' 等' : '')
-      : '未选择项目智能体') + '</span></div>';
+    (experts.length
+      ? '<span class="mgr-rail-doc">项目智能体 ' + experts.length + ' 位：' + experts.slice(0, 3).map(function (id) { return mgrEsc(mgrExpert(id).name); }).join('、') + (experts.length > 3 ? ' 等' : '') + '</span>'
+      : '') + '</div>';
 }
 
+/* 分段页签的滑块：量出选中页签的位置与宽度写到 CSS 变量，样式里用 transform 过渡实现滑动；
+   首次定位不带动画，避免从左端滑入 */
+function syncTabThumb() {
+  var list = document.querySelector('.mgr-pd-tablist');
+  var active = list && list.querySelector('.mgr-pd-tab.active');
+  if (!active || !active.offsetWidth) return;
+  list.style.setProperty('--thumb-x', active.offsetLeft + 'px');
+  list.style.setProperty('--thumb-w', active.offsetWidth + 'px');
+  if (!list.classList.contains('is-ready')) {
+    void list.offsetWidth;
+    list.classList.add('is-ready');
+  }
+}
 function renderDetail(p) {
   detailProjectId = p.id;
   $('#mgrProjDetailName').textContent = p.name;
@@ -93,6 +133,8 @@ function renderDetail(p) {
     b.classList.toggle('active', on);
     b.setAttribute('aria-selected', String(on));
   });
+  syncRailCollapse();
+  syncTabThumb();
   $('#mgrPdViews').classList.toggle('hidden', detailTab !== 'plan');
   var plan = $('#mgrPdPlanPane'), feed = $('#mgrPdFeedPane');
   plan.classList.toggle('hidden', detailTab !== 'plan');
@@ -123,10 +165,19 @@ function closeOverlay(sel) { var el = $(sel); if (!el) return; el.style.display 
 function issuesHtml(p) {
   var list = mgrProjectIssues(p.id);
   if (!list.length) return '<div class="mgr-empty">暂无议题。任务行「···」→「升级为议题」会汇总到这里。</div>';
+  var canDecide = mgrCanManageProject(p);
   return list.map(function (i) {
-    var cls = { 待处理: 'warning', 处理中: 'running' }[i.status] || 'neutral';
+    var cls = { 待处理: 'warning', 处理中: 'running', 已批准: 'done', 已驳回: 'neutral' }[i.status] || 'neutral';
+    var task = i.taskKey ? mgrTaskById(i.taskKey) : null;
+    var pending = i.status === '待处理';
     return '<div class="mgr-issue-item"><div class="mgr-issue-main"><strong>' + mgrEsc(i.title) + '</strong><span class="mgr-issue-meta">' +
-      mgrEsc(i.from || '') + (i.from ? ' · ' : '') + mgrEsc(i.time || '') + '</span></div>' + mgrTag(i.status || '待处理', cls) + '</div>';
+      mgrEsc(i.from || '') + (i.from ? ' · ' : '') + mgrEsc(i.time || '') + '</span>' +
+      (i.impact && pending ? '<span class="mgr-issue-impact">' + mgrEsc(i.impact) + '</span>' : '') +
+      (i.decision ? '<span class="mgr-issue-decision">' + mgrEsc(i.decision.by) + ' 决策：' + mgrEsc(i.decision.text) + '</span>' : '') +
+      (task ? '<button type="button" class="mgr-link-btn mgr-issue-task" data-mgr-issue-task="' + mgrEsc(i.taskKey) + '">查看任务 ' + mgrEsc(task.code || '') + ' · ' + mgrEsc(task.title) + '</button>' : '') + '</div>' +
+      '<div class="mgr-issue-side">' + mgrTag(i.status || '待处理', cls) +
+      (pending && canDecide ? '<span class="mgr-issue-actions"><button type="button" class="mgr-btn mgr-btn--ghost" data-mgr-issue-decide="' + mgrEsc(i.id) + '" data-approve="0">驳回</button>' +
+        '<button type="button" class="mgr-btn mgr-btn--primary" data-mgr-issue-decide="' + mgrEsc(i.id) + '" data-approve="1">批准</button></span>' : '') + '</div></div>';
   }).join('');
 }
 
@@ -243,15 +294,33 @@ function initDetailModals() {
 
 export function initManagerDetail() {
   initDetailModals();
+  window.addEventListener('resize', syncTabThumb);
   initManagerFeed(rerenderDetail);
   var panel = $('#mgr-panel-projects');
   panel.addEventListener('click', function (e) {
     var t = e.target;
+    if (t.closest('#mgrPdRailToggle')) { railCollapsed = !railCollapsed; syncRailCollapse(); syncTabThumb(); return; }
     var tab = t.closest('[data-pdtab]');
     if (tab) { detailTab = tab.getAttribute('data-pdtab') === 'feed' ? 'feed' : 'plan'; rerenderDetail(); return; }
     var p = currentProject();
     if (!p) return;
     if (t.closest('[data-mgr-open-issues]')) { $('#mgrIssuesBody').innerHTML = issuesHtml(p); openOverlay('#mgrIssuesOverlay'); return; }
+    var issueTask = t.closest('[data-mgr-issue-task]');
+    if (issueTask) {
+      closeOverlay('#mgrIssuesOverlay');
+      detailTab = 'plan';
+      rerenderDetail();
+      openTaskPanel(issueTask.getAttribute('data-mgr-issue-task'));
+      return;
+    }
+    var decide = t.closest('[data-mgr-issue-decide]');
+    if (decide) {
+      var approve = decide.getAttribute('data-approve') === '1';
+      if (!mgrCanManageProject(p)) { toast('仅项目负责人、项目管理员或系统管理员可决策', 'warning'); return; }
+      var done = mgrDecideIssue(decide.getAttribute('data-mgr-issue-decide'), approve);
+      if (done) toast(approve ? '已批准，相关任务恢复执行' : '已驳回，决策已留痕', approve ? 'success' : 'info');
+      return;
+    }
     if (t.closest('[data-mgr-open-kb]')) { kbQuery = ''; kbOpenId = null; $('#mgrKbBody').innerHTML = kbBodyHtml(p); openOverlay('#mgrKbOverlay'); return; }
     if (t.closest('[data-mgr-open-team]')) { teamTab = 'team'; $('#mgrTeamBody').innerHTML = teamBodyHtml(p); openOverlay('#mgrTeamOverlay'); return; }
     var tmtab = t.closest('[data-mgr-tmtab]');
