@@ -4,12 +4,12 @@ import { initMyWork } from '../collab/my-work.js';
 import { initWorkItemDetail, renderWorkItemDetail } from '../collab/work-item-detail.js';
 import { initReviewCenter, renderReviewCenter } from '../collab/review-center.js';
 import { openIssueDetail } from './issue-detail.js';
-import { openTaskExceptionHistory, openTaskSessionHistory, openTaskStatusConversation, sendComposerText, taskConversationNeedsReply } from '../composer.js';
+import { continueBlockedTaskConversation, openTaskExceptionHistory, openTaskSessionHistory, openTaskStatusConversation, sendComposerText, taskConversationNeedsReply } from '../composer.js';
 import { TASK_SESSION_STATUS, tkAddTaskSession, tkGetMySessions, tkLatestStageSession, tkTaskSessionTitle, tkTaskSessionOpeningMessage } from './task-sessions.js';
 import { cvSwitchView } from '../collab/view.js';
 /* T00 结构拆分：index。保留原交互；事件在 init* 中按原顺序注册。 */
 import { initTaskDetailPreferences, initTaskDetailWidth, initTaskDetailEvents, initTaskDetailSubtaskEvents, initTaskDetailGlobalEvents } from './issue-detail.js';
-import { tkCanStartTask, tkCanViewTask, tkIsHandledByMe, tkInMyTaskList, tkIsMyStageDone, tkWasTaskHandler, tkEnsureWorkspaceDemoTasks, tkPruneOrphanTasks, tkSyncPeople, tkProjectById } from './data.js';
+import { tkCurrentStageHandlerId, tkCanStartTask, tkCanViewTask, tkIsHandledByMe, tkInMyTaskList, tkIsMyStageDone, tkWasTaskHandler, tkEnsureWorkspaceDemoTasks, tkPruneOrphanTasks, tkSyncPeople, tkProjectById } from './data.js';
 import { taskViewState } from './ui-state.js';
 import { initTaskListDisplayEvents, initTaskListFilterEvents, initTaskListRowEvents } from './list.js';
 import { initTaskCreateEvents } from './create.js';
@@ -95,10 +95,10 @@ var LIST_FIELDS = [
   { id:'desc', name:'描述' },
 ];
 var DEFAULT_LIST_FIELD_ORDER = LIST_FIELDS.map(function(field) { return field.id; });
-/* 页签按「轮到谁」划分：需要我处理＝当前阶段由我开始／验收／回答提问／重试；
+/* 页签按「轮到谁」划分：待我处理＝当前阶段由我开始／验收／回答提问／重试；
    其余未完成任务（AI 执行中或等待他人处理）归入执行中。 */
 var LIST_STATUS_TABS = [
-  { id:'needs', name:'需要我处理', match:function (task) { return taskNeedsMyAction(task); } },
+  { id:'needs', name:'待我处理', match:function (task) { return taskNeedsMyAction(task); } },
   { id:'running', name:'执行中', match:function (task) { return task.status !== 'done' && task.status !== 'cancelled' && !taskNeedsMyAction(task) && !tkIsMyStageDone(task); } },
   /* 已完成：任务整体完成，或我负责的阶段已做完（后续阶段由他人处理） */
   { id:'done', name:'已完成', match:function (task) { return task.status === 'done' || tkIsMyStageDone(task); } },
@@ -317,21 +317,18 @@ function startTaskConversationRun(task, origin) {
   setNavActive('新会话');
   sendComposerText(tkTaskSessionOpeningMessage(task, origin, task.executionStageId || null));
 }
-function retryBlockedTask(task, openConversation) {
+function retryBlockedTask(task) {
   if (task?.status !== 'blocked') return;
+  if (tkCurrentStageHandlerId(task) !== tkCurrentUserId()) { toast('仅当前阶段处理人可重试', 'warning'); return; }
+  closeDrawer();
+  openTaskStatusConversation(task);
   tkUpdateTask(task.id, { status:'in_progress', comments:(task.comments || []).concat({
     kind:'comment', authorId:tkCurrentUserId(), createdAt:taskCommentTimestamp(),
     status:'in_progress', assignee:task.assignee, text:'已提交重试，保留上次失败运行记录。',
   }) });
-  if (openConversation) {
-    render();
-    openTaskConversationWithTask(task.id, 'retry', true);
-    toast('已重新执行，正在进入任务会话', 'success');
-    return;
-  }
   tkAddTaskSession(task, 'retry', task.executionStageId);
   render();
-  openDrawer(task.id);
+  continueBlockedTaskConversation(tkGetTasks().find(function (row) { return row.id === task.id; }));
 }
 function startTaskExecution(taskId, options) {
   var task = tkGetTasks().find(function (row) { return row.id === taskId; });
@@ -684,9 +681,10 @@ function getGroupedTasks(tasks) {
   if (state.groupBy === 'none') return [{ key: 'all', name: '全部', tasks: tasks }];
   var groups = {}, keys = [];
   if (state.groupBy === 'status') {
-    /* 「待规划」先隐藏：不单独成列，该状态任务并入「待开始」列；
-       「已取消」「已办」先隐藏：不单独成列，任务卡片也不上板，展示方式后续再规划 */
-    TK_STATUSES.forEach(function (s) { if (s.id === 'planned' || s.id === 'cancelled') return; groups[s.id] = { name: s.name, color: s.color, tasks: [] }; keys.push(s.id); });
+    /* 按处理职责归类，卡片保留实际状态；待规划仍并入待开始。 */
+    [{id:'backlog',name:'待开始',color:'gray'}, {id:'in_progress',name:'执行中',color:'blue'},
+      {id:'needs',name:'待我处理',color:'orange'}, {id:'done',name:'已完成',color:'green'}]
+      .forEach(function (group) { groups[group.id] = {name:group.name,color:group.color,tasks:[]}; keys.push(group.id); });
   } else if (state.groupBy === 'priority') {
     TK_PRIORITIES.forEach(function (p) { groups[p.id] = { name: p.name, color: p.color, tasks: [] }; keys.push(p.id); });
   } else if (state.groupBy === 'assignee') {
@@ -700,6 +698,7 @@ function getGroupedTasks(tasks) {
     var k = t[state.groupBy];
     if (state.groupBy === 'status') {
       if (k === 'planned') k = 'backlog';
+      else if (['in_progress','in_review','blocked'].includes(k)) k = (k === 'in_review' || k === 'blocked' || taskConversationNeedsReply(t, true)) ? 'needs' : 'in_progress';
     }
     /* 已取消与个人已办的任务不上板；执行中/待审核/已阻塞等活跃任务即使本人处理过也保留 */
     if (t.status === 'cancelled' || (!['in_progress', 'in_review', 'blocked'].includes(t.status) && tkIsHandledByMe(t))) return;
@@ -750,7 +749,7 @@ function renderBoard() {
     var arrow = collapsed ? '18 15 12 9 6 15' : '6 9 12 15 18 9';
     return '<div class="tk-board-col' + (collapsed ? ' is-collapsed' : '') + '" data-group-key="' + g.key + '">'
       + '<div class="tk-board-col-head"><div class="tk-board-col-head-left">'
-      + statusSvg(g.key)
+      + statusSvg(g.key === 'needs' ? 'in_review' : g.key)
       + '<span class="tk-board-col-name">' + escapeHtml(g.name) + '</span>'
       + '<span class="tk-board-col-count">' + g.tasks.length + '</span>'
       + '</div><div class="tk-board-col-head-right">'
@@ -795,12 +794,16 @@ function renderCard(t, opts) {
     footExtraHtml = latest ? '<span class="tk-card-stage">' + escapeHtml(latest.stage) + '</span>' : '';
   }
   var needsReply = taskConversationNeedsReply(t);
+  var cardState = taskListKind(t);
+  var stateBadge = ['in_review','blocked'].includes(t.status) || cardState.kind === 'question'
+    ? '<span class="tk-card-status" data-kind="' + cardState.kind + '">' + escapeHtml(cardState.badge) + '</span>' : '';
   var cardAction = isBacklog ? '<button type="button" class="tk-card-action tk-card-action--primary" data-card-play="' + t.id + '"' + (tkCanStartTask(t) ? '' : ' aria-disabled="true" title="仅当前阶段处理人可开始"') + '>开始</button>'
     : t.status === 'in_review' ? '<button type="button" class="tk-card-action tk-card-action--primary" data-card-review="' + t.id + '">确认</button>'
+    : t.status === 'blocked' && tkCurrentStageHandlerId(t) === tkCurrentUserId() ? '<button type="button" class="tk-card-action tk-card-action--primary" data-card-retry="' + t.id + '">重试</button>'
     : needsReply ? '<button type="button" class="tk-card-action" data-card-session="' + t.id + '">回复</button>' : '';
   return '<div class="tk-card' + sel + extraCls + '" draggable="true" data-task-id="' + t.id + '">'
     + '<button class="tk-card-more" data-card-more="' + t.id + '" data-tooltip="更多操作" aria-label="更多操作"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button>'
-    + '<div class="tk-card-top-row">' + toggle + spacer + '<div class="tk-card-code">' + escapeHtml(t.code) + '</div>' + childBadge + '</div>'
+    + '<div class="tk-card-top-row">' + toggle + spacer + '<div class="tk-card-code">' + escapeHtml(t.code) + '</div>' + childBadge + stateBadge + '</div>'
     + '<div class="tk-card-title">' + escapeHtml(t.title) + '</div>'
     + (props.description && t.desc ? '<div class="tk-card-description">' + escapeHtml(t.desc) + '</div>' : '')
     + '<div class="tk-card-foot"><div class="tk-card-foot-left">' + teamAvatarHtml + footExtraHtml
@@ -3120,7 +3123,8 @@ function handleDrop(e) {
   col.classList.remove('drag-over');
   var boardCol = col.closest('.tk-board-col');
   var groupKey = boardCol.getAttribute('data-group-key');
-    if (groupKey === 'cancelled') return;
+  if (groupKey === 'cancelled') return;
+  if (state.groupBy === 'status' && groupKey === 'needs') { toast('待我处理由任务状态和当前处理人自动归类', 'info'); return; }
   var patch = {};
   if (state.groupBy === 'status') patch.status = groupKey;
   else if (state.groupBy === 'priority') patch.priority = groupKey;
@@ -4211,6 +4215,8 @@ function bindEvents() {
       return;
     }
     var sessionBtn = e.target.closest('[data-card-session]');
+    var retryBtn = e.target.closest('[data-card-retry]');
+    if (retryBtn) { retryBlockedTask(tkGetTasks().find(function (task) { return task.id === Number(retryBtn.getAttribute('data-card-retry')); })); return; }
     if (sessionBtn) { openBoardTaskSession(tkGetTasks().find(function (task) { return task.id === Number(sessionBtn.getAttribute('data-card-session')); })); return; }
     var moreBtnB = e.target.closest('[data-card-more]');
     if (moreBtnB) { showCardMenu(moreBtnB.getAttribute('data-card-more'), moreBtnB); return; }
@@ -4255,7 +4261,7 @@ function bindEvents() {
       var listAction = listActionBtn.getAttribute('data-list-task-action');
       var listTaskId = parseInt(listActionBtn.getAttribute('data-list-task-id'), 10);
       var listTask = tkGetTasks().find(function (row) { return row.id === listTaskId; });
-      if (listAction === 'review') openListReviewPreview(listTaskId, listActionBtn);
+      if (listAction === 'review') openBoardTaskSession(listTask);
       else if (listAction === 'start') startTaskExecution(listTaskId, {skipHandlerCheck:true});
       else if (listAction === 'retry') retryBlockedTask(listTask, true);
       else if (listAction === 'reply') { if (listTask) { closeDrawer(); openTaskStatusConversation(listTask); } }
@@ -4424,10 +4430,10 @@ function bindEvents() {
     }
   });
   /* 滚动与缩放时关闭悬浮菜单，避免定位错位 */
-  window.addEventListener('scroll', function () {
-    if (displayChoiceMenu) closeDisplayChoiceMenu();
+  window.addEventListener('scroll', function (e) {
+    if (displayChoiceMenu && !displayChoiceMenu.contains(e.target)) closeDisplayChoiceMenu();
     var ffm = document.querySelector('.tk-flow-field-menu.show');
-    if (ffm) ffm.remove();
+    if (ffm && !ffm.contains(e.target)) ffm.remove();
   }, true);
   window.addEventListener('resize', function () {
     if (displayChoiceMenu) closeDisplayChoiceMenu();
@@ -4439,7 +4445,7 @@ function bindEvents() {
 function openCollabTaskList() {
   if (projectListMode) tkSetProjectListMode(false);
   Object.assign(state, {
-    layout:'list', activeViewId:'all', scope:'all', filters:[], search:'', listStatusTab:'needs',
+    activeViewId:'all', scope:'all', filters:[], search:'', listStatusTab:'needs',
   });
   state.selectedIds.clear();
   if (els.tkSearch) els.tkSearch.value = '';
@@ -4506,7 +4512,7 @@ function initColumnResize() {
 }
 
 /* ---------- 初始化 ---------- */
-/* 协作开发菜单徽标与任务页「需要我处理」页签使用相同的筛选口径。 */
+/* 协作开发菜单徽标与任务页「待我处理」页签使用相同的筛选口径。 */
 function updateCollabReviewBadge() {
   var badge = document.getElementById('collabReviewBadge');
   if (!badge) return;

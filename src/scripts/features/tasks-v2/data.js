@@ -1,7 +1,7 @@
 /* 任务管理 v2 —— 模拟数据与状态
    纯前端原型，所有数据本地维护。 */
 import { TK_EQUIPMENT_TASKS, equipmentArtifactDocs } from './equipment-demo.js';
-import { CV_MEMBERS, CV_PROJECTS, CV_TASKS, cvCurrentUserName, cvPeopleInProject } from '../collab/data.js';
+import { CV_MEMBERS, CV_PROJECTS, CV_TASKS, cvCurrentUserName, cvPeopleInProject, cvWorkspaceRole } from '../collab/data.js';
 import { getLoginPersonId } from '../login.js';
 import { createDemoReviewReport } from './review-reports.js';
 import { createDemoBlockedRun } from './blocked-runs.js';
@@ -86,7 +86,7 @@ export function tkCurrentStageHandlerId(task) {
 }
 /* 任务页签按人员分配：默认只列出与我当前相关的任务——
    当前阶段由我处理，或我负责的阶段已经做完（归入「已完成」）。
-   项目负责人通过「负责人 → 全部」筛选查看项目全部任务。 */
+   工作区管理员通过「负责人 → 全部」筛选查看他人任务。 */
 export function tkIsMyCurrentStage(task) {
   var me = tkCurrentUserId();
   return !!me && !!task && task.status !== 'done' && task.status !== 'cancelled' && tkCurrentStageHandlerId(task) === me;
@@ -130,7 +130,7 @@ export function tkIsHandledByMe(task) {
   });
   return completedStage || approvedReview || handedOffWork;
 }
-/* 项目成员仅能查看自己参与的任务；项目负责人可查看本项目全部任务。 */
+/* 普通成员仅能查看自己参与的任务；管理员可查看所属项目内他人任务。 */
 export function tkParticipatesCurrentUser(task) {
   var me = tkCurrentUserId();
   if (!me || !task) return false;
@@ -143,13 +143,13 @@ export function tkCanViewTask(task) {
   var project = tkProjectsForCurrentUser().find(function (row) { return row.id === task.project; });
   if (!project) return false;
   var me = CV_MEMBERS.find(function (person) { return person.id === tkCurrentUserId(); });
-  return project.owner === me?.name || tkParticipatesCurrentUser(task);
+  return cvWorkspaceRole(me) === 'system_admin' || tkParticipatesCurrentUser(task);
 }
-/* 项目负责人（管理员）拥有整项目数据的查看权限；任务页默认仅显示自己参与的任务，
+/* 工作区管理员拥有所属项目数据的查看权限；任务页默认仅显示自己参与的任务，
    通过筛选「负责人」的「全部」选项查看所有人，普通成员不显示该选项。 */
 export function tkIsProjectOwner() {
   var me = CV_MEMBERS.find(function (person) { return person.id === tkCurrentUserId(); });
-  return !!me && tkAllProjects().some(function (project) { return project.owner === me.name; });
+  return !!me && cvWorkspaceRole(me) === 'system_admin';
 }
 export function tkProjectsForCurrentUser() {
   var userId = tkCurrentUserId();

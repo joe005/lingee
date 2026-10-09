@@ -1,83 +1,96 @@
 import { $ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
-import { withBase } from '../../core/base-path.js';
-import { mgrCanManageProject, mgrProjectById, mgrProjectInvite } from './data.js';
-/* 管理 · 邀请成员：生成项目邀请链接，复制后发给同事。
-   与「项目成员」分工：邀请是发链接让对方自己加入，主动添加 / 设置角色 / 移除在成员弹窗里做。 */
+import { CV_MEMBERS } from '../collab/data.js';
+import { mgrAddProjectMembers, mgrCanManageProject, mgrProjectById } from './data.js';
+import { mgrEsc } from './utils.js';
+/* 管理 · 邀请成员：勾选尚未加入的灵基人员，指定本次加入的项目内角色（项目管理员 / 成员）后一次添加。
+   人员取协作开发的人员数据（CV_MEMBERS），与「项目成员」弹窗共用；岗位角色在项目成员里再调整。 */
 
 var projectId = null;
 var trigger = null;
+var picked = new Set();
+var query = '';
 
-function linkOf(project, token) {
-  var base = location.origin && location.origin !== 'null' ? location.origin : '';
-  return base + withBase('/manager') + '?m=ceo-projects&proj=' + encodeURIComponent(project.id) + '&invite=' + encodeURIComponent(token);
-}
-function render(regenerate) {
+function candidates() {
   var p = projectId ? mgrProjectById(projectId) : null;
-  if (!p) return false;
-  var invite = mgrProjectInvite(p, regenerate);
-  if (!invite) { toast('生成邀请链接失败，请重试', 'error'); return false; }
-  $('#mgrInviteProject').textContent = p.name;
-  $('#mgrInviteLink').value = linkOf(p, invite.token);
-  $('#mgrInviteExpire').textContent = '链接 ' + invite.days + ' 天内有效，截止 ' + invite.expires;
-  $('#mgrInviteCopy').textContent = '复制链接';
-  return true;
+  if (!p) return [];
+  var q = query.trim().toLocaleLowerCase();
+  return CV_MEMBERS.filter(function (m) {
+    return m.status !== 'disabled' && !(p.members || []).includes(m.id) && (!q || m.name.toLocaleLowerCase().includes(q));
+  });
+}
+function syncConfirm() {
+  var btn = $('#mgrInviteConfirm');
+  btn.disabled = !picked.size;
+  btn.textContent = picked.size ? '确定（' + picked.size + '）' : '确定';
+}
+function renderList() {
+  var rows = candidates();
+  $('#mgrInviteList').innerHTML = rows.length
+    ? rows.map(function (m, i) {
+      return '<label class="mgr-inv-row"><input type="checkbox" value="' + mgrEsc(m.id) + '"' + (picked.has(m.id) ? ' checked' : '') + '>' +
+        '<span class="mgr-inv-avatar mgr-inv-avatar--' + (i % 4) + '" aria-hidden="true">' + mgrEsc(m.name[0] || '?') + '</span>' +
+        '<span class="mgr-inv-name">' + mgrEsc(m.name) + '</span>' +
+        (m.dept ? '<small class="mgr-inv-dept">' + mgrEsc(m.dept) + '</small>' : '') + '</label>';
+    }).join('')
+    : '<div class="mgr-inv-empty">' + (query.trim() ? '没有匹配的人员' : '所有人员都已在项目中') + '</div>';
 }
 function openInvite(id, from) {
   var p = mgrProjectById(id);
   if (!p) return;
-  if (!mgrCanManageProject(p)) { toast('只有项目负责人或系统管理员可以邀请成员', 'warning'); return; }
+  if (!mgrCanManageProject(p)) { toast('只有项目负责人、项目管理员或系统管理员可以邀请成员', 'warning'); return; }
   projectId = id;
   trigger = from || null;
-  if (!render(false)) return;
+  picked.clear();
+  query = '';
+  $('#mgrInviteSearch').value = '';
+  $('#mgrInviteOverlay input[name="mgrInviteRole"][value="member"]').checked = true;
+  renderList();
+  syncConfirm();
   var overlay = $('#mgrInviteOverlay');
   overlay.style.display = 'flex';
   overlay.setAttribute('aria-hidden', 'false');
-  $('#mgrInviteCopy').focus();
+  $('#mgrInviteSearch').focus();
 }
 function closeInvite() {
   var overlay = $('#mgrInviteOverlay');
   overlay.style.display = 'none';
   overlay.setAttribute('aria-hidden', 'true');
   projectId = null;
+  picked.clear();
   if (trigger && trigger.isConnected) trigger.focus();
   trigger = null;
 }
-/* 剪贴板接口在非安全上下文（如 file:// 直接打开）不可用，退回选中文本 + execCommand */
-async function copyLink() {
-  var input = $('#mgrInviteLink');
-  var text = input.value;
-  var ok = false;
-  try {
-    if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(text); ok = true; }
-  } catch (e) { ok = false; }
-  if (!ok) {
-    input.focus();
-    input.select();
-    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
-  }
-  if (ok) {
-    $('#mgrInviteCopy').textContent = '已复制';
-    toast('邀请链接已复制，可发给同事', 'success');
-  } else {
-    input.select();
-    toast('复制失败，请手动选中链接复制', 'warning');
-  }
+function confirmInvite() {
+  var p = projectId ? mgrProjectById(projectId) : null;
+  if (!p || !picked.size) return;
+  if (!mgrCanManageProject(p)) { toast('项目权限已变化，无法邀请成员', 'warning'); return; }
+  var asAdmin = $('#mgrInviteOverlay input[name="mgrInviteRole"]:checked').value === 'admin';
+  var count = picked.size;
+  if (!mgrAddProjectMembers(p, Array.from(picked), asAdmin)) { toast('添加失败，请重试', 'error'); return; }
+  closeInvite();
+  toast('已添加 ' + count + ' 名' + (asAdmin ? '项目管理员' : '成员'), 'success');
 }
 
 export function initManagerInvite() {
   var overlay = $('#mgrInviteOverlay');
   overlay.addEventListener('click', function (e) {
     if (e.target === overlay || e.target.closest('[data-mgr-invite-close]')) { closeInvite(); return; }
-    if (e.target.closest('[data-mgr-invite-copy]')) { copyLink(); return; }
-    if (e.target.closest('[data-mgr-invite-reset]')) {
-      if (render(true)) toast('已重新生成，旧链接已失效', 'success');
-    }
+    if (e.target.closest('#mgrInviteConfirm')) confirmInvite();
+  });
+  overlay.addEventListener('change', function (e) {
+    if (e.target.type !== 'checkbox') return;
+    if (e.target.checked) picked.add(e.target.value); else picked.delete(e.target.value);
+    syncConfirm();
+  });
+  overlay.addEventListener('input', function (e) {
+    if (e.target.id !== 'mgrInviteSearch') return;
+    query = e.target.value;
+    renderList();
   });
   overlay.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeInvite(); }
   });
-  $('#mgrInviteLink').addEventListener('focus', function (e) { e.target.select(); });
 }
 
 export { openInvite };

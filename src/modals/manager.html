@@ -81,31 +81,43 @@
     <div class="sync-modal__footer mgr-delete-footer"><button type="button" class="sync-modal__btn sync-modal__btn--ghost" data-mgr-task-delete-cancel>取消</button><button type="button" class="sync-modal__btn mgr-delete-confirm" data-mgr-task-delete-confirm>删除</button></div>
   </div>
 </div>
-<!-- 管理 · 项目成员：搜索灵基人员多选、设置项目角色；人员与开发板块共用同一份人员数据 -->
+<!-- 管理 · 成员与权限：左侧成员（按角色分页签、分页，可邀请），右侧项目智能体（可添加、设置功能权限）；改动即时生效 -->
 <div class="sync-overlay mgr-modal" id="mgrMembersOverlay" style="display:none" aria-hidden="true">
-  <div class="sync-modal mgr-pm-modal mgr-pm-members-modal" role="dialog" aria-modal="true" aria-labelledby="mgrMembersHeading" tabindex="-1">
-    <div class="sync-modal__header mgr-pm-members-modal-header">
-      <div class="mgr-pm-members-modal-heading">
-        <div class="sync-modal__title" id="mgrMembersHeading">项目成员</div>
-        <div class="mgr-pm-members-modal-project" id="mgrMembersProjectName"></div>
-      </div>
-      <button type="button" class="sync-modal__close" data-mgr-members-close aria-label="关闭项目成员弹窗"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+  <div class="sync-modal mgr-pm-modal mgr-mp-modal" role="dialog" aria-modal="true" aria-labelledby="mgrMembersHeading" tabindex="-1">
+    <div class="sync-modal__header">
+      <div class="sync-modal__title" id="mgrMembersHeading">成员与权限</div>
+      <button type="button" class="sync-modal__close" data-mgr-members-close aria-label="关闭成员与权限弹窗"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
-    <div class="sync-modal__body mgr-pm-members-modal-body">
-      <div class="mgr-pm-member-search-row" id="mgrMemberSearchRow">
-        <label class="mgr-pm-member-search-field" for="mgrMemberSearch">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg>
-          <input id="mgrMemberSearch" type="search" placeholder="搜索人员姓名、手机号或邮箱" autocomplete="off" aria-controls="mgrMemberPicker" aria-expanded="false">
+    <div class="sync-modal__body mgr-mp-body">
+      <section class="mgr-mp-panel" aria-labelledby="mgrMpMembersTitle">
+        <div class="mgr-mp-panel-head">
+          <h2 id="mgrMpMembersTitle">成员 <span id="mgrMpMemberCount">0个</span></h2>
+          <button type="button" class="mgr-mp-add" id="mgrMpInvite" data-mgr-mp-invite><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>邀请</button>
+        </div>
+        <label class="mgr-mp-search" for="mgrMpMemberSearch">
+          <input id="mgrMpMemberSearch" type="search" placeholder="搜索姓名" autocomplete="off" aria-controls="mgrMpList">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg>
         </label>
-        <button type="button" class="mgr-pm-member-add-btn" id="mgrMemberAdd" disabled>添加</button>
-      </div>
-      <div class="mgr-pm-members-heading">
-        <h2>已选成员</h2><span id="mgrMembersCount">共 0 人</span>
-      </div>
-      <div class="mgr-pm-members-table-head"><span>姓名</span><span>所属部门</span><span>角色</span><span></span></div>
-      <div id="mgrMembersList"></div>
+        <div class="mgr-mp-tabs" id="mgrMpTabs" role="tablist" aria-label="成员角色"></div>
+        <div class="mgr-mp-list" id="mgrMpList"></div>
+        <div class="mgr-mp-pager" id="mgrMpPager"></div>
+      </section>
+      <section class="mgr-mp-panel" aria-labelledby="mgrMpAgentsTitle">
+        <div class="mgr-mp-panel-head">
+          <h2 id="mgrMpAgentsTitle">智能体 <span id="mgrMpAgentCount">0个</span></h2>
+          <div class="mgr-mp-add-wrap">
+            <button type="button" class="mgr-mp-add" id="mgrMpAgentAdd" aria-haspopup="listbox" aria-expanded="false"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>添加</button>
+            <div class="mgr-mp-pop" id="mgrMpAgentPop" role="listbox" hidden></div>
+          </div>
+        </div>
+        <label class="mgr-mp-search" for="mgrMpAgentSearch">
+          <input id="mgrMpAgentSearch" type="search" placeholder="搜索智能体" autocomplete="off" aria-controls="mgrMpAgents">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg>
+        </label>
+        <p class="mgr-mp-hint">点开智能体可查看并设置其功能权限</p>
+        <div class="mgr-mp-agents" id="mgrMpAgents"></div>
+      </section>
     </div>
-    <div class="sync-modal__footer mgr-pm-members-modal-footer"><button type="button" class="sync-modal__btn sync-modal__btn--ghost" data-mgr-members-close>取消</button><button type="button" class="sync-modal__btn sync-modal__btn--primary" data-mgr-members-confirm>保存</button></div>
   </div>
 </div>
 <!-- 管理 · 移除项目成员确认 -->
@@ -150,33 +162,37 @@
     <div class="sync-modal__footer"><button type="button" class="sync-modal__btn sync-modal__btn--ghost" data-mgr-repo-cancel>取消</button><button type="button" class="sync-modal__btn sync-modal__btn--primary" data-mgr-repo-confirm>保存</button></div>
   </div>
 </div>
-<!-- 管理 · 邀请成员：生成邀请链接，复制后发给同事；主动维护人员请用详情页的「项目成员」 -->
+<!-- 管理 · 邀请成员：勾选灵基人员并指定本次加入的项目内角色（项目管理员 / 成员）；人员数据与开发板块共用 -->
 <div class="sync-overlay mgr-modal" id="mgrInviteOverlay" style="display:none" aria-hidden="true">
-  <div class="sync-modal mgr-pm-remove-modal mgr-invite-modal" role="dialog" aria-modal="true" aria-labelledby="mgrInviteTitle" tabindex="-1">
-    <div class="sync-modal__header mgr-invite-header">
-      <span class="mgr-invite-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg></span>
-      <div class="mgr-invite-heading">
-        <div class="sync-modal__title" id="mgrInviteTitle">邀请成员</div>
-        <div class="mgr-invite-sub">加入「<span id="mgrInviteProject"></span>」</div>
+  <div class="sync-modal mgr-pm-modal mgr-inv-modal" role="dialog" aria-modal="true" aria-labelledby="mgrInviteTitle" tabindex="-1">
+    <div class="sync-modal__header">
+      <div class="sync-modal__title" id="mgrInviteTitle">邀请成员</div>
+      <button type="button" class="sync-modal__close" data-mgr-invite-close aria-label="关闭邀请成员弹窗"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="sync-modal__body mgr-inv-body">
+      <label class="mgr-inv-search" for="mgrInviteSearch">
+        <input id="mgrInviteSearch" type="search" placeholder="搜索姓名" autocomplete="off" aria-controls="mgrInviteList">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg>
+      </label>
+      <div class="mgr-inv-list" id="mgrInviteList" role="group" aria-label="可邀请的人员"></div>
+    </div>
+    <div class="mgr-inv-roles" role="radiogroup" aria-labelledby="mgrInviteRoleLabel">
+      <div class="mgr-inv-roles-label" id="mgrInviteRoleLabel">本次添加的项目内角色</div>
+      <div class="mgr-inv-role-cards">
+        <label class="mgr-inv-role">
+          <input type="radio" name="mgrInviteRole" value="admin">
+          <span class="mgr-inv-role-main"><b>项目管理员</b><small>管理项目日常：目录结构、权限配置、知识与成员维护</small></span>
+        </label>
+        <label class="mgr-inv-role">
+          <input type="radio" name="mgrInviteRole" value="member" checked>
+          <span class="mgr-inv-role-main"><b>成员</b><small>进空间协作对话、维护知识，按权限查看项目进展</small></span>
+        </label>
       </div>
     </div>
-    <div class="sync-modal__body mgr-invite-body">
-      <label class="mgr-invite-label" for="mgrInviteLink">邀请链接</label>
-      <div class="mgr-invite-row">
-        <input type="text" id="mgrInviteLink" class="mgr-invite-input" readonly aria-describedby="mgrInviteMeta">
-        <button type="button" class="mgr-invite-copy" id="mgrInviteCopy" data-mgr-invite-copy>复制链接</button>
-      </div>
-      <div class="mgr-invite-meta" id="mgrInviteMeta">
-        <span id="mgrInviteExpire"></span>
-        <button type="button" class="mgr-invite-reset" data-mgr-invite-reset><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>重新生成</button>
-      </div>
-      <ul class="mgr-invite-notes">
-        <li>把链接发给同事，对方打开后即可申请加入项目。</li>
-        <li>重新生成后，旧链接立即失效。</li>
-        <li>要直接添加人员、设置角色或移除成员，请使用标题右侧的「项目成员」。</li>
-      </ul>
+    <div class="sync-modal__footer mgr-inv-footer">
+      <button type="button" class="sync-modal__btn sync-modal__btn--ghost" data-mgr-invite-close>取消</button>
+      <button type="button" class="sync-modal__btn sync-modal__btn--primary" id="mgrInviteConfirm" disabled>确定</button>
     </div>
-    <div class="sync-modal__footer mgr-invite-footer"><button type="button" class="sync-modal__btn sync-modal__btn--ghost" data-mgr-invite-close>关闭</button></div>
   </div>
 </div>
 </div>

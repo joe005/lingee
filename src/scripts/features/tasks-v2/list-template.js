@@ -61,7 +61,7 @@ function renderTaskListRow(t, opts, context) {
   var typeTag = t.issueType
     ? '<span class="tk-list-card-label tk-list-card-type" data-type="' + e(t.issueType) + '" title="任务类型：' + e(t.issueType) + '">' + e(t.issueType) + '</span>' : '';
   var priorityTag = pri.name
-    ? '<span class="tk-list-card-label tk-list-priority" data-priority="' + e(t.priority) + '" title="优先级：' + e(pri.name) + '">' + e(pri.name) + '优先级</span>' : '';
+    ? '<span class="tk-list-card-label tk-list-priority" data-priority="' + e(t.priority) + '" title="优先级：' + e(pri.name) + '">' + e(pri.name) + '</span>' : '';
   return '<tr class="tk-row tk-list-card-row' + sel + (context.drawerTaskId === t.id ? ' detail-active' : '') + (depth ? ' tk-row--child' : '') + (hasChildren ? ' tk-row--parent' : '') + '" data-task-id="' + t.id + '" data-depth="' + depth + '" tabindex="0">'
     + '<td class="tk-list-card-cell" colspan="11"><div class="tk-list-card tk-list-card--' + info.kind + '">'
     + '<div class="tk-list-card-main"><div class="tk-list-card-meta"><span class="tk-list-status" data-kind="' + info.kind + '">' + e(info.badge) + '</span><span class="tk-list-card-code">' + e(t.code) + '</span>'

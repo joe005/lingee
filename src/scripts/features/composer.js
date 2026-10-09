@@ -216,6 +216,8 @@ function isMyChatSession(session) {
 }
 function activeChatSessionKey() { return ACTIVE_CHAT_SESSION_KEY + ':' + (tkCurrentUserId() || 'guest'); }
 function rememberActiveChatSession(sessionId) {
+  var session = chatSessions.find(function (row) { return row.id === sessionId; });
+  if (session && !session.viewed) { session.viewed = true; saveChatSessions(); }
   try {
     if (sessionId) localStorage.setItem(activeChatSessionKey(), sessionId);
     else localStorage.removeItem(activeChatSessionKey());
@@ -241,9 +243,9 @@ export function restoreChatSession() {
   }
   return true;
 }
-export function taskConversationNeedsReply(task) {
+export function taskConversationNeedsReply(task, includeOthers = false) {
   return task?.status === 'in_progress' && chatSessions.some(function (session) {
-    return Number(session.taskId) === task.id && isMyChatSession(session) && !!session.demoQuestion && !session.demoQuestion.answer;
+    return Number(session.taskId) === task.id && (includeOthers || isMyChatSession(session)) && !!session.demoQuestion && !session.demoQuestion.answer;
   });
 }
 /* 任务列表「待回答」卡片提示用：返回当前等待用户回答的 AI 提问文本，没有则为空串。 */
@@ -271,7 +273,7 @@ function renderChatSessions() {
     var running = session.demoState === 'running' || session.exchanges.some(function (exchange) { return !exchange.done && !exchange.waiting; });
     var waiting = session.demoState === 'question' && !session.demoQuestion?.answer || session.exchanges.some(function (exchange) { return !!exchange.waiting; });
     var state = session.demoState === 'blocked' ? 'red' : running ? 'blue' : waiting || session.demoState === 'review' ? 'orange' : 'green';
-    return '<button type="button" class="chat-session-entry' + (session.id === activeSessionId ? ' active' : '') + '" data-chat-session="' + session.id + '"><span class="dot ' + state + '"></span><span class="txt">' + escapeHtml(String(session.title)) + '</span></button>';
+    return '<button type="button" class="chat-session-entry' + (session.id === activeSessionId ? ' active' : '') + '" data-chat-session="' + session.id + '">' + (session.viewed ? '' : '<span class="dot ' + state + '"></span>') + '<span class="txt">' + escapeHtml(String(session.title)) + '</span></button>';
   }
   var mySessions = chatSessions.filter(isMyChatSession);
   var ungrouped = mySessions.filter(function (session) { return !projectId(session) && (!query || session.title.toLowerCase().includes(query)); });
@@ -773,13 +775,13 @@ function openChatSession(sessionId) {
       var result = createFinalResult(false);
       result.querySelector('.markdown-content').innerHTML = renderMarkdown(demoExchangeText(session, task, exchange));
       timeline.appendChild(result);
-      if (session.demoState === 'blocked') {
+      if (session.demoState === 'blocked' || exchange.failure) {
         var failure = document.createElement('div');
         failure.className = 'task-exception-error';
-        failure.innerHTML = '<strong>执行失败</strong><p>' + escapeHtml(session.demoFailure || 'AI 点数不足，无法继续解析扩展属性锁定规则。补充点数后可重试本阶段。') + '</p>';
+        failure.innerHTML = '<strong>执行失败</strong><p>' + escapeHtml(exchange.failure || session.demoFailure || 'AI 点数不足，无法继续解析扩展属性锁定规则。补充点数后可重试本阶段。') + '</p>';
         result.appendChild(failure);
       }
-      if (task && session.demoArtifact) {
+      if (task && session.demoArtifact && !exchange.failure) {
         var artifact = taskStageArtifact(task);
         if (artifact) result.appendChild(createChatResultArtifactCard(task, artifact));
       }
@@ -813,6 +815,16 @@ function openChatSession(sessionId) {
     appendUserMessage(exchange.prompt);
     if (exchange.waiting) { appendAskCard(pendingInputs(exchange.prompt)); return; }
     var response = appendAssistantMessage(resolveChatTeam(session, task));
+    if (exchange.failure) {
+      var failedResult = createFinalResult(false);
+      failedResult.querySelector('.markdown-content').innerHTML = renderMarkdown(exchange.response || '上次执行未完成。');
+      var failure = document.createElement('div');
+      failure.className = 'task-exception-error';
+      failure.innerHTML = '<strong>执行失败</strong><p>' + escapeHtml(exchange.failure) + '</p>';
+      failedResult.appendChild(failure);
+      response.appendChild(failedResult);
+      return;
+    }
     simulateAIResponse(response, !!exchange.done, task, exchange.prompt, function () { finishSessionExchange(session.id, index); });
     renderChatStageEndMarkers(session, index, false);
   });
@@ -878,6 +890,22 @@ export function openTaskStatusConversation(task) {
     return;
   }
   openChatSession(session.id);
+}
+export function continueBlockedTaskConversation(task) {
+  var session = chatSessions.find(function (row) { return row.id === activeSessionId && Number(row.taskId) === task.id; });
+  if (!session) return;
+  session.exchanges.forEach(function (exchange) { exchange.failure = session.demoFailure || task.blockedRun?.reason || '本次执行失败'; });
+  session.demoState = 'running';
+  session.demoArtifact = false;
+  saveChatSessions();
+  var prompt = '重试';
+  activeResponseRun++;
+  var exchangeIndex = addSessionExchange(prompt);
+  appendUserMessage(prompt);
+  var response = appendAssistantMessage(resolveChatTeam(session, task));
+  simulateAIResponse(response, false, task, prompt, function () { finishSessionExchange(session.id, exchangeIndex); });
+  renderChatTaskSide();
+  scrollChatBottom();
 }
 function renderTaskQuestion(session, task) {
   var question = session.demoQuestion;
