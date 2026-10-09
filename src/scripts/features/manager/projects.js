@@ -155,13 +155,16 @@ function syncDevExtra() {
   $('#mgrPeTeamError').hidden = true;
 }
 function pickTemplate(id) {
+  var changed = pickedTemplate !== id;
   pickedTemplate = id;
   var tpl = currentTemplate();
-  if (tpl && tpl.goal) $('#mgrPeGoal').value = tpl.goal;
+  if (changed) $('#mgrPeGoal').value = tpl ? tpl.goal : '';
   renderTemplates();
+  syncSubtabs(true);
   syncDevExtra();
   $('#mgrPeName').focus();
 }
+
 function syncSubtabs(showGoal) {
   var tpl = currentTemplate();
   var dev = !!(tpl && tpl.dev);

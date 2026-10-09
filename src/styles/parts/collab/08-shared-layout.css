@@ -10,3 +10,7 @@
 @media(max-width:1160px){#view-collab .cv-scroll-soft .apps-grid{grid-template-columns:repeat(2,1fr)}}
 #view-collab .card--clickable,#view-collab .card{position:relative}
 #view-collab #view-tasks>.tk-header{display:none}
+
+/* 现行智能体与团队页内容区保持白底，旧版滚动区规则不变。 */
+#view-collab #cv-experts > .cv-scroll-soft,
+#view-collab #cv-teams > .cv-scroll-soft { background: var(--bg); }
