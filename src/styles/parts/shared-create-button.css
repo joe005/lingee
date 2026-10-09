@@ -1,0 +1,42 @@
+/* 用户指定：复刻 devtest 应用开发页的新建主入口。 */
+:is(#view-manager, #view-tasks, #view-apps, #view-agents, #view-skills, #view-collab) :is(.lingee-create, .expert-assets-toolbar .lingee-create) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  height: 36px;
+  min-height: 36px;
+  width: auto;
+  gap: 4px;
+  padding: 8px 12px;
+  border: 1px solid var(--brand);
+  border-radius: 12px;
+  background: var(--brand);
+  color: var(--bg);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  white-space: nowrap;
+  box-shadow: none;
+  cursor: pointer;
+}
+:is(#view-manager, #view-tasks, #view-apps, #view-agents, #view-skills, #view-collab) .lingee-create:hover {
+  background: var(--create-hover);
+  border-color: var(--create-hover);
+  color: var(--bg);
+}
+:is(#view-manager, #view-tasks, #view-apps, #view-agents, #view-skills, #view-collab) .lingee-create:active {
+  background: var(--create-active);
+  border-color: var(--create-active);
+}
+.lingee-create:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.lingee-create:disabled { opacity: .5; cursor: not-allowed; }
+.lingee-create .create-plus { width: 10px; height: 10px; flex: none; }
+#view-tasks .tk-toolbar-new-group { height: 36px; }
+#view-tasks .tk-toolbar-new.lingee-create { border-radius: 12px 0 0 12px; border-right: 0; }
+#view-tasks .tk-toolbar-new-arrow { height: 36px; border-radius: 0 12px 12px 0; }
+#view-tasks .tk-toolbar-new-arrow:hover { background: var(--create-hover); border-color: var(--create-hover); }
+#view-tasks .tk-toolbar-new-arrow:active { background: var(--create-active); border-color: var(--create-active); }
+:is(#view-tasks, #view-apps, #view-agents, #view-skills, #view-collab) .lingee-create.hidden { display: none; }

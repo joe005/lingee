@@ -120,7 +120,7 @@ function renderTeamModal(){
 }
 /* 可选阶段（如智能体开发）：成员里有匹配的智能体才出现，否则不显示、也不算能力缺口 */
 function scenarioStages(item){
-  return item.id==='feature'?teamFeatureStages(teamDraft):item.stages;
+  return (teamDraft.preset && teamDraft.stages?.length) || item.id==='feature'?teamFeatureStages(teamDraft):item.stages;
 }
 function visibleStages(item){
   return scenarioStages(item).filter(function(stage){

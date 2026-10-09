@@ -31,7 +31,7 @@ function implementationOwner(title, team) {
 }
 
 /* 自定义执行计划的阶段 id 是 s1…s6，按阶段名称对应到交付阶段，再选认领该阶段的智能体。 */
-const PHASE_BY_STAGE_NAME = {'需求分析':'requirements','方案设计':'design','架构设计':'design','开发实现':'implementation','智能体开发':'agent','实现规划':'planning','编码实现':'implementation','测试验证':'verification','部署交付':'delivery'};
+const PHASE_BY_STAGE_NAME = {'需求确认':'requirements','系统设计':'design','苍穹应用开发':'implementation','质量验收':'verification','需求分析':'requirements','方案设计':'design','架构设计':'design','开发实现':'implementation','智能体开发':'agent','实现规划':'planning','编码实现':'implementation','测试验证':'verification','部署交付':'delivery'};
 
 function ownerFor(stageId, title, team) {
   const preferred = stageId === 'implementation' ? implementationOwner(title, team) : null;

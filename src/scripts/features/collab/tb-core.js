@@ -57,7 +57,7 @@ export function tbPriority(t) { return t.priority || (t.type === 'Bug' ? '高' :
 /* 智能体团队实际能覆盖到的阶段：团内成员有匹配该阶段能力项的智能体（每阶段最多 2 位）。 */
 export function tbTeamStages(team, issue) {
   const scenario = teamStageScenario(issue);
-  const stages = scenario.id === 'feature' ? teamFeatureStages(team) : scenario.stages;
+  const stages = (team?.preset && team?.stages?.length) || scenario.id === 'feature' ? teamFeatureStages(team) : scenario.stages;
   if (!team) return stages.slice();
   const withExperts = stages.map(stage => ({ ...stage, expertIds: stageExperts(stage.id, team.members || [], team.stageMembers?.[stage.id]) }));
   const covered = withExperts.filter(s => s.expertIds.length);

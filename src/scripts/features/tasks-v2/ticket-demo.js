@@ -1,10 +1,10 @@
 /* 工单管理系统（Manage 项目 ticket-mgmt）：CIO 演示场景的研发任务。
-   项目由项目管理员赵琳立项，通用应用开发智能体团队按 5 个阶段交付，22 个任务中 18 个已完成（82%）、
+   项目由项目管理员赵琳立项，通用应用开发智能体团队按 4 个阶段交付，22 个任务中 18 个已完成（82%）、
    2 个待审核、1 个待开始、1 个已阻塞（派单算法卡在调度集群扩容审批，等 CIO 决策）。
-   任务 id 1600–1621，编号 T1001600–T1001621；阶段 id 沿用通用应用开发的 s1–s5。 */
+   任务 id 1600–1621，编号 T1001600–T1001621；阶段 id 沿用通用应用开发的 s1–s4。 */
 
 const PROJECT = 'ticket-mgmt';
-const STAGES = [['s1', '需求分析', 'p24', 'general-app-product-expert'], ['s2', '架构设计', 'p25', 'general-app-architecture-expert'], ['s3', '开发实现', 'p26', 'general-app-development-expert'], ['s4', '智能体开发', 'p26', 'agent-development-expert'], ['s5', '测试验证', 'p27', 'general-app-qa-expert']];
+const STAGES = [['s1', '需求分析', 'p24', 'general-app-product-expert'], ['s2', '系统设计', 'p25', 'general-app-architecture-expert'], ['s3', '开发实现', 'p26', 'general-app-development-expert'], ['s4', '测试验证', 'p27', 'general-app-qa-expert']];
 const TEAM_NAME = '通用应用开发智能体团队';
 const REVIEWER = 'p04';
 
@@ -35,18 +35,18 @@ const ROWS = [
 ];
 
 const STATE_BY_STATUS = {
-  done: ['done', 'done', 'done', 'done', 'done'],
-  in_review: ['done', 'done', 'done', 'done', 'review'],
-  in_progress: ['done', 'done', 'running', 'pending', 'pending'],
-  blocked: ['done', 'done', 'blocked', 'pending', 'pending'],
-  backlog: ['pending', 'pending', 'pending', 'pending', 'pending'],
+  done: ['done', 'done', 'done', 'done'],
+  in_review: ['done', 'done', 'done', 'review'],
+  in_progress: ['done', 'done', 'running', 'pending'],
+  blocked: ['done', 'done', 'blocked', 'pending'],
+  backlog: ['pending', 'pending', 'pending', 'pending'],
 };
-const CURRENT_STAGE = { done: 's5', in_review: 's5', in_progress: 's3', blocked: 's3', backlog: 's1' };
+const CURRENT_STAGE = { done: 's4', in_review: 's4', in_progress: 's3', blocked: 's3', backlog: 's1' };
 
 function plan(status, assignee) {
   const states = STATE_BY_STATUS[status];
   return STAGES.map(function (st, i) {
-    return { id: st[0], workType: st[1], title: st[1], description: '', expertId: st[3], assigneeId: i === 4 || status === 'done' ? REVIEWER : st[2], status: states[i] };
+    return { id: st[0], workType: st[1], title: st[1], description: '', expertId: st[3], assigneeId: i === 3 || status === 'done' ? REVIEWER : st[2], status: states[i] };
   });
 }
 

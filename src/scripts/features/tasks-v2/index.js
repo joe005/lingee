@@ -3158,6 +3158,8 @@ function bindEvents() {
   els.tkDisplayBtn.addEventListener('click', function (e) {
     e.stopPropagation();
     if (els.tkDisplayPopover.classList.contains('hidden')) {
+      els.tkToolbarNewMenu.classList.add('hidden');
+      els.tkToolbarNewArrow.setAttribute('aria-expanded', 'false');
       closeFilterPanel();
       closeDisplayChoiceMenu();
       closeFieldSettings();
@@ -3296,6 +3298,14 @@ function bindEvents() {
   els.tkToolbarNewArrow.addEventListener('click', function (e) {
     e.stopPropagation();
     var open = !els.tkToolbarNewMenu.classList.contains('hidden');
+    if (!open) {
+      closeFilterPanel();
+      closeDisplayChoiceMenu();
+      closeFieldSettings();
+      els.tkDisplayPopover.classList.add('hidden');
+      els.tkDisplayBtn.classList.remove('active');
+      els.tkDisplayBtn.setAttribute('aria-expanded', 'false');
+    }
     els.tkToolbarNewMenu.classList.toggle('hidden', open);
     els.tkToolbarNewArrow.setAttribute('aria-expanded', String(!open));
   });

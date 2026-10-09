@@ -724,7 +724,7 @@ function openChatSession(sessionId) {
   rememberActiveChatSession(session.id);
   activeSessionTaskId = session.taskId == null ? null : Number(session.taskId);
   document.getElementById('chatCurrentStageToggle').setAttribute('aria-expanded', 'false');
-  document.getElementById('chatCurrentStageDetails').hidden = true;
+  document.getElementById('chatCurrentStageDetails').hidden = !document.getElementById('chatCurrentStage').classList.contains('is-horizontal');
   showView('chat');
   messagesList.innerHTML = '';
   hideTaskQuestionPanel();
@@ -909,7 +909,7 @@ export function continueBlockedTaskConversation(task) {
 }
 function renderTaskQuestion(session, task) {
   var question = session.demoQuestion;
-  appendUserMessage(question.prompt || '执行「部署交付」：完成采购订单规则配置清单，整理说明并归档 evidence 证据。');
+  appendUserMessage(question.prompt || '执行「测试验证」：完成采购订单规则配置清单，整理说明并归档 evidence 证据。');
   var response = appendAssistantMessage(resolveChatTeam(session, task));
   if (task) appendTaskReadingSummary(response, task);
   var process = document.createElement('div');
@@ -1033,7 +1033,7 @@ function renderChatTaskSide() {
       stagePanel.dataset.taskId = String(task.id);
       stagePanel.dataset.sessionId = String(activeSessionId);
       document.getElementById('chatCurrentStageToggle').setAttribute('aria-expanded', 'false');
-      document.getElementById('chatCurrentStageDetails').hidden = true;
+      document.getElementById('chatCurrentStageDetails').hidden = !document.getElementById('chatCurrentStage').classList.contains('is-horizontal');
     }
     var stage = stages[stageIndex];
     var people = tkPeopleInProject(task.project);
@@ -1052,7 +1052,7 @@ function renderChatTaskSide() {
       var handlerName = people.find(function (person) { return person.id === handlerId; })?.name || '待分配';
       var indexContent = state === 'done' ? '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4.5 10 3.5 3.5 7.5-8"/></svg>' : index + 1;
       var isNextStage = row.id === task.executionStageId && task.status !== 'done' && state !== 'done';
-      return '<li class="chat-current-stage-row is-' + state + (isNextStage ? ' is-current' : '') + '"' + (isNextStage ? ' aria-current="step"' : '') + '><span class="chat-current-stage-index" aria-label="第' + (index + 1) + '阶段' + (state === 'done' ? '已完成' : '') + '">' + indexContent + '</span><span class="chat-current-stage-row-main"><strong>' + escapeHtml(row.name || '未命名阶段') + '</strong><small>处理人 ' + escapeHtml(handlerName) + '</small></span><span class="chat-current-stage-status">' + label + '</span></li>';
+      return '<li class="chat-current-stage-row is-' + state + (isNextStage ? ' is-current' : '') + '"' + (isNextStage ? ' aria-current="step"' : '') + '><span class="chat-current-stage-index" aria-label="第' + (index + 1) + '阶段' + (state === 'done' ? '已完成' : '') + '">' + indexContent + '</span><span class="chat-current-stage-row-main"><strong>' + escapeHtml(row.name || '未命名阶段') + '</strong><small><span class="chat-current-stage-handler-label">处理人 </span>' + escapeHtml(handlerName) + '</small></span><span class="chat-current-stage-status">' + label + '</span></li>';
     }).join('');
   } else { stagePanel.removeAttribute('data-task-id'); stagePanel.removeAttribute('data-session-id'); }
   /* 任务会话不提供历史版本入口，应用开发的 workspace 会话保留。 */
@@ -1306,7 +1306,7 @@ function stageSemantic(name) {
   if (/规划/.test(text)) return 'planning';
   if (/设计/.test(text)) return 'design';
   if (/编码|实现|开发/.test(text)) return 'implementation';
-  if (/测试|验证/.test(text)) return 'verification';
+  if (/测试|验证|验收/.test(text)) return 'verification';
   if (/部署|交付|发布/.test(text)) return 'delivery';
   return '';
 }
@@ -2214,6 +2214,7 @@ export function initComposer() {
   });
   document.getElementById('chatStageConfirmBtn').addEventListener('click', confirmChatStage);
   document.getElementById('chatCurrentStageToggle').addEventListener('click', function () {
+    if (document.getElementById('chatCurrentStage').classList.contains('is-horizontal')) return;
     var details = document.getElementById('chatCurrentStageDetails');
     details.hidden = !details.hidden;
     this.setAttribute('aria-expanded', String(!details.hidden));
