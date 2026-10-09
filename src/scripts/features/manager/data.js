@@ -165,7 +165,7 @@ function mgrCanManageProject(project) {
   if (!project) return false;
   var name = cvCurrentUserName();
   var me = CV_MEMBERS.find(function (m) { return m.name === name && m.status !== 'disabled'; });
-  return !!me && (project.owner === me.name || me.workspaceRole === 'system_admin');
+  return !!me && (project.owner === me.name || me.workspaceRole === 'system_admin' || (project.adminIds || []).includes(me.id));
 }
 
 /* ---------- 项目成员 ----------
@@ -199,18 +199,38 @@ function mgrMemberOpenTasks(project, personId) {
 }
 /* 一次写入成员与角色，保存失败时回滚 */
 function mgrSetProjectMembers(project, members, roles) {
-  var prev = { members: project.members, memberRoles: project.memberRoles, updatedAt: project.updatedAt };
+  var prev = { members: project.members, memberRoles: project.memberRoles, adminIds: project.adminIds, updatedAt: project.updatedAt };
   project.members = members.slice();
   project.memberRoles = Object.assign({}, roles);
+  if (project.adminIds) project.adminIds = project.adminIds.filter(function (id) { return project.members.includes(id); });
   project.updatedAt = Date.now();
   if (mgrSaveProjects()) {
     document.dispatchEvent(new CustomEvent('lingee:mgr-projects-changed', { detail: { members: project.id } }));
     return true;
   }
-  project.members = prev.members;
-  project.memberRoles = prev.memberRoles;
-  project.updatedAt = prev.updatedAt;
+  Object.assign(project, prev);
   return false;
+}
+/* 设置 / 取消项目管理员（负责人不在此列），保存失败时回滚 */
+function mgrSetMemberLevel(project, personId, asAdmin) {
+  var prev = { adminIds: project.adminIds, updatedAt: project.updatedAt };
+  var admins = (project.adminIds || []).filter(function (id) { return id !== personId; });
+  if (asAdmin) admins.push(personId);
+  project.adminIds = admins;
+  project.updatedAt = Date.now();
+  if (!mgrSaveProjects()) { Object.assign(project, prev); return false; }
+  document.dispatchEvent(new CustomEvent('lingee:mgr-projects-changed', { detail: { members: project.id } }));
+  return true;
+}
+/* 项目智能体及其功能权限（perms：{ 智能体ID: { chat, read, write } }），保存失败时回滚 */
+function mgrSetProjectExperts(project, ids, perms) {
+  var prev = { projectExperts: project.projectExperts, expertPerms: project.expertPerms, updatedAt: project.updatedAt };
+  project.projectExperts = ids.slice();
+  project.expertPerms = Object.assign({}, perms);
+  project.updatedAt = Date.now();
+  if (!mgrSaveProjects()) { Object.assign(project, prev); return false; }
+  document.dispatchEvent(new CustomEvent('lingee:mgr-projects-changed', { detail: { experts: project.id } }));
+  return true;
 }
 /* 重命名项目：名称必填、不超过 60 字、不能与其他管理项目重名；返回错误文案，成功返回空串 */
 function mgrRenameError(project, name) {
@@ -239,25 +259,42 @@ function mgrSetProjectRepo(project, repo, baseBranch) {
   document.dispatchEvent(new Event('lingee:tasks-changed'));
   return true;
 }
-/* ---------- 邀请链接 ----------
-   每个项目一个邀请码（7 天有效），可重新生成；链接指向本项目详情，受邀同事登录后可申请加入。 */
-var INVITE_DAYS = 7;
-function mgrProjectInvite(project, regenerate) {
-  var now = Date.now();
-  var expired = !project.inviteToken || !project.inviteAt || now - project.inviteAt > INVITE_DAYS * 86400000;
-  if (regenerate || expired) {
-    project.inviteToken = Math.random().toString(36).slice(2, 8) + now.toString(36).slice(-4);
-    project.inviteAt = now;
-    project.updatedAt = now;
-    if (!mgrSaveProjects()) return null;
+/* ---------- 邀请成员 ----------
+   一次加入多名成员并指定项目内角色：项目管理员可维护项目（成员、设置、删除任务），成员只参与协作。
+   岗位角色（产品 / 开发 / 测试）不在这里设置，沿用按岗位标签推断的默认值，再到「项目成员」里调整。 */
+function mgrAddProjectMembers(project, personIds, asAdmin) {
+  var prev = { members: project.members, memberRoles: project.memberRoles, adminIds: project.adminIds, updatedAt: project.updatedAt };
+  var members = (project.members || []).slice();
+  var roles = Object.assign({}, project.memberRoles);
+  var admins = (project.adminIds || []).slice();
+  personIds.forEach(function (id) {
+    var person = cvPersonById(id);
+    if (!person || members.includes(person.id)) return;
+    members.push(person.id);
+    var role = mgrMemberRole(project, person);
+    if (role) roles[person.id] = role;
+    if (asAdmin && !admins.includes(person.id)) admins.push(person.id);
+  });
+  project.members = members;
+  project.memberRoles = roles;
+  project.adminIds = admins;
+  project.updatedAt = Date.now();
+  if (mgrSaveProjects()) {
+    document.dispatchEvent(new CustomEvent('lingee:mgr-projects-changed', { detail: { members: project.id } }));
+    return true;
   }
-  var expires = new Date(project.inviteAt + INVITE_DAYS * 86400000);
-  var pad = function (n) { return String(n).padStart(2, '0'); };
-  return {
-    token: project.inviteToken,
-    expires: expires.getFullYear() + '-' + pad(expires.getMonth() + 1) + '-' + pad(expires.getDate()),
-    days: INVITE_DAYS,
-  };
+  Object.assign(project, prev);
+  return false;
+}
+/* 项目目标与项目指令；目标同步到项目卡片描述，保存失败时回滚 */
+function mgrSetProjectText(project, patch) {
+  var prev = { goal: project.goal, desc: project.desc, instruction: project.instruction, updatedAt: project.updatedAt };
+  if (patch.goal !== undefined) { project.goal = patch.goal; project.desc = patch.goal || project.name; }
+  if (patch.instruction !== undefined) project.instruction = patch.instruction;
+  project.updatedAt = Date.now();
+  if (!mgrSaveProjects()) { Object.assign(project, prev); return false; }
+  document.dispatchEvent(new CustomEvent('lingee:mgr-projects-changed', { detail: { text: project.id } }));
+  return true;
 }
 
 /* 删除项目及其议题、任务（管理任务与开发板块任务）；演示项目记入已删除清单，避免下次从种子恢复。
@@ -495,7 +532,7 @@ export function initManagerData() {
 export {
   TASK_STATUSES, mgrAddIssue, mgrAddProject, mgrCanManageProject, mgrCanDeleteTask, mgrCreateTask, mgrDeleteProject, mgrDeleteTask, mgrCurrentPersonId, mgrExpert, mgrExpertList,
   MEMBER_ROLES, mgrHasSessionPerm, mgrMemberOpenTasks, mgrMemberRole, mgrMemberRoleLabel, mgrPersonName, mgrProjectPeople,
-  mgrProjectInvite, mgrRenameError, mgrRenameProject, mgrSetProjectMembers, mgrSetProjectRepo, mgrProjectById, mgrProjectIssues, mgrProjectKnowledge, mgrProjectMembers,
+  mgrAddProjectMembers, mgrSetMemberLevel, mgrSetProjectExperts, mgrRenameError, mgrRenameProject, mgrSetProjectMembers, mgrSetProjectRepo, mgrSetProjectText, mgrProjectById, mgrProjectIssues, mgrProjectKnowledge, mgrProjectMembers,
   mgrCreateDevTask, mgrIsDevTask, mgrProjectProgress, mgrProjectTasks, mgrProjects, mgrRelatedTask, mgrSaveProjects, mgrSaveTasks, mgrSetSessionPerm,
   mgrTaskById, mgrTaskKey, mgrTasks,
   mgrTeam, mgrTeams,

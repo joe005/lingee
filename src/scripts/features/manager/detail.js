@@ -2,12 +2,13 @@ import { $ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
 import {
   mgrProjectProgress, mgrExpert, mgrExpertList, mgrHasSessionPerm, mgrPersonName, mgrProjectById, mgrProjectIssues, mgrProjectKnowledge,
-  mgrProjectTasks, mgrSaveProjects, mgrTaskById, mgrTeam, mgrTeams,
+  mgrSaveProjects, mgrTaskById, mgrTeam, mgrTeams,
 } from './data.js';
+import { feedHtml, initManagerFeed, resetFeed } from './feed.js';
 import { openInvite } from './invite.js';
 import { openMembers } from './members.js';
 import { planWorkspaceHtml } from './plan.js';
-import { mgrDay, mgrEsc, mgrTag } from './utils.js';
+import { mgrEsc, mgrTag } from './utils.js';
 /* 管理 · 项目详情：标题与标签、计划与任务 / 动态页签、右栏（议题 / 项目概览 / 知识库 / 智能体团队），
    以及右栏打开的议题、知识库、智能体团队维护弹窗。 */
 
@@ -80,24 +81,6 @@ function railHtml(p) {
       : '未选择项目智能体') + '</span></div>';
 }
 
-/* ---------- 动态 ---------- */
-function feedHtml(p) {
-  var items = [];
-  mgrProjectTasks(p.id).forEach(function (t) {
-    items.push({ time: String(t.createDate || ''), text: '创建任务 ' + mgrEsc(t.code || '') + '「' + mgrEsc(t.title) + '」', cls: 'create' });
-    if (t.status === 'done') items.push({ time: String(t.updatedAt || t.createDate || ''), text: '任务 ' + mgrEsc(t.code || '') + '「' + mgrEsc(t.title) + '」已完成', cls: 'done' });
-  });
-  mgrProjectKnowledge(p.id).forEach(function (k) {
-    items.push({ time: String(k.archivedAt || ''), text: '「' + mgrEsc(k.title) + '」归档到项目知识库', cls: 'kb' });
-  });
-  items = items.filter(function (x) { return x.time; }).sort(function (a, b) { return String(b.time).localeCompare(String(a.time)); }).slice(0, 12);
-  if (!items.length) return '<div class="mgr-empty">暂无动态。任务创建、执行与产物归档会展示在这里。</div>';
-  return '<div class="mgr-feed">' + items.map(function (x) {
-    return '<div class="mgr-feed-item is-' + x.cls + '"><span class="mgr-feed-dot" aria-hidden="true"></span><span class="mgr-feed-text">' + x.text +
-      '</span><span class="mgr-feed-time">' + mgrDay(x.time) + '</span></div>';
-  }).join('') + '</div>';
-}
-
 function renderDetail(p) {
   detailProjectId = p.id;
   $('#mgrProjDetailName').textContent = p.name;
@@ -129,7 +112,7 @@ function rerenderDetail() {
   refreshKb();
 }
 /* 进入详情时回到「计划与任务」页签 */
-function resetDetailTab() { detailTab = 'plan'; }
+function resetDetailTab() { detailTab = 'plan'; resetFeed(); }
 
 /* ---------- 弹窗通用 ---------- */
 function isOpen(sel) { var el = $(sel); return !!el && el.style.display !== 'none'; }
@@ -260,6 +243,7 @@ function initDetailModals() {
 
 export function initManagerDetail() {
   initDetailModals();
+  initManagerFeed(rerenderDetail);
   var panel = $('#mgr-panel-projects');
   panel.addEventListener('click', function (e) {
     var t = e.target;

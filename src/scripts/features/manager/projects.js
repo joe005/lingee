@@ -4,10 +4,11 @@ import { cvCurrentUserName } from '../collab/data.js';
 import { tkBranchNameError } from '../tasks-v2/git-branch.js';
 import {
   mgrAddProject, mgrCanManageProject, mgrRenameError, mgrRenameProject, mgrSetProjectRepo, mgrCurrentPersonId, mgrDeleteProject, mgrExpert, mgrExpertList, mgrProjectById,
-  mgrProjectProgress, mgrProjectTasks, mgrProjects, mgrTeam, mgrTeams,
+  mgrProjectIssues, mgrProjectTasks, mgrProjects, mgrTeam, mgrTeams,
 } from './data.js';
 import { renderDetail, resetDetailTab } from './detail.js';
 import { closeTaskPanel, resetPlanState } from './plan.js';
+import { hideSettings, openSettings } from './settings.js';
 import { mgrEsc, mgrTag } from './utils.js';
 /* 管理 · 项目：管理项目卡片栅格、进入 / 返回项目详情、新建项目弹窗。 */
 
@@ -32,25 +33,71 @@ var pickedTemplate = 'blank';
 var pickedExperts = [];
 var expertQuery = '';
 
-/* ---------- 列表 ---------- */
+/* ---------- 列表（项目首页：待你处理 + 全部项目） ---------- */
+var TODO_PREVIEW = 3;
+var todoExpanded = false;
+var projectQuery = '';
+
+function ownerAvatar(name) {
+  return '<span class="mgr-home-owner-avatar" aria-hidden="true">' + mgrEsc((name || '?')[0]) + '</span>';
+}
 function cardHtml(p) {
   var tags = p.mgrOk
     ? mgrTag('运行正常', 'done')
     : (p.mgrRisk ? mgrTag(p.mgrRisk + ' 处风险', 'danger') : '') + (p.mgrDecide ? mgrTag(p.mgrDecide + ' 件待决策', 'warning') : '');
-  var progress = mgrProjectProgress(p).percent;
   return '<div class="mgr-mcard" data-mgr-project="' + mgrEsc(p.id) + '" role="button" tabindex="0" aria-label="查看项目：' + mgrEsc(p.name) + '">' +
-    '<div class="mgr-mcard-head"><h3 class="mgr-mcard-title">' + mgrEsc(p.name) + '</h3>' + CARD_CHEVRON + '</div>' +
+    '<h3 class="mgr-mcard-title">' + mgrEsc(p.name) + '</h3>' +
     '<p class="mgr-mcard-desc">' + mgrEsc(p.desc) + '</p>' +
-    '<div class="mgr-mcard-foot"><span class="mgr-mcard-tags">' + tags + '</span><span class="mgr-mcard-progress">进度 ' + progress + '%</span></div></div>';
+    '<div class="mgr-mcard-foot"><span class="mgr-mcard-owner">' + ownerAvatar(p.owner) + '<span>' + mgrEsc(p.owner || '未指定') + '</span></span>' +
+    '<span class="mgr-mcard-tags">' + tags + '</span></div></div>';
+}
+/* 待你处理：分给我的未完成任务 + 我能管理的项目里待处理的议题 */
+function pendingItems() {
+  var me = mgrCurrentPersonId();
+  var items = [];
+  mgrProjects().forEach(function (p) {
+    mgrProjectIssues(p.id).forEach(function (i) {
+      if (i.status === '待处理' && mgrCanManageProject(p)) items.push({ kind: '议题', title: i.title, project: p, meta: i.time || '' });
+    });
+    if (!me) return;
+    mgrProjectTasks(p.id).forEach(function (t) {
+      if (t.assignee !== me || t.status === 'done' || t.status === 'cancelled' || t.status === 'in_review') return;
+      items.push({ kind: '任务', title: t.title || t.name || '未命名任务', project: p, meta: t.dueDate ? '截止 ' + t.dueDate : '' });
+    });
+  });
+  return items;
+}
+function renderTodos() {
+  var items = pendingItems();
+  var shown = todoExpanded ? items : items.slice(0, TODO_PREVIEW);
+  $('#mgrTodoCount').textContent = items.length;
+  var all = $('#mgrTodoAll');
+  all.hidden = items.length <= TODO_PREVIEW;
+  all.setAttribute('aria-expanded', String(todoExpanded));
+  all.firstChild.textContent = todoExpanded ? '收起 ' : '全部 ';
+  $('#mgrTodoList').innerHTML = items.length
+    ? shown.map(function (it) {
+      return '<button type="button" class="mgr-todo-row" data-mgr-project="' + mgrEsc(it.project.id) + '">' +
+        '<span class="mgr-todo-kind">' + it.kind + '</span><span class="mgr-todo-title">' + mgrEsc(it.title) + '</span>' +
+        '<span class="mgr-todo-project">' + mgrEsc(it.project.name) + '</span>' +
+        (it.meta ? '<span class="mgr-todo-meta">' + mgrEsc(it.meta) + '</span>' : '') + '</button>';
+    }).join('')
+    : '<div class="mgr-todo-empty"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>暂无待办</div>';
 }
 function renderList() {
-  var list = mgrProjects();
+  var all = mgrProjects();
+  var q = projectQuery.trim().toLocaleLowerCase();
+  var list = q ? all.filter(function (p) { return (p.name + ' ' + (p.owner || '')).toLocaleLowerCase().includes(q); }) : all;
+  $('#mgrHomeCount').textContent = all.length;
+  $('#mgrAllCount').textContent = all.length;
+  renderTodos();
   $('#mgrProjCards').innerHTML = list.length
     ? list.map(cardHtml).join('')
-    : '<div class="mgr-empty">还没有管理项目，点右上角「＋ 新建项目」创建。</div>';
+    : '<div class="mgr-empty">' + (q ? '没有匹配的项目。' : '还没有管理项目，点右上角「＋ 新建项目」创建。') + '</div>';
 }
 function showList() {
   openProjectId = null;
+  hideSettings();
   closeTaskPanel();
   $('#mgrProjDetail').classList.add('hidden');
   $('#mgrProjList').classList.remove('hidden');
@@ -61,6 +108,7 @@ function openProject(id) {
   var p = mgrProjectById(id);
   if (!p) { toast('未找到该项目'); return false; }
   openProjectId = id;
+  hideSettings();
   resetDetailTab();
   resetPlanState();
   toggleMoreMenu(false);
@@ -484,8 +532,9 @@ export function initManagerProjects(routeChanged) {
     if (t.closest('[data-mgr-proj-back]')) { showList(); return; }
     if (t.closest('#mgrProjNew')) { openProjectNew(); return; }
     if (t.closest('[data-mgr-proj-more]')) { toggleMoreMenu(); return; }
-    var settings = t.closest('[data-mgr-settings]');
-    if (settings) { openRepoSettings(settings); return; }
+    if (t.closest('[data-mgr-settings]')) { openSettings(openProjectId); return; }
+    var repoEdit = t.closest('[data-mgr-repo-edit]');
+    if (repoEdit) { openRepoSettings(repoEdit); return; }
     if (t.closest('[data-mgr-proj-rename]')) { toggleMoreMenu(false); requestRename($('[data-mgr-proj-more]')); return; }
     var del = t.closest('[data-mgr-proj-delete]');
     if (del) { toggleMoreMenu(false); requestDelete($('[data-mgr-proj-more]')); return; }
@@ -497,8 +546,14 @@ export function initManagerProjects(routeChanged) {
       toast('已收到提问（演示）：「' + mgrEsc(q) + '」，AI 会基于项目上下文作答');
       return;
     }
-    var card = t.closest('#mgrProjCards [data-mgr-project]');
+    if (t.closest('#mgrTodoAll')) { todoExpanded = !todoExpanded; renderTodos(); return; }
+    var card = t.closest('#mgrProjList [data-mgr-project]');
     if (card) openProject(card.getAttribute('data-mgr-project'));
+  });
+  panel.addEventListener('input', function (e) {
+    if (e.target.id !== 'mgrProjSearch') return;
+    projectQuery = e.target.value;
+    renderList();
   });
   panel.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && e.target.closest && e.target.closest('#mgrProjDetail .mgr-proj-more')) {
@@ -512,7 +567,7 @@ export function initManagerProjects(routeChanged) {
       return;
     }
     var card = e.target.closest && e.target.closest('#mgrProjCards [data-mgr-project]');
-    if (card) { e.preventDefault(); openProject(card.getAttribute('data-mgr-project')); }
+    if (card && card === e.target) { e.preventDefault(); openProject(card.getAttribute('data-mgr-project')); }
   });
   renderList();
 }

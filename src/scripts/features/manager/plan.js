@@ -17,16 +17,16 @@ import { mgrDay, mgrEsc } from './utils.js';
    右侧滑入的任务详情，以及新建任务弹窗（核心信息 / 补充信息，研发任务可编辑执行阶段）。 */
 
 var STATUS_CHIPS = [
+  ['all', '全部'],
   ['pending', '待处理'],
   ['in_progress', '进行中'],
   ['in_review', '待验收'],
   ['done', '已完成'],
-  ['all', '全部'],
 ];
 var DOC_DIRS = ['会议纪要', '需求文档', '设计方案', '测试报告', '其他'];
 var KPIS = ['交付及时率', '一次通过率', '缺陷回归通过率'];
 
-var statusFilter = 'all';
+var statusFilter = 'pending';   /* 默认聚焦待处理 */
 var searchText = '';
 var assigneeFilter = '';
 var sortMode = 'raw';
@@ -332,12 +332,13 @@ function planWorkspaceHtml(project) {
         '" aria-pressed="' + (statusFilter === c[0]) + '">' + c[1] + ' ' + (counts[c[0]] || 0) + '</button>';
     }).join('') +
     '</div><div class="mgr-pd-filter-row">' +
-    '<input type="search" id="mgrPdSearch" value="' + mgrEsc(searchText) + '" placeholder="搜索编号或任务名" aria-label="搜索编号或任务名" autocomplete="off">' +
     '<select id="mgrPdAssignee" aria-label="负责人筛选"><option value="">全部负责人</option>' +
     assignees.map(function (a) { return opt(mgrEsc(a.id), mgrEsc(a.name), String(assigneeFilter)); }).join('') +
     '</select><select id="mgrPdSort" aria-label="排序">' +
-    opt('raw', '原始顺序', sortMode) + opt('due', '按截止时间', sortMode) + opt('progress', '按进展', sortMode) +
-    '</select><div class="mgr-pd-newtask"><button type="button" class="mgr-btn mgr-btn--primary" id="mgrPdTaskNew">＋ 新建任务</button></div></div>' +
+    opt('raw', '原始顺序', sortMode) + opt('due', '按截止时间', sortMode) + opt('progress', '按进展', sortMode) + '</select>' +
+    '<label class="mgr-pd-search" for="mgrPdSearch"><input type="search" id="mgrPdSearch" value="' + mgrEsc(searchText) + '" placeholder="搜索编号或任务名" aria-label="搜索编号或任务名" autocomplete="off">' +
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg></label>' +
+    '<div class="mgr-pd-newtask"><button type="button" class="mgr-pd-newbtn" id="mgrPdTaskNew"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>新建任务</button></div></div>' +
     '<div class="mgr-pd-table-wrap" id="mgrPdTaskArea" data-mgr-proj="' + mgrEsc(project.id) + '">' + body + '</div>' +
     '<p class="mgr-footnote" id="mgrPdPermNote"' + (canOpenSession ? ' hidden' : '') + '>当前演示角色无执行会话查看权限，仅展示任务元数据与执行状态。</p>';
 }
@@ -423,7 +424,7 @@ function setPlanView(mode) {
 }
 /* 切换项目时重置筛选状态 */
 function resetPlanState() {
-  statusFilter = 'all';
+  statusFilter = 'pending';
   searchText = '';
   assigneeFilter = '';
   sortMode = 'raw';
@@ -432,9 +433,13 @@ function resetPlanState() {
 }
 
 /* ---------- 任务详情（右侧滑入） ---------- */
-function sectionTitle(label, count) {
+var panelFold = { rel: false, more: false };   /* true = 已折叠 */
+var FOLD_CHEVRON = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg>';
+function sectionTitle(label, count, foldKey) {
   return '<div class="mgr-sec-title"><i aria-hidden="true"></i>' + mgrEsc(label) +
-    (count ? '<span class="mgr-sec-count">' + mgrEsc(count) + '</span>' : '') + '</div>';
+    (count ? '<span class="mgr-sec-count">' + mgrEsc(count) + '</span>' : '') +
+    (foldKey ? '<button type="button" class="mgr-sec-fold' + (panelFold[foldKey] ? ' is-folded' : '') + '" data-mgr-tp-fold="' + foldKey + '" aria-expanded="' + !panelFold[foldKey] + '">' +
+      (panelFold[foldKey] ? '展开' : '收起') + FOLD_CHEVRON + '</button>' : '') + '</div>';
 }
 /* 代码分支：只有开发任务按分支开发，状态口径与开发板块一致 */
 function branchSectionHtml(task) {
@@ -471,10 +476,12 @@ function taskPanelHtml(task) {
     return '<div class="mgr-tp-kv-item"><span class="mgr-detail-key">' + k + '</span><span class="mgr-detail-value">' + v + '</span></div>';
   };
   var id = mgrEsc(mgrTaskKey(task));
-  return '<div class="mgr-tp-headtag"><span class="mgr-tp-code">' + mgrEsc(task.code || '') + '</span>' +
-    (isRdTask(task) ? '<span class="mgr-tag mgr-tag--brand">研发任务</span>' : '') +
+  var creator = task.createdBy ? mgrEsc(mgrPersonName(task.createdBy)) : '—';
+  var finished = task.status === 'done' || task.status === 'cancelled' ? mgrEsc(task.updatedAt || task.createDate || '—') : '—';
+  return '<div class="mgr-tp-titlerow"><h3 class="mgr-tp-title">' + mgrEsc(task.title) + '</h3><div class="mgr-tp-tags">' +
     (ex.cls === 'expert' ? '<span class="mgr-executor mgr-executor--expert">' + mgrEsc(ex.name) + '</span>' : '<span class="mgr-executor mgr-executor--user">用户执行</span>') +
-    statusTag(task.status) + '</div><h3 class="mgr-tp-title">' + mgrEsc(task.title) + '</h3>' +
+    '<span class="mgr-tp-code">' + mgrEsc(task.code || '') + '</span>' +
+    (isRdTask(task) ? '<span class="mgr-tag mgr-tag--brand">研发任务</span>' : '') + statusTag(task.status) + '</div></div>' +
     sectionTitle('执行概览') + '<div class="mgr-tp-kv">' +
     kv('当前处理人', mgrEsc(mgrPersonName(handlerOf(task)))) +
     kv('执行智能体', ex.cls === 'expert' ? mgrEsc(ex.name) : '—') +
@@ -483,18 +490,23 @@ function taskPanelHtml(task) {
     kv('计划截止', mgrDay(task.dueDate)) +
     kv('更新时间', mgrEsc(task.updatedAt || task.createDate || '—')) + '</div>' +
     sectionTitle('任务描述') + '<p class="mgr-tp-desc">' + mgrEsc(task.desc || '暂无任务描述') + '</p>' +
+    sectionTitle('验收标准') + '<p class="mgr-tp-desc">' + mgrEsc(task.acceptance || '暂无验收标准') + '</p>' +
     branchSectionHtml(task) +
     (plan.length ? sectionTitle('执行阶段', doneStages + '/' + plan.length) + '<div class="mgr-task-stage-list" role="list">' + stages + '</div>' : '') +
-    sectionTitle('任务关系') + '<div class="mgr-tp-rel"><div class="mgr-tp-rel-row"><span class="mgr-detail-key">前序任务</span><span class="mgr-detail-value">' +
+    sectionTitle('任务关系', '', 'rel') + (panelFold.rel ? '' : '<div class="mgr-tp-rel"><div class="mgr-tp-rel-row"><span class="mgr-detail-key">前序任务</span><span class="mgr-detail-value">' +
     (pre ? mgrEsc((pre.code || '') + ' ' + pre.title) : '暂无前序：任务将按执行计划顺序调度') + '</span></div>' +
     (parent ? '<div class="mgr-tp-rel-row"><span class="mgr-detail-key">父任务</span><span class="mgr-detail-value">' + mgrEsc((parent.code || '') + ' ' + parent.title) + '</span></div>' : '') +
-    '<button type="button" class="mgr-tp-rel-add" data-mgr-tp-rel-add>＋ 添加前序</button></div>' +
+    '<button type="button" class="mgr-tp-rel-add" data-mgr-tp-rel-add>＋ 添加前序</button></div>') +
     (events.length
       ? sectionTitle('进展记录', String(events.length)) + '<div class="mgr-tp-events">' + events.slice(0, 8).map(function (e) {
-        return '<div class="mgr-tp-event"><span class="mgr-feed-dot" aria-hidden="true"></span><span class="mgr-tp-event-text">' + e.text +
-          '</span><span class="mgr-tp-event-time">' + mgrDay(e.time) + '</span></div>';
+        return '<div class="mgr-tp-event"><span class="mgr-tp-event-time">' + mgrDay(e.time) + '</span><span class="mgr-tp-event-text">' + e.text + '</span></div>';
       }).join('') + '</div>'
       : '') +
+    sectionTitle('更多信息', '', 'more') + (panelFold.more ? '' : '<div class="mgr-tp-kv">' +
+    kv('发起人', creator) + kv('验收方式', task.aiAccept ? 'AI 验收' : '人工验收') +
+    kv('任务启动方式', task.executionMode && task.executionMode !== 'manual' ? '自动启动' : '手动启动') +
+    kv('产物归档目录', task.docDir ? mgrEsc(task.docDir) : '—') +
+    kv('关联指标', task.kpi ? mgrEsc(task.kpi) : '—') + kv('完结时间', finished) + '</div>') +
     '<div class="mgr-tp-foot"><button type="button" class="mgr-btn mgr-btn--primary" data-mgr-tp-done="' + id + '">' +
     '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>报完成</button>' +
     '<button type="button" class="mgr-btn mgr-btn--ghost" data-mgr-tp-edit>编辑</button>' +
@@ -968,6 +980,8 @@ export function initManagerPlan() {
     if (msTask && !t.closest('button')) { openTaskPanel(msTask.getAttribute('data-mgr-task')); return; }
     var ganttTask = t.closest('[data-mgr-gantt-task]');
     if (ganttTask) { openTaskPanel(ganttTask.getAttribute('data-mgr-gantt-task')); return; }
+    var fold = t.closest('[data-mgr-tp-fold]');
+    if (fold) { var fk = fold.getAttribute('data-mgr-tp-fold'); panelFold[fk] = !panelFold[fk]; renderTaskPanel(); return; }
     if (t.closest('[data-mgr-tp-rel-add]')) { toast('添加前序（演示占位）：前序任务可在新建任务「补充信息」中设置'); return; }
     if (t.closest('[data-mgr-tp-done]')) { toast('已报完成（演示）：产物提交与阶段验收在开发板块完成'); return; }
     if (t.closest('[data-mgr-tp-edit]')) { toast('任务编辑（演示占位）：任务信息在开发板块维护'); return; }
