@@ -83,7 +83,8 @@
   .agent-config-log-list{margin:10px 0 0;padding:4px 16px;list-style:none;border-radius:8px;background:var(--fill-1)}
   .agent-config-log-list li{padding:8px 0;font-size:13px;color:var(--text)}
   .agent-config-log-list li + li{border-top:1px solid var(--divider)}
-  .agent-config-log-list time{margin-right:10px;color:var(--text-secondary)}
+  .agent-config-log-list time{color:var(--text-secondary)}
+  .agent-config-log-by{margin:0 12px 0 6px;color:var(--text-secondary)}
 
   /* 角色设定 */
   .agent-config-role{display:block;min-height:440px;padding:14px 16px;border-color:var(--border);border-radius:12px;font-size:13px;line-height:1.75;resize:vertical}
@@ -111,29 +112,38 @@
   .agent-config-search .ic{width:15px;height:15px;flex:none}
   .agent-config-search input{flex:1;min-width:0;border:0;outline:none;background:transparent;font:inherit;font-size:13px;color:var(--text)}
   .agent-config-search:focus-within{border-color:var(--brand)}
-  .agent-config-kb{display:grid;grid-template-columns:minmax(180px,240px) 1fr;gap:16px;min-height:420px}
+  .agent-config-kb{display:grid;grid-template-columns:minmax(160px,220px) 1fr;gap:16px;min-height:420px}
   .agent-config-kb-tree{padding:12px 8px;border-radius:12px;background:var(--bg);min-width:0}
   .agent-config-kb-label{margin:4px 8px 6px;font-size:12px;color:var(--text-secondary)}
   .agent-config-kb-label:not(:first-child){margin-top:16px}
-  .agent-config-kb-folder,.agent-config-kb-file{display:flex;align-items:center;gap:8px;width:100%;padding:8px;border:0;border-radius:8px;background:transparent;color:var(--text);font:inherit;font-size:13px;text-align:left}
-  .agent-config-kb-folder{background:var(--fill-1)}
-  .agent-config-kb-folder .ic,.agent-config-kb-file .ic{width:16px;height:16px;flex:none;color:var(--text-secondary)}
-  .agent-config-kb-folder span,.agent-config-kb-file span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .agent-config-kb-folder em,.agent-config-kb-file em{flex:none;font-style:normal;font-size:12px;color:var(--text-secondary)}
-  .agent-config-kb-file{cursor:pointer}
-  .agent-config-kb-file:hover{background:var(--hover)}
-  .agent-config-kb-file[aria-selected="true"]{background:var(--brand-fill)}
-  .agent-config-kb-file.is-parsing em{color:var(--brand)}
-  .agent-config-kb-empty{padding:4px 8px;font-size:12px;color:var(--text-soft)}
-  .agent-config-kb-preview{min-width:0;padding:20px;border-radius:12px;background:var(--bg)}
-  .agent-config-kb-none{height:100%;min-height:300px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--text-soft);font-size:13px}
+  .agent-config-kb-folder{display:flex;align-items:center;gap:8px;width:100%;padding:8px;border:0;border-radius:8px;background:transparent;color:var(--text);font:inherit;font-size:14px;text-align:left;cursor:pointer}
+  .agent-config-kb-folder:hover{background:var(--hover)}
+  .agent-config-kb-folder[aria-selected="true"]{background:var(--active);font-weight:600}
+  .agent-config-kb-folder .ic{width:16px;height:16px;flex:none;color:var(--text-secondary)}
+  .agent-config-kb-folder span:not(.agent-config-kb-check){flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .agent-config-kb-folder em{flex:none;font-style:normal;font-size:12px;color:var(--text-secondary)}
+  .agent-config-kb-check{width:14px;height:14px;flex:none;border-radius:4px;background:var(--brand-fill);border:1px solid var(--border-focus)}
+  .agent-config-kb-folder:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+  .agent-config-kb-none{min-height:300px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--text-soft);font-size:13px}
   .agent-config-kb-none .ic{width:40px;height:40px}
-  .agent-config-kb-title{margin:0;font-size:15px;font-weight:600;color:var(--text)}
-  .agent-config-kb-sub{margin-top:4px;font-size:12px;color:var(--text-secondary)}
-  .agent-config-kb-note{margin-top:12px;padding:8px 12px;border-radius:8px;background:var(--success-bg);color:var(--success);font-size:12px}
-  .agent-config-kb-table{width:100%;margin-top:14px;border-collapse:collapse;font-size:12px;color:var(--text)}
-  .agent-config-kb-table th,.agent-config-kb-table td{padding:8px;border-bottom:1px solid var(--divider);text-align:left;vertical-align:top}
-  .agent-config-kb-table th{color:var(--text-secondary);font-weight:500;background:var(--fill-1)}
+
+  .agent-config-kb-files{display:flex;flex-direction:column;gap:12px;min-width:0}
+  .agent-config-kb-card{padding:14px 16px;border-radius:12px;background:var(--bg)}
+  .agent-config-kb-card.is-parsing{opacity:.7}
+  .agent-config-kb-card-head{display:flex;align-items:center;gap:8px}
+  .agent-config-kb-tag{padding:0 8px;border:1px solid var(--brand);border-radius:4px;font-size:12px;line-height:20px;color:var(--brand)}
+  .agent-config-kb-type{font-size:12px;color:var(--text-secondary)}
+  .agent-config-kb-del{margin-left:auto;width:28px;height:28px;border:0;border-radius:6px;background:transparent;color:var(--text-secondary);display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .agent-config-kb-del:hover{background:var(--hover);color:var(--danger)}
+  .agent-config-kb-del:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+  .agent-config-kb-del .ic{width:16px;height:16px}
+  .agent-config-kb-card-name{margin-top:10px;font-size:14px;color:var(--text);overflow-wrap:anywhere}
+  .agent-config-kb-card-sub{margin-top:6px;font-size:12px;color:var(--text-secondary)}
+
+  /* 技能配置：平铺技能卡片 */
+  .agent-config-tool.is-outline{border:1px solid var(--border-hover)}
+  .agent-config-skill-list{display:flex;flex-direction:column;gap:12px}
+  .agent-config-skill{display:flex;align-items:flex-start;gap:12px;padding:16px;border-radius:12px;background:var(--bg)}
 
   /* 会话里的智能体卡片：本地测试按钮 */
   .agent-config-card-test{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 10px;border:1px solid var(--border-hover);border-radius:7px;background:var(--bg);color:var(--text);font:inherit;font-size:12px;cursor:pointer;flex:none}

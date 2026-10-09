@@ -18,7 +18,7 @@ import { taskExecutorTeam } from './expert/task-team.js';
 import { set__prevWishW } from './sidebar.js';
 import { CV_MEMBERS, CV_PROJECTS } from './collab/data.js';
 import { tbTeamStages } from './collab/tb-core.js';
-import { tkAddTask, tkCanStartTask, tkCurrentStageHandlerId, tkCurrentUserId, tkGetProjectName, tkGetTasks, tkGetTaskArtifacts, tkPeopleInProject, tkProjectsForCurrentUser } from './tasks-v2/data.js';
+import { tkAddTask, tkCanStartTask, tkCurrentStageHandlerId, tkCurrentUserId, tkGetProjectName, tkGetTasks, tkGetTaskArtifacts, tkPeopleInProject, tkProjectById, tkProjectsForCurrentUser } from './tasks-v2/data.js';
 import { defaultStageAssigneeId } from './tasks-v2/stage-owner.js';
 import { openIssueCount, requirementPoints } from './tasks-v2/artifact-docs.js';
 import { renderArtifactPreview } from './collab/run-artifacts.js';
@@ -1351,7 +1351,8 @@ function appendUserMessage(text){
 }
 
 function resolveChatTeam(session, task){
-  var project = CV_PROJECTS.find(function (row) { return row.id === (task?.project || session?.projectId); });
+  /* 管理板块立项的项目（如设备巡检维修系统建设）不在 CV_PROJECTS 里，按任务项目统一查找 */
+  var project = tkProjectById(task?.project || session?.projectId);
   if (task?.expertId) return taskExecutorTeam(task, project);
   return teamById(task?.teamId || '') || teamById(project?.defaultTeam || '') || teamById(session?.teamId || '');
 }
@@ -1680,12 +1681,16 @@ function simulateAIResponse(responseEl,instant,task,prompt,onDone){
   else beginStream();
 }
 
+/* 演示流程（如新会话里用智能体开发创建设备故障诊断助手）可接管首页发送；返回 true 表示已处理 */
+var newtaskSendInterceptor=null;
+export function setNewtaskSendInterceptor(fn){ newtaskSendInterceptor=typeof fn==='function'?fn:null; }
 function doSend(automatic){
   var t=input.textContent.trim();
   if(!t){ input.focus(); return; }
   /* 苍穹应用模式未选择关联应用时拦截；带任务关联的会话不依赖关联应用 */
   var modeEl=$('.mode-item.checked');
   var currentMode=modeEl?modeEl.getAttribute('data-val'):'';
+  if(automatic !== true && newtaskSendInterceptor && !getConversationTask() && newtaskSendInterceptor(t, currentMode)){ input.innerHTML=''; refreshSend(); return; }
   if(automatic !== true && currentMode==='苍穹应用' && appChip.classList.contains('muted') && !getConversationTask()){
     toast('请先选择关联应用','error');
     appDd.classList.remove('error');

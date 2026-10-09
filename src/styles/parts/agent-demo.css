@@ -58,3 +58,26 @@
 #view-chat .ad-actions svg{width:16px;height:16px}
 #view-chat .ad-test-hint{text-align:center;font-size:13px;color:var(--text-secondary);margin:4px auto 12px;display:grid;gap:4px}
 #view-chat .ad-test-hint p{margin:0}
+
+/* 设备故障诊断助手：创建过程（对齐 Lingee Build 会话：运行中 → 过程文字与工具行 → 处理完成） */
+#view-chat .ad-proc{display:flex;flex-direction:column;gap:8px}
+#view-chat .ad-proc-head{display:inline-flex;align-items:center;gap:8px;color:var(--text-secondary);font-size:13px}
+#view-chat .ad-proc-body{display:flex;flex-direction:column;gap:8px;padding-left:12px;border-left:2px solid var(--divider)}
+#view-chat .ad-proc-body[hidden]{display:none}
+#view-chat .ad-proc-text{margin:0;font-size:14px;line-height:1.7;color:var(--text);animation:ad-in .25s ease}
+#view-chat .ad-proc-text code,#view-chat .ad-summary code{padding:1px 6px;border-radius:4px;background:var(--tag-bg);font:12px/1.6 Monaco,Menlo,monospace;color:var(--text)}
+#view-chat .ad-tool{display:flex;align-items:center;gap:8px;min-width:0;font-size:13px;color:var(--text-secondary);animation:ad-in .25s ease}
+#view-chat .ad-tool svg{width:15px;height:15px;flex:none}
+#view-chat .ad-tool strong{font-weight:500;color:var(--text)}
+#view-chat .ad-tool span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@keyframes ad-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+/* 销售履约智能体测试：输入框上方与消息里的采购单附件 */
+#view-chat .ad-attach{display:flex;margin:0 0 8px}
+#view-chat .ad-file-chip{display:inline-flex;align-items:center;gap:8px;padding:6px 12px 6px 8px;border:1px solid var(--border);border-radius:8px;background:var(--fill-1);max-width:100%}
+#view-chat .message.user .ad-file-chip{margin:0 0 6px}
+#view-chat .ad-file-ic{width:28px;height:28px;border-radius:6px;background:var(--danger-bg);color:var(--danger);display:grid;place-items:center;flex:none}
+#view-chat .ad-file-ic svg{width:16px;height:16px}
+#view-chat .ad-file-chip strong{display:block;font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#view-chat .ad-file-chip small{display:block;font-size:12px;color:var(--text-muted)}
+@media (prefers-reduced-motion: reduce){
+}

@@ -8,7 +8,8 @@ import { appendAssistantMessage, appendUserMessage, messagesList, resetChatForSt
 import { renderModeTag } from './expert/chips.js';
 import { teamById } from './expert/store.js';
 import surveyAppHtml from '../../artifacts/survey-app.html?raw';
-import equipmentAppHtml from '../../artifacts/equipment-app.html?raw';
+import equipmentBillHtml from '../../artifacts/equipment-repair-bill.html?raw';
+import tokensCss from '../../styles/tokens.css?raw';
 import helpdeskAppHtml from '../../artifacts/helpdesk-app.html?raw';
 /* 应用开发：卡片、搜索、新建下拉、新建应用弹窗、右键菜单
    拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
@@ -129,15 +130,17 @@ function renderSurveyDevConversation(){
 var EQUIPMENT_APP_NAME='设备巡检维修系统';
 var EQUIPMENT_APP_URL='https://apps.lingee.com/equipment';
 var EQUIPMENT_AGENT_NAME='设备故障诊断助手';
+/* 表单页签用标准苍穹单据（维修记录），与其它苍穹应用一致，令牌同 bill-template.js 注入 */
+var equipmentAppHtml=equipmentBillHtml.replace('/* 令牌由 tokens.css 注入 */',tokensCss.replace(/\/\*[\s\S]*?\*\//g,'').trim());
 function renderEquipmentAppConversation(){
   messagesList.replaceChildren();
   appendUserMessage('打开设备巡检维修系统，看一下上线后的运行情况。');
   var response=appendAssistantMessage(teamById('cosmic-app-dev'));
   response.innerHTML='<div class="work-steps"><div class="work-step done final-step bare"><div class="markdown-content">'
-    +'<p>设备巡检维修系统由协作开发项目「设备巡检维修系统建设」交付，建在金蝶 ERP 的元数据上，右侧是正在运行的系统；表单、列表、实体、插件页签是它的元数据。</p><ol>'
+    +'<p>设备巡检维修系统由项目「设备巡检维修系统建设」交付，建在金蝶 ERP 的元数据上，表单、列表、实体、插件页签都按元数据生成。</p><ol>'
     +'<li><strong>设备台账与扫码巡检</strong>：126 台设备已生成二维码</li>'
     +'<li><strong>故障报修与维修记录</strong>：42 条用例全部通过，维修记录归入设备履历</li>'
-    +'<li><strong>MCP 服务</strong>：设备档案和维修记录通过 MCP 服务 <code>equipment-ops</code> 只读开放，供智能体调用</li>'
+    +'<li><strong>MCP 服务</strong>：设备档案和维修记录通过 MCP 服务 <code>equipment-ops</code> 只读开放，供智能体技能调用</li>'
     +'</ol><p>访问地址：<code>'+surveyAppEsc(EQUIPMENT_APP_URL)+'</code></p></div></div></div>';
 }
 /* 设备巡检维修系统的元数据页签：列表 / 实体 / 插件换成本系统的元数据；打开其他应用时还原默认示例 */
@@ -153,10 +156,13 @@ function setEquipmentMeta(on){
   var entity=$('#previewBodyEntity'), plugin=$('#previewBodyPlugin'), list=$('#previewBodyList');
   if(!entity||!plugin||!list) return;
   var title=$('.list-title',list), headRow=$('.list-table thead tr',list), tbody=$('#listBody');
+  var search=$('#listSearchInput',list), pager=$('.pager-info',list);
   /* 表头只换复选框之后的列，保留全选框及其监听 */
   function headCols(){ return headRow ? [].slice.call(headRow.children,1) : []; }
   if(on&&!eqMetaSaved){
-    eqMetaSaved={entity:entity.innerHTML,plugin:plugin.innerHTML,title:title&&title.textContent,cols:headCols().map(function(th){return th.outerHTML;}).join(''),tbody:tbody&&tbody.innerHTML};
+    eqMetaSaved={entity:entity.innerHTML,plugin:plugin.innerHTML,title:title&&title.textContent,cols:headCols().map(function(th){return th.outerHTML;}).join(''),tbody:tbody&&tbody.innerHTML,search:search&&search.placeholder,pager:pager&&pager.textContent};
+    if(search) search.placeholder='搜索维修单号、设备…';
+    if(pager) pager.textContent='第 1-'+EQ_ROWS.length+' 条，共 '+EQ_ROWS.length+' 条';
     entity.innerHTML='<div class="entity-layout"><div class="entity-left">'
       +EQ_ENTITIES.map(function(e,i){return '<div class="entity-left-item'+(i?'':' active')+'">'+EQ_DOC+'<span class="entity-left-name">'+e[0]+'</span><span class="entity-left-count">'+e[1]+'字段</span></div>';}).join('')
       +'</div><div class="entity-right"><table class="entity-table"><thead><tr><th>字段名称</th><th>字段标识</th><th>字段类型</th><th>是否必录</th></tr></thead><tbody>'
@@ -173,6 +179,8 @@ function setEquipmentMeta(on){
     if(title) title.textContent=eqMetaSaved.title;
     if(headRow){ headCols().forEach(function(th){th.remove();}); headRow.insertAdjacentHTML('beforeend',eqMetaSaved.cols); }
     if(tbody) tbody.innerHTML=eqMetaSaved.tbody;
+    if(search) search.placeholder=eqMetaSaved.search;
+    if(pager) pager.textContent=eqMetaSaved.pager;
     eqMetaSaved=null;
   }
 }
@@ -183,17 +191,17 @@ function renderEquipmentAgentConversation(){
   appendUserMessage('@agent-builder 帮我做一个设备故障诊断助手。维修工程师报上设备编号和故障现象，先查这台设备的档案和最近的维修记录，再按我的经验给排查步骤。');
   var response=appendAssistantMessage(null);
   response.innerHTML='<div class="work-steps"><div class="work-step done final-step bare"><div class="markdown-content">'
-    +'<p>设备故障诊断助手已创建完成，3 个真实故障测试全部通过。以下是交付摘要：</p>'
+    +'<p>设备故障诊断助手已创建完成，严格校验通过。以下是交付摘要：</p>'
     +'<p><strong>智能体配置</strong></p><ul>'
     +'<li>标识符：<code>equipment-diagnosis-assistant</code>，显示名：设备故障诊断助手</li>'
     +'<li>领域：通用，可见性：全公司</li></ul>'
     +'<p><strong>角色定位</strong></p>'
     +'<p>工厂里的设备维修老师傅，按周建国的排障经验帮设备部的维修工程师排查注塑机、空压机、数控机床故障；先查记录再下判断，最近换过的零件优先怀疑，涉及高压电先提醒断电挂牌。</p>'
-    +'<p><strong>技能与 MCP</strong></p><ul>'
-    +'<li>通过 MCP 连接协作开发交付的「设备巡检维修系统」（<code>equipment-ops</code>，只读）</li>'
+    +'<p><strong>技能</strong></p><ul>'
+    +'<li>两个技能都调用设备巡检维修系统 MCP 服务（<code>equipment-ops</code>）的只读工具</li>'
     +'<li>「查询设备档案」：按设备编号读取型号、位置和当前状态</li>'
     +'<li>「查询维修记录」：读取近 12 个月的维修原因、更换零件和维修人，只读不改</li></ul>'
-    +'<p><strong>知识</strong></p><ul><li>已上传「空压机保养规程」作为内置知识；其它排障手册可在知识页上传附件</li></ul>'
+    +'<p><strong>知识</strong></p><ul><li>已关联「设备管理知识库」；排障手册可在右侧知识页上传</li></ul>'
     +'</div></div></div>';
   var card=document.createElement('div');
   card.className='artifact-card';

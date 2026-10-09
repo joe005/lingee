@@ -43,8 +43,10 @@ function openSubmitConfirm(card, opts) {
   submitOpts = opts || null;
   var overlay = $('#agentSubmitOverlay');
   var desc = $('#agentSubmitDesc');
-  if (!desc.dataset.defaultText) desc.dataset.defaultText = desc.textContent;
-  desc.textContent = submitOpts?.desc || desc.dataset.defaultText;
+  /* 默认文案带「生产环境」强调，保存原始 HTML；自定义文案按纯文本写入 */
+  if (desc.dataset.defaultHtml === undefined) desc.dataset.defaultHtml = desc.innerHTML;
+  if (submitOpts?.desc) desc.textContent = submitOpts.desc;
+  else desc.innerHTML = desc.dataset.defaultHtml;
   overlay.hidden = false;
   $('#agentSubmitOk').focus();
 }

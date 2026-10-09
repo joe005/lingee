@@ -168,6 +168,7 @@
   .agent-submit-icon{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:var(--brand);color:#fff;font-size:12px;font-weight:700}
   .agent-submit-title{font-size:16px;font-weight:600;color:var(--text)}
   .agent-submit-desc{margin:10px 0 0 28px;font-size:14px;line-height:1.8;color:var(--text)}
+  .agent-submit-desc strong{font-weight:600;color:var(--danger)}
   .agent-submit-foot{display:flex;justify-content:flex-end;gap:12px;margin-top:28px}
   .agent-submit-cancel,.agent-submit-ok{height:34px;padding:0 16px;border-radius:8px;font:inherit;font-size:14px;cursor:pointer}
   .agent-submit-cancel{border:0;background:transparent;color:var(--text)}

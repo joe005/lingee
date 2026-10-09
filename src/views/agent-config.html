@@ -37,7 +37,7 @@
         <div class="agent-config-fields">
           <div class="agent-config-field-row">
             <label class="agent-config-field"><span class="agent-config-label">名称<em aria-hidden="true">*</em></span><input type="text" class="agent-config-input" value="设备故障诊断助手"></label>
-            <label class="agent-config-field is-narrow"><span class="agent-config-label">领域</span><select class="agent-config-input"><option selected>通用</option><option>生产制造</option><option>人力资源</option></select></label>
+            <label class="agent-config-field is-narrow"><span class="agent-config-label">领域</span><select class="agent-config-input"><option>财务</option><option>人力资源</option><option>销售</option><option>供应链</option><option>行政</option><option>法务</option><option>IT</option><option selected>通用</option></select></label>
           </div>
           <label class="agent-config-field"><span class="agent-config-label">功能描述<em aria-hidden="true">*</em></span><textarea class="agent-config-input" rows="3">维修工程师报上设备编号和故障现象，先通过设备巡检维修系统查设备档案和维修记录，再按老师傅的经验给出排查步骤。</textarea></label>
         </div>
@@ -64,49 +64,36 @@
       <textarea class="agent-config-input agent-config-role" id="agentConfigRoleText" aria-label="角色设定" aria-describedby="agentConfigRoleHint" spellcheck="false"></textarea>
       <p class="agent-config-hint" id="agentConfigRoleHint">包含角色定位、工作职责、工作原则，按示例格式填写</p>
     </div>
-    <!-- 技能配置：技能通过 MCP 调用 6.1 交付的设备巡检维修系统 -->
+    <!-- 技能配置：挂载项目 skills/ 下的本地技能；两个技能调用 6.1 交付的设备巡检维修系统开放的只读 MCP 工具（画面只写「数据来自设备巡检维修系统」） -->
     <div class="agent-config-pane" id="agentConfigSkills" role="tabpanel" data-pane="skills" hidden>
-      <div class="agent-config-toolbar"><button type="button" class="agent-config-tool" data-toast="选择要挂载的技能或 MCP 服务">添加</button></div>
-      <h3 class="agent-config-section is-first">技能</h3>
-      <div class="agent-config-card agent-config-list">
-        <div class="agent-config-item">
-          <span class="agent-config-letter" aria-hidden="true">档</span>
-          <div class="agent-config-item-main"><div class="agent-config-item-title">查询设备档案<span class="agent-config-meta">项目技能<i></i>已发布</span></div><div class="agent-config-item-desc">按设备编号读取型号、位置、责任人和当前状态，数据来自设备巡检维修系统 MCP。</div></div>
+      <div class="agent-config-toolbar"><button type="button" class="agent-config-tool is-outline" data-toast="选择项目中的本地技能">添加</button></div>
+      <div class="agent-config-skill-list">
+        <div class="agent-config-skill">
+          <span class="agent-config-letter" aria-hidden="true">查</span>
+          <div class="agent-config-item-main"><div class="agent-config-item-title">查询设备档案<span class="agent-config-meta">本地技能<i></i>已发布</span></div><div class="agent-config-item-desc">按设备编号读取型号、位置、责任人和当前状态。数据来自设备巡检维修系统，只读不改。</div></div>
         </div>
-        <div class="agent-config-item">
-          <span class="agent-config-letter" aria-hidden="true">修</span>
-          <div class="agent-config-item-main"><div class="agent-config-item-title">查询维修记录<span class="agent-config-meta">项目技能<i></i>已发布</span></div><div class="agent-config-item-desc">读取近 12 个月的报修、维修原因、更换零件和维修人，只读不改，数据来自设备巡检维修系统 MCP。</div></div>
-        </div>
-      </div>
-      <h3 class="agent-config-section">MCP 服务</h3>
-      <div class="agent-config-card agent-config-list">
-        <div class="agent-config-item agent-config-mcp">
-          <span class="agent-config-letter is-mcp" aria-hidden="true"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 7 7 9a4 4 0 0 0 5.7 5.7l.6-.6M15 17l2-2a4 4 0 0 0-5.7-5.7l-.6.6"/></svg></span>
-          <div class="agent-config-item-main">
-            <div class="agent-config-item-title">设备巡检维修系统<span class="agent-config-meta"><b class="agent-config-ok">已连接</b><i></i>只读</span></div>
-            <div class="agent-config-item-desc">由协作开发项目「设备巡检维修系统建设」交付，服务名 <code>equipment-ops</code></div>
-            <div class="agent-config-tools"><code>query_equipment_profile</code><code>query_repair_records</code></div>
-          </div>
-          <button type="button" class="agent-config-switch" role="switch" aria-checked="true" aria-label="启用设备巡检维修系统 MCP"></button>
+        <div class="agent-config-skill">
+          <span class="agent-config-letter" aria-hidden="true">查</span>
+          <div class="agent-config-item-main"><div class="agent-config-item-title">查询维修记录<span class="agent-config-meta">本地技能<i></i>已发布</span></div><div class="agent-config-item-desc">读取设备近 12 个月的报修、故障原因、更换零件和维修人。数据来自设备巡检维修系统，只读不改。</div></div>
         </div>
       </div>
     </div>
-    <!-- 知识：关联企业知识 + 上传附件，上传后成为智能体内置知识 -->
+    <!-- 知识：左侧关联企业知识与上传知识（临时目录），右侧为所选目录的文件卡片 -->
     <div class="agent-config-pane" id="agentConfigKnowledge" role="tabpanel" data-pane="knowledge" hidden>
       <div class="agent-config-toolbar">
-        <button type="button" class="agent-config-tool" data-toast="选择要关联的企业知识目录"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>添加</button>
-        <button type="button" class="agent-config-tool" id="agentKnowledgeUpload"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4M7 9l5-5 5 5"/><path d="M5 20h14"/></svg>上传</button>
+        <button type="button" class="agent-config-tool is-outline" data-toast="选择要关联的企业知识目录"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>添加</button>
+        <button type="button" class="agent-config-tool is-outline" id="agentKnowledgeUpload"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V4M7 9l5-5 5 5"/><path d="M5 20h14"/></svg>上传</button>
         <input type="file" id="agentKnowledgeFile" accept=".md,.txt,.pdf,.doc,.docx,.xls,.xlsx" multiple hidden>
-        <label class="agent-config-search"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" id="agentKnowledgeSearch" placeholder="搜索知识目录、文件名或上传人" aria-label="搜索知识"></label>
+        <label class="agent-config-search"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" id="agentKnowledgeSearch" placeholder="搜索知识目录、文件名或创建者" aria-label="搜索知识"></label>
       </div>
       <div class="agent-config-kb">
-        <div class="agent-config-kb-tree">
+        <div class="agent-config-kb-tree" role="listbox" aria-label="知识目录">
           <div class="agent-config-kb-label">关联企业知识</div>
-          <div class="agent-config-kb-folder" data-kb-name="设备管理知识库 设备主管"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span>设备管理知识库</span><em>维修规程</em></div>
+          <button type="button" class="agent-config-kb-folder" role="option" aria-selected="false" data-kb-folder="enterprise" data-kb-name="设备管理知识库"><span class="agent-config-kb-check" aria-hidden="true"></span><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span>设备管理知识库</span><em id="agentKbEnterpriseCount">2</em></button>
           <div class="agent-config-kb-label">上传知识</div>
-          <div class="agent-config-kb-files" id="agentKnowledgeList" role="listbox" aria-label="上传知识"></div>
+          <button type="button" class="agent-config-kb-folder" role="option" aria-selected="true" data-kb-folder="temp" data-kb-name="临时目录"><span class="agent-config-kb-check" aria-hidden="true"></span><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span>临时目录</span><em id="agentKbTempCount">0</em></button>
         </div>
-        <div class="agent-config-kb-preview" id="agentKnowledgePreview" aria-live="polite"></div>
+        <div class="agent-config-kb-files" id="agentKnowledgeList" aria-live="polite"></div>
       </div>
     </div>
   </div>

@@ -77,7 +77,8 @@ function cvSwitchView(name){
   if(name==='config-perm') name='config';   /* 人员已并入设置左导航 */
   if(window.cvLeaveProjectTasks)window.cvLeaveProjectTasks();
   cvSyncWorkspacePermissions();
-  if((name==='members'||name==='config') && !canAccessRestrictedMenus()) name='tasks';   /* 项目、设置仅张工可进 */
+  if(name==='members') name='tasks';   /* Build 里没有项目：项目在 Manage 立项，协作开发只处理任务；旧入口与链接回到任务 */
+  if(name==='config' && !canAccessRestrictedMenus()) name='tasks';   /* 设置仅张工可进 */
   if(name==='config' && !cvIsWorkspaceAdmin()) name='tasks';   /* 设置仅工作区管理员可进 */
   if(name==='tasks'){
     setTasksEmbedded(true);

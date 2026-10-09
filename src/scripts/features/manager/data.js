@@ -91,6 +91,21 @@ var SEED_PROJECTS = [
     milestones: [{ name: '产能扩建决策上会', date: '2026-09-28' }],
     members: ['p22', 'p06', 'p04'],
   },
+  /* 汇报 6.1 / 6.2 的贯穿项目：在 Manage 立项，研发任务 T1001500–T1001506 在协作开发里处理 */
+  {
+    id: 'equipment', name: '设备巡检维修系统建设',
+    desc: '在金蝶 ERP 上建设备台账、扫码巡检、故障报修与维修记录，并沉淀老师傅的排障经验。',
+    goal: '8 周内上线设备巡检维修系统：巡检、报修、维修全程线上留痕；设备主管把排障经验做成故障诊断助手，新人也能按老师傅的思路排查',
+    mgrOk: true, mgrProgress: 56, status: 'in_progress', priority: '高', owner: '张工',
+    dot: 'blue', start: '2026-09-14', end: '2026-11-06',
+    containsRd: true, defaultTeam: 'cosmic-app-dev', teamIds: ['cosmic-app-dev'],
+    repo: 'https://github.com/kingdee/equipment-ops', baseBranch: 'main',
+    milestones: [
+      { name: '系统上线', date: '2026-10-16' },
+      { name: '诊断助手发布', date: '2026-10-23' },
+    ],
+    members: ['p01', 'p02', 'p03', 'p04', 'p05', 'p07', 'p42', 'p22'],
+  },
 ];
 
 /* ---------- 项目任务（演示数据，按里程碑挂靠） ---------- */
