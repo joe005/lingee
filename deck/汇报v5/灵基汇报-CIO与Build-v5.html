@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>灵基汇报 · CIO 与 Build v5</title>
+<style>
+:root{
+  --navy:#0b2a5b;--ink:#1f2937;--ink-2:#4b5563;--muted:#8a93a3;--line:#e3e8f2;
+  --blue:#1f5fff;--blue-soft:#eaf1ff;--green:#0a8a4a;--green-soft:#e6f6ee;
+  --card-line:#dbe5f6;--paper:#fff;--desk:#e9ecf3;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--desk);overflow:hidden}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+.viewport{position:fixed;inset:0;display:grid;place-items:center}
+.stage{width:1600px;height:900px;position:relative;transform-origin:center center;background:var(--paper);overflow:hidden;border-radius:18px;box-shadow:0 20px 60px -20px rgba(15,23,42,.25)}
+.slide{position:absolute;inset:0;padding:44px 72px 0;opacity:0;visibility:hidden;transition:opacity .35s ease}
+.slide.on{opacity:1;visibility:visible}
+
+.product{font-size:32px;font-weight:800;color:#111;letter-spacing:-.3px}
+.logo{position:absolute;top:44px;right:64px;display:flex;align-items:center;gap:10px;font-size:30px;font-weight:800;color:var(--blue)}
+.logo i{position:relative;width:34px;height:34px;display:block}
+.logo i b{position:absolute;border-radius:50%}
+.logo i b:nth-child(1){width:14px;height:14px;background:#2aa7ff;left:14px;top:0}
+.logo i b:nth-child(2){width:9px;height:9px;background:#2aa7ff;left:0;top:13px}
+.logo i b:nth-child(3){width:11px;height:11px;background:#18c2a6;left:15px;top:20px}
+.logo i b:nth-child(4){width:6px;height:6px;background:#a46bff;left:28px;top:29px}
+h1{margin:18px 0 0;font-size:50px;line-height:1.15;font-weight:900;color:var(--navy);letter-spacing:-.5px}
+.rows{margin-top:14px;padding-bottom:14px;border-bottom:1px solid var(--line);display:grid;gap:6px}
+.row{display:grid;grid-template-columns:118px 1fr;align-items:center;font-size:19px;color:var(--ink-2)}
+.row b{font-size:17px;color:var(--blue);font-weight:700;border-right:2px solid var(--line);margin-right:20px;padding-right:12px;white-space:nowrap}
+
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;margin-top:20px}
+.card{position:relative;height:560px;border:1.5px solid var(--card-line);border-radius:36px;padding:22px 24px 0;background:linear-gradient(180deg,#fafcff 0,#fff 40%);display:flex;flex-direction:column;min-width:0}
+.tag{align-self:flex-start;font-size:15px;font-weight:700;padding:6px 16px;border-radius:8px;background:var(--blue-soft);color:var(--blue)}
+.card.g .tag{background:var(--green-soft);color:var(--green)}
+.card h3{margin:14px 0 0;font-size:27px;line-height:1.3;font-weight:900;color:#111}
+.card p{margin:8px 0 0;font-size:16px;line-height:1.6;color:var(--ink-2);min-height:51px}
+.shot{margin-top:12px;height:288px;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:#fff;box-shadow:0 6px 18px -12px rgba(15,23,42,.25)}
+.shot img{display:block;width:100%;height:100%;object-fit:cover;object-position:top left}
+.shot.fit img{object-fit:contain;object-position:center top}
+.value{position:absolute;left:18px;right:18px;bottom:16px;padding:12px 16px;border-radius:12px;background:var(--blue-soft);color:var(--blue);font-size:15px;font-weight:700;line-height:1.5}
+.card.g .value{background:var(--green-soft);color:var(--green)}
+
+/* 视频 Demo 页 */
+.vrow{margin-top:14px;display:flex;align-items:center;gap:14px;font-size:18px;color:var(--ink-2)}
+.vrow b{font-size:15px;font-weight:700;padding:5px 14px;border-radius:8px;background:var(--blue-soft);color:var(--blue)}
+.vwrap{position:absolute;left:50%;top:214px;transform:translateX(-50%);width:1152px;height:648px;border-radius:20px;overflow:hidden;background:#0b1220;box-shadow:0 18px 40px -22px rgba(15,23,42,.45)}
+.vwrap video{display:block;width:100%;height:100%;object-fit:contain;background:#0b1220}
+
+.foot{position:absolute;right:64px;bottom:14px;display:flex;align-items:center;gap:40px;font-size:15px;color:var(--muted)}
+.foot b{font-size:20px;color:var(--blue);font-weight:600}
+
+/* 讲稿与翻页 */
+.notes{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);width:min(1100px,calc(100vw - 32px));max-height:42vh;overflow:auto;padding:18px 22px;border-radius:14px;background:rgba(17,24,39,.94);color:#fff;font-size:17px;line-height:1.75;z-index:10;display:none}
+.notes.on{display:block}
+.notes b{display:block;color:#9aa6ff;font-size:14px;margin-bottom:6px}
+.notes b ~ b{margin-top:14px;color:#ffd479;font-size:15px}
+.nav{position:fixed;right:16px;bottom:16px;display:flex;gap:8px;z-index:11}
+.nav button{width:40px;height:40px;border-radius:10px;border:0;background:rgba(15,23,42,.12);color:#111;font-size:16px;cursor:pointer}
+.nav button:hover{background:rgba(15,23,42,.2)}
+.nav button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+/* CIO 总览页 */
+.lead{margin-top:14px;padding-bottom:18px;border-bottom:1px solid var(--line);font-size:22px;color:var(--ink-2)}
+.issues{margin-top:34px;display:grid;gap:18px}
+.issues .q{display:grid;grid-template-columns:64px 430px 48px 1fr;align-items:center;padding:24px 32px;border:1.5px solid var(--card-line);border-radius:28px;background:linear-gradient(180deg,#fafcff 0,#fff 60%)}
+.issues .q.key{background:var(--blue-soft);border-color:#c7d8ff}
+.issues .no{font-size:24px;font-weight:800;color:var(--blue)}
+.issues .nm{font-size:34px;font-weight:900;color:var(--navy)}
+.issues .nm small{white-space:nowrap;display:block;margin-top:6px;font-size:17px;font-weight:400;color:var(--ink-2)}
+.issues i{font-style:normal;font-size:28px;color:var(--blue);text-align:center}
+.issues .ds{white-space:nowrap;font-size:22px;line-height:1.55;color:var(--ink)}
+.issues .ds b{color:var(--blue);font-weight:700}
+/* Build 页：左侧视频 + 右侧价值卡 */
+.split{position:absolute;left:72px;right:72px;top:232px;bottom:44px;display:grid;grid-template-columns:1064px 1fr;gap:24px;align-items:start}
+.vbox{width:1064px;height:598px;border-radius:18px;overflow:hidden;background:#0b1220;box-shadow:0 18px 40px -22px rgba(15,23,42,.45)}
+.vbox video{display:block;width:100%;height:100%;object-fit:contain;background:#0b1220}
+.vals{display:flex;flex-direction:column;gap:14px;height:598px}
+.vals-head{font-size:15px;font-weight:700;color:var(--blue);letter-spacing:.5px}
+.val{flex:1;border:1.5px solid var(--card-line);border-radius:20px;padding:18px 20px;background:linear-gradient(180deg,#fafcff 0,#fff 60%);display:flex;flex-direction:column;justify-content:center}
+.val b{font-size:24px;font-weight:900;color:var(--navy)}
+.val p{margin:8px 0 0;font-size:15px;line-height:1.6;color:var(--ink-2)}
+@media print{.nav,.notes{display:none!important}}
+</style>
+</head>
+<body>
+<div class="viewport"><div class="stage" id="stage">
+  <section class="slide on" data-notes="&lt;b&gt;【版本一 · 现场完整讲解】&lt;/b&gt;视频静音播放，按时间点讲：&lt;br&gt;接下来看 CIO。AI 开始参与企业运转，CIO 的责任从建好系统，转变为让 AI 可控地产生价值。我们认为 CIO 关注三项核心议题：一是开发效率，开发产能能否跟上业务需求的增长；二是过程可控，AI 参与开发之后，过程是否可见、可审、可追溯；三是价值可见，AI 投入能否转化为可量化的业务结果。下一页以工单管理系统开发为例，我边放边讲，看灵基如何应对。&lt;br&gt;&lt;br&gt;&lt;b&gt;【版本二 · 视频自带配音】&lt;/b&gt;人只串场：&lt;br&gt;接下来看 CIO。AI 开始参与企业运转，CIO 的责任从建好系统，转变为让 AI 可控地产生价值。CIO 关注三项核心议题：开发效率、过程可控、价值可见。下面用一段一分多钟的视频，看灵基如何应对。">
+    <div class="product">灵基Manage For CIO</div>
+    <div class="logo"><i><b></b><b></b><b></b><b></b></i>金蝶</div>
+    <h1>AI 时代，CIO 关注的三项核心议题</h1>
+    <div class="lead">AI 开始参与企业运转，CIO 的责任从建好系统，转变为让 AI 可控地产生价值</div>
+    <div class="issues">
+      <div class="q"><span class="no">01</span><div class="nm">开发效率<small>开发产能能否跟上业务需求的增长</small></div><i>→</i><div class="ds">AI 承担设计、编码与测试，交付周期从 12 周缩短到 4 周<b>（开发更轻松）</b></div></div>
+      <div class="q key"><span class="no">02</span><div class="nm">过程可控<small>AI 参与开发后，过程是否可见、可审、可追溯</small></div><i>→</i><div class="ds">进度、风险一屏可见，关键环节人工审核，全程留痕可追溯<b>（管理更省心）</b></div></div>
+      <div class="q"><span class="no">03</span><div class="nm">价值可见<small>AI 投入能否转化为可量化的业务结果</small></div><i>→</i><div class="ds">AI 完成的任务与业务结果自动统计，投入产出可量化<b>（决策更高效）</b></div></div>
+    </div>
+    <div class="foot"><b>1</b></div>
+  </section>
+  <section class="slide" data-notes="&lt;b&gt;【版本一 · 现场完整讲解】&lt;/b&gt;视频静音播放，按时间点讲：&lt;br&gt;[00:00] 打开灵基 Manage，所有在跑的项目一屏呈现。&lt;br&gt;[00:04] 每张卡片上都有目标、进度、风险和待决策。哪个项目落后、哪里有风险，一目了然，不必等例会汇报。&lt;br&gt;[00:13] 以工单管理系统为例：项目负责人在 Manage 里立项，选通用开发模板，填好目标和代码仓库。项目一创建，就出现在 CIO 的项目全景里。&lt;br&gt;[00:21] 接着把需求、开发、测试三位成员拉进项目、设好角色。从立项那一刻起，项目就纳入统一管理，进度和风险随时可查。&lt;br&gt;[00:30] 新建研发任务「工单提交」，交付智能体团队自动带出执行阶段，每个阶段都指定了负责人。&lt;br&gt;[00:39] 保存并分配后，计划直接驱动研发执行；计划和执行用的是同一份数据，不用人工同步。&lt;br&gt;[00:46] 研发侧，需求、开发、测试三个阶段由智能体团队执行，依次交付需求文档、可直接操作的工单管理系统和测试报告，成员只做审核。CIO 不必逐个跟进细节。&lt;br&gt;[00:57] 回到项目详情，任务已自动标记为完成。&lt;br&gt;[01:01] 阶段结论、代码合并到 main、每一次状态变化都有记录，全程可追溯。&lt;br&gt;[01:07] 项目进度同步到 100%。进度看得清，风险早发现，CIO 决策更高效。&lt;br&gt;[01:14] 这就是三项议题的落地：过程可控、开发效率、价值可见，系统交付周期从 12 周缩短到 4 周。人与智能体协同交付，让 IT 交付跟上业务。&lt;br&gt;&lt;br&gt;&lt;b&gt;【版本二 · 视频自带配音】&lt;/b&gt;人只串场：&lt;br&gt;播放前：下面这段一分多钟的视频，以工单管理系统为例，看 CIO 如何在 Manage 里管好项目，研发又如何交给智能体团队。&lt;br&gt;（播放视频，约 79 秒）&lt;br&gt;播放后：回顾一下。过程可控：项目、风险、待决策一屏掌握；开发效率：研发阶段交给智能体团队，人只审核；价值可见：状态和进度自动回写，系统交付周期从 12 周缩短到 4 周。接下来看 Build 如何服务开发人员和业务人员。">
+    <div class="product">灵基Manage For CIO</div>
+    <div class="logo"><i><b></b><b></b><b></b><b></b></i>金蝶</div>
+    <h1>视频 Demo：工单管理系统开发</h1>
+    <div class="vwrap"><video src="灵基CIO-产品Demo.mp4" controls preload="metadata" playsinline aria-label="CIO 视频 Demo"></video></div>
+    <div class="foot"><b>2</b></div>
+  </section>
+  <section class="slide" data-notes="&lt;b&gt;【版本一 · 现场完整讲解】&lt;/b&gt;视频静音播放，按时间点讲：&lt;br&gt;[00:00] 设备巡检维修系统已经在 Manage 中立项。进入 Build，真正开始工作的，不是一个开发工程师，而是一支苍穹应用开发智能体团队。&lt;br&gt;[00:10] 需求分析、方案设计、开发实现、测试验证和部署发布，分别由不同智能体完成。前一个智能体完成任务以后，结果自动交给下一个智能体继续执行，整个研发过程由智能体团队连续协作。&lt;br&gt;[00:26] 开发工程师张伟不再需要亲自处理每一步。他主要负责目标确认和关键节点审核，重复的分析、编码、测试和部署工作，都交给智能体团队完成。&lt;br&gt;[00:38] 现在开发智能体开始实现应用。基于苍穹元数据，它直接生成业务实体、表单、列表和相关逻辑，只需要完成这个应用真正特有的部分。&lt;br&gt;[00:50] 开发完成以后，测试智能体自动接手，四十二条测试用例全部通过；张伟确认测试结果以后，部署智能体继续完成发布，几分钟后系统正式上线。&lt;br&gt;[01:02] 大家刚才看到的，不是 AI 帮开发人员多写几段代码，而是一支智能体团队，从需求、设计、开发、测试一直协作到上线，人只负责目标、判断和关键决策。&lt;br&gt;[01:16] 同时，智能体操作的是结构化 ERP 元数据，不需要反复加载整套源代码，标准能力可以直接复用，所以开发更快、Token 更省，权限和业务规则也能直接继承金蝶 ERP。&lt;br&gt;[01:30] Build，让每一名开发人员，都拥有一支自己的智能体开发团队。&lt;br&gt;&lt;br&gt;&lt;b&gt;【版本二 · 视频自带配音】&lt;/b&gt;人只串场：&lt;br&gt;播放前：6.1 看专业开发人员。设备巡检维修系统已在 Manage 中立项，进入 Build，真正干活的是一支苍穹应用开发智能体团队。&lt;br&gt;（播放视频，约 96 秒）&lt;br&gt;播放后：请看右侧三点。智能体负责干活：需求、方案、开发、测试、部署各由一个智能体完成，结果自动交接；人负责目标和审核：张伟只确认目标、审核测试结果；金蝶元数据做底座：智能体操作结构化 ERP 元数据，开发更快、Token 更省，权限和业务规则继承金蝶 ERP。过去是开发人员自己干活，未来是开发人员带着一支智能体团队干活。">
+    <div class="product">灵基Build For 专业开发人员</div>
+    <div class="logo"><i><b></b><b></b><b></b><b></b></i>金蝶</div>
+    <h1>6.1 Build 让每一名开发人员都拥有自己的智能体开发团队</h1>
+    <div class="vrow"><b>客户价值</b><span>需求、方案、开发、测试、部署各由一个智能体完成，结果自动交接；开发人员只负责目标、审核和关键决策。</span></div>
+    <div class="split">
+      <div class="vbox"><video src="6.1-Build让每一名开发人员都拥有自己的智能体开发团队.mp4" controls preload="metadata" playsinline aria-label="6.1 产品 Demo"></video></div>
+      <div class="vals"><div class="vals-head">人与智能体团队的分工</div><div class="val"><b>智能体负责干活</b><p>五个阶段各由一个智能体执行 → 前一个完成，结果自动交给下一个</p></div><div class="val"><b>人负责目标和审核</b><p>张伟只确认目标、审核测试结果 → 42 条用例通过后交给部署智能体上线</p></div><div class="val"><b>金蝶元数据做底座</b><p>智能体读写结构化 ERP 元数据 → 开发更快、Token 更省，权限继承金蝶 ERP</p></div></div>
+    </div>
+    <div class="foot"><b>3</b></div>
+  </section>
+  <section class="slide" data-notes="&lt;b&gt;【版本一 · 现场完整讲解】&lt;/b&gt;视频静音播放，按时间点讲：&lt;br&gt;[00:00] 但智能体不应该只属于开发人员。设备主管周师傅做了二十年维修，他最有价值的，是脑子里的排障经验。现在，他不需要学习开发，只要像平时说话一样告诉 Build：做一个设备故障诊断助手，顺便把查设备档案和查维修记录的两个技能也做出来。&lt;br&gt;[00:19] 设备温度异常，先看最近有没有更换过零件，再检查热电偶和加热圈；遇到高压电，一定先断电挂牌。Build 理解这段经验后，在创建助手的同时，生成查询设备档案和查询维修记录两个技能。&lt;br&gt;[00:35] 技能校验通过后，Build 把老师傅的判断方法写成工作原则，自动绑定这两个技能，关联企业的设备管理知识，生成了属于周师傅的设备故障诊断助手。&lt;br&gt;[00:47] 点开就能看到它的配置：老师傅的经验变成了工作原则，它既能查企业里的真实数据，也能读企业知识。&lt;br&gt;[00:56] 现在直接输入设备编号和故障现象，助手会自己查询设备信息和维修记录，再结合周师傅的经验，一步一步给出排查建议。整个过程中，周师傅没有写一行代码。&lt;br&gt;[01:09] 测试通过以后，再经过企业审核，就可以正式发布给其他维修人员使用。一个老师傅二十年的经验，就这样变成了整个企业都可以复制的智能能力。&lt;br&gt;[01:20] Build，让企业全员都能构建自己的智能体。懂自己的工作，就能拥有自己的智能体。&lt;br&gt;&lt;br&gt;&lt;b&gt;【版本二 · 视频自带配音】&lt;/b&gt;人只串场：&lt;br&gt;播放前：但智能体不应该只属于开发人员。6.2 看设备主管周师傅，他不会写代码，只有二十年的排障经验。&lt;br&gt;（播放视频，约 89 秒）&lt;br&gt;播放后：Build 做一个智能体就三步：说出经验和要用的技能；Build 在创建助手的同时生成技能、自动绑定，经验写成工作原则；本地测试通过后经企业审核，发布给维修人员。过去只有技术人员能开发能力，未来每个员工都能把自己的经验变成智能体。懂自己的工作，就能拥有自己的智能体。">
+    <div class="product">灵基Build For 企业全员</div>
+    <div class="logo"><i><b></b><b></b><b></b><b></b></i>金蝶</div>
+    <h1>6.2 Build 让企业全员都能构建自己的智能体</h1>
+    <div class="vrow"><b>客户价值</b><span>懂自己的工作，就能拥有自己的智能体：老师傅说出经验，Build 生成能查数据、能读知识的助手，经验变成全企业可复制的能力。</span></div>
+    <div class="split">
+      <div class="vbox"><video src="6.2-Build让企业全员都能构建自己的智能体.mp4" controls preload="metadata" playsinline aria-label="6.2 产品 Demo"></video></div>
+      <div class="vals"><div class="vals-head">Build 怎么做出一个智能体</div><div class="val"><b>① 说出经验和要求</b><p>像平时说话一样讲清楚排障经验，以及要用的两个技能</p></div><div class="val"><b>② Build 一起生成</b><p>创建助手的同时生成并校验技能、自动绑定 → 经验写成工作原则，关联企业知识</p></div><div class="val"><b>③ 先测再发布</b><p>本地测试先查记录再给建议 → 提交后经企业审核，发布给维修人员</p></div></div>
+    </div>
+    <div class="foot"><b>4</b></div>
+  </section>
+
+</div></div>
+<div class="notes" id="notes" aria-live="polite"></div>
+<div class="nav"><button type="button" id="prev" aria-label="上一页">‹</button><button type="button" id="notesBtn" aria-label="显示或隐藏逐字稿">稿</button><button type="button" id="next" aria-label="下一页">›</button></div>
+<script>
+var stage = document.getElementById('stage');
+var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+var notes = document.getElementById('notes');
+var cur = 0;
+function fit() {
+  var s = Math.min((window.innerWidth - 32) / 1600, (window.innerHeight - 32) / 900);
+  stage.style.transform = 'scale(' + s + ')';
+}
+function show(i) {
+  cur = Math.max(0, Math.min(slides.length - 1, i));
+  slides.forEach(function (el, n) { el.classList.toggle('on', n === cur); if (n !== cur) el.querySelectorAll('video').forEach(function (v) { v.pause(); }); });
+  notes.innerHTML = '<b>讲稿 · ' + (cur + 1) + ' / ' + slides.length + '</b>' + slides[cur].getAttribute('data-notes');
+}
+document.getElementById('prev').onclick = function () { show(cur - 1); };
+document.getElementById('next').onclick = function () { show(cur + 1); };
+document.getElementById('notesBtn').onclick = function () { notes.classList.toggle('on'); };
+document.addEventListener('keydown', function (e) {
+  if (e.target.tagName === 'VIDEO') return;
+  if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') show(cur + 1);
+  else if (e.key === 'ArrowLeft' || e.key === 'PageUp') show(cur - 1);
+  else if (e.key === 'n' || e.key === 'N') notes.classList.toggle('on');
+  else if (e.key === 'f' || e.key === 'F') { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen(); }
+});
+window.addEventListener('resize', fit);
+fit(); show(0);
+</script>
+</body>
+</html>
