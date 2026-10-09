@@ -8,15 +8,21 @@ import { mgrEsc } from './utils.js';
 
 var projectId = null;
 var trigger = null;
+var draft = null;   /* 新建项目时的草稿模式：{ taken: () => 已选人员 ID, onConfirm(ids, asAdmin) }，不写入任何项目 */
 var picked = new Set();
 var query = '';
 
 function candidates() {
-  var p = projectId ? mgrProjectById(projectId) : null;
-  if (!p) return [];
+  var taken;
+  if (draft) taken = draft.taken();
+  else {
+    var p = projectId ? mgrProjectById(projectId) : null;
+    if (!p) return [];
+    taken = p.members || [];
+  }
   var q = query.trim().toLocaleLowerCase();
   return CV_MEMBERS.filter(function (m) {
-    return m.status !== 'disabled' && !(p.members || []).includes(m.id) && (!q || m.name.toLocaleLowerCase().includes(q));
+    return m.status !== 'disabled' && !taken.includes(m.id) && (!q || m.name.toLocaleLowerCase().includes(q));
   });
 }
 function syncConfirm() {
@@ -35,11 +41,14 @@ function renderList() {
     }).join('')
     : '<div class="mgr-inv-empty">' + (query.trim() ? '没有匹配的人员' : '所有人员都已在项目中') + '</div>';
 }
-function openInvite(id, from) {
-  var p = mgrProjectById(id);
-  if (!p) return;
-  if (!mgrCanManageProject(p)) { toast('只有项目负责人、项目管理员或系统管理员可以邀请成员', 'warning'); return; }
-  projectId = id;
+function openInvite(id, from, draftOptions) {
+  draft = draftOptions || null;
+  if (!draft) {
+    var p = mgrProjectById(id);
+    if (!p) return;
+    if (!mgrCanManageProject(p)) { toast('只有项目负责人、项目管理员或系统管理员可以邀请成员', 'warning'); return; }
+  }
+  projectId = draft ? null : id;
   trigger = from || null;
   picked.clear();
   query = '';
@@ -57,11 +66,21 @@ function closeInvite() {
   overlay.style.display = 'none';
   overlay.setAttribute('aria-hidden', 'true');
   projectId = null;
+  draft = null;
   picked.clear();
   if (trigger && trigger.isConnected) trigger.focus();
   trigger = null;
 }
 function confirmInvite() {
+  if (draft) {
+    if (!picked.size) return;
+    var onConfirm = draft.onConfirm;
+    var chosen = Array.from(picked);
+    var admin = $('#mgrInviteOverlay input[name="mgrInviteRole"]:checked').value === 'admin';
+    closeInvite();
+    onConfirm(chosen, admin);
+    return;
+  }
   var p = projectId ? mgrProjectById(projectId) : null;
   if (!p || !picked.size) return;
   if (!mgrCanManageProject(p)) { toast('项目权限已变化，无法邀请成员', 'warning'); return; }

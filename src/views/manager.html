@@ -61,7 +61,9 @@
           <h1 id="mgrProjDetailName"></h1>
           <span id="mgrProjDetailTags"></span>
           <div class="mgr-proj-head-actions">
-            <button type="button" class="mgr-btn mgr-btn--primary" data-mgr-invite>邀请成员</button>
+            <button type="button" class="mgr-btn mgr-btn--outline" data-mgr-invite>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="4"/><path d="M2 21v-1a6 6 0 0 1 6-6h2"/><path d="M19 14v6M16 17h6"/></svg>邀请成员
+            </button>
             <button type="button" class="mgr-icon-btn" data-mgr-members aria-label="项目成员" data-tooltip="项目成员">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             </button>
@@ -85,7 +87,7 @@
             <div class="mgr-pd-tabs">
               <div class="mgr-pd-tablist" role="tablist" aria-label="项目详情页签">
                 <button type="button" class="mgr-pd-tab active" data-pdtab="plan" role="tab" aria-selected="true">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>计划与任务
+                  计划与任务
                 </button>
                 <button type="button" class="mgr-pd-tab" data-pdtab="feed" role="tab" aria-selected="false">动态</button>
               </div>
@@ -100,6 +102,10 @@
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 6h10M8 12h12M4 18h8"/></svg>甘特图
                 </button>
               </div>
+              <button type="button" class="mgr-pd-rail-toggle" id="mgrPdRailToggle" aria-expanded="true" aria-label="收起右侧栏" data-tooltip="收起右侧栏">
+                <svg class="is-collapse" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 6 6-6 6"/><path d="M18 5v14"/></svg>
+                <svg class="is-expand" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 6-6 6 6 6"/><path d="M6 5v14"/></svg>
+              </button>
             </div>
             <!-- 计划与任务（工具栏与表格由 features/manager/plan.js 渲染） -->
             <div id="mgrPdPlanPane"></div>
@@ -204,13 +210,13 @@
           </div>
           <div class="mgr-tn-field">
             <textarea id="mgrTnDesc" rows="4" placeholder="说明任务背景、工作内容与期望结果。"></textarea>
-            <div class="mgr-tn-desc-tools">
+            <div class="mgr-tn-desc-tools" data-mgr-tn-general-only>
               <button type="button" class="mgr-tn-tool" data-mgr-tn-tool="附件">＋ 附件</button>
               <button type="button" class="mgr-tn-tool" data-mgr-tn-tool="智能体">◎ 选择智能体</button>
               <button type="button" class="mgr-tn-tool" data-mgr-tn-tool="模型">✦ 选择模型</button>
             </div>
           </div>
-          <div class="mgr-tn-row">
+          <div class="mgr-tn-row" data-mgr-tn-general-only>
             <div class="mgr-tn-pop-wrap">
               <button type="button" class="mgr-tn-chipbtn" id="mgrTnCollabBtn" aria-haspopup="listbox" aria-expanded="false">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0 1 14 0v1"/></svg>
@@ -232,7 +238,7 @@
               </div>
             </div>
           </div>
-          <div class="mgr-tn-field">
+          <div class="mgr-tn-field" data-mgr-tn-general-only>
             <textarea id="mgrTnAccept" rows="2" placeholder="请输入定性验收标准，例如：交付材料完整，结论清晰，并经项目负责人确认。"></textarea>
           </div>
           <!-- 研发任务：执行阶段（可编辑） -->
@@ -241,7 +247,7 @@
             <div class="mgr-tn-rd-head">执行计划 <small id="mgrTnPlanHint">按交付智能体团队的交付路径选择阶段，智能体按阶段自动匹配</small></div>
             <table class="mgr-tn-plan-table">
               <colgroup><col class="mgr-tn-col-index"><col><col class="mgr-tn-col-review"><col class="mgr-tn-col-owner"><col class="mgr-tn-col-action"></colgroup>
-              <thead><tr><th>序号</th><th>执行阶段</th><th>自动审核</th><th>执行人</th><th><button type="button" class="mgr-tn-plan-add" id="mgrTnStageAdd">＋ 添加节点</button></th></tr></thead>
+              <thead><tr><th>序号</th><th>执行阶段</th><th>自动审核</th><th>审核人</th><th><button type="button" class="mgr-tn-plan-add" id="mgrTnStageAdd">＋ 添加节点</button></th></tr></thead>
               <tbody id="mgrTnStages"></tbody>
             </table>
           </div>
@@ -290,11 +296,7 @@
       </div>
       <div class="sync-modal__footer mgr-projedit-footer">
         <button type="button" class="sync-modal__btn sync-modal__btn--ghost" data-mgr-tntask-close>取消</button>
-        <button type="button" class="sync-modal__btn sync-modal__btn--ghost" id="mgrTnSave">保存任务</button>
-        <button type="button" class="sync-modal__btn sync-modal__btn--primary" id="mgrTnSaveStart">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m13 2-9 12h7l-1 8 9-12h-7z"/></svg>
-          保存并启动
-        </button>
+        <button type="button" class="sync-modal__btn sync-modal__btn--primary" id="mgrTnSave">保存</button>
       </div>
     </div>
   </div>

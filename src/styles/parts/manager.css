@@ -1602,8 +1602,6 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  position: sticky;
-  top: 12px;
 }
 #view-manager .mgr-rail-card {
   display: flex;
@@ -5375,4 +5373,406 @@
 #view-manager .mgr-tk-status .mgr-tag {
   border-radius: 4px;
   font-size: 12px;
+}
+
+/* 详情页分段页签：选中滑块在两个页签间滑动（位置由 detail.js 写入 --thumb-x / --thumb-w） */
+#view-manager .mgr-pd-tablist {
+  position: relative;
+}
+#view-manager .mgr-pd-tablist::before {
+  content: "";
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 0;
+  width: var(--thumb-w, 0);
+  transform: translateX(var(--thumb-x, 0));
+  border-radius: 999px;
+  background: var(--bg);
+  box-shadow: var(--pill-shadow);
+}
+#view-manager .mgr-pd-tablist.is-ready::before {
+  transition:
+    transform 0.2s ease,
+    width 0.2s ease;
+}
+#view-manager .mgr-pd-tablist .mgr-pd-tab {
+  position: relative;
+  z-index: 1;
+}
+#view-manager .mgr-pd-tablist .mgr-pd-tab.active {
+  background: none;
+  box-shadow: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  #view-manager .mgr-pd-tablist.is-ready::before {
+    transition: none;
+  }
+}
+
+/* ---------- 新建项目 · 智能体团队下拉（单独浮层，向下展开） ---------- */
+.mgr-scope .mgr-dd {
+  position: relative;
+}
+.mgr-scope .mgr-dd-native {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+.mgr-scope .mgr-dd-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.mgr-scope .mgr-dd-trigger:hover {
+  border-color: var(--border-hover);
+}
+.mgr-scope .mgr-dd-trigger[aria-expanded="true"],
+.mgr-scope .mgr-dd-trigger:focus-visible {
+  outline: none;
+  border-color: var(--brand);
+}
+.mgr-scope .mgr-dd-trigger.is-placeholder {
+  color: var(--text-secondary);
+}
+.mgr-scope .mgr-dd-trigger svg {
+  flex: none;
+  color: var(--text-secondary);
+  transition: transform 0.15s;
+}
+.mgr-scope .mgr-dd-trigger[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+}
+.mgr-scope .mgr-dd-pop {
+  position: fixed;
+  z-index: 120;
+  box-sizing: border-box;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  box-shadow: var(--menu-shadow);
+}
+.mgr-scope .mgr-dd-pop[hidden] {
+  display: none;
+}
+.mgr-scope .mgr-dd-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  height: 36px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+.mgr-scope .mgr-dd-option:hover,
+.mgr-scope .mgr-dd-option:focus-visible {
+  outline: none;
+  background: var(--hover);
+}
+.mgr-scope .mgr-dd-option.is-on b {
+  color: var(--brand);
+}
+
+/* ---------- 新建项目 · 项目成员（创建人固定，可添加其他人员） ---------- */
+.mgr-scope .mgr-pe-field > label small {
+  margin-left: 6px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 400;
+}
+.mgr-scope .mgr-pe-member-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.mgr-scope .mgr-pe-member-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+}
+.mgr-scope .mgr-pe-member-chip.is-fixed {
+  border-style: dashed;
+}
+.mgr-scope .mgr-pe-member-chip small {
+  padding: 0 6px;
+  border-radius: 4px;
+  background: var(--brand-fill);
+  color: var(--brand);
+  font-size: 12px;
+  line-height: 18px;
+}
+.mgr-scope .mgr-pe-member-remove {
+  padding: 0 2px;
+  border: none;
+  background: none;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+}
+.mgr-scope .mgr-pe-member-remove:hover {
+  color: var(--danger);
+}
+.mgr-scope .mgr-pe-member-remove:focus-visible,
+.mgr-scope .mgr-pe-member-add:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.mgr-scope .mgr-pe-member-add {
+  padding: 5px 14px;
+  border: 1px dashed var(--border-hover);
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--brand);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.mgr-scope .mgr-pe-member-add:hover {
+  background: var(--brand-fill);
+}
+
+/* 新建项目 · 模板「更多」展开 */
+.mgr-scope .mgr-pe-tpl-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-secondary);
+}
+.mgr-scope .mgr-pe-tpl-more svg {
+  transition: transform 0.15s;
+}
+.mgr-scope .mgr-pe-tpl-more[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+}
+
+/* 新建任务 · 研发任务由执行计划驱动，隐藏通用任务才需要的附件、协作人、计划时间、AI 验收和验收标准 */
+#view-manager #mgrTnCore.is-rd [data-mgr-tn-general-only] {
+  display: none;
+}
+
+/* 详情头「邀请成员」：品牌色描边按钮 */
+#view-manager .mgr-btn--outline {
+  height: var(--control-h-sm);
+  padding: 0 14px;
+  border: 1px solid var(--brand);
+  background: var(--brand-fill);
+  color: var(--brand);
+  font-size: 14px;
+}
+#view-manager .mgr-btn--outline:hover {
+  border-color: var(--brand-hover);
+  background: var(--bg);
+  color: var(--brand-hover);
+}
+
+/* 详情主卡片右上角：收起 / 展开右栏，收起后主区占满整行 */
+#view-manager .mgr-pd-rail-toggle {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: var(--control-h-sm);
+  height: var(--control-h-sm);
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+#view-manager .mgr-pd-rail-toggle:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+#view-manager .mgr-pd-rail-toggle:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 1px;
+}
+#view-manager .mgr-pd-rail-toggle .is-expand {
+  display: none;
+}
+#view-manager .mgr-pd-layout.is-rail-collapsed .mgr-pd-rail-toggle .is-collapse {
+  display: none;
+}
+#view-manager .mgr-pd-layout.is-rail-collapsed .mgr-pd-rail-toggle .is-expand {
+  display: block;
+}
+#view-manager .mgr-pd-layout.is-rail-collapsed {
+  grid-template-columns: minmax(0, 1fr);
+}
+#view-manager .mgr-pd-layout.is-rail-collapsed .mgr-pd-rail {
+  display: none;
+}
+#view-manager .mgr-pd-tabs .mgr-pd-views {
+  margin-left: auto;
+  margin-bottom: 0;
+}
+
+/* 议题弹窗：风险影响、决策记录、查看任务、批准 / 驳回 */
+#view-manager .mgr-issue-impact {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+#view-manager .mgr-issue-decision {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+#view-manager .mgr-issue-task {
+  align-self: flex-start;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+#view-manager .mgr-issue-side {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+#view-manager .mgr-issue-actions {
+  display: inline-flex;
+  gap: 8px;
+}
+
+/* 右栏「AI 贡献」：三项关键数字并排，卡片压矮 */
+#view-manager .mgr-ai-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+#view-manager .mgr-ai-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  padding: 8px;
+  border-radius: 10px;
+  background: var(--brand-fill);
+}
+#view-manager .mgr-ai-stat strong {
+  color: var(--brand);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+#view-manager .mgr-ai-stat span {
+  overflow: hidden;
+  color: var(--text-secondary);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 详情右栏：五张卡压紧，常见窗口高度下不用滚动就能看到「智能体团队」 */
+#view-manager .mgr-pd-rail {
+  gap: 10px;
+}
+#view-manager .mgr-rail-goal {
+  -webkit-line-clamp: 2;
+}
+#view-manager .mgr-rail-card .mgr-detail-row {
+  padding: 2px 0;
+}
+#view-manager .mgr-rail-avatars {
+  margin-top: 4px;
+}
+
+/* 项目详情（宽屏）：页面本身不滚动，任务表格 / 动态在主卡片内滚动，右栏保持在视野内 */
+@media (min-width: 1101px) {
+  #view-manager #mgrProjDetail .mgr-scroll {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  #view-manager #mgrProjDetail .mgr-wrap {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 0;
+    padding-bottom: 12px;
+  }
+  #view-manager #mgrProjDetail .mgr-pd-layout {
+    flex: 1;
+    grid-template-rows: minmax(0, 1fr);
+    align-items: stretch;
+    min-height: 0;
+  }
+  #view-manager #mgrProjDetail .mgr-pd-main {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    margin-bottom: 0;
+  }
+  #view-manager #mgrProjDetail .mgr-pd-main > .mgr-pd-tabs {
+    flex: none;
+  }
+  #view-manager #mgrProjDetail #mgrPdPlanPane:not(.hidden) {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+  }
+  #view-manager #mgrProjDetail #mgrPdPlanPane > * {
+    flex: none;
+  }
+  #view-manager #mgrProjDetail #mgrPdPlanPane > .mgr-pd-table-wrap {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+  #view-manager #mgrProjDetail #mgrPdFeedPane:not(.hidden) {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+  #view-manager #mgrProjDetail .mgr-pd-rail {
+    min-height: 0;
+    overflow-y: auto;
+  }
+  #view-manager #mgrProjDetail .mgr-pd-rail > .mgr-rail-card {
+    flex: none;
+  }
+  #view-manager #mgrProjDetail .mgr-task-table th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
 }

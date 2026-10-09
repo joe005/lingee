@@ -1,13 +1,14 @@
 import { $ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
-import { cvCurrentUserName } from '../collab/data.js';
+import { CV_MEMBERS, cvCurrentUserName, cvPersonById } from '../collab/data.js';
 import { tkBranchNameError } from '../tasks-v2/git-branch.js';
 import {
-  mgrAddProject, mgrCanManageProject, mgrRenameError, mgrRenameProject, mgrSetProjectRepo, mgrCurrentPersonId, mgrDeleteProject, mgrProjectById,
+  mgrAddProject, mgrCanManageProject, mgrMemberRole, mgrRenameError, mgrRenameProject, mgrSetProjectRepo, mgrCurrentPersonId, mgrDeleteProject, mgrProjectById,
   mgrProjectIssues, mgrProjectTasks, mgrProjects, mgrTeam, mgrTeams,
 } from './data.js';
 import { renderDetail, resetDetailTab } from './detail.js';
 import { closeTaskPanel, resetPlanState } from './plan.js';
+import { openInvite } from './invite.js';
 import { hideSettings, openSettings } from './settings.js';
 import { mgrEsc, mgrTag } from './utils.js';
 /* 管理 · 项目：管理项目卡片栅格、进入 / 返回项目详情、新建项目弹窗。 */
@@ -29,6 +30,7 @@ var TEMPLATES = [
   { id: 'inv', name: '库存周转优化', goal: '提升库存周转率，清理长龄库存并优化补货参数' },
 ];
 var pickedTemplate = 'blank';
+var pickedMembers = [];       /* 新建时额外邀请的成员 { id, admin }；创建人固定为负责人和成员 */
 
 /* ---------- 列表（项目首页：待你处理 + 全部项目） ---------- */
 var TODO_PREVIEW = 3;
@@ -84,7 +86,9 @@ function renderTodos() {
 function renderList() {
   var all = mgrProjects();
   var q = projectQuery.trim().toLocaleLowerCase();
-  var list = q ? all.filter(function (p) { return (p.name + ' ' + (p.owner || '')).toLocaleLowerCase().includes(q); }) : all;
+  var list = q ? all.filter(function (p) { return (p.name + ' ' + (p.owner || '')).toLocaleLowerCase().includes(q); }) : all.slice();
+  /* 按最近修改时间倒序；没改过的演示项目没有 updatedAt，排在后面并保持原有顺序（sort 稳定） */
+  list.sort(function (a, b) { return (b.updatedAt || 0) - (a.updatedAt || 0); });
   $('#mgrHomeCount').textContent = all.length;
   $('#mgrAllCount').textContent = all.length;
   renderTodos();
@@ -122,11 +126,22 @@ function openProject(id) {
 
 /* ---------- 新建项目弹窗 ---------- */
 function currentTemplate() { return TEMPLATES.find(function (t) { return t.id === pickedTemplate; }); }
+/* 模板默认只显示前 5 个，其余通过「更多」展开；选中的模板在折叠区时自动展开 */
+var TEMPLATE_VISIBLE = 5;
+var templatesExpanded = false;
 function renderTemplates() {
-  $('#mgrPeTplChips').innerHTML = TEMPLATES.map(function (t) {
+  var extra = TEMPLATES.slice(TEMPLATE_VISIBLE);
+  var open = templatesExpanded || extra.some(function (t) { return t.id === pickedTemplate; });
+  var chip = function (t) {
     var on = pickedTemplate === t.id;
     return '<button type="button" class="mgr-pe-tpl' + (on ? ' active' : '') + '" data-mgr-pe-tpl="' + mgrEsc(t.id) + '" role="radio" aria-checked="' + on + '">' + mgrEsc(t.name) + '</button>';
-  }).join('');
+  };
+  $('#mgrPeTplChips').innerHTML = TEMPLATES.slice(0, TEMPLATE_VISIBLE).map(chip).join('') +
+    (open ? extra.map(chip).join('') : '') +
+    (extra.length
+      ? '<button type="button" class="mgr-pe-tpl mgr-pe-tpl-more" data-mgr-pe-tpl-more aria-expanded="' + open + '">' + (open ? '收起' : '更多') +
+        '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>'
+      : '');
 }
 function syncDevExtra() {
   var tpl = currentTemplate();
@@ -139,7 +154,7 @@ function pickTemplate(id) {
   pickedTemplate = id;
   var tpl = currentTemplate();
   if (tpl && tpl.goal) $('#mgrPeGoal').value = tpl.goal;
-  if (tpl && tpl.dev && tpl.team) $('#mgrPeTeam').value = tpl.team;
+  if (tpl && tpl.dev && tpl.team) { $('#mgrPeTeam').value = tpl.team; syncTeamUi(); }
   renderTemplates();
   syncDevExtra();
 }
@@ -152,6 +167,66 @@ function syncSubtabs(showGoal) {
     b.setAttribute('aria-selected', String(on));
   });
 }
+/* ---------- 项目成员（创建人固定；其他人沿用项目详情里的「邀请成员」弹窗添加） ---------- */
+function renderMemberChips() {
+  var me = cvPersonById(mgrCurrentPersonId());
+  $('#mgrPeMemberChips').innerHTML =
+    (me ? '<span class="mgr-pe-member-chip is-fixed" title="创建人默认为项目负责人">' + mgrEsc(me.name) + '<small>负责人</small></span>' : '') +
+    pickedMembers.map(function (x) { return { m: cvPersonById(x.id), admin: x.admin }; }).filter(function (x) { return x.m; }).map(function (x) {
+      return '<span class="mgr-pe-member-chip">' + mgrEsc(x.m.name) + (x.admin ? '<small>项目管理员</small>' : '') +
+        '<button type="button" class="mgr-pe-member-remove" data-mgr-pe-member-remove="' + mgrEsc(x.m.id) + '" aria-label="移除成员 ' + mgrEsc(x.m.name) + '">×</button></span>';
+    }).join('') +
+    '<button type="button" class="mgr-pe-member-add" id="mgrPeMemberAdd" aria-haspopup="dialog">＋ 邀请成员</button>';
+}
+function inviteForNewProject(trigger) {
+  openInvite(null, trigger, {
+    taken: function () { return [mgrCurrentPersonId()].concat(pickedMembers.map(function (x) { return x.id; })); },
+    onConfirm: function (ids, admin) {
+      ids.forEach(function (id) { if (!pickedMembers.some(function (x) { return x.id === id; })) pickedMembers.push({ id: id, admin: admin }); });
+      renderMemberChips();
+      $('#mgrPeMemberAdd').focus();
+    },
+  });
+}
+/* 开发项目只提供两个交付团队；下拉是单独的浮层，固定向触发按钮下方展开 */
+var TEAM_IDS = ['general-app-dev', 'cosmic-app-dev'];
+function teamChoices() { return TEAM_IDS.map(mgrTeam).filter(Boolean); }
+function syncTeamUi() {
+  var sel = $('#mgrPeTeam');
+  var team = mgrTeam(sel.value);
+  $('#mgrPeTeamText').textContent = team ? team.name : '请选择智能体团队';
+  $('#mgrPeTeamBtn').classList.toggle('is-placeholder', !team);
+}
+function closeTeamPop() {
+  var pop = $('#mgrPeTeamPop');
+  if (pop.hidden) return;
+  pop.hidden = true;
+  $('#mgrPeTeamBtn').setAttribute('aria-expanded', 'false');
+}
+function openTeamPop() {
+  var pop = $('#mgrPeTeamPop');
+  var btn = $('#mgrPeTeamBtn');
+  var current = $('#mgrPeTeam').value;
+  pop.innerHTML = teamChoices().map(function (t) {
+    var on = t.id === current;
+    return '<button type="button" class="mgr-dd-option' + (on ? ' is-on' : '') + '" role="option" aria-selected="' + on + '" data-mgr-pe-team-pick="' + mgrEsc(t.id) + '"><span>' + mgrEsc(t.name) + '</span>' + (on ? '<b aria-hidden="true">✓</b>' : '') + '</button>';
+  }).join('');
+  var box = btn.getBoundingClientRect();
+  pop.style.left = box.left + 'px';
+  pop.style.top = box.bottom + 4 + 'px';
+  pop.style.width = box.width + 'px';
+  pop.hidden = false;
+  btn.setAttribute('aria-expanded', 'true');
+  var target = pop.querySelector('.is-on') || pop.querySelector('.mgr-dd-option');
+  if (target) target.focus();
+}
+function pickTeam(id) {
+  $('#mgrPeTeam').value = id;
+  syncTeamUi();
+  closeTeamPop();
+  $('#mgrPeTeam').dispatchEvent(new Event('change', { bubbles: true }));
+  $('#mgrPeTeamBtn').focus();
+}
 function selectedBaseBranch() {
   var v = $('#mgrPeBaseBranch').value;
   return (v === '__custom' ? $('#mgrPeBaseBranchCustom').value : v).trim();
@@ -159,6 +234,7 @@ function selectedBaseBranch() {
 function openProjectNew() {
   var overlay = $('#mgrProjEditOverlay');
   pickedTemplate = 'blank';
+  templatesExpanded = false;
   renderTemplates();
   $('#mgrPeName').value = '';
   $('#mgrPeGoal').value = '';
@@ -167,9 +243,13 @@ function openProjectNew() {
   $('#mgrPeBaseBranch').value = 'main';
   $('#mgrPeBaseBranchCustom').value = '';
   $('#mgrPeBaseBranchCustom').hidden = true;
-  $('#mgrPeTeam').innerHTML = '<option value="">请选择智能体团队</option>' + mgrTeams().map(function (t) {
+  $('#mgrPeTeam').innerHTML = teamChoices().map(function (t) {
     return '<option value="' + mgrEsc(t.id) + '">' + mgrEsc(t.name) + '</option>';
   }).join('');
+  syncTeamUi();
+  closeTeamPop();
+  pickedMembers = [];
+  renderMemberChips();
   syncSubtabs(true);
   syncDevExtra();
   overlay.style.display = 'flex';
@@ -177,6 +257,7 @@ function openProjectNew() {
   $('#mgrPeName').focus();
 }
 function closeProjectNew() {
+  closeTeamPop();
   var overlay = $('#mgrProjEditOverlay');
   overlay.style.display = 'none';
   overlay.setAttribute('aria-hidden', 'true');
@@ -196,7 +277,7 @@ function submitProjectNew() {
   if (dev && !mgrTeam(teamId)) {
     $('#mgrPeTeamError').hidden = false;
     toast('开发类项目必须选择智能体团队', 'error');
-    $('#mgrPeTeam').focus();
+    $('#mgrPeTeamBtn').focus();
     return;
   }
   $('#mgrPeTeamError').hidden = true;
@@ -228,9 +309,16 @@ function submitProjectNew() {
     defaultTeam: dev ? teamId : '', teamIds: dev && teamId ? [teamId] : [],
     status: 'planned', priority: '中', owner: cvCurrentUserName() || '未指定',
     repo: dev ? repo : '', baseBranch: dev ? baseBranch : '', code: repoCode(repo, id),
-    start: '', end: '', milestones: [], members: me ? [me] : [],
+    start: '', end: '', milestones: [], members: (me ? [me] : []).concat(pickedMembers.map(function (x) { return x.id; }).filter(function (id) { return id !== me; })), memberRoles: {},
+    adminIds: pickedMembers.filter(function (x) { return x.admin && x.id !== me; }).map(function (x) { return x.id; }),
     projectExperts: [], updatedAt: Date.now(),
   };
+  /* 岗位按岗位标签默认推断，之后可在「成员与权限」里调整 */
+  project.members.forEach(function (id) {
+    var person = cvPersonById(id);
+    var role = person ? mgrMemberRole(project, person) : '';
+    if (role) project.memberRoles[id] = role;
+  });
   if (!mgrAddProject(project)) { toast('项目保存失败，请重试', 'error'); return; }
   closeProjectNew();
   toast('已创建项目：' + mgrEsc(name) + (tpl ? '（' + mgrEsc(tpl.name) + '）' : ''), 'success');
@@ -242,6 +330,19 @@ function initProjectNewModal() {
   overlay.addEventListener('click', function (e) {
     var t = e.target;
     if (t === overlay || t.closest('[data-mgr-projedit-close]')) { closeProjectNew(); return; }
+    var memberRm = t.closest('[data-mgr-pe-member-remove]');
+    if (memberRm) {
+      var rmId = memberRm.getAttribute('data-mgr-pe-member-remove');
+      pickedMembers = pickedMembers.filter(function (x) { return x.id !== rmId; });
+      renderMemberChips();
+      return;
+    }
+    if (t.closest('#mgrPeMemberAdd')) { inviteForNewProject(t.closest('#mgrPeMemberAdd')); return; }
+    var teamPick = t.closest('[data-mgr-pe-team-pick]');
+    if (teamPick) { pickTeam(teamPick.getAttribute('data-mgr-pe-team-pick')); return; }
+    if (t.closest('#mgrPeTeamBtn')) { if ($('#mgrPeTeamPop').hidden) openTeamPop(); else closeTeamPop(); return; }
+    if (!t.closest('#mgrPeTeamPop')) closeTeamPop();
+    if (t.closest('[data-mgr-pe-tpl-more]')) { templatesExpanded = !templatesExpanded; renderTemplates(); return; }
     var tplBtn = t.closest('[data-mgr-pe-tpl]');
     if (tplBtn) { pickTemplate(tplBtn.getAttribute('data-mgr-pe-tpl')); return; }
     var sub = t.closest('[data-mgr-pe-subtab]');
@@ -260,8 +361,25 @@ function initProjectNewModal() {
     }
   });
   overlay.addEventListener('keydown', function (e) {
+    var pop = $('#mgrPeTeamPop');
+    if (!pop.hidden) {
+      var options = Array.from(pop.querySelectorAll('.mgr-dd-option'));
+      var i = options.indexOf(document.activeElement);
+      if (e.key === 'Escape') { e.stopPropagation(); closeTeamPop(); $('#mgrPeTeamBtn').focus(); return; }
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        options[(i + (e.key === 'ArrowDown' ? 1 : -1) + options.length) % options.length].focus();
+        return;
+      }
+      if (e.key === 'Tab') closeTeamPop();
+    } else if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && e.target.id === 'mgrPeTeamBtn') {
+      e.preventDefault();
+      openTeamPop();
+      return;
+    }
     if (e.key === 'Escape') { e.stopPropagation(); closeProjectNew(); }
   });
+  $('.mgr-projedit-body', overlay).addEventListener('scroll', closeTeamPop);
   $('#mgrPeSubmit').addEventListener('click', submitProjectNew);
 }
 

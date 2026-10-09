@@ -1,6 +1,7 @@
 /* 任务管理 v2 —— 模拟数据与状态
    纯前端原型，所有数据本地维护。 */
 import { TK_EQUIPMENT_TASKS, equipmentArtifactDocs } from './equipment-demo.js';
+import { TK_TICKET_TASKS } from './ticket-demo.js';
 import { CV_MEMBERS, CV_PROJECTS, CV_TASKS, cvCurrentUserName, cvPeopleInProject, cvWorkspaceRole } from '../collab/data.js';
 import { getLoginPersonId } from '../login.js';
 import { createDemoReviewReport } from './review-reports.js';
@@ -720,6 +721,7 @@ function tkToGeneralAppPlan(task) {
 TK_SURVEY_TASKS.forEach(tkToGeneralAppPlan);
 TK_TASKS.push(...TK_SURVEY_TASKS);
 TK_TASKS.push(...TK_EQUIPMENT_TASKS);
+TK_TASKS.push(...TK_TICKET_TASKS);
 
 /* ---------- 工具函数：根据 id 查名称 ---------- */
 export function tkGetStatusName(id) {
@@ -860,6 +862,15 @@ try {
     var equipmentAdds = TK_EQUIPMENT_TASKS.filter(function (task) { return !equipmentCodes.has(task.code); }).map(tkSeedTask);
     if (equipmentAdds.length) { _tasks.push(...equipmentAdds); persistTasks(); }
     localStorage.setItem('lingee_tasks_equipment_v1', '1');
+  }
+} catch (e) { /* 本地存储不可用时保留内存数据 */ }
+/* 工单管理系统（CIO 演示）任务：同样按编号补种一次。 */
+try {
+  if (!localStorage.getItem('lingee_tasks_ticket_v1')) {
+    var ticketCodes = new Set(_tasks.map(function (task) { return task.code; }));
+    var ticketAdds = TK_TICKET_TASKS.filter(function (task) { return !ticketCodes.has(task.code); }).map(tkSeedTask);
+    if (ticketAdds.length) { _tasks.push(...ticketAdds); persistTasks(); }
+    localStorage.setItem('lingee_tasks_ticket_v1', '1');
   }
 } catch (e) { /* 本地存储不可用时保留内存数据 */ }
 /* 问卷调研项目已缓存的任务：一次性转换为通用应用开发的 5 阶段执行计划 */
