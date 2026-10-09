@@ -3,28 +3,22 @@ import { toast } from '../../core/toast.js';
 import { CV_MEMBERS, cvPersonById } from '../collab/data.js';
 import { openInvite } from './invite.js';
 import {
-  MEMBER_ROLES, mgrCanManageProject, mgrExpert, mgrExpertList, mgrMemberOpenTasks, mgrMemberRole, mgrProjectById,
-  mgrProjectPeople, mgrProjectTasks, mgrSetMemberLevel, mgrSetProjectExperts, mgrSetProjectMembers,
+  MEMBER_ROLES, mgrCanManageProject, mgrMemberOpenTasks, mgrMemberRole, mgrProjectById,
+  mgrProjectPeople, mgrProjectTasks, mgrSetMemberLevel, mgrSetProjectMembers,
 } from './data.js';
 import { mgrEsc } from './utils.js';
-/* 管理 · 成员与权限：左侧成员（按负责人 / 管理员 / 成员 / 参与人分页签，分页，邀请入口在「邀请成员」弹窗），
-   右侧项目智能体（添加、移除、设置功能权限）。人员数据与开发板块共用（CV_MEMBERS）；所有改动即时生效。 */
+/* 管理 · 成员与权限：成员按负责人 / 管理员 / 成员 / 参与人分页签，分页，邀请入口在「邀请成员」弹窗。人员数据与开发板块共用（CV_MEMBERS）；所有改动即时生效。 */
 
 var PAGE_SIZE = 6;
 var TABS = [['all', '全部'], ['owner', '负责人'], ['admin', '管理员'], ['member', '成员'], ['participant', '参与人']];
 var LEVEL_LABEL = { owner: '项目负责人', admin: '项目管理员', member: '成员', participant: '参与人' };
-var AGENT_PERMS = [['chat', '对话调用', '在项目对话里调用该智能体'], ['read', '读取项目知识库', '读取项目知识库与任务产物'], ['write', '写入任务产物', '把执行结果写回任务与知识库']];
 var PENCIL = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
-var CHEVRON = '<svg class="mgr-mp-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>';
 
 var projectId = null;
 var tab = 'all';
 var page = 1;
 var memberQuery = '';
-var agentQuery = '';
-var agentOpen = null;      /* 展开功能权限的智能体 ID */
 var menuFor = null;        /* 打开角色菜单的成员 ID */
-var popQuery = '';
 var pendingRemoval = null;
 
 function project() { return projectId ? mgrProjectById(projectId) : null; }
@@ -191,73 +185,8 @@ function confirmRemove() {
   toast('已移除项目成员', 'success');
 }
 
-/* ---------- 智能体 ---------- */
-function permsOf(p, id) { return Object.assign({ chat: true, read: true, write: false }, (p.expertPerms || {})[id]); }
-function renderAgents() {
-  var p = project();
-  if (!p) return;
-  var canEdit = mgrCanManageProject(p);
-  var ids = (p.projectExperts || []).filter(mgrExpert);
-  $('#mgrMpAgentCount').textContent = ids.length + '个';
-  $('#mgrMpAgentAdd').hidden = !canEdit;
-  var q = agentQuery.trim().toLocaleLowerCase();
-  var shown = q ? ids.filter(function (id) { return mgrExpert(id).name.toLocaleLowerCase().includes(q); }) : ids;
-  $('#mgrMpAgents').innerHTML = shown.length
-    ? shown.map(function (id) {
-      var e = mgrExpert(id);
-      var open = agentOpen === id;
-      var perms = permsOf(p, id);
-      return '<div class="mgr-mp-agent' + (open ? ' is-open' : '') + '"><button type="button" class="mgr-mp-agent-head" data-mgr-mp-agent="' + mgrEsc(id) + '" aria-expanded="' + open + '">' +
-        '<span class="mgr-mp-avatar mgr-mp-avatar--agent" aria-hidden="true">' + mgrEsc((e.name || '?')[0]) + '</span>' +
-        '<span class="mgr-mp-name">' + mgrEsc(e.name) + '</span><small class="mgr-mp-agent-role">' + mgrEsc(e.role || '智能体') + '</small>' + CHEVRON + '</button>' +
-        (open
-          ? '<div class="mgr-mp-perms"><div class="mgr-mp-menu-title">功能权限</div>' + AGENT_PERMS.map(function (pm) {
-            return '<label class="mgr-mp-perm"><input type="checkbox" data-mgr-mp-perm="' + pm[0] + '" data-mgr-mp-perm-agent="' + mgrEsc(id) + '"' + (perms[pm[0]] ? ' checked' : '') + (canEdit ? '' : ' disabled') + '>' +
-              '<span><b>' + pm[1] + '</b><small>' + pm[2] + '</small></span></label>';
-          }).join('') + (canEdit ? '<button type="button" class="mgr-mp-agent-remove" data-mgr-mp-agent-remove="' + mgrEsc(id) + '">移除智能体</button>' : '') + '</div>'
-          : '') + '</div>';
-    }).join('')
-    : '<div class="mgr-mp-agents-empty"><b>' + (q ? '没有匹配的智能体' : '暂无已装配智能体') + '</b>' +
-      (q ? '' : '<small>' + (canEdit ? '点右上「添加」把智能体装到项目里' : '项目管理员可以把智能体装到项目里') + '</small>') + '</div>';
-}
-function closePop() {
-  var pop = $('#mgrMpAgentPop');
-  pop.hidden = true;
-  pop.innerHTML = '';
-  $('#mgrMpAgentAdd').setAttribute('aria-expanded', 'false');
-}
-function renderPopOptions() {
-  var p = project();
-  if (!p) return;
-  var picked = p.projectExperts || [];
-  var q = popQuery.trim().toLocaleLowerCase();
-  var list = mgrExpertList().filter(function (e) { return !picked.includes(e.id) && (!q || e.name.toLocaleLowerCase().includes(q)); }).slice(0, 40);
-  $('#mgrMpAgentPop .mgr-mp-pop-options').innerHTML = list.length
-    ? list.map(function (e) {
-      return '<button type="button" class="mgr-mp-pop-option" role="option" data-mgr-mp-agent-pick="' + mgrEsc(e.id) + '">' + mgrEsc(e.name) + '<small>' + mgrEsc(e.role || '智能体') + '</small></button>';
-    }).join('')
-    : '<div class="mgr-mp-empty">没有可添加的智能体</div>';
-}
-function togglePop() {
-  var p = project();
-  var pop = $('#mgrMpAgentPop');
-  if (!p || !mgrCanManageProject(p)) return;
-  if (!pop.hidden) { closePop(); return; }
-  popQuery = '';
-  pop.innerHTML = '<input type="search" id="mgrMpPopSearch" placeholder="搜索智能体" aria-label="搜索可添加的智能体" autocomplete="off"><div class="mgr-mp-pop-options"></div>';
-  pop.hidden = false;
-  $('#mgrMpAgentAdd').setAttribute('aria-expanded', 'true');
-  renderPopOptions();
-  $('#mgrMpPopSearch').focus();
-}
-function saveAgents(p, ids, perms, msg) {
-  if (!mgrSetProjectExperts(p, ids, perms)) { toast('保存失败，请重试', 'error'); return false; }
-  if (msg) toast(msg, 'success');
-  return true;
-}
-
 /* ---------- 打开 / 关闭 ---------- */
-function render() { renderMembers(); renderAgents(); }
+function render() { renderMembers(); }
 function openMembers(id) {
   var p = mgrProjectById(id);
   if (!p) return;
@@ -265,12 +194,8 @@ function openMembers(id) {
   tab = 'all';
   page = 1;
   memberQuery = '';
-  agentQuery = '';
-  agentOpen = null;
   $('#mgrMpMemberSearch').value = '';
-  $('#mgrMpAgentSearch').value = '';
   closeMenu();
-  closePop();
   render();
   var overlay = $('#mgrMembersOverlay');
   overlay.style.display = 'flex';
@@ -279,7 +204,6 @@ function openMembers(id) {
 }
 function closeMembers() {
   closeMenu();
-  closePop();
   var overlay = $('#mgrMembersOverlay');
   overlay.style.display = 'none';
   overlay.setAttribute('aria-hidden', 'true');
@@ -324,50 +248,18 @@ export function initManagerMembers() {
     var pg = t.closest('[data-mgr-mp-page]');
     if (pg) { page += Number(pg.getAttribute('data-mgr-mp-page')); renderMembers(); return; }
     if (t.closest('[data-mgr-mp-invite]')) { openInvite(projectId, t.closest('[data-mgr-mp-invite]')); return; }
-    if (t.closest('#mgrMpAgentAdd')) { togglePop(); return; }
-    var pick = t.closest('[data-mgr-mp-agent-pick]');
-    if (pick && p) {
-      var aid = pick.getAttribute('data-mgr-mp-agent-pick');
-      if (mgrExpert(aid) && !(p.projectExperts || []).includes(aid)) {
-        closePop();
-        agentOpen = aid;
-        saveAgents(p, (p.projectExperts || []).concat(aid), p.expertPerms, '已添加智能体：' + mgrExpert(aid).name);
-      }
-      return;
-    }
-    if (!t.closest('.mgr-mp-add-wrap')) closePop();
-    var head = t.closest('[data-mgr-mp-agent]');
-    if (head) { var id = head.getAttribute('data-mgr-mp-agent'); agentOpen = agentOpen === id ? null : id; renderAgents(); return; }
-    var rmAgent = t.closest('[data-mgr-mp-agent-remove]');
-    if (rmAgent && p && mgrCanManageProject(p)) {
-      var xid = rmAgent.getAttribute('data-mgr-mp-agent-remove');
-      agentOpen = null;
-      saveAgents(p, (p.projectExperts || []).filter(function (x) { return x !== xid; }), p.expertPerms, '已移除项目智能体');
-    }
   });
   overlay.addEventListener('input', function (e) {
     if (e.target.id === 'mgrMpMemberSearch') { memberQuery = e.target.value; page = 1; closeMenu(); renderMembers(); }
-    if (e.target.id === 'mgrMpAgentSearch') { agentQuery = e.target.value; renderAgents(); }
-    if (e.target.id === 'mgrMpPopSearch') { popQuery = e.target.value; renderPopOptions(); }
-  });
-  overlay.addEventListener('change', function (e) {
-    var cb = e.target.closest('[data-mgr-mp-perm]');
-    var p = project();
-    if (!cb || !p || !mgrCanManageProject(p)) return;
-    var id = cb.getAttribute('data-mgr-mp-perm-agent');
-    var perms = Object.assign({}, p.expertPerms);
-    perms[id] = Object.assign(permsOf(p, id), { [cb.getAttribute('data-mgr-mp-perm')]: cb.checked });
-    saveAgents(p, p.projectExperts || [], perms, '');
   });
   overlay.addEventListener('keydown', function (e) {
     if (e.key !== 'Escape') return;
     e.preventDefault();
     e.stopPropagation();
     if (menuFor) { var who = menuFor; closeMenu(); renderMembers(); var b = $('#mgrMpList [data-mgr-mp-edit="' + who + '"]'); if (b) b.focus(); return; }
-    if (!$('#mgrMpAgentPop').hidden) { closePop(); $('#mgrMpAgentAdd').focus(); return; }
     closeMembers();
   });
-  /* 邀请、移除、智能体增删等改动后刷新（弹窗打开期间） */
+  /* 邀请、移除等改动后刷新（弹窗打开期间） */
   document.addEventListener('lingee:mgr-projects-changed', function () {
     if (projectId && project()) { closeMenu(); render(); } else if (projectId) { closeMembers(); }
   });

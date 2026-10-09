@@ -82,12 +82,15 @@
           </div>
         </div>
         <div class="mgr-pd-layout">
-          <!-- 主栏：计划与任务 / 动态 -->
+          <!-- 主栏：计划与任务 / 研发任务 / 动态 -->
           <section class="mgr-card mgr-pd-main">
             <div class="mgr-pd-tabs">
               <div class="mgr-pd-tablist" role="tablist" aria-label="项目详情页签">
                 <button type="button" class="mgr-pd-tab active" data-pdtab="plan" role="tab" aria-selected="true">
                   计划与任务
+                </button>
+                <button type="button" class="mgr-pd-tab" data-pdtab="rd" role="tab" aria-selected="false">
+                  研发任务<span class="mgr-pd-tab-count" id="mgrPdRdCount">0</span>
                 </button>
                 <button type="button" class="mgr-pd-tab" data-pdtab="feed" role="tab" aria-selected="false">动态</button>
               </div>
@@ -109,6 +112,8 @@
             </div>
             <!-- 计划与任务（工具栏与表格由 features/manager/plan.js 渲染） -->
             <div id="mgrPdPlanPane"></div>
+            <!-- 研发任务：按阶段推进，与计划与任务分开（features/manager/rd-tasks.js 渲染） -->
+            <div id="mgrPdRdPane" class="hidden"></div>
             <!-- 动态 -->
             <div id="mgrPdFeedPane" class="hidden"></div>
           </section>
@@ -297,6 +302,7 @@
       <div class="sync-modal__footer mgr-projedit-footer">
         <button type="button" class="sync-modal__btn sync-modal__btn--ghost" data-mgr-tntask-close>取消</button>
         <button type="button" class="sync-modal__btn sync-modal__btn--primary" id="mgrTnSave">保存</button>
+        <button type="button" class="sync-modal__btn sync-modal__btn--primary mgr-tn-save-start" id="mgrTnSaveStart" hidden><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 3 14h9l-1 8 10-12h-9z"/></svg>保存并启动</button>
       </div>
     </div>
   </div>

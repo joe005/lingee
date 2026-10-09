@@ -2,17 +2,19 @@ import { $ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
 import {
   mgrAiContribution, mgrCanManageProject, mgrDecideIssue, mgrProjectProgress, mgrExpert, mgrHasSessionPerm, mgrPersonName, mgrProjectById, mgrProjectIssues, mgrProjectKnowledge,
-  mgrSaveProjects, mgrTaskById, mgrTeam, mgrTeams,
+  mgrIsDevTask, mgrSaveProjects, mgrTaskById, mgrTeam, mgrTeams,
 } from './data.js';
 import { feedHtml, initManagerFeed, resetFeed } from './feed.js';
 import { openInvite } from './invite.js';
 import { openMembers } from './members.js';
 import { openTaskPanel, planWorkspaceHtml } from './plan.js';
+import { rdTasks, rdWorkspaceHtml, resetRdState } from './rd-tasks.js';
 import { mgrEsc, mgrTag } from './utils.js';
-/* 管理 · 项目详情：标题与标签、计划与任务 / 动态页签、右栏（议题 / 项目概览 / 知识库 / 智能体团队），
+/* 管理 · 项目详情：标题与标签、计划与任务 / 研发任务 / 动态页签、右栏（议题 / 项目概览 / 知识库 / 智能体团队），
    以及右栏打开的议题、知识库、智能体团队维护弹窗。 */
 
 var detailTab = 'plan';
+var TAB_LABELS = { plan: '计划与任务', rd: '研发任务', feed: '动态' };
 var kbQuery = '';
 var kbOpenId = null;
 var detailProjectId = null;
@@ -100,7 +102,7 @@ function railHtml(p) {
     '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>智能体团队</span>' +
     '<button type="button" class="mgr-link-btn" data-mgr-open-team>管理</button></span>' +
     (teams.length
-      ? teams.map(function (t) { return '<span class="mgr-rail-doc" title="' + mgrEsc(t.name) + '">' + mgrEsc(t.name) + (p.defaultTeam === t.id ? ' · 主' : '') + '</span>'; }).join('')
+      ? teams.map(function (t) { return '<span class="mgr-rail-doc" title="' + mgrEsc(t.name) + '">' + mgrEsc(t.name) + '</span>'; }).join('')
       : '<span class="mgr-rail-doc mgr-rail-doc--empty">未绑定交付智能体团队</span>') +
     (experts.length
       ? '<span class="mgr-rail-doc">项目智能体 ' + experts.length + ' 位：' + experts.slice(0, 3).map(function (id) { return mgrEsc(mgrExpert(id).name); }).join('、') + (experts.length > 3 ? ' 等' : '') + '</span>'
@@ -132,17 +134,24 @@ function renderDetail(p) {
     b.classList.toggle('active', on);
     b.setAttribute('aria-selected', String(on));
   });
+  /* 研发项目默认不显示「计划与任务」页签 */
+  var planTab = document.querySelector('[data-pdtab="plan"]');
+  if (planTab) planTab.hidden = !!p.containsRd;
   syncRailCollapse();
   syncTabThumb();
   $('#mgrPdViews').classList.toggle('hidden', detailTab !== 'plan');
-  var plan = $('#mgrPdPlanPane'), feed = $('#mgrPdFeedPane');
+  var plan = $('#mgrPdPlanPane'), rd = $('#mgrPdRdPane'), feed = $('#mgrPdFeedPane');
   plan.classList.toggle('hidden', detailTab !== 'plan');
   if (detailTab === 'plan') plan.innerHTML = planWorkspaceHtml(p);
+  rd.classList.toggle('hidden', detailTab !== 'rd');
+  if (detailTab === 'rd') rd.innerHTML = rdWorkspaceHtml(p);
+  var rdCount = $('#mgrPdRdCount');
+  if (rdCount) rdCount.textContent = String(rdTasks(p.id).length);
   feed.classList.toggle('hidden', detailTab !== 'feed');
   if (detailTab === 'feed') feed.innerHTML = feedHtml(p);
   $('#mgrPdRail').innerHTML = railHtml(p);
   var ask = $('#mgrPdAskInput');
-  if (ask) ask.placeholder = '问灵基：就「' + (detailTab === 'plan' ? '计划与任务' : '动态') + '」这个模块提问';
+  if (ask) ask.placeholder = '问灵基：就「' + TAB_LABELS[detailTab] + '」这个模块提问';
 }
 function rerenderDetail() {
   var p = currentProject();
@@ -152,8 +161,12 @@ function rerenderDetail() {
   if (isOpen('#mgrIssuesOverlay')) $('#mgrIssuesBody').innerHTML = issuesHtml(p);
   refreshKb();
 }
-/* 进入详情时回到「计划与任务」页签 */
-function resetDetailTab() { detailTab = 'plan'; resetFeed(); }
+/* 进入详情时：含研发任务的项目默认打开「研发任务」，其余回到「计划与任务」 */
+function resetDetailTab(p) {
+  detailTab = p && p.containsRd ? 'rd' : 'plan';
+  resetFeed();
+  resetRdState();
+}
 
 /* ---------- 弹窗通用 ---------- */
 function isOpen(sel) { var el = $(sel); return !!el && el.style.display !== 'none'; }
@@ -235,7 +248,6 @@ function teamBodyHtml(p) {
     var lead = mgrExpert(t.leadId);
     var members = (t.members || []).filter(mgrExpert);
     return '<div class="mgr-team-card" data-mgr-team-card="' + mgrEsc(t.id) + '"><div class="mgr-team-card-head"><span class="mgr-team-name">' + mgrEsc(t.name) + '</span>' +
-      (p.defaultTeam === t.id ? mgrTag('交付主团队', 'brand') : '') +
       '<button type="button" class="mgr-link-btn" data-mgr-team-remove="' + mgrEsc(t.id) + '" aria-label="移除智能体团队 ' + mgrEsc(t.name) + '">移除</button></div>' +
       '<p class="mgr-project-desc">' + mgrEsc(t.desc || '') + '</p>' +
       '<div class="mgr-detail-row"><span class="mgr-detail-key">负责人</span><span class="mgr-detail-value">' + (lead ? mgrEsc(lead.name) : '—') + '</span></div>' +
@@ -245,9 +257,11 @@ function teamBodyHtml(p) {
   }).join('');
   var teamPane = '<div class="mgr-team-pane" data-mgr-tm-pane="team">' +
     (teamCards || '<div class="mgr-empty">未绑定交付智能体团队</div>') +
+    /* 一个项目只绑定一个智能体团队：已绑定时先移除再选择新的 */
+    (boundIds.length ? '<p class="mgr-footnote">一个项目只能绑定一个智能体团队；如需更换，请先移除当前团队。</p>' :
     '<div class="mgr-team-add-row"><select data-mgr-team-add aria-label="添加智能体团队"><option value="">选择要添加的智能体团队</option>' +
     addable.map(function (t) { return '<option value="' + mgrEsc(t.id) + '">' + mgrEsc(t.name) + '</option>'; }).join('') +
-    '</select><button type="button" class="mgr-btn mgr-btn--ghost" data-mgr-team-add-btn' + (addable.length ? '' : ' disabled') + '>添加智能体团队</button></div></div>';
+    '</select><button type="button" class="mgr-btn mgr-btn--ghost" data-mgr-team-add-btn' + (addable.length ? '' : ' disabled') + '>添加智能体团队</button></div>') + '</div>';
   return '<div class="mgr-card mgr-proj-team" data-mgr-proj-team="' + mgrEsc(p.id) + '"><div class="mgr-tmtabs" role="tablist" aria-label="智能体团队">' +
     '<button type="button" class="mgr-tmtab active" role="tab" aria-selected="true">智能体团队</button></div><div class="mgr-card-body">' + teamPane +
     (p.containsRd ? '<p class="mgr-footnote">包含研发任务的项目，研发任务的阶段子任务模板来自交付智能体团队的交付路径。</p>' : '') + '</div></div>';
@@ -279,14 +293,15 @@ export function initManagerDetail() {
     var t = e.target;
     if (t.closest('#mgrPdRailToggle')) { railCollapsed = !railCollapsed; syncRailCollapse(); syncTabThumb(); return; }
     var tab = t.closest('[data-pdtab]');
-    if (tab) { detailTab = tab.getAttribute('data-pdtab') === 'feed' ? 'feed' : 'plan'; rerenderDetail(); return; }
+    if (tab) { var name = tab.getAttribute('data-pdtab'); detailTab = TAB_LABELS[name] ? name : 'plan'; rerenderDetail(); return; }
     var p = currentProject();
     if (!p) return;
     if (t.closest('[data-mgr-open-issues]')) { $('#mgrIssuesBody').innerHTML = issuesHtml(p); openOverlay('#mgrIssuesOverlay'); return; }
     var issueTask = t.closest('[data-mgr-issue-task]');
     if (issueTask) {
       closeOverlay('#mgrIssuesOverlay');
-      detailTab = 'plan';
+      var issueTaskObj = mgrTaskById(issueTask.getAttribute('data-mgr-issue-task'));
+      detailTab = issueTaskObj && mgrIsDevTask(issueTaskObj) ? 'rd' : 'plan';
       rerenderDetail();
       openTaskPanel(issueTask.getAttribute('data-mgr-issue-task'));
       return;
@@ -311,8 +326,8 @@ export function initManagerDetail() {
     if (addTeam) {
       var tid = addTeam.closest('.mgr-team-add-row').querySelector('[data-mgr-team-add]').value;
       if (!tid || !mgrTeam(tid)) return;
-      if (!(p.teamIds || []).includes(tid)) p.teamIds = (p.teamIds || []).concat(tid);
-      if (!p.defaultTeam) p.defaultTeam = tid;
+      p.teamIds = [tid];
+      p.defaultTeam = tid;
       saveProjectChange(p, '已添加智能体团队：' + mgrTeam(tid).name);
       return;
     }

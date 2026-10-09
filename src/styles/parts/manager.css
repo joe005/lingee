@@ -4230,13 +4230,13 @@
 /* ---------- 成员与权限（左成员 / 右智能体） ---------- */
 .mgr-scope .mgr-mp-modal {
   position: relative;
-  width: min(960px, calc(100vw - 32px));
+  width: min(560px, calc(100vw - 32px));
   height: min(720px, 88vh);
   border-radius: var(--r-modal);
 }
 .mgr-scope .mgr-mp-body {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
   min-height: 0;
   overflow: hidden;

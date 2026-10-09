@@ -3,15 +3,13 @@ import { toast } from '../../core/toast.js';
 import { TASK_STATUSES, mgrIsDevTask, mgrPersonName, mgrProjectIssues, mgrProjectKnowledge, mgrProjectTasks, mgrTaskKey, mgrTeam } from './data.js';
 import { mgrEsc } from './utils.js';
 /* 管理 · 项目动态：活动流。由任务创建、状态变更和知识库归档汇总成时间线，
-   可按来源（人工 / 智能体 / 风险 / 系统）、任务、关键动作和关键词过滤。 */
+   可按来源（人工 / 智能体 / 风险 / 系统）、任务和关键词过滤。 */
 
 var SOURCES = [['all', '全部'], ['human', '人工'], ['agent', '智能体'], ['risk', '风险'], ['system', '系统']];
-var ACTIONS = ['任务创建', '任务状态变更', '阶段完成', '风险决策', '知识库归档'];
 var MAX_ITEMS = 60;
 
 var sourceFilter = 'all';
 var taskFilter = '';
-var actionFilter = '';
 var query = '';
 
 function statusName(id) {
@@ -103,7 +101,7 @@ export function feedHtml(p) {
   if (taskFilter && !tasks.some(function (t) { return mgrTaskKey(t) === taskFilter; })) taskFilter = '';
   var q = query.trim().toLocaleLowerCase();
   var shown = all.filter(function (x) {
-    return (sourceFilter === 'all' || x.source === sourceFilter) && (!taskFilter || x.taskKey === taskFilter) && (!actionFilter || x.action === actionFilter) &&
+    return (sourceFilter === 'all' || x.source === sourceFilter) && (!taskFilter || x.taskKey === taskFilter) &&
       (!q || (x.text + ' ' + x.actor + ' ' + x.task).toLocaleLowerCase().includes(q));
   }).slice(0, MAX_ITEMS);
   return '<div class="mgr-fd">' +
@@ -116,9 +114,7 @@ export function feedHtml(p) {
       var on = sourceFilter === s[0];
       return '<button type="button" class="mgr-fd-pill' + (on ? ' active' : '') + '" role="tab" aria-selected="' + on + '" data-mgr-fd-source="' + s[0] + '">' + s[1] + ' <small>' + counts[s[0]] + '</small></button>';
     }).join('') + '</div>' +
-    '<select class="mgr-fd-select" id="mgrFdAction" aria-label="关键动作"><option value="">关键动作</option>' + ACTIONS.map(function (a) {
-      return '<option value="' + a + '"' + (actionFilter === a ? ' selected' : '') + '>' + a + '</option>';
-    }).join('') + '</select></div>' +
+    '</div>' +
     '<div class="mgr-fd-tasks" role="tablist" aria-label="按任务筛选"><button type="button" class="mgr-fd-task-tab' + (taskFilter ? '' : ' active') + '" role="tab" aria-selected="' + !taskFilter + '" data-mgr-fd-task="">全部任务</button>' +
     tasks.slice(0, 12).map(function (t) {
       var key = mgrTaskKey(t);
@@ -148,13 +144,11 @@ export function initManagerFeed(rerender) {
     if (input) { input.focus(); input.setSelectionRange(caret, caret); }
   });
   pane.addEventListener('change', function (e) {
-    if (e.target.id === 'mgrFdAction') { actionFilter = e.target.value; rerender(); }
   });
 }
 /* 切换项目 / 重新进入详情时清空过滤条件 */
 export function resetFeed() {
   sourceFilter = 'all';
   taskFilter = '';
-  actionFilter = '';
   query = '';
 }

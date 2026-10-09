@@ -83,7 +83,7 @@
     <div class="sync-modal__footer mgr-delete-footer"><button type="button" class="sync-modal__btn sync-modal__btn--ghost" data-mgr-task-delete-cancel>取消</button><button type="button" class="sync-modal__btn mgr-delete-confirm" data-mgr-task-delete-confirm>删除</button></div>
   </div>
 </div>
-<!-- 管理 · 成员与权限：左侧成员（按角色分页签、分页，可邀请），右侧项目智能体（可添加、设置功能权限）；改动即时生效 -->
+<!-- 管理 · 成员与权限：成员按角色分页签、分页，可邀请；改动即时生效 -->
 <div class="sync-overlay mgr-modal" id="mgrMembersOverlay" style="display:none" aria-hidden="true">
   <div class="sync-modal mgr-pm-modal mgr-mp-modal" role="dialog" aria-modal="true" aria-labelledby="mgrMembersHeading" tabindex="-1">
     <div class="sync-modal__header">
@@ -103,21 +103,6 @@
         <div class="mgr-mp-tabs" id="mgrMpTabs" role="tablist" aria-label="成员角色"></div>
         <div class="mgr-mp-list" id="mgrMpList"></div>
         <div class="mgr-mp-pager" id="mgrMpPager"></div>
-      </section>
-      <section class="mgr-mp-panel" aria-labelledby="mgrMpAgentsTitle">
-        <div class="mgr-mp-panel-head">
-          <h2 id="mgrMpAgentsTitle">智能体 <span id="mgrMpAgentCount">0个</span></h2>
-          <div class="mgr-mp-add-wrap">
-            <button type="button" class="mgr-mp-add" id="mgrMpAgentAdd" aria-haspopup="listbox" aria-expanded="false"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>添加</button>
-            <div class="mgr-mp-pop" id="mgrMpAgentPop" role="listbox" hidden></div>
-          </div>
-        </div>
-        <label class="mgr-mp-search" for="mgrMpAgentSearch">
-          <input id="mgrMpAgentSearch" type="search" placeholder="搜索智能体" autocomplete="off" aria-controls="mgrMpAgents">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg>
-        </label>
-        <p class="mgr-mp-hint">点开智能体可查看并设置其功能权限</p>
-        <div class="mgr-mp-agents" id="mgrMpAgents"></div>
       </section>
     </div>
   </div>
