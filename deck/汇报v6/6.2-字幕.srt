@@ -1,0 +1,59 @@
+1
+00:00:00,400 --> 00:00:05,700
+销售系统上线后，商务主管林悦想把自己的履约经验做成智能体。
+Sales lead Lin Yue wants to turn her fulfillment know-how into an agent.
+
+2
+00:00:05,800 --> 00:00:11,600
+她不会写代码，就在 Build 里选「智能体开发」，用大白话写下需求。
+She can't code, so she picks Agent Builder in Build and writes in plain words.
+
+3
+00:00:11,700 --> 00:00:18,100
+接单先查信用，改 ERP 先存草稿，缺数据交给人，逾期 30 天才催收。
+Check credit first, draft before ERP writes, hand gaps to people, chase after 30 days.
+
+4
+00:00:18,300 --> 00:00:25,900
+Build 调用 skill-builder，一起生成接单、履约、催收、月报四个技能。
+Build generates four skills at once: intake, fulfillment, collection, monthly report.
+
+5
+00:00:26,000 --> 00:00:33,500
+四个技能通过 MCP 接上金蝶 ERP，读写都走 ERP 原有的权限。
+All four connect to Kingdee ERP via MCP, using ERP's existing permissions.
+
+6
+00:00:33,700 --> 00:00:39,900
+不到两分钟，销售履约智能体就生成了：交付摘要和智能体卡片。
+In under two minutes, the sales fulfillment agent is ready.
+
+7
+00:00:40,000 --> 00:00:46,300
+她说的规矩变成了工作原则：改动 ERP 先存草稿，等人确认。
+Her rules become working principles: draft first, confirm before submitting.
+
+8
+00:00:46,400 --> 00:00:54,700
+四个技能已绑定；运价表、催收函和网页报告模板上传为内置知识。
+Skills are bound; rate card and report templates become built-in knowledge.
+
+9
+00:00:54,800 --> 00:01:01,900
+附上一张客户采购单做本地测试，测试不触碰生产数据。
+A local test with a real customer PO, without touching production data.
+
+10
+00:01:02,000 --> 00:01:10,000
+先查信用，再出订单草稿和网页预览，然后停下来问是否提交审核。
+Credit check, then a draft order and web preview, then it asks before submitting.
+
+11
+00:01:10,100 --> 00:01:19,000
+测试通过后，林悦提交上架审核，审核通过即发布给销售团队。
+Tests pass; Lin Yue submits it for review, and it is published to the sales team.
+
+12
+00:01:19,100 --> 00:01:23,800
+Build，让企业全员都能构建自己的智能体。
+Build lets everyone in the enterprise build their own agents.
