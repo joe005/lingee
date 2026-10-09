@@ -1,5 +1,5 @@
 import { $ } from '../../core/dom.js';
-import { mgrIsDevTask, mgrPersonName, mgrProjectById, mgrProjectTasks, mgrTaskKey, mgrTeam } from './data.js';
+import { mgrIsDevTask, mgrPersonName, mgrProjectById, mgrProjectTasks, mgrTaskKey } from './data.js';
 import { tkCurrentStageHandlerId } from '../tasks-v2/data.js';
 import { taskListKind } from '../tasks-v2/list-kind.js';
 import { taskExecutionStages } from '../tasks-v2/task-execution.js';
@@ -27,13 +27,8 @@ function stageProgress(task) {
   }
   return { name: stages[index] ? stages[index].name : '任务处理', index: index, total: stages.length, stages: stages };
 }
-function teamName(task, project) {
-  var team = mgrTeam(task.teamId) || mgrTeam(project.defaultTeam);
-  return team ? team.name : '未绑定智能体团队';
-}
-
-/* 行样式与「计划与任务」同一套（.mgr-task-table / .mgr-tk-*）：编号、任务、处理人、执行主体、进展、状态 */
-function rowHtml(r, project) {
+/* 行样式与「计划与任务」同一套（.mgr-task-table / .mgr-tk-*）：编号、任务、处理人、进展、状态 */
+function rowHtml(r) {
   var t = r.task, info = r.info, p = r.progress;
   var handler = tkCurrentStageHandlerId(t) || t.assignee || '';
   var plan = t.executionPlan || [];
@@ -46,7 +41,6 @@ function rowHtml(r, project) {
     '<td class="mgr-tk-title"><span class="mgr-tk-title-text">' + mgrEsc(t.title) + '</span>' +
     '<div class="mgr-rd-hint" title="' + mgrEsc(info.hint) + '">' + mgrEsc(info.hint) + '</div></td>' +
     '<td class="mgr-tk-assignee">' + mgrEsc(info.kind === 'done' ? '—' : mgrPersonName(handler) || '待分配') + '</td>' +
-    '<td class="mgr-tk-executor"><span class="mgr-executor mgr-executor--expert">' + mgrEsc(teamName(t, project)) + '</span></td>' +
     '<td class="mgr-tk-progress"><span class="mgr-bar mgr-bar--sm"><span class="mgr-bar-fill" style="width:' + percent + '%"></span></span>' +
     '<span class="mgr-tk-progress-num">' + done + '/' + total + '</span></td>' +
     '<td class="mgr-tk-status">' + statusTag(t.status) + '</td>' +
@@ -68,8 +62,8 @@ function rdWorkspaceHtml(project) {
   if (!all.length) body = '<div class="mgr-empty">暂无研发任务。点「新建研发任务」按交付智能体团队的阶段创建，任务分配给第一阶段执行人后在开发板块执行。</div>';
   else if (!rows.length) body = '<div class="mgr-empty">没有符合条件的研发任务。<button type="button" class="mgr-link-btn" data-mgr-rd-reset>清除筛选</button></div>';
   else {
-    body = '<table class="mgr-task-table"><thead><tr><th>编号</th><th>任务</th><th>当前处理人</th><th>执行主体</th><th>进展</th><th>状态</th><th aria-label="操作"></th></tr></thead><tbody>' +
-      rows.map(function (r) { return rowHtml(r, project); }).join('') + '</tbody></table>';
+    body = '<table class="mgr-task-table"><thead><tr><th>编号</th><th>任务</th><th>当前处理人</th><th>进展</th><th>状态</th><th aria-label="操作"></th></tr></thead><tbody>' +
+      rows.map(function (r) { return rowHtml(r); }).join('') + '</tbody></table>';
   }
   return '<div class="mgr-pd-filter-row mgr-rd-toolbar">' +
     '<select id="mgrRdStatus" aria-label="研发任务状态筛选">' +
