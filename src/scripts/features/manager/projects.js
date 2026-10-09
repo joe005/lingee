@@ -113,7 +113,7 @@ function openProject(id) {
   if (!p) { toast('未找到该项目'); return false; }
   openProjectId = id;
   hideSettings();
-  resetDetailTab();
+  resetDetailTab(p);
   resetPlanState();
   toggleMoreMenu(false);
   closeTaskPanel();

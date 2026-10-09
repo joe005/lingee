@@ -2503,39 +2503,6 @@
   line-height: 1.8;
   white-space: pre-wrap;
 }
-#view-manager .mgr-tp-rel {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-#view-manager .mgr-tp-rel-row {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-}
-#view-manager .mgr-tp-rel-row .mgr-detail-value {
-  color: var(--text-secondary);
-  font-size: 12.5px;
-  min-width: 0;
-}
-#view-manager .mgr-tp-rel-add {
-  align-self: flex-start;
-  border: none;
-  background: none;
-  color: var(--brand);
-  font: inherit;
-  font-size: 12.5px;
-  cursor: pointer;
-  padding: 2px 0;
-}
-#view-manager .mgr-tp-rel-add:hover {
-  text-decoration: underline;
-}
-#view-manager .mgr-tp-rel-add:focus-visible {
-  outline: 2px solid var(--border-focus);
-  outline-offset: 1px;
-  border-radius: 4px;
-}
 #view-manager .mgr-tp-events {
   display: flex;
   flex-direction: column;
@@ -4263,13 +4230,13 @@
 /* ---------- 成员与权限（左成员 / 右智能体） ---------- */
 .mgr-scope .mgr-mp-modal {
   position: relative;
-  width: min(960px, calc(100vw - 32px));
+  width: min(560px, calc(100vw - 32px));
   height: min(720px, 88vh);
   border-radius: var(--r-modal);
 }
 .mgr-scope .mgr-mp-body {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
   min-height: 0;
   overflow: hidden;
@@ -4831,31 +4798,6 @@
   line-height: 20px;
   text-align: center;
 }
-#view-manager .mgr-sec-fold {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  margin-left: auto;
-  padding: 2px 4px;
-  border: none;
-  border-radius: 6px;
-  background: none;
-  color: var(--text-secondary);
-  font: inherit;
-  font-size: 13px;
-  font-weight: 400;
-  cursor: pointer;
-}
-#view-manager .mgr-sec-fold:hover {
-  color: var(--text);
-}
-#view-manager .mgr-sec-fold:focus-visible {
-  outline: 2px solid var(--focus-ring);
-  outline-offset: 2px;
-}
-#view-manager .mgr-sec-fold.is-folded svg {
-  transform: rotate(180deg);
-}
 #view-manager .mgr-taskpanel .mgr-tp-kv {
   gap: 12px 32px;
 }
@@ -4866,17 +4808,10 @@
   font-size: 14px;
 }
 #view-manager .mgr-taskpanel .mgr-tp-kv-item .mgr-detail-value,
-#view-manager .mgr-taskpanel .mgr-tp-rel-row .mgr-detail-value {
-  color: var(--text);
-  font-size: 14px;
-}
 #view-manager .mgr-taskpanel .mgr-tp-desc {
   color: var(--text);
   font-size: 14px;
   line-height: 1.7;
-}
-#view-manager .mgr-taskpanel .mgr-tp-rel-add {
-  font-size: 14px;
 }
 #view-manager .mgr-taskpanel .mgr-tp-event {
   gap: 24px;

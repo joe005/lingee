@@ -1,6 +1,7 @@
 import { CV_MEMBERS, cvCurrentUserName, cvPersonById } from '../collab/data.js';
 import { EX, EXPERTS } from '../expert/data.js';
 import { TEAMS, teamById } from '../expert/store.js';
+import { TK_TICKET_CODE_STATS } from '../tasks-v2/ticket-demo.js';
 import { tkAddTask, tkCanDeleteTask, tkCurrentStageHandlerId, tkDeleteTask, tkGetTasks, tkPruneOrphanTasks, tkSetTasks, tkSetExternalProjects } from '../tasks-v2/data.js';
 /* 管理板块数据：管理项目、项目任务、议题、项目知识库。
    与协作开发的项目 / 任务数据分开存放，避免管理项目出现在开发板块的项目列表里；
@@ -543,21 +544,22 @@ function mgrDecideIssue(issueId, approve) {
 }
 
 /* ---------- AI 贡献（项目概览） ----------
-   研发任务由智能体团队按阶段交付：完成占比按任务完成数，节省人天按每个已交付任务相对人工的估算值（演示口径），
-   周期与同类系统以往的 12 周对比。没有已完成的研发任务时不显示。 */
-var AI_SAVED_DAYS_PER_TASK = 7.2;
-var BASELINE_WEEKS = 12;
+   只用过程中可度量的数据：研发任务合入代码里 AI 生成的行数占比、代码提交里智能体发起的占比、
+   阶段产物一次审核通过的占比。统计来自任务的代码与审核记录（原型为演示数据），没有记录时不显示。 */
 function mgrAiContribution(project) {
   if (!project || !project.containsRd) return null;
-  var all = mgrProjectTasks(project.id).filter(function (t) { return t.status !== 'cancelled'; });
-  var ai = all.filter(function (t) { return mgrIsDevTask(t) && Array.isArray(t.executionPlan) && t.executionPlan.length; });
-  if (!ai.length) return null;
-  var done = ai.filter(function (t) { return t.status === 'done'; }).length;
-  if (!done) return null;
-  var weeks = project.start && project.end ? Math.max(1, Math.ceil((new Date(project.end) - new Date(project.start)) / 604800000)) : 0;
+  var lines = 0, aiLines = 0, commits = 0, aiCommits = 0, stages = 0, rejects = 0;
+  mgrProjectTasks(project.id).forEach(function (t) {
+    var st = t.codeStats || TK_TICKET_CODE_STATS[t.code];
+    if (!mgrIsDevTask(t) || !st) return;
+    lines += st.lines; aiLines += st.aiLines; commits += st.commits; aiCommits += st.aiCommits; rejects += st.rejects || 0;
+    stages += (t.executionPlan || []).filter(function (s) { return s.status === 'done'; }).length;
+  });
+  if (!lines || !commits || !stages) return null;
   return {
-    percent: Math.round((done / all.length) * 100), done: done, total: all.length,
-    savedDays: Math.round(done * AI_SAVED_DAYS_PER_TASK), weeks: weeks, baselineWeeks: BASELINE_WEEKS,
+    codeRate: Math.round((aiLines / lines) * 100), lines: lines, aiLines: aiLines,
+    commitRate: Math.round((aiCommits / commits) * 100), commits: commits, aiCommits: aiCommits,
+    passRate: Math.round(((stages - rejects) / stages) * 100), stages: stages,
   };
 }
 

@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>研发任务方案汇报</title>
+<style>
+:root{--brand:#495dff;--text:#2d2d2d;--muted:#767676;--border:#e6e6ec;--bg:#fff;--canvas:#f7f7fa;--ok:#08a040;--bad:#e04a3a;--warn:#c06010;--fill:#eef3ff}
+*{box-sizing:border-box}body{margin:0;background:var(--canvas);color:var(--text);font:14px/1.7 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
+.page{max-width:900px;margin:24px auto;padding:32px 40px;background:var(--bg);border-radius:16px}
+h1{margin:0 0 4px;font-size:22px}.sub{color:var(--muted);margin:0 0 16px}
+h2{font-size:16px;margin:24px 0 10px;padding-left:10px;border-left:3px solid var(--brand)}
+.box{background:var(--fill);border-radius:10px;padding:12px 16px}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{border:1px solid var(--border);padding:8px 10px;text-align:left;vertical-align:top}th{background:#fafafa;color:var(--muted);font-weight:500}
+.y{color:var(--ok);font-weight:600}.n{color:var(--bad);font-weight:600}.m{color:var(--warn);font-weight:600}
+svg{display:block;width:100%;height:auto}.cap{color:var(--muted);font-size:12px;margin-top:4px}
+@media(max-width:700px){.page{margin:0;padding:20px 16px;border-radius:0}}
+@media print{body{background:#fff}.page{margin:0;max-width:none}}
+</style></head><body><div class="page">
+<h1>研发任务与通用任务分开实现方案</h1>
+<p class="sub">Manage × Build 联合演示 · 2026-10-09</p>
+
+<div class="box"><b>结论：</b>项目统一管理，研发任务单独页签，优先保障 10/23 交付；同时向领导说明后续与「计划与任务」合并的风险。原型已完成，待内部对齐评审。</div>
+
+<h2>一、项目统一，任务分开</h2>
+<svg viewBox="0 0 860 200" role="img" aria-label="项目统一、任务分开结构图">
+<rect x="10" y="10" width="840" height="180" rx="12" fill="#fafafa" stroke="#e6e6ec"/>
+<text x="26" y="36" font-size="13" fill="#767676">同一个项目（统一）：成员与权限 · 议题 · 动态 · 知识库 · 智能体团队</text>
+<rect x="30" y="54" width="380" height="116" rx="10" fill="#fff" stroke="#e6e6ec"/>
+<text x="48" y="82" font-size="14" font-weight="600">页签：计划与任务</text>
+<text x="48" y="108" font-size="12" fill="#767676">通用任务 · 列表 / 里程碑 / 甘特图</text>
+<text x="48" y="130" font-size="12" fill="#767676">字段：执行人、截止、进展、状态</text>
+<rect x="450" y="54" width="380" height="116" rx="10" fill="#eef3ff" stroke="#495dff"/>
+<text x="468" y="82" font-size="14" font-weight="600" fill="#495dff">页签：研发任务（新增）</text>
+<text x="468" y="108" font-size="12" fill="#2d2d2d">研发任务 · 按阶段推进 · 专家团执行</text>
+<text x="468" y="130" font-size="12" fill="#2d2d2d">字段：处理人、执行主体、阶段进展、状态</text>
+</svg>
+
+<table style="margin-top:12px"><tr><th style="width:120px">范围</th><th>内容</th></tr>
+<tr><td><b>统一</b></td><td>同一个项目入口；成员、权限、议题、动态、知识库、智能体团队共用一份；管理者在一个项目里看全部进展</td></tr>
+<tr><td><b>分开</b></td><td>任务入口、字段和视图：通用任务在「计划与任务」，研发任务在「研发任务」；研发项目默认打开「研发任务」</td></tr></table>
+
+<h2>二、为什么不能直接复用现有任务</h2>
+<p style="margin:0 0 8px">现有「计划与任务」围绕<b>人</b>设计：谁做、几号截止、做到哪、验收标准是什么。研发任务由<b>智能体与专家团按阶段</b>执行，两者对任务的定义不同：</p>
+<table><tr><th style="width:110px">维度</th><th>通用任务（现有）</th><th>研发任务</th></tr>
+<tr><td>执行主体</td><td>人（可选智能体）</td><td>专家团逐阶段执行，人负责审核</td></tr>
+<tr><td>核心结构</td><td>执行人 + 截止 + 验收标准</td><td>执行计划：多个阶段，每阶段有执行专家、处理人、审核节点和产物</td></tr>
+<tr><td>推进方式</td><td>状态由人流转</td><td>阶段通过后自动流转，需要「轮到谁」判断：开始、验收、回答、重试</td></tr>
+<tr><td>特有能力</td><td>里程碑、甘特图、父子任务</td><td>代码分支、阶段产物、阶段评审、执行会话回写</td></tr>
+<tr><td>数据来源</td><td>Manage 自身维护</td><td>Build 根据专家团生成执行计划，状态和产物回写 Manage</td></tr></table>
+<p style="margin:10px 0 0"><b>直接复用的问题：</b>一是现有字段表达不了阶段、专家和审核节点，硬塞会让通用任务列表被研发字段污染；二是里程碑、甘特图按截止日期排布，而研发任务按阶段推进，视图含义不同；三是要兼容两类逻辑，需要改造现有任务模型，周期放不进 10/23。通过元数据配置统一虽然可行，但开发复杂度高、内部尚有分歧，所以本期先分开，后续再合并。</p>
+
+<h2>三、方案对比</h2>
+<table><tr><th>方案</th><th>做法</th><th>优势</th><th>风险</th></tr>
+<tr><td><b>分开实现（采用）</b></td><td>统一项目内，研发任务单独页签与字段</td><td class="y">落地快、周期可控；保留阶段与专家团特性</td><td class="m">后续合并有返工，不能随计划与任务迭代</td></tr>
+<tr><td>1023 强行合并</td><td>研发任务并入计划与任务</td><td>入口统一</td><td class="n">字段视图未对齐，发版风险高</td></tr>
+<tr><td>元数据配置</td><td>自定义字段与表单</td><td>扩展性强</td><td class="n">开发复杂、周期无法保障，内部有分歧</td></tr></table>
+
+<h2>四、需要关注的风险</h2>
+<table><tr><th>风险</th><th>说明</th></tr>
+<tr><td>后续不能随计划与任务持续迭代</td><td>列表、里程碑、甘特图等视图需各自维护</td></tr>
+<tr><td>后续合并</td><td>字段与视图需对齐，有返工与数据迁移成本</td></tr>
+<tr><td>1023 强行合并</td><td>需求未对齐，存在发版风险</td></tr></table>
+
+<h2>五、后续计划</h2>
+<table><tr><th>时间</th><th>事项</th></tr>
+<tr><td>近期</td><td>原型评审与内部对齐；向领导汇报方案与合并风险</td></tr>
+<tr><td>10/23</td><td>按分开方案发版</td></tr>
+<tr><td>发版后</td><td>统一任务模型（项目、里程碑、阶段、处理人），评估并入计划与任务的路径</td></tr></table>
+</div></body></html>

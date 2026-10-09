@@ -7,8 +7,7 @@ import {
 } from './data.js';
 import { CV_MEMBERS } from '../collab/data.js';
 import { tbTeamStages } from '../collab/tb-core.js';
-import { tkCurrentStageHandlerId } from '../tasks-v2/data.js';
-import { tkTaskBranch } from '../tasks-v2/git-branch.js';
+import { tkCurrentStageHandlerId, tkUpdateTask } from '../tasks-v2/data.js';
 import { defaultStageAssigneeId } from '../tasks-v2/stage-owner.js';
 import { openTaskDetail } from '../tasks-v2/index.js';
 import { mgrDateGet, mgrDateSet } from './datepicker.js';
@@ -53,7 +52,16 @@ function statusTag(status) {
 }
 /* 当前处理人：有执行计划的任务看当前阶段执行人，与开发板块同口径 */
 function handlerOf(task) { return tkCurrentStageHandlerId(task) || task.assignee || ''; }
+/* 协作人筛选：任务负责人与协作人都算参与 */
+function participantsOf(task) {
+  var ids = [task.assignee].concat(task.collaborators || []).filter(Boolean).map(String);
+  return ids.filter(function (id, i) { return ids.indexOf(id) === i; });
+}
 function isRdTask(task) { return !!task && (task.taskKind === 'rd' || task.issueType === '研发任务'); }
+/* 「计划与任务」只放通用任务；研发任务在「研发任务」页签单独维护（features/manager/rd-tasks.js） */
+function planTasks(projectId) {
+  return mgrProjectTasks(projectId).filter(function (t) { return !mgrIsDevTask(t) && !isRdTask(t); });
+}
 
 /* 执行主体：当前阶段的智能体 > 任务挂的智能体团队 > 用户自己执行 */
 function executorOf(task) {
@@ -98,8 +106,8 @@ function groupByMilestone(project, tasks) {
 }
 
 function filteredTasks(project) {
-  var list = mgrProjectTasks(project.id).filter(function (t) { return matchStatus(t.status, statusFilter); });
-  if (assigneeFilter) list = list.filter(function (t) { return String(handlerOf(t)) === String(assigneeFilter); });
+  var list = planTasks(project.id).filter(function (t) { return matchStatus(t.status, statusFilter); });
+  if (assigneeFilter) list = list.filter(function (t) { return participantsOf(t).indexOf(String(assigneeFilter)) >= 0; });
   var q = searchText.trim().toLocaleLowerCase();
   if (q) {
     list = list.filter(function (t) {
@@ -125,34 +133,91 @@ function deleteMenuItem(task, key) {
     ? '<button type="button" role="menuitem" class="mgr-menu-danger" data-mgr-task-delete="' + mgrEsc(key) + '">删除任务</button>' : '';
 }
 
+/* 行操作：编辑图标 + 「···」菜单（研发任务不提供启动与子任务，执行与拆分在开发板块完成） */
+var MENU_ICONS = {
+  view: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/>',
+  edit: '<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/>',
+  sub: '<path d="M12 5v14M5 12h14"/>',
+  start: '<path d="M13 2 3 14h9l-1 8 10-12h-9z"/>',
+  void: '<circle cx="12" cy="12" r="9"/><path d="m5.6 5.6 12.8 12.8"/>',
+  del: '<path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/>',
+};
+function menuItem(act, key, label, enabled, danger, reason) {
+  return '<button type="button" role="menuitem" class="mgr-row-act' + (danger ? ' mgr-menu-danger' : '') + '"' +
+    (enabled ? ' data-mgr-task-act="' + act + '" data-mgr-task-key="' + mgrEsc(key) + '"' : ' disabled title="' + mgrEsc(reason || '当前状态不可用') + '"') + '>' +
+    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + MENU_ICONS[act === 'force' ? 'start' : act] + '</svg>' + label + '</button>';
+}
+function rowActionsHtml(task, key) {
+  var rd = mgrIsDevTask(task) || isRdTask(task);
+  var st = task.status;
+  var editable = st !== 'done';
+  var items = menuItem('view', key, '查看详情', true) + menuItem('edit', key, '编辑任务', editable, false, '已完成的任务不能编辑');
+  if (!rd) {
+    items += menuItem('sub', key, '新建子任务', true) +
+      menuItem('start', key, '启动', st === 'planned' || st === 'backlog', false, '只有待规划、待开始的任务可以启动') +
+      menuItem('force', key, '强制启动', st === 'planned' || st === 'backlog' || st === 'blocked', false, '只有待规划、待开始、已阻塞的任务可以强制启动');
+  }
+  items += menuItem('void', key, '作废任务', st !== 'done' && st !== 'cancelled', false, '已完成或已取消的任务不能作废');
+  items += canDeleteTaskHere(task)
+    ? '<button type="button" role="menuitem" class="mgr-row-act mgr-menu-danger" data-mgr-task-delete="' + mgrEsc(key) + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + MENU_ICONS.del + '</svg>删除任务</button>'
+    : menuItem('del', key, '删除任务', false, true, '只有未开始的任务，且需项目负责人或任务创建人才能删除');
+  var open = openRowMenu === key;
+  return '<button type="button" class="mgr-row-edit" aria-label="编辑任务"' +
+    (editable ? ' data-mgr-task-act="edit" data-mgr-task-key="' + mgrEsc(key) + '" data-tooltip="编辑任务"' : ' disabled title="已完成的任务不能编辑"') + '>' +
+    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + MENU_ICONS.edit + '</svg></button>' +
+    '<button type="button" class="mgr-row-more" data-mgr-row-menu="' + mgrEsc(key) + '" aria-haspopup="menu" aria-expanded="' + open + '" aria-label="任务操作">···</button>' +
+    (open ? '<div class="mgr-row-menu" role="menu">' + items + '</div>' : '');
+}
+function stamp() {
+  var d = new Date();
+  var pad = function (n) { return String(n).padStart(2, '0'); };
+  return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+}
+function setTaskStatus(task, to) {
+  if (mgrIsDevTask(task)) tkUpdateTask(task.id, { status: to });
+  else {
+    task.statusHistory = (task.statusHistory || []).concat({ from: task.status, to: to, time: stamp(), authorId: mgrCurrentPersonId() });
+    task.status = to;
+    task.updatedAt = stamp();
+    mgrSaveTasks();
+  }
+  document.dispatchEvent(new Event('lingee:mgr-tasks-changed'));
+}
+function runTaskAction(act, key) {
+  var task = mgrTaskById(key);
+  if (!task) return;
+  openRowMenu = null;
+  rerenderPlan();
+  if (act === 'view') { openTaskPanel(key); return; }
+  if (act === 'edit') {
+    if (task.status === 'done') { toast('已完成的任务不能编辑', 'warning'); return; }
+    openTaskNew(null, { edit: task });
+    return;
+  }
+  if (act === 'sub') { openTaskNew(key); return; }
+  if (act === 'start' || act === 'force') { setTaskStatus(task, 'in_progress'); toast(act === 'force' ? '已强制启动任务' : '任务已启动', 'success'); return; }
+  if (act === 'void') { setTaskStatus(task, 'cancelled'); toast('任务已作废', 'success'); }
+}
+
 /* ---------- 列表视图 ---------- */
-function taskRowHtml(task, canOpenSession) {
-  var p = progressOf(task);
+function taskRowHtml(task, canOpenSession, index) {
   var ex = executorOf(task);
   var key = mgrTaskKey(task);
-  var menuOpen = openRowMenu === key;
+  var collaborators = (task.collaborators || []).map(mgrPersonName).filter(Boolean);
   return '<tr class="mgr-tk-row" data-mgr-task="' + mgrEsc(key) + '">' +
-    '<td class="mgr-tk-code">' + mgrEsc(task.code || '') + '</td>' +
+    '<td class="mgr-tk-code">' + index + '</td>' +
     '<td class="mgr-tk-title"><span class="mgr-tk-title-text">' + mgrEsc(task.title) + '</span></td>' +
-    '<td class="mgr-tk-assignee">' + mgrEsc(mgrPersonName(handlerOf(task))) + '</td>' +
-    '<td class="mgr-tk-executor"><span class="mgr-executor mgr-executor--' + ex.cls + '">' + mgrEsc(ex.name) + '</span></td>' +
+    '<td class="mgr-tk-session">—</td>' +
+    '<td class="mgr-tk-executor">' + (ex.cls === 'expert' ? '<span class="mgr-executor mgr-executor--expert">' + mgrEsc(ex.name) + '</span>' : '—') + '</td>' +
+    '<td class="mgr-tk-assignee">' + (collaborators.length ? mgrEsc(collaborators.join('、')) : '—') + '</td>' +
     '<td class="mgr-tk-due">' + mgrDay(task.dueDate) + '</td>' +
-    '<td class="mgr-tk-progress"><span class="mgr-bar mgr-bar--sm"><span class="mgr-bar-fill" style="width:' + p.percent + '%"></span></span>' +
-    '<span class="mgr-tk-progress-num">' + p.done + '/' + p.total + '</span></td>' +
     '<td class="mgr-tk-status">' + statusTag(task.status) + '</td>' +
-    '<td class="mgr-tk-actions"><button type="button" class="mgr-row-more" data-mgr-row-menu="' + mgrEsc(key) +
-    '" aria-haspopup="menu" aria-expanded="' + menuOpen + '" aria-label="任务操作">···</button>' +
-    (menuOpen
-      ? '<div class="mgr-row-menu" role="menu">' +
-        (canOpenSession && mgrIsDevTask(task) ? '<button type="button" role="menuitem" data-mgr-task-open="' + mgrEsc(key) + '">在开发板块打开任务</button>' : '') +
-        '<button type="button" role="menuitem" data-mgr-task-issue="' + mgrEsc(key) + '">升级为议题</button>' +
-        deleteMenuItem(task, key) + '</div>'
-      : '') +
-    '</td></tr>';
+    '<td class="mgr-tk-actions">' + rowActionsHtml(task, key) + '</td></tr>';
 }
 function listViewHtml(project, tasks, canOpenSession) {
   var g = groupByMilestone(project, tasks);
   var rows = '';
+  var n = 0;
   g.milestones.forEach(function (m) {
     var collapsed = collapsedMilestones.has(m.index);
     rows += '<tr class="mgr-ms-row"><td colspan="8">' +
@@ -161,11 +226,11 @@ function listViewHtml(project, tasks, canOpenSession) {
       '<svg class="mgr-ms-flag" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 22V4"/><path d="M4 4h13l-2.5 4L17 12H4"/></svg>' +
       '<span class="mgr-ms-code">' + m.code + '</span><span class="mgr-ms-name">' + mgrEsc(m.name) + '</span>' +
       '<span class="mgr-ms-count">' + m.tasks.length + ' 项任务</span><span class="mgr-ms-due">截止 ' + mgrDay(m.date) + '</span></td></tr>';
-    if (!collapsed) m.tasks.forEach(function (t) { rows += taskRowHtml(t, canOpenSession); });
+    if (!collapsed) m.tasks.forEach(function (t) { rows += taskRowHtml(t, canOpenSession, ++n); });
   });
-  g.top.forEach(function (t) { rows += taskRowHtml(t, canOpenSession); });
-  if (!rows) return '<div class="mgr-empty">暂无任务。点「＋ 新建任务」创建，或在开发板块新建——两端共用一套任务数据。</div>';
-  return '<table class="mgr-task-table"><thead><tr><th>编号</th><th>任务</th><th>执行人</th><th>执行主体</th><th>截止</th><th>进展</th><th>状态</th><th aria-label="操作"></th></tr></thead><tbody>' +
+  g.top.forEach(function (t) { rows += taskRowHtml(t, canOpenSession, ++n); });
+  if (!rows) return '<div class="mgr-empty">暂无任务。点「＋ 新建任务」创建通用任务；研发任务在「研发任务」页签维护。</div>';
+  return '<table class="mgr-task-table"><thead><tr><th>序号</th><th>任务</th><th>关联会话</th><th>执行智能体</th><th>协作人</th><th>截止时间</th><th>状态</th><th>操作</th></tr></thead><tbody>' +
     rows + '</tbody></table>';
 }
 
@@ -308,17 +373,16 @@ function ganttViewHtml(project, tasks) {
 
 /* ---------- 计划与任务工作区 ---------- */
 function planWorkspaceHtml(project) {
-  var all = mgrProjectTasks(project.id);
+  var all = planTasks(project.id);
   var counts = {};
   STATUS_CHIPS.forEach(function (c) {
     counts[c[0]] = c[0] === 'all' ? all.length : all.filter(function (t) { return matchStatus(t.status, c[0]); }).length;
   });
   var assignees = [];
   all.forEach(function (t) {
-    var h = handlerOf(t);
-    if (h && !assignees.some(function (a) { return String(a.id) === String(h); })) {
-      assignees.push({ id: h, name: mgrPersonName(h) });
-    }
+    participantsOf(t).forEach(function (h) {
+      if (!assignees.some(function (a) { return String(a.id) === h; })) assignees.push({ id: h, name: mgrPersonName(h) });
+    });
   });
   var tasks = filteredTasks(project);
   var canOpenSession = mgrHasSessionPerm();
@@ -329,7 +393,7 @@ function planWorkspaceHtml(project) {
   return '<div class="mgr-pd-filter-row">' +
     '<select id="mgrPdStatus" aria-label="任务状态筛选">' +
     STATUS_CHIPS.map(function (c) { return opt(c[0], c[1] + ' ' + (counts[c[0]] || 0), statusFilter); }).join('') + '</select>' +
-    '<select id="mgrPdAssignee" aria-label="负责人筛选"><option value="">全部负责人</option>' +
+    '<select id="mgrPdAssignee" aria-label="协作人筛选"><option value="">全部协作人</option>' +
     assignees.map(function (a) { return opt(mgrEsc(a.id), mgrEsc(a.name), String(assigneeFilter)); }).join('') +
     '</select><select id="mgrPdSort" aria-label="排序">' +
     opt('raw', '原始顺序', sortMode) + opt('due', '按截止时间', sortMode) + opt('progress', '按进展', sortMode) + '</select>' +
@@ -348,14 +412,16 @@ function currentPlanProject() {
 }
 function rerenderPlan() {
   var pane = $('#mgrPdPlanPane');
-  if (!pane || pane.classList.contains('hidden')) return;
+  /* 「研发任务」页签共用行菜单，由它自己重绘 */
+  if (pane && pane.classList.contains('hidden')) { document.dispatchEvent(new Event('lingee:mgr-rd-rerender')); return; }
+  if (!pane) return;
   var project = currentPlanProject();
   if (project) pane.innerHTML = planWorkspaceHtml(project);
   floatRowMenu();
 }
 /* 行菜单浮在卡片之上：卡片有 overflow 裁剪，菜单改为按「···」按钮的位置固定定位，靠右对齐，空间不够时向上展开 */
 function floatRowMenu() {
-  var menu = document.querySelector('#mgrPdPlanPane .mgr-row-menu');
+  var menu = document.querySelector('#mgrProjDetail .mgr-row-menu');
   if (!menu) return;
   var btn = menu.parentElement.querySelector('.mgr-row-more');
   var rect = btn.getBoundingClientRect();
@@ -430,23 +496,9 @@ function resetPlanState() {
 }
 
 /* ---------- 任务详情（右侧滑入） ---------- */
-var panelFold = { rel: false, more: false };   /* true = 已折叠 */
-var FOLD_CHEVRON = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg>';
-function sectionTitle(label, count, foldKey) {
+function sectionTitle(label, count) {
   return '<div class="mgr-sec-title"><i aria-hidden="true"></i>' + mgrEsc(label) +
-    (count ? '<span class="mgr-sec-count">' + mgrEsc(count) + '</span>' : '') +
-    (foldKey ? '<button type="button" class="mgr-sec-fold' + (panelFold[foldKey] ? ' is-folded' : '') + '" data-mgr-tp-fold="' + foldKey + '" aria-expanded="' + !panelFold[foldKey] + '">' +
-      (panelFold[foldKey] ? '展开' : '收起') + FOLD_CHEVRON + '</button>' : '') + '</div>';
-}
-/* 代码分支：只有开发任务按分支开发，状态口径与开发板块一致 */
-function branchSectionHtml(task) {
-  var info = mgrIsDevTask(task) ? tkTaskBranch(task) : null;
-  if (!info) return '';
-  var cls = { merged: 'done', developing: 'running', pending: 'neutral', closed: 'neutral' }[info.state.key] || 'neutral';
-  return sectionTitle('代码分支') + '<div class="mgr-tp-branch">' +
-    '<div class="mgr-tp-branch-line"><span class="mgr-tp-branch-name">' + mgrEsc(info.branch) + '</span><span aria-hidden="true">→</span>' +
-    '<span class="mgr-tp-branch-name">' + mgrEsc(info.base) + '</span><span class="mgr-tag mgr-tag--' + cls + '">' + mgrEsc(info.state.label) + '</span></div>' +
-    '<span class="mgr-tp-branch-hint">' + mgrEsc(info.state.hint) + '</span></div>';
+    (count ? '<span class="mgr-sec-count">' + mgrEsc(count) + '</span>' : '') + '</div>';
 }
 function taskPanelHtml(task) {
   var plan = task.executionPlan || [];
@@ -460,8 +512,6 @@ function taskPanelHtml(task) {
       '</strong><span class="mgr-task-stage-meta">' + (expert ? '智能体「' + mgrEsc(expert.name) + '」执行' : mgrEsc(mgrPersonName(s.assigneeId))) +
       '</span></div><span class="mgr-task-stage-state st-' + st.cls + '"><i aria-hidden="true">' + st.icon + '</i>' + st.label + '</span></div></div>';
   }).join('');
-  var pre = mgrRelatedTask(task, task.preTaskId);
-  var parent = mgrRelatedTask(task, task.parentId);
   var events = [{ time: String(task.createDate || ''), text: '创建任务' }];
   (task.statusHistory || []).forEach(function (h) {
     events.push({ time: String(h.time || '').slice(0, 10), text: '状态由 ' + mgrEsc(statusName(h.from)) + ' 变更为 ' + mgrEsc(statusName(h.to)) });
@@ -473,8 +523,6 @@ function taskPanelHtml(task) {
     return '<div class="mgr-tp-kv-item"><span class="mgr-detail-key">' + k + '</span><span class="mgr-detail-value">' + v + '</span></div>';
   };
   var id = mgrEsc(mgrTaskKey(task));
-  var creator = task.createdBy ? mgrEsc(mgrPersonName(task.createdBy)) : '—';
-  var finished = task.status === 'done' || task.status === 'cancelled' ? mgrEsc(task.updatedAt || task.createDate || '—') : '—';
   return '<div class="mgr-tp-titlerow"><h3 class="mgr-tp-title">' + mgrEsc(task.title) + '</h3><div class="mgr-tp-tags">' +
     (ex.cls === 'expert' ? '<span class="mgr-executor mgr-executor--expert">' + mgrEsc(ex.name) + '</span>' : '<span class="mgr-executor mgr-executor--user">用户执行</span>') +
     '<span class="mgr-tp-code">' + mgrEsc(task.code || '') + '</span>' +
@@ -488,26 +536,13 @@ function taskPanelHtml(task) {
     kv('更新时间', mgrEsc(task.updatedAt || task.createDate || '—')) + '</div>' +
     sectionTitle('任务描述') + '<p class="mgr-tp-desc">' + mgrEsc(task.desc || '暂无任务描述') + '</p>' +
     sectionTitle('验收标准') + '<p class="mgr-tp-desc">' + mgrEsc(task.acceptance || '暂无验收标准') + '</p>' +
-    branchSectionHtml(task) +
     (plan.length ? sectionTitle('执行阶段', doneStages + '/' + plan.length) + '<div class="mgr-task-stage-list" role="list">' + stages + '</div>' : '') +
-    sectionTitle('任务关系', '', 'rel') + (panelFold.rel ? '' : '<div class="mgr-tp-rel"><div class="mgr-tp-rel-row"><span class="mgr-detail-key">前序任务</span><span class="mgr-detail-value">' +
-    (pre ? mgrEsc((pre.code || '') + ' ' + pre.title) : '暂无前序：任务将按执行计划顺序调度') + '</span></div>' +
-    (parent ? '<div class="mgr-tp-rel-row"><span class="mgr-detail-key">父任务</span><span class="mgr-detail-value">' + mgrEsc((parent.code || '') + ' ' + parent.title) + '</span></div>' : '') +
-    '<button type="button" class="mgr-tp-rel-add" data-mgr-tp-rel-add>＋ 添加前序</button></div>') +
     (events.length
       ? sectionTitle('进展记录', String(events.length)) + '<div class="mgr-tp-events">' + events.slice(0, 8).map(function (e) {
         return '<div class="mgr-tp-event"><span class="mgr-tp-event-time">' + mgrDay(e.time) + '</span><span class="mgr-tp-event-text">' + e.text + '</span></div>';
       }).join('') + '</div>'
       : '') +
-    sectionTitle('更多信息', '', 'more') + (panelFold.more ? '' : '<div class="mgr-tp-kv">' +
-    kv('发起人', creator) + kv('验收方式', task.aiAccept ? 'AI 验收' : '人工验收') +
-    kv('任务启动方式', task.executionMode && task.executionMode !== 'manual' ? '自动启动' : '手动启动') +
-    kv('产物归档目录', task.docDir ? mgrEsc(task.docDir) : '—') +
-    kv('关联指标', task.kpi ? mgrEsc(task.kpi) : '—') + kv('完结时间', finished) + '</div>') +
-    '<div class="mgr-tp-foot"><button type="button" class="mgr-btn mgr-btn--primary" data-mgr-tp-done="' + id + '">' +
-    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>报完成</button>' +
-    '<button type="button" class="mgr-btn mgr-btn--ghost" data-mgr-tp-edit>编辑</button>' +
-    '<button type="button" class="mgr-btn mgr-btn--ghost" data-mgr-tp-subtask="' + id + '">＋ 新建子任务</button>' +
+    '<div class="mgr-tp-foot"><button type="button" class="mgr-btn mgr-btn--ghost" data-mgr-tp-edit>编辑</button>' +
     '<div class="mgr-tp-more"><button type="button" class="mgr-tp-more-btn" data-mgr-tp-more aria-haspopup="menu" aria-expanded="false" aria-label="更多操作">···</button>' +
     '<div class="mgr-tp-more-menu" role="menu" hidden>' +
     (mgrIsDevTask(task) ? '<button type="button" role="menuitem" data-mgr-task-open="' + id + '">在开发板块打开任务</button>' : '') +
@@ -663,9 +698,17 @@ function checkedCollaborators() {
 }
 function fillSelect(id, html) { var el = $(id); if (el) el.innerHTML = html; }
 
-function openTaskNew(parentId) {
-  var project = currentPlanProject();
+/* 新建任务弹窗由两个页签共用：「计划与任务」建通用任务，「研发任务」建研发任务 */
+var taskNewProjectId = null;
+var editingKey = null;
+function openTaskNew(parentId, opts) {
+  /* 编辑任务：复用新建任务弹窗，带入已有内容，保存时更新原任务 */
+  var editTask = (opts && opts.edit) || null;
+  editingKey = editTask ? mgrTaskKey(editTask) : null;
+  var project = editTask ? mgrProjectById(editTask.project) : (opts && opts.project) || currentPlanProject();
   if (!project) { toast('请先打开项目详情', 'warning'); return; }
+  var rdKind = editTask ? mgrIsDevTask(editTask) || isRdTask(editTask) : !!(opts && opts.kind === 'rd');
+  taskNewProjectId = project.id;
   var overlay = $('#mgrTaskNewOverlay');
   if (!overlay) return;
   document.querySelectorAll('[data-mgr-tntab]').forEach(function (b) {
@@ -675,11 +718,18 @@ function openTaskNew(parentId) {
   });
   $('#mgrTnCore').hidden = false;
   $('#mgrTnExtra').hidden = true;
-  /* 任务类型不再让用户选：含研发任务的项目固定建研发任务，其余项目建通用任务 */
-  var rdProject = !!project.containsRd;
+  /* 任务类型不让用户选，由入口页签决定 */
   document.querySelectorAll('[data-mgr-tntype]').forEach(function (b) {
-    b.classList.toggle('active', b.getAttribute('data-mgr-tntype') === (rdProject ? 'rd' : 'general'));
+    b.classList.toggle('active', b.getAttribute('data-mgr-tntype') === (rdKind ? 'rd' : 'general'));
   });
+  $('#mgrTaskNewOverlay .mgr-projedit-title').textContent = editTask ? '编辑任务' : rdKind ? '新建研发任务' : '新建任务';
+  /* 新建通用任务：「保存任务」+「保存并启动」；研发任务与编辑只有一个主按钮 */
+  var twoButtons = !editTask && !rdKind;
+  var saveBtn = $('#mgrTnSave');
+  saveBtn.textContent = editTask ? '保存修改' : twoButtons ? '保存任务' : '保存';
+  saveBtn.classList.toggle('sync-modal__btn--ghost', twoButtons);
+  saveBtn.classList.toggle('sync-modal__btn--primary', !twoButtons);
+  $('#mgrTnSaveStart').hidden = !twoButtons;
   $('#mgrTnTypeField').hidden = true;
   syncRdPane();
   ['#mgrTnTitle', '#mgrTnDesc', '#mgrTnAccept'].forEach(function (s) { $(s).value = ''; });
@@ -699,7 +749,7 @@ function openTaskNew(parentId) {
   resetDraftStages(project);
   renderStages();
 
-  var tasks = mgrProjectTasks(project.id);
+  var tasks = mgrProjectTasks(project.id).filter(function (t) { return mgrIsDevTask(t) === rdKind; });
   fillSelect('#mgrTnParent', '<option value="">无（挂在本项目根任务下）</option>' + tasks.map(function (t) {
     return '<option value="' + mgrEsc(mgrTaskKey(t)) + '">' + mgrEsc((t.code || '') + ' ' + t.title) + '</option>';
   }).join(''));
@@ -714,9 +764,39 @@ function openTaskNew(parentId) {
   $('#mgrTnMsLabel').textContent = '否';
   $('#mgrTnSubs').innerHTML = '<p class="mgr-tn-sub-empty">暂无子任务。点「添加子任务」创建，可批量添加给多位协作人。</p>';
   syncSubCount();
+  var subField = $('#mgrTnSubs').closest('.mgr-tn-field');
+  if (subField) subField.hidden = !!editTask;
+  if (editTask) fillEditTask(editTask, rdKind);
   overlay.style.display = 'flex';
   overlay.setAttribute('aria-hidden', 'false');
   $('#mgrTnTitle').focus();
+}
+function fillEditTask(task, rd) {
+  $('#mgrTnTitle').value = task.title || '';
+  $('#mgrTnDesc').value = task.desc || '';
+  $('#mgrTnAccept').value = task.acceptance || '';
+  mgrDateSet($('#mgrTnDue'), task.dueDate || '');
+  var aiOn = !!task.aiAccept;
+  $('#mgrTnAiBtn').setAttribute('data-ai', aiOn ? 'on' : 'off');
+  $('#mgrTnAiBtn').querySelector('span').textContent = aiOn ? 'AI 验收 · 开' : 'AI 验收';
+  var picked = (task.collaborators || []).map(String);
+  document.querySelectorAll('#mgrTnCollabPopup input[data-mgr-tn-collab]').forEach(function (el) {
+    el.checked = picked.indexOf(el.getAttribute('data-mgr-tn-collab')) >= 0;
+  });
+  var n = checkedCollaborators().length;
+  $('#mgrTnCollabBtn').querySelector('span').textContent = n ? '协作人 ' + n + ' 人' : '添加协作人';
+  var self = mgrTaskKey(task);
+  Array.prototype.forEach.call($('#mgrTnParent').options, function (o) { if (o.value === self) o.remove(); });
+  Array.prototype.forEach.call($('#mgrTnPre').options, function (o) { if (o.value === self) o.remove(); });
+  if (task.parentId != null && task.parentId !== '') $('#mgrTnParent').value = (rd ? 'tk' : '') + task.parentId;
+  if (task.preTaskId) $('#mgrTnPre').value = (rd ? 'tk' : '') + task.preTaskId;
+  if (task.docDir) $('#mgrTnDir').value = task.docDir;
+  if (task.kpi) $('#mgrTnKpi').value = task.kpi;
+  $('#mgrTnMs').checked = !!task.milestoneFlag;
+  $('#mgrTnMsLabel').textContent = task.milestoneFlag ? '是' : '否';
+  /* 研发任务的执行阶段在开发板块按阶段推进，编辑时不改 */
+  var pane = $('#mgrTnRdPane');
+  if (pane) pane.hidden = true;
 }
 function closeTaskNew() {
   var overlay = $('#mgrTaskNewOverlay');
@@ -731,12 +811,37 @@ function sameStoreId(key, dev) {
   if (isDevKey !== dev) return null;
   return Number(isDevKey ? key.slice(2) : key);
 }
-function saveTaskNew() {
-  var project = currentPlanProject();
+function saveTaskEdit(project, rd, title) {
+  var task = mgrTaskById(editingKey);
+  if (!task) { toast('任务已不存在', 'error'); closeTaskNew(); return; }
+  var patch = {
+    title: title,
+    desc: $('#mgrTnDesc').value.trim(),
+    dueDate: mgrDateGet($('#mgrTnDue')),
+    collaborators: checkedCollaborators(),
+    acceptance: $('#mgrTnAccept').value.trim(),
+    docDir: $('#mgrTnDir').value || '',
+    kpi: $('#mgrTnKpi').value || '',
+    aiAccept: $('#mgrTnAiBtn').getAttribute('data-ai') === 'on',
+    milestoneFlag: $('#mgrTnMs').checked,
+  };
+  var parentId = sameStoreId($('#mgrTnParent').value, rd);
+  var preId = sameStoreId($('#mgrTnPre').value, rd);
+  patch.parentId = parentId !== null ? parentId : '';
+  patch.preTaskId = preId !== null ? String(preId) : '';
+  if (mgrIsDevTask(task)) tkUpdateTask(task.id, patch);
+  else { Object.assign(task, patch, { updatedAt: stamp() }); mgrSaveTasks(); }
+  closeTaskNew();
+  document.dispatchEvent(new Event('lingee:mgr-tasks-changed'));
+  toast('任务已保存', 'success');
+}
+function saveTaskNew(start) {
+  var project = mgrProjectById(taskNewProjectId);
   if (!project) { toast('请先打开项目详情', 'warning'); return; }
   var rd = !!document.querySelector('[data-mgr-tntype="rd"].active');
   var title = $('#mgrTnTitle').value.trim();
   if (!title) { toast('请输入任务名', 'error'); $('#mgrTnTitle').focus(); return; }
+  if (editingKey) { saveTaskEdit(project, rd, title); return; }
   var stages = rd ? collectStages() : [];
   if (rd && !stages.length) { toast('研发任务至少保留一个执行阶段', 'error'); return; }
   if (rd && stages.some(function (st) { return !st.assigneeId; })) { toast('请为每个执行阶段选择审核人', 'error'); return; }
@@ -778,7 +883,11 @@ function saveTaskNew() {
   mgrSaveTasks();
   closeTaskNew();
   document.dispatchEvent(new Event('lingee:mgr-tasks-changed'));
-  if (!rd) { toast('任务已创建', 'success'); return; }
+  if (!rd) {
+    if (start) setTaskStatus(task, 'in_progress');
+    toast(start ? '任务已创建并启动' : '任务已创建', 'success');
+    return;
+  }
   toast('研发任务已分配给「' + mgrPersonName(assignee) + '」，待其在开发板块「任务」中开始执行', 'success');
 }
 
@@ -846,7 +955,8 @@ function initTaskNewModal() {
       syncSubCount();
       return;
     }
-    if (t.closest('#mgrTnSave')) { saveTaskNew(); return; }
+    if (t.closest('#mgrTnSave')) { saveTaskNew(false); return; }
+    if (t.closest('#mgrTnSaveStart')) { saveTaskNew(true); return; }
     if (!t.closest('.mgr-tn-pop-wrap')) {
       $('#mgrTnCollabPopup').hidden = true;
       $('#mgrTnAiMenu').hidden = true;
@@ -912,7 +1022,7 @@ export function initManagerPlan() {
   if (!panel) return;
   panel.addEventListener('click', function (e) {
     var t = e.target;
-    if (t.closest('#mgrPdTaskNew')) { openTaskNew(); return; }
+    if (t.closest('#mgrPdTaskNew')) { openTaskNew(null, { kind: 'general' }); return; }
     var view = t.closest('[data-pdview]');
     if (view) { setPlanView(view.getAttribute('data-pdview')); return; }
     var ms = t.closest('[data-mgr-ms-toggle]');
@@ -922,6 +1032,8 @@ export function initManagerPlan() {
       rerenderPlan();
       return;
     }
+    var act = t.closest('[data-mgr-task-act]');
+    if (act) { runTaskAction(act.getAttribute('data-mgr-task-act'), act.getAttribute('data-mgr-task-key')); return; }
     var rowMenu = t.closest('[data-mgr-row-menu]');
     if (rowMenu) {
       var rid = rowMenu.getAttribute('data-mgr-row-menu');
@@ -966,13 +1078,7 @@ export function initManagerPlan() {
     if (msTask && !t.closest('button')) { openTaskPanel(msTask.getAttribute('data-mgr-task')); return; }
     var ganttTask = t.closest('[data-mgr-gantt-task]');
     if (ganttTask) { openTaskPanel(ganttTask.getAttribute('data-mgr-gantt-task')); return; }
-    var fold = t.closest('[data-mgr-tp-fold]');
-    if (fold) { var fk = fold.getAttribute('data-mgr-tp-fold'); panelFold[fk] = !panelFold[fk]; renderTaskPanel(); return; }
-    if (t.closest('[data-mgr-tp-rel-add]')) { toast('添加前序（演示占位）：前序任务可在新建任务「补充信息」中设置'); return; }
-    if (t.closest('[data-mgr-tp-done]')) { toast('已报完成（演示）：产物提交与阶段验收在开发板块完成'); return; }
     if (t.closest('[data-mgr-tp-edit]')) { toast('任务编辑（演示占位）：任务信息在开发板块维护'); return; }
-    var subBtn = t.closest('[data-mgr-tp-subtask]');
-    if (subBtn) { openTaskNew(subBtn.getAttribute('data-mgr-tp-subtask')); return; }
     var more = t.closest('[data-mgr-tp-more]');
     if (more) {
       var menu = more.closest('.mgr-tp-more').querySelector('.mgr-tp-more-menu');
@@ -1020,4 +1126,4 @@ export function initManagerPlan() {
   document.addEventListener('lingee:mgr-perm-changed', rerenderPlan);
 }
 
-export { closeTaskPanel, openTaskPanel, planWorkspaceHtml, resetPlanState, statusTag };
+export { STATUS_CHIPS, closeTaskPanel, matchStatus, openTaskNew, openTaskPanel, planWorkspaceHtml, resetPlanState, rowActionsHtml, statusTag };
