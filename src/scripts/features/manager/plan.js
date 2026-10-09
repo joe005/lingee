@@ -615,9 +615,10 @@ function renderStages() {
   $('#mgrTnPlanHint').textContent = team
     ? '按「' + team.name + '」的交付路径选择阶段，智能体按阶段自动匹配'
     : '项目未绑定交付智能体团队，按默认交付路径选择阶段';
-  $('#mgrTnStageAdd').disabled = !options.some(function (o) {
+  $('#mgrTnStageAdd').disabled = editLocked || !options.some(function (o) {
     return !draftStages.some(function (st) { return st.workType === o.name; });
   });
+  if (editLocked) $('#mgrTnPlanHint').textContent = '任务已启动，执行计划不能修改';
   if (!draftStages.length) {
     body.innerHTML = '<tr><td colspan="5" class="mgr-tn-plan-empty">还没有工作阶段。点击「＋ 添加节点」开始。</td></tr>';
     return;
@@ -638,6 +639,7 @@ function renderStages() {
       '<td><select data-mgr-tn-stage-owner="' + mgrEsc(st.id) + '" aria-label="第 ' + n + ' 节点审核人">' + owners + '</select></td>' +
       '<td><button type="button" class="mgr-tn-stage-remove" data-mgr-tn-stage-remove="' + mgrEsc(st.id) + '" aria-label="移除第 ' + n + ' 节点">×</button></td></tr>';
   }).join('');
+  if (editLocked) body.querySelectorAll('select, input, button').forEach(function (el) { el.disabled = true; });
 }
 function addStage() {
   var project = planProject;
@@ -701,10 +703,12 @@ function fillSelect(id, html) { var el = $(id); if (el) el.innerHTML = html; }
 /* 新建任务弹窗由两个页签共用：「计划与任务」建通用任务，「研发任务」建研发任务 */
 var taskNewProjectId = null;
 var editingKey = null;
+var editLocked = false;   /* 编辑已启动的研发任务：执行计划只读 */
 function openTaskNew(parentId, opts) {
   /* 编辑任务：复用新建任务弹窗，带入已有内容，保存时更新原任务 */
   var editTask = (opts && opts.edit) || null;
   editingKey = editTask ? mgrTaskKey(editTask) : null;
+  editLocked = false;
   var project = editTask ? mgrProjectById(editTask.project) : (opts && opts.project) || currentPlanProject();
   if (!project) { toast('请先打开项目详情', 'warning'); return; }
   var rdKind = editTask ? mgrIsDevTask(editTask) || isRdTask(editTask) : !!(opts && opts.kind === 'rd');
@@ -794,9 +798,15 @@ function fillEditTask(task, rd) {
   if (task.kpi) $('#mgrTnKpi').value = task.kpi;
   $('#mgrTnMs').checked = !!task.milestoneFlag;
   $('#mgrTnMsLabel').textContent = task.milestoneFlag ? '是' : '否';
-  /* 研发任务的执行阶段在开发板块按阶段推进，编辑时不改 */
-  var pane = $('#mgrTnRdPane');
-  if (pane) pane.hidden = true;
+  /* 研发任务：和新建一样展示执行计划；已启动（有阶段不是待执行）后只读 */
+  if (rd) {
+    var plan = task.executionPlan || [];
+    editLocked = task.status !== 'backlog' || plan.some(function (st) { return st.status && st.status !== 'pending'; });
+    draftStages = plan.map(function (st) {
+      return Object.assign({}, st, { expertIds: st.expertId ? [st.expertId] : [] });
+    });
+    renderStages();
+  }
 }
 function closeTaskNew() {
   var overlay = $('#mgrTaskNewOverlay');
@@ -825,6 +835,13 @@ function saveTaskEdit(project, rd, title) {
     aiAccept: $('#mgrTnAiBtn').getAttribute('data-ai') === 'on',
     milestoneFlag: $('#mgrTnMs').checked,
   };
+  if (rd && !editLocked) {
+    var stages = collectStages();
+    if (!stages.length) { toast('研发任务至少保留一个执行阶段', 'error'); return; }
+    if (stages.some(function (st) { return !st.assigneeId; })) { toast('请为每个执行阶段选择审核人', 'error'); return; }
+    patch.executionPlan = stages;
+    patch.assignee = stages[0].assigneeId;
+  }
   var parentId = sameStoreId($('#mgrTnParent').value, rd);
   var preId = sameStoreId($('#mgrTnPre').value, rd);
   patch.parentId = parentId !== null ? parentId : '';
