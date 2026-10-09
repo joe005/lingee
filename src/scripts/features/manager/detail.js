@@ -1,7 +1,7 @@
 import { $ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
 import {
-  mgrAiContribution, mgrCanManageProject, mgrDecideIssue, mgrProjectProgress, mgrExpert, mgrExpertList, mgrHasSessionPerm, mgrPersonName, mgrProjectById, mgrProjectIssues, mgrProjectKnowledge,
+  mgrAiContribution, mgrCanManageProject, mgrDecideIssue, mgrProjectProgress, mgrExpert, mgrHasSessionPerm, mgrPersonName, mgrProjectById, mgrProjectIssues, mgrProjectKnowledge,
   mgrSaveProjects, mgrTaskById, mgrTeam, mgrTeams,
 } from './data.js';
 import { feedHtml, initManagerFeed, resetFeed } from './feed.js';
@@ -13,7 +13,6 @@ import { mgrEsc, mgrTag } from './utils.js';
    以及右栏打开的议题、知识库、智能体团队维护弹窗。 */
 
 var detailTab = 'plan';
-var teamTab = 'team';
 var kbQuery = '';
 var kbOpenId = null;
 var detailProjectId = null;
@@ -231,15 +230,7 @@ function refreshKb() {
 /* ---------- 智能体团队与项目智能体 ---------- */
 function teamBodyHtml(p) {
   var boundIds = projectTeams(p).map(function (t) { return t.id; });
-  var addable = mgrTeams().filter(function (t) { return !boundIds.includes(t.id); });
-  var picked = p.projectExperts || [];
-  var candidates = [];
-  projectTeams(p).forEach(function (t) {
-    (t.members || []).forEach(function (id) { if (mgrExpert(id) && !candidates.includes(id) && !picked.includes(id)) candidates.push(id); });
-  });
-  if (!candidates.length) {
-    mgrExpertList().forEach(function (e) { if (!picked.includes(e.id) && candidates.length < 40) candidates.push(e.id); });
-  }
+  var addable = mgrTeams().filter(function (t) { return t.preset && !boundIds.includes(t.id); });
   var teamCards = projectTeams(p).map(function (t) {
     var lead = mgrExpert(t.leadId);
     var members = (t.members || []).filter(mgrExpert);
@@ -252,26 +243,13 @@ function teamBodyHtml(p) {
       (members.slice(0, 8).map(function (id) { return '<span class="mgr-expert-chip">' + mgrEsc(mgrExpert(id).name) + '</span>'; }).join('') || '<span class="mgr-footnote">无成员智能体</span>') +
       (members.length > 8 ? '<span class="mgr-expert-chip mgr-expert-chip--more">+' + (members.length - 8) + '</span>' : '') + '</span></div></div>';
   }).join('');
-  var teamPane = '<div class="mgr-team-pane' + (teamTab === 'team' ? '' : ' hidden') + '" data-mgr-tm-pane="team">' +
+  var teamPane = '<div class="mgr-team-pane" data-mgr-tm-pane="team">' +
     (teamCards || '<div class="mgr-empty">未绑定交付智能体团队</div>') +
     '<div class="mgr-team-add-row"><select data-mgr-team-add aria-label="添加智能体团队"><option value="">选择要添加的智能体团队</option>' +
     addable.map(function (t) { return '<option value="' + mgrEsc(t.id) + '">' + mgrEsc(t.name) + '</option>'; }).join('') +
     '</select><button type="button" class="mgr-btn mgr-btn--ghost" data-mgr-team-add-btn' + (addable.length ? '' : ' disabled') + '>添加智能体团队</button></div></div>';
-  var agentPane = '<div class="mgr-team-pane' + (teamTab === 'agents' ? '' : ' hidden') + '" data-mgr-tm-pane="agents"><div class="mgr-expert-section">' +
-    '<div class="mgr-expert-section-title">项目智能体（可增删）</div><div class="mgr-expert-chips">' +
-    (picked.filter(mgrExpert).map(function (id) {
-      var name = mgrExpert(id).name;
-      return '<span class="mgr-expert-chip" data-mgr-expert-chip="' + mgrEsc(id) + '">' + mgrEsc(name) +
-        '<button type="button" class="mgr-expert-remove" data-mgr-expert-remove="' + mgrEsc(id) + '" aria-label="移除智能体 ' + mgrEsc(name) + '">×</button></span>';
-    }).join('') || '<span class="mgr-footnote">未选择项目智能体</span>') +
-    '</div><div class="mgr-team-add-row"><select data-mgr-expert-add aria-label="添加项目智能体"><option value="">选择要添加的智能体</option>' +
-    candidates.map(function (id) { return '<option value="' + mgrEsc(id) + '">' + mgrEsc(mgrExpert(id).name) + '</option>'; }).join('') +
-    '</select><button type="button" class="mgr-btn mgr-btn--ghost" data-mgr-expert-add-btn' + (candidates.length ? '' : ' disabled') + '>添加智能体</button></div></div></div>';
-  var tabBtn = function (id, label) {
-    return '<button type="button" class="mgr-tmtab' + (teamTab === id ? ' active' : '') + '" data-mgr-tmtab="' + id + '" role="tab" aria-selected="' + (teamTab === id) + '">' + label + '</button>';
-  };
-  return '<div class="mgr-card mgr-proj-team" data-mgr-proj-team="' + mgrEsc(p.id) + '"><div class="mgr-tmtabs" role="tablist" aria-label="智能体团队与智能体">' +
-    tabBtn('team', '智能体团队') + tabBtn('agents', '智能体') + '</div><div class="mgr-card-body">' + teamPane + agentPane +
+  return '<div class="mgr-card mgr-proj-team" data-mgr-proj-team="' + mgrEsc(p.id) + '"><div class="mgr-tmtabs" role="tablist" aria-label="智能体团队">' +
+    '<button type="button" class="mgr-tmtab active" role="tab" aria-selected="true">智能体团队</button></div><div class="mgr-card-body">' + teamPane +
     (p.containsRd ? '<p class="mgr-footnote">包含研发任务的项目，研发任务的阶段子任务模板来自交付智能体团队的交付路径。</p>' : '') + '</div></div>';
 }
 function saveProjectChange(p, msg) {
@@ -322,9 +300,7 @@ export function initManagerDetail() {
       return;
     }
     if (t.closest('[data-mgr-open-kb]')) { kbQuery = ''; kbOpenId = null; $('#mgrKbBody').innerHTML = kbBodyHtml(p); openOverlay('#mgrKbOverlay'); return; }
-    if (t.closest('[data-mgr-open-team]')) { teamTab = 'team'; $('#mgrTeamBody').innerHTML = teamBodyHtml(p); openOverlay('#mgrTeamOverlay'); return; }
-    var tmtab = t.closest('[data-mgr-tmtab]');
-    if (tmtab) { teamTab = tmtab.getAttribute('data-mgr-tmtab') === 'agents' ? 'agents' : 'team'; $('#mgrTeamBody').innerHTML = teamBodyHtml(p); return; }
+    if (t.closest('[data-mgr-open-team]')) { $('#mgrTeamBody').innerHTML = teamBodyHtml(p); openOverlay('#mgrTeamOverlay'); return; }
     var kbToggle = t.closest('[data-mgr-kb-toggle]');
     if (kbToggle) { var kid = kbToggle.getAttribute('data-mgr-kb-toggle'); kbOpenId = kbOpenId === kid ? null : kid; refreshKb(); return; }
     if (t.closest('[data-mgr-kb-session]')) { toast('执行会话跳转尚未就绪（演示）', 'warning'); return; }
@@ -348,21 +324,6 @@ export function initManagerDetail() {
       p.teamIds = (p.teamIds || []).filter(function (x) { return x !== rid; });
       if (p.defaultTeam === rid) p.defaultTeam = p.teamIds[0] || '';
       saveProjectChange(p, '已移除智能体团队：' + rt.name + (p.containsRd && !p.teamIds.length ? '（包含研发任务，建议尽快重新绑定交付智能体团队）' : ''));
-      return;
-    }
-    var addExpert = t.closest('[data-mgr-expert-add-btn]');
-    if (addExpert) {
-      var eid = addExpert.closest('.mgr-team-add-row').querySelector('[data-mgr-expert-add]').value;
-      if (!eid || !mgrExpert(eid)) return;
-      p.projectExperts = (p.projectExperts || []).concat(eid);
-      saveProjectChange(p, '已添加项目智能体：' + mgrExpert(eid).name);
-      return;
-    }
-    var rmExpert = t.closest('[data-mgr-expert-remove]');
-    if (rmExpert) {
-      var xid = rmExpert.getAttribute('data-mgr-expert-remove');
-      p.projectExperts = (p.projectExperts || []).filter(function (x) { return x !== xid; });
-      saveProjectChange(p, '已移除项目智能体');
       return;
     }
     if (t.closest('#mgrPdAskSend')) {

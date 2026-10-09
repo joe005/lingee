@@ -26,7 +26,7 @@ var STATUS_CHIPS = [
 var DOC_DIRS = ['会议纪要', '需求文档', '设计方案', '测试报告', '其他'];
 var KPIS = ['交付及时率', '一次通过率', '缺陷回归通过率'];
 
-var statusFilter = 'pending';   /* 默认聚焦待处理 */
+var statusFilter = 'all';   /* 默认显示全部 */
 var searchText = '';
 var assigneeFilter = '';
 var sortMode = 'raw';
@@ -326,12 +326,9 @@ function planWorkspaceHtml(project) {
     : viewMode === 'gantt' ? ganttViewHtml(project, tasks)
     : listViewHtml(project, tasks, canOpenSession);
   var opt = function (v, label, cur) { return '<option value="' + v + '"' + (cur === v ? ' selected' : '') + '>' + label + '</option>'; };
-  return '<div class="mgr-pd-status-chips" id="mgrPdStatusChips" role="tablist" aria-label="任务状态筛选">' +
-    STATUS_CHIPS.map(function (c) {
-      return '<button type="button" class="mgr-pd-chip' + (statusFilter === c[0] ? ' active' : '') + '" data-pdstatus="' + c[0] +
-        '" aria-pressed="' + (statusFilter === c[0]) + '">' + c[1] + ' ' + (counts[c[0]] || 0) + '</button>';
-    }).join('') +
-    '</div><div class="mgr-pd-filter-row">' +
+  return '<div class="mgr-pd-filter-row">' +
+    '<select id="mgrPdStatus" aria-label="任务状态筛选">' +
+    STATUS_CHIPS.map(function (c) { return opt(c[0], c[1] + ' ' + (counts[c[0]] || 0), statusFilter); }).join('') + '</select>' +
     '<select id="mgrPdAssignee" aria-label="负责人筛选"><option value="">全部负责人</option>' +
     assignees.map(function (a) { return opt(mgrEsc(a.id), mgrEsc(a.name), String(assigneeFilter)); }).join('') +
     '</select><select id="mgrPdSort" aria-label="排序">' +
@@ -424,7 +421,7 @@ function setPlanView(mode) {
 }
 /* 切换项目时重置筛选状态 */
 function resetPlanState() {
-  statusFilter = 'pending';
+  statusFilter = 'all';
   searchText = '';
   assigneeFilter = '';
   sortMode = 'raw';
@@ -595,13 +592,12 @@ function renderStages() {
     var opts = options.map(function (o) {
       return '<option value="' + mgrEsc(o.name) + '"' + (o.name === st.workType ? ' selected' : '') + '>' + mgrEsc(o.name) + '</option>';
     }).join('') + (options.some(function (o) { return o.name === st.workType; }) ? '' : '<option value="' + mgrEsc(st.workType) + '" selected>' + mgrEsc(st.workType) + '</option>');
-    var agents = (st.expertIds || []).map(mgrExpert).filter(Boolean).map(function (e) { return e.name; });
     var owners = '<option value="">待分配</option>' + members.map(function (m) {
       return '<option value="' + mgrEsc(m.id) + '"' + (st.assigneeId === m.id ? ' selected' : '') + '>' + mgrEsc(m.name) + '</option>';
     }).join('');
     return '<tr class="mgr-tn-plan-row" data-mgr-tn-stage="' + mgrEsc(st.id) + '"><td>' + String(n).padStart(2, '0') + '</td>' +
       '<td><select data-mgr-tn-stage-type="' + mgrEsc(st.id) + '" aria-label="第 ' + n + ' 执行阶段">' + opts + '</select>' +
-      (agents.length ? '<span class="mgr-tn-plan-agents" title="' + mgrEsc(agents.join('、')) + '">智能体：' + mgrEsc(agents.join('、')) + '</span>' : '') + '</td>' +
+      '</td>' +
       '<td><label class="mgr-tn-review-switch"><input type="checkbox" data-mgr-tn-stage-review="' + mgrEsc(st.id) + '" aria-label="第 ' + n + ' 节点自动审核"' +
       (st.requiresConfirmation === false ? ' checked' : '') + '><span aria-hidden="true"></span></label></td>' +
       '<td><select data-mgr-tn-stage-owner="' + mgrEsc(st.id) + '" aria-label="第 ' + n + ' 节点审核人">' + owners + '</select></td>' +
@@ -679,12 +675,12 @@ function openTaskNew(parentId) {
   });
   $('#mgrTnCore').hidden = false;
   $('#mgrTnExtra').hidden = true;
-  /* 只有含研发任务的项目才显示「任务类型」，默认选中研发任务 */
+  /* 任务类型不再让用户选：含研发任务的项目固定建研发任务，其余项目建通用任务 */
   var rdProject = !!project.containsRd;
   document.querySelectorAll('[data-mgr-tntype]').forEach(function (b) {
     b.classList.toggle('active', b.getAttribute('data-mgr-tntype') === (rdProject ? 'rd' : 'general'));
   });
-  $('#mgrTnTypeField').hidden = !rdProject;
+  $('#mgrTnTypeField').hidden = true;
   syncRdPane();
   ['#mgrTnTitle', '#mgrTnDesc', '#mgrTnAccept'].forEach(function (s) { $(s).value = ''; });
   mgrDateSet($('#mgrTnDue'), '');
@@ -917,8 +913,6 @@ export function initManagerPlan() {
   panel.addEventListener('click', function (e) {
     var t = e.target;
     if (t.closest('#mgrPdTaskNew')) { openTaskNew(); return; }
-    var chip = t.closest('[data-pdstatus]');
-    if (chip) { statusFilter = chip.getAttribute('data-pdstatus'); rerenderPlan(); return; }
     var view = t.closest('[data-pdview]');
     if (view) { setPlanView(view.getAttribute('data-pdview')); return; }
     var ms = t.closest('[data-mgr-ms-toggle]');
@@ -1010,6 +1004,7 @@ export function initManagerPlan() {
     if (e.target.id === 'mgrPdSearch') { searchText = e.target.value; rerenderKeepSearchFocus(); }
   });
   panel.addEventListener('change', function (e) {
+    if (e.target.id === 'mgrPdStatus') { statusFilter = e.target.value; rerenderPlan(); }
     if (e.target.id === 'mgrPdAssignee') { assigneeFilter = e.target.value; rerenderPlan(); }
     if (e.target.id === 'mgrPdSort') { sortMode = e.target.value; rerenderPlan(); }
   });

@@ -22,7 +22,7 @@ var CARD_CHEVRON = '<svg class="mgr-mcard-chevron" width="16" height="16" viewBo
 /* 新建项目模板：选中开发类模板时需要 Git 地址与智能体团队 */
 var TEMPLATES = [
   { id: 'blank', name: '空白', goal: '' },
-  { id: 'dev', name: '开发项目', dev: true, team: 'general-app-dev', goal: '' },
+  { id: 'dev', name: '开发项目', dev: true, goal: '' },
   { id: 'budget', name: '预算目标制定', goal: '围绕年度预算目标拆解编制任务，按里程碑推进并沉淀编制产物' },
   { id: 'month', name: '月度经营分析', goal: '按月归集经营数据，输出差异归因与改进建议' },
   { id: 'ceo', name: 'CEO月度会议', goal: '围绕 CEO 月度会议组织议题收集、材料准备与决议跟进' },
@@ -51,11 +51,13 @@ function cardHtml(p) {
     '<div class="mgr-mcard-foot"><span class="mgr-mcard-owner">' + ownerAvatar(p.owner) + '<span>' + mgrEsc(p.owner || '未指定') + '</span></span>' +
     '<span class="mgr-mcard-tags">' + tags + '</span></div></div>';
 }
+/* 项目首页暂时只展示开发类项目（含研发任务），与开发无关的项目不出现在待你处理和全部项目里 */
+function homeProjects() { return mgrProjects().filter(function (p) { return p.containsRd; }); }
 /* 待你处理：分给我的未完成任务 + 我能管理的项目里待处理的议题 */
 function pendingItems() {
   var me = mgrCurrentPersonId();
   var items = [];
-  mgrProjects().forEach(function (p) {
+  homeProjects().forEach(function (p) {
     mgrProjectIssues(p.id).forEach(function (i) {
       if (i.status === '待处理' && mgrCanManageProject(p)) items.push({ kind: '议题', title: i.title, project: p, meta: i.time || '' });
     });
@@ -85,7 +87,7 @@ function renderTodos() {
     : '<div class="mgr-todo-empty"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>暂无待办</div>';
 }
 function renderList() {
-  var all = mgrProjects();
+  var all = homeProjects();
   var q = projectQuery.trim().toLocaleLowerCase();
   var list = q ? all.filter(function (p) { return (p.name + ' ' + (p.owner || '')).toLocaleLowerCase().includes(q); }) : all.slice();
   /* 按最近修改时间倒序；没改过的演示项目没有 updatedAt，排在后面并保持原有顺序（sort 稳定） */
@@ -156,7 +158,6 @@ function pickTemplate(id) {
   pickedTemplate = id;
   var tpl = currentTemplate();
   if (tpl && tpl.goal) $('#mgrPeGoal').value = tpl.goal;
-  if (tpl && tpl.dev && tpl.team) { $('#mgrPeTeam').value = tpl.team; syncTeamUi(); }
   renderTemplates();
   syncDevExtra();
   $('#mgrPeName').focus();
@@ -205,45 +206,6 @@ function inviteForNewProject(trigger) {
     },
   });
 }
-/* 开发项目只提供两个交付团队；下拉是单独的浮层，固定向触发按钮下方展开 */
-var TEAM_IDS = ['general-app-dev', 'cosmic-app-dev'];
-function teamChoices() { return TEAM_IDS.map(mgrTeam).filter(Boolean); }
-function syncTeamUi() {
-  var sel = $('#mgrPeTeam');
-  var team = mgrTeam(sel.value);
-  $('#mgrPeTeamText').textContent = team ? team.name : '请选择智能体团队';
-  $('#mgrPeTeamBtn').classList.toggle('is-placeholder', !team);
-}
-function closeTeamPop() {
-  var pop = $('#mgrPeTeamPop');
-  if (pop.hidden) return;
-  pop.hidden = true;
-  $('#mgrPeTeamBtn').setAttribute('aria-expanded', 'false');
-}
-function openTeamPop() {
-  var pop = $('#mgrPeTeamPop');
-  var btn = $('#mgrPeTeamBtn');
-  var current = $('#mgrPeTeam').value;
-  pop.innerHTML = teamChoices().map(function (t) {
-    var on = t.id === current;
-    return '<button type="button" class="mgr-dd-option' + (on ? ' is-on' : '') + '" role="option" aria-selected="' + on + '" data-mgr-pe-team-pick="' + mgrEsc(t.id) + '"><span>' + mgrEsc(t.name) + '</span>' + (on ? '<b aria-hidden="true">✓</b>' : '') + '</button>';
-  }).join('');
-  var box = btn.getBoundingClientRect();
-  pop.style.left = box.left + 'px';
-  pop.style.top = box.bottom + 4 + 'px';
-  pop.style.width = box.width + 'px';
-  pop.hidden = false;
-  btn.setAttribute('aria-expanded', 'true');
-  var target = pop.querySelector('.is-on') || pop.querySelector('.mgr-dd-option');
-  if (target) target.focus();
-}
-function pickTeam(id) {
-  $('#mgrPeTeam').value = id;
-  syncTeamUi();
-  closeTeamPop();
-  $('#mgrPeTeam').dispatchEvent(new Event('change', { bubbles: true }));
-  $('#mgrPeTeamBtn').focus();
-}
 function selectedBaseBranch() {
   var v = $('#mgrPeBaseBranch').value;
   return (v === '__custom' ? $('#mgrPeBaseBranchCustom').value : v).trim();
@@ -260,9 +222,11 @@ function openProjectNew() {
   $('#mgrPeBaseBranch').value = 'main';
   $('#mgrPeBaseBranchCustom').value = '';
   $('#mgrPeBaseBranchCustom').hidden = true;
-  $('#mgrPeTeam').innerHTML = teamChoices().map(function (t) {
+  $('#mgrPeTeam').innerHTML = '<option value="">请选择智能体团队</option>' + mgrTeams().filter(function (t) { return t.preset; }).map(function (t) {
     return '<option value="' + mgrEsc(t.id) + '">' + mgrEsc(t.name) + '</option>';
   }).join('');
+  pickedMembers = [];
+  renderMemberChips();
   initSelectDropdowns([$('#mgrPeBaseBranch')]);
   $('#mgrPeBaseBranch').dispatchEvent(new Event('change', { bubbles: true }));
   syncSubtabs(true);
@@ -272,7 +236,6 @@ function openProjectNew() {
   $('#mgrPeName').focus();
 }
 function closeProjectNew() {
-  closeTeamPop();
   var overlay = $('#mgrProjEditOverlay');
   overlay.style.display = 'none';
   overlay.setAttribute('aria-hidden', 'true');
@@ -292,7 +255,7 @@ function submitProjectNew() {
   if (dev && !mgrTeam(teamId)) {
     $('#mgrPeTeamError').hidden = false;
     toast('开发类项目必须选择智能体团队', 'error');
-    $('#mgrPeTeamBtn').focus();
+    $('#mgrPeTeam').focus();
     return;
   }
   $('#mgrPeTeamError').hidden = true;
@@ -353,10 +316,6 @@ function initProjectNewModal() {
       return;
     }
     if (t.closest('#mgrPeMemberAdd')) { inviteForNewProject(t.closest('#mgrPeMemberAdd')); return; }
-    var teamPick = t.closest('[data-mgr-pe-team-pick]');
-    if (teamPick) { pickTeam(teamPick.getAttribute('data-mgr-pe-team-pick')); return; }
-    if (t.closest('#mgrPeTeamBtn')) { if ($('#mgrPeTeamPop').hidden) openTeamPop(); else closeTeamPop(); return; }
-    if (!t.closest('#mgrPeTeamPop')) closeTeamPop();
     if (t.closest('[data-mgr-pe-tpl-more]')) { templatesExpanded = !templatesExpanded; renderTemplates(); return; }
     var tplBtn = t.closest('[data-mgr-pe-tpl]');
     if (tplBtn) { pickTemplate(tplBtn.getAttribute('data-mgr-pe-tpl')); return; }
@@ -376,25 +335,8 @@ function initProjectNewModal() {
     }
   });
   overlay.addEventListener('keydown', function (e) {
-    var pop = $('#mgrPeTeamPop');
-    if (!pop.hidden) {
-      var options = Array.from(pop.querySelectorAll('.mgr-dd-option'));
-      var i = options.indexOf(document.activeElement);
-      if (e.key === 'Escape') { e.stopPropagation(); closeTeamPop(); $('#mgrPeTeamBtn').focus(); return; }
-      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-        e.preventDefault();
-        options[(i + (e.key === 'ArrowDown' ? 1 : -1) + options.length) % options.length].focus();
-        return;
-      }
-      if (e.key === 'Tab') closeTeamPop();
-    } else if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && e.target.id === 'mgrPeTeamBtn') {
-      e.preventDefault();
-      openTeamPop();
-      return;
-    }
     if (e.key === 'Escape') { e.stopPropagation(); closeProjectNew(); }
   });
-  $('.mgr-projedit-body', overlay).addEventListener('scroll', closeTeamPop);
   $('#mgrPeSubmit').addEventListener('click', submitProjectNew);
 }
 
