@@ -2,11 +2,10 @@
 <div class="mgr-scope" id="mgrModals">
 <!-- 管理 · 新建项目弹窗：项目新建统筹到管理板块。
      2026-10 评审决议：项目层面不区分 通用/研发 类型——开发属性由模板表达：
-     选中「通用开发 / 苍穹项目开发」模板时展开 Git 地址（必录）与交付智能体团队
-     （默认 通用应用开发智能体团队 / 苍穹应用开发智能体团队）；其余交互对齐管理原型
-     （模板 chips、目标/项目指令页签、项目智能体 chips + 添加）。
-     负责人默认当前登录用户、成员默认创建人，弹窗内不再设置周期与优先级。
-     命名：项目级协作者称「项目智能体」，基础资料为「智能体/智能体团队」。
+     选中「开发项目」模板时展开 Git 地址（必录）与智能体团队（不再区分通用 / 苍穹，
+     默认 通用应用开发智能体团队，可改选）；其余交互对齐管理原型（模板 chips、目标/项目指令页签）。
+     负责人默认当前登录用户、成员默认创建人，弹窗内不再设置周期、优先级与项目智能体
+     （项目智能体在项目详情右栏「智能体团队 → 管理」中增删）。
      顶层沿用 .sync-overlay（display:none→flex），ESC 关闭命中 main.js 既有选择器。 -->
 <div class="sync-overlay mgr-modal" id="mgrProjEditOverlay" style="display:none" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="mgrProjEditTitle">
   <div class="sync-modal mgr-projedit-modal">
@@ -34,16 +33,8 @@
           <textarea id="mgrPeGoal" rows="3" maxlength="300" placeholder="为什么建立这个项目，需要达成什么经营结果"></textarea>
           <textarea id="mgrPeInstruction" rows="3" maxlength="300" placeholder="项目内所有对话共同遵循的全局指令（演示）" hidden></textarea>
         </div>
-        <div class="mgr-pe-field">
-          <label id="mgrPeExpertsLabel">项目智能体 <small>项目内可调用的智能体，可增删</small></label>
-          <div class="mgr-pe-expert-chips" id="mgrPeExpertChips" aria-labelledby="mgrPeExpertsLabel"></div>
-          <div class="mgr-pe-expert-add-wrap">
-            <button type="button" class="mgr-pe-expert-add" id="mgrPeExpertAdd" aria-haspopup="listbox" aria-expanded="false">＋ 添加</button>
-            <div class="mgr-pe-expert-popup" id="mgrPeExpertPopup" role="listbox" hidden></div>
-          </div>
-        </div>
         <div class="mgr-pe-field mgr-pe-rd-field" id="mgrPeDevExtra" hidden>
-          <div class="mgr-pe-dev-head">开发交付信息 <small>该模板按交付智能体团队路径生成研发任务阶段</small></div>
+          <div class="mgr-pe-dev-head">开发交付信息 <small>该模板按智能体团队的交付路径生成研发任务阶段</small></div>
           <div class="mgr-pe-field">
             <label for="mgrPeRepo">Git 地址与基准分支 <b aria-hidden="true">*</b></label>
             <div class="mgr-repo-row">
@@ -61,9 +52,9 @@
             <p class="mgr-pe-error" id="mgrPeBranchError" hidden></p>
           </div>
           <div class="mgr-pe-field">
-            <label for="mgrPeTeam">交付智能体团队 <b aria-hidden="true">*</b></label>
-            <select id="mgrPeTeam"><option value="">请选择交付智能体团队</option></select>
-            <p class="mgr-pe-error" id="mgrPeTeamError" hidden>开发类项目必须选择交付智能体团队，用于按阶段生成研发任务</p>
+            <label for="mgrPeTeam">智能体团队 <b aria-hidden="true">*</b></label>
+            <select id="mgrPeTeam"><option value="">请选择智能体团队</option></select>
+            <p class="mgr-pe-error" id="mgrPeTeamError" hidden>开发类项目必须选择智能体团队，用于按阶段生成研发任务</p>
           </div>
         </div>
       </form>
