@@ -23,31 +23,29 @@
         </div>
         <div class="mgr-pe-field">
           <label for="mgrPeName">项目名称 <b aria-hidden="true">*</b></label>
-          <input type="text" id="mgrPeName" maxlength="60" placeholder="例如：重点物料采购降本与保供" required>
+          <input type="text" id="mgrPeName" maxlength="60" required>
         </div>
         <div class="mgr-pe-field">
           <div class="mgr-pe-subtabs" role="tablist" aria-label="项目目标与指令">
             <button type="button" class="mgr-pe-subtab active" data-mgr-pe-subtab="goal" role="tab" aria-selected="true">目标</button>
             <button type="button" class="mgr-pe-subtab" data-mgr-pe-subtab="instruction" role="tab" aria-selected="false">项目指令</button>
           </div>
-          <textarea id="mgrPeGoal" rows="3" maxlength="300" placeholder="为什么建立这个项目，需要达成什么经营结果"></textarea>
+          <textarea id="mgrPeGoal" rows="3" maxlength="300"></textarea>
           <textarea id="mgrPeInstruction" rows="3" maxlength="300" placeholder="项目内所有对话共同遵循的全局指令（演示）" hidden></textarea>
         </div>
-        <div class="mgr-pe-field mgr-pe-rd-field" id="mgrPeDevExtra" hidden>
-          <div class="mgr-pe-dev-head">开发交付信息 <small>该模板按智能体团队的交付路径生成研发任务阶段</small></div>
+        <div class="mgr-pe-field" id="mgrPeDevExtra" hidden>
           <div class="mgr-pe-field">
-            <label for="mgrPeRepo">Git 地址与基准分支 <b aria-hidden="true">*</b></label>
+            <label for="mgrPeRepo">Git 地址 <b aria-hidden="true">*</b></label>
             <div class="mgr-repo-row">
               <input type="text" id="mgrPeRepo" inputmode="url" placeholder="https://git.example.com/org/repo.git">
-              <label class="mgr-repo-branch"><svg class="mgr-repo-branch-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="8" r="2"/><path d="M6 7v10"/><path d="M18 10c0 4-6 3-12 7"/></svg><select id="mgrPeBaseBranch" aria-label="基准分支" aria-describedby="mgrPeBranchHint">
+              <div class="mgr-repo-branch"><svg class="mgr-repo-branch-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="8" r="2"/><path d="M6 7v10"/><path d="M18 10c0 4-6 3-12 7"/></svg><select id="mgrPeBaseBranch" aria-label="基准分支">
                   <option value="main">main</option>
                   <option value="master">master</option>
                   <option value="develop">develop</option>
-                  <option value="__custom">其他分支…</option>
-                </select></label>
+                  <option value="__custom">其他</option>
+                </select></div>
               <input type="text" id="mgrPeBaseBranchCustom" class="mgr-repo-branch-custom" placeholder="分支名，如 release/2026" aria-label="自定义基准分支" autocomplete="off" hidden>
             </div>
-            <p class="mgr-repo-hint" id="mgrPeBranchHint">任务从基准分支拉取开发分支，审核通过后合并回基准分支</p>
             <p class="mgr-pe-error" id="mgrPeRepoError" hidden>开发类项目必须填写 Git 地址</p>
             <p class="mgr-pe-error" id="mgrPeBranchError" hidden></p>
           </div>
@@ -152,7 +150,7 @@
             <option value="main">main</option>
                   <option value="master">master</option>
                   <option value="develop">develop</option>
-                  <option value="__custom">其他分支…</option>
+                  <option value="__custom">其他</option>
           </select></label>
         <input type="text" id="mgrRepoBaseCustom" class="mgr-rename-input mgr-repo-branch-custom" placeholder="分支名，如 release/2026" aria-label="自定义基准分支" autocomplete="off" hidden>
       </div>

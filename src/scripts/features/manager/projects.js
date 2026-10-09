@@ -1,3 +1,4 @@
+import { initSelectDropdowns } from '../../core/select-dropdown.js';
 import { $ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
 import { cvCurrentUserName } from '../collab/data.js';
@@ -20,7 +21,7 @@ var CARD_CHEVRON = '<svg class="mgr-mcard-chevron" width="16" height="16" viewBo
 /* 新建项目模板：选中开发类模板时需要 Git 地址与智能体团队 */
 var TEMPLATES = [
   { id: 'blank', name: '空白', goal: '' },
-  { id: 'dev', name: '开发项目', dev: true, team: 'general-app-dev', goal: '按智能体团队的交付路径完成需求、开发、联调与交付' },
+  { id: 'dev', name: '开发项目', dev: true, team: 'general-app-dev', goal: '' },
   { id: 'budget', name: '预算目标制定', goal: '围绕年度预算目标拆解编制任务，按里程碑推进并沉淀编制产物' },
   { id: 'month', name: '月度经营分析', goal: '按月归集经营数据，输出差异归因与改进建议' },
   { id: 'ceo', name: 'CEO月度会议', goal: '围绕 CEO 月度会议组织议题收集、材料准备与决议跟进' },
@@ -131,6 +132,7 @@ function renderTemplates() {
 function syncDevExtra() {
   var tpl = currentTemplate();
   $('#mgrPeDevExtra').hidden = !(tpl && tpl.dev);
+  syncSubtabs(!$('#mgrPeGoal').hidden);
   $('#mgrPeRepoError').hidden = true;
   $('#mgrPeBranchError').hidden = true;
   $('#mgrPeTeamError').hidden = true;
@@ -142,14 +144,29 @@ function pickTemplate(id) {
   if (tpl && tpl.dev && tpl.team) $('#mgrPeTeam').value = tpl.team;
   renderTemplates();
   syncDevExtra();
+  $('#mgrPeName').focus();
 }
 function syncSubtabs(showGoal) {
+  var tpl = currentTemplate();
+  var dev = !!(tpl && tpl.dev);
+  if (dev) showGoal = true;
+  var tabs = $('#mgrProjEditForm .mgr-pe-subtabs');
+  tabs.classList.toggle('mgr-pe-subtabs--plain', dev);
+  tabs.setAttribute('role', dev ? 'group' : 'tablist');
   $('#mgrPeGoal').hidden = !showGoal;
   $('#mgrPeInstruction').hidden = showGoal;
   document.querySelectorAll('[data-mgr-pe-subtab]').forEach(function (b) {
+    b.hidden = dev && b.getAttribute('data-mgr-pe-subtab') === 'instruction';
     var on = (b.getAttribute('data-mgr-pe-subtab') === 'goal') === showGoal;
-    b.classList.toggle('active', on);
-    b.setAttribute('aria-selected', String(on));
+    b.classList.toggle('active', !dev && on);
+    b.disabled = dev;
+    if (dev) {
+      b.removeAttribute('role');
+      b.removeAttribute('aria-selected');
+    } else {
+      b.setAttribute('role', 'tab');
+      b.setAttribute('aria-selected', String(on));
+    }
   });
 }
 function selectedBaseBranch() {
@@ -170,6 +187,8 @@ function openProjectNew() {
   $('#mgrPeTeam').innerHTML = '<option value="">请选择智能体团队</option>' + mgrTeams().map(function (t) {
     return '<option value="' + mgrEsc(t.id) + '">' + mgrEsc(t.name) + '</option>';
   }).join('');
+  initSelectDropdowns([$('#mgrPeBaseBranch')]);
+  $('#mgrPeBaseBranch').dispatchEvent(new Event('change', { bubbles: true }));
   syncSubtabs(true);
   syncDevExtra();
   overlay.style.display = 'flex';
@@ -214,7 +233,7 @@ function submitProjectNew() {
     be.textContent = branchErr;
     be.hidden = false;
     toast(branchErr, 'error');
-    ($('#mgrPeBaseBranchCustom').hidden ? $('#mgrPeBaseBranch') : $('#mgrPeBaseBranchCustom')).focus();
+    ($('#mgrPeBaseBranchCustom').hidden ? $('#mgrPeBaseBranch').nextElementSibling : $('#mgrPeBaseBranchCustom')).focus();
     return;
   }
   $('#mgrPeBranchError').hidden = true;
@@ -222,7 +241,7 @@ function submitProjectNew() {
   var me = mgrCurrentPersonId();
   var project = {
     id: id, name: name, desc: goal || name + '（管理板块创建）', goal: goal,
-    instruction: $('#mgrPeInstruction').value.trim(),
+    instruction: dev ? '' : $('#mgrPeInstruction').value.trim(),
     dot: ['blue', 'orange', 'green'][mgrProjects().length % 3],
     containsRd: dev, space: 'manage',
     defaultTeam: dev ? teamId : '', teamIds: dev && teamId ? [teamId] : [],

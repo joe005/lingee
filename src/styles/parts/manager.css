@@ -2880,6 +2880,21 @@
   margin-bottom: 8px;
   border-bottom: 1px solid var(--divider);
 }
+.mgr-scope .mgr-pe-subtab[hidden] {
+  display: none;
+}
+.mgr-scope .mgr-pe-subtabs--plain {
+  border-bottom: none;
+  margin-bottom: 8px;
+}
+.mgr-scope .mgr-pe-subtabs--plain .mgr-pe-subtab {
+  padding: 0;
+  margin-bottom: 0;
+  border: none;
+  color: var(--text);
+  font-weight: 400;
+  cursor: default;
+}
 .mgr-scope .mgr-pe-subtab {
   border: none;
   background: none;
@@ -2900,11 +2915,6 @@
   outline: 2px solid var(--border-focus);
   outline-offset: 1px;
 }
-.mgr-scope .mgr-pe-rd-field {
-  border: 1px solid var(--divider);
-  border-radius: 10px;
-  padding: 12px;
-}
 .mgr-scope .mgr-projedit-modal {
   border-radius: 20px;
 }
@@ -2920,18 +2930,6 @@
 .mgr-scope .mgr-pe-field select:focus-visible {
   outline: none;
   border-color: var(--brand);
-}
-.mgr-scope .mgr-pe-dev-head {
-  color: var(--text);
-  font-size: 12.5px;
-  font-weight: 600;
-  margin-bottom: 10px;
-}
-.mgr-scope .mgr-pe-dev-head small {
-  color: var(--text-label);
-  font-weight: 400;
-  margin-left: 6px;
-  font-size: 11.5px;
 }
 
 /* ---------- 项目详情「···」菜单 ---------- */
@@ -5375,4 +5373,46 @@
 #view-manager .mgr-tk-status .mgr-tag {
   border-radius: 4px;
   font-size: 12px;
+}
+
+/* 新建项目分支选择复用新建任务下拉组件 */
+#mgrProjEditOverlay .mgr-repo-branch .niu-custom-select-source {
+  display: none;
+}
+#mgrProjEditOverlay .mgr-repo-branch .niu-select-trigger {
+  box-sizing: border-box;
+  width: 100%;
+  height: 36px;
+  min-height: 36px;
+  gap: 8px;
+  padding: 0 12px 0 32px;
+  border: 1px solid var(--border-hover);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 400;
+  box-shadow: none;
+}
+#mgrProjEditOverlay .mgr-repo-branch .niu-select-trigger > span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#mgrProjEditOverlay .niu-select-caret {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  color: var(--text-secondary);
+}
+#mgrProjEditOverlay .mgr-repo-branch .niu-select-trigger:hover {
+  border-color: var(--border-focus);
+}
+#mgrProjEditOverlay .mgr-repo-branch .niu-select-trigger:focus-visible,
+#mgrProjEditOverlay .mgr-repo-branch .niu-select-trigger[aria-expanded=true] {
+  border-color: var(--brand);
+  outline: none;
+  box-shadow: none;
 }

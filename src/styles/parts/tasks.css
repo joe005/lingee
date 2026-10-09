@@ -1809,7 +1809,7 @@ td.niu-plan-empty{padding:18px 0;text-align:center;color:var(--text-soft);font-s
 .niu-person-popup input:hover{border-color:var(--border-hover)}
 .niu-person-popup input:focus{border-color:var(--border-focus);outline:none;box-shadow:none}
 .niu-person-popup button{min-height:32px;padding:8px 12px;gap:8px;border-radius:8px;color:var(--text);font-size:14px;font-weight:400}
-.niu-person-popup button:hover{background:var(--hover)}
+.niu-person-popup button:hover{background:var(--hover);color:var(--text)}
 .niu-person-popup button[aria-selected=true]{background:var(--brand-fill)}
 .niu-person-popup button:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}
 .niu-person-popup button>span:first-child{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

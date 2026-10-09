@@ -8,6 +8,7 @@ import { openAppDropdown } from './attach-app.js';
 
 /* ---------- Changelog / 更新日志 ---------- */
 var changelogData=[
+  {id:'88',date:'2026-10-09',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'优化',module:'表单与下拉',author:'Joe',body:'优化·表单与下拉：统一现行页面普通单选下拉组件与面板样式，精简管理新建项目表单并优化模板切换后的录入体验。'},
   {id:'87',date:'2026-10-09',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'智能体开发',author:'liangpingxian',body:'功能·智能体开发：新增设备运维（6.1 / 6.2）与销售履约演示场景，开发板块新会话可通过 agent-builder 调用 skill-builder 创建智能体并自动绑定技能，支持独立测试会话、提交审核后发布，设备巡检维修系统改建在金蝶 ERP 元数据上并由苍穹应用开发智能体团队交付；项目统一在 Manage 立项，协作开发移除项目页签。'},
   {id:'86',date:'2026-10-09',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'管理项目',author:'wuhc2023',body:'功能·管理项目：项目首页新增待你处理与项目搜索，邀请成员改为勾选人员并指定项目管理员或成员，项目成员改为成员与权限弹窗（含智能体装配与功能权限），新增项目设置页与活动流，任务详情抽屉和计划与任务页统一新样式并默认聚焦待处理。'},
   {id:'85',date:'2026-10-08',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'Joe',body:'功能·任务管理：完善任务新建与必填校验、统一下拉和状态标签，支持已有阻塞会话重试，将人工审核、阻塞与待回复任务归入待我处理，限制他人任务查看权限并记住看板与列表选择。'},
@@ -78,6 +79,7 @@ var changelogData=[
 ];
 // 每个数据条目对应的 avatar SVG 图标（与 Build_demo 的 lucide 图标一致）
 var changelogIcons={
+  '88':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V4.5M9 14h.01M15 14h.01"/></svg>',
   '87':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V4.5M9 14h.01M15 14h.01"/></svg>',
   '86':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 14 2 2 4-4"/></svg>',
   '85':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V4.5M9 14h.01M15 14h.01"/></svg>',

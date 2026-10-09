@@ -35,3 +35,5 @@
 @import './parts/work.css';
 @import './parts/work-chat.css';
 @import './parts/agent-demo.css';
+
+@import './parts/shared-select.css';

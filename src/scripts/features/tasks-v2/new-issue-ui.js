@@ -1,3 +1,4 @@
+import { initSelectDropdowns, niuSelectCaret } from '../../core/select-dropdown.js';
 /* 新版任务界面原型。复用当前任务数据；执行计划只在当前页面会话中保存。 */
 import { escapeHtml } from './ui-utils.js';
 import { TK_STATUSES, tkAddTask, tkCurrentUserId, tkGetTasks, tkPeopleInProject, tkProjectsForCurrentUser, tkUpdateTask, tkProjectById } from './data.js';
@@ -476,78 +477,10 @@ function savePlan(confirm) {
   toast(confirm ? '执行计划已确认' : '执行计划已保存', 'success');
 }
 
-const niuSelectCaret = '<svg class="niu-select-caret" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 7.5 5 5 5-5"/></svg>';
-const niuSelectCleanups = new Map();
 function initCreateSelects(selects = [byId('niuType'), byId('niuPriority')]) {
-  niuSelectCleanups.forEach((cleanup, source) => { if (!source.isConnected) { cleanup(); niuSelectCleanups.delete(source); } });
   const caret = byId('niuProjectTrigger').querySelector('.niu-person-chevron');
   if (caret) caret.outerHTML = niuSelectCaret;
-  selects.forEach(select => {
-    if (niuSelectCleanups.has(select)) return;
-    const id = select.id;
-    const controller = new AbortController();
-    const overlay = select.closest('#niuCreateOverlay, #niuPlanOverlay');
-    const trigger = document.createElement('button');
-    trigger.type = 'button';
-    trigger.className = 'niu-person-trigger niu-select-trigger';
-    trigger.setAttribute('aria-haspopup', 'listbox');
-    trigger.setAttribute('aria-expanded', 'false');
-    trigger.setAttribute('aria-label', select.getAttribute('aria-label') || (id === 'niuType' ? '选择任务类型' : '选择优先级'));
-    trigger.disabled = select.disabled;
-    const menu = document.createElement('div');
-    menu.className = 'niu-person-popup niu-select-popup';
-    menu.setAttribute('role', 'listbox');
-    menu.hidden = true;
-    select.classList.add('niu-custom-select-source');
-    select.after(trigger);
-    overlay.appendChild(menu);
-    const sync = () => {
-      trigger.innerHTML = '<span>' + escapeHtml(select.selectedOptions[0]?.textContent || '') + '</span>' + niuSelectCaret;
-      trigger.classList.toggle('is-placeholder', !select.value);
-      trigger.disabled = select.disabled;
-    };
-    const close = () => { menu.hidden = true; trigger.setAttribute('aria-expanded', 'false'); };
-    trigger.addEventListener('click', () => {
-      if (!menu.hidden) { close(); return; }
-      closeProjectPopup();
-      document.querySelectorAll('.niu-select-popup').forEach(el => { el.hidden = true; });
-      document.querySelectorAll('.niu-select-trigger').forEach(el => el.setAttribute('aria-expanded', 'false'));
-      menu.replaceChildren();
-      Array.from(select.options).filter(option => option.value).forEach(option => {
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.setAttribute('role', 'option');
-        button.setAttribute('aria-selected', String(option.selected));
-        button.innerHTML = '<span>' + escapeHtml(option.textContent) + '</span>' + (option.selected ? '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m5 12 4 4 10-10"/></svg>' : '');
-        button.addEventListener('click', () => { select.value = option.value; select.dispatchEvent(new Event('change', {bubbles:true})); close(); trigger.focus(); });
-        menu.appendChild(button);
-      });
-      menu.hidden = false;
-      trigger.setAttribute('aria-expanded', 'true');
-      const rect = trigger.getBoundingClientRect();
-      menu.style.width = rect.width + 'px';
-      menu.style.left = rect.left + 'px';
-      menu.style.top = Math.max(8, rect.bottom + menu.offsetHeight + 8 <= window.innerHeight ? rect.bottom + 4 : rect.top - menu.offsetHeight - 4) + 'px';
-      menu.querySelector('[aria-selected="true"]')?.focus();
-      if (!menu.contains(document.activeElement)) menu.querySelector('button')?.focus();
-    });
-    menu.addEventListener('keydown', event => {
-      const buttons = Array.from(menu.querySelectorAll('button'));
-      const index = buttons.indexOf(document.activeElement);
-      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') { event.preventDefault(); buttons[(index + (event.key === 'ArrowDown' ? 1 : -1) + buttons.length) % buttons.length]?.focus(); }
-      if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); close(); trigger.focus(); }
-      if (event.key === 'Tab') close();
-    });
-    document.addEventListener('click', event => { if (!trigger.contains(event.target) && !menu.contains(event.target)) close(); }, {signal:controller.signal});
-    const sourceObserver = new MutationObserver(sync);
-    sourceObserver.observe(select, {attributes:true, childList:true, subtree:true});
-    select.addEventListener('change', sync);
-    byId('niuProjectTrigger').addEventListener('click', close, {signal:controller.signal});
-    const overlayObserver = new MutationObserver(() => { if (!overlay.hidden) sync(); else close(); });
-    overlayObserver.observe(overlay, {attributes:true, attributeFilter:['hidden']});
-    niuSelectCleanups.set(select, () => { controller.abort(); sourceObserver.disconnect(); overlayObserver.disconnect(); menu.remove(); });
-    sync();
-  });
+  initSelectDropdowns(selects, closeProjectPopup);
 }
 
 export function initNewIssueUI(renderCallback, detailCallback) {
