@@ -65,8 +65,7 @@ function openTaskConversationWithTask(taskId, autoSend) {
   if (t) tkAddTaskSession(t, 'start', t.executionStageId || null);
   closeDrawer();
   if (t && autoSend) {
-    var project = tkProjectById(t.project);
-    var teamId = t.teamId || (project && project.defaultTeam);
+    var teamId = t.teamId;
     if (teamId) { set_activePick({kind:'team', id:teamId, auto:false}); renderExpertChips(); }
     setComposerTaskReference(t.id);
     setNavActive('新会话');
@@ -75,8 +74,7 @@ function openTaskConversationWithTask(taskId, autoSend) {
   }
   openTaskConversation();
   if (!t) return;
-  var project = tkProjectById(t.project);
-  var teamId = t.teamId || (project && project.defaultTeam);
+  var teamId = t.teamId;
   if (teamId) { set_activePick({kind:'team', id:teamId, auto:false}); renderExpertChips(); }
   setComposerTaskReference(t.id);
   var tags = document.getElementById('ntTags');

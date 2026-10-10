@@ -134,7 +134,7 @@ export function openTaskModal(taskId, parentId) {
   els.tkFormPriority.value = 'medium';
   els.tkFormProject.insertAdjacentHTML('afterbegin','<option value="">请选择所属项目 *</option>');
   els.tkFormProject.value = pageState.projectListMode ? pageState.projectListProjectId : '';
-  set_activePick({kind:'team', id: tkProjectById(els.tkFormProject.value)?.defaultTeam || TEAMS[0]?.id || '', auto:false}); renderExpertChips();
+  set_activePick({kind:'team', id: TEAMS[0]?.id || '', auto:false}); renderExpertChips();
   refreshFormAssignees(tkCurrentUserId());
   els.tkFormDue.value = '';
   ['tkFormStatus','tkFormAssignee','tkFormDue'].forEach(function(fid){ var el=document.getElementById(fid); if(el) el.hidden=true; });
@@ -155,7 +155,7 @@ export function openTaskModal(taskId, parentId) {
     var parent = tkGetTasks().find(function (x) { return x.id === parentId; });
     if (parent) {
       els.tkFormProject.value = parent.project;
-      set_activePick({kind:'team', id: parent.teamId || tkProjectById(parent.project)?.defaultTeam || TEAMS[0]?.id || '', auto:false}); renderExpertChips();
+      set_activePick({kind:'team', id: parent.teamId || TEAMS[0]?.id || '', auto:false}); renderExpertChips();
       refreshFormAssignees(parent.assignee);
       els.tkFormPriority.value = parent.priority;
     }

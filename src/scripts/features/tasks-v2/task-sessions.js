@@ -31,9 +31,7 @@ function formatMinute(date) {
 function minutesAgo(minutes) { return formatMinute(new Date(Date.now() - minutes * 60000)); }
 function stageName(stageId, task) { return (task ? taskExecutionStages(task) : STAGES).find(function (stage) { return stage.id === stageId; })?.name || ''; }
 function taskAgentName(task) {
-  var project = tkProjectById(task.project);
-  var teamId = task.teamId || project?.defaultTeam;
-  return TEAMS.find(function (row) { return row.id === teamId; })?.name || '任务专家团';
+  return TEAMS.find(function (row) { return row.id === task.teamId; })?.name || '任务智能体团队';
 }
 function clip(text, size) {
   text = String(text || '');

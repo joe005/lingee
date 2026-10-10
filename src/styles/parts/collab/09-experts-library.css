@@ -104,7 +104,7 @@
 #view-collab #cv-experts .x-card .x-modes{flex:none;margin-top:8px}
 /* 「我的智能体」卡片没有底部操作区（也不再展示可承担的工作），高度收紧；市场卡片仍留出安装按钮的位置 */
 #view-collab #cv-experts .apps-grid:not(.asset-cloud-grid) .x-card{height:var(--asset-expert-card-height-compact);min-height:var(--asset-expert-card-height-compact)}
-/* 专家团卡片：描述固定两行槽位，标签行在各卡片上对齐；底部操作区（自建团队）贴底 */
+/* 智能体团队卡片：描述固定两行槽位，标签行在各卡片上对齐；底部操作区（自建团队）贴底 */
 #view-collab #cv-teams .x-card .card-top{flex:none}
 #view-collab #cv-teams .x-card .card-desc{flex:0 0 42px;min-height:0;-webkit-line-clamp:2;margin:10px 0 8px}
 #view-collab #cv-teams .x-card .card-tags{flex:none;margin-top:0}
@@ -115,5 +115,5 @@
 #view-collab #cv-experts .x-card .card-title{display:block;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #view-collab #cv-experts .x-card .card-title-row .asset-source-badge,#view-collab #cv-experts .x-card .platform-client-badge{flex:none;white-space:nowrap;margin-left:0}
 
-/* 智能体与专家团卡片名称与管理端共用字号。 */
+/* 智能体与智能体团队卡片名称与管理端共用字号。 */
 #view-collab #cv-experts .x-card .card-title,#view-collab #cv-teams .x-card .card-title{font-size:var(--asset-card-title-size)}

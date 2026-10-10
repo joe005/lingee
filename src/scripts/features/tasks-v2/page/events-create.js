@@ -50,7 +50,6 @@ export function bindCreateEvents() {
   });
   els.tkFormProject.addEventListener('change', function () {
     refreshFormAssignees(tkCurrentUserId());
-    set_activePick({kind:'team', id: tkProjectById(els.tkFormProject.value)?.defaultTeam || TEAMS[0]?.id || '', auto:false}); renderExpertChips();
   });
   var moreDD = document.getElementById('tkMcMoreFields');
   if (moreDD) {

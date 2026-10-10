@@ -96,7 +96,7 @@ export function renderCard(t, opts) {
   var stateBadge = ['in_review','blocked'].includes(t.status) || cardState.kind === 'question'
     ? '<span class="tk-card-status" data-kind="' + cardState.kind + '">' + escapeHtml(cardState.badge) + '</span>' : '';
   var cardAction = isBacklog ? '<button type="button" class="tk-card-action tk-card-action--primary" data-card-play="' + t.id + '"' + (tkCanStartTask(t) ? '' : ' aria-disabled="true" title="仅当前阶段处理人可开始"') + '>开始</button>'
-    : t.status === 'in_review' ? '<button type="button" class="tk-card-action tk-card-action--primary" data-card-review="' + t.id + '">确认</button>'
+    : t.status === 'in_review' ? '<button type="button" class="tk-card-action tk-card-action--primary" data-card-review="' + t.id + '">查看产物</button>'
     : t.status === 'blocked' && tkCurrentStageHandlerId(t) === tkCurrentUserId() ? '<button type="button" class="tk-card-action tk-card-action--primary" data-card-retry="' + t.id + '">重试</button>'
     : needsReply ? '<button type="button" class="tk-card-action" data-card-session="' + t.id + '">回复</button>' : '';
   return '<div class="tk-card' + sel + extraCls + '" draggable="true" data-task-id="' + t.id + '">'

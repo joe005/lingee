@@ -397,7 +397,7 @@ function renderCard(t, opts) {
   var childBadge = hasChildren ? '<span class="tk-card-child-count"' + (isCollapsed ? '' : ' style="visibility:hidden"') + '>' + childCount + '</span>' : '';
   var extraCls = (depth ? ' tk-card--child' : '') + (hasChildren ? ' tk-card--parent' : '');
   var project = tkProjectById(t.project);
-  var team = (function(){ var tid = t.teamId || (project && project.defaultTeam); return TEAMS.find(function(tm){ return tm.id === tid; }); })();
+  var team = (function(){ var tid = t.teamId; return TEAMS.find(function(tm){ return tm.id === tid; }); })();
   var isBacklog = t.status === 'backlog';
   var teamAvatarHtml, footExtraHtml;
   if (isBacklog) {

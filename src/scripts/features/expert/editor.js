@@ -22,7 +22,7 @@ function deleteMyExpert(id){
   var e=EX[id]; if(!e||!e.mine||layerOf('expert',e)!=='personal') return;
   var used=TEAMS.filter(function(t){ return t.members.indexOf(id)>=0; });
   var msg='删除专家「'+e.name+'」？此操作不可撤销。';
-  if(used.length) msg+='\n他还在 '+used.length+' 个专家团里，删除后会一并移出。';
+  if(used.length) msg+='\n他还在 '+used.length+' 个智能体团队里，删除后会一并移出。';
   if(!window.confirm(msg)) return;
   set_MY_EXPERTS(MY_EXPERTS.filter(function(x){ return x.id!==id; }));
   rebuildExperts();
@@ -64,7 +64,7 @@ function populateExpertEditor(id){
        comp:e.comp.slice(),cmds:e.cmds.length?e.cmds.map(function(c){return c.slice()}):[['','']],
        kn:(e.kn||[]).slice(),knOff:(e.knOff||[]).slice(),knDocOff:(e.knDocOff||[]).slice(),
        knUp:(e.knUp||[]).map(function(f){return {n:f.n,t:f.t,up:f.up,by:f.by}})};
-  $('#expertEditTitle').textContent = '编辑专家';
+  $('#expertEditTitle').textContent = '编辑智能体';
   $('#expertEditSub').textContent = id;
   setXeBadge(false);
   xeSkillKw=''; $('#xeSkillSearch').value='';
@@ -150,7 +150,7 @@ export function initExpertEditor() {
       toast('已还原为上次保存的内容','success');
     });
     $('#xeCallBtn').addEventListener('click',function(){
-      if(!xeEditingId){ toast('先保存这个专家，再对话','warning'); return; }
+      if(!xeEditingId){ toast('先保存这个智能体，再对话','warning'); return; }
       hideAssetEditorPanel();
       summon('expert',xeEditingId);
     });
@@ -196,7 +196,7 @@ export function initExpertEditor() {
       d.name=$('#xeName').value.trim(); d.desc=$('#xeDesc').value.trim();
       d.tags=splitList($('#xeTags').value); d.comp=splitList($('#xeComp').value);
       if(!d.name){ setXeTab('base'); toast('请填写专家名称','warning'); $('#xeName').focus(); return; }
-      if(!d.modes.length){ setXeTab('base'); toast('至少勾选一项「可承担的工作」，否则他在专家团里领不到任务','warning'); return; }
+      if(!d.modes.length){ setXeTab('base'); toast('至少勾选一项「可承担的工作」，否则他在智能体团队里领不到任务','warning'); return; }
       var cmds=d.cmds.map(function(c){ return [String(c[0]||'').trim(),String(c[1]||'').trim()]; })
                      .filter(function(c){ return c[0]; });
       var index=MY_EXPERTS.findIndex(function(item){return item.id===xeEditingId;});

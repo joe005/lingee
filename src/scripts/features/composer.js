@@ -13,7 +13,7 @@ import { assetOwnerKey } from './expert/layers.js';
 import { hideAssetEditorPanel, renderAssetCreationPanel } from './expert/editor-panel.js';
 import { renderExpertGrid, set_teamLayer } from './expert/library.js';
 import { cvRenderExperts, set_cvExpertLayer } from './collab/experts.js';
-import { activePick, pickValid, set_activePick, teamById } from './expert/store.js';
+import { TEAMS, activePick, pickValid, set_activePick, teamById } from './expert/store.js';
 import { taskExecutorTeam } from './expert/task-team.js';
 import { set__prevWishW } from './sidebar.js';
 import { CV_MEMBERS, CV_PROJECTS } from './collab/data.js';
@@ -315,8 +315,7 @@ function renderChatSessions() {
 function createChatSession(title, taskId) {
   var task = tkGetTasks().find(function (row) { return row.id === taskId; });
   var projectId = task?.project || '';
-  var project = CV_PROJECTS.find(function (row) { return row.id === projectId; });
-  var teamId = task?.teamId || project?.defaultTeam || (activePick.kind === 'team' ? activePick.id : '');
+  var teamId = task?.teamId || (activePick.kind === 'team' ? activePick.id : '');
   var session = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), title: title, taskId: taskId, stageId: task?.executionStageId || '', projectId: projectId, teamId: teamId, ownerId: tkCurrentUserId(), exchanges: [] };
   if (projectId) collapsedChatProjects.delete(projectId);
   chatSessions.unshift(session);
@@ -374,9 +373,9 @@ function setTaskCreateChipLabel() {
 }
 function taskCreateStages(draft) {
   var project = CV_PROJECTS.find(function (row) { return row.id === draft.projectId; });
-  var team = teamById(project?.defaultTeam || '');
+  var team = teamById(draft.teamId || '');
   var people = tkPeopleInProject(draft.projectId);
-  var allStages = tbTeamStages(team, { type: draft.issueType, title: draft.title || draft.prompt });
+  var allStages = team ? tbTeamStages(team, { type: draft.issueType, title: draft.title || draft.prompt }) : [];
   var stages = draft.selectedStages
     ? allStages.filter(function (s) { return draft.selectedStages.includes(s.id); })
     : allStages;
@@ -401,7 +400,8 @@ function prepareTaskCreateDraft(draft, latestMessage) {
   var project = CV_PROJECTS.find(function (row) { return row.id === draft.projectId; });
   var explicitType = String(latestMessage || '').match(/(?:改为|改成|类型是|类型为)(需求|缺陷)/);
   draft.issueType = explicitType?.[1] || draft.issueType || (/缺陷|Bug|报错|故障|修复/i.test(draft.prompt) ? '缺陷' : '需求');
-  var allStages = tbTeamStages(teamById(project?.defaultTeam || ''), { type: draft.issueType, title: draft.title || draft.prompt });
+  var draftTeam = teamById(draft.teamId || '');
+  var allStages = draftTeam ? tbTeamStages(draftTeam, { type: draft.issueType, title: draft.title || draft.prompt }) : [];
   if (explicitType || !draft.selectedStages?.length) draft.selectedStages = inferDefaultStageIds(draft.prompt, draft.issueType, allStages);
   var instruction = String(latestMessage || draft.prompt);
   if (latestMessage) allStages.forEach(function (stage) {
@@ -552,10 +552,11 @@ function confirmTaskCreate(session) {
   var draft = session.taskCreate;
   if (draft.status !== 'confirm' || !tkProjectsForCurrentUser().some(function (row) { return row.id === draft.projectId; })) { toast('请先确认所属项目', 'warning'); return; }
   var stages = taskCreateStages(draft);
-  if (!stages.length) { toast('当前项目没有可用执行阶段', 'warning'); return; }
+  if (!teamById(draft.teamId || '')) { toast('请先选择智能体团队', 'warning'); $('#chatTaskTeamSelect').focus(); return; }
+  if (!stages.length) { toast('所选智能体团队没有可用执行阶段', 'warning'); return; }
   var owner = stages[0].assigneeId || '';
   var task = tkAddTask({ title:draft.title, desc:draft.description, issueType:draft.issueType, status:'backlog', priority:'medium', dueDate:'',
-    assignee:owner, createdBy:tkCurrentUserId(), project:draft.projectId, teamId:CV_PROJECTS.find(function (row) { return row.id === draft.projectId; })?.defaultTeam || '',
+    assignee:owner, createdBy:tkCurrentUserId(), project:draft.projectId, teamId:draft.teamId || '',
     labels:[], executionPlan:stages.map(function (stage) { return {...stage, id:crypto.randomUUID()}; }), planStatus:stages.every(function (stage) { return !!stage.assigneeId; }) ? 'confirmed' : 'draft' });
   session.taskId = task.id;
   session.title = task.title;
@@ -580,9 +581,9 @@ export function startTaskCreationChat(projectId, initialPrompt) {
   setComposerTaskReference(null);
   var selectedProjectId = projectId || '';
   var session = createChatSession('创建任务', null);
-  session.taskCreate = {projectId:selectedProjectId, prompt:'', title:'', description:'', issueType:'', selectedStages:null, autoReviewStages:[], reviewers:{}, revisions:[], status:'prompt'};
+  session.taskCreate = {projectId:selectedProjectId, teamId:'', prompt:'', title:'', description:'', issueType:'', selectedStages:null, autoReviewStages:[], reviewers:{}, revisions:[], status:'prompt'};
   session.projectId = selectedProjectId;
-  session.teamId = CV_PROJECTS.find(function (row) { return row.id === selectedProjectId; })?.defaultTeam || '';
+  session.teamId = '';
   if (selectedProjectId) collapsedChatProjects.delete(selectedProjectId);
   saveChatSessions();
   renderChatSessions();
@@ -615,7 +616,7 @@ function assetCreateQuestionHtml(question,interactive){
     +(interactive?'<small>也可以直接在下方输入回答</small>':'')+'</div>';
 }
 function builderSkillChip(){
-  return '<span class="builder-skill-mention" data-skill-mention="expert-builder" contenteditable="false" title="expert-builder · 创建专家和专家团"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="7" width="16" height="13" rx="4"/><path d="M12 3v4M8 12v2M16 12v2M9 17h6"/><circle cx="12" cy="2" r="1"/></svg><span>expert-builder</span></span>';
+  return '<span class="builder-skill-mention" data-skill-mention="expert-builder" contenteditable="false" title="expert-builder · 创建专家和智能体团队"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="7" width="16" height="13" rx="4"/><path d="M12 3v4M8 12v2M16 12v2M9 17h6"/><circle cx="12" cy="2" r="1"/></svg><span>expert-builder</span></span>';
 }
 function builderInputText(){
   var copy=chatInput.cloneNode(true);copy.querySelectorAll('[data-skill-mention]').forEach(function(chip){chip.remove();});return copy.textContent.trim();
@@ -624,7 +625,7 @@ function ensureBuilderMention(){
   if(!chatInput.querySelector('[data-skill-mention="expert-builder"]'))chatInput.insertAdjacentHTML('afterbegin',builderSkillChip()+' ');
 }
 function renderAssetCreateChat(session){
-  var draft=session.assetCreate,kindName=draft.kind==='team'?'专家团':'智能体';
+  var draft=session.assetCreate,kindName=draft.kind==='team'?'智能体团队':'智能体';
   if(['draft','scope'].includes(draft.status)){
     draft.question=assetClarifyingQuestion(draft);
     draft.status=draft.question?'question':'ready';
@@ -659,7 +660,7 @@ function handleAssetCreateMessage(session,text){
     if(result.ok){
       if(draft.kind==='expert'){set_cvExpertLayer('personal');cvRenderExperts();}
       else{set_teamLayer('personal');renderExpertGrid();}
-      toast('已创建'+(draft.kind==='team'?'专家团':'智能体'),'success');
+      toast('已创建'+(draft.kind==='team'?'智能体团队':'智能体'),'success');
     }else{draft.status='error';draft.error=result.message;}
   }
   saveChatSessions();renderChatSessions();renderAssetCreateChat(session);
@@ -672,7 +673,7 @@ export function startAssetCreationChat(kind){
   activeSessionTaskId=null;
   setComposerTaskReference(null);
   set_activePick({kind:'expert',id:'software-product-manager',auto:false});
-  var session=createChatSession(kind==='team'?'创建专家团':'创建智能体',null);
+  var session=createChatSession(kind==='team'?'创建智能体团队':'创建智能体',null);
   session.assetCreate=newAssetDraft(kind);
   session.ownerId=assetOwnerKey();
   saveChatSessions();
@@ -689,7 +690,7 @@ export function startAssetCreationChat(kind){
 export function startAssetEditChat(kind,id,name){
   if(!['expert','team'].includes(kind)||!id)return;
   closeTaskExceptionHistory();
-  var session=createChatSession('编辑'+(kind==='team'?'专家团':'智能体')+' · '+name,null);
+  var session=createChatSession('编辑'+(kind==='team'?'智能体团队':'智能体')+' · '+name,null);
   session.assetEdit={kind:kind,id:id,name:name};
   session.ownerId=assetOwnerKey();
   saveChatSessions();
@@ -990,6 +991,9 @@ function syncTaskCreateProjectPicker(){
   if(picker.hidden)return;
   select.innerHTML='<option value="">请选择项目</option>'+tkProjectsForCurrentUser().map(function(project){return '<option value="'+escapeHtml(project.id)+'">'+escapeHtml(project.name)+'</option>';}).join('');
   select.value=session.taskCreate.projectId||'';
+  var teamSelect=$('#chatTaskTeamSelect');
+  teamSelect.innerHTML='<option value="">请选择智能体团队</option>'+TEAMS.map(function(team){return '<option value="'+escapeHtml(team.id)+'">'+escapeHtml(team.name)+'</option>';}).join('');
+  teamSelect.value=session.taskCreate.teamId||'';
 }
 function renderChatTaskSide() {
   syncTaskCreateProjectPicker();
@@ -1382,7 +1386,7 @@ function resolveChatTeam(session, task){
   /* 管理板块立项的项目（如设备巡检维修系统建设）不在 CV_PROJECTS 里，按任务项目统一查找 */
   var project = tkProjectById(task?.project || session?.projectId);
   if (task?.expertId) return taskExecutorTeam(task, project);
-  return teamById(task?.teamId || '') || teamById(project?.defaultTeam || '') || teamById(session?.teamId || '');
+  return teamById(task?.teamId || '') || teamById(session?.teamId || '');
 }
 function teamAvatarHtml(team){
   var members = (team.members || []).map(function (id) { return EX[id]; }).filter(Boolean).slice(0, 3);
@@ -1806,7 +1810,7 @@ function chatDoSend(){
   var assetEditing=chatSessions.find(function(row){return row.id===activeSessionId&&row.assetEdit;});
   if(assetEditing){
     var edit=assetEditing.assetEdit;
-    var field=/^(?:把|将)?(?:智能体|专家团|数字员工|专家团|专家)?(?:的)?(名称|名字|简介|说明|描述)(?:改为|改成|修改为|设为|设置为|：|:|是)\s*[「“]?(.+?)[」”]?\s*$/.exec(t);
+    var field=/^(?:把|将)?(?:智能体|智能体团队|数字员工|专家团|专家)?(?:的)?(名称|名字|简介|说明|描述)(?:改为|改成|修改为|设为|设置为|：|:|是)\s*[「“]?(.+?)[」”]?\s*$/.exec(t);
     var target=field&&(field[1]==='名称'||field[1]==='名字'?(edit.kind==='team'?'teamName':'xeName'):(edit.kind==='team'?'teamDesc':'xeDesc'));
     var inputEl=target&&document.getElementById(target);
     if(inputEl){inputEl.value=field[2].replace(/^[「“]|[」”]$/g,'').trim();inputEl.dispatchEvent(new Event('input',{bubbles:true}));}
@@ -2116,7 +2120,15 @@ export function initComposer() {
     var projectId=event.target.value;
     if(!session||session.taskCreate.status==='done'||!tkProjectsForCurrentUser().some(function(project){return project.id===projectId;}))return;
     session.taskCreate.projectId=projectId;session.projectId=projectId;
-    session.teamId=CV_PROJECTS.find(function(project){return project.id===projectId;})?.defaultTeam||'';
+    if(session.taskCreate.prompt){activeResponseRun++;session.taskCreate.selectedStages=null;session.taskCreate.reviewers={};prepareTaskCreateDraft(session.taskCreate);session.taskCreate.status='confirm';}
+    saveChatSessions();renderChatSessions();renderTaskCreateChat(session);chatInput.focus();
+  });
+  /* 智能体团队跟任务走：在创建任务对话里单独选，换团队后按新团队的阶段重新生成草稿 */
+  $('#chatTaskTeamSelect').addEventListener('change',function(event){
+    var session=chatSessions.find(function(row){return row.id===activeSessionId&&row.taskCreate;});
+    var teamId=event.target.value;
+    if(!session||session.taskCreate.status==='done'||!teamById(teamId))return;
+    session.taskCreate.teamId=teamId;session.teamId=teamId;
     if(session.taskCreate.prompt){activeResponseRun++;session.taskCreate.selectedStages=null;session.taskCreate.reviewers={};prepareTaskCreateDraft(session.taskCreate);session.taskCreate.status='confirm';}
     saveChatSessions();renderChatSessions();renderTaskCreateChat(session);chatInput.focus();
   });
@@ -2125,7 +2137,7 @@ export function initComposer() {
     var edit=event.detail;
     chatSessions.filter(function(session){return session.assetEdit?.kind===edit.kind&&session.assetEdit?.id===edit.id;}).forEach(function(session){
       session.assetEdit.name=edit.name;
-      session.title='编辑'+(edit.kind==='team'?'专家团':'智能体')+' · '+edit.name;
+      session.title='编辑'+(edit.kind==='team'?'智能体团队':'智能体')+' · '+edit.name;
       if(session.id===activeSessionId)$('#chatTitle').textContent=session.title;
     });
     saveChatSessions();renderChatSessions();
@@ -2152,7 +2164,7 @@ export function initComposer() {
         if(result.ok){
           if(draft.kind==='expert'){set_cvExpertLayer('personal');cvRenderExperts();}
           else{set_teamLayer('personal');renderExpertGrid();}
-          toast('已创建'+(draft.kind==='team'?'专家团':'智能体'),'success');
+          toast('已创建'+(draft.kind==='team'?'智能体团队':'智能体'),'success');
         }else{draft.status='error';draft.error=result.message;}
         saveChatSessions();renderChatSessions();renderAssetCreateChat(assetSession);return;
       }

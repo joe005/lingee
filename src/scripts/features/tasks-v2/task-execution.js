@@ -7,7 +7,7 @@ const pendingStageReviews = new Map();
 export function taskExecutionStages(task) {
   return Array.isArray(task?.executionPlan) && task.executionPlan.length
     ? task.executionPlan.map(function (stage) { return {id:stage.id, name:stage.title || stage.workType, desc:stage.description || '', assigneeId:stage.assigneeId}; })
-    : deliveryStagesFor(task?.teamId || tkProjectById(task?.project)?.defaultTeam, task) || STAGES;
+    : deliveryStagesFor(task?.teamId, task) || STAGES;
 }
 
 function stagePlan(task, stageId, status) {
@@ -111,7 +111,7 @@ export function isAgentSubmitStep(task) {
   if (!task?.deliversAgent || task.status !== 'in_review') return false;
   var stages = taskExecutionStages(task);
   var index = stages.findIndex(function (stage) { return stage.id === task.executionStageId; });
-  var builtin = builtinDeliveryStages(task.teamId || tkProjectById(task.project)?.defaultTeam);
+  var builtin = builtinDeliveryStages(task.teamId);
   return index >= 0 && index === stages.length - (builtin ? 1 : 2);
 }
 export function approveAndSubmitAgent(task) {

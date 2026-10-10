@@ -11,7 +11,7 @@ import { pageState } from './page-state.js';
 import { animateListSubtasks, visibleListColumnCount } from './render.js';
 import { els, persistViewState, state, subtaskSectionExpanded } from './state.js';
 import { _collapsedActivityIds, _expandedActivityIds, _showOlderActivityIds, closeDrawer, openDrawer, openDrawerArtifacts } from './subtasks.js';
-import { chooseFirstAssignee, confirmDeleteTask, confirmTaskStageApproval, filterAssigneeOptions, openBoardTaskSession, retryBlockedTask, showCardMenu, startTaskExecution } from './utils.js';
+import { chooseFirstAssignee, confirmDeleteTask, filterAssigneeOptions, openBoardTaskSession, retryBlockedTask, showCardMenu, startTaskExecution } from './utils.js';
 /* 任务页 · 事件绑定 · 子任务、看板 / 列表点击与拖拽、列折叠、浮层关闭（拆分自 tasks-v2/index.js，逻辑未改） */
 export function bindBoardEvents() {
   /* 详情面板内：添加子任务 / 打开子任务 */
@@ -130,8 +130,7 @@ export function bindBoardEvents() {
     if (playBtnB) { startTaskExecution(parseInt(playBtnB.getAttribute('data-card-play'), 10)); return; }
     var reviewBtn = e.target.closest('[data-card-review]');
     if (reviewBtn) {
-      var taskToReview = tkGetTasks().find(function (task) { return task.id === Number(reviewBtn.getAttribute('data-card-review')); });
-      confirmTaskStageApproval(taskToReview, false);
+      openDrawerArtifacts(Number(reviewBtn.getAttribute('data-card-review')));
       return;
     }
     var sessionBtn = e.target.closest('[data-card-session]');

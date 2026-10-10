@@ -1,10 +1,10 @@
 import { BUG_STAGES, GENERAL_APP_STAGES, COSMIC_APP_STAGES } from './delivery-stages.js';
-/* 专家 / 专家团：内置数据、能力项字典、开工输入
+/* 专家 / 智能体团队：内置数据、能力项字典、开工输入
    拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
    由 main.js 按拆分前的原始顺序调用。 */
 
 /* ============================================================
-   专家 / 专家团
+   专家 / 智能体团队
    数据取自 lingee-build/packages/opencode/builtin-experts/
    技能名取自 packages/opencode/builtin-skills/
    ============================================================ */
@@ -66,7 +66,7 @@ function skillCatalog(){
 
 var EXPERTS=[
   {id:'software-team-lead',k:'lead',name:'软件团队负责人',role:'交付负责人',by:'Lingee 内置',
-   desc:'协调范围、分工、集成、风险与交付闭环，是专家团里唯一能开 kickoff 与做最终集成确认的角色。',
+   desc:'协调范围、分工、集成、风险与交付闭环，是智能体团队里唯一能开 kickoff 与做最终集成确认的角色。',
    tags:['交付管理','团队协调'],modes:['分析','设计','集成','评审','验证','恢复'],
    comp:['delivery.orchestration · principal','delivery.integration · advanced'],
    skills:['delivery-planner','integration-review'],
@@ -188,8 +188,8 @@ function setBuiltinExperts(items){ BUILTIN_EXPERTS=items; rebuildExperts(); }
 var AV_KEYS=['lead','pm','arch','eng','qa','cr','sec','ana','fe','ux','form','flow','rpt','plug','api'];
 var WORK_MODES=['分析','设计','实现','集成','评审','验证','恢复'];
 
-/* ---------- 专家团流程阶段 ----------
-   专家团沿这条流程推进交付：requirements / design / planning /
+/* ---------- 智能体团队流程阶段 ----------
+   智能体团队沿这条流程推进交付：requirements / design / planning /
    implementation / verification / delivery，各阶段由对应工作模式的成员认领。 */
 var STAGES=[
   {id:'requirements',name:'需求分析',desc:'明确目标、范围与验收条件'},
@@ -209,8 +209,8 @@ var STAGE_MODES={
   delivery:['集成'],
   agent:['实现']
 };
-/* 同一专家团可按问题类型采用不同交付路径；阶段 id 沿用任务执行层的能力映射。
-   功能开发 4 个阶段；缺陷修复只有开发实现、测试验证 2 个阶段。专家、技能与业务组件开发属于开发实现内的工作，不单列阶段。 */
+/* 同一智能体团队可按问题类型采用不同交付路径；阶段 id 沿用任务执行层的能力映射。
+   功能开发 4 个阶段；缺陷修复只有开发实现、测试验证 2 个阶段。智能体、技能与业务组件开发属于开发实现内的工作，不单列阶段。 */
 var FEATURE_STAGES=[
   {id:'requirements',name:'需求分析',desc:'明确目标、范围与验收条件'},
   {id:'design',name:'系统设计',desc:'设计系统边界、接口与数据流'},
@@ -232,7 +232,7 @@ function teamStageScenario(issue){
 }
 function stageById(id){ for(var i=0;i<STAGES.length;i++){ if(STAGES[i].id===id) return STAGES[i]; } return null; }
 
-/* 模型级别：专家运行时用哪个推理档位 */
+/* 模型级别：智能体运行时用哪个推理档位 */
 var MODEL_TIERS=[
   {id:'auto',  label:'自动', desc:'按任务复杂度自动选择'},
   {id:'fast',  label:'快速', desc:'响应最快，适合简单明确的任务'},
@@ -294,7 +294,7 @@ var ASK={
   '变更说明':{q:'这次改了什么？',
     o:['用软件工程师提交的变更说明','读本次提交自己判断','我列一下改动点']},
   '设计稿与规范':{q:'按哪份设计稿实现？',
-    o:['用界面设计专家出的设计说明','我贴 Figma 链接','没有设计稿，你按设计系统发挥']},
+    o:['用界面设计智能体出的设计说明','我贴 Figma 链接','没有设计稿，你按设计系统发挥']},
   '接口契约':{q:'对接哪个接口？',
     o:['我贴接口文档','用苍穹开放平台上已注册的接口','先帮我查一下有哪些可用']},
   '应用编码':{q:'在哪个苍穹应用里开发？',
@@ -328,7 +328,7 @@ function compChip(v){
 }
 
 /* ---------- 交付阶段 ↔ 能力项 ----------
-   每个阶段由「能力项」匹配的专家承担，而不是按工作模式笼统过滤：
+   每个阶段由「能力项」匹配的智能体承担，而不是按工作模式笼统过滤：
    阶段列出它看重的能力项（前缀匹配，越靠前越重要），按成员在这些能力上的等级打分，
    每个阶段最多 2 位，通常 1 位；第二位要和第一位差距不大才入选。 */
 var STAGE_EXPERT_MAX=2;
@@ -353,7 +353,7 @@ function stageScore(expert,stageId){
   });
   return total;
 }
-/* 阶段承担的专家：有人工绑定（explicit）就用绑定的（最多 2 位），否则按能力项匹配 */
+/* 阶段承担的智能体：有人工绑定（explicit）就用绑定的（最多 2 位），否则按能力项匹配 */
 function stageExperts(stageId,memberIds,explicit){
   var members=(memberIds||[]).filter(function(id){return EX[id];});
   var bound=(Array.isArray(explicit)?explicit:[]).filter(function(id){return members.indexOf(id)>=0;});
@@ -367,7 +367,7 @@ function stageExperts(stageId,memberIds,explicit){
   return out.slice(0,STAGE_EXPERT_MAX);
 }
 var PRESET_TEAMS=[
-  {id:'cosmic-app-dev',preset:true,name:'苍穹应用开发专家团',by:'Lingee 内置',
+  {id:'cosmic-app-dev',preset:true,name:'苍穹应用开发智能体团队',by:'Lingee 内置',
    desc:'面向苍穹应用完整交付，覆盖需求、表单、流程、报表、二开插件、接口、智能体开发与质量验证。',
    domains:['苍穹应用','表单','工作流','报表','集成'],
    leadId:'cosmic-team-lead',
@@ -376,7 +376,7 @@ var PRESET_TEAMS=[
    cmds:[['帮我在苍穹上做一套请假申请，从单据到审批','表单、流程、报表、接口一体化交付'],
          ['这个业务要在苍穹落地，帮我出方案并实现','先出需求规格，再按依赖拆分实现与验证'],
          ['苍穹单据、流程和报表都要改，帮我排一下','按依赖顺序编排配置、二开与验证任务']]},
-  {id:'general-app-dev',preset:true,name:'通用应用开发专家团',by:'Lingee 内置',
+  {id:'general-app-dev',preset:true,name:'通用应用开发智能体团队',by:'Lingee 内置',
    desc:'面向 Web 与通用业务应用，覆盖产品、架构、体验、前后端实现、测试与集成交付。',
    domains:['通用应用','Web','前端','产品设计'],
    leadId:'general-app-team-lead',

@@ -50,6 +50,11 @@
   font-size: 12.5px;
   font-weight: 600;
 }
+#view-manager .mgr-tn-field > label b {
+  margin-left: 2px;
+  color: var(--danger);
+  font-weight: 600;
+}
 #view-manager .mgr-tn-field input[type="text"],
 #view-manager .mgr-tn-field textarea,
 #view-manager .mgr-tn-field select {

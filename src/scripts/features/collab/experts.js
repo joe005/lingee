@@ -23,10 +23,10 @@ function cvExpertGroups(){
   ];
 }
 function cvBuildExpertCard(e){
-  /* 与专家团卡片统一用 app-card x-card 结构，更清爽 */
+  /* 与智能体团队卡片统一用 app-card x-card 结构，更清爽 */
   var tags=(e.tags||[]).length?e.tags:(e.skills||[]).map(function(id){return skillInfo(id).name});
   return '<div class="app-card x-card" data-cv-expert="'+e.id+'">'
-    +'<button type="button" class="x-call" data-cv-call="'+e.id+'" title="对话这位专家">对话</button>'
+    +'<button type="button" class="x-call" data-cv-call="'+e.id+'" title="对话这位智能体">对话</button>'
     +'<div class="card-top"><img class="x-av" src="'+xav(e.k)+'" alt="">'
     +'<div class="card-titles"><div class="card-title-row"><span class="card-title">'+xesc(e.name)+'</span>'
     +assetSourceBadge('expert',e)+'</div>'
@@ -46,11 +46,11 @@ function cvRenderExperts(){
   var groups=cvExpertGroups();
   /* 搜索把结果筛空时要说清楚。 */
   if(cvExpertKw.trim() && !groups.some(function(g){return g.list.length})){
-    box.innerHTML='<div class="x-empty">没有匹配「'+xesc(cvExpertKw.trim())+'」的专家</div>';
+    box.innerHTML='<div class="x-empty">没有匹配「'+xesc(cvExpertKw.trim())+'」的智能体</div>';
     return;
   }
   var cards=groups.flatMap(function(g){return g.list;}).map(cvBuildExpertCard).join('');
-  box.innerHTML=cards?'<div class="apps-grid">'+cards+'</div>':'<div class="x-empty">没有匹配的专家</div>';
+  box.innerHTML=cards?'<div class="apps-grid">'+cards+'</div>':'<div class="x-empty">没有匹配的智能体</div>';
 }
 
 /* cvExpertKw 由其它模块写回；import 绑定只读，所以走这个 setter */

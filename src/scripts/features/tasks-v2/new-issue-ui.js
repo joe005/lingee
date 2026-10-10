@@ -24,7 +24,7 @@ let personPopupStageId = '';
 let activePlanScope = 'existing';
 const byId = id => document.getElementById(id);
 const currentTask = () => activePlanScope === 'create'
-  ? { project: byId('niuProject').value, assignee: selectedOwnerId, title: byId('niuTitle').value, desc: byId('niuDescription').value, issueType: byId('niuType').value }
+  ? { project: byId('niuProject').value, assignee: selectedOwnerId, title: byId('niuTitle').value, desc: byId('niuDescription').value, issueType: byId('niuType').value, teamId: byId('niuTeam').value }
   : tkGetTasks().find(task => task.id === currentTaskId);
 const projectName = id => tkProjectsForCurrentUser().find(project => project.id === id)?.name || '项目';
 const personName = (projectId, id) => tkPeopleInProject(projectId).find(person => person.id === id)?.name || '待分配';
@@ -154,9 +154,9 @@ function setDefaultStageOwner(projectId) {
   selectedOwnerId = people.some(person => person.id === creatorId) ? creatorId : '';
 }
 
-/* 执行计划的执行阶段选项：项目对应专家团的每个交付阶段一项，逐个预置、不重复。 */
-const projectTeamOf = projectId => TEAMS.find(item => item.id === tkProjectById(projectId)?.defaultTeam) || null;
-const planStageOptions = projectId => tbTeamStages(projectTeamOf(projectId), currentTask()).map(stage => ({ name: stage.name, desc: stage.desc || '' }));
+/* 执行计划的执行阶段选项：任务所选智能体团队的每个交付阶段一项，逐个预置、不重复；项目不绑定团队，没选团队时没有阶段可选。 */
+const taskTeamOf = task => TEAMS.find(item => item.id === task?.teamId) || null;
+const planStageOptions = projectId => { const task = currentTask(); const team = taskTeamOf(task); return team ? tbTeamStages(team, task).map(stage => ({ name: stage.name, desc: stage.desc || '' })) : []; };
 
 /* 默认执行计划：按项目成员角色预选每个阶段的执行人；同角色多人先选第一人。 */
 function defaultPlanStages(projectId) {
@@ -233,6 +233,14 @@ function renderOwner(projectId) {
   byId('niuOwnerAvatar').textContent = selectedOwnerId ? name.slice(0, 1) : '人';
 }
 
+/* 团队下拉：全部智能体团队，选完团队才加载执行阶段；项目不绑定团队，每个任务自己选 */
+function fillTeamOptions(selectedId) {
+  const select = byId('niuTeam');
+  select.innerHTML = '<option value=""></option>' + TEAMS.map(team => '<option value="' + escapeHtml(team.id) + '">' + escapeHtml(team.name) + '</option>').join('');
+  select.value = TEAMS.some(team => team.id === selectedId) ? selectedId : '';
+  select.disabled = false;
+}
+
 export function openNewIssueCreate(projectId) {
   const projects = tkProjectsForCurrentUser();
   if (!projects.length) { toast('请先加入项目再创建任务', 'warning'); return; }
@@ -255,6 +263,7 @@ export function openNewIssueCreate(projectId) {
   byId('niuDescription').value = '';
   byId('niuType').value = '';
   byId('niuPriority').value = 'medium';
+  fillTeamOptions('');
   setDefaultStageOwner(selectedProjectId);
   draftStages = selectedProjectId ? defaultPlanStages(selectedProjectId) : [];
   initialPlanSnapshot = JSON.stringify(draftStages);
@@ -278,6 +287,7 @@ export function openNewIssueCopy(taskId) {
   byId('niuDescription').value = source.desc || '';
   byId('niuType').value = source.issueType || '';
   byId('niuPriority').value = source.priority || 'medium';
+  fillTeamOptions(source.teamId);
   if (tkPeopleInProject(source.project).some(person => person.id === source.assignee)) selectedOwnerId = source.assignee;
   copiedTaskFields = { labels: [...(source.labels || [])], dueDate: source.dueDate || '', module: source.module || '' };
   draftStages = (source.executionPlan || defaultPlanStages(source.project, selectedOwnerId)).map(stage => ({
@@ -307,6 +317,8 @@ export function openNewIssueEdit(taskId) {
   byId('niuDescription').value = task.desc || '';
   byId('niuType').value = task.issueType || '';
   byId('niuPriority').value = task.priority || 'medium';
+  fillTeamOptions(task.teamId);
+  byId('niuTeam').disabled = planLocked(); /* 任务启动后团队与执行计划一并锁定 */
   selectedOwnerId = task.assignee || '';
   byId('niuCreateSubmit').textContent = '保存修改';
   byId('niuCreateStageCount').textContent = String(draftStages.length);
@@ -325,6 +337,7 @@ function taskInfoValidationFields() {
     {input:byId('niuTitle'), control:byId('niuTitle'), valid:!!byId('niuTitle').value.trim()},
     {input:byId('niuDescription'), control:byId('niuDescription'), valid:!!byId('niuDescription').value.trim()},
     {input:byId('niuProject'), control:byId('niuProjectTrigger'), valid:tkProjectsForCurrentUser().some(item => item.id === byId('niuProject').value)},
+    {input:byId('niuTeam'), control:byId('niuTeam').nextElementSibling, valid:!!byId('niuTeam').value},
     {input:byId('niuType'), control:byId('niuType').nextElementSibling, valid:!!byId('niuType').value},
   ];
 }
@@ -358,6 +371,7 @@ function createTask() {
   const description = byId('niuDescription').value.trim();
   const project = byId('niuProject').value;
   const issueType = byId('niuType').value;
+  const teamId = byId('niuTeam').value;
   const owner = selectedOwnerId;
   if (!planLocked() && !draftStages.length) { toast('请至少添加一个执行阶段', 'warning'); selectCreateTab('plan'); byId('niuCreateAdd').focus(); return; }
   const originalProject = editingTaskId === null ? null : tkGetTasks().find(item => item.id === editingTaskId)?.project;
@@ -367,8 +381,7 @@ function createTask() {
     const task = tkGetTasks().find(item => item.id === editingTaskId);
     if (!task) { toast('未找到任务', 'warning'); closeOverlays(); return; }
     const patch = { title, desc: description, issueType,
-      priority: byId('niuPriority').value, assignee: owner, project };
-    if (project !== task.project) patch.teamId = tkProjectById(project)?.defaultTeam || '';
+      priority: byId('niuPriority').value, assignee: owner, project, teamId };
     if (!planLocked() && JSON.stringify(draftStages) !== initialPlanSnapshot) {
       patch.executionPlan = draftStages.map(stage => ({ ...stage }));
       patch.planStatus = 'draft';
@@ -383,7 +396,7 @@ function createTask() {
   tkAddTask({
     title, desc: description, issueType,
     status: 'backlog', priority: byId('niuPriority').value, dueDate: copiedTaskFields?.dueDate || '',
-    assignee: owner, createdBy: tkCurrentUserId(), project, teamId: tkProjectById(project)?.defaultTeam || '', labels: copiedTaskFields?.labels || [], module: copiedTaskFields?.module || '',
+    assignee: owner, createdBy: tkCurrentUserId(), project, teamId, labels: copiedTaskFields?.labels || [], module: copiedTaskFields?.module || '',
     executionPlan: draftStages.map(stage => ({ ...stage })),
     planStatus: 'draft',
   });
@@ -414,7 +427,7 @@ function renderPlan() {
       return '<tr class="niu-stage-row" data-niu-stage="' + escapeHtml(stage.id) + '"><td class="niu-stage-index">' + String(index + 1).padStart(2, '0') + '</td><td><select data-niu-work-type="' + escapeHtml(stage.id) + '" class="niu-stage-select" aria-label="第 ' + (index + 1) + ' 执行阶段"' + disabled + '>' + options + '</select></td><td class="niu-stage-review-cell">' + reviewMode + '</td><td>' + owner + '</td><td>' + remove + '</td></tr>';
     }
     return '<div class="niu-stage" data-niu-stage="' + escapeHtml(stage.id) + '"><span class="niu-stage-index">' + String(index + 1).padStart(2, '0') + '</span>' + fields + completion + remove + '</div>';
-  }).join('') : (activePlanScope === 'create' ? '<tr><td colspan="5" class="niu-plan-empty">还没有工作阶段。点击「＋ 添加节点」开始。</td></tr>' : '<div class="niu-plan-empty">还没有工作阶段。添加阶段后可直接在分录中编辑。</div>');
+  }).join('') : (activePlanScope === 'create' ? '<tr><td colspan="5" class="niu-plan-empty">' + (taskTeamOf(task) ? '还没有工作阶段。点击「＋ 添加节点」开始。' : '请先在任务信息里选择智能体团队，选完后加载执行阶段。') + '</td></tr>' : '<div class="niu-plan-empty">还没有工作阶段。添加阶段后可直接在分录中编辑。</div>');
   if (activePlanScope === 'create') {
     byId('niuCreateAdd').disabled = locked;
     byId('niuCreateStageCount').textContent = String(draftStages.length);
@@ -436,7 +449,7 @@ function renderPlan() {
   initCreateSelects(Array.from(byId('niuStageList').querySelectorAll('select')));
   const teamName = TEAMS.find(team => team.id === task.teamId)?.name || '未设置';
   const statusName = TK_STATUSES.find(status => status.id === task.status)?.name || '待办';
-  byId('niuPlanAside').innerHTML = '<dl><div><dt>状态</dt><dd>' + escapeHtml(statusName) + '</dd></div><div><dt>所属项目</dt><dd>' + escapeHtml(projectName(task.project)) + '</dd></div><div><dt>专家团</dt><dd>' + escapeHtml(teamName) + '</dd></div><div><dt>任务负责人</dt><dd>' + escapeHtml(personName(task.project, task.assignee)) + '</dd></div><div><dt>计划进度</dt><dd>' + completed + ' / ' + draftStages.length + '</dd></div></dl><div class="niu-progress"><span style="width:' + (draftStages.length ? completed / draftStages.length * 100 : 0) + '%"></span></div><p>工作类型决定每个阶段的职责。计划确认后再开始执行。</p>';
+  byId('niuPlanAside').innerHTML = '<dl><div><dt>状态</dt><dd>' + escapeHtml(statusName) + '</dd></div><div><dt>所属项目</dt><dd>' + escapeHtml(projectName(task.project)) + '</dd></div><div><dt>智能体团队</dt><dd>' + escapeHtml(teamName) + '</dd></div><div><dt>任务负责人</dt><dd>' + escapeHtml(personName(task.project, task.assignee)) + '</dd></div><div><dt>计划进度</dt><dd>' + completed + ' / ' + draftStages.length + '</dd></div></dl><div class="niu-progress"><span style="width:' + (draftStages.length ? completed / draftStages.length * 100 : 0) + '%"></span></div><p>工作类型决定每个阶段的职责。计划确认后再开始执行。</p>';
 }
 
 export function openNewIssuePlan(taskId) {
@@ -457,7 +470,7 @@ function addStage() {
   if (!task?.project) { toast('请先选择所属项目', 'warning'); selectCreateTab('info'); byId('niuProjectTrigger').focus(); return; }
   const used = new Set(draftStages.map(stage => stage.workType));
   const next = planStageOptions(task.project).find(stage => !used.has(stage.name));
-  if (!next) { toast('专家团的交付阶段已全部加入执行计划', 'warning'); return; }
+  if (!next) { toast('智能体团队的交付阶段已全部加入执行计划', 'warning'); return; }
   draftStages.push({ id: crypto.randomUUID(), workType: next.name, title: next.name, description: next.desc, assigneeId: defaultStageAssigneeId(tkProjectById(task.project), tkPeopleInProject(task.project), CV_MEMBERS, next.name), status: 'pending' });
   draftConfirmed = false;
   renderPlan();
@@ -477,7 +490,7 @@ function savePlan(confirm) {
   toast(confirm ? '执行计划已确认' : '执行计划已保存', 'success');
 }
 
-function initCreateSelects(selects = [byId('niuType'), byId('niuPriority')]) {
+function initCreateSelects(selects = [byId('niuTeam'), byId('niuType'), byId('niuPriority')]) {
   const caret = byId('niuProjectTrigger').querySelector('.niu-person-chevron');
   if (caret) caret.outerHTML = niuSelectCaret;
   initSelectDropdowns(selects, closeProjectPopup);
@@ -485,7 +498,7 @@ function initCreateSelects(selects = [byId('niuType'), byId('niuPriority')]) {
 
 export function initNewIssueUI(renderCallback, detailCallback) {
   initCreateSelects();
-  ['niuTitle','niuDescription','niuType'].forEach(id => {
+  ['niuTitle','niuDescription','niuTeam','niuType'].forEach(id => {
     byId(id).addEventListener('input', refreshTaskInfoErrors);
     byId(id).addEventListener('change', refreshTaskInfoErrors);
   });
@@ -503,6 +516,12 @@ export function initNewIssueUI(renderCallback, detailCallback) {
   byId('niuSmartBackHead').addEventListener('click', () => setCreateMode('manual'));
   byId('niuSmartSubmit').addEventListener('click', submitSmartCreate);
   byId('niuSmartProject').addEventListener('change', event => selectProject(event.target.value));
+  byId('niuTeam').addEventListener('change', () => {
+    if (activePlanScope !== 'create' || planLocked() || !selectedProjectId) return;
+    draftStages = defaultPlanStages(selectedProjectId);
+    draftConfirmed = false;
+    byId('niuCreateStageCount').textContent = String(draftStages.length);
+  });
   byId('niuType').addEventListener('change', () => {
     if (activePlanScope !== 'create' || planLocked() || !selectedProjectId) return;
     draftStages = defaultPlanStages(selectedProjectId);

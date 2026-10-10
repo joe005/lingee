@@ -83,15 +83,15 @@ export function initSelectDropdowns(selects, onOpen = () => {}) {
 /* 只接入现行页面列出的单选字段，不扫描归档容器或已有搜索/多选面板。 */
 export function initPageSelectDropdowns() {
   const selectors = [
-    '#mgrPeTeam', '#mgrRepoBase', '#mgrTnParent', '#mgrTnDir', '#mgrTnExec', '#mgrTnPre', '#mgrTnKpi',
+    '#mgrTnTeam', '#mgrTnFlow', '#mgrRepoBase', '#mgrTnParent', '#mgrTnDir', '#mgrTnExec', '#mgrTnPre', '#mgrTnKpi',
     '#view-manager select', '#mgrPdAssignee', '#mgrPdSort', '#mgrFdAction',
     '#niuSmartProject', '#tkViewModeSelect', '#tkFormPriority', '#tkFormProject',
     '#tkSaveViewVisibility', '#tkSaveViewScope', '#tkSaveViewLayout', '#tkImportProject',
     '#cv-nt-priority', '#cv-nt-project', '#cv-nt-team', '#cv-nt-group', '[data-nt-expert-assignee]',
-    '#cv-pe-team', '#cv-pe-status', '#cv-pe-priority', '[data-pe-member-role]',
+    '#cv-pe-status', '#cv-pe-priority', '[data-pe-member-role]',
     '[data-pj-field]', '[data-pj-artifact-type]', '[data-pj-member-role]', '[data-ps-workspace-role]',
     '#cv-audit-category', '#agentConfigPanel select',
-    '#chatTaskProjectSelect', '#inboxStatusFilter', '#inboxPriorityFilter', '#inboxActorFilter',
+    '#chatTaskProjectSelect', '#chatTaskTeamSelect', '#inboxStatusFilter', '#inboxPriorityFilter', '#inboxActorFilter',
     '#envProduct', '#envDataCenter', '#consentDc'
   ].join(',');
   const scan = () => {

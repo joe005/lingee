@@ -5,7 +5,7 @@ import { CV_MEMBERS, cvCurrentUserName, cvPersonById } from '../collab/data.js';
 import { tkBranchNameError } from '../tasks-v2/git-branch.js';
 import {
   mgrAddProject, mgrCanManageProject, mgrMemberRole, mgrRenameError, mgrRenameProject, mgrSetProjectRepo, mgrCurrentPersonId, mgrDeleteProject, mgrProjectById,
-  mgrProjectIssues, mgrProjectTasks, mgrProjects, mgrTeam, mgrTeams,
+  mgrProjectIssues, mgrProjectTasks, mgrProjects,
 } from './data.js';
 import { renderDetail, resetDetailTab } from './detail.js';
 import { closeTaskPanel, resetPlanState } from './plan.js';
@@ -19,7 +19,7 @@ var onRouteChange = function () {};
 
 var CARD_CHEVRON = '<svg class="mgr-mcard-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>';
 
-/* 新建项目先选类型：开发项目需要 Git 地址与专家团；通用项目再选模板 */
+/* 新建项目先选类型：开发项目需要 Git 地址（智能体团队在新建任务时再选）；通用项目再选模板 */
 var TEMPLATES = [
   { id: 'blank', name: '空白', goal: '' },
   { id: 'budget', name: '预算目标制定', goal: '围绕年度预算目标拆解编制任务，按里程碑推进并沉淀编制产物' },
@@ -170,7 +170,6 @@ function syncDevExtra() {
   syncSubtabs(!$('#mgrPeGoal').hidden);
   $('#mgrPeRepoError').hidden = true;
   $('#mgrPeBranchError').hidden = true;
-  $('#mgrPeTeamError').hidden = true;
 }
 function pickTemplate(id) {
   var changed = pickedTemplate !== id;
@@ -245,9 +244,6 @@ function openProjectNew() {
   $('#mgrPeBaseBranch').value = 'main';
   $('#mgrPeBaseBranchCustom').value = '';
   $('#mgrPeBaseBranchCustom').hidden = true;
-  $('#mgrPeTeam').innerHTML = '<option value="" disabled>请选择专家团</option>' + mgrTeams().filter(function (t) { return t.preset; }).map(function (t) {
-    return '<option value="' + mgrEsc(t.id) + '">' + mgrEsc(t.name) + '</option>';
-  }).join('');
   pickedMembers = [];
   renderMemberChips();
   initSelectDropdowns([$('#mgrPeBaseBranch')]);
@@ -271,17 +267,9 @@ function submitProjectNew() {
   var name = $('#mgrPeName').value.trim();
   var goal = $('#mgrPeGoal').value.trim();
   var repo = $('#mgrPeRepo').value.trim();
-  var teamId = $('#mgrPeTeam').value;
   var tpl = currentTemplate();
   var dev = isDevKind();
   if (!name) { toast('请填写项目名称', 'error'); $('#mgrPeName').focus(); return; }
-  if (dev && !mgrTeam(teamId)) {
-    $('#mgrPeTeamError').hidden = false;
-    toast('开发类项目必须选择专家团', 'error');
-    $('#mgrPeTeam').focus();
-    return;
-  }
-  $('#mgrPeTeamError').hidden = true;
   if (dev && !repo) {
     $('#mgrPeRepoError').hidden = false;
     toast('开发类项目必须填写 Git 地址', 'error');
@@ -307,7 +295,6 @@ function submitProjectNew() {
     instruction: dev ? '' : $('#mgrPeInstruction').value.trim(),
     dot: ['blue', 'orange', 'green'][mgrProjects().length % 3],
     containsRd: dev, space: 'manage',
-    defaultTeam: dev ? teamId : '', teamIds: dev && teamId ? [teamId] : [],
     status: 'planned', priority: '中', owner: cvCurrentUserName() || '未指定',
     repo: dev ? repo : '', baseBranch: dev ? baseBranch : '', code: repoCode(repo, id),
     start: '', end: '', milestones: [], members: (me ? [me] : []).concat(pickedMembers.map(function (x) { return x.id; }).filter(function (id) { return id !== me; })), memberRoles: {},
@@ -351,7 +338,6 @@ function initProjectNewModal() {
     if (e.target.id === 'mgrPeBaseBranchCustom') $('#mgrPeBranchError').hidden = true;
   });
   overlay.addEventListener('change', function (e) {
-    if (e.target.id === 'mgrPeTeam') $('#mgrPeTeamError').hidden = true;
     if (e.target.id === 'mgrPeBaseBranch') {
       var custom = $('#mgrPeBaseBranchCustom');
       custom.hidden = e.target.value !== '__custom';
