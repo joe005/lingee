@@ -150,6 +150,8 @@ try {
     return session && /^[a-z0-9]+$/i.test(session.id) && typeof session.title === 'string' && Array.isArray(session.exchanges);
   }).slice(0, 200).map(function (session) {
     session.exchanges = session.exchanges.filter(function (exchange) { return exchange && typeof exchange.prompt === 'string'; });
+    /* 曾短暂改称「专家 / 专家团」时存下的会话标题，统一回到「智能体 / 智能体团队」 */
+    session.title = session.title.replace(/专家团/g, '智能体团队').replace(/^(创建|编辑)专家/, '$1智能体');
     return session;
   });
 } catch (e) {}
@@ -422,9 +424,9 @@ function prepareTaskCreateDraft(draft, latestMessage) {
       || (people.some(function (person) { return person.id === tkCurrentUserId(); }) ? tkCurrentUserId() : people[0]?.id) || '';
   });
   if (!Array.isArray(draft.autoReviewStages)) draft.autoReviewStages = draft.autoReview ? allStages.map(function (stage) { return stage.name; }) : [];
-  if (/全部人工审核|不要自动审核|无需自动审核/.test(instruction)) draft.autoReviewStages = [];
-  else if (/自动审核/.test(instruction)) {
-    var reviewClauses = instruction.split(/[。！？；;，,\n]/).filter(function (part) { return part.includes('自动审核'); }).join(' ');
+  if (/全部人工审核|不要(?:自动审核|AI\s*验收)|无需(?:自动审核|AI\s*验收)/.test(instruction)) draft.autoReviewStages = [];
+  else if (/自动审核|AI\s*验收/.test(instruction)) {
+    var reviewClauses = instruction.split(/[。！？；;，,\n]/).filter(function (part) { return /自动审核|AI\s*验收/.test(part); }).join(' ');
     var namedStages = allStages.filter(function (stage) { return reviewClauses.includes(stage.name); });
     draft.autoReviewStages = namedStages.length ? namedStages.map(function (stage) { return stage.name; }) : allStages.map(function (stage) { return stage.name; });
   }
@@ -442,7 +444,7 @@ function taskCreateRecommendation(draft) {
     + stages.map(function (stage, index) {
       var person = people.find(function (row) { return row.id === stage.assigneeId; });
       return (index + 1) + '. **' + stage.workType + '**：' + (person?.name || '待分配')
-        + '执行，' + (stage.requiresConfirmation ? '人工审核' : '自动审核');
+        + '执行，' + (stage.requiresConfirmation ? '不开 AI 验收' : '开启 AI 验收');
     }).join('\n');
 }
 function appendTaskCreateAgent(html) {

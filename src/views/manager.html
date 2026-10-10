@@ -242,7 +242,7 @@
             <textarea id="mgrTnAccept" rows="2" placeholder="请输入定性验收标准，例如：交付材料完整，结论清晰，并经项目负责人确认。"></textarea>
           </div>
           <!-- 研发任务：执行阶段（可编辑） -->
-          <!-- 研发任务：执行计划（对齐开发板块新建任务的执行计划表：执行阶段 / 自动审核 / 执行人） -->
+          <!-- 研发任务：执行计划（对齐开发板块新建任务的执行计划表：执行阶段 / AI验收 / 执行人） -->
           <div class="mgr-tn-rd" id="mgrTnRdPane" hidden>
             <div class="mgr-tn-grid">
               <div class="mgr-tn-field" id="mgrTnTeamField">
@@ -257,8 +257,8 @@
             </div>
             <div class="mgr-tn-rd-head">执行计划 <small id="mgrTnPlanHint">先选智能体团队，再按它的交付路径选择阶段</small></div>
             <table class="mgr-tn-plan-table">
-              <colgroup><col class="mgr-tn-col-index"><col><col class="mgr-tn-col-review"><col class="mgr-tn-col-owner"><col class="mgr-tn-col-action"></colgroup>
-              <thead><tr><th>序号</th><th>执行阶段</th><th>自动审核</th><th>审核人</th><th><button type="button" class="mgr-tn-plan-add" id="mgrTnStageAdd">＋ 添加节点</button></th></tr></thead>
+              <colgroup><col class="mgr-tn-col-index"><col><col class="mgr-tn-col-expert"><col class="mgr-tn-col-review"><col class="mgr-tn-col-owner"><col class="mgr-tn-col-action"></colgroup>
+              <thead><tr><th>序号</th><th>执行阶段</th><th>智能体</th><th>AI验收</th><th>审核人</th><th><button type="button" class="mgr-tn-plan-add" id="mgrTnStageAdd">＋ 添加节点</button></th></tr></thead>
               <tbody id="mgrTnStages"></tbody>
             </table>
           </div>

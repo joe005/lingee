@@ -8,6 +8,7 @@ import {
 import { CV_MEMBERS } from '../collab/data.js';
 import { tbTeamStages } from '../collab/tb-core.js';
 import { tkCurrentStageHandlerId, tkUpdateTask } from '../tasks-v2/data.js';
+import { startTaskStage } from '../tasks-v2/task-execution.js';
 import { defaultStageAssigneeId } from '../tasks-v2/stage-owner.js';
 import { openTaskDetail } from '../tasks-v2/index.js';
 import { mgrDateGet, mgrDateSet } from './datepicker.js';
@@ -574,7 +575,7 @@ function renderTaskPanel() {
 /* ---------- 新建任务弹窗 ---------- */
 /* 研发任务的执行计划，对齐开发板块新建任务的执行计划表：
    执行阶段取自任务所选智能体团队的交付路径（项目不绑定团队，新建任务时选；智能体按阶段自动匹配），
-   每个节点设置自动审核与执行人；执行人按项目角色默认匹配。 */
+   每个节点展示执行的智能体，设置 AI 验收（默认关闭，可打开）与审核人；执行人按项目角色默认匹配。 */
 var draftStages = [];
 var draftTeamId = '';
 var planProject = null;
@@ -635,6 +636,13 @@ function resetDraftStages(project) {
   planProject = project;
   draftStages = stageOptions(project).map(function (o) { return stageFromOption(project, o); });
 }
+/* 每个阶段由哪些智能体执行：来自所选团队按阶段匹配的成员 */
+function stageExpertsHtml(st) {
+  var ids = (st.expertIds && st.expertIds.length ? st.expertIds : st.expertId ? [st.expertId] : []).filter(function (id) { return mgrExpert(id); });
+  return '<div class="mgr-tn-stage-experts">' + (ids.length
+    ? ids.map(function (id) { return '<span class="mgr-tn-stage-expert" title="由智能体执行">✦ ' + mgrEsc(mgrExpert(id).name) + '</span>'; }).join('')
+    : '<span class="mgr-tn-stage-expert mgr-tn-stage-expert--empty">未匹配智能体</span>') + '</div>';
+}
 function renderStages() {
   var body = $('#mgrTnStages');
   var project = planProject;
@@ -650,7 +658,7 @@ function renderStages() {
   });
   if (editLocked) $('#mgrTnPlanHint').textContent = '任务已启动，执行计划不能修改';
   if (!draftStages.length) {
-    body.innerHTML = '<tr><td colspan="5" class="mgr-tn-plan-empty">' + (team ? '还没有工作阶段。点击「＋ 添加节点」开始。' : '请先选择智能体团队，选完后加载执行阶段。') + '</td></tr>';
+    body.innerHTML = '<tr><td colspan="6" class="mgr-tn-plan-empty">' + (team ? '还没有工作阶段。点击「＋ 添加节点」开始。' : '请先选择智能体团队，选完后加载执行阶段。') + '</td></tr>';
     return;
   }
   body.innerHTML = draftStages.map(function (st, i) {
@@ -663,8 +671,8 @@ function renderStages() {
     }).join('');
     return '<tr class="mgr-tn-plan-row" data-mgr-tn-stage="' + mgrEsc(st.id) + '"><td>' + String(n).padStart(2, '0') + '</td>' +
       '<td><select data-mgr-tn-stage-type="' + mgrEsc(st.id) + '" aria-label="第 ' + n + ' 执行阶段">' + opts + '</select>' +
-      '</td>' +
-      '<td><label class="mgr-tn-review-switch"><input type="checkbox" data-mgr-tn-stage-review="' + mgrEsc(st.id) + '" aria-label="第 ' + n + ' 节点自动审核"' +
+      '</td><td>' + stageExpertsHtml(st) + '</td>' +
+      '<td><label class="mgr-tn-review-switch"><input type="checkbox" data-mgr-tn-stage-review="' + mgrEsc(st.id) + '" aria-label="第 ' + n + ' 节点 AI 验收"' +
       (st.requiresConfirmation === false ? ' checked' : '') + '><span aria-hidden="true"></span></label></td>' +
       '<td><select data-mgr-tn-stage-owner="' + mgrEsc(st.id) + '" aria-label="第 ' + n + ' 节点审核人">' + owners + '</select></td>' +
       '<td><button type="button" class="mgr-tn-stage-remove" data-mgr-tn-stage-remove="' + mgrEsc(st.id) + '" aria-label="移除第 ' + n + ' 节点">×</button></td></tr>';
@@ -759,8 +767,8 @@ function openTaskNew(parentId, opts) {
     b.classList.toggle('active', b.getAttribute('data-mgr-tntype') === (rdKind ? 'rd' : 'general'));
   });
   $('#mgrTaskNewOverlay .mgr-projedit-title').textContent = editTask ? '编辑任务' : rdKind ? '新建研发任务' : '新建任务';
-  /* 新建通用任务：「保存任务」+「保存并启动」；研发任务与编辑只有一个主按钮 */
-  var twoButtons = !editTask && !rdKind;
+  /* 新建任务（通用 / 研发）：「保存任务」+「保存并启动」；编辑只有一个主按钮 */
+  var twoButtons = !editTask;
   var saveBtn = $('#mgrTnSave');
   saveBtn.textContent = editTask ? '保存修改' : twoButtons ? '保存任务' : '保存';
   saveBtn.classList.toggle('sync-modal__btn--ghost', twoButtons);
@@ -900,6 +908,7 @@ function saveTaskNew(start) {
   if (!title) { toast('请输入任务名', 'error'); $('#mgrTnTitle').focus(); return; }
   if (editingKey) { saveTaskEdit(project, rd, title); return; }
   if (rd && !mgrTeam(draftTeamId)) { $('#mgrTnTeamError').hidden = false; toast('请选择智能体团队', 'error'); $('#mgrTnTeam').focus(); return; }
+  var autoStart = rd && start;
   var stages = rd ? collectStages() : [];
   if (rd && !stages.length) { toast('研发任务至少保留一个执行阶段', 'error'); return; }
   if (rd && stages.some(function (st) { return !st.assigneeId; })) { toast('请为每个执行阶段选择审核人', 'error'); return; }
@@ -945,6 +954,12 @@ function saveTaskNew(start) {
     if (start) setTaskStatus(task, 'in_progress');
     toast(start ? '任务已创建并启动' : '任务已创建', 'success');
     return;
+  }
+  /* 「保存并启动」：创建人正好是第一阶段审核人时直接进入执行 */
+  if (autoStart) {
+    var started = startTaskStage(task);
+    if (started.ok) { document.dispatchEvent(new Event('lingee:mgr-tasks-changed')); toast('研发任务已创建并开始执行', 'success'); return; }
+    toast(started.message || '暂时无法自动开始', 'warning');
   }
   toast('研发任务已分配给「' + mgrPersonName(assignee) + '」，待其在开发板块「任务」中开始执行', 'success');
 }

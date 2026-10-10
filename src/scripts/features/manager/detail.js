@@ -10,7 +10,7 @@ import { openMembers } from './members.js';
 import { openTaskPanel, planWorkspaceHtml } from './plan.js';
 import { rdTasks, rdWorkspaceHtml, resetRdState } from './rd-tasks.js';
 import { mgrEsc, mgrTag } from './utils.js';
-/* 管理 · 项目详情：标题与标签、计划与任务 / 研发任务 / 动态页签、右栏（议题 / 项目概览 / 知识库 / 项目智能体），
+/* 管理 · 项目详情：标题与标签、计划与任务 / 研发任务 / 动态页签、右栏（议题 / 项目概览 / 知识库），
    以及右栏打开的议题、知识库。 */
 
 var detailTab = 'plan';
@@ -62,7 +62,6 @@ function railHtml(p) {
   var issues = mgrProjectIssues(p.id);
   var pendingIssues = issues.filter(function (i) { return i.status === '待处理'; }).length;
   var docs = mgrProjectKnowledge(p.id);
-  var experts = (p.projectExperts || []).filter(mgrExpert);
   var now = new Date();
   var nextMs = (p.milestones || []).find(function (m) { return new Date(m.date + 'T23:59:59') >= now; });
   var members = p.members || [];
@@ -96,13 +95,7 @@ function railHtml(p) {
     (docs.slice(0, 1).map(function (d) { return '<span class="mgr-rail-doc" title="' + mgrEsc(d.title) + '">' + mgrEsc(d.title) + '</span>'; }).join('') ||
       '<span class="mgr-rail-doc mgr-rail-doc--empty">暂无归档产物</span>') +
     '<span class="mgr-rail-foot"><label class="mgr-perm-switch"><input type="checkbox" data-mgr-session-perm' + (mgrHasSessionPerm() ? ' checked' : '') +
-    '><span>会话权限（演示）</span></label></span></div>' +
-
-    '<div class="mgr-rail-card"><span class="mgr-rail-head"><span class="mgr-rail-title">' +
-    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>项目智能体</span></span>' +
-    (experts.length
-      ? '<span class="mgr-rail-doc">' + experts.length + ' 位：' + experts.slice(0, 3).map(function (id) { return mgrEsc(mgrExpert(id).name); }).join('、') + (experts.length > 3 ? ' 等' : '') + '</span>'
-      : '<span class="mgr-rail-doc mgr-rail-doc--empty">未配置项目智能体</span>') + '</div>';
+    '><span>会话权限（演示）</span></label></span></div>';
 }
 
 /* 分段页签的滑块：量出选中页签的位置与宽度写到 CSS 变量，样式里用 transform 过渡实现滑动；

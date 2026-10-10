@@ -259,6 +259,7 @@
   font-size: 12px;
 }
 #view-manager .mgr-tn-col-index { width: 40px; }
+#view-manager .mgr-tn-col-expert { width: 170px; }
 #view-manager .mgr-tn-col-review { width: 88px; }
 #view-manager .mgr-tn-col-owner { width: 148px; }
 #view-manager .mgr-tn-col-action { width: 88px; }
@@ -273,7 +274,7 @@
   white-space: nowrap;
 }
 #view-manager .mgr-tn-plan-table thead th:first-child,
-#view-manager .mgr-tn-plan-table thead th:nth-child(3),
+#view-manager .mgr-tn-plan-table thead th:nth-child(4),
 #view-manager .mgr-tn-plan-table thead th:last-child {
   text-align: center;
 }
@@ -295,9 +296,32 @@
   text-align: center;
   font-variant-numeric: tabular-nums;
 }
-#view-manager .mgr-tn-plan-row td:nth-child(3),
+#view-manager .mgr-tn-plan-row td:nth-child(4),
 #view-manager .mgr-tn-plan-row td:last-child {
   text-align: center;
+}
+/* 阶段下方展示执行该阶段的智能体 */
+#view-manager .mgr-tn-stage-experts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 0;
+}
+#view-manager .mgr-tn-stage-expert {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--brand-fill);
+  color: var(--brand);
+  font-size: 11px;
+  line-height: 1;
+  white-space: nowrap;
+}
+#view-manager .mgr-tn-stage-expert--empty {
+  background: var(--fill-1);
+  color: var(--text-secondary);
 }
 /* 执行阶段与执行人：扁平选择框，悬停 / 聚焦时显出边框 */
 #view-manager .mgr-tn-plan-table select {
@@ -352,7 +376,7 @@
   font-size: 13px;
   text-align: center;
 }
-/* 自动审核开关 */
+/* AI 验收开关 */
 #view-manager .mgr-tn-review-switch {
   position: relative;
   display: inline-flex;

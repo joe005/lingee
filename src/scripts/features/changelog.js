@@ -8,6 +8,7 @@ import { openAppDropdown } from './attach-app.js';
 
 /* ---------- Changelog / 更新日志 ---------- */
 var changelogData=[
+  {id:'90',date:'2026-10-11',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务协作',author:'wuhc2023',body:'功能·任务协作：新建任务时执行计划每个节点改为「AI 验收」开关（默认关闭），管理研发任务先选智能体团队再加载开发流程与阶段并展示各阶段智能体，开发新建任务的「任务类型」改为同样的「开发流程」，新建任务弹窗增加「保存并启动」，管理项目详情右栏去掉项目智能体。'},
   {id:'89',date:'2026-10-10',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'管理项目',author:'wuhc2023',body:'功能·管理项目：新建项目先选通用或开发项目类型（通用项目再选模板），项目设置新增功能页面（页签开关、排序与自定义页面），开发项目隐藏计划与任务页签，用户新建的空白项目可在项目首页显示，智能体团队交付路径调整为功能开发 4 个阶段、缺陷修复 2 个阶段并去掉方案咨询，智能体团队详情的「开发流程」改为纵向时间线、可在功能开发与缺陷修复间切换并标明各阶段由 AI 智能体执行，项目不再绑定智能体团队，改为新建任务时选团队（选完团队才加载开发流程与执行阶段，必填项标红 *），待审核任务卡片的「确认」改为「查看产物」。'},
   {id:'88',date:'2026-10-09',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务协作',author:'Joe',body:'功能·任务协作：统一现行页面普通单选下拉与新建入口，精简项目表单，新增会话执行阶段横向方案与右键切换，统一内置智能体团队交付阶段并同步示例及缓存迁移。'},
   {id:'87',date:'2026-10-09',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'智能体开发',author:'liangpingxian',body:'功能·智能体开发：新增设备运维（6.1 / 6.2）与销售履约演示场景，开发板块新会话可通过 agent-builder 调用 skill-builder 创建智能体并自动绑定技能，支持独立测试会话、提交审核后发布，设备巡检维修系统改建在金蝶 ERP 元数据上并由苍穹应用开发智能体团队交付；项目统一在 Manage 立项，协作开发移除项目页签。'},
@@ -80,6 +81,7 @@ var changelogData=[
 ];
 // 每个数据条目对应的 avatar SVG 图标（与 Build_demo 的 lucide 图标一致）
 var changelogIcons={
+  '90':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V4.5M9 14h.01M15 14h.01"/></svg>',
   '88':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V4.5M9 14h.01M15 14h.01"/></svg>',
   '87':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V4.5M9 14h.01M15 14h.01"/></svg>',
   '86':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 14 2 2 4-4"/></svg>',
