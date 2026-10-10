@@ -1,12 +1,13 @@
+import { builtinDeliveryStages } from '../expert/delivery-stages.js';
 import { STAGES } from '../expert/data.js';
-import { tkCurrentStageHandlerId, tkCurrentUserId, tkGetTasks, tkGetTaskArtifacts, tkUpdateTask, tkCanViewTask } from './data.js';
+import { tkCurrentStageHandlerId, tkCurrentUserId, tkGetTasks, tkGetTaskArtifacts, tkUpdateTask, tkCanViewTask, tkProjectById } from './data.js';
 
 const pendingStageReviews = new Map();
 
 export function taskExecutionStages(task) {
   return Array.isArray(task?.executionPlan) && task.executionPlan.length
     ? task.executionPlan.map(function (stage) { return {id:stage.id, name:stage.title || stage.workType, desc:stage.description || '', assigneeId:stage.assigneeId}; })
-    : STAGES;
+    : builtinDeliveryStages(task?.teamId || tkProjectById(task?.project)?.defaultTeam) || STAGES;
 }
 
 function stagePlan(task, stageId, status) {
@@ -72,7 +73,7 @@ export function submitTaskStage(task) {
     var templateId = /需求/.test(stage.name) ? 'requirements'
       : /设计|规划/.test(stage.name) ? 'technical'
       : /编码|实现|开发/.test(stage.name) ? 'implementation'
-      : /测试|验证/.test(stage.name) ? 'test'
+      : /测试|验证|验收/.test(stage.name) ? 'test'
       : /部署|交付|发布/.test(stage.name) ? 'delivery' : 'technical';
     var template = tkGetTaskArtifacts(task).find(function (artifact) { return artifact.id === templateId; });
     artifacts = artifacts.concat(template ? {
@@ -110,7 +111,8 @@ export function isAgentSubmitStep(task) {
   if (!task?.deliversAgent || task.status !== 'in_review') return false;
   var stages = taskExecutionStages(task);
   var index = stages.findIndex(function (stage) { return stage.id === task.executionStageId; });
-  return index >= 0 && index === stages.length - 2;
+  var builtin = builtinDeliveryStages(task.teamId || tkProjectById(task.project)?.defaultTeam);
+  return index >= 0 && index === stages.length - (builtin ? 1 : 2);
 }
 export function approveAndSubmitAgent(task) {
   if (!isAgentSubmitStep(task)) return {ok:false};

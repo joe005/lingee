@@ -245,7 +245,7 @@ function openProjectNew() {
   $('#mgrPeBaseBranch').value = 'main';
   $('#mgrPeBaseBranchCustom').value = '';
   $('#mgrPeBaseBranchCustom').hidden = true;
-  $('#mgrPeTeam').innerHTML = '<option value="">请选择智能体团队</option>' + mgrTeams().filter(function (t) { return t.preset; }).map(function (t) {
+  $('#mgrPeTeam').innerHTML = '<option value="" disabled>请选择智能体团队</option>' + mgrTeams().filter(function (t) { return t.preset; }).map(function (t) {
     return '<option value="' + mgrEsc(t.id) + '">' + mgrEsc(t.name) + '</option>';
   }).join('');
   pickedMembers = [];

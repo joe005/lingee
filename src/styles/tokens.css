@@ -8,6 +8,8 @@
   --brand: #495dff;
   --brand-hover: #3a5eff;
   --brand-active: #1a5cff;
+  --create-hover: #6d80ff;
+  --create-active: #3b47f2;
   --brand-fill: #eef3ff;
   --focus-ring: var(--brand);
 

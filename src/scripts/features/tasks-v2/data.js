@@ -1,3 +1,4 @@
+import { migrateDeliveryPlan } from './delivery-plan-migration.js';
 /* 任务管理 v2 —— 模拟数据与状态
    纯前端原型，所有数据本地维护。 */
 import { TK_EQUIPMENT_TASKS, equipmentArtifactDocs } from './equipment-demo.js';
@@ -173,12 +174,17 @@ export const TK_LABELS = ['需求', '缺陷'];
 /* 任务详情中的 AI 产物，内容随任务标题、描述与项目成员变化。 */
 /* 阶段产物按标准阶段（requirements / design / implementation …）生成；任务执行计划的节点 ID 可能是 s1…s6
    或自定义，这里按阶段名把产物归到对应的计划节点，详情里才能在该阶段下查看产物。 */
-var ARTIFACT_PHASE_BY_NAME = { '需求分析':'requirements', '方案设计':'design', '架构设计':'design', '编码实现':'implementation', '开发实现':'implementation', '测试验证':'verification', '部署交付':'delivery' };
+var ARTIFACT_PHASE_BY_NAME = { '需求确认':'requirements', '系统设计':'design', '苍穹应用开发':'implementation', '质量验收':'verification', '需求分析':'requirements', '方案设计':'design', '架构设计':'design', '编码实现':'implementation', '开发实现':'implementation', '测试验证':'verification', '部署交付':'delivery' };
 function tkArtifactStageId(task, phaseId) {
   var plan = task.executionPlan;
   if (!Array.isArray(plan) || !plan.length || plan.some(function (stage) { return stage.id === phaseId; })) return phaseId;
   var hit = plan.find(function (stage) { return ARTIFACT_PHASE_BY_NAME[stage.title || stage.workType] === phaseId || ARTIFACT_PHASE_BY_NAME[stage.workType] === phaseId; });
-  return hit ? hit.id : phaseId;
+  if (hit) return hit.id;
+  var team = taskDeliveryTeam(task);
+  if (team === 'cosmic-app-dev' && ['design','planning','agent'].includes(phaseId)) return 'implementation';
+  if (['cosmic-app-dev','general-app-dev'].includes(team) && phaseId === 'delivery') return 'verification';
+  if (team === 'general-app-dev' && ['planning','agent'].includes(phaseId)) return 'implementation';
+  return phaseId;
 }
 /* 应用开发（通用应用开发智能体团队）的「开发实现」产物是部署后的网站，可直接预览和操作。
    问卷类项目用问卷调研演示应用，工单类项目用工单管理系统演示应用；其他项目按业务主题（工单、采购、报销、库存…）生成演示网站，
@@ -766,9 +772,14 @@ function taskMinuteNow() {
   return now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) + ' '
     + pad(now.getHours()) + ':' + pad(now.getMinutes());
 }
+function taskDeliveryTeam(task) {
+  var project = CV_PROJECTS.find(function (row) { return row.id === task.project; });
+  return task.teamId || project?.defaultTeam || project?.teamIds?.[0];
+}
 function tkSeedTask(t) {
+  migrateDeliveryPlan(t, taskDeliveryTeam(t));
   var people = tkPeopleInProject(t.project).filter(function (person) { return TK_DEMO_PERSON_IDS.includes(person.id); });
-  return Object.assign({
+  var seeded = Object.assign({
     initialStatus:t.status,
     executionStageId:['in_progress','in_review','blocked'].includes(t.status)
       ? DEMO_TASK_STAGE[t.id] || DEMO_EXECUTION_STAGES[t.id % DEMO_EXECUTION_STAGES.length]
@@ -780,6 +791,8 @@ function tkSeedTask(t) {
     blockedRun: createDemoBlockedRun(t),
     completedRun: createDemoCompletedRun(t),
   }, t);
+  migrateDeliveryPlan(seeded, taskDeliveryTeam(seeded));
+  return seeded;
 }
 var _tasks = TK_TASKS.map(tkSeedTask);
 const TASKS_STORAGE_KEY = 'lingee_tasks_v2';
@@ -888,6 +901,27 @@ try {
     localStorage.setItem('lingee_tasks_general_app_5stage_v1', '1');
   }
 } catch (e) { /* 本地存储不可用时保留内存数据 */ }
+/* 新交付范围同步已有缓存；迁移阶段引用，不覆盖状态历史与用户内容。 */
+try {
+  if (!localStorage.getItem('lingee_delivery_stages_20261009_v2')) {
+    var sessions = JSON.parse(localStorage.getItem('lingee-chat-sessions-v1') || '[]');
+    _tasks.forEach(function (task) {
+      var map = migrateDeliveryPlan(task, taskDeliveryTeam(task));
+      sessions.filter(function (session) { return Number(session.taskId) === task.id; }).forEach(function (session) {
+        if (map[session.stageId]) session.stageId = map[session.stageId];
+        (session.stageEndMarkers || []).forEach(function (marker) { if (map[marker.stageId]) marker.stageId = map[marker.stageId]; });
+        if (session.stageEndMarkers && task.executionPlan?.length && Object.keys(map).length) {
+          session.stageEndMarkers = session.stageEndMarkers.filter(function (marker) {
+            return task.executionPlan.some(function (stage) { return stage.id === marker.stageId && ['done','review'].includes(stage.status); });
+          });
+        }
+      });
+    });
+    persistTasks();
+    localStorage.setItem('lingee-chat-sessions-v1', JSON.stringify(sessions));
+    localStorage.setItem('lingee_delivery_stages_20261009_v2', '1');
+  }
+} catch (e) { /* 存储不可用时不影响当前页面 */ }
 function persistTasks() {
   localStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(_tasks));
   if (typeof document !== 'undefined') document.dispatchEvent(new Event('lingee:tasks-changed'));

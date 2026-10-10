@@ -1,3 +1,4 @@
+import { GENERAL_APP_STAGES, COSMIC_APP_STAGES } from './delivery-stages.js';
 /* 专家 / 智能体团队：内置数据、能力项字典、开工输入
    拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
    由 main.js 按拆分前的原始顺序调用。 */
@@ -229,15 +230,7 @@ var TEAM_STAGE_SCENARIOS=[
     {id:'delivery',name:'方案交付',desc:'交付结论、依据与后续建议'}
   ]}
 ];
-/* 通用应用开发智能体团队的交付路径：5 个阶段（架构设计、开发实现沿用 design / implementation 的能力映射） */
-var GENERAL_APP_STAGES=[
-  {id:'requirements',name:'需求分析',desc:'明确目标、范围与验收条件'},
-  {id:'design',name:'架构设计',desc:'设计系统架构、模块边界、接口与数据模型'},
-  {id:'implementation',name:'开发实现',desc:'实现前后端功能并完成针对性自测'},
-  {id:'agent',name:'智能体开发',desc:'开发智能体、技能与业务组件，绑定知识与工具'},
-  {id:'verification',name:'测试验证',desc:'独立验证验收行为与回归影响'}
-];
-/* 功能开发场景的阶段：团队自带交付路径（如通用应用开发 5 阶段）时用团队的，否则用通用路径 */
+/* 内置团队使用固定交付范围，自建团队保留既有路径。 */
 function teamFeatureStages(team){ return team&&Array.isArray(team.stages)&&team.stages.length?team.stages:FEATURE_STAGES; }
 function teamStageScenario(issue){
   var type=String(issue?.type||issue?.issueType||''),title=String(issue?.title||'');
@@ -388,6 +381,7 @@ var PRESET_TEAMS=[
    desc:'面向苍穹应用完整交付，覆盖需求、表单、流程、报表、二开插件、接口、智能体开发与质量验证。',
    domains:['苍穹应用','表单','工作流','报表','集成'],
    leadId:'cosmic-team-lead',
+   stages:COSMIC_APP_STAGES,
    members:['cosmic-team-lead','cosmic-product-manager','cosmic-architect','cosmic-metadata-expert','cosmic-software-engineer','cosmic-api-engineer','kwc-frontend-engineer','cosmic-ui-designer','cosmic-qa-engineer','cosmic-code-reviewer','agent-development-expert'],
    cmds:[['帮我在苍穹上做一套请假申请，从单据到审批','表单、流程、报表、接口一体化交付'],
          ['这个业务要在苍穹落地，帮我出方案并实现','先出需求规格，再按依赖拆分实现与验证'],

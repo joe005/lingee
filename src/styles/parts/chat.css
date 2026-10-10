@@ -556,3 +556,116 @@
 #view-chat #chatExpertFaces,#view-chat #chatExpertDropdown .caret{flex-shrink:0}
 #view-chat #chatExpertLabel{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #view-chat .composer-bar>.spacer{min-width:0}
+
+/* 方案 B：无子卡片边框的横向步骤条，会话拖窄时局部滚动。 */
+#view-chat .chat-current-stage.is-horizontal {
+  background: var(--bg);
+  box-shadow: none;
+  container-type: inline-size;
+  container-name: chat-stage;
+  --stage-gap: clamp(8px, 2cqw, 16px);
+}
+#view-chat .chat-current-stage.is-horizontal .chat-current-stage-details {
+  padding: 16px;
+  max-height: none;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+#view-chat .is-horizontal .chat-current-stage-list {
+  display: flex;
+  gap: var(--stage-gap);
+  min-width: 0;
+}
+#view-chat .is-horizontal .chat-current-stage-row {
+  position: relative;
+  flex: 1 1 112px;
+  min-width: 72px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+#view-chat .is-horizontal .chat-current-stage-row:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 12px;
+  left: 36px;
+  width: calc(100% + var(--stage-gap) - 48px);
+  height: 1px;
+  background: var(--border-hover);
+}
+#view-chat .is-horizontal .chat-current-stage-index { width: 24px; height: 24px; font-size: 12px; margin-bottom: 12px; }
+#view-chat .is-horizontal .chat-current-stage-index::after { display: none; }
+#view-chat .chat-current-stage-row.is-pending:not(.is-current) .chat-current-stage-index {
+  background: var(--hover);
+  border-color: var(--hover);
+  color: var(--text-secondary);
+}
+#view-chat .is-horizontal .chat-current-stage-row-main { display: contents; }
+#view-chat .is-horizontal .chat-current-stage-row-main strong { order: 1; margin-bottom: 8px; }
+#view-chat .is-horizontal .chat-current-stage-status { order: 2; margin-bottom: 4px; }
+#view-chat .is-horizontal .chat-current-stage-row-main small { order: 3; }
+#view-chat .is-horizontal .chat-current-stage-row-main strong {
+  font-size: 14px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+#view-chat .is-horizontal .chat-current-stage-row-main small {
+  font-size: 12px;
+  color: var(--text-secondary);
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#view-chat .is-horizontal .chat-current-stage-handler-label { display: none; }
+#view-chat .is-horizontal .chat-current-stage-row.is-current strong { color: var(--brand); }
+@container chat-stage (max-width: 600px) {
+  #view-chat .is-horizontal .chat-current-stage-details { padding: 12px; }
+}
+/* 方案 B 始终平铺，不提供折叠入口。 */
+#view-chat .chat-current-stage.is-horizontal .chat-current-stage-toggle { display: none; }
+
+/* 阶段文字节奏：横向标题按实际内容共享行高。 */
+#view-chat .chat-current-stage-row-main strong { line-height: 20px; }
+#view-chat .chat-current-stage-row-main small,
+#view-chat .chat-current-stage-status { line-height: 18px; }
+#view-chat .is-horizontal .chat-current-stage-list {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(72px, 1fr);
+  grid-template-rows: 24px auto 18px 18px;
+  column-gap: var(--stage-gap);
+  row-gap: 8px;
+}
+#view-chat .is-horizontal .chat-current-stage-row {
+  display: grid;
+  grid-row: span 4;
+  grid-template-rows: subgrid;
+  row-gap: 8px;
+  align-items: start;
+}
+#view-chat .is-horizontal .chat-current-stage-index,
+#view-chat .is-horizontal .chat-current-stage-row-main strong,
+#view-chat .is-horizontal .chat-current-stage-status { margin-bottom: 0; }
+#view-chat .is-horizontal .chat-current-stage-row-main strong {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  max-height: 40px;
+}
+
+/* 横向步骤列共用中心线，连接线在两端节点圆圈外留出间距。 */
+#view-chat .is-horizontal .chat-current-stage-row {
+  justify-items: center;
+  text-align: center;
+}
+#view-chat .is-horizontal .chat-current-stage-row:not(:last-child)::after {
+  left: calc(50% + 24px);
+}

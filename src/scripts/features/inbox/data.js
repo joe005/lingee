@@ -31,7 +31,7 @@ function initialItems() {
   const pick = (status, index = 0) => byStatus(status)[index] || tasks[index] || tasks[0];
   const recipes = [
     ['in_review',0,'review_requested',0.3,'智能体团队已完成交付并提交审核，请核对执行结果、验收标准和关联产物。','agent'],
-    ['in_review',0,'agent_completed',1.2,'苍穹应用开发智能体团队完成编码实现与测试验证，执行报告已生成。','agent'],
+    ['in_review',0,'agent_completed',1.2,'苍穹应用开发智能体团队完成开发实现与测试验证，执行报告已生成。','agent'],
     ['blocked',0,'agent_blocked',1.8,'集成接口返回权限不足，智能体已暂停执行，等待负责人确认连接配置。','agent'],
     ['in_progress',0,'new_comment',2.4,'我已补充字段映射与筛选条件，请在本轮实现中一并核对。'],
     ['in_progress',1,'mentioned',3.1,'在任务讨论中提到了你：请确认本阶段的交付范围。'],

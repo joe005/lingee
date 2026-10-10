@@ -399,7 +399,7 @@ function planWorkspaceHtml(project) {
     opt('raw', '原始顺序', sortMode) + opt('due', '按截止时间', sortMode) + opt('progress', '按进展', sortMode) + '</select>' +
     '<label class="mgr-pd-search" for="mgrPdSearch"><input type="search" id="mgrPdSearch" value="' + mgrEsc(searchText) + '" placeholder="搜索编号或任务名" aria-label="搜索编号或任务名" autocomplete="off">' +
     '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg></label>' +
-    '<div class="mgr-pd-newtask"><button type="button" class="mgr-pd-newbtn" id="mgrPdTaskNew"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>新建任务</button></div></div>' +
+    '<div class="mgr-pd-newtask"><button type="button" class="lingee-create mgr-pd-newbtn" id="mgrPdTaskNew"><svg class="create-plus" width="10" height="10" viewBox="0 0 11 11" fill="none" aria-hidden="true"><path d="M5.25 0C5.66421 0 6 0.335786 6 0.75V4.5H9.75C10.1642 4.5 10.5 4.83579 10.5 5.25C10.5 5.66421 10.1642 6 9.75 6H6V9.75C6 10.1642 5.66421 10.5 5.25 10.5C4.83579 10.5 4.5 10.1642 4.5 9.75V6H0.75C0.335786 6 0 5.66421 0 5.25C0 4.83579 0.335786 4.5 0.75 4.5H4.5V0.75C4.5 0.335786 4.83579 0 5.25 0Z" fill="currentColor"/></svg>新建</button></div></div>' +
     '<div class="mgr-pd-table-wrap" id="mgrPdTaskArea" data-mgr-proj="' + mgrEsc(project.id) + '">' + body + '</div>' +
     '<p class="mgr-footnote" id="mgrPdPermNote"' + (canOpenSession ? ' hidden' : '') + '>当前演示角色无执行会话查看权限，仅展示任务元数据与执行状态。</p>';
 }

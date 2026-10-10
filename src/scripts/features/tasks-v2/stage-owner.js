@@ -1,4 +1,8 @@
 const STAGE_ROLES = {
+  '需求确认': 'product',
+  '系统设计': 'development',
+  '苍穹应用开发': 'development',
+  '质量验收': 'testing',
   '需求分析': 'product',
   '方案设计': 'development',
   '架构设计': 'development',
