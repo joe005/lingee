@@ -15,6 +15,7 @@ import { renderExpertGrid, set_teamLayer } from './expert/library.js';
 import { cvRenderExperts, set_cvExpertLayer } from './collab/experts.js';
 import { activePick, pickValid, set_activePick, teamById } from './expert/store.js';
 import { taskExecutorTeam } from './expert/task-team.js';
+import { stageExecutor } from './collab/delivery-activity.js';
 import { set__prevWishW } from './sidebar.js';
 import { CV_MEMBERS, CV_PROJECTS } from './collab/data.js';
 import { tbTeamStages } from './collab/tb-core.js';
@@ -76,7 +77,7 @@ export function openTaskExceptionHistory(task, onBack) {
   panel.className = 'task-exception-history';
   panel.innerHTML = '<div class="task-exception-intro"><span>历史会话 · ' + escapeHtml(String(task.code || '')) + '</span><strong>' + escapeHtml(String(task.title || '任务')) + '</strong><small>' + escapeHtml(String(run?.failedAt || task.createDate || '')) + '</small></div>'
     + '<div class="task-exception-message task-exception-user"><span>任务指令</span><p>' + escapeHtml(String(task.desc || task.title || '执行任务')) + '</p></div>'
-    + '<div class="task-exception-message task-exception-agent"><span>' + escapeHtml(String(run?.agentName || '执行专家')) + ' · 执行过程</span>'
+    + '<div class="task-exception-message task-exception-agent"><span>' + escapeHtml(String(run?.agentName || '执行智能体')) + ' · 执行过程</span>'
     + (steps.length ? '<ol>' + steps.map(function (step, index) { return '<li class="' + (index === steps.length - 1 ? 'is-error' : '') + '"><strong>' + escapeHtml(String(step[0] || '执行步骤')) + '</strong><p>' + escapeHtml(String(step[1] || '')) + '</p></li>'; }).join('') + '</ol>' : '<p>运行在当前阶段停止，未产生完整步骤记录。</p>')
     + '<div class="task-exception-error"><strong>执行异常</strong><p>' + escapeHtml(String(reason)) + '</p></div>'
     + (run?.next ? '<p class="task-exception-next">建议处理：' + escapeHtml(String(run.next)) + '</p>' : '') + '</div>';
@@ -114,9 +115,9 @@ export function openTaskSessionHistory(task, session, onBack, onContinue) {
     + session.messages.map(function (message) {
       return message.role === 'user'
         ? '<div class="task-exception-message task-exception-user"><span>我</span><p>' + escapeHtml(String(message.text || '')) + '</p></div>'
-        : '<div class="task-exception-message task-exception-agent"><span>' + escapeHtml(String(session.agentName || '执行专家')) + '</span><p>' + escapeHtml(String(message.text || '')) + '</p></div>';
+        : '<div class="task-exception-message task-exception-agent"><span>' + escapeHtml(String(session.agentName || '执行智能体')) + '</span><p>' + escapeHtml(String(message.text || '')) + '</p></div>';
     }).join('')
-    + (steps.length || session.error ? '<div class="task-exception-message task-exception-agent"><span>' + escapeHtml(String(session.agentName || '执行专家')) + ' · 执行过程</span>'
+    + (steps.length || session.error ? '<div class="task-exception-message task-exception-agent"><span>' + escapeHtml(String(session.agentName || '执行智能体')) + ' · 执行过程</span>'
       + (steps.length ? '<ol>' + steps.map(function (step, index) { return '<li class="' + (session.error && index === steps.length - 1 ? 'is-error' : '') + '"><strong>' + escapeHtml(String(step[0] || '执行步骤')) + '</strong><p>' + escapeHtml(String(step[1] || '')) + '</p></li>'; }).join('') + '</ol>' : '')
       + (session.error ? '<div class="task-exception-error"><strong>执行异常</strong><p>' + escapeHtml(String(session.error)) + '</p></div>' : '')
       + (session.next ? '<p class="task-exception-next">建议处理：' + escapeHtml(String(session.next)) + '</p>' : '') + '</div>' : '')
@@ -602,7 +603,7 @@ export function startTaskCreationChat(projectId, initialPrompt) {
 }
 function appendAssetCreateAgent(html,editing){
   var response=appendAssistantMessage(null);
-  response.innerHTML='<div class="chat-agent-identity"><img class="task-create-avatar" src="'+xav('pm')+'" alt=""><strong>'+(editing?'专家编辑助手':'专家创建智能体')+'</strong><span class="chat-agent-state">对话'+(editing?'编辑':'创建')+' · 原型</span></div>'+html;
+  response.innerHTML='<div class="chat-agent-identity"><img class="task-create-avatar" src="'+xav('pm')+'" alt=""><strong>'+(editing?'智能体编辑助手':'创建智能体')+'</strong><span class="chat-agent-state">对话'+(editing?'编辑':'创建')+' · 原型</span></div>'+html;
 }
 function assetCreateQuestionHtml(question,interactive){
   var selected=Array.isArray(question.selected)?question.selected:[];
@@ -615,7 +616,7 @@ function assetCreateQuestionHtml(question,interactive){
     +(interactive?'<small>也可以直接在下方输入回答</small>':'')+'</div>';
 }
 function builderSkillChip(){
-  return '<span class="builder-skill-mention" data-skill-mention="expert-builder" contenteditable="false" title="expert-builder · 创建专家和专家团"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="7" width="16" height="13" rx="4"/><path d="M12 3v4M8 12v2M16 12v2M9 17h6"/><circle cx="12" cy="2" r="1"/></svg><span>expert-builder</span></span>';
+  return '<span class="builder-skill-mention" data-skill-mention="expert-builder" contenteditable="false" title="expert-builder · 创建智能体和智能体团队"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="7" width="16" height="13" rx="4"/><path d="M12 3v4M8 12v2M16 12v2M9 17h6"/><circle cx="12" cy="2" r="1"/></svg><span>expert-builder</span></span>';
 }
 function builderInputText(){
   var copy=chatInput.cloneNode(true);copy.querySelectorAll('[data-skill-mention]').forEach(function(chip){chip.remove();});return copy.textContent.trim();
@@ -624,7 +625,7 @@ function ensureBuilderMention(){
   if(!chatInput.querySelector('[data-skill-mention="expert-builder"]'))chatInput.insertAdjacentHTML('afterbegin',builderSkillChip()+' ');
 }
 function renderAssetCreateChat(session){
-  var draft=session.assetCreate,kindName=draft.kind==='team'?'专家团':'智能体';
+  var draft=session.assetCreate,kindName=draft.kind==='team'?'智能体团队':'智能体';
   if(['draft','scope'].includes(draft.status)){
     draft.question=assetClarifyingQuestion(draft);
     draft.status=draft.question?'question':'ready';
@@ -644,7 +645,7 @@ function renderAssetCreateChat(session){
   chatInput.setAttribute('data-placeholder',draft.status==='done'?'创建已完成':draft.status==='question'?'回答上面的问题…':'继续描述创建要求…');
   if(draft.status==='prompt'&&!draft.messages.length)chatInput.textContent=assetStarterPrompt(draft.kind);
   if(draft.status!=='done')ensureBuilderMention();
-  document.getElementById('chatExpertLabel').textContent='专家创建智能体';
+  document.getElementById('chatExpertLabel').textContent='创建智能体';
   viewChat.classList.remove('preview-open');
   syncTogglePreviewBtn();
   hideAssetEditorPanel();
@@ -659,7 +660,7 @@ function handleAssetCreateMessage(session,text){
     if(result.ok){
       if(draft.kind==='expert'){set_cvExpertLayer('personal');cvRenderExperts();}
       else{set_teamLayer('personal');renderExpertGrid();}
-      toast('已创建'+(draft.kind==='team'?'专家团':'智能体'),'success');
+      toast('已创建'+(draft.kind==='team'?'智能体团队':'智能体'),'success');
     }else{draft.status='error';draft.error=result.message;}
   }
   saveChatSessions();renderChatSessions();renderAssetCreateChat(session);
@@ -672,7 +673,7 @@ export function startAssetCreationChat(kind){
   activeSessionTaskId=null;
   setComposerTaskReference(null);
   set_activePick({kind:'expert',id:'software-product-manager',auto:false});
-  var session=createChatSession(kind==='team'?'创建专家团':'创建智能体',null);
+  var session=createChatSession(kind==='team'?'创建智能体团队':'创建智能体',null);
   session.assetCreate=newAssetDraft(kind);
   session.ownerId=assetOwnerKey();
   saveChatSessions();
@@ -689,7 +690,7 @@ export function startAssetCreationChat(kind){
 export function startAssetEditChat(kind,id,name){
   if(!['expert','team'].includes(kind)||!id)return;
   closeTaskExceptionHistory();
-  var session=createChatSession('编辑'+(kind==='team'?'专家团':'智能体')+' · '+name,null);
+  var session=createChatSession('编辑'+(kind==='team'?'智能体团队':'智能体')+' · '+name,null);
   session.assetEdit={kind:kind,id:id,name:name};
   session.ownerId=assetOwnerKey();
   saveChatSessions();
@@ -767,7 +768,7 @@ function openChatSession(sessionId) {
     if (session.demoState !== 'question') session.exchanges.forEach(function (exchange, index) {
       if (!exchange) return;
       appendUserMessage(exchange.prompt);
-      var response = appendAssistantMessage(resolveChatTeam(session, task));
+      var response = appendTaskAssistantMessage(session, task);
       if (task) appendTaskReadingSummary(response, task);
       var timeline = document.createElement('div');
       timeline.className = 'work-steps';
@@ -790,7 +791,7 @@ function openChatSession(sessionId) {
     if (session.demoQuestion) {
       renderTaskQuestion(session, task);
       if (session.demoQuestion.answer && task) {
-        var continuation = appendAssistantMessage(resolveChatTeam(session, task));
+        var continuation = appendTaskAssistantMessage(session, task);
         simulateAIResponse(continuation, !!session.demoQuestion.continuationDone, task, session.demoQuestion.answer, function () {
           session.demoQuestion.continuationDone = true;
           session.demoArtifact = true;
@@ -814,7 +815,7 @@ function openChatSession(sessionId) {
   session.exchanges.forEach(function (exchange, index) {
     appendUserMessage(exchange.prompt);
     if (exchange.waiting) { appendAskCard(pendingInputs(exchange.prompt)); return; }
-    var response = appendAssistantMessage(resolveChatTeam(session, task));
+    var response = appendTaskAssistantMessage(session, task);
     if (exchange.failure) {
       var failedResult = createFinalResult(false);
       failedResult.querySelector('.markdown-content').innerHTML = renderMarkdown(exchange.response || '上次执行未完成。');
@@ -902,7 +903,7 @@ export function continueBlockedTaskConversation(task) {
   activeResponseRun++;
   var exchangeIndex = addSessionExchange(prompt);
   appendUserMessage(prompt);
-  var response = appendAssistantMessage(resolveChatTeam(session, task));
+  var response = appendTaskAssistantMessage(session, task);
   simulateAIResponse(response, false, task, prompt, function () { finishSessionExchange(session.id, exchangeIndex); });
   renderChatTaskSide();
   scrollChatBottom();
@@ -910,7 +911,7 @@ export function continueBlockedTaskConversation(task) {
 function renderTaskQuestion(session, task) {
   var question = session.demoQuestion;
   appendUserMessage(question.prompt || '执行「测试验证」：完成采购订单规则配置清单，整理说明并归档 evidence 证据。');
-  var response = appendAssistantMessage(resolveChatTeam(session, task));
+  var response = appendTaskAssistantMessage(session, task);
   if (task) appendTaskReadingSummary(response, task);
   var process = document.createElement('div');
   response.appendChild(process);
@@ -936,7 +937,7 @@ function renderTaskQuestion(session, task) {
   }
   if (question.answer) {
     appendUserMessage(question.answer);
-    var acknowledgement = appendAssistantMessage(resolveChatTeam(session, task));
+    var acknowledgement = appendTaskAssistantMessage(session, task);
     acknowledgement.textContent = question.acknowledgement || '收到，将按你的决定整理 evidence 归档和交付说明，继续完成当前阶段。';
   }
 }
@@ -1003,7 +1004,7 @@ function renderChatTaskSide() {
   expertDropdown.classList.remove('open');
   expertDropdown.querySelector('[data-chip]').setAttribute('aria-disabled', task || assetSession ? 'true' : 'false');
   renderExpertChips();
-  if(assetSession?.assetCreate)document.getElementById('chatExpertLabel').textContent='专家创建智能体';
+  if(assetSession?.assetCreate)document.getElementById('chatExpertLabel').textContent='创建智能体';
   if (task) {
     viewChat.classList.remove('preview-open');
     var preview = document.getElementById('chatPreviewSide');
@@ -1037,6 +1038,7 @@ function renderChatTaskSide() {
     }
     var stage = stages[stageIndex];
     var people = tkPeopleInProject(task.project);
+    var project = tkProjectById(task.project);
     document.getElementById('chatCurrentStageName').textContent = stage.name || '未命名阶段';
     document.getElementById('chatCurrentStageCount').textContent = (stageIndex + 1) + '/' + stages.length;
     document.getElementById('chatCurrentStageList').innerHTML = stages.map(function (row, index) {
@@ -1048,11 +1050,13 @@ function renderChatTaskSide() {
       else if (row.id === task.executionStageId && state !== 'done' && task.status === 'in_review') state = 'review';
       else if (row.id === task.executionStageId && task.status === 'in_progress' && state === 'pending') state = 'running';
       var label = state === 'done' ? '已完成' : state === 'running' ? '执行中' : state === 'review' ? '待审核' : state === 'blocked' ? '已阻塞' : index === stageIndex && task.status === 'backlog' ? '待开始' : '未开始';
-      var handlerId = row.id === task.executionStageId ? tkCurrentStageHandlerId(task) || row.assigneeId : row.assigneeId || (!task.executionPlan?.length ? task.assignee : '');
-      var handlerName = people.find(function (person) { return person.id === handlerId; })?.name || '待分配';
+      /* 每个阶段只展示执行的智能体，不出现人名，避免误读成处理人 */
+      var executor = stageExecutor(task, project, row);
       var indexContent = state === 'done' ? '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4.5 10 3.5 3.5 7.5-8"/></svg>' : index + 1;
       var isNextStage = row.id === task.executionStageId && task.status !== 'done' && state !== 'done';
-      return '<li class="chat-current-stage-row is-' + state + (isNextStage ? ' is-current' : '') + '"' + (isNextStage ? ' aria-current="step"' : '') + '><span class="chat-current-stage-index" aria-label="第' + (index + 1) + '阶段' + (state === 'done' ? '已完成' : '') + '">' + indexContent + '</span><span class="chat-current-stage-row-main"><strong>' + escapeHtml(row.name || '未命名阶段') + '</strong><small><span class="chat-current-stage-handler-label">处理人 </span>' + escapeHtml(handlerName) + '</small></span><span class="chat-current-stage-status">' + label + '</span></li>';
+      return '<li class="chat-current-stage-row is-' + state + (isNextStage ? ' is-current' : '') + '"' + (isNextStage ? ' aria-current="step"' : '') + '><span class="chat-current-stage-index" aria-label="第' + (index + 1) + '阶段' + (state === 'done' ? '已完成' : '') + '">' + indexContent + '</span><span class="chat-current-stage-row-main"><strong>' + escapeHtml(row.name || '未命名阶段') + '</strong>'
+        + '<span class="chat-current-stage-who"><small class="chat-current-stage-exec" title="执行智能体：' + escapeHtml(executor.name) + '"><span class="chat-ai-tag">✦ AI 执行</span><img src="' + xav(executor.k || executor.id) + '" alt=""><span>' + escapeHtml(executor.name) + '</span></small>'
+        + '</span></span><span class="chat-current-stage-status">' + label + '</span></li>';
     }).join('');
   } else { stagePanel.removeAttribute('data-task-id'); stagePanel.removeAttribute('data-session-id'); }
   /* 任务会话不提供历史版本入口，应用开发的 workspace 会话保留。 */
@@ -1389,6 +1393,30 @@ function teamAvatarHtml(team){
   return '<span class="chat-team-avatars" role="img" aria-label="' + xesc(team.name) + '成员头像">'
     + members.map(function (member) { return '<img src="' + xesc(xav(member.k)) + '" alt="" title="' + xesc(member.name) + '">'; }).join('') + '</span>';
 }
+/* 任务会话：当前阶段由哪个智能体执行（与执行阶段下拉、确认弹窗同一规则） */
+function taskStageAgent(task){
+  if (!task) return null;
+  var stages = taskExecutionStages(task);
+  var stage = stages.find(function (row) { return row.id === task.executionStageId; }) || stages[0];
+  if (!stage) return null;
+  return { stage: stage, agent: stageExecutor(task, tkProjectById(task.project), stage) };
+}
+/* 任务会话的回复头只显示正在执行的那个智能体，团队名作为补充，不再用一排头像 */
+function appendTaskAssistantMessage(session, task){
+  var team = resolveChatTeam(session, task);
+  var current = taskStageAgent(task);
+  if (!current) return appendAssistantMessage(team);
+  var msg=document.createElement('div');
+  msg.className='message assistant';
+  msg.innerHTML='<div class="message-content"><div class="chat-agent-identity chat-agent-identity--stage">'
+    + '<img class="chat-agent-avatar" src="' + xesc(xav(current.agent.k || current.agent.id)) + '" alt="">'
+    + '<strong>' + escapeHtml(current.agent.name) + '</strong>'
+    + '<span class="chat-ai-tag">✦ AI 执行中 · ' + escapeHtml(current.stage.name || '当前阶段') + '</span>'
+    + (team ? '<span class="chat-agent-team">' + escapeHtml(team.name) + '</span>' : '')
+    + '</div><div class="assistant-response"></div></div>';
+  messagesList.appendChild(msg);
+  return msg.querySelector('.assistant-response');
+}
 function appendAssistantMessage(team){
   var msg=document.createElement('div');
   msg.className='message assistant';
@@ -1636,8 +1664,16 @@ function appendTaskReadingSummary(responseEl, task) {
   var thinking = document.createElement('details');
   thinking.className = 'chat-task-thinking';
   thinking.open = true;
-  thinking.innerHTML = '<summary><span class="chat-task-thinking-mark" aria-hidden="true">✧</span><span>思考了 1 秒</span><span class="chat-task-thinking-toggle">收起</span></summary>'
-    + '<div class="chat-task-thinking-content"><strong>✧ 读取附件</strong><p>已读取「' + escapeHtml(task.title) + '」的任务描述与当前阶段资料，正在核对交付范围、依赖和验收要求。</p></div>';
+  var current = taskStageAgent(task);
+  var semantic = current ? stageSemantic(current.stage.name) || current.stage.id : '';
+  var skill = {requirements:'需求设计', design:'系统架构设计', planning:'实现计划', implementation:'苍穹元数据交付', verification:'验收测试', delivery:'交付发布'}[semantic] || '阶段执行';
+  var cosmic = resolveChatTeam(null, task)?.id === 'cosmic-app-dev';
+  /* 执行轨迹：让观众看到是智能体在调用技能和工具，而不是人在处理 */
+  var steps = [['读取附件', '已读取「' + task.title + '」的任务描述与当前阶段资料，核对交付范围、依赖和验收要求。'],
+    ['调用技能「' + skill + '」', (current ? current.agent.name : '智能体') + '按技能步骤执行「' + (current ? current.stage.name : '当前阶段') + '」。']];
+  if (cosmic) steps.push(['调用 MCP「苍穹元数据」', semantic === 'verification' ? '读取已生成的实体、表单和插件，生成并执行测试用例。' : '读取金蝶 ERP 中已有的实体、字段与权限规则。']);
+  thinking.innerHTML = '<summary><span class="chat-task-thinking-mark" aria-hidden="true">✧</span><span>执行过程 · ' + steps.length + ' 步</span><span class="chat-task-thinking-toggle">收起</span></summary>'
+    + '<div class="chat-task-thinking-content">' + steps.map(function (step) { return '<strong>✧ ' + escapeHtml(step[0]) + '</strong><p>' + escapeHtml(step[1]) + '</p>'; }).join('') + '</div>';
   thinking.addEventListener('toggle', function () { thinking.querySelector('.chat-task-thinking-toggle').textContent = thinking.open ? '收起' : '展开'; });
   responseEl.appendChild(thinking);
 }
@@ -1757,7 +1793,7 @@ function doSend(automatic){
     saveChatSessions();
     renderChatSessions();
   }else{
-    var responseEl=appendAssistantMessage(resolveChatTeam(session, linkedTask));
+    var responseEl=appendTaskAssistantMessage(session, linkedTask);
     simulateAIResponse(responseEl,false,linkedTask,t,function () { finishSessionExchange(session.id, exchangeIndex); });
   }
   chatInput.innerHTML='';
@@ -1806,7 +1842,7 @@ function chatDoSend(){
   var assetEditing=chatSessions.find(function(row){return row.id===activeSessionId&&row.assetEdit;});
   if(assetEditing){
     var edit=assetEditing.assetEdit;
-    var field=/^(?:把|将)?(?:智能体|专家团|数字员工|专家团|专家)?(?:的)?(名称|名字|简介|说明|描述)(?:改为|改成|修改为|设为|设置为|：|:|是)\s*[「“]?(.+?)[」”]?\s*$/.exec(t);
+    var field=/^(?:把|将)?(?:智能体|智能体团队|数字员工|智能体团队|智能体)?(?:的)?(名称|名字|简介|说明|描述)(?:改为|改成|修改为|设为|设置为|：|:|是)\s*[「“]?(.+?)[」”]?\s*$/.exec(t);
     var target=field&&(field[1]==='名称'||field[1]==='名字'?(edit.kind==='team'?'teamName':'xeName'):(edit.kind==='team'?'teamDesc':'xeDesc'));
     var inputEl=target&&document.getElementById(target);
     if(inputEl){inputEl.value=field[2].replace(/^[「“]|[」”]$/g,'').trim();inputEl.dispatchEvent(new Event('input',{bubbles:true}));}
@@ -1833,7 +1869,7 @@ function chatDoSend(){
   appendUserMessage(t);
   chatInput.innerHTML=''; refreshChatSend();
   var task = tkGetTasks().find(function (row) { return row.id === activeSessionTaskId; });
-  var responseEl=appendAssistantMessage(resolveChatTeam(session, task));
+  var responseEl=appendTaskAssistantMessage(session, task);
   activeResponseRun++;
   simulateAIResponse(responseEl,false,task,t,function () { finishSessionExchange(session.id, exchangeIndex); });
   chatInput.focus();
@@ -2125,7 +2161,7 @@ export function initComposer() {
     var edit=event.detail;
     chatSessions.filter(function(session){return session.assetEdit?.kind===edit.kind&&session.assetEdit?.id===edit.id;}).forEach(function(session){
       session.assetEdit.name=edit.name;
-      session.title='编辑'+(edit.kind==='team'?'专家团':'智能体')+' · '+edit.name;
+      session.title='编辑'+(edit.kind==='team'?'智能体团队':'智能体')+' · '+edit.name;
       if(session.id===activeSessionId)$('#chatTitle').textContent=session.title;
     });
     saveChatSessions();renderChatSessions();
@@ -2152,7 +2188,7 @@ export function initComposer() {
         if(result.ok){
           if(draft.kind==='expert'){set_cvExpertLayer('personal');cvRenderExperts();}
           else{set_teamLayer('personal');renderExpertGrid();}
-          toast('已创建'+(draft.kind==='team'?'专家团':'智能体'),'success');
+          toast('已创建'+(draft.kind==='team'?'智能体团队':'智能体'),'success');
         }else{draft.status='error';draft.error=result.message;}
         saveChatSessions();renderChatSessions();renderAssetCreateChat(assetSession);return;
       }

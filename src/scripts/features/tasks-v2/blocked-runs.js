@@ -23,7 +23,7 @@ export function createDemoBlockedRun(task) {
   var expert = EXPERTS.find(function (row) { return row.id === expertId; });
   return {
     agentName:expert?.name || team?.name || '任务智能体',
-    teamName:team?.name || '专家团',
+    teamName:team?.name || '智能体团队',
     failedAt:task.createDate + ' 14:12',
     duration:content.duration,
     reason:content.reason,

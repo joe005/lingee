@@ -32,10 +32,15 @@
   .chat-current-stage-index svg{width:14px;height:14px}
   .chat-current-stage-row.is-done .chat-current-stage-index{border-color:var(--brand-fill);background:var(--brand-fill);color:var(--brand)}
   .chat-current-stage-row.is-current .chat-current-stage-index{border-color:var(--brand);background:var(--brand);color:#fff}
-  .chat-current-stage-row-main{display:grid;grid-template-columns:minmax(0,118px) minmax(0,1fr);align-items:center;flex:1;gap:18px;min-width:0;white-space:nowrap}
+  .chat-current-stage-row-main{display:grid;grid-template-columns:minmax(0,1fr);align-items:center;flex:1;gap:4px;min-width:0;white-space:nowrap}
   .chat-current-stage-row-main strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);font-size:13px;font-weight:600}
   .chat-current-stage-row-main small{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);font-size:13px}
   .chat-current-stage-status{flex:none;color:var(--text-muted);font-size:12px}
+  /* 阶段第二行：「AI 执行」标签 + 执行智能体 */
+  .chat-current-stage-who{display:flex;align-items:center;gap:16px;min-width:0}
+  .chat-current-stage-exec{display:flex;align-items:center;gap:6px;min-width:0}
+  .chat-current-stage-exec img{flex:none;width:20px;height:20px;border-radius:50%}
+  .chat-current-stage-exec span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis}
   .chat-current-stage-row.is-done .chat-current-stage-status{color:var(--success)}
   .chat-current-stage-row.is-running .chat-current-stage-status{color:var(--brand)}
   .chat-current-stage-row.is-review .chat-current-stage-status{color:#a66713}
@@ -49,6 +54,11 @@
   .chat-agent-identity .chat-agent-state{color:var(--brand);font-size:12px}
   .chat-agent-identity .chat-agent-state.is-review{color:#a66713}
   .chat-agent-identity .chat-agent-state.is-done{color:var(--text-muted)}
+  /* 任务会话：回复头是当前阶段的执行智能体，团队名降为补充信息 */
+  .chat-agent-identity .chat-agent-avatar{flex:none;width:26px;height:26px;border-radius:50%}
+  /* 「AI 执行」标签：智能体头像沿用原来的人像，用文字标签说明是 AI 在干活（同智能体团队详情的「智能体执行」标签） */
+  .chat-ai-tag{flex:none;display:inline-flex;align-items:center;gap:4px;padding:0 8px;border-radius:4px;background:var(--brand-fill);color:var(--brand);font-size:12px;font-weight:500;line-height:20px}
+  .chat-agent-identity .chat-agent-team{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-secondary);font-size:12px}
   .task-create-avatar{width:25px;height:25px;border-radius:50%;object-fit:cover}
   #view-chat .asset-ask-question{width:min(620px,100%);padding:16px 18px;border:1px solid var(--border);border-radius:14px;background:var(--bg);box-shadow:0 6px 18px rgba(31,35,41,.06)}
   #view-chat .asset-ask-question>strong{display:block;color:var(--text);font-size:15px;line-height:1.4}
@@ -506,6 +516,9 @@
   .markdown-content ul,.markdown-content ol{margin:8px 0;padding-left:20px}
   .markdown-content li{margin:3px 0}
   .markdown-content li::marker{color:var(--text-muted)}
+  .markdown-content a{color:var(--brand);text-decoration:none}
+  .markdown-content a:hover{text-decoration:underline}
+  .markdown-content a:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px;border-radius:4px}
   .markdown-content code{background:#f5f5f6;padding:2px 6px;border-radius:4px;font-family:Monaco,Menlo,monospace;font-size:13px}
   .chat-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--text-muted);font-size:14px;gap:10px}
   .chat-empty .ic{width:40px;height:40px;color:var(--text-soft)}
@@ -519,7 +532,7 @@
 #view-chat .chat-asset-editor{width:50%;max-width:calc(100% - 361px);min-width:0;background:var(--bg)}
 @media(max-width:850px){#view-chat .chat-asset-editor{width:100%;max-width:none}}
 
-/* 创建专家和专家团使用输入区技能引用，不占用专家选择栏。 */
+/* 创建专家和智能体团队使用输入区技能引用，不占用专家选择栏。 */
 #view-chat.expert-builder-session #chatExpertDropdown{display:none}
 #view-chat .builder-skill-mention{display:inline-flex;align-items:center;gap:6px;vertical-align:middle;padding:4px 10px;margin:0 8px 4px 0;border-radius:var(--asset-pill-radius);background:var(--brand-fill);color:var(--brand);font-size:var(--tb-body-size);font-weight:500;white-space:nowrap;user-select:none;line-height:1.5}
 #view-chat .builder-skill-mention svg{flex:none}
@@ -608,6 +621,7 @@
 #view-chat .is-horizontal .chat-current-stage-row-main strong { order: 1; margin-bottom: 8px; }
 #view-chat .is-horizontal .chat-current-stage-status { order: 2; margin-bottom: 4px; }
 #view-chat .is-horizontal .chat-current-stage-row-main small { order: 3; }
+#view-chat .is-horizontal .chat-current-stage-who { order: 3; flex-direction: column; align-items: flex-start; gap: 4px; max-width: 100%; }
 #view-chat .is-horizontal .chat-current-stage-row-main strong {
   font-size: 14px;
   white-space: normal;
@@ -637,7 +651,7 @@
   display: grid;
   grid-auto-flow: column;
   grid-auto-columns: minmax(72px, 1fr);
-  grid-template-rows: 24px auto 18px 18px;
+  grid-template-rows: 24px auto 18px auto;
   column-gap: var(--stage-gap);
   row-gap: 8px;
 }

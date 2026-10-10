@@ -44,7 +44,7 @@
 .platform-dialog .platform-update-row{grid-template-columns:minmax(120px,1fr) 58px minmax(135px,auto) minmax(130px,1fr)}
 @media(max-width:700px){.platform-dialog .platform-history{grid-template-columns:72px minmax(0,1fr) 52px}.platform-dialog .platform-history small{grid-column:2/3;grid-row:2}.platform-dialog .platform-update-row{grid-template-columns:minmax(0,1fr) 58px minmax(125px,auto)}.platform-dialog .platform-update-row small{grid-column:1/-1}}
 
-/* 管理卡片沿用协作开发智能体、专家团卡片的宽度与内容节奏。 */
+/* 管理卡片沿用协作开发智能体、智能体团队卡片的宽度与内容节奏。 */
 .platform-view .platform-cards{grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr));gap:16px}
 .platform-view .platform-card{min-height:0;border-color:var(--border);border-radius:14px;padding:20px 22px;color:var(--text)}
 .platform-view .platform-card:hover{border-color:var(--border-hover)}

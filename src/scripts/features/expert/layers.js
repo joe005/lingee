@@ -10,7 +10,7 @@ function records(){try{return JSON.parse(localStorage.getItem(KEY)||'{}');}catch
 export function assetOwnerKey(){return getLoginPersonId()||('login:'+getLoginAccount());}
 export function canShareNewAsset(kind,item){
   if(!cvWorkspace)return {ok:false,message:'请先选择协作空间，再共享到租户'};
-  if(kind==='team'&&item.members.some(id=>!EX[id]||layerOf('expert',EX[id])==='personal'||!layerVisible('expert',EX[id])))return {ok:false,message:'请先将团内个人专家共享到当前租户'};
+  if(kind==='team'&&item.members.some(id=>!EX[id]||layerOf('expert',EX[id])==='personal'||!layerVisible('expert',EX[id])))return {ok:false,message:'请先将团内个人智能体共享到当前租户'};
   return {ok:true};
 }
 export function setNewAssetScope(kind,item){
@@ -57,11 +57,11 @@ export function handleLayerAction(event){
   const data=records(),key=kind+':'+id;
   if(action==='share'){
     if(!cvWorkspace){toast('请先选择协作空间，再共享到租户','warning');return true;}
-    if(kind==='team'&&item.members.some(id=>!EX[id]||layerOf('expert',EX[id])==='personal'||!layerVisible('expert',EX[id]))){toast('请先将团内个人专家共享到当前租户','warning');return true;}
+    if(kind==='team'&&item.members.some(id=>!EX[id]||layerOf('expert',EX[id])==='personal'||!layerVisible('expert',EX[id]))){toast('请先将团内个人智能体共享到当前租户','warning');return true;}
     data[key]={workspace:cvWorkspace,owner:cvCurrentUserName()};
   }else if(action==='withdraw'){
     if(data[key]?.owner!==cvCurrentUserName())return true;
-    if(kind==='expert'&&TEAMS.some(t=>layerOf('team',t)==='shared'&&t.members.includes(id))){toast('该专家被共享专家团引用，请先取消专家团共享','warning');return true;}
+    if(kind==='expert'&&TEAMS.some(t=>layerOf('team',t)==='shared'&&t.members.includes(id))){toast('该智能体被共享智能体团队引用，请先取消智能体团队共享','warning');return true;}
     delete data[key];
   }else{
     const copy=JSON.parse(JSON.stringify(item));copy.id='my-'+kind+'-'+Date.now();copy.name+='（副本）';copy.by='我创建的';copy.ownerId=assetOwnerKey();

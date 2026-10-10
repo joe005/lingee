@@ -24,7 +24,7 @@ function openTaskConversation() {
   showView('newtask');
   setNavActive('新会话');
 }
-/* 会话执行方跟随任务：指定了单个智能体就选它，否则选任务或项目的专家团 */
+/* 会话执行方跟随任务：指定了单个智能体就选它，否则选任务或项目的智能体团队 */
 function pickTaskExecutor(task, project) {
   var teamId = task.teamId || (project && project.defaultTeam);
   if (task.expertId) set_activePick({kind:'expert', id:task.expertId, auto:false});
@@ -46,7 +46,7 @@ export function openTaskConversationWithTask(taskId, origin, autoSend) {
   input.focus();
 }
 
-/* 「开始执行」直接发起会话并进入运行中：沿用任务专家团与开场指令，不再跳输入框等手动发送 */
+/* 「开始执行」直接发起会话并进入运行中：沿用任务智能体团队与开场指令，不再跳输入框等手动发送 */
 function startTaskConversationRun(task, origin) {
   var project = tkProjectById(task.project);
   pickTaskExecutor(task, project);

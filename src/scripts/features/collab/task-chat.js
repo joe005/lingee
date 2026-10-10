@@ -20,7 +20,7 @@ function taskConversations(t) {
     const first = { id: 'c1', title: '主会话', createdAt: Date.now(), messages: [] };
     if (t.messages && t.messages.length) first.messages = t.messages;
     else if (t.activity && t.activity.length) t.activity.forEach(a => first.messages.push({ role: 'user', text: (a.author ? a.author + '：' : '') + a.text }));
-    else first.messages.push({ role: 'agent', text: '任务已指派给我（' + tbOwner(t) + '）。\n已匹配到专家团【' + tbTeamName(t) + '】，根据任务意图，参与执行的专家：' + tbMatchExperts(t).join('、') + '。\n需要我先从哪一步开始？' });
+    else first.messages.push({ role: 'agent', text: '任务已指派给我（' + tbOwner(t) + '）。\n已匹配到智能体团队【' + tbTeamName(t) + '】，根据任务意图，参与执行的智能体：' + tbMatchExperts(t).join('、') + '。\n需要我先从哪一步开始？' });
     t.conversations = [first];
   }
   return t.conversations;
@@ -153,7 +153,7 @@ function tbAgentReply(text, t) {
   if (/进展|状态|怎么样了|如何/.test(text)) return '当前状态：' + tbLabel(t.status) + '，进度 ' + (t.progress || 0) + '%。';
   if (/转交|分配|谁来/.test(text)) return '收到，请在右侧属性栏选择负责人，或告诉我转交给谁。';
   if (/评审|审核/.test(text)) return '已记录评审请求。当前尚未接入审批流程，请先核对任务的验收标准与交付产物。';
-  return '已记录：' + text + '\n（本地演示回复，未调用专家执行。）';
+  return '已记录：' + text + '\n（本地演示回复，未调用智能体执行。）';
 }
 /* 复用会话窗口时，消息仍归属于明确的任务与会话。 */
 function tbSendWindowMessage() {
@@ -222,7 +222,7 @@ function tbOpenTransfer(opts) {
   const all = people;
   const el = document.createElement('div');
   el.className = 'sync-overlay'; el.id = 'tb-transfer-overlay';
-  el.innerHTML = '<div class="task-modal tf-modal"><div class="task-modal__header"><h3 class="task-modal__title">' + title + '</h3><button type="button" class="task-modal__close" data-tf-close>×</button></div><div class="task-modal__body"><div class="tf-search-wrap"><svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input type="search" id="tf-search" placeholder="搜索人员或专家" autocomplete="off"></div><div class="tf-list" id="tf-list">'
+  el.innerHTML = '<div class="task-modal tf-modal"><div class="task-modal__header"><h3 class="task-modal__title">' + title + '</h3><button type="button" class="task-modal__close" data-tf-close>×</button></div><div class="task-modal__body"><div class="tf-search-wrap"><svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg><input type="search" id="tf-search" placeholder="搜索人员或智能体" autocomplete="off"></div><div class="tf-list" id="tf-list">'
     + '<div class="tf-group" data-kind="person"><div class="tf-group-t">项目成员<span>' + people.length + '</span></div>' + people.map((p, i) => item(p, i)).join('') + '</div>'
     + '</div></div><div class="task-modal__footer"><button type="button" class="sync-modal__btn sync-modal__btn--ghost" data-tf-close>取消</button><button type="button" class="sync-modal__btn sync-modal__btn--primary" data-tf-confirm>确认转交</button></div></div>';
   (document.getElementById("cvModals") || document.body).appendChild(el);

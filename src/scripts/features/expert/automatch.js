@@ -11,7 +11,7 @@ import { activePick, pickName, pickValid, set_activePick, teamById } from './sto
 
 
 /* ---------- 没选专家时的自动匹配 ---------- */
-/* 专家团不是必选的：不选就由系统按开发模式 + 任务描述挑一个，并在会话里说明挑了谁 */
+/* 智能体团队不是必选的：不选就由系统按开发模式 + 任务描述挑一个，并在会话里说明挑了谁 */
 var MODE_MATCH={
   '苍穹应用':{kind:'team',id:'cosmic-app-dev'},
   '原型探索':{kind:'expert',id:'ux-designer'},
@@ -20,7 +20,7 @@ var MODE_MATCH={
   '技能开发':{kind:'expert',id:'software-engineer'},
   '智能体开发':{kind:'expert',id:'software-engineer'}
 };
-/* 关键词 → 专家。命中多个领域时升级成专家团 */
+/* 关键词 → 专家。命中多个领域时升级成智能体团队 */
 var KW_MATCH=[
   {id:'cosmic-workflow', kw:['工作流','审批','流转','加签','会签','流程节点']},
   {id:'cosmic-form',     kw:['表单','单据','字段','校验','联动']},
@@ -41,7 +41,7 @@ function autoMatch(text){
     return r.kw.some(function(k){ return t.toLowerCase().indexOf(k.toLowerCase())>=0; });
   }).filter(function(r){ return !!EX[r.id]; });
 
-  /* 跨了两个以上领域，一个人扛不住，上专家团 */
+  /* 跨了两个以上领域，一个人扛不住，上智能体团队 */
   if(hits.length>=2){
     var cosmic=hits.filter(function(r){ return r.id.indexOf('cosmic-')===0; }).length;
     var pick=cosmic>=2?'cosmic-app-dev':'general-app-dev';
@@ -55,7 +55,7 @@ function autoMatch(text){
 
   return teamById('general-app-dev')?{kind:'team',id:'general-app-dev',auto:true}:null;
 }
-/* 对话 = 选中这个专家/专家团 + 把第一条触发词带进输入框 */
+/* 对话 = 选中这个专家/智能体团队 + 把第一条触发词带进输入框 */
 function summon(kind,id,phrase){
   var o = kind==='team' ? teamById(id) : EX[id];
   if(!o) return;
@@ -109,12 +109,12 @@ function appendAutoNote(){
   var av=isTeam
     ? teamById(activePick.id).members.slice(0,3).map(function(i){return '<img src="'+xav(EX[i].k)+'" alt="">'}).join('')
     : '<img src="'+xav(EX[activePick.id].k)+'" alt="">';
-  var why=isTeam?'这次要跨多个环节，交给一个专家团':'按你描述的内容匹配到这位专家';
+  var why=isTeam?'这次要跨多个环节，交给一个智能体团队':'按你描述的内容匹配到这个智能体';
   var note=document.createElement('div');
   note.className='auto-note';
   note.innerHTML='<span class="auto-note-av">'+av+'</span>'
-    +'<span class="auto-note-b">你没有指定专家，已自动匹配 <b>'+xesc(pickName())+'</b>'
-    +'<i>'+why+'。想换人，点下方输入框左侧的专家按钮。</i></span>';
+    +'<span class="auto-note-b">你没有指定智能体，已自动匹配 <b>'+xesc(pickName())+'</b>'
+    +'<i>'+why+'。想换人，点下方输入框左侧的智能体按钮。</i></span>';
   messagesList.appendChild(note);
 }
 

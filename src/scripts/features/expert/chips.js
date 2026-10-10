@@ -21,7 +21,7 @@ function pickIconSvg(){
 }
 
 /* 模式 → builder 名。来源见 lingee-build packages/kcode-web/src/components/prompt-input.tsx
-   starterRecommendationCards；技能/专家两项用 1.x 线的新名（用户确认） */
+   starterRecommendationCards；技能/智能体两项用 1.x 线的新名（用户确认） */
 var MODE_BUILDERS={
   '技能开发':{id:'skill-builder',    ic:'<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>'},
   '智能体开发':{id:'agent-builder',  ic:'<rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V3"/><circle cx="12" cy="3" r="1.5" fill="currentColor"/><rect x="8" y="13" width="3" height="2" rx="1"/><rect x="13" y="13" width="3" height="2" rx="1"/>'},
@@ -52,15 +52,15 @@ function renderExpertChips(){
     var label=$('#'+pfx+'ExpertLabel'), faces=$('#'+pfx+'ExpertFaces');
     var dd=$('#'+pfx+'ExpertDropdown');
     if(pfx==='chat' && dd?.classList.contains('task-team-locked')){
-      /* 单专家执行的任务锁定为「expert:<id>」，按该专家显示 */
+      /* 单智能体执行的任务锁定为「expert:<id>」，按该智能体显示 */
       var lockedId=dd.dataset.lockedTeamId||'', soloId=lockedId.indexOf('expert:')===0 ? lockedId.slice(7) : '';
       var lockedTeam=soloId ? (EX[soloId] ? {name:EX[soloId].name,members:[soloId]} : null) : teamById(lockedId);
-      if(label) label.textContent=lockedTeam?.name || '未配置专家团';
+      if(label) label.textContent=lockedTeam?.name || '未配置智能体团队';
       if(faces) faces.innerHTML=lockedTeam ? lockedTeam.members.slice(0,3).map(function(i){ return EX[i] ? '<img src="'+xav(EX[i].k)+'" alt="">' : ''; }).join('') : '';
       dd.querySelector('[data-chip]')?.classList.toggle('muted', !lockedTeam);
       return;
     }
-    if(label) label.textContent = has ? pickName() : (pfx==='tkForm' ? '选择专家团' : '选择专家');
+    if(label) label.textContent = has ? pickName() : (pfx==='tkForm' ? '选择智能体团队' : '选择智能体');
     if(faces){
       faces.innerHTML = has
         ? (activePick.kind==='team'
@@ -80,7 +80,7 @@ function renderExpertPicker(pfx,kw){
   var experts=EXPERTS.filter(function(e){ return layerVisible('expert',e)&&(!kw || (e.name+e.role+e.desc+e.tags.join()).indexOf(kw)>=0); });
   var html='';
   if(teams.length){
-    html+='<div class="pick-group">专家团</div>'+teams.map(function(t){
+    html+='<div class="pick-group">智能体团队</div>'+teams.map(function(t){
       var on=activePick.kind==='team'&&activePick.id===t.id;
       return '<div class="app-item x-opt'+(on?' checked':'')+'" data-pick-team="'+t.id+'">'
         +facesHtml(t.members,3)
@@ -89,7 +89,7 @@ function renderExpertPicker(pfx,kw){
     }).join('');
   }
   if(experts.length){
-    html+='<div class="pick-group">专家</div>'+experts.map(function(e){
+    html+='<div class="pick-group">智能体</div>'+experts.map(function(e){
       var on=activePick.kind==='expert'&&activePick.id===e.id;
       return '<div class="app-item x-opt'+(on?' checked':'')+'" data-pick-expert="'+e.id+'">'
         +'<img class="x-opt-av" src="'+xav(e.k)+'" alt="">'
@@ -97,14 +97,14 @@ function renderExpertPicker(pfx,kw){
         +(on?'<svg class="ic ic-sm menu-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>':'')+'</div>';
     }).join('');
   }
-  list.innerHTML = html || '<div class="x-empty-sm">没有匹配的专家或专家团</div>';
+  list.innerHTML = html || '<div class="x-empty-sm">没有匹配的智能体或智能体团队</div>';
 }
 /* tkForm（任务管理新建任务弹窗）专属：二级展开 + 产物确认人由 tasks-v2 注入，
    nt / chat 不受影响。 */
 var tkFormHooks=null;
 function setTkFormHooks(h){ tkFormHooks=h; }
 
-/* 弹窗内专家团下拉：浮层 portal 到 body，脱离 .tk-modal--mc 的 transform 与 overflow，
+/* 弹窗内智能体团队下拉：浮层 portal 到 body，脱离 .tk-modal--mc 的 transform 与 overflow，
    fixed 按触发器视口坐标定位，实现「在 chip 下方原位弹出」且不被弹窗裁剪 */
 function floatMenu(dd){
   var menu=dd.querySelector('.menu'); if(!menu) return;
@@ -176,7 +176,7 @@ export function openExpertPicker(pfx){
   if(si) setTimeout(function(){ si.focus() },40);
 }
 
-/* 新会话不继承上一次的专家/专家团选择 */
+/* 新会话不继承上一次的专家/智能体团队选择 */
 function resetPickForNewSession(){
   if(forcedBuilder){ set_forcedBuilder(null); renderModeTag(); }
   if(!activePick.kind) return;

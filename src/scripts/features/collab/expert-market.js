@@ -39,7 +39,7 @@ export function cloudCardsHtml(kind,keyword){
     const face=kind==='team'?`<span class="x-faces">${(data.members||[]).slice(0,4).map(id=>`<img src="${xav((experts.get(id)||EX[id])?.k||'lead')}" alt="">`).join('')}</span>`:`<img class="x-av" src="${xav(data.k||'lead')}" alt="">`;
     const tags=assetTagsHtml(kind==='team'?data.domains:data.tags);
     const responsibilities=assetModesHtml(kind==='team'?teamWorkModes(data,id=>experts.get(id)||EX[id]):data.modes);
-    const summary=kind==='team'?`${(data.members||[]).length} 个专家`:`${(data.skills||[]).length} 个技能`;
+    const summary=kind==='team'?`${(data.members||[]).length} 个智能体`:`${(data.skills||[]).length} 个技能`;
     return `<div class="app-card x-card expert-market-uninstalled">${installButton}<div class="card-top">${face}<div class="card-titles"><div class="card-title-row"><span class="card-title">${xesc(data.name)}</span>${assetSourceBadge(kind,data)}<span class="platform-client-badge">V${installed||version}</span></div><div class="x-sub asset-card-summary"><span>${summary}</span>${update?cloudUpgradeBadgeProvider(item.key):''}</div></div></div><div class="card-desc">${xesc(data.desc||'暂无描述')}</div>${tags}${responsibilities}</div>`;
 
   }).join('')||'<div class="x-empty">没有匹配的云端内容</div>';

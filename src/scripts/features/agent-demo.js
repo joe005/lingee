@@ -50,7 +50,7 @@ function setComposer(opts) {
   input.innerHTML = opts.builder ? '<span class="builder-skill-mention ad-skill-chip" data-skill-mention="agent-builder" contenteditable="false">' + ROBOT + '<span>agent-builder</span></span>&nbsp;' : '';
   input.setAttribute('data-placeholder', opts.placeholder || '输入消息…');
   var label = $('#chatExpertLabel');
-  if (label) label.textContent = opts.expert || '选择专家';
+  if (label) label.textContent = opts.expert || '选择智能体';
   $('#adAgentChip')?.remove();
   if (opts.agentChip) {
     var chip = document.createElement('span');
@@ -129,7 +129,7 @@ function openBuilder() {
   enterChat('builder');
   setChannel('dev');
   setNavActive('智能体开发');
-  setComposer({ builder: true, expert: '智能体开发专家', placeholder: '布置开发任务，输入 / 调用技能或命令' });
+  setComposer({ builder: true, expert: '智能体开发', placeholder: '布置开发任务，输入 / 调用技能或命令' });
   if (demo.created && demo.builderNodes) {
     setTitle('创建' + AGENT);
     messagesList.replaceChildren.apply(messagesList, demo.builderNodes);
@@ -183,7 +183,7 @@ function finishBuild(box) {
     + '<li><strong>原则</strong>：不返回个人答卷，样本少于 5 份不展示；部门负责人只看本部门汇总</li></ul>'
     + '<div class="ad-agent-card" role="button" tabindex="0" data-ad-open-editor><span class="ad-agent-icon">' + ROBOT + '</span><span class="ad-agent-copy"><strong>' + AGENT + '</strong><small>查看并编辑智能体配置</small></span>'
     + '<button type="button" class="ad-test-btn" data-ad-test>本地测试</button>' + CHEVRON + '</div>'
-    + '<div class="ad-meta">' + ACTIONS + 'Build · 智能体开发专家 · 18s</div>';
+    + '<div class="ad-meta">' + ACTIONS + 'Build · 智能体开发 · 18s</div>';
   box.appendChild(body);
   demo.created = true;
   demo.building = false;
@@ -286,7 +286,7 @@ var SCENES = {
 };
 function sceneOf(name) { return Object.keys(SCENES).find(function (k) { return SCENES[k].agent === name; }) || ''; }
 function builderComposer() {
-  setComposer({ builder: false, expert: '专家', placeholder: '布置开发任务，输入 / 调用技能或命令' });
+  setComposer({ builder: false, expert: '智能体', placeholder: '布置开发任务，输入 / 调用技能或命令' });
 }
 function openSceneBuilder(key) {
   var sc = SCENES[key];
@@ -361,7 +361,7 @@ function finishSceneBuild(key, box) {
   sum.innerHTML = sc.summary()
     + '<div class="ad-agent-card" role="button" tabindex="0" data-ad-open-editor><span class="ad-agent-icon">' + ROBOT + '</span><span class="ad-agent-copy"><strong>' + sc.agent + '</strong><small>查看并编辑智能体配置</small></span>'
     + '<button type="button" class="ad-test-btn" data-ad-test>本地测试</button>' + CHEVRON + '</div>'
-    + '<div class="ad-meta">' + ACTIONS + 'Build · 专家 · ' + sc.elapsed[1] + '</div>';
+    + '<div class="ad-meta">' + ACTIONS + 'Build · 智能体 · ' + sc.elapsed[1] + '</div>';
   box.appendChild(sum);
   demo.built[key] = true;
   demo.building = false;
@@ -607,7 +607,7 @@ function endDemo() {
   var input = chatInput();
   if (input) { input.innerHTML = ''; input.setAttribute('data-placeholder', '输入消息…'); }
   var label = $('#chatExpertLabel');
-  if (label) label.textContent = '选择专家';
+  if (label) label.textContent = '选择智能体';
   document.getElementById('chatPreviewSide')?.classList.remove('is-editor');
   var frame = editorFrame();
   if (frame) delete frame.dataset.adEditor;

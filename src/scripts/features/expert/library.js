@@ -42,11 +42,11 @@ function renderExpertGrid(){
     });
     html=rows.map(function(t){
       return '<div class="app-card x-card" data-team="'+t.id+'">'
-        +'<button type="button" class="x-call" data-call-team="'+t.id+'" title="对话这个专家团">对话</button>'
+        +'<button type="button" class="x-call" data-call-team="'+t.id+'" title="对话这个智能体团队">对话</button>'
         +'<div class="card-top">'+facesHtml(t.members,4)
         +'<div class="card-titles"><div class="card-title-row"><span class="card-title">'+xesc(t.name)+'</span>'+assetSourceBadge('team',t)
         +'</div>'
-        +'<div class="x-sub asset-card-summary"><span>'+t.members.length+' 个专家</span><span class="asset-card-upgrade-anchor"></span></div></div></div>'
+        +'<div class="x-sub asset-card-summary"><span>'+t.members.length+' 个智能体</span><span class="asset-card-upgrade-anchor"></span></div></div></div>'
         +'<div class="card-desc">'+xesc(t.desc)+'</div>'
         +assetTagsHtml(teamDomains(t))+assetModesHtml(teamWorkModes(t))+layerActions('team',t)+'</div>';
     }).join('');
@@ -58,7 +58,7 @@ function renderExpertGrid(){
     });
     html=rows2.map(function(e){
       return '<div class="app-card x-card" data-expert="'+e.id+'">'
-        +'<button type="button" class="x-call" data-call-expert="'+e.id+'" title="对话这位专家">对话</button>'
+        +'<button type="button" class="x-call" data-call-expert="'+e.id+'" title="对话这个智能体">对话</button>'
         +'<div class="card-top"><img class="x-av" src="'+xav(e.k)+'" alt="">'
         +'<div class="card-titles"><div class="card-title-row"><span class="card-title">'+xesc(e.name)+'</span>'
         +assetSourceBadge('expert',e)+'</div>'
@@ -77,7 +77,7 @@ var expertSearchInput=$('#expertSearchInput');
 
 /* ---------- 专家详情弹窗 ---------- */
 var expertModal=$('#expertModal');
-var xdTab='overview';    /* 详情弹窗顶部页签：概览 / 知识——跟专家详情页的顶部页签是一个思路 */
+var xdTab='overview';    /* 详情弹窗顶部页签：概览 / 知识——跟智能体详情页的顶部页签是一个思路 */
 function openExpertModal(id){
   var e=EX[id]; if(!e) return;
   resetKnDetail();
@@ -103,10 +103,10 @@ function openExpertModal(id){
       var s=skillInfo(id);
       return '<div class="x-skill-row"><span class="x-skill-icon tone-'+xesc(s.tone)+'" aria-hidden="true">✦</span>'
         +'<span class="x-skill-copy"><strong>'+xesc(s.name)+'</strong><span>'+xesc(s.desc)+'</span></span></div>';
-    }).join('')+'</div>':'<div class="x-skill-empty">这位专家暂未挂载技能</div>');
+    }).join('')+'</div>':'<div class="x-skill-empty">这个智能体暂未挂载技能</div>');
   var knHtml=knSecHtml(e);
   /* 概览一项项堆下去本来就长，知识按能力项还能再分好几组——分成顶部页签，一次只看一块，
-     跟专家详情页顶部「概览／知识／…」的页签是同一个思路，不再全部堆在一屏里 */
+     跟智能体详情页顶部「概览／知识／…」的页签是同一个思路，不再全部堆在一屏里 */
   $('#expertModalBody').innerHTML='<div class="modal-tabs" id="xdTabs">'
     +'<button type="button" class="modal-tab active" data-xdtab="overview">概览</button>'
     +'<button type="button" class="modal-tab" data-xdtab="skills">技能</button>'
@@ -115,14 +115,14 @@ function openExpertModal(id){
     +'<div class="x-detail-pane hidden" data-xdpane="skills">'+skillsHtml+'</div>'
     +(knHtml?'<div class="x-detail-pane hidden" data-xdpane="kn">'+knHtml+'</div>':'');
   $('#expertModalFoot').innerHTML=
-    (layerOf('expert',e)==='personal'?'<button type="button" class="btn-link team-delete-btn" data-x-del="'+e.id+'">删除该专家</button>':'')
+    (layerOf('expert',e)==='personal'?'<button type="button" class="btn-link team-delete-btn" data-x-del="'+e.id+'">删除该智能体</button>':'')
     +'<div class="team-footer-spacer"></div>'
     +(layerOf('expert',e)==='personal'?'<button type="button" class="modal-btn cancel" data-x-close>取消</button>':'')
     +(layerOf('expert',e)==='personal'?'<button type="button" class="modal-btn cancel" data-x-edit="'+e.id+'">编辑</button>':'')
     +(layerOf('expert',e)==='personal'?'<button type="button" class="modal-btn confirm" data-x-submit="'+e.id+'">提交审核</button>':'')
     +(knHtml?'<button type="button" class="modal-btn cancel hidden" id="xkDtlCancelBtn">取消</button>':'')
     +(knHtml?'<button type="button" class="modal-btn cancel hidden" id="xkDtlSaveBtn" data-x-save-kn="'+e.id+'">保存</button>':'')
-    +(layerOf('expert',e)==='personal'?'':'<button type="button" class="modal-btn confirm" data-x-call="'+e.id+'">对话专家</button>');
+    +(layerOf('expert',e)==='personal'?'':'<button type="button" class="modal-btn confirm" data-x-call="'+e.id+'">对话智能体</button>');
   $('#expertModalFoot').className='modal-footer team-modal-footer';
   expertModal.classList.add('show');
 }

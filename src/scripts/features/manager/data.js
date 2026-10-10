@@ -5,7 +5,7 @@ import { TK_TICKET_CODE_STATS } from '../tasks-v2/ticket-demo.js';
 import { tkAddTask, tkCanDeleteTask, tkCurrentStageHandlerId, tkDeleteTask, tkGetTasks, tkPruneOrphanTasks, tkSetTasks, tkSetExternalProjects } from '../tasks-v2/data.js';
 /* 管理板块数据：管理项目、项目任务、议题、项目知识库。
    与协作开发的项目 / 任务数据分开存放，避免管理项目出现在开发板块的项目列表里；
-   人员、专家与专家团直接复用协作开发和专家模块的基础数据。 */
+   人员、智能体与智能体团队直接复用协作开发和智能体模块的基础数据。 */
 
 var PROJECTS_KEY = 'lingee-manager-projects-v1';
 var TASKS_KEY = 'lingee-manager-tasks-v1';
@@ -17,7 +17,7 @@ var DELETED_KEY = 'lingee-manager-deleted-projects-v1';
    mgrRisk / mgrDecide / mgrOk 是卡片上的风险、待决策与「运行正常」标记，
    mgrProgress 是卡片与概览共用的进度百分比。 */
 var SEED_PROJECTS = [
-  /* CIO 演示项目：由项目管理员赵琳立项，通用应用开发专家团 4 周交付；进度由任务完成数计算 */
+  /* CIO 演示项目：由项目管理员赵琳立项，通用应用开发智能体团队 4 周交付；进度由任务完成数计算 */
   {
     id: 'ticket-mgmt', name: '工单管理系统',
     desc: '4 周上线客户服务工单管理系统：工单提交、自动派单、SLA 时效、统计报表与企业微信集成，替代原有手工台账。',
@@ -203,7 +203,7 @@ var KNOWLEDGE = [
 
 /* 议题：风险与待决策事项。kind=risk 的议题关联任务（taskKey），CIO 可在议题里批准 / 驳回 */
 var SEED_ISSUES = [
-  { id: 'pi-ticket-1', projectId: 'ticket-mgmt', title: '调度集群扩容待审批，自动派单算法无法压测上线', status: '待处理', from: '专家 通用应用开发 · 风险上报', time: '10/8 14:12', kind: 'risk', taskKey: 'tk1610', impact: '影响里程碑「系统上线」（10 月 16 日），需 CIO 审批集群扩容' },
+  { id: 'pi-ticket-1', projectId: 'ticket-mgmt', title: '调度集群扩容待审批，自动派单算法无法压测上线', status: '待处理', from: '智能体 通用应用开发 · 风险上报', time: '10/8 14:12', kind: 'risk', taskKey: 'tk1610', impact: '影响里程碑「系统上线」（10 月 16 日），需 CIO 审批集群扩容' },
   { id: 'pi-ticket-2', projectId: 'ticket-mgmt', title: '历史工单迁移的字段映射口径确认', status: '已批准', from: '项目管理员 赵琳', time: '10/5 10:20', kind: 'decision', decision: { by: '吴宏超', at: '2026-10-05 15:30', text: '同意按「新分类」映射，保留旧编号作追溯字段' } },
 ];
 
@@ -302,7 +302,7 @@ function mgrSetMemberLevel(project, personId, asAdmin) {
   document.dispatchEvent(new CustomEvent('lingee:mgr-projects-changed', { detail: { members: project.id } }));
   return true;
 }
-/* 项目专家及其功能权限（perms：{ 专家ID: { chat, read, write } }），保存失败时回滚 */
+/* 项目智能体及其功能权限（perms：{ 智能体ID: { chat, read, write } }），保存失败时回滚 */
 function mgrSetProjectExperts(project, ids, perms) {
   var prev = { projectExperts: project.projectExperts, expertPerms: project.expertPerms, updatedAt: project.updatedAt };
   project.projectExperts = ids.slice();
@@ -574,7 +574,7 @@ function mgrDecideIssue(issueId, approve) {
 }
 
 /* ---------- AI 贡献（项目概览） ----------
-   只用过程中可度量的数据：研发任务合入代码里 AI 生成的行数占比、代码提交里专家发起的占比、
+   只用过程中可度量的数据：研发任务合入代码里 AI 生成的行数占比、代码提交里智能体发起的占比、
    阶段产物一次审核通过的占比。统计来自任务的代码与审核记录（原型为演示数据），没有记录时不显示。 */
 function mgrAiContribution(project) {
   if (!project || !project.containsRd) return null;
@@ -607,7 +607,7 @@ function mgrSetSessionPerm(on) {
   document.dispatchEvent(new Event('lingee:mgr-perm-changed'));
 }
 
-/* ---------- 人员 / 专家 / 专家团 ---------- */
+/* ---------- 人员 / 智能体 / 智能体团队 ---------- */
 function mgrPersonName(id) {
   var p = cvPersonById(id);
   return p ? p.name : (id ? '已移除' : '—');

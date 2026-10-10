@@ -2,15 +2,15 @@ import { $ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
 import { parseComp, xesc } from './data.js';
 /* 专家知识：企业知识目录的挂载 + 单独上传的文件
-   与智能体开发里的「知识」页签同构：专家挂目录（绑定元数据），文档本身留在平台上。
-   知识与能力项挂钩：目录声明自己服务哪些能力项，专家勾了对应能力项，目录就自动挂上——
+   与智能体开发里的「知识」页签同构：智能体挂目录（绑定元数据），文档本身留在平台上。
+   知识与能力项挂钩：目录声明自己服务哪些能力项，智能体勾了对应能力项，目录就自动挂上——
    不用两头分别维护。自动挂的目录仍可在这里临时停用（检索时跳过），但解除不了，
-   要去掉就去「专家」页签取消对应能力项；另外也支持手动追加不对应任何能力项的目录。
+   要去掉就去「智能体」页签取消对应能力项；另外也支持手动追加不对应任何能力项的目录。
    副作用集中在下方 init* 函数里，由 main.js 调用。 */
 
 
 /* ---------- 企业知识库（平台侧已入库的目录） ----------
-   专家身上只存绑定关系，不存文档内容；文档更新了，专家下次检索就会用到新的。 */
+   智能体身上只存绑定关系，不存文档内容；文档更新了，智能体下次检索就会用到新的。 */
 var KN_DIRS=[
   {id:'kn-fe-spec',name:'金蝶前端开发规范',by:'前端架构组',comps:['engineering.frontend','design.interaction'],docs:[
     {n:'金蝶前端组件库使用规范 v3.2',t:'PDF',sz:'1.8 MB',by:'赵媛媛',up:'2026/8/18',pg:12},
@@ -58,11 +58,11 @@ KN_DIRS.forEach(function(d){ KN_MAP[d.id]=d; });
 function knDir(id){ return KN_MAP[id]||null; }
 
 /* ---------- 知识分层：预置知识 / 自己的知识 ----------
-   预置知识——只有 Lingee 内置专家才有，是平台按专家的能力项预先配好的，
-     不能查看也不能改；要动就去改专家自己的能力项，那是另一件事。
-   自己的知识——关联的企业知识目录 + 自己上传的文件，预置专家、自己创建的专家都能加。
-   内置专家是静态共享数据，改不了；用户在内置专家身上加的知识落在这个按专家 id
-   存的覆盖层里，不污染专家本身的定义。 */
+   预置知识——只有 Lingee 内置智能体才有，是平台按智能体的能力项预先配好的，
+     不能查看也不能改；要动就去改智能体自己的能力项，那是另一件事。
+   自己的知识——关联的企业知识目录 + 自己上传的文件，预置智能体、自己创建的智能体都能加。
+   内置智能体是静态共享数据，改不了；用户在内置智能体身上加的知识落在这个按智能体 id
+   存的覆盖层里，不污染智能体本身的定义。 */
 var KN_OVERLAY_KEY='lingee.knowledge-overlay.v1';
 var KN_OVERLAY_SEED_KEY='lingee.knowledge-overlay.seeded.v1';
 var knOverlay=loadKnOverlay();
@@ -103,9 +103,9 @@ function knOverlayMut(id){
   return knOverlay[id];
 }
 /* 是不是「预置专家」——只有这种专家才有预置知识这一层，规则上不可查看也不可改；
-   预置专家「自己的知识」跟自建专家一样，既能关联企业知识目录，也能直接上传文件，
-   只是落在覆盖层里，不污染预置定义。自己创建的专家没有平台预置一说，
-   关联的知识和上传的文件都直接存在专家记录上 */
+   预置智能体「自己的知识」跟自建智能体一样，既能关联企业知识目录，也能直接上传文件，
+   只是落在覆盖层里，不污染预置定义。自己创建的智能体没有平台预置一说，
+   关联的知识和上传的文件都直接存在智能体记录上 */
 function isPresetExpert(e){ return !(e&&e.mine); }
 /* 手动关联的目录：预置专家走覆盖层，自建专家直接存在专家记录上 */
 function knLinkedIds(e){ return isPresetExpert(e) ? (knOverlayRec(e.id).kn||[]) : ((e&&e.kn)||[]); }
@@ -124,8 +124,8 @@ function knDirVisibleCount(dir,offDocs){
 }
 
 /* 一个专家有多个能力项（技能标签），每个标签各管各的知识——不是挂到专家身上的一个大池子。
-   目录声明自己服务哪些能力项，按专家的能力项列表分组，标签之间互不影响。
-   预置专家的这一层是「预置知识」，规则上不可查看，这里直接不产出任何分组。 */
+   目录声明自己服务哪些能力项，按智能体的能力项列表分组，标签之间互不影响。
+   预置智能体的这一层是「预置知识」，规则上不可查看，这里直接不产出任何分组。 */
 function compGroupsOf(e){
   if(isPresetExpert(e)) return [];
   var seen={}, groups=[];
@@ -199,7 +199,7 @@ function knPreviewHtml(d,backText){
 /* ---------- 编辑器里的「知识」页签 ----------
    跟智能体开发的知识页签同一形态：左边一列目录（勾选框 + 名字 + 计数），右边文档卡片；
    顶部「＋ 添加」「⬆ 上传」两个按钮。跟能力项的关联体现在每一行目录后面的小标签上——
-   按能力项自动带出的目录标着服务哪项能力，没法在这解除，要去掉得去「专家」页签取消对应能力项；
+   按能力项自动带出的目录标着服务哪项能力，没法在这解除，要去掉得去「智能体」页签取消对应能力项；
    手动追加的目录没有标签，可以随时解除。 */
 var xkDraft=null;      /* 指向 editor.js 的 xeDraft，渲染时传进来 */
 var xkPick='';         /* 右侧文档列表当前看的是哪个目录：'' 全部 / 目录 id / '__up' 上传知识 */
@@ -316,12 +316,12 @@ function resetKnPane(draft){ xkDraft=draft; xkPick=''; xkKw=''; xkPv=null;
   var s=$('#xkSearch'); if(s) s.value=''; }
 
 /* ---------- 详情弹窗里的「知识」一节 ----------
-   自建专家点击直接进编辑器（用上面的 renderKnPane），不再走详情弹窗；
-   这一节此后只服务预置专家，跟编辑器共用同一套外壳（工具条 + 说明 + 左右两栏），
+   自建智能体点击直接进编辑器（用上面的 renderKnPane），不再走详情弹窗；
+   这一节此后只服务预置智能体，跟编辑器共用同一套外壳（工具条 + 说明 + 左右两栏），
    「自己的知识」跟编辑器一样既能关联企业知识目录也能上传文件，只是多一行锁住的预置知识。
    改动先落在草稿里，点「保存」才写回覆盖层——跟编辑器表单要点保存才生效是一个心智模型。 */
-var xkDetailEx=null;   /* 详情弹窗当前是哪位专家，重绘这一节时要用 */
-var xkDetailDraft=null;/* {kn:[],knUp:[]} 当前专家未保存的草稿 */
+var xkDetailEx=null;   /* 详情弹窗当前是哪个智能体，重绘这一节时要用 */
+var xkDetailDraft=null;/* {kn:[],knUp:[]} 当前智能体未保存的草稿 */
 var xkDetailPv=null;   /* 详情里正在预览的文档 */
 var xkDetailKw='';     /* 详情里的知识搜索关键字 */
 var xkDtlComposing=false;  /* IME 组合输入中，跳过重渲染 */
@@ -348,7 +348,7 @@ function presetKnDirsOf(e){
   return dirs;
 }
 /* 预置专家：跟编辑器同一套外壳（工具条 + 说明 + 左右两栏）。预置知识可以看目录名和文件名，
-   但不能解除、不能改；「知识扩展」是这位专家自己加的，能关联企业知识目录，也能上传文件——
+   但不能解除、不能改；「知识扩展」是这个智能体自己加的，能关联企业知识目录，也能上传文件——
    两块都以「目录」的形式摆在左边，点一个目录就只看这个目录里有什么 */
 function knSecHtmlPreset(e){
   var draft=xkDetailDraftFor(e);
@@ -384,7 +384,7 @@ function knSecHtmlPreset(e){
         return '<div class="xk-dir'+(xkDetailPick===dir.id?' on':'')+'" data-xk-dtl-pick="'+dir.id+'"><div class="xk-dir-row1">'
           +'<span class="xk-dir-ic">🔒</span><span class="xk-dir-n">'+xesc(dir.name)+'</span>'
           +'<span class="xk-dir-c">'+knDirCount(dir)+'</span></div></div>'+knSubDirs(dir,true);
-      }).join('') : '<div class="xk-none">这位专家没有预置知识</div>')
+      }).join('') : '<div class="xk-none">这个智能体没有预置知识</div>')
     +'<div class="xk-grp">关联企业知识</div>'
     +(dirs.length ? dirs.map(function(dir){
         return '<div class="xk-dir'+(xkDetailPick===dir.id?' on':'')+'" data-xk-dtl-pick="'+dir.id+'"><div class="xk-dir-row1">'

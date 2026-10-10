@@ -33,7 +33,7 @@ function stageName(stageId, task) { return (task ? taskExecutionStages(task) : S
 function taskAgentName(task) {
   var project = tkProjectById(task.project);
   var teamId = task.teamId || project?.defaultTeam;
-  return TEAMS.find(function (row) { return row.id === teamId; })?.name || '任务专家团';
+  return TEAMS.find(function (row) { return row.id === teamId; })?.name || '任务智能体团队';
 }
 function clip(text, size) {
   text = String(text || '');

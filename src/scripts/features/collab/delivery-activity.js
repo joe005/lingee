@@ -1,4 +1,4 @@
-/* 项目与任务管理共用的本地交付过程样例；优先使用任务选择的专家团。 */
+/* 项目与任务管理共用的本地交付过程样例；优先使用任务选择的智能体团队。 */
 import { EXPERTS, PRESET_TEAMS } from '../expert/data.js';
 import { TEAMS } from '../expert/store.js';
 import { taskExecutorTeam } from '../expert/task-team.js';
@@ -30,7 +30,7 @@ function implementationOwner(title, team) {
   return ['cosmic-metadata-expert'].concat(preferences).find(id => team.members.includes(id));
 }
 
-/* 自定义执行计划的阶段 id 是 s1…s6，按阶段名称对应到交付阶段，再选认领该阶段的专家。 */
+/* 自定义执行计划的阶段 id 是 s1…s6，按阶段名称对应到交付阶段，再选认领该阶段的智能体。 */
 const PHASE_BY_STAGE_NAME = {'需求确认':'requirements','系统设计':'design','苍穹应用开发':'implementation','质量验收':'verification','需求分析':'requirements','方案设计':'design','架构设计':'design','开发实现':'implementation','智能体开发':'agent','实现规划':'planning','编码实现':'implementation','测试验证':'verification','部署交付':'delivery'};
 
 function ownerFor(stageId, title, team) {
@@ -62,13 +62,22 @@ function normalizedStatus(status) {
   return ({'待规划':'planned','待办':'backlog','进行中':'in_progress','审核中':'in_review','已阻塞':'blocked','已完成':'done','已取消':'cancelled','未开始':'backlog','待评审':'in_review','已失败':'blocked'})[status] || status;
 }
 
-export function createDeliveryActivity(task, project, options = {}) {
+function deliveryTeam(task, project) {
   const oldTeamAlias = {'kingdee-saas-implementation':'cosmic-app-dev','kingdee-secondary-dev':'general-app-dev'};
   const teamId = oldTeamAlias[task.teamId || project?.defaultTeam] || task.teamId || project?.defaultTeam;
-  const team = (task.expertId && taskExecutorTeam(task, project))
+  return (task.expertId && taskExecutorTeam(task, project))
     || TEAMS.find(item => item.id === teamId)
     || PRESET_TEAMS.find(item => item.id === teamId)
     || {id:'task-ai',name:'AI 助手',members:EXPERTS[0] ? [EXPERTS[0].id] : [],leadId:EXPERTS[0]?.id};
+}
+
+/* 某个执行阶段由哪个智能体执行：与任务动态、执行计划用同一套认领规则。 */
+export function stageExecutor(task, project, stage) {
+  return ownerFor(PHASE_BY_STAGE_NAME[stage.name] || stage.id, task.title || project?.name || '', deliveryTeam(task, project));
+}
+
+export function createDeliveryActivity(task, project, options = {}) {
+  const team = deliveryTeam(task, project);
   const status = normalizedStatus(task.status);
   const date = task.createDate || options.date || '2026-09-22';
   const title = task.title || project.name;

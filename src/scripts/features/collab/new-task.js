@@ -6,7 +6,7 @@ import { tbSave, tbTeamStages } from './tb-core.js';
 import { renderTaskBoard } from './task-board.js';
 import { toast } from '../../core/toast.js';
 /* 新建任务弹窗：手动创建 / 一句话草拟。
-   手动：关联项目 → 选定专家团 → 按专家逐一指定负责人。
+   手动：关联项目 → 选定智能体团队 → 按智能体逐一指定负责人。
    一句话：本地规则整理可编辑草稿，创建前由用户确认项目、执行人与内容。
    从 task-board.js 拆出，副作用集中在 initNewTask()。 */
 
@@ -148,7 +148,7 @@ function ntOpenLabelPicker() {
   ntLabelMenu.querySelector('input').focus({ preventScroll: true });
 }
 
-/* 项目 → 专家团：一个项目只绑定一个专家团 */
+/* 项目 → 智能体团队：一个项目只绑定一个智能体团队 */
 function ntTeamOfProject(pid) {
   const proj = CV_PROJECTS.find(p => p.id === pid);
   const tid = (proj && proj.defaultTeam) || (TEAMS[0] && TEAMS[0].id);
@@ -159,7 +159,7 @@ function ntPeopleOfProject(pid) {
   const proj = CV_PROJECTS.find(p => p.id === pid);
   return proj ? cvPeopleInProject(proj) : [];
 }
-/* 项目 → 默认专家团：一个项目绑定一个团，用户可在弹窗内改选 */
+/* 项目 → 默认智能体团队：一个项目绑定一个团，用户可在弹窗内改选 */
 function ntRenderTeam() {
   const sel = document.getElementById('cv-nt-team');
   const team = ntProjectId ? ntTeamOfProject(ntProjectId) : null;
@@ -201,7 +201,7 @@ function ntRenderPeople() {
   if (avatarEl) avatarEl.textContent = sel.name[0] || '?';
   menu.innerHTML = members.map(m => '<button type="button" class="nt-person-item' + (m.name === ntAssignee ? ' selected' : '') + '" data-person="' + xesc(m.name) + '"><span class="person-avatar-sm">' + xesc(m.name[0] || '?') + '</span><span class="person-name-sm">' + xesc(m.name) + '</span></button>').join('');
 }
-/* 多人协作：按专家团成员逐一指定负责人，每人只负责并启动自己那一段。 */
+/* 多人协作：按智能体团队成员逐一指定负责人，每人只负责并启动自己那一段。 */
 function ntExpertsFieldVisible() {
   return ntExecMode === '多人协作';
 }
@@ -248,11 +248,11 @@ function ntRenderExperts() {
   const members = ntPeopleOfProject(ntProjectId);
   const count = document.getElementById('cv-nt-expert-count');
   const teamEl = document.getElementById('cv-nt-expert-team');
-  if (teamEl) teamEl.textContent = team ? (team.name + ' · ' + (team.members || []).length + ' 位专家') : '未选择专家团';
-  if (!team) { el.innerHTML = '<span class="nt-people-empty">请先选择专家团</span>'; ntExpertPlan = []; if (count) count.textContent = ''; return; }
+  if (teamEl) teamEl.textContent = team ? (team.name + ' · ' + (team.members || []).length + ' 个智能体') : '未选择智能体团队';
+  if (!team) { el.innerHTML = '<span class="nt-people-empty">请先选择智能体团队</span>'; ntExpertPlan = []; if (count) count.textContent = ''; return; }
   if (!ntProjectId || !members.length) { el.innerHTML = '<span class="nt-people-empty">' + (ntProjectId ? '请先为项目添加成员' : '请先选择项目') + '</span>'; ntExpertPlan = []; if (count) count.textContent = ''; return; }
   const roster = (team.members || []).filter(id => EX[id]);
-  if (!roster.length) { el.innerHTML = '<span class="nt-people-empty">该专家团暂无专家</span>'; ntExpertPlan = []; if (count) count.textContent = ''; return; }
+  if (!roster.length) { el.innerHTML = '<span class="nt-people-empty">该智能体团队暂无智能体</span>'; ntExpertPlan = []; if (count) count.textContent = ''; return; }
   if (!ntExpertPlan.length || ntExpertPlan[0].teamId !== ntTeamId) {
     ntExpertPlan = roster.map((id, i) => ({ id, teamId: ntTeamId, lead: id === team.leadId, assignee: members[i % members.length].name }));
   }
@@ -457,11 +457,11 @@ function cvSubmitNewTask(keepOpen) {
   if (!['单人执行', '多人协作'].includes(mode)) { window.alert('请选择执行方式'); return; }
   if (!ntPeopleOfProject(projectId).length) { window.alert('请先为项目添加成员，再选择执行人'); return; }
   if (mode === '多人协作') {
-    if (!ntExpertPlan.length) { window.alert('请先为专家团选择专家'); return; }
+    if (!ntExpertPlan.length) { window.alert('请先为智能体团队选择智能体'); return; }
     const fallback = (ntExpertPlan.find(e => e.assignee) || {}).assignee || ntAssignee;
-    if (!fallback) { window.alert('请至少为一位专家指定负责人'); return; }
+    if (!fallback) { window.alert('请至少为一个智能体指定负责人'); return; }
     const pending = ntExpertPlan.filter(e => !e.assignee);
-    if (pending.length) toast('还有 ' + pending.length + ' 位专家未指定负责人，将继承「' + fallback + '」', 'warning');
+    if (pending.length) toast('还有 ' + pending.length + ' 个智能体未指定负责人，将继承「' + fallback + '」', 'warning');
     expertPlan = ntExpertPlan.map(e => ({ id: e.id, name: (EX[e.id] || {}).name || e.id, lead: !!e.lead, modes: ((EX[e.id] || {}).modes || []).slice(), assignee: e.assignee || fallback }));
     stagePlan = ntDeriveStagePlan(team, expertPlan, fallback, issue);
     // 任务详情的负责人代表当前环节的执行人，需与阶段分工保持一致。
@@ -473,11 +473,11 @@ function cvSubmitNewTask(keepOpen) {
   if (!stagePlan) stagePlan = tbTeamStages(team, issue).map(s => ({ id: s.id, name: s.name, assignee, expertIds: s.expertIds || [] }));
   const proj = CV_PROJECTS.find(p => p.id === projectId) || CV_PROJECTS[0];
   const stageActivity = expertPlan
-    ? ('各专家负责人：' + expertPlan.map(e => e.name + '·' + e.assignee).join('、'))
+    ? ('各智能体负责人：' + expertPlan.map(e => e.name + '·' + e.assignee).join('、'))
     : ('各阶段执行人：' + stagePlan.map(s => s.name + '·' + s.assignee).join('、'));
   const parentTaskId = ntParentTaskId || document.getElementById('cv-nt-group')?.value || undefined;
   const parentIsGroup = !!parentTaskId && CV_TASKS.some(t => t.boardId === parentTaskId && t.project === proj.id && t.kind === 'epic');
-  const t = { boardId: crypto.randomUUID(), kind: 'task', parentTaskId, source: fromAgent ? '一句话创建' : (parentTaskId ? (parentIsGroup ? '父任务下创建' : '父任务下推') : '手动创建'), sourceId: 'TASK-' + Date.now().toString().slice(-6), size: '小', exec: '专家团', collab: mode === '单人执行' ? '无需协作' : '人Agent协作', progress: 0, status: ntStatus, mode, stage: stagePlan ? stagePlan[0].id : undefined, stagePlan, expertPlan: expertPlan || null, team: ntTeamId, type: issue.type, project: proj.id, title, desc, assignee, priority, tags: ntTags.slice(), files: ntFiles.slice(), activity: [{ author: '张工', text: fromAgent ? ('根据草稿创建任务，由 ' + assignee + ' 负责') : '创建了任务', time: new Date().toLocaleString('zh-CN', { hour12: false }) }].concat(stageActivity ? [{ author: '张工', text: stageActivity, time: new Date().toLocaleString('zh-CN', { hour12: false }) }] : []), artifacts: [] };
+  const t = { boardId: crypto.randomUUID(), kind: 'task', parentTaskId, source: fromAgent ? '一句话创建' : (parentTaskId ? (parentIsGroup ? '父任务下创建' : '父任务下推') : '手动创建'), sourceId: 'TASK-' + Date.now().toString().slice(-6), size: '小', exec: '智能体团队', collab: mode === '单人执行' ? '无需协作' : '人Agent协作', progress: 0, status: ntStatus, mode, stage: stagePlan ? stagePlan[0].id : undefined, stagePlan, expertPlan: expertPlan || null, team: ntTeamId, type: issue.type, project: proj.id, title, desc, assignee, priority, tags: ntTags.slice(), files: ntFiles.slice(), activity: [{ author: '张工', text: fromAgent ? ('根据草稿创建任务，由 ' + assignee + ' 负责') : '创建了任务', time: new Date().toLocaleString('zh-CN', { hour12: false }) }].concat(stageActivity ? [{ author: '张工', text: stageActivity, time: new Date().toLocaleString('zh-CN', { hour12: false }) }] : []), artifacts: [] };
   CV_TASKS.unshift(t);
   tbSave(); renderTaskBoard(); cvUpdateCounts();
   if (parentTaskId) window.cvRenderProjectDetail && window.cvRenderProjectDetail();

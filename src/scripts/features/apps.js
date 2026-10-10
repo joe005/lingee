@@ -124,7 +124,7 @@ function renderSurveyDevConversation(){
   response.innerHTML='<div class="work-steps"><div class="work-step done final-step bare"><div class="markdown-content">'
     +'<p>问卷调研系统已开发完成并部署上线，右侧是正在运行的应用。</p><ol>'
     +SURVEY_DEV_STEPS.map(function(step){return '<li><strong>'+surveyAppEsc(step[0])+'</strong>：'+surveyAppEsc(step[1])+'</li>';}).join('')
-    +'</ol><p>访问地址：<code>'+surveyAppEsc(SURVEY_APP_URL)+'</code></p></div></div></div>';
+    +'</ol><p>访问地址：<a href="'+surveyAppEsc(SURVEY_APP_URL)+'" target="_blank" rel="noopener">'+surveyAppEsc(SURVEY_APP_URL)+'</a></p></div></div></div>';
 }
 /* ---------- 设备巡检维修：6.1 系统预览与 6.2 诊断助手使用 ---------- */
 var EQUIPMENT_APP_NAME='设备巡检维修系统';
@@ -141,7 +141,7 @@ function renderEquipmentAppConversation(){
     +'<li><strong>设备台账与扫码巡检</strong>：126 台设备已生成二维码</li>'
     +'<li><strong>故障报修与维修记录</strong>：42 条用例全部通过，维修记录归入设备履历</li>'
     +'<li><strong>MCP 服务</strong>：设备档案和维修记录通过 MCP 服务 <code>equipment-ops</code> 只读开放，供智能体技能调用</li>'
-    +'</ol><p>访问地址：<code>'+surveyAppEsc(EQUIPMENT_APP_URL)+'</code></p></div></div></div>';
+    +'</ol><p>访问地址：<a href="'+surveyAppEsc(EQUIPMENT_APP_URL)+'" target="_blank" rel="noopener">'+surveyAppEsc(EQUIPMENT_APP_URL)+'</a></p></div></div></div>';
 }
 /* 设备巡检维修系统的元数据页签：列表 / 实体 / 插件换成本系统的元数据；打开其他应用时还原默认示例 */
 var EQ_DOC='<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M8 13h8M8 17h5"/></svg>';
@@ -227,7 +227,7 @@ function renderHelpdeskAppConversation(){
     +'<li><strong>提交工单</strong>：按分类和优先级提交，附件支持截图和日志</li>'
     +'<li><strong>SLA 与派单</strong>：按优先级自动给出响应和解决时限，工单自动派给处理人</li>'
     +'<li><strong>我的工单与常见问题</strong>：跟踪处理进度、评价已解决工单，常见问题先自助排查</li>'
-    +'</ol><p>访问地址：<code>'+surveyAppEsc(HELPDESK_APP_URL)+'</code></p></div></div></div>';
+    +'</ol><p>访问地址：<a href="'+surveyAppEsc(HELPDESK_APP_URL)+'" target="_blank" rel="noopener">'+surveyAppEsc(HELPDESK_APP_URL)+'</a></p></div></div></div>';
 }
 function openSurveyAppPreview(frame,urlInput){
   if(frame) frame.src=URL.createObjectURL(new Blob([surveyAppHtml],{type:'text/html'}));

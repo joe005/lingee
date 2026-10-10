@@ -1,5 +1,5 @@
-/* 任务管理「新建任务」弹窗：专家团下拉面板 hover 右侧二级面板 + 产物确认人。
-   专家团作为一级选项，鼠标悬停时右侧弹出二级面板，展示该专家团覆盖的交付
+/* 任务管理「新建任务」弹窗：智能体团队下拉面板 hover 右侧二级面板 + 产物确认人。
+   智能体团队作为一级选项，鼠标悬停时右侧弹出二级面板，展示该智能体团队覆盖的交付
    阶段节点，每个节点可下拉选一位项目成员作为产物确认人。参考列表筛选下拉的
    hover submenu 交互。复用 chips.js 下拉框架，通过 setTkFormHooks 注入专属
    渲染与点击处理，不改动 nt / chat 的原有行为。 */
@@ -10,9 +10,9 @@ import { renderExpertChips, refloatTkFormMenu, setTkFormHooks } from '../expert/
 import { tkPeopleInProject } from './data.js';
 import { tbTeamStages } from '../collab/tb-core.js';
 
-/* 当前悬停的专家团 id（控制二级面板显示） */
+/* 当前悬停的智能体团队 id（控制二级面板显示） */
 var tkFormHoverTeam = null;
-/* 每个专家团每个阶段的产物确认人：{ teamId: { stageId: personId | '' } }，默认空，由用户指定 */
+/* 每个智能体团队每个阶段的产物确认人：{ teamId: { stageId: personId | '' } }，默认空，由用户指定 */
 var tkFormPlan = {};
 var lastKw = '';
 
@@ -32,15 +32,15 @@ function rerender() {
   refloatTkFormMenu();
 }
 
-/* 一级：专家团列表 */
+/* 一级：智能体团队列表 */
 function render(list, kw) {
   lastKw = (kw || '').trim();
   var teams = TEAMS.filter(function (t) {
     return !lastKw || (t.name + t.desc).indexOf(lastKw) >= 0;
   });
-  var html = '<div class="pick-group">专家团</div>';
+  var html = '<div class="pick-group">智能体团队</div>';
   if (!teams.length) {
-    html += '<div class="xp-empty">没有匹配的专家团</div>';
+    html += '<div class="xp-empty">没有匹配的智能体团队</div>';
   } else {
     teams.forEach(function (t) {
       var on = activePick.kind === 'team' && activePick.id === t.id;
@@ -69,7 +69,7 @@ function renderSubmenu() {
   var people = projectPeople();
   var html = '';
   if (!stages.length) {
-    html += '<div class="xp-empty">该专家团暂无覆盖阶段</div>';
+    html += '<div class="xp-empty">该智能体团队暂无覆盖阶段</div>';
   } else if (!people.length) {
     html += '<div class="xp-empty">' + (document.getElementById('tkFormProject') && document.getElementById('tkFormProject').value ? '当前项目暂无成员，无法指定确认人' : '请先选择项目') + '</div>';
   } else {
@@ -105,7 +105,7 @@ function onListOver(ev) {
   }
 }
 
-/* click：点专家团行选用该团（再点取消），不关闭面板 */
+/* click：点智能体团队行选用该团（再点取消），不关闭面板 */
 function onMenuClick(ev) {
   if (ev.target.closest('.xp-confirmer-menu')) return true;
   var trigger = ev.target.closest('.xp-confirmer');

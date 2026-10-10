@@ -235,7 +235,7 @@ export function saveTask() {
   var createdForOpenParent = !state.editingTaskId && state.editingParentId && state.drawerTaskId === state.editingParentId;
   var labels = pageState.modalLabelSelection.slice();
   if (!tkPeopleInProject(els.tkFormProject.value).some(function (person) { return person.id === els.tkFormAssignee.value; })) { toast('请选择该项目成员作为处理人', 'warning'); return; }
-  if (!TEAMS.some(function (team) { return team.id === (activePick.kind==='team' ? activePick.id : ''); })) { toast('请选择专家团', 'warning'); return; }
+  if (!TEAMS.some(function (team) { return team.id === (activePick.kind==='team' ? activePick.id : ''); })) { toast('请选择智能体团队', 'warning'); return; }
   var data = {
     title: title, desc: els.tkFormDesc.value.trim(),
     status: els.tkFormStatus.value, priority: els.tkFormPriority.value,

@@ -8,8 +8,8 @@ import { toast } from '../../core/toast.js';
 
 /* 状态：[值, 标签, 色调, 图标符号, 分类, 说明]。分类用于看板列分组与设置页展示。 */
 export const tbColumns = [
-  ['待规划', '待规划', 'backlog', '◌', '未开始', '搁置。把任务移到这里不会启动专家。'],
-  ['待办', '待开始', 'pending', '○', '未开始', '排队中。把任务移到这里会启动指派的专家。'],
+  ['待规划', '待规划', 'backlog', '◌', '未开始', '搁置。把任务移到这里不会启动智能体。'],
+  ['待办', '待开始', 'pending', '○', '未开始', '排队中。把任务移到这里会启动指派的智能体。'],
   ['进行中', '执行中', 'running', '◐', '已开始', '正在进行。'],
   ['审核中', '审核中', 'review', '◉', '已开始', '已交付，等待人工审核。会结束自动化运行。'],
   ['已阻塞', '已阻塞', 'blocked', '⊘', '已开始', '被外部依赖阻塞。'],
@@ -35,9 +35,9 @@ export function tbMode(t) { return t.mode || (t.collab === '无需协作' ? '单
 export function tbOwner(t) { return t.assignee; }
 export function tbTeamName(t) {
   const id = tbCurrentTeamId(CV_PROJECTS.find(p => p.id === t.project)?.defaultTeam);
-  return TEAMS.find(team => team.id === id)?.name || '未指定专家团';
+  return TEAMS.find(team => team.id === id)?.name || '未指定智能体团队';
 }
-/* 专家团属于项目策略。Task 与运行期 WorkItem 只继承，不单独覆盖。 */
+/* 智能体团队属于项目策略。Task 与运行期 WorkItem 只继承，不单独覆盖。 */
 export function tbMatchedTeam(t) {
   const id = tbCurrentTeamId(CV_PROJECTS.find(p => p.id === t.project)?.defaultTeam);
   return TEAMS.find(team => team.id === id) || null;
@@ -48,13 +48,13 @@ export function tbMatchExperts(t) {
     const names = team.members.slice(0, 3).map(m => (EX[m] && EX[m].name) || m);
     if (names.length) return names;
   }
-  /* 没有绑专家团时，按任务类型/关键词退化为角色建议 */
+  /* 没有绑智能体团队时，按任务类型/关键词退化为角色建议 */
   if (/Bug|修复|错误|异常|失败/.test(t.type + t.title)) return ['架构设计', '开发实现', '测试验证'];
   if (/需求|方案|设计/.test(t.type + t.title)) return ['需求分析', '架构设计'];
   return ['开发实现'];
 }
 export function tbPriority(t) { return t.priority || (t.type === 'Bug' ? '高' : '中'); }
-/* 专家团实际能覆盖到的阶段：团内成员有匹配该阶段能力项的专家（每阶段最多 2 位）。 */
+/* 智能体团队实际能覆盖到的阶段：团内成员有匹配该阶段能力项的智能体（每阶段最多 2 位）。 */
 export function tbTeamStages(team, issue) {
   const scenario = teamStageScenario(issue);
   /* 缺陷修复固定为开发实现、测试验证；其他类型取团队的交付范围（内置团队固定，自建团队用默认 4 阶段） */

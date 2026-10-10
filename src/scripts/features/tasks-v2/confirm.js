@@ -1,4 +1,5 @@
-import { tkGetPerson, tkPeopleInProject } from './data.js';
+import { tkProjectById } from './data.js';
+import { stageExecutor } from '../collab/delivery-activity.js';
 import { taskExecutionStages } from './task-execution.js';
 
 let confirmAction = null;
@@ -35,9 +36,8 @@ export function showTaskStageConfirm(task, action) {
   }
   if (index < 0) return;
   const next = stages[index + 1];
-  const assigneeId = next && (task.flowAssignee || next.assigneeId || (!task.executionPlan?.length ? task.assignee : ''));
-  const assigneeName = assigneeId ? tkPeopleInProject(task.project).find(person => person.id === assigneeId)?.name || tkGetPerson(assigneeId).name : '未指定';
-  const message = next ? '通过后进入「' + next.name + '」，处理人：' + assigneeName + '。' : '通过后任务完成。';
+  /* 下一阶段只写由哪个智能体执行，不出现人名，避免把执行者误读成人 */
+  const message = next ? '通过后进入「' + next.name + '」，由「' + stageExecutor(task, tkProjectById(task.project), next).name + '」执行。' : '通过后任务完成。';
   showTaskConfirm(message, action, '确认产物', '确认', 'primary');
 }
 

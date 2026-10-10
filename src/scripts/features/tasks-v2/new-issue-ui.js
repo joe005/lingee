@@ -154,7 +154,7 @@ function setDefaultStageOwner(projectId) {
   selectedOwnerId = people.some(person => person.id === creatorId) ? creatorId : '';
 }
 
-/* 执行计划的执行阶段选项：项目对应专家团的每个交付阶段一项，逐个预置、不重复。 */
+/* 执行计划的执行阶段选项：项目对应智能体团队的每个交付阶段一项，逐个预置、不重复。 */
 const projectTeamOf = projectId => TEAMS.find(item => item.id === tkProjectById(projectId)?.defaultTeam) || null;
 const planStageOptions = projectId => tbTeamStages(projectTeamOf(projectId), currentTask()).map(stage => ({ name: stage.name, desc: stage.desc || '' }));
 
@@ -436,7 +436,7 @@ function renderPlan() {
   initCreateSelects(Array.from(byId('niuStageList').querySelectorAll('select')));
   const teamName = TEAMS.find(team => team.id === task.teamId)?.name || '未设置';
   const statusName = TK_STATUSES.find(status => status.id === task.status)?.name || '待办';
-  byId('niuPlanAside').innerHTML = '<dl><div><dt>状态</dt><dd>' + escapeHtml(statusName) + '</dd></div><div><dt>所属项目</dt><dd>' + escapeHtml(projectName(task.project)) + '</dd></div><div><dt>专家团</dt><dd>' + escapeHtml(teamName) + '</dd></div><div><dt>任务负责人</dt><dd>' + escapeHtml(personName(task.project, task.assignee)) + '</dd></div><div><dt>计划进度</dt><dd>' + completed + ' / ' + draftStages.length + '</dd></div></dl><div class="niu-progress"><span style="width:' + (draftStages.length ? completed / draftStages.length * 100 : 0) + '%"></span></div><p>工作类型决定每个阶段的职责。计划确认后再开始执行。</p>';
+  byId('niuPlanAside').innerHTML = '<dl><div><dt>状态</dt><dd>' + escapeHtml(statusName) + '</dd></div><div><dt>所属项目</dt><dd>' + escapeHtml(projectName(task.project)) + '</dd></div><div><dt>智能体团队</dt><dd>' + escapeHtml(teamName) + '</dd></div><div><dt>任务负责人</dt><dd>' + escapeHtml(personName(task.project, task.assignee)) + '</dd></div><div><dt>计划进度</dt><dd>' + completed + ' / ' + draftStages.length + '</dd></div></dl><div class="niu-progress"><span style="width:' + (draftStages.length ? completed / draftStages.length * 100 : 0) + '%"></span></div><p>工作类型决定每个阶段的职责。计划确认后再开始执行。</p>';
 }
 
 export function openNewIssuePlan(taskId) {
@@ -457,7 +457,7 @@ function addStage() {
   if (!task?.project) { toast('请先选择所属项目', 'warning'); selectCreateTab('info'); byId('niuProjectTrigger').focus(); return; }
   const used = new Set(draftStages.map(stage => stage.workType));
   const next = planStageOptions(task.project).find(stage => !used.has(stage.name));
-  if (!next) { toast('专家团的交付阶段已全部加入执行计划', 'warning'); return; }
+  if (!next) { toast('智能体团队的交付阶段已全部加入执行计划', 'warning'); return; }
   draftStages.push({ id: crypto.randomUUID(), workType: next.name, title: next.name, description: next.desc, assigneeId: defaultStageAssigneeId(tkProjectById(task.project), tkPeopleInProject(task.project), CV_MEMBERS, next.name), status: 'pending' });
   draftConfirmed = false;
   renderPlan();

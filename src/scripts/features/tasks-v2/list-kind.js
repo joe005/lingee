@@ -29,7 +29,7 @@ export function taskListKind(task) {
     return { kind:'start', badge:'待开始', hint:'轮到你开始执行' + quoted, action:'start', label:'交给AI执行', primary:true, needsMe:true };
   }
   if (status === 'in_review' && mine) {
-    return { kind:'review', badge:'待审核', hint:'专家团已提交' + quoted + '产物，等待你确认', action:'review', label:'查看并验收产物', primary:true, needsMe:true };
+    return { kind:'review', badge:'待审核', hint:'智能体团队已提交' + quoted + '产物，等待你确认', action:'review', label:'查看并验收产物', primary:true, needsMe:true };
   }
   if (status === 'in_progress' && taskConversationNeedsReply(task, true)) {
     var question = taskConversationQuestion(task);
@@ -45,7 +45,7 @@ export function taskListKind(task) {
     return { kind:status === 'in_review' ? 'review' : 'waiting', badge:status === 'in_review' ? '待审核' : '待开始', hint:'当前阶段' + quoted + '由' + waitingName + '处理', action:'detail', label:'查看详情', needsMe:false };
   }
   if (status === 'in_progress') {
-    return { kind:'running', badge:'AI执行中', hint:'专家团正在执行' + quoted, action:'detail', label:'查看详情', needsMe:false };
+    return { kind:'running', badge:'AI执行中', hint:'智能体团队正在执行' + quoted, action:'detail', label:'查看详情', needsMe:false };
   }
   return { kind:'waiting', badge:tkGetStatusName(status) || '待开始', hint:quoted ? '当前阶段' + quoted : '等待开始执行', action:'detail', label:'查看详情', needsMe:false };
 }
