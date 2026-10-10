@@ -377,6 +377,36 @@ function mgrSetProjectText(project, patch) {
   return true;
 }
 
+/* 项目详情的功能页面：内置「计划与任务 / 研发任务 / 动态」加自定义页面，可开关、调序。
+   未配置时开发类项目显示研发任务和动态，其他项目显示计划与任务和动态；研发任务只对开发类项目可用。 */
+var BUILTIN_PAGES = [['plan', '计划与任务'], ['rd', '研发任务'], ['feed', '动态']];
+function mgrProjectPages(project) {
+  var rd = !!project.containsRd;
+  var avail = BUILTIN_PAGES.filter(function (b) { return b[0] !== 'rd' || rd; });
+  var out = [];
+  (Array.isArray(project.pages) ? project.pages : []).forEach(function (s) {
+    if (s.custom) { out.push({ id: s.id, name: s.name, enabled: s.enabled !== false, custom: true }); return; }
+    var b = avail.find(function (x) { return x[0] === s.id; });
+    if (b && !out.some(function (o) { return o.id === b[0]; })) out.push({ id: b[0], name: b[1], enabled: s.enabled !== false });
+  });
+  avail.forEach(function (b) {
+    if (!out.some(function (o) { return o.id === b[0]; })) out.push({ id: b[0], name: b[1], enabled: b[0] === 'plan' ? !rd : true });
+  });
+  if (!out.some(function (o) { return o.enabled; })) out[out.length - 1].enabled = true;
+  return out;
+}
+/* 保存失败时回滚；至少保留一个页面由调用方保证 */
+function mgrSetProjectPages(project, pages) {
+  var prev = { pages: project.pages, updatedAt: project.updatedAt };
+  project.pages = pages.map(function (x) {
+    return x.custom ? { id: x.id, name: x.name, custom: true, enabled: x.enabled } : { id: x.id, enabled: x.enabled };
+  });
+  project.updatedAt = Date.now();
+  if (!mgrSaveProjects()) { Object.assign(project, prev); return false; }
+  document.dispatchEvent(new CustomEvent('lingee:mgr-projects-changed', { detail: { pages: project.id } }));
+  return true;
+}
+
 /* 删除项目及其议题、任务（管理任务与开发板块任务）；演示项目记入已删除清单，避免下次从种子恢复。
    不校验项目下是否还有任务，任务随项目一并清理。 */
 function mgrDeleteProject(id) {
@@ -686,7 +716,7 @@ export function initManagerData() {
 export {
   TASK_STATUSES, mgrAddIssue, mgrAiContribution, mgrDecideIssue, mgrAddProject, mgrCanManageProject, mgrCanDeleteTask, mgrCreateTask, mgrDeleteProject, mgrDeleteTask, mgrCurrentPersonId, mgrExpert, mgrExpertList,
   MEMBER_ROLES, mgrHasSessionPerm, mgrMemberOpenTasks, mgrMemberRole, mgrMemberRoleLabel, mgrPersonName, mgrProjectPeople,
-  mgrAddProjectMembers, mgrSetMemberLevel, mgrSetProjectExperts, mgrRenameError, mgrRenameProject, mgrSetProjectMembers, mgrSetProjectRepo, mgrSetProjectText, mgrProjectById, mgrProjectIssues, mgrProjectKnowledge, mgrProjectMembers,
+  mgrAddProjectMembers, mgrSetMemberLevel, mgrSetProjectExperts, mgrRenameError, mgrRenameProject, mgrSetProjectMembers, mgrSetProjectPages, mgrSetProjectRepo, mgrSetProjectText, mgrProjectById, mgrProjectIssues, mgrProjectKnowledge, mgrProjectMembers, mgrProjectPages,
   mgrCreateDevTask, mgrIsDevTask, mgrProjectProgress, mgrProjectTasks, mgrProjects, mgrRelatedTask, mgrSaveProjects, mgrSaveTasks, mgrSetSessionPerm,
   mgrTaskById, mgrTaskKey, mgrTasks,
   mgrTeam, mgrTeams,

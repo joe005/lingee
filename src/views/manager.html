@@ -82,18 +82,10 @@
           </div>
         </div>
         <div class="mgr-pd-layout">
-          <!-- 主栏：计划与任务 / 研发任务 / 动态 -->
+          <!-- 主栏：页签由项目设置「功能页面」决定（计划与任务 / 研发任务 / 动态 / 自定义页面） -->
           <section class="mgr-card mgr-pd-main">
             <div class="mgr-pd-tabs">
-              <div class="mgr-pd-tablist" role="tablist" aria-label="项目详情页签">
-                <button type="button" class="mgr-pd-tab active" data-pdtab="plan" role="tab" aria-selected="true">
-                  计划与任务
-                </button>
-                <button type="button" class="mgr-pd-tab" data-pdtab="rd" role="tab" aria-selected="false">
-                  研发任务<span class="mgr-pd-tab-count" id="mgrPdRdCount">0</span>
-                </button>
-                <button type="button" class="mgr-pd-tab" data-pdtab="feed" role="tab" aria-selected="false">动态</button>
-              </div>
+              <div class="mgr-pd-tablist" id="mgrPdTabs" role="tablist" aria-label="项目详情页签"></div>
               <div class="mgr-pd-views" id="mgrPdViews" role="tablist" aria-label="任务视图">
                 <button type="button" class="mgr-pd-view active" data-pdview="list">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg>列表
@@ -116,6 +108,8 @@
             <div id="mgrPdRdPane" class="hidden"></div>
             <!-- 动态 -->
             <div id="mgrPdFeedPane" class="hidden"></div>
+            <!-- 自定义页面（项目设置 → 功能页面 添加） -->
+            <div id="mgrPdCustomPane" class="hidden"></div>
           </section>
           <!-- 右栏 -->
           <aside class="mgr-pd-rail" id="mgrPdRail"></aside>
@@ -259,7 +253,7 @@
         </div>
         <!-- 补充信息 -->
         <div id="mgrTnExtra" hidden>
-          <div class="mgr-tn-grid">
+          <div class="mgr-tn-grid mgr-tn-general-only">
             <div class="mgr-tn-field">
               <label>父任务</label>
               <div class="mgr-tn-withbtn"><select id="mgrTnParent"><option value="">无（挂在本项目根任务下）</option></select><span class="mgr-tn-choose">选择</span></div>
@@ -269,7 +263,7 @@
               <select><option>不关联议题</option></select>
             </div>
           </div>
-          <div class="mgr-tn-grid">
+          <div class="mgr-tn-grid mgr-tn-general-only">
             <div class="mgr-tn-field">
               <label>产物归档目录</label>
               <select id="mgrTnDir"></select>
@@ -279,7 +273,7 @@
               <select id="mgrTnExec"></select>
             </div>
           </div>
-          <div class="mgr-tn-field">
+          <div class="mgr-tn-field mgr-tn-general-only">
             <label>前序任务</label>
             <div class="mgr-tn-withbtn"><select id="mgrTnPre"><option value="">无（不设前序）</option></select><span class="mgr-tn-choose">选择</span></div>
           </div>
@@ -288,11 +282,11 @@
             <input type="checkbox" id="mgrTnMs" class="mgr-tn-switch" aria-label="是否里程碑">
             <span id="mgrTnMsLabel">否</span>
           </div>
-          <div class="mgr-tn-field">
+          <div class="mgr-tn-field mgr-tn-general-only">
             <label>任务关联指标（选填）</label>
             <select id="mgrTnKpi"></select>
           </div>
-          <div class="mgr-tn-field">
+          <div class="mgr-tn-field mgr-tn-general-only">
             <label>子任务 <span id="mgrTnSubCount">0</span></label>
             <div id="mgrTnSubs"></div>
             <button type="button" class="mgr-tn-sub-add" id="mgrTnSubAdd">＋ 添加子任务</button>

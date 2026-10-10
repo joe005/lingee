@@ -722,6 +722,8 @@ function openTaskNew(parentId, opts) {
   });
   $('#mgrTnCore').hidden = false;
   $('#mgrTnExtra').hidden = true;
+  /* 研发任务的「补充信息」只保留「是否里程碑」，父任务、前序等通用任务项隐藏 */
+  document.querySelectorAll('#mgrTnExtra .mgr-tn-general-only').forEach(function (el) { el.hidden = rdKind; });
   /* 任务类型不让用户选，由入口页签决定 */
   document.querySelectorAll('[data-mgr-tntype]').forEach(function (b) {
     b.classList.toggle('active', b.getAttribute('data-mgr-tntype') === (rdKind ? 'rd' : 'general'));
@@ -769,7 +771,7 @@ function openTaskNew(parentId, opts) {
   $('#mgrTnSubs').innerHTML = '<p class="mgr-tn-sub-empty">暂无子任务。点「添加子任务」创建，可批量添加给多位协作人。</p>';
   syncSubCount();
   var subField = $('#mgrTnSubs').closest('.mgr-tn-field');
-  if (subField) subField.hidden = !!editTask;
+  if (subField) subField.hidden = !!editTask || rdKind;
   if (editTask) fillEditTask(editTask, rdKind);
   overlay.style.display = 'flex';
   overlay.setAttribute('aria-hidden', 'false');

@@ -2,7 +2,7 @@ import { $ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
 import {
   mgrAiContribution, mgrCanManageProject, mgrDecideIssue, mgrProjectProgress, mgrExpert, mgrHasSessionPerm, mgrPersonName, mgrProjectById, mgrProjectIssues, mgrProjectKnowledge,
-  mgrIsDevTask, mgrSaveProjects, mgrTaskById, mgrTeam, mgrTeams,
+  mgrIsDevTask, mgrProjectPages, mgrSaveProjects, mgrTaskById, mgrTeam, mgrTeams,
 } from './data.js';
 import { feedHtml, initManagerFeed, resetFeed } from './feed.js';
 import { openInvite } from './invite.js';
@@ -14,7 +14,12 @@ import { mgrEsc, mgrTag } from './utils.js';
    以及右栏打开的议题、知识库、智能体团队维护弹窗。 */
 
 var detailTab = 'plan';
-var TAB_LABELS = { plan: '计划与任务', rd: '研发任务', feed: '动态' };
+/* 项目详情主栏的页签由项目设置里的「功能页面」决定（顺序、开关、自定义页面） */
+function enabledPages(p) { return mgrProjectPages(p).filter(function (x) { return x.enabled; }); }
+function pageLabel(p, id) {
+  var hit = mgrProjectPages(p).find(function (x) { return x.id === id; });
+  return hit ? hit.name : '';
+}
 var kbQuery = '';
 var kbOpenId = null;
 var detailProjectId = null;
@@ -129,14 +134,13 @@ function renderDetail(p) {
     mgrTag(projectStatusName(p), p.status === 'in_progress' ? 'running' : p.status === 'completed' ? 'done' : 'neutral') +
     (p.containsRd ? mgrTag('含研发任务', 'brand') : '') +
     (p.repo ? '<span class="mgr-tag mgr-tag--neutral" title="' + mgrEsc(p.repo) + '">Git</span>' : '');
-  document.querySelectorAll('[data-pdtab]').forEach(function (b) {
-    var on = b.getAttribute('data-pdtab') === detailTab;
-    b.classList.toggle('active', on);
-    b.setAttribute('aria-selected', String(on));
-  });
-  /* 研发项目默认不显示「计划与任务」页签 */
-  var planTab = document.querySelector('[data-pdtab="plan"]');
-  if (planTab) planTab.hidden = !!p.containsRd;
+  var pages = enabledPages(p);
+  if (!pages.some(function (x) { return x.id === detailTab; })) detailTab = pages[0].id;
+  $('#mgrPdTabs').innerHTML = pages.map(function (x) {
+    var on = x.id === detailTab;
+    return '<button type="button" class="mgr-pd-tab' + (on ? ' active' : '') + '" data-pdtab="' + mgrEsc(x.id) + '" role="tab" aria-selected="' + on + '">' + mgrEsc(x.name) +
+      (x.id === 'rd' ? '<span class="mgr-pd-tab-count" id="mgrPdRdCount">' + rdTasks(p.id).length + '</span>' : '') + '</button>';
+  }).join('');
   syncRailCollapse();
   syncTabThumb();
   $('#mgrPdViews').classList.toggle('hidden', detailTab !== 'plan');
@@ -145,13 +149,15 @@ function renderDetail(p) {
   if (detailTab === 'plan') plan.innerHTML = planWorkspaceHtml(p);
   rd.classList.toggle('hidden', detailTab !== 'rd');
   if (detailTab === 'rd') rd.innerHTML = rdWorkspaceHtml(p);
-  var rdCount = $('#mgrPdRdCount');
-  if (rdCount) rdCount.textContent = String(rdTasks(p.id).length);
   feed.classList.toggle('hidden', detailTab !== 'feed');
   if (detailTab === 'feed') feed.innerHTML = feedHtml(p);
+  var custom = $('#mgrPdCustomPane');
+  var isCustom = ['plan', 'rd', 'feed'].indexOf(detailTab) < 0;
+  custom.classList.toggle('hidden', !isCustom);
+  if (isCustom) custom.innerHTML = '<div class="mgr-empty">「' + mgrEsc(pageLabel(p, detailTab)) + '」是自定义页面，内容待建设（原型演示）。</div>';
   $('#mgrPdRail').innerHTML = railHtml(p);
   var ask = $('#mgrPdAskInput');
-  if (ask) ask.placeholder = '问灵基：就「' + TAB_LABELS[detailTab] + '」这个模块提问';
+  if (ask) ask.placeholder = '问灵基：就「' + pageLabel(p, detailTab) + '」这个模块提问';
 }
 function rerenderDetail() {
   var p = currentProject();
@@ -161,9 +167,9 @@ function rerenderDetail() {
   if (isOpen('#mgrIssuesOverlay')) $('#mgrIssuesBody').innerHTML = issuesHtml(p);
   refreshKb();
 }
-/* 进入详情时：含研发任务的项目默认打开「研发任务」，其余回到「计划与任务」 */
+/* 进入详情时打开第一个已开启的功能页面（开发类项目默认是「研发任务」，其余是「计划与任务」） */
 function resetDetailTab(p) {
-  detailTab = p && p.containsRd ? 'rd' : 'plan';
+  detailTab = p ? enabledPages(p)[0].id : 'plan';
   resetFeed();
   resetRdState();
 }
@@ -293,7 +299,7 @@ export function initManagerDetail() {
     var t = e.target;
     if (t.closest('#mgrPdRailToggle')) { railCollapsed = !railCollapsed; syncRailCollapse(); syncTabThumb(); return; }
     var tab = t.closest('[data-pdtab]');
-    if (tab) { var name = tab.getAttribute('data-pdtab'); detailTab = TAB_LABELS[name] ? name : 'plan'; rerenderDetail(); return; }
+    if (tab) { detailTab = tab.getAttribute('data-pdtab'); rerenderDetail(); return; }
     var p = currentProject();
     if (!p) return;
     if (t.closest('[data-mgr-open-issues]')) { $('#mgrIssuesBody').innerHTML = issuesHtml(p); openOverlay('#mgrIssuesOverlay'); return; }

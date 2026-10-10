@@ -1,8 +1,8 @@
 import { $ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
-import { mgrCanManageProject, mgrProjectById, mgrSetProjectText } from './data.js';
+import { mgrCanManageProject, mgrProjectById, mgrProjectPages, mgrSetProjectPages, mgrSetProjectText } from './data.js';
 import { mgrEsc } from './utils.js';
-/* 管理 · 项目设置页：项目目标、项目指令就地编辑，开发项目另有代码仓库卡片（仓库与分支的编辑弹窗在 projects.js）。
+/* 管理 · 项目设置页：项目目标、项目指令就地编辑，功能页面（详情页签的开关、顺序、自定义页面）即改即存，开发项目另有代码仓库卡片（仓库与分支的编辑弹窗在 projects.js）。
    页面本身是 #mgr-panel-projects 里与项目列表、项目详情并列的一屏，返回回到项目详情。 */
 
 var projectId = null;
@@ -15,6 +15,9 @@ var ICONS = {
   instruction: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="m8 10 3 2-3 2"/><path d="M13 15h3"/></svg>',
   repo: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="8" r="2"/><path d="M6 7v10"/><path d="M18 10c0 4-6 3-12 7"/></svg>',
   edit: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>',
+  pages: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18"/><path d="M9 9v12"/></svg>',
+  up: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg>',
+  trash: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/></svg>',
   chevron: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>',
 };
 
@@ -52,6 +55,26 @@ function repoCard(p, canEdit) {
     '<dl class="mgr-set-kv"><dt>Git 地址</dt><dd>' + (p.repo ? mgrEsc(p.repo) : '<span class="mgr-set-empty">未设置</span>') + '</dd>' +
     '<dt>基准分支</dt><dd>' + (p.repo && p.baseBranch ? mgrEsc(p.baseBranch) : '<span class="mgr-set-empty">未设置</span>') + '</dd></dl>';
 }
+function pagesCard(p, canEdit) {
+  var pages = mgrProjectPages(p);
+  var enabledCount = pages.filter(function (x) { return x.enabled; }).length;
+  var dis = canEdit ? '' : ' disabled';
+  var rows = pages.map(function (x, i) {
+    var lastOne = x.enabled && enabledCount === 1;
+    return '<li class="mgr-pg-row"><span class="mgr-pg-name">' + mgrEsc(x.name) + (x.custom ? '<span class="mgr-pg-tag">自定义</span>' : '') + '</span>' +
+      '<button type="button" class="mgr-pg-btn" data-mgr-pg-move="up" data-mgr-pg="' + mgrEsc(x.id) + '" aria-label="上移' + mgrEsc(x.name) + '"' + (!canEdit || i === 0 ? ' disabled' : '') + '>' + ICONS.up + '</button>' +
+      '<button type="button" class="mgr-pg-btn mgr-pg-btn--down" data-mgr-pg-move="down" data-mgr-pg="' + mgrEsc(x.id) + '" aria-label="下移' + mgrEsc(x.name) + '"' + (!canEdit || i === pages.length - 1 ? ' disabled' : '') + '>' + ICONS.up + '</button>' +
+      (x.custom
+        ? '<button type="button" class="mgr-pg-btn" data-mgr-pg-del="' + mgrEsc(x.id) + '" aria-label="删除' + mgrEsc(x.name) + '"' + dis + '>' + ICONS.trash + '</button>'
+        : '<span class="mgr-pg-gap" aria-hidden="true"></span>') +
+      '<input type="checkbox" class="mgr-pg-check" data-mgr-pg-toggle="' + mgrEsc(x.id) + '" aria-label="显示' + mgrEsc(x.name) + '页签"' + (x.enabled ? ' checked' : '') +
+      (!canEdit || lastOne ? ' disabled' : '') + (lastOne ? ' title="至少保留一个页面"' : '') + '></li>';
+  }).join('');
+  return cardHead('pages', '功能页面') + '<ul class="mgr-pg-list" aria-label="功能页面">' + rows + '</ul>' +
+    '<div class="mgr-pg-add"><input type="text" class="mgr-pg-input" id="mgrPgName" maxlength="12" placeholder="输入自定义页面名称" aria-label="自定义页面名称"' + dis + '>' +
+    '<button type="button" class="mgr-btn mgr-btn--ghost mgr-pg-add-btn" data-mgr-pg-add' + dis + '>添加自定义页面</button></div>' +
+    '<p class="mgr-set-note mgr-pg-hint">关闭后项目详情页不再显示对应页签，至少保留一个页面；可调整页签顺序，也可添加自定义页面。</p>';
+}
 function render() {
   var p = project();
   if (!p) return;
@@ -59,6 +82,7 @@ function render() {
   $('#mgrSetProjectName').textContent = p.name;
   $('#mgrSetBody').innerHTML = '<section class="mgr-set-card">' + goalCard(p, canEdit) + '</section>' +
     '<section class="mgr-set-card">' + instructionCard(p, canEdit) + '</section>' +
+    '<section class="mgr-set-card">' + pagesCard(p, canEdit) + '</section>' +
     (p.containsRd || p.repo ? '<section class="mgr-set-card">' + repoCard(p, canEdit) + '</section>' : '') +
     (canEdit ? '' : '<p class="mgr-set-note">只有项目负责人、项目管理员或系统管理员可以修改项目设置。</p>');
   var input = $('#mgrSetInput');
@@ -87,8 +111,54 @@ function back() {
   var id = projectId;
   hideSettings();
   if (mgrProjectById(id)) $('#mgrProjDetail').classList.remove('hidden');
+  /* 详情隐藏期间改过的内容（功能页面、目标等）在显示后补一次刷新 */
+  if (mgrProjectById(id)) document.dispatchEvent(new CustomEvent('lingee:mgr-projects-changed', { detail: { back: id } }));
   var btn = $('#mgrProjDetail [data-mgr-settings]');
   if (btn) btn.focus();
+}
+/* 功能页面：即改即存，保存失败回滚并提示 */
+function savePages(pages, okMsg) {
+  var p = project();
+  if (!p) return;
+  if (!mgrCanManageProject(p)) { toast('项目权限已变化，无法修改项目设置', 'warning'); render(); return; }
+  if (!pages.some(function (x) { return x.enabled; })) { toast('至少保留一个页面', 'warning'); render(); return; }
+  if (!mgrSetProjectPages(p, pages)) { toast('保存失败，请重试', 'error'); render(); return; }
+  if (okMsg) toast(okMsg, 'success');
+}
+function pageAction(t) {
+  var p = project();
+  if (!p) return false;
+  var pages = mgrProjectPages(p);
+  var idxOf = function (id) { return pages.findIndex(function (x) { return x.id === id; }); };
+  var move = t.closest('[data-mgr-pg-move]');
+  if (move) {
+    var i = idxOf(move.getAttribute('data-mgr-pg')), j = i + (move.getAttribute('data-mgr-pg-move') === 'up' ? -1 : 1);
+    if (i < 0 || j < 0 || j >= pages.length) return true;
+    var tmp = pages[i]; pages[i] = pages[j]; pages[j] = tmp;
+    savePages(pages);
+    var again = $('#mgrSetBody [data-mgr-pg="' + move.getAttribute('data-mgr-pg') + '"][data-mgr-pg-move="' + move.getAttribute('data-mgr-pg-move') + '"]');
+    if (again && !again.disabled) again.focus();
+    return true;
+  }
+  var del = t.closest('[data-mgr-pg-del]');
+  if (del) {
+    var k = idxOf(del.getAttribute('data-mgr-pg-del'));
+    if (k < 0) return true;
+    var name = pages[k].name;
+    pages.splice(k, 1);
+    savePages(pages, '已删除自定义页面：' + name);
+    return true;
+  }
+  if (t.closest('[data-mgr-pg-add]')) { addPage(p, pages); return true; }
+  return false;
+}
+function addPage(p, pages) {
+  var input = $('#mgrPgName');
+  var name = input.value.trim();
+  if (!name) { toast('请输入自定义页面名称', 'warning'); input.focus(); return; }
+  if (pages.some(function (x) { return x.name === name; })) { toast('已有同名页面', 'warning'); input.focus(); return; }
+  pages.push({ id: 'c' + Date.now().toString(36), name: name, enabled: true, custom: true });
+  savePages(pages, '已添加自定义页面：' + name);
 }
 function save(kind) {
   var p = project();
@@ -112,9 +182,23 @@ export function initManagerSettings() {
     if (t.closest('[data-mgr-set-cancel]')) { editing = ''; render(); return; }
     var sv = t.closest('[data-mgr-set-save]');
     if (sv) { save(sv.getAttribute('data-mgr-set-save')); return; }
-    if (t.closest('[data-mgr-set-more]')) { goalOpen = !goalOpen; render(); }
+    if (t.closest('[data-mgr-set-more]')) { goalOpen = !goalOpen; render(); return; }
+    pageAction(t);
+  });
+  page.addEventListener('change', function (e) {
+    var cb = e.target.closest('[data-mgr-pg-toggle]');
+    var p = project();
+    if (!cb || !p) return;
+    var id = cb.getAttribute('data-mgr-pg-toggle');
+    savePages(mgrProjectPages(p).map(function (x) { return x.id === id ? Object.assign({}, x, { enabled: cb.checked }) : x; }));
   });
   page.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && e.target.id === 'mgrPgName') {
+      e.preventDefault();
+      var p = project();
+      if (p) addPage(p, mgrProjectPages(p));
+      return;
+    }
     if (e.key === 'Escape' && editing) { e.preventDefault(); editing = ''; render(); }
   });
   /* 仓库保存、重命名等改动后刷新设置页 */

@@ -19,10 +19,9 @@ var onRouteChange = function () {};
 
 var CARD_CHEVRON = '<svg class="mgr-mcard-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>';
 
-/* 新建项目模板：选中开发类模板时需要 Git 地址与智能体团队 */
+/* 新建项目先选类型：开发项目需要 Git 地址与智能体团队；通用项目再选模板 */
 var TEMPLATES = [
   { id: 'blank', name: '空白', goal: '' },
-  { id: 'dev', name: '开发项目', dev: true, goal: '' },
   { id: 'budget', name: '预算目标制定', goal: '围绕年度预算目标拆解编制任务，按里程碑推进并沉淀编制产物' },
   { id: 'month', name: '月度经营分析', goal: '按月归集经营数据，输出差异归因与改进建议' },
   { id: 'ceo', name: 'CEO月度会议', goal: '围绕 CEO 月度会议组织议题收集、材料准备与决议跟进' },
@@ -31,6 +30,7 @@ var TEMPLATES = [
   { id: 'inv', name: '库存周转优化', goal: '提升库存周转率，清理长龄库存并优化补货参数' },
 ];
 var pickedTemplate = 'blank';
+var pickedKind = 'general';   /* 项目类型：general 通用项目 / dev 开发项目 */
 var pickedMembers = [];       /* 新建时额外邀请的成员 { id, admin }；创建人固定为负责人和成员 */
 
 /* ---------- 列表（项目首页：待你处理 + 全部项目） ---------- */
@@ -51,8 +51,8 @@ function cardHtml(p) {
     '<div class="mgr-mcard-foot"><span class="mgr-mcard-owner">' + ownerAvatar(p.owner) + '<span>' + mgrEsc(p.owner || '未指定') + '</span></span>' +
     '<span class="mgr-mcard-tags">' + tags + '</span></div></div>';
 }
-/* 项目首页暂时只展示开发类项目（含研发任务），与开发无关的项目不出现在待你处理和全部项目里 */
-function homeProjects() { return mgrProjects().filter(function (p) { return p.containsRd; }); }
+/* 项目首页暂时只展示开发类项目（含研发任务）；非开发类的预置演示项目不出现，但用户自己新建的项目（含空白类）都要显示，否则创建后看不到 */
+function homeProjects() { return mgrProjects().filter(function (p) { return p.containsRd || p.custom; }); }
 /* 待你处理：分给我的未完成任务 + 我能管理的项目里待处理的议题 */
 function pendingItems() {
   var me = mgrCurrentPersonId();
@@ -129,6 +129,25 @@ function openProject(id) {
 
 /* ---------- 新建项目弹窗 ---------- */
 function currentTemplate() { return TEMPLATES.find(function (t) { return t.id === pickedTemplate; }); }
+function isDevKind() { return pickedKind === 'dev'; }
+function renderKinds() {
+  document.querySelectorAll('[data-mgr-pe-kind]').forEach(function (b) {
+    var on = b.getAttribute('data-mgr-pe-kind') === pickedKind;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-checked', String(on));
+  });
+  $('#mgrPeTplField').hidden = isDevKind();
+}
+function pickKind(kind) {
+  if (pickedKind === kind) return;
+  pickedKind = kind;
+  var tpl = currentTemplate();
+  $('#mgrPeGoal').value = isDevKind() ? '' : tpl ? tpl.goal : '';
+  renderKinds();
+  syncSubtabs(true);
+  syncDevExtra();
+  $('#mgrPeName').focus();
+}
 /* 模板默认只显示前 5 个，其余通过「更多」展开；选中的模板在折叠区时自动展开 */
 var TEMPLATE_VISIBLE = 5;
 var templatesExpanded = false;
@@ -147,8 +166,7 @@ function renderTemplates() {
       : '');
 }
 function syncDevExtra() {
-  var tpl = currentTemplate();
-  $('#mgrPeDevExtra').hidden = !(tpl && tpl.dev);
+  $('#mgrPeDevExtra').hidden = !isDevKind();
   syncSubtabs(!$('#mgrPeGoal').hidden);
   $('#mgrPeRepoError').hidden = true;
   $('#mgrPeBranchError').hidden = true;
@@ -166,8 +184,7 @@ function pickTemplate(id) {
 }
 
 function syncSubtabs(showGoal) {
-  var tpl = currentTemplate();
-  var dev = !!(tpl && tpl.dev);
+  var dev = isDevKind();
   if (dev) showGoal = true;
   var tabs = $('#mgrProjEditForm .mgr-pe-subtabs');
   tabs.classList.toggle('mgr-pe-subtabs--plain', dev);
@@ -176,6 +193,7 @@ function syncSubtabs(showGoal) {
   $('#mgrPeInstruction').hidden = showGoal;
   document.querySelectorAll('[data-mgr-pe-subtab]').forEach(function (b) {
     b.hidden = dev && b.getAttribute('data-mgr-pe-subtab') === 'instruction';
+    if (b.getAttribute('data-mgr-pe-subtab') === 'goal') b.textContent = dev ? '描述' : '目标';
     var on = (b.getAttribute('data-mgr-pe-subtab') === 'goal') === showGoal;
     b.classList.toggle('active', !dev && on);
     b.disabled = dev;
@@ -216,7 +234,9 @@ function selectedBaseBranch() {
 function openProjectNew() {
   var overlay = $('#mgrProjEditOverlay');
   pickedTemplate = 'blank';
+  pickedKind = 'general';
   templatesExpanded = false;
+  renderKinds();
   renderTemplates();
   $('#mgrPeName').value = '';
   $('#mgrPeGoal').value = '';
@@ -253,7 +273,7 @@ function submitProjectNew() {
   var repo = $('#mgrPeRepo').value.trim();
   var teamId = $('#mgrPeTeam').value;
   var tpl = currentTemplate();
-  var dev = !!(tpl && tpl.dev);
+  var dev = isDevKind();
   if (!name) { toast('请填写项目名称', 'error'); $('#mgrPeName').focus(); return; }
   if (dev && !mgrTeam(teamId)) {
     $('#mgrPeTeamError').hidden = false;
@@ -302,7 +322,7 @@ function submitProjectNew() {
   });
   if (!mgrAddProject(project)) { toast('项目保存失败，请重试', 'error'); return; }
   closeProjectNew();
-  toast('已创建项目：' + mgrEsc(name) + (tpl ? '（' + mgrEsc(tpl.name) + '）' : ''), 'success');
+  toast('已创建项目：' + mgrEsc(name) + '（' + (dev ? '开发项目' : tpl ? mgrEsc(tpl.name) : '通用项目') + '）', 'success');
   if (!openProjectId) renderList();
 }
 
@@ -320,6 +340,8 @@ function initProjectNewModal() {
     }
     if (t.closest('#mgrPeMemberAdd')) { inviteForNewProject(t.closest('#mgrPeMemberAdd')); return; }
     if (t.closest('[data-mgr-pe-tpl-more]')) { templatesExpanded = !templatesExpanded; renderTemplates(); return; }
+    var kindBtn = t.closest('[data-mgr-pe-kind]');
+    if (kindBtn) { pickKind(kindBtn.getAttribute('data-mgr-pe-kind')); return; }
     var tplBtn = t.closest('[data-mgr-pe-tpl]');
     if (tplBtn) { pickTemplate(tplBtn.getAttribute('data-mgr-pe-tpl')); return; }
     var sub = t.closest('[data-mgr-pe-subtab]');
