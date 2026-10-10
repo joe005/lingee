@@ -61,7 +61,7 @@ export function handleLayerAction(event){
     data[key]={workspace:cvWorkspace,owner:cvCurrentUserName()};
   }else if(action==='withdraw'){
     if(data[key]?.owner!==cvCurrentUserName())return true;
-    if(kind==='expert'&&TEAMS.some(t=>layerOf('team',t)==='shared'&&t.members.includes(id))){toast('该专家被共享智能体团队引用，请先取消智能体团队共享','warning');return true;}
+    if(kind==='expert'&&TEAMS.some(t=>layerOf('team',t)==='shared'&&t.members.includes(id))){toast('该专家被共享专家团引用，请先取消专家团共享','warning');return true;}
     delete data[key];
   }else{
     const copy=JSON.parse(JSON.stringify(item));copy.id='my-'+kind+'-'+Date.now();copy.name+='（副本）';copy.by='我创建的';copy.ownerId=assetOwnerKey();

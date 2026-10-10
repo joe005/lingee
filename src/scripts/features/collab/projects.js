@@ -10,7 +10,7 @@ import { getLoginPersonId, getRole } from '../login.js';
 import { CV_PROJECT_ICON_COLORS, cvProjectFolderIcon, cvProjectIconColor, cvProjectIconOptions } from './project-icons.js';
 import { recordConfigAudit, recordProjectConfigAudit } from './audit-log.js';
 import { cvEnsureProjectPerson, cvSearchLingeePeople } from './people-search.js';
-/* 协作开发：工作区切换、工作台项目筛选与智能体团队默认绑定
+/* 协作开发：工作区切换、工作台项目筛选与专家团默认绑定
    拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
    由 main.js 按拆分前的原始顺序调用。 */
 
@@ -96,7 +96,7 @@ function cvSyncUrl(){
 var cvWsBtn=$('#cvWsBtn');
 var cvWsMenu=$('#cvWsMenu');
 
-/* 智能体团队由项目详情维护；任务和运行期只消费项目绑定结果。 */
+/* 专家团由项目详情维护；任务和运行期只消费项目绑定结果。 */
 
 /* ---------- 项目设置：标题 / 描述 / 优先级 / 负责人 / 代码仓库 / 里程碑 ---------- */
 var cvProjEditId='';
@@ -286,7 +286,7 @@ function cvOpenProjEdit(id){
   cvSetProjectOwner(CV_MEMBERS.find(function(m){return m.name===p.owner;})||null);
   if(!cvSelectedProjectOwner){var ownerInput=$('#cv-pe-owner');if(ownerInput)ownerInput.value=p.owner||'';}
   var tsel=$('#cv-pe-team');
-  if(tsel) tsel.innerHTML='<option value="">请选择智能体团队</option>'+TEAMS.map(function(t){return '<option value="'+xesc(t.id)+'"'+(t.id===p.defaultTeam?' selected':'')+'>'+xesc(t.name)+'</option>';}).join('');
+  if(tsel) tsel.innerHTML='<option value="">请选择专家团</option>'+TEAMS.map(function(t){return '<option value="'+xesc(t.id)+'"'+(t.id===p.defaultTeam?' selected':'')+'>'+xesc(t.name)+'</option>';}).join('');
   var more=$('#cv-pe-more');if(more)more.open=false;
   var ov=$('#cv-projedit-overlay');if(ov)ov.style.display='flex';
   var memberNote=$('#cv-projedit-overlay .pe-member-default-note');if(memberNote)memberNote.hidden=true;
@@ -310,7 +310,7 @@ function cvOpenProjNew(){
   set('name','');set('desc','');if($('#cv-pe-desc-count'))$('#cv-pe-desc-count').textContent='0/100';set('status','planned');set('priority','中');set('repo','');set('start','');set('end','');
   cvSetProjectOwner(currentPerson);
   var tsel=$('#cv-pe-team');
-  if(tsel) tsel.innerHTML='<option value="">请选择智能体团队</option>'+TEAMS.map(function(t){return '<option value="'+xesc(t.id)+'">'+xesc(t.name)+'</option>';}).join('');
+  if(tsel) tsel.innerHTML='<option value="">请选择专家团</option>'+TEAMS.map(function(t){return '<option value="'+xesc(t.id)+'">'+xesc(t.name)+'</option>';}).join('');
   var more=$('#cv-pe-more');if(more)more.open=false;
   var ov=$('#cv-projedit-overlay');if(ov)ov.style.display='flex';
   var repoInput=$('#cv-pe-repo');if(repoInput)repoInput.required=true;
@@ -337,7 +337,7 @@ function cvSaveProjEdit(){
   if(isNew&&!cvCurrentUserName()){toast('请先登录再新建项目','warning');return;}
   if(!cvSelectedProjectOwner||cvSelectedProjectOwner.name!==g('owner')){toast('请搜索并选择项目负责人','warning');$('#cv-pe-owner')?.focus();return;}
   var teamId=g('team');
-  if(!TEAMS.some(function(t){return t.id===teamId;})){ toast('请选择智能体团队','error'); $('#cv-pe-team').focus(); return; }
+  if(!TEAMS.some(function(t){return t.id===teamId;})){ toast('请选择专家团','error'); $('#cv-pe-team').focus(); return; }
   var repo=g('repo');
   if(!g('desc')){toast('请填写项目描述','warning');$('#cv-pe-desc')?.focus();return;}
   if(!repo){toast('请填写 Git 仓库地址','error');$('#cv-pe-repo').focus();return;}

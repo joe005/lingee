@@ -519,7 +519,7 @@
 #view-chat .chat-asset-editor{width:50%;max-width:calc(100% - 361px);min-width:0;background:var(--bg)}
 @media(max-width:850px){#view-chat .chat-asset-editor{width:100%;max-width:none}}
 
-/* 创建专家和智能体团队使用输入区技能引用，不占用专家选择栏。 */
+/* 创建专家和专家团使用输入区技能引用，不占用专家选择栏。 */
 #view-chat.expert-builder-session #chatExpertDropdown{display:none}
 #view-chat .builder-skill-mention{display:inline-flex;align-items:center;gap:6px;vertical-align:middle;padding:4px 10px;margin:0 8px 4px 0;border-radius:var(--asset-pill-radius);background:var(--brand-fill);color:var(--brand);font-size:var(--tb-body-size);font-weight:500;white-space:nowrap;user-select:none;line-height:1.5}
 #view-chat .builder-skill-mention svg{flex:none}

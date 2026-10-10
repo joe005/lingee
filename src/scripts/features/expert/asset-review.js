@@ -33,13 +33,13 @@ function submitToTenant(kind,item,tenant){
   if(existing)return assetReviewDialog('已提交审核','<p>已有待审核版本，请等待管理平台审核。</p>',null,'关闭');
   const bundle=[],data=definition(kind,item,tenant);
   if(kind==='expert'){
-    if(!data.modes?.length)return assetReviewDialog('无法提交','<p>智能体至少需要一种工作模式。</p>',null,'关闭');
+    if(!data.modes?.length)return assetReviewDialog('无法提交','<p>专家至少需要一种工作模式。</p>',null,'关闭');
   }else{
     data.members=[];
     for(const id of item.members){
       const member=EX[id];if(!member)return assetReviewDialog('无法提交',`<p>成员 ${xesc(id)} 不存在。</p>`,null,'关闭');
-      if(member.source==='tenant'&&member.tenantId!==tenant)return assetReviewDialog('无法提交','<p>智能体团队包含其他企业的智能体，请调整成员后重试。</p>',null,'关闭');
-      if(member.mine&&member.ownerId&&member.ownerId!==assetOwnerKey())return assetReviewDialog('无法提交','<p>智能体团队包含其他用户的个人智能体，请调整成员后重试。</p>',null,'关闭');
+      if(member.source==='tenant'&&member.tenantId!==tenant)return assetReviewDialog('无法提交','<p>专家团包含其他企业的专家，请调整成员后重试。</p>',null,'关闭');
+      if(member.mine&&member.ownerId&&member.ownerId!==assetOwnerKey())return assetReviewDialog('无法提交','<p>专家团包含其他用户的个人专家，请调整成员后重试。</p>',null,'关闭');
       const ref=!member.mine?publishedExpertRef(id):null;
       if(ref)data.members.push(ref.id);
       else{const expert=definition('expert',member,tenant);bundle.push({kind:'expert',data:expert});data.members.push(expert.id);}
@@ -48,7 +48,7 @@ function submitToTenant(kind,item,tenant){
     delete data.memberRefs;
   }
   bundle.push({kind,data});
-  assetReviewDialog('提交审核',`<p>将「${xesc(item.name)}」提交到租户 ${xesc(tenantName)}，审核通过后可在“更多”中安装。</p>${bundle.length>1?`<p>将同时提交 ${bundle.length-1} 位个人成员智能体，审核通过后随智能体团队自动安装。</p>`:''}<label class="platform-import-note-label">提交说明 <span>*</span><textarea id="assetReviewNote" rows="3" maxlength="500" placeholder="说明用途和本次修改"></textarea></label><div class="platform-dialog-error" id="assetReviewError"></div><p class="platform-dialog-note">原型演示：审核和发布使用当前浏览器持久化数据。</p>`,()=>{
+  assetReviewDialog('提交审核',`<p>将「${xesc(item.name)}」提交到租户 ${xesc(tenantName)}，审核通过后可在“更多”中安装。</p>${bundle.length>1?`<p>将同时提交 ${bundle.length-1} 位个人成员专家，审核通过后随专家团自动安装。</p>`:''}<label class="platform-import-note-label">提交说明 <span>*</span><textarea id="assetReviewNote" rows="3" maxlength="500" placeholder="说明用途和本次修改"></textarea></label><div class="platform-dialog-error" id="assetReviewError"></div><p class="platform-dialog-note">原型演示：审核和发布使用当前浏览器持久化数据。</p>`,()=>{
     if(!reviewTenants().some(workspace=>workspace.id===tenant)||item.ownerId&&item.ownerId!==assetOwnerKey()){$('#assetReviewError').textContent='当前账号已无提交权限，请重新登录后重试';return;}
     const note=$('#assetReviewNote').value.trim();if(!note){$('#assetReviewError').textContent='请填写提交说明';return;}
     const rows=reviews();if(rows.some(row=>row.kind===kind&&row.sourceId===item.id&&row.tenantId===tenant&&row.status==='pending')){$('#assetReviewError').textContent='该内容已有待审核版本';return;}
@@ -92,7 +92,7 @@ export function openAssetReview(id,onChange){
     const names=(ids)=>ids.map(id=>row.bundle.find(entry=>entry.data.id===id)?.data.name||EX[id]?.name||id).join('、');
     return `<section class="platform-review-definition"><div class="platform-detail-headline">${team?'':`<img class="x-av" src="${xav(d.k||'eng')}" alt="">`}<strong>${xesc(d.name)}</strong><span>V${nextReviewVersion(item.kind,d.id)}</span></div><dl class="platform-info-list"><dt>状态</dt><dd>${{pending:'待审核',approved:'审核通过',rejected:'已驳回'}[row.status]}</dd><dt>当前上架</dt><dd>${currentPublishedVersion(item.kind,d.id)?'V'+currentPublishedVersion(item.kind,d.id):'暂无'}</dd><dt>编码</dt><dd>${xesc(d.id)}</dd><dt>简介</dt><dd>${xesc(d.desc||'暂无简介')}</dd><dt>更新说明</dt><dd>${xesc(row.note)}</dd><dt>更新时间</dt><dd>${xesc(row.at)}</dd>${team?`<dt>成员</dt><dd>${xesc(names(d.members||[]))}</dd><dt>组长</dt><dd>${xesc(names(d.leadId?[d.leadId]:[]))}</dd><dt>交付阶段</dt><dd>${xesc((d.stages||[]).map(stage=>stage.name||stage.title||stage).join('、')||'暂无')}</dd>`:''}</dl><button type="button" class="platform-link" data-review-history="${xesc(d.id)}">查看历史版本</button> <button type="button" class="platform-link" data-review-export="${xesc(d.id)}">导出 ZIP</button></section>`;
   }).join('');
-  assetReviewDialog((row.kind==='team'?'智能体团队':'智能体')+'详情',`${contents}${row.reason?`<p>驳回原因：${xesc(row.reason)}</p>`:''}${row.status==='pending'&&canApprove?'<label class="platform-import-note-label" id="assetRejectFields" hidden>驳回原因<textarea id="assetRejectReason" rows="2" maxlength="500" placeholder="请填写驳回原因"></textarea></label><div class="platform-dialog-error" id="assetReviewError"></div>':''}`,row.status==='pending'&&canApprove?()=>{
+  assetReviewDialog((row.kind==='team'?'专家团':'专家')+'详情',`${contents}${row.reason?`<p>驳回原因：${xesc(row.reason)}</p>`:''}${row.status==='pending'&&canApprove?'<label class="platform-import-note-label" id="assetRejectFields" hidden>驳回原因<textarea id="assetRejectReason" rows="2" maxlength="500" placeholder="请填写驳回原因"></textarea></label><div class="platform-dialog-error" id="assetReviewError"></div>':''}`,row.status==='pending'&&canApprove?()=>{
     if(!canApprovePlatformReview(row))return;
     const rows=reviews(),request=rows.find(item=>item.id===id);if(!request||request.status!=='pending')return;
     if(!$('#assetRejectFields').hidden){

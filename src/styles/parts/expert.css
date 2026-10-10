@@ -1,5 +1,5 @@
 /* ============================================================
-   专家 / 智能体团队
+   专家 / 专家团
    追加在文件末尾，遵循本工程的层叠顺序约定
    配色一律取 tokens.css，勿在此写死色值
    ============================================================ */
@@ -23,7 +23,7 @@
 .x-empty { grid-column: 1 / -1; text-align: center; color: var(--text-soft); padding: 48px 0; font-size: 14px; }
 .x-empty-sm { color: var(--text-soft); font-size: 13px; text-align: center; padding: 18px; }
 
-/* ---- 智能体团队配置弹窗 ---- */
+/* ---- 专家团配置弹窗 ---- */
 .team-config-modal { width: min(820px, 92vw); height: min(610px, 86vh); }
 .team-config-modal .modal-header{display:flex;align-items:center;gap:12px}
 .team-config-modal .modal-header-actions{display:flex;align-items:center;gap:8px;margin-left:auto;margin-right:34px}
@@ -110,7 +110,7 @@
 .x-mrow-m { display: block; font-size: 11.5px; color: var(--text-soft); margin-top: 4px; }
 
 /* ---- 专家详情弹窗 ---- */
-/* 跟智能体团队配置弹窗一样宽，别让专家详情挤成一条；
+/* 跟专家团配置弹窗一样宽，别让专家详情挤成一条；
    高度也定死——概览短、知识长，不定死切页签时弹窗会跟着跳一下 */
 .expert-detail-modal { width: min(720px, 92vw); height: min(600px, 86vh); }
 .expert-detail-modal > .modal-body { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
@@ -136,7 +136,7 @@
 .x-cmd-go { flex: none; width: 15px; height: 15px; color: var(--text-soft); }
 .x-cmd:hover .x-cmd-go { color: var(--brand); }
 
-/* ---- composer 里的智能体团队 chip 与下拉 ---- */
+/* ---- composer 里的专家团 chip 与下拉 ---- */
 .chip-faces { display: inline-flex; margin-right: 2px; }
 .chip-faces img { width: 18px; height: 18px; border-radius: 5px; margin-right: -6px; border: 1.5px solid var(--bg); }
 .expert-menu { min-width: 280px; }
@@ -148,7 +148,7 @@
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 
-/* 智能体团队弹窗页脚：删除左置，主操作右置 */
+/* 专家团弹窗页脚：删除左置，主操作右置 */
 .team-modal-footer { justify-content: flex-start; }
 .team-footer-spacer { flex: 1; }
 .team-delete-btn { color: var(--danger); }
@@ -175,7 +175,7 @@
 /* 标题去掉吉祥物后独立成行 */
 #view-newtask .greeting { display: block; text-align: center; }
 
-/* composer 顶部：选中的专家 / 智能体团队标签 */
+/* composer 顶部：选中的专家 / 专家团标签 */
 .composer-tags { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 4px 10px; }
 .composer-tags.hidden { display: none; }
 .ctag {
@@ -382,7 +382,7 @@
 .x-call:focus-visible { opacity: 1; }
 @media (hover: none) { .x-call { opacity: 1; } }
 
-/* ---------- 智能体团队弹窗压缩 ---------- */
+/* ---------- 专家团弹窗压缩 ---------- */
 .team-hint-inline {
   margin-left: 8px;
   font-size: 11.5px;
@@ -402,7 +402,7 @@
   .team-config-modal .team-members { grid-template-columns: 1fr; }
 }
 
-/* 智能体团队的触发词单行显示（说明进 title），弹窗不至于太长 */
+/* 专家团的触发词单行显示（说明进 title），弹窗不至于太长 */
 .x-cmd-1 { padding: 7px 12px; margin-bottom: 5px; }
 .x-cmd-1 .x-cmd-q { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
@@ -457,7 +457,7 @@
 #expertEditForm .team-pane[data-xpane="kn"] .xk-side { max-height: none; min-height: 0; overflow-y: auto; }
 #expertEditForm .team-pane[data-xpane="kn"] .xk-docs { max-height: none; min-height: 0; overflow-y: auto; border: 1px solid var(--border); border-radius: 10px; padding: 10px; background: var(--fill-1); }
 
-/* 智能体团队按问题类型切换交付路径，保留阶段说明与能力覆盖提示。 */
+/* 专家团按问题类型切换交付路径，保留阶段说明与能力覆盖提示。 */
 #teamModal .team-stage-tree-select{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;color:var(--text-secondary);font-size:var(--tb-small-size)}
 #teamModal .team-stage-tree-select select{width:100%;height:36px;box-sizing:border-box;padding:0 10px;border:1px solid var(--border-hover);border-radius:10px;background:var(--bg);color:var(--text);font:inherit;font-size:var(--tb-body-size)}
 #teamModal .team-stage-tree-select select:focus-visible{outline:2px solid var(--focus-ring);outline-offset:1px}

@@ -1,5 +1,5 @@
 /* ============================================================
-   专家 / 智能体团队 —— 能力项、可承担工作
+   专家 / 专家团 —— 能力项、可承担工作
    追加在文件末尾，勿前置（层叠顺序见 README）
    ============================================================ */
 
@@ -67,7 +67,7 @@
 #view-collab .expert-skills-label{font-size:10px;color:var(--text-soft);padding:2px 1px}
 #view-collab .expert-skill-more{border:1px dashed var(--border);background:var(--bg);color:var(--text-soft)}
 
-/* 专家卡片对话按钮：与智能体团队卡片的 .x-call 统一，别让浏览器默认按钮样式漏出来 */
+/* 专家卡片对话按钮：与专家团卡片的 .x-call 统一，别让浏览器默认按钮样式漏出来 */
 #view-collab .expert-chat-btn{position:absolute;top:12px;right:12px;width:auto;height:auto;
   padding:3px 10px;border:1px solid var(--border-hover);border-radius:999px;background:var(--bg);
   font:inherit;font-size:11.5px;line-height:1.5;color:var(--text-secondary);cursor:pointer;

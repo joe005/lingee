@@ -63,7 +63,7 @@ function planTasks(projectId) {
   return mgrProjectTasks(projectId).filter(function (t) { return !mgrIsDevTask(t) && !isRdTask(t); });
 }
 
-/* 执行主体：当前阶段的智能体 > 任务挂的智能体团队 > 用户自己执行 */
+/* 执行主体：当前阶段的专家 > 任务挂的专家团 > 用户自己执行 */
 function executorOf(task) {
   var plan = task.executionPlan || [];
   var stage = plan.find(function (s) { return s.status !== 'done'; }) || plan[plan.length - 1];
@@ -230,7 +230,7 @@ function listViewHtml(project, tasks, canOpenSession) {
   });
   g.top.forEach(function (t) { rows += taskRowHtml(t, canOpenSession, ++n); });
   if (!rows) return '<div class="mgr-empty">暂无任务。点「＋ 新建任务」创建通用任务；研发任务在「研发任务」页签维护。</div>';
-  return '<table class="mgr-task-table"><thead><tr><th>序号</th><th>任务</th><th>关联会话</th><th>执行智能体</th><th>协作人</th><th>截止时间</th><th>状态</th><th>操作</th></tr></thead><tbody>' +
+  return '<table class="mgr-task-table"><thead><tr><th>序号</th><th>任务</th><th>关联会话</th><th>执行专家</th><th>协作人</th><th>截止时间</th><th>状态</th><th>操作</th></tr></thead><tbody>' +
     rows + '</tbody></table>';
 }
 
@@ -509,7 +509,7 @@ function taskPanelHtml(task) {
     var expert = mgrExpert(s.expertId);
     return '<div class="mgr-task-stage-item"><div class="mgr-task-stage is-' + st.cls + '"><span class="mgr-task-stage-index">' +
       String(i + 1).padStart(2, '0') + '</span><div class="mgr-task-stage-main"><strong>' + mgrEsc(s.title || s.workType) +
-      '</strong><span class="mgr-task-stage-meta">' + (expert ? '智能体「' + mgrEsc(expert.name) + '」执行' : mgrEsc(mgrPersonName(s.assigneeId))) +
+      '</strong><span class="mgr-task-stage-meta">' + (expert ? '专家「' + mgrEsc(expert.name) + '」执行' : mgrEsc(mgrPersonName(s.assigneeId))) +
       '</span></div><span class="mgr-task-stage-state st-' + st.cls + '"><i aria-hidden="true">' + st.icon + '</i>' + st.label + '</span></div></div>';
   }).join('');
   var events = [{ time: String(task.createDate || ''), text: '创建任务' }];
@@ -529,7 +529,7 @@ function taskPanelHtml(task) {
     (isRdTask(task) ? '<span class="mgr-tag mgr-tag--brand">研发任务</span>' : '') + statusTag(task.status) + '</div></div>' +
     sectionTitle('执行概览') + '<div class="mgr-tp-kv">' +
     kv('当前处理人', mgrEsc(mgrPersonName(handlerOf(task)))) +
-    kv('执行智能体', ex.cls === 'expert' ? mgrEsc(ex.name) : '—') +
+    kv('执行专家', ex.cls === 'expert' ? mgrEsc(ex.name) : '—') +
     kv('协作人', collaborators.length ? mgrEsc(collaborators.join('、')) : '—') +
     kv('优先级', { urgent: '紧急', high: '高', medium: '中', low: '低' }[task.priority] || '中') +
     kv('计划截止', mgrDay(task.dueDate)) +
@@ -573,7 +573,7 @@ function renderTaskPanel() {
 
 /* ---------- 新建任务弹窗 ---------- */
 /* 研发任务的执行计划，对齐开发板块新建任务的执行计划表：
-   执行阶段取自项目交付智能体团队的交付路径（智能体按阶段自动匹配），
+   执行阶段取自项目交付专家团的交付路径（专家按阶段自动匹配），
    每个节点设置自动审核与执行人；执行人按项目角色默认匹配。 */
 var draftStages = [];
 var planProject = null;
@@ -613,8 +613,8 @@ function renderStages() {
   var members = mgrProjectMembers(project);
   var team = projectTeamOf(project);
   $('#mgrTnPlanHint').textContent = team
-    ? '按「' + team.name + '」的交付路径选择阶段，智能体按阶段自动匹配'
-    : '项目未绑定交付智能体团队，按默认交付路径选择阶段';
+    ? '按「' + team.name + '」的交付路径选择阶段，专家按阶段自动匹配'
+    : '项目未绑定交付专家团，按默认交付路径选择阶段';
   $('#mgrTnStageAdd').disabled = editLocked || !options.some(function (o) {
     return !draftStages.some(function (st) { return st.workType === o.name; });
   });
@@ -646,7 +646,7 @@ function addStage() {
   if (!project) return;
   var used = new Set(draftStages.map(function (st) { return st.workType; }));
   var next = stageOptions(project).find(function (o) { return !used.has(o.name); });
-  if (!next) { toast('智能体团队的交付阶段已全部加入执行计划', 'warning'); return; }
+  if (!next) { toast('专家团的交付阶段已全部加入执行计划', 'warning'); return; }
   draftStages.push(stageFromOption(project, next));
   renderStages();
   var selects = document.querySelectorAll('#mgrTnStages [data-mgr-tn-stage-type]');

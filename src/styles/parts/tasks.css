@@ -1398,7 +1398,7 @@ input[type=date].tk-mc-pill{width:auto}
   .tk-body.is-split .tk-doc-preview.show{width:100%;border-left:0;border-top:1px solid var(--divider)}
 }
 
-/* ============ 新建任务弹窗：智能体团队下拉二级展开 + 产物确认人 ============ */
+/* ============ 新建任务弹窗：专家团下拉二级展开 + 产物确认人 ============ */
 .xp-form-menu{min-width:300px}
 .xp-team-row{display:flex;align-items:center;gap:9px;padding:8px 10px;cursor:pointer;border-radius:8px;transition:background .1s}
 .xp-team-row:hover,.xp-team-row.xp-hover{background:var(--hover)}
@@ -1779,7 +1779,7 @@ td.niu-plan-empty{padding:18px 0;text-align:center;color:var(--text-soft);font-s
 .tk-import-reqs-list{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:5px}
 .tk-import-reqs-list li{font-size:13px;color:var(--text-secondary);line-height:1.5}
 
-/* 任务页签：与专家、智能体团队的来源筛选一致，使用描边胶囊；工具栏与列表同底色、同边距。 */
+/* 任务页签：与专家、专家团的来源筛选一致，使用描边胶囊；工具栏与列表同底色、同边距。 */
 #view-tasks:not(.tk-project-list-mode) .tk-toolbar{padding:16px 28px 6px;border-bottom:0}
 #view-tasks.tk-list-mode:not(.tk-project-list-mode) .tk-toolbar{background:var(--bg)}
 #view-tasks:not(.tk-project-list-mode) .tk-toolbar .tk-view-bar{height:34px;gap:8px}

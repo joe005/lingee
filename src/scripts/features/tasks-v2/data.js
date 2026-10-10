@@ -187,7 +187,7 @@ function tkArtifactStageId(task, phaseId) {
   if (team === 'general-app-dev' && ['planning','agent'].includes(phaseId)) return 'implementation';
   return phaseId;
 }
-/* 应用开发（通用应用开发智能体团队）的「开发实现」产物是部署后的网站，可直接预览和操作。
+/* 应用开发（通用应用开发专家团）的「开发实现」产物是部署后的网站，可直接预览和操作。
    问卷类项目用问卷调研演示应用，工单类项目用工单管理系统演示应用；其他项目按业务主题（工单、采购、报销、库存…）生成演示网站，
    没有命中主题时用任务产物里的演示列表数据。 */
 function tkWebsiteArtifact(task, doc) {
@@ -324,7 +324,7 @@ export const TK_TASKS = [
   { id: 50, code: 'T1000050', title: '库存实时预警引擎', desc: '开发库存实时预警引擎：监控安全库存阈值（低于安全线黄色/为零红色）、库龄超期（>180天橙色/>365天红色）、呆滞料识别（无动销>90天标记）。预警事件推送至仓储主管和对应采购员，同时在看板滚动展示。引擎已部署，正在调试阈值参数和推送频率。', status: 'in_progress', priority: 'high',   assignee: 'p01', project: 'warehouse', labels: ['缺陷'],        dueDate: '2026-09-29', createDate: '2026-09-20' },
   { id: 51, code: 'T1000051', title: '库龄分析与呆滞料识别', desc: '开发库龄分析与呆滞料识别报表：按物料维度展示入库日期、库龄天数、库龄分布直方图。呆滞料识别规则：90天无动销预警、180天冻结采购建议、365天启动清仓处理。报表支持按仓库/品类/供应商筛选，自动计算呆滞金额占比。已完成后端分析逻辑。', status: 'backlog',     priority: 'medium', assignee: 'p02', project: 'warehouse', labels: ['需求'],     dueDate: '2026-10-03', createDate: '2026-09-22' },
   { id: 52, code: 'T1000052', title: '仓储大屏可视化', desc: '开发仓储运营大屏（1920x1080横屏）：四区布局——今日出入库概览（单数/数量/异常）、库存水位热力图（按库区色温展示利用率）、实时出入库流水滚动、预警待处理清单。数据每15秒自动刷新，支持暂停。已上线部署在仓库入口大屏，日均运行稳定。', status: 'done',        priority: 'low',    assignee: 'p04', project: 'warehouse', labels: ['缺陷'],     dueDate: '2026-09-14', createDate: '2026-09-07' },
-  { id: 73, code: 'T1000073', title: '采购合同电子签章需求梳理', desc: '梳理采购合同电子签章的适用单据、签署顺序、证书校验和归档范围；待法务确认签章主体与验收边界后，再安排智能体团队评估和实施。', status: 'planned', priority: 'medium', assignee: 'p02', project: 'purchase', labels: ['需求'], dueDate: '2026-10-12', createDate: '2026-09-24' },
+  { id: 73, code: 'T1000073', title: '采购合同电子签章需求梳理', desc: '梳理采购合同电子签章的适用单据、签署顺序、证书校验和归档范围；待法务确认签章主体与验收边界后，再安排专家团评估和实施。', status: 'planned', priority: 'medium', assignee: 'p02', project: 'purchase', labels: ['需求'], dueDate: '2026-10-12', createDate: '2026-09-24' },
   { id: 74, code: 'T1000074', title: '旧版工单短信模板迁移', desc: '原计划将旧版工单短信模板迁移到新通知中心；因模板已被统一消息服务替代，项目负责人取消该项工作并保留任务记录供追溯。', status: 'cancelled', priority: 'low', assignee: 'p04', project: 'service', labels: ['缺陷'], dueDate: '2026-09-30', createDate: '2026-09-20' },
 ];
 
@@ -537,7 +537,7 @@ const TK_COSMIC_WUXF_TASKS = [
       { from:'in_progress', to:'blocked', time:'2026-09-29 15:42:00', authorId:'p23' },
     ],
     blockedRun:{
-      agentName:'元模型开发', teamName:'苍穹应用开发智能体团队', failedAt:'2026-09-29 15:42', duration:'2分11秒',
+      agentName:'元模型开发', teamName:'苍穹应用开发专家团', failedAt:'2026-09-29 15:42', duration:'2分11秒',
       reason:'增量扫描发现重复 EntryId，继续写入可能覆盖现有控件元数据。',
       next:'清理冲突记录并确认局部覆盖优先级后重新执行扫描。',
       steps:[['读取增量变更','已识别本批次新增与修改的控件定义。'],['合并局部覆盖','发现两条记录使用相同 EntryId。'],['执行写入前校验','为避免覆盖现有数据，已中止本次写入。']],
@@ -700,7 +700,7 @@ const TK_SURVEY_TASKS = [
 ];
 /* 旧 6 阶段执行计划（含实现规划、部署交付）先转成过渡的 5 阶段：方案设计→架构设计，编码实现→开发实现，
    实现规划、部署交付并入相邻阶段，新增智能体开发（开发实现完成后视为已完成）。
-   通用应用开发智能体团队现行的交付路径是 4 个阶段：需求分析、系统设计、开发实现、测试验证，
+   通用应用开发专家团现行的交付路径是 4 个阶段：需求分析、系统设计、开发实现、测试验证，
    过渡结果随后由 migrateDeliveryPlan 统一迁移到 4 阶段，最终以 4 阶段为准。 */
 function tkToGeneralAppPlan(task) {
   var plan = task.executionPlan;

@@ -1,10 +1,10 @@
 <!-- 管理板块弹窗容器（.mgr-scope 提供弹窗内的按钮与标签样式） -->
 <div class="mgr-scope" id="mgrModals">
 <!-- 管理 · 新建项目弹窗：项目新建统筹到管理板块。
-     先选项目类型：开发项目展开 Git 地址（必录）与智能体团队，目标改称「描述」；
+     先选项目类型：开发项目展开 Git 地址（必录）与专家团，目标改称「描述」；
      通用项目再选模板（空白、预算目标制定等）；其余交互对齐管理原型（模板 chips、目标/项目指令页签）。
-     负责人默认当前登录用户、成员默认创建人，弹窗内不再设置周期、优先级与项目智能体
-     （项目智能体在项目详情右栏「智能体团队 → 管理」中增删）。
+     负责人默认当前登录用户、成员默认创建人，弹窗内不再设置周期、优先级与项目专家
+     （项目专家在项目详情右栏「专家团 → 管理」中增删）。
      顶层沿用 .sync-overlay（display:none→flex），ESC 关闭命中 main.js 既有选择器。 -->
 <div class="sync-overlay mgr-modal" id="mgrProjEditOverlay" style="display:none" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="mgrProjEditTitle">
   <div class="sync-modal mgr-projedit-modal">
@@ -60,9 +60,9 @@
             <p class="mgr-pe-error" id="mgrPeBranchError" hidden></p>
           </div>
           <div class="mgr-pe-field">
-            <label for="mgrPeTeam">智能体团队 <b aria-hidden="true">*</b></label>
-            <select id="mgrPeTeam"><option value="" disabled>请选择智能体团队</option></select>
-            <p class="mgr-pe-error" id="mgrPeTeamError" hidden>开发类项目必须选择智能体团队，用于按阶段生成研发任务</p>
+            <label for="mgrPeTeam">专家团 <b aria-hidden="true">*</b></label>
+            <select id="mgrPeTeam"><option value="" disabled>请选择专家团</option></select>
+            <p class="mgr-pe-error" id="mgrPeTeamError" hidden>开发类项目必须选择专家团，用于按阶段生成研发任务</p>
           </div>
         </div>
       </form>

@@ -26,7 +26,7 @@ function mentionGroup(label, items, type) {
         : '<span class="tk-mention-avatar" style="background:' + escapeHtml(item.color || 'var(--brand)') + '">' + escapeHtml(item.avatar || item.name.slice(0, 1)) + '</span>';
       return '<button type="button" role="option" aria-selected="false" class="tk-mention-item" data-mention-name="' + escapeHtml(item.name) + '" data-mention-type="' + type + '" data-mention-id="' + escapeHtml(item.id) + '">'
         + avatar + '<span class="tk-mention-name">' + escapeHtml(item.name) + '</span>'
-        + (type === 'person' ? '' : '<span class="tk-mention-type">' + (type === 'team' ? '智能体团队成员' : '智能体') + '</span>') + '</button>';
+        + (type === 'person' ? '' : '<span class="tk-mention-type">' + (type === 'team' ? '专家团成员' : '智能体') + '</span>') + '</button>';
     }).join('') + '</div>';
 }
 
@@ -51,7 +51,7 @@ export function createMentionPanel(textarea, query) {
     .filter(Boolean).filter(function (row) { return mentionMatches(row, query); });
   var agents = EXPERTS.filter(function (row) { return !teamIds.has(row.id) && mentionMatches(row, query); })
     .concat(TK_AGENTS.filter(function (row) { return mentionMatches(row, query); }));
-  var html = mentionGroup(team ? team.name + ' · 成员' : '智能体团队成员', members, 'team')
+  var html = mentionGroup(team ? team.name + ' · 成员' : '专家团成员', members, 'team')
     + mentionGroup('人员', people, 'person') + mentionGroup('智能体', agents, 'agent');
   if (!html) html = '<div class="tk-mention-empty">无匹配结果</div>';
   if (!pageState.mentionPanel) {

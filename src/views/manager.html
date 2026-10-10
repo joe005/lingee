@@ -211,7 +211,7 @@
             <textarea id="mgrTnDesc" rows="4" placeholder="说明任务背景、工作内容与期望结果。"></textarea>
             <div class="mgr-tn-desc-tools" data-mgr-tn-general-only>
               <button type="button" class="mgr-tn-tool" data-mgr-tn-tool="附件">＋ 附件</button>
-              <button type="button" class="mgr-tn-tool" data-mgr-tn-tool="智能体">◎ 选择智能体</button>
+              <button type="button" class="mgr-tn-tool" data-mgr-tn-tool="专家">◎ 选择专家</button>
               <button type="button" class="mgr-tn-tool" data-mgr-tn-tool="模型">✦ 选择模型</button>
             </div>
           </div>
@@ -243,7 +243,7 @@
           <!-- 研发任务：执行阶段（可编辑） -->
           <!-- 研发任务：执行计划（对齐开发板块新建任务的执行计划表：执行阶段 / 自动审核 / 执行人） -->
           <div class="mgr-tn-rd" id="mgrTnRdPane" hidden>
-            <div class="mgr-tn-rd-head">执行计划 <small id="mgrTnPlanHint">按交付智能体团队的交付路径选择阶段，智能体按阶段自动匹配</small></div>
+            <div class="mgr-tn-rd-head">执行计划 <small id="mgrTnPlanHint">按交付专家团的交付路径选择阶段，专家按阶段自动匹配</small></div>
             <table class="mgr-tn-plan-table">
               <colgroup><col class="mgr-tn-col-index"><col><col class="mgr-tn-col-review"><col class="mgr-tn-col-owner"><col class="mgr-tn-col-action"></colgroup>
               <thead><tr><th>序号</th><th>执行阶段</th><th>自动审核</th><th>审核人</th><th><button type="button" class="mgr-tn-plan-add" id="mgrTnStageAdd">＋ 添加节点</button></th></tr></thead>
@@ -301,12 +301,12 @@
     </div>
   </div>
 
-  <!-- 智能体团队维护弹窗（复用智能体团队页签渲染，内部为 智能体团队/智能体 两个并列页签） -->
+  <!-- 专家团维护弹窗（复用专家团页签渲染，内部为 专家团/专家 两个并列页签） -->
   <div class="sync-overlay mgr-modal" id="mgrTeamOverlay" style="display:none" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="mgrTeamTitle">
     <div class="sync-modal mgr-railmodal">
       <div class="sync-modal__header mgr-projedit-header">
-        <span class="mgr-projedit-title" id="mgrTeamTitle">智能体团队</span>
-        <button type="button" class="sync-modal__close mgr-projedit-close" data-mgr-team-close aria-label="关闭智能体团队弹窗">
+        <span class="mgr-projedit-title" id="mgrTeamTitle">专家团</span>
+        <button type="button" class="sync-modal__close mgr-projedit-close" data-mgr-team-close aria-label="关闭专家团弹窗">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>

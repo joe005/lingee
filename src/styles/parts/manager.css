@@ -1,7 +1,7 @@
 /* 管理板块样式按源码原顺序引入；编号保持原有层叠关系，后面的文件会覆盖前面的同名规则。
    新增样式放进对应界面的文件末尾；跨界面的覆盖规则放到编号更大的文件里。 */
 @import './manager/01-shell-base.css';   /* 管理板块基础：作用域、按钮、标签、侧栏菜单 */
-@import './manager/02-detail-tasks.css';   /* 项目详情头、卡片、智能体团队、知识库、页签与任务表、里程碑 */
+@import './manager/02-detail-tasks.css';   /* 项目详情头、卡片、专家团、知识库、页签与任务表、里程碑 */
 @import './manager/03-gantt.css';   /* 甘特图视图 */
 @import './manager/04-rail-ask.css';   /* 详情右栏、问灵基输入条、右栏弹窗 */
 @import './manager/05-tasknew-modal.css';   /* 新建任务弹窗 */

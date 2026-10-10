@@ -615,7 +615,7 @@ function assetCreateQuestionHtml(question,interactive){
     +(interactive?'<small>也可以直接在下方输入回答</small>':'')+'</div>';
 }
 function builderSkillChip(){
-  return '<span class="builder-skill-mention" data-skill-mention="expert-builder" contenteditable="false" title="expert-builder · 创建专家和智能体团队"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="7" width="16" height="13" rx="4"/><path d="M12 3v4M8 12v2M16 12v2M9 17h6"/><circle cx="12" cy="2" r="1"/></svg><span>expert-builder</span></span>';
+  return '<span class="builder-skill-mention" data-skill-mention="expert-builder" contenteditable="false" title="expert-builder · 创建专家和专家团"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="7" width="16" height="13" rx="4"/><path d="M12 3v4M8 12v2M16 12v2M9 17h6"/><circle cx="12" cy="2" r="1"/></svg><span>expert-builder</span></span>';
 }
 function builderInputText(){
   var copy=chatInput.cloneNode(true);copy.querySelectorAll('[data-skill-mention]').forEach(function(chip){chip.remove();});return copy.textContent.trim();
@@ -624,7 +624,7 @@ function ensureBuilderMention(){
   if(!chatInput.querySelector('[data-skill-mention="expert-builder"]'))chatInput.insertAdjacentHTML('afterbegin',builderSkillChip()+' ');
 }
 function renderAssetCreateChat(session){
-  var draft=session.assetCreate,kindName=draft.kind==='team'?'智能体团队':'智能体';
+  var draft=session.assetCreate,kindName=draft.kind==='team'?'专家团':'智能体';
   if(['draft','scope'].includes(draft.status)){
     draft.question=assetClarifyingQuestion(draft);
     draft.status=draft.question?'question':'ready';
@@ -659,7 +659,7 @@ function handleAssetCreateMessage(session,text){
     if(result.ok){
       if(draft.kind==='expert'){set_cvExpertLayer('personal');cvRenderExperts();}
       else{set_teamLayer('personal');renderExpertGrid();}
-      toast('已创建'+(draft.kind==='team'?'智能体团队':'智能体'),'success');
+      toast('已创建'+(draft.kind==='team'?'专家团':'智能体'),'success');
     }else{draft.status='error';draft.error=result.message;}
   }
   saveChatSessions();renderChatSessions();renderAssetCreateChat(session);
@@ -672,7 +672,7 @@ export function startAssetCreationChat(kind){
   activeSessionTaskId=null;
   setComposerTaskReference(null);
   set_activePick({kind:'expert',id:'software-product-manager',auto:false});
-  var session=createChatSession(kind==='team'?'创建智能体团队':'创建智能体',null);
+  var session=createChatSession(kind==='team'?'创建专家团':'创建智能体',null);
   session.assetCreate=newAssetDraft(kind);
   session.ownerId=assetOwnerKey();
   saveChatSessions();
@@ -689,7 +689,7 @@ export function startAssetCreationChat(kind){
 export function startAssetEditChat(kind,id,name){
   if(!['expert','team'].includes(kind)||!id)return;
   closeTaskExceptionHistory();
-  var session=createChatSession('编辑'+(kind==='team'?'智能体团队':'智能体')+' · '+name,null);
+  var session=createChatSession('编辑'+(kind==='team'?'专家团':'智能体')+' · '+name,null);
   session.assetEdit={kind:kind,id:id,name:name};
   session.ownerId=assetOwnerKey();
   saveChatSessions();
@@ -1806,7 +1806,7 @@ function chatDoSend(){
   var assetEditing=chatSessions.find(function(row){return row.id===activeSessionId&&row.assetEdit;});
   if(assetEditing){
     var edit=assetEditing.assetEdit;
-    var field=/^(?:把|将)?(?:智能体|智能体团队|数字员工|专家团|专家)?(?:的)?(名称|名字|简介|说明|描述)(?:改为|改成|修改为|设为|设置为|：|:|是)\s*[「“]?(.+?)[」”]?\s*$/.exec(t);
+    var field=/^(?:把|将)?(?:智能体|专家团|数字员工|专家团|专家)?(?:的)?(名称|名字|简介|说明|描述)(?:改为|改成|修改为|设为|设置为|：|:|是)\s*[「“]?(.+?)[」”]?\s*$/.exec(t);
     var target=field&&(field[1]==='名称'||field[1]==='名字'?(edit.kind==='team'?'teamName':'xeName'):(edit.kind==='team'?'teamDesc':'xeDesc'));
     var inputEl=target&&document.getElementById(target);
     if(inputEl){inputEl.value=field[2].replace(/^[「“]|[」”]$/g,'').trim();inputEl.dispatchEvent(new Event('input',{bubbles:true}));}
@@ -2125,7 +2125,7 @@ export function initComposer() {
     var edit=event.detail;
     chatSessions.filter(function(session){return session.assetEdit?.kind===edit.kind&&session.assetEdit?.id===edit.id;}).forEach(function(session){
       session.assetEdit.name=edit.name;
-      session.title='编辑'+(edit.kind==='team'?'智能体团队':'智能体')+' · '+edit.name;
+      session.title='编辑'+(edit.kind==='team'?'专家团':'智能体')+' · '+edit.name;
       if(session.id===activeSessionId)$('#chatTitle').textContent=session.title;
     });
     saveChatSessions();renderChatSessions();
@@ -2152,7 +2152,7 @@ export function initComposer() {
         if(result.ok){
           if(draft.kind==='expert'){set_cvExpertLayer('personal');cvRenderExperts();}
           else{set_teamLayer('personal');renderExpertGrid();}
-          toast('已创建'+(draft.kind==='team'?'智能体团队':'智能体'),'success');
+          toast('已创建'+(draft.kind==='team'?'专家团':'智能体'),'success');
         }else{draft.status='error';draft.error=result.message;}
         saveChatSessions();renderChatSessions();renderAssetCreateChat(assetSession);return;
       }

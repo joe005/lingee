@@ -10,7 +10,7 @@ const projectOf = (task) => CV_PROJECTS.find((project) => project.id === task.pr
 const actorOf = (task, type) => {
   if (type !== 'agent') return tkGetPerson(task.assignee).name;
   const team = task.teamId || projectOf(task)?.defaultTeam;
-  return ({'cosmic-app-dev':'苍穹应用开发智能体团队','general-app-dev':'通用应用开发智能体团队','kingdee-saas':'金蝶 SaaS 实施智能体团队','kingdee-custom':'金蝶二次开发智能体团队'})[team] || '项目执行智能体团队';
+  return ({'cosmic-app-dev':'苍穹应用开发专家团','general-app-dev':'通用应用开发专家团','kingdee-saas':'金蝶 SaaS 实施专家团','kingdee-custom':'金蝶二次开发专家团'})[team] || '项目执行专家团';
 };
 
 function makeItem(id, task, type, hours, body, actorType = 'user') {
@@ -30,8 +30,8 @@ function initialItems() {
   const tasks = visibleTasks();
   const pick = (status, index = 0) => byStatus(status)[index] || tasks[index] || tasks[0];
   const recipes = [
-    ['in_review',0,'review_requested',0.3,'智能体团队已完成交付并提交审核，请核对执行结果、验收标准和关联产物。','agent'],
-    ['in_review',0,'agent_completed',1.2,'苍穹应用开发智能体团队完成开发实现与测试验证，执行报告已生成。','agent'],
+    ['in_review',0,'review_requested',0.3,'专家团已完成交付并提交审核，请核对执行结果、验收标准和关联产物。','agent'],
+    ['in_review',0,'agent_completed',1.2,'苍穹应用开发专家团完成开发实现与测试验证，执行报告已生成。','agent'],
     ['blocked',0,'agent_blocked',1.8,'集成接口返回权限不足，智能体已暂停执行，等待负责人确认连接配置。','agent'],
     ['in_progress',0,'new_comment',2.4,'我已补充字段映射与筛选条件，请在本轮实现中一并核对。'],
     ['in_progress',1,'mentioned',3.1,'在任务讨论中提到了你：请确认本阶段的交付范围。'],
@@ -39,8 +39,8 @@ function initialItems() {
     ['in_review',1,'review_requested',5.1,'测试验证结束，待审核测试结果和回归记录。','agent'],
     ['blocked',1,'task_failed',6.3,'执行时发现接口返回字段与方案设计不一致，需要先更新数据契约。','agent'],
     ['backlog',0,'issue_assigned',8,'任务已分配给你，请确认目标和截止时间。'],
-    ['in_progress',2,'status_changed',10,'状态由「待开始」变更为「执行中」，智能体团队开始处理。'],
-    ['done',1,'task_completed',12,'智能体团队已完成全部交付阶段，负责人确认后归档。','agent'],
+    ['in_progress',2,'status_changed',10,'状态由「待开始」变更为「执行中」，专家团开始处理。'],
+    ['done',1,'task_completed',12,'专家团已完成全部交付阶段，负责人确认后归档。','agent'],
     ['in_review',2,'new_comment',15,'评审意见已补充：请检查权限边界和异常处理。'],
     ['planned',0,'priority_changed',20,'优先级调整，请重新安排本周计划。'],
     ['in_progress',3,'agent_completed',26,'方案设计已输出接口清单与数据流说明。','agent'],

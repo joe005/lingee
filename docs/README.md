@@ -7,13 +7,13 @@
 | 登录与权限 | [01-login-permission.md](01-login-permission.md) | 登录页、账号菜单 |
 | 任务 | [02-tasks.md](02-tasks.md) | 协作开发 → 任务 |
 | 项目与协作 | [03-projects-collaboration.md](03-projects-collaboration.md) | 协作开发 → 项目、设置 |
-| 智能体与智能体团队 | [04-experts-and-teams.md](04-experts-and-teams.md) | 协作开发 → 智能体、智能体团队 |
+| 专家与专家团 | [04-experts-and-teams.md](04-experts-and-teams.md) | 协作开发 → 专家、专家团 |
 | 管理平台 | [05-platform-management.md](05-platform-management.md) | 原厂管理（云端）、租户管理（云端） |
 | 设置 | [06-settings.md](06-settings.md) | 协作开发 → 设置 |
 | 管理 | [07-manager.md](07-manager.md) | 侧栏「管理」页签 → 项目 |
 | 工作 | [08-work.md](08-work.md) | 侧栏「工作」页签 → 新任务 |
 
-专题说明：智能体团队领域模型见 [expert-team-spec.md](expert-team-spec.md)，演示步骤见 [智能体团队演示场景.md](智能体团队演示场景.md) 、[smart-site-demo-script.md](smart-site-demo-script.md)、[设备运维演示场景.md](设备运维演示场景.md) 和 [CIO演示场景.md](CIO演示场景.md)。
+专题说明：专家团领域模型见 [expert-team-spec.md](expert-team-spec.md)，演示步骤见 [专家团演示场景.md](专家团演示场景.md) 、[smart-site-demo-script.md](smart-site-demo-script.md)、[设备运维演示场景.md](设备运维演示场景.md) 和 [CIO演示场景.md](CIO演示场景.md)。
 
 ## 更新规则
 

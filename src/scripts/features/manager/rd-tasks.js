@@ -5,7 +5,7 @@ import { taskListKind } from '../tasks-v2/list-kind.js';
 import { taskExecutionStages } from '../tasks-v2/task-execution.js';
 import { STATUS_CHIPS, matchStatus, openTaskNew, openTaskPanel, rowActionsHtml, statusTag } from './plan.js';
 import { mgrEsc } from './utils.js';
-/* 管理 · 项目详情「研发任务」页签：研发任务与「计划与任务」分开，按阶段推进、由智能体团队执行。
+/* 管理 · 项目详情「研发任务」页签：研发任务与「计划与任务」分开，按阶段推进、由专家团执行。
    列表沿用开发板块最初的任务卡片字段（状态、编号、标题、轮到谁的提示、阶段进度、执行团队、当前处理人、操作），
    表格样式与「计划与任务」一致。数据与开发板块共用。 */
 
@@ -59,7 +59,7 @@ function rdWorkspaceHtml(project) {
     return !q || [r.task.code, r.task.title].some(function (v) { return v && String(v).toLocaleLowerCase().includes(q); });
   });
   var body;
-  if (!all.length) body = '<div class="mgr-empty">暂无研发任务。点「新建研发任务」按交付智能体团队的阶段创建，任务分配给第一阶段执行人后在开发板块执行。</div>';
+  if (!all.length) body = '<div class="mgr-empty">暂无研发任务。点「新建研发任务」按交付专家团的阶段创建，任务分配给第一阶段执行人后在开发板块执行。</div>';
   else if (!rows.length) body = '<div class="mgr-empty">没有符合条件的研发任务。<button type="button" class="mgr-link-btn" data-mgr-rd-reset>清除筛选</button></div>';
   else {
     body = '<table class="mgr-task-table"><thead><tr><th>编号</th><th>任务</th><th>当前处理人</th><th>进展</th><th>状态</th><th aria-label="操作"></th></tr></thead><tbody>' +

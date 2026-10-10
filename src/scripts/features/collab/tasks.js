@@ -95,7 +95,7 @@ function cvSaveTaskToStorage(task){
 function cvNormalizeTask(task){
   var big=task.size==='大任务'||task.size==='大';
   return {type:task.type,size:big?'大':'小',source:task.source,sourceId:task.sourceId||'新建',
-    exec:big?'智能体团队':'自动执行',status:task.status,collab:task.collab,title:task.title,
+    exec:big?'专家团':'自动执行',status:task.status,collab:task.collab,title:task.title,
     desc:task.desc||'暂无描述',assignee:task.assignee,progress:task.progress||0,
     project:task.project||cvProject||CV_PROJECTS.find(function(project){return cvProjectInWorkspace(project.id);})?.id};
 }

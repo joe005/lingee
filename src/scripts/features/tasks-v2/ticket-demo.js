@@ -1,11 +1,11 @@
 /* 工单管理系统（Manage 项目 ticket-mgmt）：CIO 演示场景的研发任务。
-   项目由项目管理员赵琳立项，通用应用开发智能体团队按 4 个阶段交付，22 个任务中 18 个已完成（82%）、
+   项目由项目管理员赵琳立项，通用应用开发专家团按 4 个阶段交付，22 个任务中 18 个已完成（82%）、
    2 个待审核、1 个待开始、1 个已阻塞（派单算法卡在调度集群扩容审批，等 CIO 决策）。
    任务 id 1600–1621，编号 T1001600–T1001621；阶段 id 沿用通用应用开发的 s1–s4。 */
 
 const PROJECT = 'ticket-mgmt';
 const STAGES = [['s1', '需求分析', 'p24', 'general-app-product-expert'], ['s2', '系统设计', 'p25', 'general-app-architecture-expert'], ['s3', '开发实现', 'p26', 'general-app-development-expert'], ['s4', '测试验证', 'p27', 'general-app-qa-expert']];
-const TEAM_NAME = '通用应用开发智能体团队';
+const TEAM_NAME = '通用应用开发专家团';
 const REVIEWER = 'p04';
 
 /* [id, 标题, 描述, 状态, 里程碑序号, 创建日, 截止日, 审核通过日, 耗时] */

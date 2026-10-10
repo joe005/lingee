@@ -9,8 +9,8 @@ export function newAssetDraft(kind){
 
 export function assetStarterPrompt(kind){
   return kind==='team'
-    ? '帮我创建一个[智能体团队名称]智能体团队，负责[要解决的问题]，成员包括[现有智能体名称]。'
-    : '帮我创建一个[专家名称]智能体，负责[主要职责]，擅长[主要工作]。我的经验是：[行业背景与相关经验]';
+    ? '帮我创建一个[专家团名称]专家团，负责[要解决的问题]，成员包括[现有专家名称]。'
+    : '帮我创建一个[专家名称]专家，负责[主要职责]，擅长[主要工作]。我的经验是：[行业背景与相关经验]';
 }
 
 export function availableAssetMembers(){
@@ -43,7 +43,7 @@ function matchedAssetMembers(text){
 }
 
 const stripPlaceholders=text=>text.replace(/\[[^\]]+\]|［[^］]+］|X{2,}|…{2,}/gi,'').trim();
-const genericRequest=text=>/^(?:请)?(?:帮我)?(?:创建|开发|新增|做)(?:一个|一位|一支)?(?:专家|智能体|智能体团队|数字员工|专家团)[。！!]?$/u.test(text.replace(/\s+/g,''));
+const genericRequest=text=>/^(?:请)?(?:帮我)?(?:创建|开发|新增|做)(?:一个|一位|一支)?(?:专家|智能体|专家团|智能体团队|数字员工)[。！!]?$/u.test(text.replace(/\s+/g,''));
 function inferredModes(text){
   const modes=WORK_MODES.filter(mode=>text.includes(mode));
   if(/开发|编码|编程|代码|实现/.test(text))modes.push('实现');
@@ -58,13 +58,13 @@ function inferredModes(text){
 function inferredName(text,kind){
   const explicit=text.match(/(?:名称|名字)\s*(?:是|为|[:：])\s*[「“]?([^，。；;\n」”]{2,36})|(?:命名为|叫做|叫)\s*[「“]?([^，。；;\n」”]{2,36})/);
   if(explicit)return (explicit[1]||explicit[2]).trim();
-  const noun=kind==='team'?'(?:智能体团队|专家团)':'(?:智能体|数字员工|专家)';
+  const noun=kind==='team'?'(?:专家团|智能体团队)':'(?:智能体|数字员工|专家)';
   const intent=text.match(new RegExp('(?:创建|新增|做|开发)(?:一个|一位|一支)?\\s*([^，。；;\\n]{2,30})('+noun+')'));
   if(intent&&!/^(?:一个|一位|一支|专业|全能|通用)$/.test(intent[1].trim()))return intent[1].trim()+intent[2];
   return '';
 }
 export function assetClarifyingQuestion(draft){
-  const kind=draft.kind==='team'?'智能体团队':'智能体';
+  const kind=draft.kind==='team'?'专家团':'专家';
   if(!draft.name)return {key:'name',text:`这个${kind}叫什么？请给出具体名称。`};
   if(!draft.desc)return {key:'purpose',text:`「${draft.name}」主要负责什么？请说一个实际任务或使用场景。`};
   if(draft.kind==='expert'&&!draft.modes.length)return {key:'modes',text:'它主要承担哪类工作？可以选择一项，也可以直接描述。',options:WORK_MODES};
@@ -72,8 +72,8 @@ export function assetClarifyingQuestion(draft){
     const matches=matchedAssetMembers(draft.desc);
     const examples=(matches.length?matches:availableAssetMembers().slice(0,5)).map(expert=>expert.name).join('、');
     return {key:'members',text:matches.length
-      ? `根据你描述的职责，建议选择合适的智能体加入「${draft.name}」，可多选。`
-      : `希望哪些现有智能体加入「${draft.name}」？请直接说出名称。${examples?'例如：'+examples+'。':''}`,
+      ? `根据你描述的职责，建议选择合适的专家加入「${draft.name}」，可多选。`
+      : `希望哪些现有专家加入「${draft.name}」？请直接说出名称。${examples?'例如：'+examples+'。':''}`,
       options:matches.map(expert=>expert.name)};
   }
   return null;

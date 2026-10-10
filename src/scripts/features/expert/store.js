@@ -1,11 +1,11 @@
 import { AV_KEYS, EX, MODEL_TIERS, MY_EXPERTS, PRESET_TEAMS, WORK_MODES, rebuildExperts, set_MY_EXPERTS } from './data.js';
 import { knDir } from './knowledge.js';
-/* 专家 / 智能体团队：持久化、能力自检
+/* 专家 / 专家团：持久化、能力自检
    拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
    由 main.js 按拆分前的原始顺序调用。 */
 
 
-/* ---------- 持久化：只存自建智能体团队与当前选择 ----------
+/* ---------- 持久化：只存自建专家团与当前选择 ----------
    内置团不入库，这样以后改内置定义能直接生效，不会被旧缓存盖住 */
 var TEAM_STORE_KEY='lingee.experts.v1';
 var TEAMS=PRESET_TEAMS.slice();
@@ -91,7 +91,7 @@ function teamById(id){
 }
 
 /* ---------- 团队能力自检 ----------
-   智能体团队不是一条写死的流程，谁做哪一步由编排在运行时按当前任务动态决定；
+   专家团不是一条写死的流程，谁做哪一步由编排在运行时按当前任务动态决定；
    团队定义只负责声明「这个团合起来能干什么」，这里检查这份能力声明是否有明显缺口。 */
 function teamLint(t){
   var w=[];
@@ -104,7 +104,7 @@ function teamLint(t){
   return w;
 }
 
-/* 智能体团队的领域标签：优先用团自己声明的，没有就从成员标签聚合 */
+/* 专家团的领域标签：优先用团自己声明的，没有就从成员标签聚合 */
 function teamDomains(t){
   if(t&&t.domains&&t.domains.length) return t.domains;
   var seen={},out=[];

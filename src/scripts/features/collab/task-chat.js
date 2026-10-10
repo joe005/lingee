@@ -20,7 +20,7 @@ function taskConversations(t) {
     const first = { id: 'c1', title: '主会话', createdAt: Date.now(), messages: [] };
     if (t.messages && t.messages.length) first.messages = t.messages;
     else if (t.activity && t.activity.length) t.activity.forEach(a => first.messages.push({ role: 'user', text: (a.author ? a.author + '：' : '') + a.text }));
-    else first.messages.push({ role: 'agent', text: '任务已指派给我（' + tbOwner(t) + '）。\n已匹配到智能体团队【' + tbTeamName(t) + '】，根据任务意图，参与执行的专家：' + tbMatchExperts(t).join('、') + '。\n需要我先从哪一步开始？' });
+    else first.messages.push({ role: 'agent', text: '任务已指派给我（' + tbOwner(t) + '）。\n已匹配到专家团【' + tbTeamName(t) + '】，根据任务意图，参与执行的专家：' + tbMatchExperts(t).join('、') + '。\n需要我先从哪一步开始？' });
     t.conversations = [first];
   }
   return t.conversations;

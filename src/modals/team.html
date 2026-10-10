@@ -1,10 +1,10 @@
-<!-- 智能体团队配置 -->
+<!-- 专家团配置 -->
 <div class="modal-overlay" id="teamModal">
   <form class="modal-card env-config-modal team-config-modal" id="teamConfigForm" role="dialog" aria-modal="true" aria-labelledby="teamModalTitle" novalidate>
     <div class="modal-header">
       <div class="env-config-heading">
         <div class="team-panel-title-row">
-          <div class="modal-title" id="teamModalTitle">智能体团队详情</div>
+          <div class="modal-title" id="teamModalTitle">专家团详情</div>
           <span class="team-panel-badge" id="teamModalBadge">已保存</span>
         </div>
       </div>
@@ -16,7 +16,7 @@
       <button class="modal-close" id="teamModalClose" type="button" aria-label="关闭">×</button>
     </div>
     <div class="team-panel-tabs-row">
-      <div class="modal-tabs team-modal-tabs" role="tablist" aria-label="智能体团队配置">
+      <div class="modal-tabs team-modal-tabs" role="tablist" aria-label="专家团配置">
         <button type="button" class="modal-tab team-modal-tab active" role="tab" aria-selected="true" data-team-tab="info">基本信息</button>
         <button type="button" class="modal-tab team-modal-tab" role="tab" aria-selected="false" data-team-tab="stages">开发流程</button>
         <button type="button" class="modal-tab team-modal-tab" role="tab" aria-selected="false" data-team-tab="commands">触发词</button>
@@ -26,11 +26,11 @@
     <div class="modal-body env-config-body">
       <div class="team-pane" data-team-pane="info" role="tabpanel">
         <div id="teamEditFields">
-          <div class="team-hint">智能体团队定义成员和使用方式；执行任务时由 Runtime 动态生成 WorkItem 并路由给合适的专家。</div>
+          <div class="team-hint">专家团定义成员和使用方式；执行任务时由 Runtime 动态生成 WorkItem 并路由给合适的专家。</div>
           <section class="env-form-section">
             <div class="env-form-grid">
               <label class="env-field env-field-wide"><span>名称<span class="env-required">*</span></span>
-                <input type="text" id="teamName" placeholder="给这个智能体团队起个名字" autocomplete="off" required></label>
+                <input type="text" id="teamName" placeholder="给这个专家团起个名字" autocomplete="off" required></label>
               <label class="env-field env-field-wide"><span>说明</span>
                 <textarea id="teamDesc" rows="3" placeholder="它擅长什么、适合什么场景"></textarea></label>
             </div>
@@ -54,7 +54,7 @@
       </div>
     </div>
     <div class="modal-footer team-modal-footer hidden" id="teamViewFoot">
-      <button type="button" class="btn-link team-delete-btn" id="teamDeleteBtn">删除该智能体团队</button>
+      <button type="button" class="btn-link team-delete-btn" id="teamDeleteBtn">删除该专家团</button>
       <div class="team-footer-spacer"></div>
       <button type="button" class="modal-btn cancel" id="teamCancelBtn">取消</button>
       <button type="button" class="modal-btn cancel" id="teamEditBtn">编辑</button>

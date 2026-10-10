@@ -29,7 +29,7 @@ function stageSteps(task, stageId) {
     ],
     planning:[
       ['thinking','拆解可交付工作项',`把「${title}」拆为实现、验证和交付工作项。`],
-      ['tool','检查依赖与责任分工',`核对智能体团队成员的职责和工作项先后顺序。`],
+      ['tool','检查依赖与责任分工',`核对专家团成员的职责和工作项先后顺序。`],
       ['result','形成实施计划',`已排定「${title}」的执行顺序与验收门禁。`],
     ],
     implementation:[
