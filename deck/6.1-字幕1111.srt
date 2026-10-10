@@ -1,0 +1,39 @@
+1
+00:00:03,400 --> 00:00:06,774
+张工要做一套设备巡检维修系统。
+Zhang needs an equipment inspection and repair system.
+
+2
+00:00:06,925 --> 00:00:11,883
+他在协作开发里建了项目，交给通用应用开发智能体团队。
+He creates a project and hands it to the app development agent team.
+
+3
+00:00:12,034 --> 00:00:17,928
+每个任务分六个阶段，每个阶段由一个智能体执行，张工只负责审核。
+Each task runs in six stages, each done by an agent; Zhang only reviews.
+
+4
+00:00:18,078 --> 00:00:23,852
+测试验证阶段，智能体交来测试报告：四十二条用例全部通过。
+At testing, the agent delivers a report: all 42 cases pass.
+
+5
+00:00:24,003 --> 00:00:28,313
+张工看过结果，点通过，部署也交给智能体。
+Zhang approves, and deployment goes to the agent too.
+
+6
+00:00:29,184 --> 00:00:33,110
+几分钟后部署完成，张工确认，任务完成。
+Minutes later it's deployed. Zhang confirms, and the task is done.
+
+7
+00:00:34,144 --> 00:00:38,142
+系统已经上线，每台设备都有了维修履历。
+The system is live, with a repair history for every machine.
+
+8
+00:00:38,419 --> 00:00:42,057
+Build，让专业开发人员工作更轻松。
+Build makes professional developers' work easier.

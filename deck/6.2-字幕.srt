@@ -1,0 +1,39 @@
+1
+00:00:03,400 --> 00:00:09,654
+设备巡检维修系统上线后，设备主管周师傅在同一个项目里提了个新任务。
+After the equipment system goes live, equipment lead Zhou adds a new task to the same project.
+
+2
+00:00:09,804 --> 00:00:15,266
+他不会写代码，就用大白话写下排障经验，交给智能体开发。
+He can't code, so he writes his know-how in plain words for the Agent Builder.
+
+3
+00:00:15,418 --> 00:00:22,152
+这次交付的是一个智能体：角色设定写好了，还通过 MCP 接上了刚上线的系统。
+This time it delivers an agent: role written, and connected via MCP to the new system.
+
+4
+00:00:22,302 --> 00:00:27,908
+周师傅再把排障手册作为附件上传，变成智能体的内置知识。
+Zhou uploads his troubleshooting manual as built-in knowledge.
+
+5
+00:00:28,059 --> 00:00:32,417
+测试通过后，周师傅点提交，确认上架审核。
+Tests passed, Zhou clicks Submit and confirms it for listing review.
+
+6
+00:00:32,641 --> 00:00:38,607
+设备部的维修工程师陈志远，在工作里选上诊断助手，直接提问。
+Maintenance engineer Chen picks the assistant in Work and just asks.
+
+7
+00:00:38,757 --> 00:00:44,915
+它从系统里查到这台设备的维修记录，再按老师傅的经验给出排查步骤。
+It pulls the machine's repair records, then gives steps from the master's experience.
+
+8
+00:00:45,067 --> 00:00:49,473
+Build，让非专业开发人员都可构建自己的智能体。
+Build lets non-developers build their own agents.
