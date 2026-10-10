@@ -78,7 +78,7 @@ src/
 │     │                       chat / experts / projects / config / index
 │     ├─ manager/             管理板块：data / plan / detail / projects /
 │                             nav / index（视图 views/manager.html，
-│                             弹窗 modals/manager.html，样式 parts/manager.css）
+│                             弹窗 modals/manager.html，样式 parts/manager.css 汇总引入 parts/manager/ 下按界面分的文件）
 │     └─ work/                工作板块：index（视图 views/work.html，样式 parts/work.css）
 └─ artifacts/
    └─ purchase-order.html     单据产物模板，经 ?raw 导入

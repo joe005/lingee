@@ -1,0 +1,465 @@
+#view-manager .mgr-taskpanel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(520px, 94vw);
+  background: var(--bg);
+  box-shadow: -12px 0 32px #0000001a;
+  display: flex;
+  flex-direction: column;
+  transform: translate(24px);
+  opacity: 0;
+  transition:
+    transform 0.25s ease-in-out,
+    opacity 0.25s ease-in-out;
+}
+#view-manager .mgr-taskpanel-wrap.is-open .mgr-taskpanel {
+  transform: translate(0);
+  opacity: 1;
+}
+#view-manager .mgr-taskpanel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--divider);
+  flex-shrink: 0;
+}
+#view-manager .mgr-taskpanel-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+#view-manager .mgr-taskpanel-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px 20px 20px;
+}
+#view-manager .mgr-tp-code {
+  color: var(--text-label);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+#view-manager .mgr-tp-title {
+  margin: 0 0 14px;
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 650;
+  line-height: 24px;
+}
+#view-manager .mgr-sec-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 16px 0 10px;
+  color: var(--text);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+#view-manager .mgr-sec-title i {
+  width: 3px;
+  height: 14px;
+  border-radius: 2px;
+  background: var(--brand);
+}
+#view-manager .mgr-sec-count {
+  color: var(--text-label);
+  font-size: 11.5px;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+#view-manager .mgr-tp-kv {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 16px;
+}
+#view-manager .mgr-tp-kv-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+#view-manager .mgr-tp-kv-item .mgr-detail-key {
+  flex: none;
+}
+#view-manager .mgr-tp-kv-item .mgr-detail-value {
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#view-manager .mgr-tp-desc {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
+#view-manager .mgr-tp-events {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+#view-manager .mgr-tp-event {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px dashed var(--divider);
+  font-size: 12.5px;
+}
+#view-manager .mgr-tp-event:last-child {
+  border-bottom: none;
+}
+#view-manager .mgr-tp-event-text {
+  flex: 1;
+  min-width: 0;
+  color: var(--text-secondary);
+}
+#view-manager .mgr-tp-event-time {
+  flex: none;
+  color: var(--text-label);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+}
+#view-manager .mgr-tp-foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--divider);
+}
+#view-manager .mgr-tp-sessions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+#view-manager .mgr-tp-session {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+#view-manager .mgr-tp-session:hover {
+  border-color: var(--border-hover);
+  background: var(--hover);
+}
+#view-manager .mgr-tp-session:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 1px;
+}
+#view-manager .mgr-tp-session > svg {
+  flex: none;
+  color: var(--text-secondary);
+}
+#view-manager .mgr-tp-session-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#view-manager .mgr-tp-session-chevron {
+  flex: none;
+  color: var(--text-soft);
+}
+#view-manager .mgr-tp-more {
+  position: relative;
+  margin-left: auto;
+}
+#view-manager .mgr-tp-more-btn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 14px;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+#view-manager .mgr-tp-more-btn:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+#view-manager .mgr-tp-more-btn:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 1px;
+}
+#view-manager .mgr-tp-more-menu {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 6px);
+  z-index: 10;
+  min-width: 180px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--menu-shadow);
+  padding: 4px;
+}
+#view-manager .mgr-tp-more-menu button {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: none;
+  text-align: left;
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--text);
+  cursor: pointer;
+  border-radius: 7px;
+}
+#view-manager .mgr-tp-more-menu button:hover {
+  background: var(--hover);
+}
+#view-manager .mgr-tp-more-menu button:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: -2px;
+}
+#view-manager .mgr-task-stage-item {
+  min-width: 0;
+}
+#view-manager .mgr-task-stage-sessions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 2px 12px 10px 38px;
+}
+#view-manager .mgr-task-stage-sessions .mgr-tp-session {
+  padding: 8px 12px;
+  font-size: 12.5px;
+  border-radius: 10px;
+}
+.mgr-scope .mgr-projedit-modal {
+  width: min(640px, calc(100vw - 32px));
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  border-radius: 14px;
+  box-shadow: var(--menu-shadow);
+}
+.mgr-scope .mgr-projedit-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--divider);
+  flex-shrink: 0;
+}
+.mgr-scope .mgr-projedit-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+.mgr-scope .mgr-projedit-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+.mgr-scope .mgr-projedit-close:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+.mgr-scope .mgr-projedit-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 16px 20px;
+}
+.mgr-scope .mgr-projedit-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 12px 20px;
+  border-top: 1px solid var(--divider);
+  flex-shrink: 0;
+}
+.mgr-scope .mgr-projedit-modal .sync-modal__btn--primary {
+  border: 1px solid var(--brand);
+  background: var(--brand);
+  color: #fff;
+}
+.mgr-scope .mgr-projedit-modal .sync-modal__btn--primary:hover {
+  background: var(--brand-hover);
+}
+.mgr-scope .mgr-projedit-modal .sync-modal__btn:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+.mgr-scope .mgr-pe-field {
+  margin-bottom: 14px;
+  min-width: 0;
+}
+.mgr-scope .mgr-pe-field > label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.mgr-scope .mgr-pe-field > label b {
+  color: var(--danger);
+  margin-left: 2px;
+  font-weight: 600;
+}
+.mgr-scope .mgr-pe-field > label small {
+  color: var(--text-soft);
+  font-weight: 400;
+  margin-left: 6px;
+  font-size: 11.5px;
+}
+.mgr-scope .mgr-pe-field input[type="text"],
+.mgr-scope .mgr-pe-field input[type="date"],
+.mgr-scope .mgr-pe-field input[type="search"],
+.mgr-scope .mgr-pe-field textarea,
+.mgr-scope .mgr-pe-field select {
+  width: 100%;
+  box-sizing: border-box;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 12.5px;
+}
+.mgr-scope .mgr-pe-field textarea {
+  height: auto;
+  padding: 8px 10px;
+  resize: vertical;
+  line-height: 1.6;
+}
+.mgr-scope .mgr-pe-field input:focus-visible,
+.mgr-scope .mgr-pe-field textarea:focus-visible,
+.mgr-scope .mgr-pe-field select:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 0;
+}
+.mgr-scope .mgr-pe-error {
+  margin: 6px 0 0;
+  color: var(--danger);
+  font-size: 11.5px;
+}
+.mgr-scope .mgr-pe-owner-empty {
+  padding: 10px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  text-align: center;
+}
+.mgr-scope .mgr-pe-tpl-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.mgr-scope .mgr-pe-tpl {
+  padding: 6px 16px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.mgr-scope .mgr-pe-tpl:hover {
+  border-color: var(--border-hover);
+}
+.mgr-scope .mgr-pe-tpl.active {
+  border-color: var(--text);
+  font-weight: 600;
+}
+.mgr-scope .mgr-pe-tpl:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 1px;
+}
+.mgr-scope .mgr-pe-subtabs {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--divider);
+}
+.mgr-scope .mgr-pe-subtab[hidden] {
+  display: none;
+}
+.mgr-scope .mgr-pe-subtabs--plain {
+  border-bottom: none;
+  margin-bottom: 8px;
+}
+.mgr-scope .mgr-pe-subtabs--plain .mgr-pe-subtab {
+  padding: 0;
+  margin-bottom: 0;
+  border: none;
+  color: var(--text);
+  font-weight: 400;
+  cursor: default;
+}
+.mgr-scope .mgr-pe-subtab {
+  border: none;
+  background: none;
+  padding: 0 2px 8px;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+.mgr-scope .mgr-pe-subtab.active {
+  color: var(--text);
+  font-weight: 600;
+  border-bottom-color: var(--text);
+}
+.mgr-scope .mgr-pe-subtab:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 1px;
+}
+.mgr-scope .mgr-projedit-modal {
+  border-radius: 20px;
+}
+.mgr-scope .mgr-pe-field > label {
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+}
+.mgr-scope .mgr-pe-field input[type="text"]:focus-visible,
+.mgr-scope .mgr-pe-field input[type="date"]:focus-visible,
+.mgr-scope .mgr-pe-field input[type="search"]:focus-visible,
+.mgr-scope .mgr-pe-field textarea:focus-visible,
+.mgr-scope .mgr-pe-field select:focus-visible {
+  outline: none;
+  border-color: var(--brand);
+}

@@ -88,15 +88,19 @@ const ownerOf = new Map();
 for (const [file, m] of mods) for (const n of m.exports) if (!ownerOf.has(n)) ownerOf.set(n, file);
 for (const [file, m] of mods) {
   const body = m.code.split('\n').filter((l) => !/^(?:import|export)\s/.test(l)).join('\n');
-  const declared = new Set();
+  const declared = new Set(m.exports);   /* export function / var 也是本文件声明 */
   for (const mm of body.matchAll(/(?:var|let|const|function|class)\s+([A-Za-z_$][\w$]*)/g)) declared.add(mm[1]);
   for (const mm of body.matchAll(/function\s*[A-Za-z_$\w$]*\s*\(([^)]*)\)/g)) mm[1].split(',').forEach((p) => { const n = p.trim().match(/^([A-Za-z_$][\w$]*)/); if (n) declared.add(n[1]); });
   for (const mm of body.matchAll(/catch\s*\(\s*([A-Za-z_$][\w$]*)/g)) declared.add(mm[1]);
   const imported = new Set(m.imports.flatMap((i) => i.names));
   for (const [n, home] of ownerOf) {
     if (home === file || declared.has(n) || imported.has(n)) continue;
-    const re = new RegExp('(?<![.\\w$])' + n.replace(/\$/g, '\\$') + '(?![\\w$])');
-    if (re.test(body)) problems.push(`${rel(file)}: 用到了 ${n}，但没 import（它定义在 ${rel(home)}）`);
+    /* 对象字面量的键名（{ state: 1 }、, state: 1）不算引用 */
+    const re = new RegExp('(?<![.\\w$])' + n.replace(/\$/g, '\\$') + '(?![\\w$])', 'g');
+    const isKey = (i) => /[{,]\s*$/.test(body.slice(Math.max(0, i - 80), i)) && /^\s*:(?!:)/.test(body.slice(i + n.length, i + n.length + 4));
+    let hit = false, mm2;
+    while ((mm2 = re.exec(body))) { if (!isKey(mm2.index)) { hit = true; break; } }
+    if (hit) problems.push(`${rel(file)}: 用到了 ${n}，但没 import（它定义在 ${rel(home)}）`);
   }
 }
 

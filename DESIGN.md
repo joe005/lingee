@@ -217,12 +217,12 @@ Lingee 是面向企业工作与 AI 开发协作的工作台：人和智能体在
 | 按钮 | 任务页工具栏 | `.tk-btn-primary` / `.tk-btn-ghost` | `parts/tasks/01-list.css` | 13px，圆角 6px |
 | 按钮 | 应用、智能体、技能列表主操作 | `.btn-new` | `parts/apps.css` | 高 34px，圆角 10px，13px/500 |
 | 按钮 | 任务创建与智能模式 | `.niu-button` / `.niu-button-primary` | `parts/tasks.css` | 存量，含 650 字重与字面色值 |
-| 按钮 | 管理平台 | `.mgr-btn` / `--primary` / `--ghost` | `parts/manager.css` | 存量，12.5px |
+| 按钮 | 管理平台 | `.mgr-btn` / `--primary` / `--ghost` | `parts/manager/01-shell-base.css` | 存量，12.5px |
 | 按钮 | 旧版全局弹窗 | `.modal-btn` + `.confirm` / `.cancel` / `.danger` | `parts/modal-new-app.css` | 存量，含字面色值 |
 | 弹窗容器 | 协作空间（首选） | `.sync-modal` | `parts/collab/07-workbench-chat-dialogs.css` | 宽 560px，圆角 16px，主体滚动 |
 | 弹窗容器 | 全局旧版 | `.modal-overlay` / `.modal-box` / `.modal-head` | `parts/modal-attach.css` | 存量 |
 | 右键菜单与下拉 | 全站 | `.ctxmenu` / `.dropdown` / `.ctx-item` | `parts/ctxmenu.css` | 菜单项高 32px，14px，图标 16px |
-| 下拉选择 | 现行页面普通单选字段 | `initSelectDropdowns` / `initPageSelectDropdowns`、`.niu-select-trigger` / `.niu-person-popup` | `core/select-dropdown.js`、`parts/tasks.css`；通用触发器在 `parts/shared-select.css`，项目分支触发器在 `parts/manager.css` | 复用原生 select 数据与 change 事件；统一箭头、选中标记和键盘操作 |
+| 下拉选择 | 现行页面普通单选字段 | `initSelectDropdowns` / `initPageSelectDropdowns`、`.niu-select-trigger` / `.niu-person-popup` | `core/select-dropdown.js`、`parts/tasks.css`；通用触发器在 `parts/shared-select.css`，项目分支触发器在 `parts/manager/11-detail-target.css` | 复用原生 select 数据与 change 事件；统一箭头、选中标记和键盘操作 |
 | Toast 提示 | 全站 | `.toast` | `parts/ctxmenu.css` | — |
 | 表格 | 协作空间设置与项目 | `.cfg-table-*` / `.cv-proj-*` | `parts/collab/15-shared-tables.css` | 作用域限定在 `#view-collab` |
 | 输入框与表单字段 | 各页自有 | `.niu-field`、`.env-field`、`.tk-form-field`、`.mgr-pe-field` 等 | 各页面 CSS | 待统一，暂按作用域复用 |

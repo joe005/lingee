@@ -697,9 +697,10 @@ const TK_SURVEY_TASKS = [
       { id:'s6', workType:'部署交付', title:'部署交付', description:'发布上线', assigneeId:'p22', status:'pending' },
     ] },
 ];
-/* 通用应用开发智能体团队的交付路径是 5 个阶段：需求分析、架构设计、开发实现、智能体开发、测试验证。
-   旧的 6 阶段执行计划（含实现规划、部署交付）转换成新路径：方案设计→架构设计，编码实现→开发实现，
-   实现规划、部署交付并入相邻阶段，新增智能体开发（开发实现完成后视为已完成）。 */
+/* 旧 6 阶段执行计划（含实现规划、部署交付）先转成过渡的 5 阶段：方案设计→架构设计，编码实现→开发实现，
+   实现规划、部署交付并入相邻阶段，新增智能体开发（开发实现完成后视为已完成）。
+   通用应用开发智能体团队现行的交付路径是 4 个阶段：需求分析、系统设计、开发实现、测试验证，
+   过渡结果随后由 migrateDeliveryPlan 统一迁移到 4 阶段，最终以 4 阶段为准。 */
 function tkToGeneralAppPlan(task) {
   var plan = task.executionPlan;
   if (!Array.isArray(plan) || plan.length !== 6) return task;
@@ -886,7 +887,7 @@ try {
     localStorage.setItem('lingee_tasks_ticket_v1', '1');
   }
 } catch (e) { /* 本地存储不可用时保留内存数据 */ }
-/* 问卷调研项目已缓存的任务：一次性转换为通用应用开发的 5 阶段执行计划 */
+/* 问卷调研项目已缓存的任务：一次性把旧 6 阶段转成过渡 5 阶段（之后统一迁移为 4 阶段） */
 try {
   if (!localStorage.getItem('lingee_tasks_general_app_5stage_v1')) {
     var planChanged = false;

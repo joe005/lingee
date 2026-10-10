@@ -1,0 +1,118 @@
+/* ---------- 项目设置 · 功能页面（features/manager/settings.js） ----------
+   每行：页面名 + 上移 / 下移 / 删除（仅自定义页面）+ 显示复选框，控件统一 32px，复选框 18px 品牌色 */
+#view-manager .mgr-pg-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+#view-manager .mgr-pg-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) repeat(3, var(--control-h-sm)) 18px;
+  align-items: center;
+  gap: 8px;
+  min-height: 56px;
+  border-bottom: 1px solid var(--divider);
+  color: var(--text);
+  font-size: 14px;
+}
+#view-manager .mgr-pg-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#view-manager .mgr-pg-tag {
+  flex: none;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: var(--tag-bg);
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 20px;
+}
+#view-manager .mgr-pg-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--control-h-sm);
+  height: var(--control-h-sm);
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+#view-manager .mgr-pg-btn--down svg {
+  transform: rotate(180deg);
+}
+#view-manager .mgr-pg-btn:hover:not(:disabled) {
+  border-color: var(--border-hover);
+  background: var(--hover);
+}
+#view-manager .mgr-pg-btn:focus-visible,
+#view-manager .mgr-pg-check:focus-visible,
+#view-manager .mgr-pg-input:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+#view-manager .mgr-pg-btn:disabled {
+  color: var(--text-soft);
+  cursor: not-allowed;
+}
+#view-manager .mgr-pg-check {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--brand);
+  cursor: pointer;
+}
+#view-manager .mgr-pg-check:disabled {
+  cursor: not-allowed;
+}
+#view-manager .mgr-pg-add {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+#view-manager .mgr-pg-input {
+  flex: 1;
+  min-width: 0;
+  height: var(--control-h);
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  transition: border-color 0.15s;
+}
+#view-manager .mgr-pg-input::placeholder {
+  color: var(--text-soft);
+}
+#view-manager .mgr-pg-input:hover:not(:disabled) {
+  border-color: var(--border-hover);
+}
+#view-manager .mgr-pg-input:focus {
+  border-color: var(--brand);
+}
+#view-manager .mgr-pg-input:disabled {
+  background: var(--fill-1);
+  cursor: not-allowed;
+}
+#view-manager .mgr-pg-add-btn {
+  height: var(--control-h);
+  padding: 0 16px;
+  border-radius: 10px;
+  font-size: 14px;
+}
+#view-manager .mgr-pg-hint {
+  margin-top: 12px;
+}

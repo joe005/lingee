@@ -1,0 +1,246 @@
+#view-manager .mgr-gantt {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 4px;
+}
+#view-manager .mgr-gantt-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+}
+#view-manager .mgr-gantt-body {
+  min-width: 720px;
+}
+#view-manager .mgr-gantt-row {
+  display: grid;
+  grid-template-columns: 240px minmax(480px, 1fr);
+  align-items: stretch;
+  min-height: 36px;
+  border-bottom: 1px solid var(--divider);
+}
+#view-manager .mgr-gantt-rows {
+  position: relative;
+}
+#view-manager .mgr-gantt-rows > .mgr-gantt-row:last-child {
+  border-bottom: none;
+}
+/* 左列：编号 + 名称，横向滚动时固定 */
+#view-manager .mgr-gantt-label {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 0 12px;
+  border-right: 1px solid var(--divider);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 12.5px;
+}
+#view-manager .mgr-gantt-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#view-manager .mgr-gantt-label .mgr-tk-code {
+  flex: none;
+  font-size: 11.5px;
+}
+/* 表头：时间刻度 */
+#view-manager .mgr-gantt-axis {
+  min-height: 34px;
+  background: var(--fill-1);
+}
+#view-manager .mgr-gantt-axis .mgr-gantt-label {
+  background: var(--fill-1);
+  color: var(--text-secondary);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+}
+#view-manager .mgr-gantt-track {
+  position: relative;
+  min-width: 0;
+}
+#view-manager .mgr-gantt-tick {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  padding-left: 6px;
+  color: var(--text-secondary);
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+/* 纵向网格线与今天线：覆盖在右侧时间列上 */
+#view-manager .mgr-gantt-lines {
+  position: absolute;
+  inset: 0 0 0 240px;
+  z-index: 1;
+  pointer-events: none;
+}
+#view-manager .mgr-gantt-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  border-left: 1px solid var(--divider);
+}
+#view-manager .mgr-gantt-today {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  border-left: 1.5px dashed var(--brand);
+}
+#view-manager .mgr-gantt-today b {
+  position: absolute;
+  top: 2px;
+  left: 4px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--brand);
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+/* 里程碑分组行 */
+#view-manager .mgr-gantt-ms-row {
+  background: var(--fill-1);
+}
+#view-manager .mgr-gantt-ms-row .mgr-gantt-label {
+  background: var(--fill-1);
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+#view-manager .mgr-gantt-ms-row .mgr-ms-code {
+  flex: none;
+}
+#view-manager .mgr-gantt-diamond {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  width: 11px;
+  height: 11px;
+  margin: -5.5px 0 0 -5.5px;
+  border-radius: 2px;
+  background: var(--dot-purple);
+  transform: rotate(45deg);
+}
+/* 任务行与横条 */
+#view-manager .mgr-gantt-task {
+  cursor: pointer;
+}
+#view-manager .mgr-gantt-task:hover .mgr-gantt-label,
+#view-manager .mgr-gantt-task:hover {
+  background: var(--brand-fill);
+}
+#view-manager .mgr-gantt-task:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: -2px;
+}
+#view-manager .mgr-gantt-bar {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  min-width: 10px;
+  height: 16px;
+  margin-top: -8px;
+  border-radius: 6px;
+  background: var(--text-soft);
+}
+#view-manager .mgr-gantt-bar.is-done {
+  background: var(--success);
+}
+#view-manager .mgr-gantt-bar.is-running {
+  background: var(--brand);
+}
+#view-manager .mgr-gantt-bar.is-review {
+  background: var(--warning);
+}
+#view-manager .mgr-gantt-bar.is-blocked {
+  background: var(--danger);
+}
+#view-manager .mgr-gantt-bar.is-cancelled {
+  background: var(--border-hover);
+}
+/* 未设截止：虚线描边 + 渐隐，表示终点不确定 */
+#view-manager .mgr-gantt-bar.is-open {
+  border: 1.5px dashed currentColor;
+  background-clip: padding-box;
+  opacity: 0.55;
+}
+#view-manager .mgr-gantt-bar.is-pending.is-open { color: var(--text-secondary); }
+#view-manager .mgr-gantt-bar.is-done.is-open { color: var(--success); }
+#view-manager .mgr-gantt-bar.is-running.is-open { color: var(--brand); }
+#view-manager .mgr-gantt-bar.is-review.is-open { color: var(--warning); }
+#view-manager .mgr-gantt-bar.is-blocked.is-open { color: var(--danger); }
+/* 已逾期：条尾加红色标记 */
+#view-manager .mgr-gantt-bar.is-late {
+  box-shadow: inset -3px 0 0 var(--danger);
+}
+#view-manager .mgr-gantt-range {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+/* 图例 */
+#view-manager .mgr-gantt-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  padding: 0 4px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+#view-manager .mgr-gantt-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+#view-manager .mgr-gantt-swatch {
+  display: inline-block;
+  width: 18px;
+  height: 8px;
+  border-radius: 3px;
+  background: var(--text-soft);
+}
+#view-manager .mgr-gantt-swatch.is-done { background: var(--success); }
+#view-manager .mgr-gantt-swatch.is-running { background: var(--brand); }
+#view-manager .mgr-gantt-swatch.is-review { background: var(--warning); }
+#view-manager .mgr-gantt-swatch.is-blocked { background: var(--danger); }
+#view-manager .mgr-gantt-swatch.is-open {
+  border: 1px dashed var(--text-secondary);
+  background: none;
+}
+#view-manager .mgr-gantt-diamond-key {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  background: var(--dot-purple);
+  transform: rotate(45deg);
+}
+#view-manager .mgr-gantt-today-key {
+  display: inline-block;
+  width: 0;
+  height: 12px;
+  border-left: 1.5px dashed var(--brand);
+}
+#view-manager .mgr-pd-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}

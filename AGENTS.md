@@ -144,3 +144,25 @@ skill 里，两处不重复；改 `tokens.css` 时同步改 DESIGN.md 色值表�
    两处都不新增内容，直接提交推送。
 7. 顺序为先写两处记录，再跑 `npm run check` 和 `npm run build`，然后连同代码改动
    一起提交并推送，保证记录与代码在同一次推送内；不要在推送之后再补一次提交。
+8. `CHANGELOG.md` 配了 git union 合并（`.gitattributes`），两人同时在表格顶部加行时会自动保留双方；
+   `changelog.js` 仍可能冲突，冲突时两条都保留并把后合入的 `id` 改成下一个号。
+
+### 多人协作约定
+
+1. 开工前先 `git pull`，提交前再拉一次；提交只 `git add` 自己改的文件，不要 `git add -A`
+   把同事未提交的修改带上。
+2. 以下是跨页共享文件，改之前在群里说一声，改动尽量小且单独提交：
+   `src/scripts/main.js`、`src/styles/app.css`、`src/views/sidebar.html`、
+   `src/scripts/features/tasks-v2/data.js`、`src/scripts/features/collab/data.js`、
+   `src/scripts/features/manager/data.js`、`src/styles/tokens.css`。
+3. 页面之间只通过数据模块导出的函数和 `lingee:*` 自定义事件协作，不直接改别的页面的
+   DOM 或内部状态；需要新的跨页接口时在对应 data.js 里加导出函数。
+4. 两个大页面已按区域拆分，改动放进对应文件，不要再往入口文件里堆代码：
+   - 任务页：`src/scripts/features/tasks-v2/index.js` 只做初始化，代码在 `tasks-v2/page/` 下
+     （`render.js` 看板与列表、`detail-panel.js` / `subtasks.js` 详情、`form-modal.js` 新建编辑、
+     `filters.js` 筛选排序、`events-*.js` 各区域事件等，文件头有说明）。跨模块共享且会被重新赋值的
+     变量挂在 `page/page-state.js` 的 `pageState` 上，新增这类变量也放这里。
+   - 管理板块样式：`src/styles/parts/manager.css` 只按顺序引入 `parts/manager/01..13-*.css`，
+     编号即层叠顺序；新规则放进对应界面文件，需要覆盖前面规则时放编号更大的文件。
+5. 合并遇到冲突且涉及同事的业务取舍（文案、阶段、字段口径）时，不要替对方决定，
+   保留对方改动（如 `git stash`）并告知对方。

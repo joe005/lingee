@@ -1,0 +1,266 @@
+#view-manager .mgr-rail-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--pill-shadow);
+  font: inherit;
+  text-align: left;
+}
+#view-manager .mgr-rail-card > button.mgr-rail-head {
+  margin: -12px -14px 0;
+  padding: 12px 14px;
+  border: none;
+  background: none;
+  border-radius: 12px 12px 0 0;
+}
+#view-manager .mgr-rail-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+#view-manager button.mgr-rail-head {
+  cursor: pointer;
+}
+#view-manager button.mgr-rail-head:hover {
+  background: var(--hover);
+}
+#view-manager button.mgr-rail-head:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: -2px;
+  border-radius: 12px;
+}
+#view-manager .mgr-rail-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  flex: 1;
+  min-width: 0;
+}
+#view-manager .mgr-rail-meta {
+  color: var(--text-secondary);
+  font-size: 12px;
+  white-space: nowrap;
+}
+#view-manager .mgr-rail-badge {
+  font-style: normal;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--danger-bg);
+  color: var(--danger);
+  font-size: 11px;
+}
+#view-manager .mgr-rail-chevron {
+  flex: none;
+  color: var(--text-soft);
+}
+#view-manager .mgr-rail-goal {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.7;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+#view-manager .mgr-rail-card .mgr-detail-row {
+  font-size: 12px;
+  padding: 4px 0;
+}
+#view-manager .mgr-rail-card .mgr-detail-key {
+  color: var(--text-soft);
+  flex: none;
+}
+#view-manager .mgr-rail-card .mgr-detail-value {
+  color: var(--text);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#view-manager .mgr-rail-avatars {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+#view-manager .mgr-rail-doc {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+#view-manager .mgr-rail-doc--empty {
+  color: var(--text-soft);
+}
+#view-manager .mgr-rail-foot {
+  margin-top: 4px;
+}
+#view-manager .mgr-rail-foot .mgr-perm-switch {
+  margin-left: 0;
+}
+/* 列表 / 详情两种状态都撑满面板：内容区滚动，问灵基输入框固定在底部 */
+#view-manager #mgrProjList,
+#view-manager #mgrProjDetail {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+#view-manager #mgrProjList.hidden,
+#view-manager #mgrProjDetail.hidden {
+  display: none;
+}
+/* 问灵基输入框（参考对话输入框：更宽更高，文本区在上，发送在底部一行） */
+#view-manager .mgr-pd-ask {
+  flex: none;
+  box-sizing: border-box;
+  width: min(900px, calc(100% - 56px));
+  margin: 8px auto 20px;
+  padding: 14px 16px 10px 20px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.05);
+}
+#view-manager .mgr-pd-ask:focus-within {
+  border-color: var(--brand);
+}
+#view-manager .mgr-pd-ask textarea {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 48px;
+  max-height: 140px;
+  padding: 2px 0;
+  border: none;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 15px;
+  line-height: 1.6;
+  resize: none;
+}
+#view-manager .mgr-pd-ask textarea:focus {
+  outline: none;
+}
+#view-manager .mgr-pd-ask textarea::placeholder {
+  color: var(--text-soft);
+}
+#view-manager .mgr-pd-ask-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 6px;
+}
+#view-manager .mgr-pd-ask-hint {
+  color: var(--text-soft);
+  font-size: 12px;
+}
+#view-manager .mgr-pd-ask-send {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 10px;
+  background: var(--brand);
+  color: #fff;
+  cursor: pointer;
+}
+#view-manager .mgr-pd-ask-send:hover {
+  background: var(--brand-hover);
+}
+#view-manager .mgr-pd-ask-send:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 1px;
+}
+#view-manager .mgr-issue-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 2px;
+  border-bottom: 1px solid var(--divider);
+}
+#view-manager .mgr-issue-item:last-child {
+  border-bottom: none;
+}
+#view-manager .mgr-issue-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+#view-manager .mgr-issue-main strong {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+}
+#view-manager .mgr-issue-meta {
+  color: var(--text-soft);
+  font-size: 11.5px;
+}
+.mgr-scope .mgr-railmodal,
+#view-manager .mgr-railmodal {
+  width: min(640px, calc(100vw - 32px));
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  border-radius: 14px;
+  box-shadow: var(--menu-shadow);
+}
+.mgr-scope .mgr-railmodal .sync-modal__body,
+#view-manager .mgr-railmodal .sync-modal__body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 8px 20px 16px;
+}
+.mgr-scope .mgr-railmodal .mgr-card,
+#view-manager .mgr-railmodal .mgr-card {
+  box-shadow: none;
+  margin-bottom: 0;
+}
+#view-manager .mgr-tmtabs {
+  display: flex;
+  gap: 18px;
+  padding: 12px 16px 0;
+  border-bottom: 1px solid var(--divider);
+}
+#view-manager .mgr-tmtab {
+  border: none;
+  background: none;
+  padding: 0 2px 10px;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 13.5px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+#view-manager .mgr-tmtab.active {
+  color: var(--text);
+  font-weight: 600;
+  border-bottom-color: var(--brand);
+}
+#view-manager .mgr-tmtab:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: -2px;
+}
+#view-manager .mgr-team-pane {
+  padding-top: 4px;
+}

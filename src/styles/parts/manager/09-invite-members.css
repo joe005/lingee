@@ -1,0 +1,702 @@
+/* ---------- 邀请成员（勾选人员 + 项目内角色） ---------- */
+.mgr-scope .mgr-inv-modal {
+  width: min(720px, calc(100vw - 32px));
+  max-height: min(720px, 88vh);
+  border-radius: var(--r-modal);
+}
+.mgr-scope .mgr-inv-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  overflow: hidden;
+}
+.mgr-scope .mgr-inv-search {
+  position: relative;
+  display: block;
+  flex: none;
+}
+.mgr-scope .mgr-inv-search input {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  height: var(--control-h);
+  padding: 0 40px 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  transition: border-color 0.15s;
+}
+.mgr-scope .mgr-inv-search input:hover {
+  border-color: var(--border-hover);
+}
+.mgr-scope .mgr-inv-search input:focus {
+  outline: none;
+  border-color: var(--brand);
+}
+.mgr-scope .mgr-inv-search input::placeholder {
+  color: var(--text-soft);
+}
+.mgr-scope .mgr-inv-search svg {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  color: var(--text-soft);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+.mgr-scope .mgr-inv-list {
+  flex: 1;
+  min-height: 120px;
+  max-height: 340px;
+  overflow-y: auto;
+}
+.mgr-scope .mgr-inv-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.mgr-scope .mgr-inv-row:hover {
+  background: var(--hover);
+}
+.mgr-scope .mgr-inv-row input {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--brand);
+  cursor: pointer;
+}
+.mgr-scope .mgr-inv-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--brand-fill);
+  color: var(--brand);
+  font-size: 13px;
+  font-weight: 600;
+}
+.mgr-scope .mgr-inv-avatar--1 {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+.mgr-scope .mgr-inv-avatar--2 {
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+.mgr-scope .mgr-inv-avatar--3 {
+  background: var(--success-bg);
+  color: var(--success);
+}
+.mgr-scope .mgr-inv-name {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text);
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mgr-scope .mgr-inv-dept {
+  margin-left: auto;
+  flex: none;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.mgr-scope .mgr-inv-empty {
+  padding: 32px 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+  text-align: center;
+}
+.mgr-scope .mgr-inv-roles {
+  flex: none;
+  padding: 12px 24px 16px;
+  border-top: 1px solid var(--divider);
+}
+.mgr-scope .mgr-inv-roles-label {
+  margin-bottom: 8px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.mgr-scope .mgr-inv-role-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.mgr-scope .mgr-inv-role {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+.mgr-scope .mgr-inv-role:hover {
+  border-color: var(--border-hover);
+}
+.mgr-scope .mgr-inv-role:has(input:checked) {
+  border-color: var(--brand);
+  background: var(--brand-fill);
+}
+.mgr-scope .mgr-inv-role:has(input:focus-visible) {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+.mgr-scope .mgr-inv-role input {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin: 2px 0 0;
+  accent-color: var(--brand);
+}
+.mgr-scope .mgr-inv-role-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.mgr-scope .mgr-inv-role-main b {
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+}
+.mgr-scope .mgr-inv-role-main small {
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.mgr-scope .mgr-inv-footer .sync-modal__btn--ghost {
+  border-color: transparent;
+  background: none;
+  color: var(--text);
+}
+.mgr-scope .mgr-inv-footer .sync-modal__btn--ghost:hover {
+  background: var(--hover);
+}
+.mgr-scope .mgr-inv-footer .sync-modal__btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+@media (max-width: 600px) {
+  .mgr-scope .mgr-inv-role-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- 成员与权限（左成员 / 右智能体） ---------- */
+.mgr-scope .mgr-mp-modal {
+  position: relative;
+  width: min(560px, calc(100vw - 32px));
+  height: min(720px, 88vh);
+  border-radius: var(--r-modal);
+}
+.mgr-scope .mgr-mp-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  min-height: 0;
+  overflow: hidden;
+}
+.mgr-scope .mgr-mp-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  min-height: 0;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  background: var(--bg);
+}
+.mgr-scope .mgr-mp-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex: none;
+}
+.mgr-scope .mgr-mp-panel-head h2 {
+  margin: 0;
+  color: var(--text-title);
+  font-size: 16px;
+  font-weight: 600;
+}
+.mgr-scope .mgr-mp-panel-head h2 span {
+  margin-left: 4px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 400;
+}
+.mgr-scope .mgr-mp-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: var(--control-h-sm);
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+.mgr-scope .mgr-mp-add:hover {
+  border-color: var(--border-hover);
+  background: var(--hover);
+}
+.mgr-scope .mgr-mp-add[hidden] {
+  display: none;
+}
+.mgr-scope .mgr-mp-add:focus-visible,
+.mgr-scope .mgr-mp-tab:focus-visible,
+.mgr-scope .mgr-mp-edit:focus-visible,
+.mgr-scope .mgr-mp-page:focus-visible,
+.mgr-scope .mgr-mp-agent-head:focus-visible,
+.mgr-scope .mgr-mp-menu-item:focus-visible,
+.mgr-scope .mgr-mp-pop-option:focus-visible,
+.mgr-scope .mgr-mp-agent-remove:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+.mgr-scope .mgr-mp-search {
+  position: relative;
+  display: block;
+  flex: none;
+}
+.mgr-scope .mgr-mp-search input,
+.mgr-scope .mgr-mp-pop input[type="search"] {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  height: var(--control-h);
+  padding: 0 40px 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  transition: border-color 0.15s;
+}
+.mgr-scope .mgr-mp-search input:hover,
+.mgr-scope .mgr-mp-pop input[type="search"]:hover {
+  border-color: var(--border-hover);
+}
+.mgr-scope .mgr-mp-search input:focus,
+.mgr-scope .mgr-mp-pop input[type="search"]:focus {
+  outline: none;
+  border-color: var(--brand);
+}
+.mgr-scope .mgr-mp-search input::placeholder,
+.mgr-scope .mgr-mp-pop input[type="search"]::placeholder {
+  color: var(--text-soft);
+}
+.mgr-scope .mgr-mp-search svg {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  color: var(--text-soft);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+.mgr-scope .mgr-mp-tabs {
+  display: flex;
+  gap: 16px;
+  flex: none;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--divider);
+}
+.mgr-scope .mgr-mp-tab {
+  flex: none;
+  margin-bottom: -1px;
+  padding: 6px 0;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.mgr-scope .mgr-mp-tab small {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.mgr-scope .mgr-mp-tab.active {
+  border-bottom-color: var(--text);
+  color: var(--text);
+  font-weight: 600;
+}
+.mgr-scope .mgr-mp-list {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+.mgr-scope .mgr-mp-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 4px;
+}
+.mgr-scope .mgr-mp-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--brand-fill);
+  color: var(--brand);
+  font-size: 15px;
+  font-weight: 600;
+}
+.mgr-scope .mgr-mp-avatar--1 {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+.mgr-scope .mgr-mp-avatar--2 {
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+.mgr-scope .mgr-mp-avatar--3,
+.mgr-scope .mgr-mp-avatar--agent {
+  background: var(--success-bg);
+  color: var(--success);
+}
+.mgr-scope .mgr-mp-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mgr-scope .mgr-mp-badge {
+  flex: none;
+  padding: 0 8px;
+  border-radius: 4px;
+  background: var(--tag-bg);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 20px;
+}
+.mgr-scope .mgr-mp-badge--owner {
+  background: var(--brand-fill);
+  color: var(--brand);
+}
+.mgr-scope .mgr-mp-badge--admin {
+  background: var(--blue-bg);
+  color: var(--brand);
+}
+.mgr-scope .mgr-mp-edit,
+.mgr-scope .mgr-mp-edit-gap {
+  flex: none;
+  width: 28px;
+  height: 28px;
+}
+.mgr-scope .mgr-mp-edit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.mgr-scope .mgr-mp-edit:hover,
+.mgr-scope .mgr-mp-edit[aria-expanded="true"] {
+  background: var(--hover);
+  color: var(--text);
+}
+.mgr-scope .mgr-mp-empty {
+  padding: 32px 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+  text-align: center;
+}
+.mgr-scope .mgr-mp-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex: none;
+  color: var(--text);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.mgr-scope .mgr-mp-pager:empty {
+  display: none;
+}
+.mgr-scope .mgr-mp-page {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 16px;
+  cursor: pointer;
+}
+.mgr-scope .mgr-mp-page:hover:not(:disabled) {
+  background: var(--hover);
+}
+.mgr-scope .mgr-mp-page:disabled {
+  color: var(--text-soft);
+  cursor: not-allowed;
+}
+.mgr-scope .mgr-mp-menu {
+  position: absolute;
+  z-index: 8;
+  width: 180px;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  box-shadow: var(--menu-shadow);
+}
+.mgr-scope .mgr-mp-menu-title {
+  padding: 6px 10px 2px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.mgr-scope .mgr-mp-menu-sep {
+  height: 1px;
+  margin: 6px 4px;
+  background: var(--divider);
+}
+.mgr-scope .mgr-mp-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  height: 32px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+.mgr-scope .mgr-mp-menu-item:hover {
+  background: var(--hover);
+}
+.mgr-scope .mgr-mp-menu-item.is-on b {
+  color: var(--brand);
+}
+.mgr-scope .mgr-mp-menu-item.is-danger {
+  color: var(--danger);
+}
+.mgr-scope .mgr-mp-hint {
+  flex: none;
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+.mgr-scope .mgr-mp-agents {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+.mgr-scope .mgr-mp-agents-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  flex: 1;
+  color: var(--text);
+  font-size: 14px;
+}
+.mgr-scope .mgr-mp-agents-empty small {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.mgr-scope .mgr-mp-agent {
+  border-radius: 12px;
+}
+.mgr-scope .mgr-mp-agent.is-open {
+  background: var(--fill-1);
+}
+.mgr-scope .mgr-mp-agent-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 8px;
+  border: none;
+  border-radius: 12px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.mgr-scope .mgr-mp-agent-head:hover {
+  background: var(--hover);
+}
+.mgr-scope .mgr-mp-agent-role {
+  flex: none;
+  max-width: 120px;
+  overflow: hidden;
+  color: var(--text-secondary);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mgr-scope .mgr-mp-chev {
+  flex: none;
+  color: var(--text-secondary);
+  transition: transform 0.15s;
+}
+.mgr-scope .mgr-mp-agent.is-open .mgr-mp-chev {
+  transform: rotate(90deg);
+}
+.mgr-scope .mgr-mp-perms {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 12px 12px 60px;
+}
+.mgr-scope .mgr-mp-perms .mgr-mp-menu-title {
+  padding: 0;
+}
+.mgr-scope .mgr-mp-perm {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  cursor: pointer;
+}
+.mgr-scope .mgr-mp-perm input {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin: 2px 0 0;
+  accent-color: var(--brand);
+}
+.mgr-scope .mgr-mp-perm span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.mgr-scope .mgr-mp-perm b {
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 500;
+}
+.mgr-scope .mgr-mp-perm small {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.mgr-scope .mgr-mp-agent-remove {
+  align-self: flex-start;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--danger);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.mgr-scope .mgr-mp-add-wrap {
+  position: relative;
+}
+.mgr-scope .mgr-mp-pop {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 8;
+  width: 260px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  box-shadow: var(--menu-shadow);
+}
+.mgr-scope .mgr-mp-pop[hidden] {
+  display: none;
+}
+.mgr-scope .mgr-mp-pop input[type="search"] {
+  height: var(--control-h-sm);
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+.mgr-scope .mgr-mp-pop-options {
+  max-height: 240px;
+  overflow-y: auto;
+}
+.mgr-scope .mgr-mp-pop-option {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+.mgr-scope .mgr-mp-pop-option small {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.mgr-scope .mgr-mp-pop-option:hover {
+  background: var(--hover);
+}
+@media (max-width: 760px) {
+  .mgr-scope .mgr-mp-modal {
+    height: 88vh;
+  }
+  .mgr-scope .mgr-mp-body {
+    grid-template-columns: 1fr;
+    overflow-y: auto;
+  }
+  .mgr-scope .mgr-mp-panel {
+    min-height: 360px;
+  }
+}
+
+/* 项目详情：计划与任务主区占满可用宽度，右栏保持固定宽度 */
+#view-manager #mgrProjDetail .mgr-wrap {
+  max-width: none;
+}

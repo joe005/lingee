@@ -1,0 +1,409 @@
+/* ---------- 任务详情抽屉（目标规格：宽抽屉、大圆角、分区标题） ---------- */
+#view-manager .mgr-taskpanel {
+  width: min(840px, 94vw);
+  border-radius: var(--r-modal) 0 0 var(--r-modal);
+  box-shadow: var(--menu-shadow);
+  overflow: hidden;
+}
+#view-manager .mgr-taskpanel-head {
+  padding: 20px 24px 16px;
+}
+#view-manager .mgr-taskpanel-title {
+  font-size: 18px;
+}
+#view-manager .mgr-taskpanel-body {
+  padding: 8px 24px 24px;
+}
+#view-manager .mgr-tp-titlerow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 12px 0 4px;
+}
+#view-manager .mgr-tp-title {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  color: var(--text-title);
+  font-size: var(--tb-heading-size);
+  font-weight: 600;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+#view-manager .mgr-tp-tags {
+  display: flex;
+  align-items: center;
+  flex: none;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  max-width: 45%;
+}
+#view-manager .mgr-tp-tags .mgr-tp-code,
+#view-manager .mgr-tp-tags .mgr-executor {
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--tag-bg);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 20px;
+}
+#view-manager .mgr-taskpanel .mgr-sec-title {
+  margin: 24px 0 12px;
+  font-size: 14px;
+}
+#view-manager .mgr-taskpanel .mgr-sec-title i {
+  background: var(--brand);
+}
+#view-manager .mgr-taskpanel .mgr-sec-count {
+  min-width: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--tag-bg);
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 20px;
+  text-align: center;
+}
+#view-manager .mgr-taskpanel .mgr-tp-kv {
+  gap: 12px 32px;
+}
+#view-manager .mgr-taskpanel .mgr-detail-key {
+  flex: none;
+  width: 104px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+#view-manager .mgr-taskpanel .mgr-tp-kv-item .mgr-detail-value,
+#view-manager .mgr-taskpanel .mgr-tp-desc {
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.7;
+}
+#view-manager .mgr-taskpanel .mgr-tp-event {
+  gap: 24px;
+  padding: 8px 0;
+  border-bottom: none;
+  font-size: 14px;
+}
+#view-manager .mgr-taskpanel .mgr-tp-event-time {
+  flex: none;
+  width: 112px;
+  order: -1;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+#view-manager .mgr-taskpanel .mgr-tp-event-text {
+  color: var(--text);
+}
+@media (max-width: 600px) {
+  #view-manager .mgr-tp-titlerow {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  #view-manager .mgr-tp-tags {
+    justify-content: flex-start;
+    max-width: none;
+  }
+  #view-manager .mgr-taskpanel .mgr-tp-kv {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- 项目动态 · 活动流 ---------- */
+#view-manager .mgr-fd {
+  padding: 16px 16px 24px;
+}
+#view-manager .mgr-fd-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+#view-manager .mgr-fd-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: var(--text-title);
+  font-size: 16px;
+  font-weight: 600;
+}
+#view-manager .mgr-fd-sub {
+  flex: 1;
+  min-width: 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+#view-manager .mgr-fd-search {
+  position: relative;
+  display: block;
+  width: 280px;
+  max-width: 100%;
+}
+#view-manager .mgr-fd-search input {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  height: var(--control-h-sm);
+  padding: 0 36px 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  transition: border-color 0.15s;
+}
+#view-manager .mgr-fd-search input:hover {
+  border-color: var(--border-hover);
+}
+#view-manager .mgr-fd-search input:focus {
+  outline: none;
+  border-color: var(--brand);
+}
+#view-manager .mgr-fd-search input::placeholder {
+  color: var(--text-soft);
+}
+#view-manager .mgr-fd-search svg {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  color: var(--text-soft);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+#view-manager .mgr-fd-export {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: var(--control-h-sm);
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+#view-manager .mgr-fd-export:hover {
+  border-color: var(--border-hover);
+  background: var(--hover);
+}
+#view-manager .mgr-fd-filters {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+#view-manager .mgr-fd-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+#view-manager .mgr-fd-pill {
+  height: var(--control-h-sm);
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: none;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+#view-manager .mgr-fd-pill small {
+  font-size: 14px;
+}
+#view-manager .mgr-fd-pill:hover {
+  background: var(--hover);
+}
+#view-manager .mgr-fd-pill.active {
+  border-color: var(--brand);
+  background: var(--bg);
+  color: var(--brand);
+  font-weight: 500;
+}
+#view-manager .mgr-fd-select {
+  height: var(--control-h-sm);
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+#view-manager .mgr-fd-select:hover {
+  border-color: var(--border-hover);
+}
+#view-manager .mgr-fd-export:focus-visible,
+#view-manager .mgr-fd-pill:focus-visible,
+#view-manager .mgr-fd-select:focus-visible,
+#view-manager .mgr-fd-task-tab:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+#view-manager .mgr-fd-tasks {
+  display: flex;
+  gap: 20px;
+  margin-top: 16px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--divider);
+}
+#view-manager .mgr-fd-task-tab {
+  flex: none;
+  max-width: 200px;
+  margin-bottom: -1px;
+  padding: 6px 0;
+  overflow: hidden;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+#view-manager .mgr-fd-task-tab:hover {
+  color: var(--text);
+}
+#view-manager .mgr-fd-task-tab.active {
+  border-bottom-color: var(--text);
+  color: var(--text);
+  font-weight: 600;
+}
+#view-manager .mgr-fd-list {
+  position: relative;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+#view-manager .mgr-fd-list::before {
+  content: "";
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  left: 108px;
+  width: 1px;
+  background: var(--divider);
+}
+#view-manager .mgr-fd-item {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 0 14px;
+}
+#view-manager .mgr-fd-time {
+  flex: none;
+  width: 88px;
+  color: var(--text);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  line-height: 24px;
+  text-align: right;
+}
+#view-manager .mgr-fd-dot {
+  position: relative;
+  z-index: 1;
+  flex: none;
+  width: 10px;
+  height: 10px;
+  margin: 7px 0 0;
+  border: 2px solid var(--bg);
+  border-radius: 50%;
+  background: var(--text-secondary);
+  box-sizing: content-box;
+}
+#view-manager .mgr-fd-dot--create {
+  background: var(--warning);
+}
+#view-manager .mgr-fd-dot--risk {
+  background: var(--danger);
+}
+#view-manager .mgr-fd-dot--kb {
+  background: var(--dot-purple);
+}
+#view-manager .mgr-fd-body {
+  flex: 1;
+  min-width: 0;
+}
+#view-manager .mgr-fd-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 24px;
+}
+#view-manager .mgr-fd-action {
+  padding: 0 8px;
+  border-radius: 4px;
+  background: var(--tag-bg);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 20px;
+}
+#view-manager .mgr-fd-action--create {
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+#view-manager .mgr-fd-action--risk {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+#view-manager .mgr-fd-action--kb {
+  background: var(--purple-bg);
+  color: var(--dot-purple);
+}
+#view-manager .mgr-fd-actor {
+  color: var(--text);
+  font-size: 13px;
+}
+#view-manager .mgr-fd-task {
+  max-width: 260px;
+  padding: 0 8px;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--tag-bg);
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#view-manager .mgr-fd-text {
+  margin-top: 8px;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 600px) {
+  #view-manager .mgr-fd-search {
+    width: 100%;
+  }
+  #view-manager .mgr-fd-time {
+    width: 64px;
+  }
+  #view-manager .mgr-fd-list::before {
+    left: 84px;
+  }
+}
