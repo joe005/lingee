@@ -16,7 +16,7 @@ import { hideAssetEditorPanel, showAssetEditorPanel } from './editor-panel.js';
 
 
 /* ---------- 专家团配置弹窗 ---------- */
-var teamModal=$('#teamModal'), teamDraft=null, teamEditingId=null, teamModalTab='info', teamEditMode=false;
+var teamModal=$('#teamModal'), teamDraft=null, teamEditingId=null, teamModalTab='info', teamStageScenarioId='feature', teamEditMode=false;
 /* 面板头部的保存状态：改过任何字段就切换成「未保存」，保存或还原后回到「已保存」 */
 function setTeamPanelBadge(dirty){
   var badge=$('#teamModalBadge'); if(!badge) return;
@@ -50,6 +50,7 @@ function populateTeamModal(id,editing){
   if(!t) return;
   teamEditMode=!!editing;
   teamEditingId=id;
+  teamStageScenarioId='feature';
   teamDraft={name:t.name,desc:t.desc,leadId:t.leadId,members:t.members.slice(),stages:t.stages,preset:layerOf('team',t)!=='personal',
                domains:(t.domains||[]).slice(),
                stageMembers:t.stageMembers&&typeof t.stageMembers==='object'?Object.fromEntries(Object.entries(t.stageMembers).map(function(entry){return [entry[0],Array.isArray(entry[1])?entry[1].slice():[]]})): {},
@@ -136,17 +137,20 @@ function renderTeamStages(){
       var expert=EX[id],selected=bound.includes(id);
       return '<button type="button" class="team-stage-member-option'+(selected?' is-selected':'')+'" data-stage-member="'+xesc(stage.id)+'" data-stage-expert="'+xesc(id)+'" aria-pressed="'+selected+'"><img src="'+xav(expert.k)+'" alt=""><span>'+xesc(expert.name)+'</span></button>';
     }).join('')+'</div></details>':'';
-    /* 横向时间线：圆点 + 横线串起各阶段，阶段名和说明下面直接展示绑定的专家 */
+    /* 纵向时间线：圆点 + 竖线串起各阶段，阶段名和说明下面直接展示绑定的专家 */
     return '<div class="team-stage" role="listitem" aria-label="第'+(index+1)+'阶段：'+xesc(stage.name)+'"><span class="team-stage-dot" aria-hidden="true"></span>'
       +'<div class="team-stage-content"><strong>'+xesc(stage.name)+(covered?'':'<span class="team-stage-gap" title="当前成员没有匹配该阶段的能力项">能力待补齐</span>')+'</strong><p>'+xesc(stage.desc)+'</p>'
-      +'<div class="team-stage-members">'+binding+picker+'</div></div></div>';
+      +'<div class="team-stage-members">'+(covered?'<span class="team-stage-ai-tag" title="该阶段由 AI 专家执行，不是真人"><span aria-hidden="true">✦</span>AI 专家执行</span>':'')+binding+picker+'</div></div></div>';
   }
-  /* 每条开发流程（功能开发、缺陷修复）上下平铺，默认全部展开，不用切换 */
-  $('#teamStages').innerHTML=TEAM_STAGE_SCENARIOS.map(function(item){
-    var stages=visibleStages(item);
-    return '<section class="team-stage-section" aria-label="'+xesc(item.name)+'"><div class="team-stage-section-head"><strong>'+xesc(item.name)+'</strong><small>'+stages.length+' 个阶段</small></div>'
-      +(stages.length?'<div class="team-stage-timeline" role="list">'+stages.map(stageHtml).join('')+'</div>':'<div class="team-stage-empty">当前路径暂无阶段</div>')+'</section>';
+  /* 默认只展示一条开发流程（功能开发），点标签切换到缺陷修复 */
+  var scenario=TEAM_STAGE_SCENARIOS.find(function(item){return item.id===teamStageScenarioId})||TEAM_STAGE_SCENARIOS[0];
+  $('#teamStageScenarios').innerHTML=TEAM_STAGE_SCENARIOS.map(function(item){
+    var on=item.id===scenario.id;
+    return '<button type="button" class="team-stage-scenario'+(on?' active':'')+'" role="tab" aria-selected="'+on+'" data-team-scenario="'+xesc(item.id)+'"><strong>'+xesc(item.name)+'</strong><small>'+visibleStages(item).length+' 个阶段</small></button>';
   }).join('');
+  var stages=visibleStages(scenario);
+  $('#teamStages').innerHTML='<section class="team-stage-section" aria-label="'+xesc(scenario.name)+'">'
+    +(stages.length?'<div class="team-stage-timeline" role="list">'+stages.map(stageHtml).join('')+'</div>':'<div class="team-stage-empty">当前路径暂无阶段</div>')+'</section>';
 }
 
 /* ---------- 添加成员弹窗 ---------- */
@@ -177,6 +181,7 @@ export function initTeamModal() {
       if(e.target===teamModal){ if(teamDraft&&!teamDraft.preset&&teamEditMode)hideAssetEditorPanel();else teamModal.classList.remove('show'); return; }
       var n;
       if(n=e.target.closest('[data-team-tab]')){ setTeamModalTab(n.getAttribute('data-team-tab')); return; }
+      if(n=e.target.closest('[data-team-scenario]')){ teamStageScenarioId=n.getAttribute('data-team-scenario');renderTeamStages();return; }
       if(n=e.target.closest('[data-stage-member]')){
         var stageId=n.getAttribute('data-stage-member'),expertId=n.getAttribute('data-stage-expert');
         var current=stageExperts(stageId,teamDraft.members,teamDraft.stageMembers[stageId]);
