@@ -16,7 +16,7 @@ import { hideAssetEditorPanel, showAssetEditorPanel } from './editor-panel.js';
 
 
 /* ---------- 智能体团队配置弹窗 ---------- */
-var teamModal=$('#teamModal'), teamDraft=null, teamEditingId=null, teamModalTab='info', teamStageScenarioId='feature', teamStageSelectedId='', teamEditMode=false;
+var teamModal=$('#teamModal'), teamDraft=null, teamEditingId=null, teamModalTab='info', teamEditMode=false;
 /* 面板头部的保存状态：改过任何字段就切换成「未保存」，保存或还原后回到「已保存」 */
 function setTeamPanelBadge(dirty){
   var badge=$('#teamModalBadge'); if(!badge) return;
@@ -50,22 +50,16 @@ function populateTeamModal(id,editing){
   if(!t) return;
   teamEditMode=!!editing;
   teamEditingId=id;
-  teamStageScenarioId='feature';
-  teamStageSelectedId='';
   teamDraft={name:t.name,desc:t.desc,leadId:t.leadId,members:t.members.slice(),stages:t.stages,preset:layerOf('team',t)!=='personal',
                domains:(t.domains||[]).slice(),
                stageMembers:t.stageMembers&&typeof t.stageMembers==='object'?Object.fromEntries(Object.entries(t.stageMembers).map(function(entry){return [entry[0],Array.isArray(entry[1])?entry[1].slice():[]]})): {},
                cmds:(t.cmds&&t.cmds.length)?t.cmds.map(function(c){return c.slice()}):[['','']]};
   /* 信息栏里名称就是标题（状态和 id 在它旁边），居中弹窗仍带「智能体团队详情 · 」前缀 */
   $('#teamModalTitle').textContent = (!teamDraft.preset&&!teamEditMode)?'智能体团队详情 · '+t.name:t.name;
-  /* 内置团：标题已经是名字，正文只留一句话说明，不重复摆一份只读表单；
-     自建团：正常的可编辑名称 + 说明 */
+  /* 内置团：标题已经是名字，不重复摆一份只读表单；自建团编辑时显示可编辑的名称 + 说明 */
   $('#teamEditFields').classList.toggle('hidden', teamDraft.preset||!teamEditMode);
-  $('#teamViewDesc').classList.toggle('hidden', !teamDraft.preset&&teamEditMode);
-  $('#teamViewDesc').textContent=teamDraft.desc;
   $('#teamName').value=teamDraft.name; $('#teamDesc').value=teamDraft.desc;
   setTeamPanelBadge(false);
-  $('#teamModalSub').textContent=t.id||'';
   $('#teamResetBtn').hidden=!(teamEditMode&&!teamDraft.preset);
   /* 内置团最常用的动作是发起对话，主按钮给它；自建团主按钮还是保存 */
   $('#teamSaveBtn').className = 'modal-btn '+(teamDraft.preset?'cancel':'confirm')+' team-panel-btn-save';
@@ -89,7 +83,7 @@ function renderTeamModal(){
     var e=EX[id];
     return '<div class="x-member"><img src="'+xav(e.k)+'" alt="" data-view-expert="'+id+'">'
       +'<div class="x-member-b" data-view-expert="'+id+'"><div class="x-member-n">'+xesc(e.name)
-      +(d.leadId===id?'<span class="x-badge x-badge-lead">组长</span>':'')
+      +(teamEditMode&&d.leadId===id?'<span class="x-badge x-badge-lead">组长</span>':'')
       +(e.ro?'<span class="x-badge x-badge-ro">只读</span>':'')
       +'</div></div>'
       +'<div class="x-member-a'+(teamEditMode?'':' hidden')+'">'
@@ -109,9 +103,6 @@ function renderTeamModal(){
           +'<button type="button" class="x-ic x-ic-dg'+(teamEditMode?'':' hidden')+'" data-tm-rmcmd="'+i+'" title="删除">✕</button></div>';
       }).join('');
   $('#teamAddCmd').classList.toggle('hidden', !!d.preset||!teamEditMode);
-  $('#teamCmdHint').textContent = d.preset
-    ? '点任意一条就会带着这个团开一个新会话。'
-    : '用户平时会怎么找这个团做事。点「发起对话」会带上第一条。';
 
   renderTeamStages();
 
@@ -120,7 +111,7 @@ function renderTeamModal(){
 }
 /* 可选阶段（如智能体开发）：成员里有匹配的智能体才出现，否则不显示、也不算能力缺口 */
 function scenarioStages(item){
-  /* 需求开发取团队自己的交付范围（内置团队固定，自建团队用默认 4 阶段）；缺陷修复固定为开发实现、测试验证 */
+  /* 功能研发取团队自己的交付范围（内置团队固定，自建团队用默认 4 阶段）；缺陷修复固定为开发实现、测试验证 */
   return item.id==='feature'?teamFeatureStages(teamDraft):item.stages;
 }
 function visibleStages(item){
@@ -130,21 +121,11 @@ function visibleStages(item){
 }
 function renderTeamStages(){
   if(!teamDraft)return;
-  var scenario=TEAM_STAGE_SCENARIOS.find(function(item){return item.id===teamStageScenarioId})||TEAM_STAGE_SCENARIOS[0];
-  $('#teamStageScenarios').innerHTML=TEAM_STAGE_SCENARIOS.map(function(item){
-    var on=item.id===scenario.id;
-    return '<button type="button" class="team-stage-scenario'+(on?' active':'')+'" data-team-scenario="'+xesc(item.id)+'" aria-pressed="'+on+'"><strong>'+xesc(item.name)+'</strong><small>'+visibleStages(item).length+' 个阶段</small></button>';
-  }).join('');
-  $('#teamStageScenarioTitle').textContent=scenario.name;
-  $('#teamStageScenarioHint').textContent=scenario.hint+'，例如：'+scenario.example;
-  var stages=visibleStages(scenario);
-  $('#teamStageScenarioCount').textContent=stages.length+' 个阶段';
   function boundMembers(stage){
     /* 每个阶段 1~2 位：有人工绑定用绑定的，否则按能力项匹配 */
     return stageExperts(stage.id,teamDraft.members,teamDraft.stageMembers[stage.id]);
   }
-  if(!stages.length){$('#teamStages').innerHTML='<div class="team-stage-empty">当前路径暂无阶段</div>';return;}
-  $('#teamStages').innerHTML=stages.map(function(stage,index){
+  function stageHtml(stage,index){
     var bound=boundMembers(stage);
     var covered=bound.length>0;
     var binding=bound.length?bound.map(function(id){
@@ -155,9 +136,16 @@ function renderTeamStages(){
       var expert=EX[id],selected=bound.includes(id);
       return '<button type="button" class="team-stage-member-option'+(selected?' is-selected':'')+'" data-stage-member="'+xesc(stage.id)+'" data-stage-expert="'+xesc(id)+'" aria-pressed="'+selected+'"><img src="'+xav(expert.k)+'" alt=""><span>'+xesc(expert.name)+'</span></button>';
     }).join('')+'</div></details>':'';
-    return '<div class="team-stage" role="listitem"><span class="team-stage-index">'+(index+1)+'</span>'
-      +'<div class="team-stage-content"><strong>'+xesc(stage.name)+(covered?'':'<span class="team-stage-gap" title="当前成员没有匹配该阶段的能力项">能力待补齐</span>')+'</strong><p>'+xesc(stage.desc)+'</p></div>'
-      +'<div class="team-stage-members">'+binding+picker+'</div></div>';
+    /* 横向时间线：圆点 + 横线串起各阶段，阶段名和说明下面直接展示绑定的智能体 */
+    return '<div class="team-stage" role="listitem" aria-label="第'+(index+1)+'阶段：'+xesc(stage.name)+'"><span class="team-stage-dot" aria-hidden="true"></span>'
+      +'<div class="team-stage-content"><strong>'+xesc(stage.name)+(covered?'':'<span class="team-stage-gap" title="当前成员没有匹配该阶段的能力项">能力待补齐</span>')+'</strong><p>'+xesc(stage.desc)+'</p>'
+      +'<div class="team-stage-members">'+binding+picker+'</div></div></div>';
+  }
+  /* 每条开发流程（功能研发、缺陷修复）上下平铺，默认全部展开，不用切换 */
+  $('#teamStages').innerHTML=TEAM_STAGE_SCENARIOS.map(function(item){
+    var stages=visibleStages(item);
+    return '<section class="team-stage-section" aria-label="'+xesc(item.name)+'"><div class="team-stage-section-head"><strong>'+xesc(item.name)+'</strong><small>'+stages.length+' 个阶段</small></div>'
+      +(stages.length?'<div class="team-stage-timeline" role="list">'+stages.map(stageHtml).join('')+'</div>':'<div class="team-stage-empty">当前路径暂无阶段</div>')+'</section>';
   }).join('');
 }
 
@@ -189,7 +177,6 @@ export function initTeamModal() {
       if(e.target===teamModal){ if(teamDraft&&!teamDraft.preset&&teamEditMode)hideAssetEditorPanel();else teamModal.classList.remove('show'); return; }
       var n;
       if(n=e.target.closest('[data-team-tab]')){ setTeamModalTab(n.getAttribute('data-team-tab')); return; }
-      if(n=e.target.closest('[data-team-scenario]')){ teamStageScenarioId=n.getAttribute('data-team-scenario');renderTeamStages();return; }
       if(n=e.target.closest('[data-stage-member]')){
         var stageId=n.getAttribute('data-stage-member'),expertId=n.getAttribute('data-stage-expert');
         var current=stageExperts(stageId,teamDraft.members,teamDraft.stageMembers[stageId]);

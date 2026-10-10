@@ -153,10 +153,8 @@
   #view-chat .chat-asset-editor .modal-body{flex:1;min-height:0;padding:0 24px 20px;background:transparent}
   #view-chat .chat-asset-editor .team-pane{padding:0 2px 4px}
   #view-chat .chat-asset-editor .env-form-section{padding:18px 20px;border:1px solid var(--border);border-radius:var(--r-xl);background:var(--bg)}
-  #view-chat .chat-asset-editor .team-stage-scenarios{padding:14px 12px;border:1px solid var(--border);border-radius:var(--r-xl);background:var(--bg)}
-  #view-chat .chat-asset-editor .team-stage-detail{border-radius:var(--r-xl)}
+  #view-chat .chat-asset-editor .team-stage-section{border-radius:var(--r-xl)}
   #view-chat .chat-asset-editor .team-config-modal .team-members{grid-template-columns:1fr}
-  #view-chat .chat-asset-editor .team-stage-layout{grid-template-columns:1fr}
   #view-chat .chat-asset-editor .modal-footer{flex-wrap:wrap;background:var(--fill-1)}
   #view-chat .chat-asset-editor .modal-footer .team-footer-spacer{flex:1}
   #view-chat.asset-editor-collapsed .chat-asset-editor{width:48px;min-width:48px}

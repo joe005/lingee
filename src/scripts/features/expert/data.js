@@ -210,7 +210,7 @@ var STAGE_MODES={
   agent:['实现']
 };
 /* 同一智能体团队可按问题类型采用不同交付路径；阶段 id 沿用任务执行层的能力映射。
-   需求开发 4 个阶段；缺陷修复只有开发实现、测试验证 2 个阶段。智能体、技能与业务组件开发属于开发实现内的工作，不单列阶段。 */
+   功能研发 4 个阶段；缺陷修复只有开发实现、测试验证 2 个阶段。智能体、技能与业务组件开发属于开发实现内的工作，不单列阶段。 */
 var FEATURE_STAGES=[
   {id:'requirements',name:'需求分析',desc:'明确目标、范围与验收条件'},
   {id:'design',name:'系统设计',desc:'设计系统边界、接口与数据流'},
@@ -218,7 +218,7 @@ var FEATURE_STAGES=[
   {id:'verification',name:'测试验证',desc:'独立验证验收行为与回归影响'}
 ];
 var TEAM_STAGE_SCENARIOS=[
-  {id:'feature',name:'需求开发',hint:'新需求、功能建设',example:'新增一项业务功能',stages:FEATURE_STAGES},
+  {id:'feature',name:'功能研发',hint:'新需求、功能建设',example:'新增一项业务功能',stages:FEATURE_STAGES},
   {id:'bug',name:'缺陷修复',hint:'错误、异常、回归问题',example:'修复审批提交失败',stages:BUG_STAGES}
 ];
 /* 内置团队使用固定交付范围，自建团队保留既有路径。 */

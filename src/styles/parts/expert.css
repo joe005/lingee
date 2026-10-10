@@ -50,7 +50,6 @@
 }
 .team-hint { font-size: 12px; color: var(--text-secondary); margin: -4px 0 12px; }
 /* 内置团查看态：一句话说明，不摆只读表单 */
-.team-view-desc { font-size: 13.5px; color: var(--text-secondary); line-height: 1.6; margin: -4px 0 18px; }
 .team-count {
   font-size: 12px; font-weight: 400; color: var(--text-secondary);
   background: var(--fill-1); border-radius: 5px; padding: 1px 7px; margin-left: 6px;
@@ -459,10 +458,6 @@
 #expertEditForm .team-pane[data-xpane="kn"] .xk-docs { max-height: none; min-height: 0; overflow-y: auto; border: 1px solid var(--border); border-radius: 10px; padding: 10px; background: var(--fill-1); }
 
 /* 智能体团队按问题类型切换交付路径，保留阶段说明与能力覆盖提示。 */
-#teamModal .team-stage-intro{display:flex;flex-direction:column;gap:5px;margin:2px 0 16px}
-#teamModal .team-stage-intro strong{font-size:var(--tb-body-size);color:var(--text)}
-#teamModal .team-stage-intro span{font-size:var(--tb-small-size);color:var(--text-secondary);line-height:1.5}
-#teamModal .team-stage-layout{display:grid;grid-template-columns:140px minmax(0,1fr);gap:20px;align-items:start}
 #teamModal .team-stage-tree-select{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;color:var(--text-secondary);font-size:var(--tb-small-size)}
 #teamModal .team-stage-tree-select select{width:100%;height:36px;box-sizing:border-box;padding:0 10px;border:1px solid var(--border-hover);border-radius:10px;background:var(--bg);color:var(--text);font:inherit;font-size:var(--tb-body-size)}
 #teamModal .team-stage-tree-select select:focus-visible{outline:2px solid var(--focus-ring);outline-offset:1px}
@@ -473,31 +468,23 @@
 #teamModal .team-stage-tree-node:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}
 #teamModal .team-stage-tree-index{display:grid;place-items:center;flex:none;width:22px;height:22px;background:var(--bg);border:1px solid var(--border);border-radius:50%;font-size:10px}
 #teamModal .team-stage-tree-node.active .team-stage-tree-index{border-color:var(--brand);background:var(--brand);color:var(--bg)}
-#teamModal .team-stage-scenarios{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
-#teamModal .team-stage-scenario{display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:4px;min-height:76px;min-width:0;padding:12px 14px;border:1px solid var(--border);border-radius:14px;background:var(--bg);text-align:left;font:inherit;cursor:pointer;transition:border-color .15s,background .15s}
-#teamModal .team-stage-scenario:hover{border-color:var(--border-focus);background:var(--fill-2)}
-#teamModal .team-stage-scenario.active{border-color:var(--brand);background:var(--brand-fill)}
-#teamModal .team-stage-scenario:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
-#teamModal .team-stage-scenario strong{font-size:var(--tb-body-size);font-weight:600;color:var(--text);line-height:1.35}
-#teamModal .team-stage-scenario.active strong{color:var(--brand)}
-#teamModal .team-stage-scenario span,#teamModal .team-stage-scenario small{font-size:var(--tb-small-size);color:var(--text-secondary)}
-#teamModal .team-stage-scenario small{margin-top:auto}
-#teamModal .team-stage-detail{min-width:0;border:1px solid var(--border);border-radius:var(--tb-radius);background:var(--bg)}
-#teamModal .team-stage-detail-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;border-bottom:1px solid var(--border)}
-#teamModal .team-stage-detail-head div{display:flex;flex-direction:column;gap:4px;min-width:0}
-#teamModal .team-stage-detail-head strong{font-size:var(--tb-body-size);color:var(--text)}
-#teamModal .team-stage-detail-head span{font-size:var(--tb-small-size);color:var(--text-secondary)}
-#teamModal #teamStageScenarioCount{flex:none}
-#teamModal .team-stages{display:flex;flex-direction:column;padding:2px 18px}
-#teamModal .team-stage{display:grid;grid-template-columns:22px minmax(0,1fr) minmax(0,1.15fr);align-items:start;gap:14px;padding:14px 0;min-width:0}
+#teamModal .team-stages{display:flex;flex-direction:column;gap:14px}
+#teamModal .team-stage-section{min-width:0;border:1px solid var(--border);border-radius:var(--tb-radius);background:var(--bg)}
+#teamModal .team-stage-section-head{display:flex;align-items:baseline;gap:8px;padding:14px 18px 0}
+#teamModal .team-stage-section-head strong{font-size:var(--tb-body-size);font-weight:600;color:var(--text)}
+#teamModal .team-stage-section-head small{font-size:var(--tb-small-size);color:var(--text-secondary)}
+#teamModal .team-stage-timeline{display:flex;align-items:flex-start;gap:0;padding:16px 18px;overflow-x:auto}
+#teamModal .team-stage{position:relative;flex:1 1 0;min-width:150px;padding:0 18px 4px 0}
+/* 横向时间线：圆点在上，横线从当前圆点连到下一个圆点，名称、说明和智能体依次排在圆点下方 */
+#teamModal .team-stage:not(:last-child)::before{content:'';position:absolute;left:18px;right:6px;top:5px;height:2px;background:var(--divider)}
 #teamModal .team-stage-empty{padding:26px;color:var(--text-soft);font-size:var(--tb-small-size)}
-#teamModal .team-stage+.team-stage{border-top:1px solid var(--divider)}
-#teamModal .team-stage-index{display:flex;align-items:center;justify-content:center;flex:none;width:22px;height:22px;border-radius:50%;background:var(--brand-fill);color:var(--brand);font-size:var(--tb-small-size);font-weight:600}
+#teamModal .team-stage-dot{position:relative;z-index:1;display:block;box-sizing:border-box;width:12px;height:12px;margin:0 0 12px;border:2px solid var(--brand);border-radius:50%;background:var(--bg)}
 #teamModal .team-stage-content{min-width:0;flex:1}
 #teamModal .team-stage-content strong{display:block;color:var(--text);font-size:var(--tb-body-size);line-height:22px}
 #teamModal .team-stage-content p{margin:3px 0 0;color:var(--text-secondary);font-size:var(--tb-small-size);line-height:1.5}
-#teamModal .team-stage-members{display:flex;flex-wrap:wrap;align-items:center;gap:6px;min-width:0}
-#teamModal .team-stage-member{display:inline-flex;align-items:center;gap:6px;max-width:220px;padding:4px 12px 4px 5px;border:1px solid var(--border);border-radius:999px;background:var(--fill-1);color:var(--text);font-size:var(--tb-small-size);line-height:20px}
+/* 每个阶段的智能体收在一个带边框的容器里，与上方的阶段名称和说明区分开 */
+#teamModal .team-stage-members{display:flex;flex-direction:column;align-items:flex-start;gap:6px;box-sizing:border-box;min-width:0;margin-top:10px;padding:8px;border:1px solid var(--border);border-radius:10px;background:var(--bg)}
+#teamModal .team-stage-member{display:inline-flex;align-items:center;gap:6px;max-width:100%;padding:4px 12px 4px 5px;border:1px solid var(--border);border-radius:999px;background:var(--fill-1);color:var(--text);font-size:var(--tb-small-size);line-height:20px}
 #teamModal .team-stage-member img,#teamModal .team-stage-member-option img{width:22px;height:22px;flex:none;border-radius:50%}
 #teamModal .team-stage-member span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #teamModal .team-stage-member-empty{padding:4px 0;color:var(--warning);font-size:var(--tb-small-size)}
@@ -513,4 +500,4 @@
 #teamModal .team-stage-member-option.is-selected{border-color:var(--brand);background:var(--brand-fill);color:var(--brand)}
 #teamModal .team-stage-member-option:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 #teamModal .team-stage-gap{display:inline-block;margin-left:8px;color:var(--warning);font-size:var(--tb-small-size);font-weight:400}
-@media(max-width:640px){#teamModal .team-stage{grid-template-columns:22px minmax(0,1fr)}#teamModal .team-stage-members{grid-column:2}#teamModal .team-stage-layout{grid-template-columns:1fr}#teamModal .team-stage-scenarios{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}#teamModal .team-stage-scenario{padding:9px}#teamModal .team-stage-scenario span{display:none}#teamModal .team-stage-members{flex-basis:100%;align-items:flex-start;min-width:0}#teamModal .team-stage-member-picker{max-width:none}#teamModal .team-stage-member-options{justify-content:flex-start}#teamModal .team-stage{flex-wrap:wrap}}
+@media(max-width:640px){#teamModal .team-stage-timeline{flex-direction:column;overflow-x:visible}#teamModal .team-stage{flex:none;min-width:0;padding:0 0 18px 28px}#teamModal .team-stage-dot{position:absolute;left:0;top:5px;margin:0}#teamModal .team-stage:not(:last-child)::before{left:5px;right:auto;top:18px;bottom:-4px;width:2px;height:auto}#teamModal .team-stage-members{flex-basis:100%;align-items:flex-start;min-width:0}#teamModal .team-stage-member-picker{max-width:none}#teamModal .team-stage-member-options{justify-content:flex-start}}
