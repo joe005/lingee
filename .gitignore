@@ -36,6 +36,18 @@ outputs/*
 !outputs/task-state-flow.html
 !outputs/task-state-flow.svg
 
+# 视频、演示文稿与压缩包放共享盘，不进 git（体积大，拖慢推送和拉取）
+*.mp4
+*.mov
+*.webm
+*.m4a
+*.mp3
+*.wav
+*.pptx
+*.ppt
+*.key
+*.zip
+
 # 临时与备份（历史存档另行保留）
 *.bak
 *.tmp
