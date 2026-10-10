@@ -1,4 +1,4 @@
-import { GENERAL_APP_STAGES, COSMIC_APP_STAGES } from './delivery-stages.js';
+import { BUG_STAGES, GENERAL_APP_STAGES, COSMIC_APP_STAGES } from './delivery-stages.js';
 /* 专家 / 智能体团队：内置数据、能力项字典、开工输入
    拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
    由 main.js 按拆分前的原始顺序调用。 */
@@ -209,35 +209,25 @@ var STAGE_MODES={
   delivery:['集成'],
   agent:['实现']
 };
-/* 同一智能体团队可按问题类型采用不同交付路径；阶段 id 沿用任务执行层的能力映射。 */
-/* 功能开发路径：在编码实现之后可插入「智能体开发」阶段（开发智能体、技能与业务组件）。
-   optional 表示成员里没有对应能力时该阶段不出现，不算能力缺口。 */
-var AGENT_STAGE={id:'agent',name:'智能体开发',desc:'开发智能体、技能与业务组件，绑定知识与工具',optional:true};
-var FEATURE_STAGES=STAGES.slice(0,4).concat([AGENT_STAGE],STAGES.slice(4));
+/* 同一智能体团队可按问题类型采用不同交付路径；阶段 id 沿用任务执行层的能力映射。
+   需求开发 4 个阶段；缺陷修复只有开发实现、测试验证 2 个阶段。智能体、技能与业务组件开发属于开发实现内的工作，不单列阶段。 */
+var FEATURE_STAGES=[
+  {id:'requirements',name:'需求分析',desc:'明确目标、范围与验收条件'},
+  {id:'design',name:'系统设计',desc:'设计系统边界、接口与数据流'},
+  {id:'implementation',name:'开发实现',desc:'实现功能并完成针对性验证'},
+  {id:'verification',name:'测试验证',desc:'独立验证验收行为与回归影响'}
+];
 var TEAM_STAGE_SCENARIOS=[
-  {id:'feature',name:'功能开发',hint:'新需求、功能建设',example:'新增一项业务功能',stages:FEATURE_STAGES},
-  {id:'bug',name:'缺陷修复',hint:'错误、异常、回归问题',example:'修复审批提交失败',stages:[
-    {id:'requirements',name:'问题定位',desc:'复现问题，确认影响范围和根因'},
-    {id:'design',name:'修复方案',desc:'确定最小修复范围及兼容处理'},
-    {id:'implementation',name:'修复实现',desc:'修改代码并完成针对性自测'},
-    {id:'verification',name:'回归验证',desc:'验证问题解决且相关功能未受影响'},
-    {id:'delivery',name:'发布确认',desc:'发布修复并确认线上结果'}
-  ]},
-  {id:'consult',name:'方案咨询',hint:'评估、调研、方案设计',example:'评估审批流程改造方案',stages:[
-    {id:'requirements',name:'目标澄清',desc:'明确问题、约束和判断标准'},
-    {id:'design',name:'方案设计',desc:'比较可行路径并形成建议'},
-    {id:'verification',name:'方案评审',desc:'检查风险、成本和可实施性'},
-    {id:'delivery',name:'方案交付',desc:'交付结论、依据与后续建议'}
-  ]}
+  {id:'feature',name:'需求开发',hint:'新需求、功能建设',example:'新增一项业务功能',stages:FEATURE_STAGES},
+  {id:'bug',name:'缺陷修复',hint:'错误、异常、回归问题',example:'修复审批提交失败',stages:BUG_STAGES}
 ];
 /* 内置团队使用固定交付范围，自建团队保留既有路径。 */
 function teamFeatureStages(team){ return team&&Array.isArray(team.stages)&&team.stages.length?team.stages:FEATURE_STAGES; }
 function teamStageScenario(issue){
   var type=String(issue?.type||issue?.issueType||''),title=String(issue?.title||'');
   if(/Bug|缺陷|故障/i.test(type))return TEAM_STAGE_SCENARIOS[1];
-  if(/咨询|评估|调研|方案/.test(type))return TEAM_STAGE_SCENARIOS[2];
-  if(/Bug|缺陷|故障|修复|错误|异常|失败|回归/i.test(title))return TEAM_STAGE_SCENARIOS[1];
-  if(/^(评估|调研|咨询|分析一下)/.test(title))return TEAM_STAGE_SCENARIOS[2];
+  /* 没有明确任务类型时才按标题关键词判断；研发任务等已有类型的不按标题猜 */
+  if(!type&&/Bug|缺陷|故障|修复|错误|异常|失败|回归/i.test(title))return TEAM_STAGE_SCENARIOS[1];
   return TEAM_STAGE_SCENARIOS[0];
 }
 function stageById(id){ for(var i=0;i<STAGES.length;i++){ if(STAGES[i].id===id) return STAGES[i]; } return null; }

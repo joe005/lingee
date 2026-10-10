@@ -1,4 +1,4 @@
-import { builtinDeliveryStages } from '../expert/delivery-stages.js';
+import { deliveryStagesFor } from '../expert/delivery-stages.js';
 
 function phase(stage) {
   const name = stage.title || stage.workType || stage.name || stage.id || '';
@@ -10,10 +10,12 @@ function phase(stage) {
 }
 /* 合并旧节点时保留运行状态和产物，不重置已流转任务。 */
 export function migrateDeliveryPlan(task, teamId) {
-  const stages = builtinDeliveryStages(teamId);
+  const stages = deliveryStagesFor(teamId, task);
   if (!stages) return {};
-  const targetPhase = id => teamId === 'cosmic-app-dev' && id === 'design' ? 'implementation' : id;
-  const map = {requirements:'requirements',design:targetPhase('design'),planning:'implementation',implementation:'implementation',agent:'implementation',verification:'verification',delivery:'verification'};
+  /* 目标阶段里没有的旧阶段并入相邻阶段：前期与实现类并入开发实现，验证与交付类并入测试验证（苍穹没有系统设计，缺陷修复只有开发实现、测试验证） */
+  const ids = stages.map(stage => stage.id);
+  const targetPhase = id => ids.includes(id) ? id : ['requirements','design','planning','agent','implementation'].includes(id) ? (ids.includes('implementation') ? 'implementation' : ids[0]) : (ids.includes('verification') ? 'verification' : ids[ids.length - 1]);
+  const map = {requirements:targetPhase('requirements'),design:targetPhase('design'),planning:targetPhase('planning'),implementation:targetPhase('implementation'),agent:targetPhase('agent'),verification:targetPhase('verification'),delivery:targetPhase('delivery')};
   const old = task.executionPlan;
   if (Array.isArray(old) && old.length) {
     old.forEach(stage => { map[stage.id] = targetPhase(phase(stage)); });

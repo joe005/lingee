@@ -1,4 +1,5 @@
 import { migrateDeliveryPlan } from './delivery-plan-migration.js';
+import { isBugTask } from '../expert/delivery-stages.js';
 /* 任务管理 v2 —— 模拟数据与状态
    纯前端原型，所有数据本地维护。 */
 import { TK_EQUIPMENT_TASKS, equipmentArtifactDocs } from './equipment-demo.js';
@@ -921,6 +922,27 @@ try {
     persistTasks();
     localStorage.setItem('lingee-chat-sessions-v1', JSON.stringify(sessions));
     localStorage.setItem('lingee_delivery_stages_20261009_v2', '1');
+  }
+} catch (e) { /* 存储不可用时不影响当前页面 */ }
+/* 缺陷类任务的交付范围改为开发实现、测试验证 2 个阶段：把已缓存的缺陷任务一次性迁移，阶段引用同步到会话。 */
+try {
+  if (!localStorage.getItem('lingee_delivery_stages_bug_20261010')) {
+    var bugSessions = JSON.parse(localStorage.getItem('lingee-chat-sessions-v1') || '[]');
+    var bugChanged = false;
+    _tasks.filter(function (task) { return isBugTask(task); }).forEach(function (task) {
+      var map = migrateDeliveryPlan(task, taskDeliveryTeam(task));
+      if (!Object.keys(map).length) return;
+      bugChanged = true;
+      bugSessions.filter(function (session) { return Number(session.taskId) === task.id; }).forEach(function (session) {
+        if (map[session.stageId]) session.stageId = map[session.stageId];
+        (session.stageEndMarkers || []).forEach(function (marker) { if (map[marker.stageId]) marker.stageId = map[marker.stageId]; });
+      });
+    });
+    if (bugChanged) {
+      persistTasks();
+      localStorage.setItem('lingee-chat-sessions-v1', JSON.stringify(bugSessions));
+    }
+    localStorage.setItem('lingee_delivery_stages_bug_20261010', '1');
   }
 } catch (e) { /* 存储不可用时不影响当前页面 */ }
 function persistTasks() {

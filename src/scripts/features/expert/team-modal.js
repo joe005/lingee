@@ -120,7 +120,8 @@ function renderTeamModal(){
 }
 /* 可选阶段（如智能体开发）：成员里有匹配的智能体才出现，否则不显示、也不算能力缺口 */
 function scenarioStages(item){
-  return (teamDraft.preset && teamDraft.stages?.length) || item.id==='feature'?teamFeatureStages(teamDraft):item.stages;
+  /* 需求开发取团队自己的交付范围（内置团队固定，自建团队用默认 4 阶段）；缺陷修复固定为开发实现、测试验证 */
+  return item.id==='feature'?teamFeatureStages(teamDraft):item.stages;
 }
 function visibleStages(item){
   return scenarioStages(item).filter(function(stage){

@@ -1,4 +1,4 @@
-import { builtinDeliveryStages } from '../expert/delivery-stages.js';
+import { builtinDeliveryStages, deliveryStagesFor } from '../expert/delivery-stages.js';
 import { STAGES } from '../expert/data.js';
 import { tkCurrentStageHandlerId, tkCurrentUserId, tkGetTasks, tkGetTaskArtifacts, tkUpdateTask, tkCanViewTask, tkProjectById } from './data.js';
 
@@ -7,7 +7,7 @@ const pendingStageReviews = new Map();
 export function taskExecutionStages(task) {
   return Array.isArray(task?.executionPlan) && task.executionPlan.length
     ? task.executionPlan.map(function (stage) { return {id:stage.id, name:stage.title || stage.workType, desc:stage.description || '', assigneeId:stage.assigneeId}; })
-    : builtinDeliveryStages(task?.teamId || tkProjectById(task?.project)?.defaultTeam) || STAGES;
+    : deliveryStagesFor(task?.teamId || tkProjectById(task?.project)?.defaultTeam, task) || STAGES;
 }
 
 function stagePlan(task, stageId, status) {

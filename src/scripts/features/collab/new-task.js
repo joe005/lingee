@@ -448,7 +448,7 @@ function cvSubmitNewTask(keepOpen) {
   if (!ntProjectId) { window.alert('请先关联一个项目'); return; }
   if (!title) { window.alert('请输入任务标题'); return; }
   const scenarioId = teamStageScenario({ title }).id;
-  const issue = { title, type: scenarioId === 'bug' ? '缺陷' : scenarioId === 'consult' ? '方案咨询' : '需求' };
+  const issue = { title, type: scenarioId === 'bug' ? '缺陷' : '需求' };
   projectId = ntProjectId;
   team = TEAMS.find(t => t.id === ntTeamId) || TEAMS[0];
   const pv = document.getElementById('cv-nt-priority').value;

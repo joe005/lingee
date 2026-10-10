@@ -399,8 +399,8 @@ function hideTaskQuestionPanel() {
 }
 function prepareTaskCreateDraft(draft, latestMessage) {
   var project = CV_PROJECTS.find(function (row) { return row.id === draft.projectId; });
-  var explicitType = String(latestMessage || '').match(/(?:改为|改成|类型是|类型为)(需求|缺陷|方案咨询)/);
-  draft.issueType = explicitType?.[1] || draft.issueType || (/缺陷|Bug|报错|故障|修复/i.test(draft.prompt) ? '缺陷' : /评估|调研|咨询/.test(draft.prompt) ? '方案咨询' : '需求');
+  var explicitType = String(latestMessage || '').match(/(?:改为|改成|类型是|类型为)(需求|缺陷)/);
+  draft.issueType = explicitType?.[1] || draft.issueType || (/缺陷|Bug|报错|故障|修复/i.test(draft.prompt) ? '缺陷' : '需求');
   var allStages = tbTeamStages(teamById(project?.defaultTeam || ''), { type: draft.issueType, title: draft.title || draft.prompt });
   if (explicitType || !draft.selectedStages?.length) draft.selectedStages = inferDefaultStageIds(draft.prompt, draft.issueType, allStages);
   var instruction = String(latestMessage || draft.prompt);
