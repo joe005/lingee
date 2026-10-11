@@ -95,7 +95,7 @@ export const TK_EQUIPMENT_TASKS = [
       stage('delivery', '部署交付', '正式上线', 'p01', 'pending'),
     ] },
   { id:1506, code:'T1001506', title:'设备故障诊断助手', status:'in_review', priority:'high', assignee:'p42', createdBy:'p42', project:'equipment', labels:['智能体'], issueType:'需求', createDate:'2026-10-03', dueDate:'2026-10-23',
-    expertId:'agent-development-expert',
+    expertId:'cosmic-app-development-expert',
     desc:'设备巡检维修系统上线了，帮我做一个设备故障诊断助手。维修工程师报上设备编号和故障现象，先从系统里查这台设备的档案和最近的维修记录，再按我的经验给排查步骤。比如注塑机温度忽高忽低，先查热电偶接线，再查加热圈，最后查温控表；最近换过的零件要优先怀疑；碰到高压电的活先断电挂牌。',
     executionStageId:'verification',
     deliversAgent:'设备故障诊断助手',

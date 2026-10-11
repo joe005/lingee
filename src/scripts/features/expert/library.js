@@ -71,7 +71,7 @@ function renderExpertGrid(){
   expertGrid.innerHTML = html || '<div class="x-empty">没有匹配的结果</div>';
   var tc=$('#teamTabCount'), ec=$('#expertTabCount');
   if(tc) tc.textContent=TEAMS.length;
-  if(ec) ec.textContent=EXPERTS.length;
+  if(ec) ec.textContent=EXPERTS.filter(function(e){return e.listed!==false}).length;
 }
 var expertSearchInput=$('#expertSearchInput');
 

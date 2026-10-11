@@ -9,10 +9,10 @@ const PHASE_OWNERS = {
   requirements:['software-product-manager','general-app-product-expert','cosmic-product-manager','software-team-lead'],
   design:['software-architect','general-app-architecture-expert','cosmic-architect','cosmic-workflow','cosmic-api','software-team-lead'],
   planning:['software-team-lead','software-architect'],
-  implementation:['cosmic-metadata-expert','cosmic-form','cosmic-workflow','cosmic-report','cosmic-plugin','cosmic-api','frontend-engineer','software-engineer','general-app-development-expert','cosmic-software-engineer'],
+  implementation:['cosmic-metadata-expert','cosmic-form','cosmic-workflow','cosmic-report','cosmic-plugin','cosmic-api','frontend-engineer','software-engineer','general-app-development-expert','cosmic-app-development-expert','cosmic-plugin-developer'],
   verification:['software-qa-engineer','general-app-qa-expert','cosmic-qa-engineer','software-product-manager','software-team-lead'],
   delivery:['software-team-lead','software-architect'],
-  agent:['agent-development-expert'],
+  agent:['cosmic-app-development-expert'],
 };
 
 function implementationOwner(title, team) {
