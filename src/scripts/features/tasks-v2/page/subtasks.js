@@ -421,8 +421,11 @@ export function openTaskDetailFloating(taskId) {
 export function jumpFloatingDrawerToDev(taskId) {
   restoreDrawerHome();
   setChannel('dev');
-  showView('tasks');
-  setNavActive('任务');
+  /* 与点侧栏「协作开发」同一路径：进入协作开发的「任务」页签（任务页嵌在协作开发里） */
+  var collabNav = Array.from(document.querySelectorAll('.sb-scroll .nav-item')).find(function (item) {
+    return !item.classList.contains('mgr-nav-item') && !item.classList.contains('work-nav-item') && item.textContent.trim().indexOf('协作开发') === 0;
+  });
+  if (collabNav) collabNav.click(); else { showView('tasks'); setNavActive('任务'); }
   openDrawer(taskId);
 }
 function restoreDrawerHome() {
