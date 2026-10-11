@@ -122,3 +122,15 @@
 #tkDrawer.tk-drawer--latest .tk-drawer-foot.is-start-action #tkDrawerChat { width:auto; min-width:68px; }
 #tkDrawer.tk-drawer--latest .tk-drawer-foot button:focus-visible { outline:2px solid var(--focus-ring); outline-offset:2px; }
 #tkDrawer.tk-drawer--latest .tk-feed-stage-meta .tk-feed-stage-expert-content img { width:24px; height:24px; border-radius:50%; object-fit:cover; }
+
+/* 阶段仅展示信息；产物使用一层文件列表，操作集中在详情底部。 */
+#tkDrawer.tk-drawer--latest .tk-feed-stage-extra { background:transparent; border-radius:0; }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-extra>td { display:block; padding:0 12px; background:transparent; border:0; }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-extra .tk-feed-stage-detail { margin:0; padding:0; border-radius:0; background:transparent; }
+#tkDrawer.tk-drawer--latest .tk-stage-artifacts-label { display:block; margin-bottom:8px; font-size:12px; color:var(--text-secondary); }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-detail .tk-artifacts-list { gap:8px; }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-detail .tk-artifact { margin:0; border:1px solid var(--border); border-radius:8px; background:var(--bg); }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-detail .tk-artifact:hover { background:var(--hover); }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-detail .tk-artifact-summary { min-height:40px; padding:8px 12px; gap:8px; }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-detail .tk-artifact-title { min-width:0; font-size:14px; font-weight:400; }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-detail .tk-artifact-type { font-size:12px; background:var(--tag-bg); color:var(--text-secondary); }

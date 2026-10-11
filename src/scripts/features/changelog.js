@@ -8,6 +8,7 @@ import { openAppDropdown } from './attach-app.js';
 
 /* ---------- Changelog / 更新日志 ---------- */
 var changelogData=[
+  {id:'92',date:'2026-10-11',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务协作',author:'Joe',body:'功能·任务协作：任务详情阶段卡片精简为信息展示，产物直接以文件列表呈现，操作集中在详情底部；卡片更多菜单移除复制；专家与团队页新建按钮统一紧凑样式。'},
   {id:'91',date:'2026-10-11',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务协作',author:'Joe',body:'功能·任务协作：按视觉稿还原任务列表、看板、详情与新建弹窗，统一双视图数据及状态操作，支持视图记忆、全部状态删除和返回已有会话，并统一智能体及团队页面导航与内容宽度，任务详情执行计划改为时间线并统一验收入口与底部操作，优化提示和导入交互并整理需求文档。'},
   {id:'90',date:'2026-10-11',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务协作',author:'wuhc2023',body:'功能·任务协作：新建任务时选完智能体团队才加载任务类型（读自团队开发流程）与阶段，管理研发任务展示各阶段智能体、人工审核默认勾选，管理新建任务弹窗增加「保存并启动」并去掉补充信息页签，研发任务列表展示优先级，开发项目的项目描述必填，管理项目详情右栏去掉项目智能体。'},
   {id:'89',date:'2026-10-10',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'管理项目',author:'wuhc2023',body:'功能·管理项目：新建项目先选通用或开发项目类型（通用项目再选模板），项目设置新增功能页面（页签开关、排序与自定义页面），开发项目隐藏计划与任务页签，用户新建的空白项目可在项目首页显示，智能体团队交付路径调整为功能开发 4 个阶段、缺陷修复 2 个阶段并去掉方案咨询，智能体团队详情的「开发流程」改为纵向时间线、可在功能开发与缺陷修复间切换并标明各阶段由 AI 智能体执行，项目不再绑定智能体团队，改为新建任务时选团队（选完团队才加载开发流程与执行阶段，必填项标红 *），待审核任务卡片的「确认」改为「查看产物」。'},
@@ -82,6 +83,7 @@ var changelogData=[
 ];
 // 每个数据条目对应的 avatar SVG 图标（与 Build_demo 的 lucide 图标一致）
 var changelogIcons={
+  '92':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V4.5M9 14h.01M15 14h.01"/></svg>',
   '91':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="m8 12 3 3 5-6"/></svg>',
   '90':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V4.5M9 14h.01M15 14h.01"/></svg>',
   '88':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V4.5M9 14h.01M15 14h.01"/></svg>',

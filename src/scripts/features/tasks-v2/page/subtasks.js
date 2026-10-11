@@ -166,43 +166,20 @@ function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml,
       var stageArtifacts = latestLayout && entry && ['done', 'review'].includes(state)
         ? artifacts.filter(function (artifact) { return artifact.stageId === stage.id; }) : [];
       var detailId = 'tkStageDetail' + index;
-      var sessionListId = 'tkStageSessions' + index;
-      var showExpert = latestLayout;
       var hasDetail = latestLayout && stageArtifacts.length > 0;
-      /* 待审核阶段默认展开产物，审核人无需再点「查看产物」。 */
-      var inReviewStage = task.status === 'in_review' && state === 'review';
-      var stageSessions = latestLayout && state !== 'done' && state !== 'pending' ? mySessions.filter(function (session) {
-        return session.stageId === stage.id || (!session.stageId && isCurrent);
-      }) : [];
       if (!latestLayout) return '<li class="tk-feed-stage is-' + state + (isCurrent ? ' is-current' : '') + '" aria-label="' + escapeHtml(stage.name + '，处理人' + assignee + '，' + label) + '"' + (isCurrent ? ' aria-current="step"' : '') + '><span class="tk-feed-stage-mark" aria-hidden="true"></span><span class="tk-feed-stage-name">' + escapeHtml(stage.name) + '</span><span class="tk-feed-stage-assignee" title="处理人：' + escapeHtml(assignee) + '">处理人 <b>' + escapeHtml(assignee) + '</b></span><span class="tk-feed-stage-state">' + label + '</span>' + (isCurrent ? '<span class="tk-feed-stage-current-tag">当前</span>' : '') + '</li>';
-      var stageAction = isCurrent && kindInfo.primary ? {
-        start:{attr:'data-stage-start', label:'AI 执行'}, review:{attr:'data-stage-review', label:'验收产物'},
-        reply:{attr:'data-stage-answer', label:'回答提问'}, retry:{attr:'data-stage-retry', label:'重试'},
-      }[kindInfo.action] : null;
-      var stageActionHtml = stageAction
-        ? '<button type="button" class="tk-feed-stage-review-btn" ' + stageAction.attr + '="' + task.id + '" aria-label="' + stageAction.label + '：' + escapeHtml(stage.name) + '">' + stageAction.label + '</button>' : '';
-      /* 已阻塞节点不单设「查看会话」，会话和执行异常在节点下方的会话列表里展开查看 */
-      var actions = (stageActionHtml ? '<span class="tk-feed-stage-review-actions">' + stageActionHtml + '</span>' : '')
-        + (hasDetail && !inReviewStage ? '<button type="button" class="tk-feed-stage-expand" data-stage-detail-toggle aria-expanded="false" aria-controls="' + detailId + '" aria-label="展开' + escapeHtml(stage.name) + '的产物"><span>查看产物</span><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m6 3 5 5-5 5"/></svg></button>' : '');
-      var sessionsHtml = state !== 'done' && stageSessions.length ? '<div class="tk-feed-stage-sessions" aria-label="' + escapeHtml(stage.name) + '的会话">'
-          + '<button type="button" class="tk-feed-stage-sessions-toggle" data-stage-sessions-toggle aria-expanded="' + isCurrent + '" aria-controls="' + sessionListId + '">会话 ' + stageSessions.length + '<svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m6 3 5 5-5 5"/></svg></button>'
-          + '<div class="tk-feed-stage-sessions-list" id="' + sessionListId + '"' + (isCurrent ? '' : ' hidden') + '>' + stageSessions.map(function (session) {
-            return '<div class="tk-feed-stage-session"><span class="tk-feed-stage-session-title" title="' + escapeHtml(tkTaskSessionTitle(session)) + '">' + escapeHtml(tkTaskSessionTitle(session)) + '</span><button type="button" data-stage-session-open="' + session.id + '">查看</button></div>';
-          }).join('') + '</div></div>' : '';
-      var detailHtml = hasDetail ? '<div class="tk-feed-stage-detail" id="' + detailId + '"' + (inReviewStage ? '' : ' hidden') + '><div class="tk-delivery-artifacts"><div class="tk-artifacts-list">' + stageArtifacts.map(renderTaskArtifact).join('') + '</div></div></div>' : '';
-      return '<tr class="tk-feed-stage-row is-' + state + (isCurrent ? ' is-current' : '') + (sessionsHtml ? ' has-extra' : '') + '"' + (isCurrent ? ' aria-current="step"' : '') + '>'
+      var detailHtml = hasDetail ? '<div class="tk-feed-stage-detail" id="' + detailId + '"><span class="tk-stage-artifacts-label">产物 · ' + stageArtifacts.length + '</span><div class="tk-artifacts-list">' + stageArtifacts.map(renderTaskArtifact).join('') + '</div></div>' : '';
+      return '<tr class="tk-feed-stage-row is-' + state + (isCurrent ? ' is-current' : '') + '"' + (isCurrent ? ' aria-current="step"' : '') + '>'
         + '<td class="tk-stage-cell-mark"><span class="tk-feed-stage-mark" aria-hidden="true"></span></td>'
-        + '<th scope="row" class="tk-feed-stage-main" colspan="4"><div class="tk-feed-stage-meta"><span class="tk-feed-stage-expert-content">'
+        + '<th scope="row" class="tk-feed-stage-main" colspan="5"><div class="tk-feed-stage-meta"><span class="tk-feed-stage-expert-content">'
           + (expert ? '<img src="' + escapeHtml(xav(expert.k)) + '" alt="">' : '<span class="tk-figma-person-avatar" aria-hidden="true">' + escapeHtml(assignee.slice(0, 1)) + '</span>')
           + '<strong>' + escapeHtml(assignee) + '</strong>'
           + (expert?.role ? '<span class="tk-feed-stage-role">' + escapeHtml(expert.role) + '</span>' : '')
           + '</span>'
-          + (isCurrent && state === 'running' && task.status === 'in_progress'
-          ? '<button type="button" class="tk-feed-stage-state tk-feed-stage-state-action" data-stage-submit="' + escapeHtml(stage.id) + '" aria-label="' + escapeHtml(stage.name) + '执行完成，转为待审核" title="点击模拟 Agent 完成">' + label + '</button>'
-          : '<span class="tk-feed-stage-state">' + label + '</span>') + '</div>'
+          + '<span class="tk-feed-stage-state">' + label + '</span></div>'
         + '<div class="tk-feed-stage-line"><span class="tk-feed-stage-name">' + escapeHtml(stage.name) + '</span></div></th>'
-        + '<td class="tk-stage-cell-actions">' + actions + '</td></tr>'
-        + (sessionsHtml || detailHtml ? '<tr class="tk-feed-stage-extra is-' + state + (isCurrent ? ' is-current' : '') + '"' + (sessionsHtml || inReviewStage ? '' : ' hidden') + '><td colspan="6">' + sessionsHtml + detailHtml + '</td></tr>' : '');
+        + '</tr>'
+        + (detailHtml ? '<tr class="tk-feed-stage-extra is-' + state + (isCurrent ? ' is-current' : '') + '"><td colspan="6">' + detailHtml + '</td></tr>' : '');
     }).join('') + (latestLayout ? '</tbody></table></div>' : '</ol>')
     + (latestLayout ? '' : '<div class="tk-exec-card-feedback">' + feedback + nextAction + '</div>')
     + (latestLayout ? '' : historyButton + stageHistoryHtml) + '</section>';

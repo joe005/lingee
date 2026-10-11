@@ -83,3 +83,32 @@
 #view-collab :is(#cv-experts,#cv-teams) .asset-primary-tabs .list-page-tab.active {
   color:var(--text-title); background:var(--bg); font-weight:500; box-shadow:none;
 }
+
+/* 三个页签的新建入口沿用任务页截图的紧凑规格。 */
+#view-collab :is(#cv-experts,#cv-teams) .asset-create-btn,
+#view-collab #cv-tasks-current #tkToolbarNew {
+  height:32px; min-height:32px; padding:0 12px; gap:4px;
+  border:1px solid var(--brand); border-radius:8px;
+  background:var(--brand); color:var(--bg);
+  font-size:14px; font-weight:400; line-height:20px;
+}
+#view-collab :is(#cv-experts,#cv-teams) .asset-create-plus { width:16px; height:16px; flex:none; }
+#view-collab #cv-tasks-current #tkToolbarNewGroup { height:32px; }
+#view-collab #cv-tasks-current #tkToolbarNew { border-right:0; border-radius:8px 0 0 8px; }
+#view-collab #cv-tasks-current #tkToolbarNewArrow {
+  height:32px; min-height:32px; border-radius:0 8px 8px 0;
+  background:var(--brand); color:var(--bg);
+}
+#view-collab :is(#cv-experts,#cv-teams) .asset-create-btn:hover,
+#view-collab #cv-tasks-current :is(#tkToolbarNew,#tkToolbarNewArrow):hover {
+  background:var(--create-hover); border-color:var(--create-hover);
+}
+#view-collab :is(#cv-experts,#cv-teams) .asset-create-btn:active,
+#view-collab #cv-tasks-current :is(#tkToolbarNew,#tkToolbarNewArrow):active,
+#view-collab #cv-tasks-current #tkToolbarNewArrow[aria-expanded="true"] {
+  background:var(--create-active); border-color:var(--create-active);
+}
+#view-collab :is(#cv-experts,#cv-teams) .asset-create-btn:focus-visible,
+#view-collab #cv-tasks-current :is(#tkToolbarNew,#tkToolbarNewArrow):focus-visible {
+  outline:2px solid var(--focus-ring); outline-offset:2px;
+}
