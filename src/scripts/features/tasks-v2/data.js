@@ -975,6 +975,18 @@ export function tkPruneOrphanTasks(projectIds) {
   _tasks=_tasks.filter(function(task){return !removed.has(task.project);});
   if(_tasks.length!==previousLength)persistTasks();
 }
+/* 已完成演示任务只补充一次，用户删除后不自动恢复。 */
+export function tkEnsureCompletedDemoTask() {
+  var personId = tkCurrentUserId();
+  var project = tkProjectsForCurrentUser().find(function (row) { return row.demoSeed; }) || tkProjectsForCurrentUser()[0];
+  if (!personId || !project) return;
+  var key = 'lingee_completed_demo_v1_' + project.id;
+  try { if (localStorage.getItem(key)) return; } catch (e) { return; }
+  if (!_tasks.some(function (task) { return task.demoCompletedExample && task.project === project.id; })) {
+    tkAddTask({ title:'客服工单查询与验收', desc:'完成客服工单查询、状态筛选及详情展示，已通过功能验证并交付。', issueType:'需求', status:'done', priority:'medium', project:project.id, assignee:personId, createdBy:personId, teamId:project.defaultTeam || '', demoCompletedExample:true, planStatus:'confirmed', executionStageId:'demo-completed-delivery', executionPlan:[{id:'demo-completed-delivery',workType:'部署交付',title:'部署交付',status:'done',assigneeId:personId,requiresConfirmation:false}], labels:[] });
+  }
+  try { localStorage.setItem(key, '1'); } catch (e) { /* 标记不可写时由任务标识去重 */ }
+}
 export function tkEnsureWorkspaceDemoTasks() {
   var projects=tkProjectsForCurrentUser();
   var project=projects.find(function(row){return row.demoSeed;});
@@ -1021,14 +1033,10 @@ export function tkUpdateTask(id, patch) {
   }
   return t;
 }
-/* 只有从未开始、也没经历过任何阶段的任务可以删除；已开始或已流转的任务要保留执行记录。 */
-export const TK_DELETE_BLOCKED_REASON = '任务已开始或已经历阶段，不能删除';
+/* 所有状态的任务均可删除，执行记录不再作为删除限制。 */
+export const TK_DELETE_BLOCKED_REASON = '任务不存在或已被删除';
 export function tkCanDeleteTask(task) {
-  if (!task) return false;
-  if (task.status !== 'backlog') return false;
-  if ((task.executionPlan || []).some(function (stage) { return stage && stage.status && stage.status !== 'pending'; })) return false;
-  if ((task.statusHistory || []).length) return false;
-  return !(task.comments || []).some(function (comment) { return comment?.kind === 'flow'; });
+  return !!task;
 }
 /* 返回是否真的删除；不满足条件时保持原样 */
 export function tkDeleteTask(id) {

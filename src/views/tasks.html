@@ -42,23 +42,24 @@
         </button>
       </div>
       <div class="tk-tools-right">
+        <div class="tk-layout-shortcuts" role="group" aria-label="任务展示方式">
+          <button type="button" class="tk-layout-btn" data-layout="board" aria-pressed="false"><img src="/src/assets/figma/task-list/board.svg" alt="" width="16" height="16"><span>看板</span></button>
+          <button type="button" class="tk-layout-btn" data-layout="list" aria-pressed="true"><img src="/src/assets/figma/task-list/list.svg" alt="" width="16" height="16"><span>列表</span></button>
+        </div>
         <div class="tk-toolbar-new-group hidden" id="tkToolbarNewGroup">
           <button type="button" class="lingee-create tk-toolbar-new" id="tkToolbarNew" aria-label="新建任务">
-            <svg class="create-plus" width="10" height="10" viewBox="0 0 11 11" fill="none" aria-hidden="true"><path d="M5.25 0C5.66421 0 6 0.335786 6 0.75V4.5H9.75C10.1642 4.5 10.5 4.83579 10.5 5.25C10.5 5.66421 10.1642 6 9.75 6H6V9.75C6 10.1642 5.66421 10.5 5.25 10.5C4.83579 10.5 4.5 10.1642 4.5 9.75V6H0.75C0.335786 6 0 5.66421 0 5.25C0 4.83579 0.335786 4.5 0.75 4.5H4.5V0.75C4.5 0.335786 4.83579 0 5.25 0Z" fill="currentColor"/></svg>
-            <span>新建</span>
+            <img class="tk-figma-plus" src="/src/assets/figma/task-list/plus.svg" alt="" width="16" height="16">
+            <span>新建任务</span>
           </button>
           <button type="button" class="tk-toolbar-new-arrow" id="tkToolbarNewArrow" aria-label="更多新建选项" aria-expanded="false" aria-haspopup="menu">
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
           </button>
           <div class="tk-toolbar-new-menu hidden" id="tkToolbarNewMenu" role="menu">
             <button type="button" class="tk-toolbar-new-item" id="tkImportExcel" role="menuitem">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-              <span>导入 Excel</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3m-4 4 4-4 4 4"/><path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg>
+              <span>导入</span>
             </button>
-            <button type="button" class="tk-toolbar-new-item" id="tkExportExcelTemplate" role="menuitem">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              <span>下载 Excel 模板</span>
-            </button>
+
           </div>
         </div>
         <button class="tk-display-btn" id="tkDisplayBtn" aria-haspopup="dialog" aria-expanded="false" data-tooltip="显示设置" aria-label="显示设置">

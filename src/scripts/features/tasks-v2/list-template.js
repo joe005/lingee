@@ -1,5 +1,12 @@
+import stageCurrent from '../../../assets/figma/task-list/stage-current.svg';
+import stagePending from '../../../assets/figma/task-list/stage-pending.svg';
+import stageComplete from '../../../assets/figma/task-list/stage-complete.svg';
+import stageLinkCurrent from '../../../assets/figma/task-list/stage-link-current.svg';
+import stageLink from '../../../assets/figma/task-list/stage-link.svg';
+import stageLinkComplete from '../../../assets/figma/task-list/stage-link-complete.svg';
+import moreIcon from '../../../assets/figma/task-list/more.svg';
 import { tkGetPerson, tkGetPriorityObj, tkGetProjectName, tkGetStatusObj } from './data.js';
-import { taskListKind } from './list-kind.js';
+import { taskCardAction, taskListKind } from './list-kind.js';
 
 /* 任务列表的共用行模板与列设置。任务页和项目详情挂载同一个列表实例，
    排序、折叠、选择、快捷新建及详情事件均由任务页的控制器处理。 */
@@ -48,30 +55,39 @@ function renderTaskListRow(t, opts, context) {
     var row = Array.isArray(t.executionPlan) ? t.executionPlan.find(function (item) { return item.id === stage.id; }) : null;
     var done = t.status === 'done' || row?.status === 'done' || index < progress.index;
     var stepState = done ? ' is-complete' : index === progress.index ? ' is-current' : ' is-pending';
-    return '<span class="tk-list-stage-step' + stepState + '" title="' + e(stage.name) + '"><span>' + e(stage.name) + '</span><i aria-hidden="true"></i></span>';
+    var current = !done && index === progress.index;
+    var dot = done ? stageComplete : current ? stageCurrent : stagePending;
+    var size = current ? 14 : 10;
+    var line = done ? stageLinkComplete : current ? stageLinkCurrent : stageLink;
+    return '<span class="tk-list-stage-step' + stepState + '" title="' + e(stage.name) + '"><span>' + e(stage.name) + '</span><img class="tk-list-stage-dot" src="' + dot + '" width="' + size + '" height="' + size + '" alt="">'
+      + (index < progress.total - 1 ? '<img class="tk-list-stage-link" src="' + line + '" width="' + (done || current ? 48 : 50) + '" height="1" alt="">' : '') + '</span>';
   }).join('');
   var stageHtml = steps
-    ? '<div class="tk-list-stage-progress" role="progressbar" aria-label="当前任务阶段：' + e(progress.name) + '" aria-valuemin="1" aria-valuemax="' + progress.total + '" aria-valuenow="' + (progress.index + 1) + '">'
+    ? '<div class="tk-list-stage-progress" style="--tk-stage-index:' + progress.index + '" role="progressbar" aria-label="当前任务阶段：' + e(progress.name) + '" aria-valuemin="1" aria-valuemax="' + progress.total + '" aria-valuenow="' + (progress.index + 1) + '">'
       + '<div class="tk-list-stage-summary' + (t.status === 'done' ? ' is-done' : '') + '"><span>' + e(progress.name) + '</span><b>' + (progress.index + 1) + '/' + progress.total + '</b></div>'
-      + '<div class="tk-list-stage-track">' + steps + '</div></div>'
+      + '<div class="tk-list-stage-track">' + steps + '<b class="tk-list-stage-count">' + (progress.index + 1) + '/' + progress.total + '</b></div></div>'
     : '<span class="tk-list-stage-empty">—</span>';
   var descText = String(t.desc || '').replace(/\s+/g, ' ');
   var hintTitle = info.hint + (descText ? '：' + descText : '');
-  var actionButton = '<button type="button" class="tk-list-action-btn' + (info.primary ? ' is-primary' : '') + '" data-list-task-action="' + info.action + '" data-list-task-id="' + t.id + '" aria-label="' + e(info.label + '：' + t.title) + '">' + e(info.label) + '</button>';
+  var cardAction = taskCardAction(t);
+  var actionLabel = cardAction.label;
+  var actionButton = '<button type="button" class="tk-list-action-btn' + (info.primary ? ' is-primary' : '') + '" data-list-task-action="' + cardAction.action + '" data-list-task-id="' + t.id + '" aria-label="' + e(info.label + '：' + t.title) + '">' + e(actionLabel) + '</button>';
   var typeTag = t.issueType
     ? '<span class="tk-list-card-label tk-list-card-type" data-type="' + e(t.issueType) + '" title="任务类型：' + e(t.issueType) + '">' + e(t.issueType) + '</span>' : '';
+  var deleteShortcut = info.kind === 'review' || info.kind === 'blocked';
+  var menuAttributes = ' data-card-more="' + t.id + '" aria-label="更多任务操作" aria-haspopup="menu"' + (deleteShortcut ? ' data-delete-only-menu' : '');
   var priorityTag = pri.name
     ? '<span class="tk-list-card-label tk-list-priority" data-priority="' + e(t.priority) + '" title="优先级：' + e(pri.name) + '">' + e(pri.name) + '</span>' : '';
   return '<tr class="tk-row tk-list-card-row' + sel + (context.drawerTaskId === t.id ? ' detail-active' : '') + (depth ? ' tk-row--child' : '') + (hasChildren ? ' tk-row--parent' : '') + '" data-task-id="' + t.id + '" data-depth="' + depth + '" tabindex="0">'
     + '<td class="tk-list-card-cell" colspan="11"><div class="tk-list-card tk-list-card--' + info.kind + '">'
-    + '<div class="tk-list-card-main"><div class="tk-list-card-meta"><span class="tk-list-status" data-kind="' + info.kind + '">' + e(info.badge) + '</span><span class="tk-list-card-code">' + e(t.code) + '</span>'
+    + '<div class="tk-list-card-main"><div class="tk-list-card-meta"><span class="tk-list-status" data-kind="' + info.kind + '">' + e(info.kind === 'review' ? '待确认' : info.badge) + '</span><span class="tk-list-card-code">' + e(t.code) + '</span>'
     + (t.project ? '<span class="tk-list-card-project">' + e(tkGetProjectName(t.project)) + '</span>' : '') + '</div>'
     + '<div class="tk-list-card-title"><button type="button" class="tk-list-card-title-btn" title="' + e(t.title) + '">' + e(t.title) + '</button>' + toggle + childBadge + '</div>'
-    + '<p class="tk-list-card-desc" title="' + e(hintTitle) + '"><span class="tk-list-card-hint-lead">' + e(info.hint) + '</span>' + (descText ? '<span class="tk-list-card-hint-desc">' + e(descText) + '</span>' : '') + '</p>'
+    + '<p class="tk-list-card-desc" title="' + e(hintTitle) + '">' + e(descText || info.hint) + '</p>'
     + (typeTag || priorityTag ? '<div class="tk-list-card-foot">' + typeTag + priorityTag + '</div>' : '')
     + '</div>'
     + '<div class="tk-list-stage">' + stageHtml + '</div>'
-    + '<div class="tk-list-card-actions">' + actionButton + '</div>'
+    + '<div class="tk-list-card-actions"><button type="button" class="tk-card-more tk-list-card-more" ' + menuAttributes + '><img src="' + moreIcon + '" alt="" width="16" height="16"></button>' + actionButton + '</div>'
     + '</div></td></tr>';
 }
 

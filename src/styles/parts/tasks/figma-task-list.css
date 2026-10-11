@@ -1,0 +1,112 @@
+/* Figma 232:36534：仅协作开发当前任务页，保留项目内任务表格与其他页面。 */
+#view-collab:has(#cv-tasks-current.active) { background:var(--canvas-bg); }
+
+#cv-tasks-current.active { min-height:0; overflow:visible; }
+#cv-tasks-current #view-tasks { width:100%; background:var(--canvas-bg); }
+#cv-tasks-current #view-tasks .tk-header { display:none; }
+#cv-tasks-current #view-tasks:not(.tk-project-list-mode) .tk-toolbar {
+  position:relative; align-self:center; width:calc(100% - 32px); max-width:1160px;
+  height:48px; min-height:48px; margin:0 0 20px; padding:8px 0 0;
+  border:0; background:transparent; box-sizing:border-box;
+}
+#cv-tasks-current #view-tasks:not(.tk-project-list-mode) .tk-toolbar .tk-view-bar { height:40px; gap:8px; }
+#cv-tasks-current #view-tasks:not(.tk-project-list-mode).tk-list-mode .tk-view-tabs {
+  display:flex; flex:none; width:auto; padding:4px; gap:4px; border-radius:999px; background:var(--segment-track);
+}
+#cv-tasks-current #view-tasks:not(.tk-project-list-mode).tk-list-mode .tk-view-tabs .list-page-tab {
+  height:32px; padding:0 16px; gap:4px; border:0; color:var(--text-muted); background:transparent;
+  font-size:14px; font-weight:400; line-height:22px;
+}
+#cv-tasks-current #view-tasks:not(.tk-project-list-mode).tk-list-mode .tk-view-tabs .list-page-tab.active {
+  color:var(--text-title); background:var(--bg); font-weight:500;
+}
+#cv-tasks-current .tk-list-tab-count::before { content:'·'; margin-right:4px; }
+.tk-layout-shortcuts { display:none; }
+#cv-tasks-current .tk-layout-shortcuts { display:flex; align-items:center; gap:12px; }
+#cv-tasks-current .tk-layout-shortcuts .tk-layout-btn {
+  display:flex; align-items:center; gap:4px; height:32px; padding:0 12px; border:1px solid var(--border-hover);
+  border-radius:8px; background:var(--bg); color:var(--text); font:inherit; font-size:14px; cursor:pointer;
+}
+#cv-tasks-current .tk-layout-shortcuts .tk-layout-btn.active { background:var(--segment-track); }
+#cv-tasks-current .tk-layout-shortcuts .tk-layout-btn:hover { background:var(--hover); }
+#cv-tasks-current .tk-tools-right { gap:12px; }
+#cv-tasks-current #tkToolbarNew { height:32px; min-height:32px; border-radius:8px 0 0 8px; padding:0 12px; font-size:14px; font-weight:400; gap:4px; }
+#cv-tasks-current #tkToolbarNewArrow { height:32px; min-height:32px; align-self:center; border-radius:0 8px 8px 0; }
+#cv-tasks-current #view-tasks:not(.tk-project-list-mode) #tkDisplayBtn { position:absolute; top:-44px; right:0; width:36px; height:36px; padding:0; border:0; border-radius:8px; background:transparent; }
+#cv-tasks-current #view-tasks:not(.tk-project-list-mode) .tk-list .tk-list-scroll {
+  padding:0 16px 24px; background:var(--canvas-bg);
+}
+#cv-tasks-current #view-tasks:not(.tk-project-list-mode) .tk-list .tk-table {
+  width:100%; max-width:1160px; margin:0 auto; border-spacing:0 16px; table-layout:fixed;
+  /* 抵消第一行 border-spacing，让首张卡片位于顶部栏下方 20px。 */
+  margin-top:-16px;
+}
+#cv-tasks-current #view-tasks:not(.tk-project-list-mode) .tk-list .tk-table td.tk-list-card-cell {
+  border:0; border-radius:24px; background:var(--bg); box-shadow:none;
+}
+#cv-tasks-current .tk-list-card {
+  grid-template-columns:minmax(0,1fr) 252px auto; gap:16px; min-height:142px; padding:16px;
+}
+#cv-tasks-current .tk-list-card-main { gap:8px; }
+#cv-tasks-current .tk-list-card-meta { height:24px; color:var(--text-secondary); }
+#cv-tasks-current .tk-list-status { height:24px; padding:0 6px; font-size:12px; font-weight:400; box-sizing:border-box; }
+#cv-tasks-current .tk-list-card-title-btn { font-size:16px; font-weight:500; line-height:24px; color:var(--text-title); }
+#cv-tasks-current .tk-list-card-desc { font-size:14px; line-height:18px; margin-top:-4px; }
+#cv-tasks-current .tk-list-card-foot { margin:0; gap:8px; }
+#cv-tasks-current .tk-list-card-label {
+  height:24px; padding:0 6px; border:1px solid var(--border-hover); border-radius:6px; background:transparent;
+  font-size:12px; font-weight:400; line-height:18px;
+}
+#cv-tasks-current .tk-list-card-type { border-color:var(--border-focus); color:var(--brand); background:transparent; }
+#cv-tasks-current .tk-list-priority[data-priority="low"] { background:transparent; color:var(--text-secondary); }
+#cv-tasks-current .tk-list-priority[data-priority="medium"] { background:transparent; color:var(--brand); border-color:var(--border-focus); }
+#cv-tasks-current .tk-list-priority[data-priority="high"] { background:transparent; color:var(--warning); border-color:var(--warning-bg); }
+#cv-tasks-current .tk-list-priority[data-priority="urgent"] { background:transparent; color:var(--danger); border-color:var(--danger-bg); }
+#cv-tasks-current .tk-list-card-actions { gap:12px; }
+#cv-tasks-current .tk-list-action-btn { min-width:0; height:28px; padding:0 8px; border-radius:8px; font-size:14px; font-weight:400; }
+#cv-tasks-current .tk-list-action-btn.is-primary { color:var(--text); border-color:var(--border-hover); }
+#cv-tasks-current .tk-list-card-more { position:static; opacity:1; display:grid; place-items:center; flex:none; width:28px; height:28px; padding:0; border:1px solid var(--border-hover); border-radius:8px; background:var(--bg); cursor:pointer; }
+#cv-tasks-current .tk-list-card-more:hover { background:var(--hover); }
+.tk-list-stage-dot { flex:none; display:block; }
+.tk-list-stage-link { position:absolute; left:12px; top:7px; }
+.tk-list-stage-step.is-current .tk-list-stage-link { left:14px; }
+.tk-list-stage-count { display:none; }
+#cv-tasks-current .tk-list-stage-progress { gap:8px; }
+#cv-tasks-current .tk-list-stage-summary { font-size:12px; line-height:18px; }
+#cv-tasks-current .tk-list-stage-summary > span { font-weight:400; }
+#cv-tasks-current .tk-list-stage-summary > b { display:none; }
+#cv-tasks-current .tk-list-stage-track { position:relative; align-items:center; height:14px; padding-left:24px; }
+#cv-tasks-current .tk-list-stage-step { flex:0 0 60px; height:14px; }
+#cv-tasks-current .tk-list-stage-step:last-of-type { flex:0 0 14px; }
+#cv-tasks-current .tk-list-stage-step::after { display:none; }
+#cv-tasks-current .tk-list-stage-count { display:block; margin-left:8px; color:var(--text-secondary); font-size:12px; line-height:18px; font-weight:400; }
+#cv-tasks-current .tk-list-stage { overflow:auto; scrollbar-width:thin; }
+@media(max-width:900px) {
+  #cv-tasks-current .tk-list-card { grid-template-columns:minmax(0,1fr) auto; }
+  #cv-tasks-current .tk-list-stage { display:none; }
+}
+@media(max-width:760px) {
+  #cv-tasks-current #view-tasks:not(.tk-project-list-mode) .tk-toolbar { height:auto; min-height:48px; flex-wrap:wrap; gap:12px; }
+  #cv-tasks-current .tk-tools-right { margin-left:auto; }
+  #cv-tasks-current .tk-layout-shortcuts { gap:4px; }
+}
+@media(max-width:600px) {
+  #cv-tasks-current .tk-list-card { display:flex; flex-wrap:wrap; min-height:142px; padding:16px; }
+  #cv-tasks-current .tk-list-card-main { flex-basis:100%; }
+  #cv-tasks-current .tk-list-card-actions { width:100%; }
+}
+
+#cv-tasks-current .tk-list-stage-summary { position:relative; height:18px; overflow:visible; }
+#cv-tasks-current .tk-list-stage-summary > span { max-width:120px; text-align:center; position:absolute; left:calc(31px + var(--tk-stage-index, 0) * 60px); transform:translateX(-50%); }
+#cv-tasks-current .tk-list-stage-empty { color:var(--text-secondary); font-size:12px; }
+#cv-tasks-current :is(.tk-layout-btn,.tk-list-card-more,#tkToolbarNew,#tkToolbarNewArrow):focus-visible { outline:2px solid var(--focus-ring); outline-offset:2px; }
+#cv-tasks-current .tk-body.is-split .tk-list-card { display:flex; min-height:0; }
+#cv-tasks-current .tk-body.is-split :is(.tk-list-stage,.tk-list-card-actions) { display:none; }
+.tk-list-stage-step:has(.tk-list-stage-dot)::after { display:none; }
+
+#cv-tasks-current .tk-figma-plus { flex:none; }
+#cv-tasks-current #tkDisplayBtn svg { display:none; }
+#cv-tasks-current #view-tasks:not(.tk-project-list-mode) #tkDisplayBtn { background: url('../../../assets/figma/task-list/settings.svg') center / 16px 16px no-repeat; }
+#cv-tasks-current #view-tasks:not(.tk-project-list-mode) #tkDisplayBtn:hover { background-color:var(--hover); }
+
+#cv-tasks-current .tk-list-stage-step:not(.is-current) .tk-list-stage-dot { margin-left:2px; }

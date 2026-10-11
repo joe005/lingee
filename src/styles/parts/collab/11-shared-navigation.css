@@ -43,3 +43,22 @@
 #view-collab .config-card-title{align-items:center}
 #view-collab .cv-card-locked .config-row{opacity:.55}
 #view-collab .cv-card-locked .toggle{pointer-events:none}
+
+/* 任务、智能体与智能体团队共用同一文字导航。 */
+#view-collab:has(:is(#cv-tasks-current,#cv-experts,#cv-teams).active) #cvPageTitle { display:none; }
+#view-collab:has(:is(#cv-tasks-current,#cv-experts,#cv-teams).active) #cvTabNav {
+  position:relative; align-self:center; width:calc(100% - 32px); max-width:1160px;
+  height:52px; min-height:52px; margin:0; padding:0; gap:12px;
+  border:0; border-radius:0; background:transparent; overflow:visible;
+}
+#view-collab:has(:is(#cv-tasks-current,#cv-experts,#cv-teams).active) #cvTabNav .tab-nav-item {
+  height:28px; padding:0; border:0; border-radius:0; background:transparent;
+  color:var(--text-secondary); font-size:18px; line-height:28px; font-weight:500; box-shadow:none;
+}
+#view-collab:has(:is(#cv-tasks-current,#cv-experts,#cv-teams).active) #cvTabNav .tab-nav-item--active { color:var(--text-title); }
+#view-collab:has(:is(#cv-tasks-current,#cv-experts,#cv-teams).active) #cvTabNav [data-cvview="config"] {
+  margin-left:auto; margin-right:44px; width:36px; height:36px; font-size:0;
+  background:url('../../../assets/figma/task-list/settings.svg') center / 16px 16px no-repeat;
+}
+#view-collab:has(:is(#cv-tasks-current,#cv-experts,#cv-teams).active) #cvTabNav .tab-nav-item:hover { color:var(--text-title); }
+#view-collab:has(:is(#cv-tasks-current,#cv-experts,#cv-teams).active) #cvTabNav .tab-nav-item:focus-visible { outline:2px solid var(--focus-ring); outline-offset:2px; }

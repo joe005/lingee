@@ -131,7 +131,7 @@ function renderTaskTeamAvatarGroup(team) {
 }
 function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml, stageCount, reportHtml) {
   var stages = activity.filter(function (entry) { return entry.expertId; });
-  if (!stages.length && !activity.length) return reportHtml || '';
+  if (!stages.length && !activity.length && pageState.taskDetailVersion !== 'latest') return reportHtml || '';
   var plannedStages = taskExecutionStages(task);
   var mySessions = pageState.taskDetailVersion === 'latest' ? tkGetMySessions(task) : [];
   var latest = stages.at(-1);
@@ -167,7 +167,7 @@ function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml,
         ? artifacts.filter(function (artifact) { return artifact.stageId === stage.id; }) : [];
       var detailId = 'tkStageDetail' + index;
       var sessionListId = 'tkStageSessions' + index;
-      var showExpert = latestLayout && !!entry;
+      var showExpert = latestLayout;
       var hasDetail = latestLayout && stageArtifacts.length > 0;
       /* 待审核阶段默认展开产物，审核人无需再点「查看产物」。 */
       var inReviewStage = task.status === 'in_review' && state === 'review';
@@ -196,7 +196,7 @@ function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml,
         + (isCurrent && state === 'running' && task.status === 'in_progress'
           ? '<button type="button" class="tk-feed-stage-state tk-feed-stage-state-action" data-stage-submit="' + escapeHtml(stage.id) + '" aria-label="' + escapeHtml(stage.name) + '执行完成，转为待审核" title="点击模拟 Agent 完成">' + label + '</button>'
           : '<span class="tk-feed-stage-state">' + label + '</span>') + '</div>'
-        + (showExpert ? '<div class="tk-feed-stage-meta"><span class="tk-feed-stage-expert-content" title="执行专家：' + escapeHtml(entry.author) + '"><img src="' + escapeHtml(xav(expert?.k)) + '" alt=""><span>' + escapeHtml(entry.author) + '</span></span></div>' : '') + '</th>'
+        + (showExpert ? '<div class="tk-feed-stage-meta"><span class="tk-feed-stage-expert-content" title="执行专家：' + escapeHtml(entry?.author || assignee) + '">' + (expert ? '<img src="' + escapeHtml(xav(expert.k)) + '" alt="">' : '<span class="tk-figma-person-avatar" aria-hidden="true">' + escapeHtml(assignee.slice(0, 1)) + '</span>') + '<span>' + escapeHtml(entry?.author || assignee) + '</span></span></div>' : '') + '</th>'
         + '<td class="tk-stage-cell-actions">' + actions + '</td></tr>'
         + (sessionsHtml || detailHtml ? '<tr class="tk-feed-stage-extra is-' + state + (isCurrent ? ' is-current' : '') + '"' + (sessionsHtml || inReviewStage ? '' : ' hidden') + '><td colspan="6">' + sessionsHtml + detailHtml + '</td></tr>' : '');
     }).join('') + (latestLayout ? '</tbody></table></div>' : '</ol>')
@@ -353,7 +353,7 @@ function renderTaskComments(t) {
   })).sort(function (left, right) {
     return left.time.localeCompare(right.time) || left.index - right.index;
   });
-  if (!events.length) return reportHtml || '<div class="tk-drawer-comments-empty">暂无动态</div>';
+  if (!events.length) return latestLayout ? '<div class="tk-feed">' + renderTaskDeliveryOverview(t, activity, artifacts, '', 0, reportHtml) + '<div class="tk-drawer-comments-empty">暂无操作记录</div></div>' : reportHtml || '<div class="tk-drawer-comments-empty">暂无动态</div>';
   var sections = [];
   events.forEach(function (event) {
     var isAgent = event.type === 'delivery' && event.entry.expertId;
@@ -494,6 +494,16 @@ export function openDrawer(taskId) {
     });
     els.tkDrawerBody.querySelectorAll('[data-action="blocked-retry"]').forEach(function (button) { button.remove(); });
     mainInner.prepend(sidebar);
+    var overviewHeading = document.createElement('h4');
+    overviewHeading.className = 'tk-figma-overview-heading';
+    overviewHeading.textContent = '任务概况';
+    sidebar.prepend(overviewHeading);
+    var description = mainInner.querySelector('.tk-drawer-desc');
+    var descriptionRow = document.createElement('div');
+    descriptionRow.className = 'tk-figma-description-row';
+    descriptionRow.innerHTML = '<span>任务描述</span>';
+    descriptionRow.append(description);
+    sidebar.append(descriptionRow);
   }
   var _newDetails = els.tkDrawerBody.querySelectorAll('details');
   _savedDetailsOpen.forEach(function (open, i) { if (open && _newDetails[i]) _newDetails[i].open = true; });

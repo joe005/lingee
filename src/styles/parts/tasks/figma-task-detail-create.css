@@ -1,0 +1,83 @@
+/* Figma 243:40290 / 265:59803 / 265:59804：仅任务最新版详情和新建弹窗。 */
+#niuCreateOverlay .niu-create{width:min(720px,calc(100vw - 32px));height:min(640px,calc(100dvh - 32px));border-radius:24px;box-shadow:var(--menu-shadow)}
+#niuCreateOverlay .niu-create-head{padding:16px 20px 0;border:0;min-height:52px}
+#niuCreateOverlay .niu-breadcrumb{font-size:18px;font-weight:500}
+#niuCreateOverlay .niu-create-mode button{display:flex;align-items:center;gap:4px;font-size:14px;font-weight:400}
+#niuCreateOverlay [data-niu-close].niu-icon-button{width:36px;height:36px;background: url('../../../assets/figma/task-dialog/close.svg') center/20px no-repeat}
+#niuCreateOverlay [data-niu-close].niu-icon-button svg{visibility:hidden}
+#niuCreateOverlay .niu-wizard-progress{padding:24px 20px 20px;border:0}
+#niuCreateOverlay .niu-wizard-progress ol{position:relative;max-width:460px;margin:auto;justify-content:space-between;gap:0}
+#niuCreateOverlay .niu-wizard-progress ol::before{content:'';position:absolute;top:0;left:68px;right:68px;height:32px;background:url('../../../assets/figma/task-dialog/steps.svg') center/100% 32px no-repeat}
+#niuCreateOverlay .niu-wizard-progress li{position:relative;display:flex;flex-direction:column;gap:8px;min-width:68px;color:var(--text-secondary)}
+#niuCreateOverlay .niu-wizard-progress li+li::before{display:none}
+#niuCreateOverlay .niu-wizard-progress li span{box-sizing:border-box;width:32px;height:32px;border:1px solid var(--border);background:var(--bg);font-size:14px;font-weight:500}
+#niuCreateOverlay .niu-wizard-progress li[aria-current=step] span{border-color:var(--brand);background:var(--bg);color:var(--brand)}
+#niuCreateOverlay .niu-wizard-progress li[data-complete] span{border-color:var(--text-secondary);font-size:0;background:var(--bg) url('../../../assets/figma/task-dialog/check.svg') center/16px no-repeat}
+#niuCreateOverlay .niu-create-section{padding:12px 20px 20px}
+#niuCreateOverlay .niu-create-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;height:auto}
+#niuCreateOverlay .niu-create-writing,#niuCreateOverlay .niu-create-properties{display:contents}
+#niuCreateOverlay .niu-create-writing>.niu-field:first-child{grid-column:1/-1;order:0}
+#niuCreateOverlay .niu-create-properties>.niu-field{order:1}
+#niuCreateOverlay .niu-create-writing>.niu-field:last-child{grid-column:1/-1;order:2}
+#niuCreateOverlay .niu-field{gap:8px;font-size:14px;color:var(--text-secondary)}
+#niuCreateOverlay .niu-field>span{font-size:14px;font-weight:400;color:var(--text-secondary)}
+#niuCreateOverlay .niu-field :is(input:not([type=hidden]),textarea,select,.niu-person-trigger){box-sizing:border-box;width:100%;height:40px;min-height:40px;padding:8px 12px;border:1px solid var(--border);border-radius:12px;background:var(--bg);font-size:14px;font-weight:400}
+#niuCreateOverlay .niu-create-writing .niu-field textarea{height:94px;min-height:94px;resize:vertical}
+#niuCreateOverlay .niu-create-foot{padding:16px 20px 20px;border:0}
+#niuCreateOverlay .niu-button{height:32px;padding:0 12px;border-radius:8px;font-size:14px}
+#niuCreateOverlay .niu-create-plan-toolbar{display:flex;justify-content:flex-end;margin-bottom:12px}
+#niuCreateOverlay .niu-create-add-btn{height:24px;padding:0 8px;font-size:12px}
+#niuCreateOverlay .niu-create-stage-table{border:1px solid var(--border);border-collapse:separate;border-spacing:0;border-radius:16px;overflow:hidden;font-size:14px}
+#niuCreateOverlay .niu-create-stage-table :is(th,td){height:40px;padding:4px 8px;font-size:14px;font-weight:400}
+#niuCreateOverlay .niu-col-index{width:48px}
+#niuCreateOverlay .niu-col-review{width:100px}
+#niuCreateOverlay .niu-col-action{width:56px}
+#niuCreateOverlay .niu-create-stage-table .niu-stage-owner{height:32px;border:1px solid var(--border);border-radius:12px;background:var(--bg);font-size:14px}
+#tkDrawer.tk-drawer--latest .tk-drawer-head{min-height:52px;padding:12px 20px;border-bottom:1px solid var(--divider)}
+#tkDrawer.tk-drawer--latest .tk-drawer-title{font-size:18px;font-weight:500;line-height:26px}
+#tkDrawer.tk-drawer--latest .tk-drawer-code{font-size:12px}
+#tkDrawer.tk-drawer--latest .tk-drawer-main{padding:0 20px 24px;min-width:0}
+#tkDrawer.tk-drawer--latest .tk-drawer-sidebar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;padding:20px 0;margin:0;border:0}
+#tkDrawer.tk-drawer--latest .tk-figma-overview-heading{grid-column:1/-1;display:flex;align-items:center;gap:8px;margin:0;font-size:14px;font-weight:500}
+#tkDrawer.tk-drawer--latest .tk-figma-overview-heading::before{content:'';width:3px;height:12px;border-radius:2px;background:var(--brand)}
+#tkDrawer.tk-drawer--latest .tk-prop-row{width:100%;gap:12px;font-size:14px}
+#tkDrawer.tk-drawer--latest .tk-prop-row>span:first-child{width:64px;font-size:14px;color:var(--text-secondary)}
+#tkDrawer.tk-drawer--latest .tk-prop-display{font-size:14px}
+#tkDrawer.tk-drawer--latest .tk-figma-description-row{grid-column:1/-1;display:flex;gap:12px;align-items:flex-start;font-size:14px}
+#tkDrawer.tk-drawer--latest .tk-figma-description-row>span{flex:none;width:64px;color:var(--text-secondary)}
+#tkDrawer.tk-drawer--latest .tk-drawer-desc{flex:1;min-width:0;min-height:0;margin:0;padding:0;font-size:14px;line-height:22px}
+#tkDrawer.tk-drawer--latest .tk-drawer-comments-head{display:none}
+#tkDrawer.tk-drawer--latest .tk-exec-card{padding:16px;border:1px solid var(--border);border-radius:20px;box-shadow:none;background:var(--bg)}
+#tkDrawer.tk-drawer--latest .tk-exec-card-head{padding-bottom:16px;border-bottom:1px solid var(--divider)}
+#tkDrawer.tk-drawer--latest .tk-exec-card-identity{margin-left:auto;text-align:right}
+#tkDrawer.tk-drawer--latest .tk-feed-stage-overview-head{padding:16px 0;font-size:14px}
+#tkDrawer.tk-drawer--latest .tk-feed-stage-table{display:block;border-spacing:0}
+#tkDrawer.tk-drawer--latest .tk-feed-stage-table tbody{display:flex;flex-direction:column;gap:12px;padding-left:20px}
+#tkDrawer.tk-drawer--latest .tk-feed-stage-row{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;min-height:76px;border:1px solid transparent;border-radius:16px;background:var(--fill-2)}
+#tkDrawer.tk-drawer--latest .tk-feed-stage-row.is-current{border-color:var(--brand)}
+#tkDrawer.tk-drawer--latest .tk-feed-stage-row :is(th,td){display:block;border:0;background:transparent;padding:12px;height:auto;border-radius:0}
+#tkDrawer.tk-drawer--latest .tk-feed-stage-row .tk-stage-cell-mark{position:absolute;left:-28px;top:20px;padding:0}
+#tkDrawer.tk-drawer--latest .tk-stage-cell-mark::after{content:'';position:absolute;left:4px;top:12px;width:1px;height:76px;background:var(--border)}
+#tkDrawer.tk-drawer--latest .tk-feed-stage-row:last-of-type .tk-stage-cell-mark::after{display:none}
+#tkDrawer.tk-drawer--latest .tk-feed-stage-main{display:flex;flex-direction:column;gap:8px}
+#tkDrawer.tk-drawer--latest .tk-feed-stage-meta{order:-1;margin:0;font-size:16px;color:var(--text)}
+#tkDrawer.tk-drawer--latest .tk-feed-stage-name{font-size:14px;color:var(--text)}
+#tkDrawer.tk-drawer--latest .tk-feed-stage-mark::after{animation:none;border:0}
+#tkDrawer.tk-drawer--latest .tk-feed-stage-row.is-current .tk-feed-stage-mark{width:10px;height:10px;background:var(--brand)}
+#tkDrawer.tk-drawer--latest .tk-feed-stage-extra{display:block;border-radius:16px;background:var(--fill-2)}
+#tkDrawer.tk-drawer--latest .tk-feed-stage-extra[hidden]{display:none}
+#tkDrawer.tk-drawer--latest .tk-feed-activity-block{padding:16px;border:1px solid var(--border);border-radius:20px;background:var(--bg)}
+#tkDrawer.tk-drawer--latest .tk-feed-activity-row{font-size:12px;line-height:20px}
+#tkDrawer.tk-drawer--latest .tk-drawer-foot{padding:16px 20px}
+@media(max-width:600px){#niuCreateOverlay .niu-create-columns{grid-template-columns:1fr}#niuCreateOverlay .niu-wizard-progress ol{max-width:320px}#niuCreateOverlay .niu-create-stage-table{min-width:570px}#niuCreateOverlay .niu-create-section--plan{overflow-x:auto}#tkDrawer.tk-drawer--latest .tk-drawer-sidebar{grid-template-columns:1fr}}
+#tkDrawer.tk-drawer--latest .tk-figma-person-avatar{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--brand-fill);color:var(--brand);font-size:12px}
+#tkDrawer.tk-drawer--latest .tk-feed-stage-table colgroup{display:none}
+#tkDrawer.tk-drawer--latest .tk-feed-stage-table-wrap{overflow:visible}
+
+#niuCreateOverlay .niu-wizard-progress li[aria-current=step] strong{color:var(--brand)}
+#niuCreateOverlay .niu-wizard-progress li[data-complete] strong{color:var(--text)}
+#niuCreateOverlay .niu-create-stage-table .niu-stage-owner>.niu-select-caret{margin-left:auto;flex:none}
+#niuCreateOverlay .niu-create-stage-table .niu-stage-remove{display:inline-grid;place-items:center;width:28px;height:28px;margin:0;padding:0;color:var(--text-secondary)}
+#niuCreateOverlay .niu-create-stage-table .niu-stage-remove:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+
+#niuCreateOverlay .niu-create-stage-table .niu-stage-name{display:block;padding:0 8px;color:var(--text);font-size:14px;line-height:22px}

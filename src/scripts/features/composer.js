@@ -843,7 +843,7 @@ function openChatSession(sessionId) {
   scrollChatBottom();
 }
 /* 任务状态卡片回到对应的聊天；旧数据没有聊天记录时只补建一次。 */
-export function openTaskStatusConversation(task) {
+export function openTaskStatusConversation(task, options = {}) {
   if (!task) return;
   seedCosmicDemoSessions();
   var linked = chatSessions.filter(function (session) { return Number(session.taskId) === task.id && isMyChatSession(session); });
@@ -857,6 +857,7 @@ export function openTaskStatusConversation(task) {
         || linked.find(function (row) { return row.demoState === 'question' && row.demoQuestion?.answer && !row.demoQuestion.continuationDone; })
         || linked.find(function (row) { return row.exchanges.some(function (exchange) { return exchange && !exchange.done && !exchange.waiting; }); })
         || linked.find(function (row) { return row.demoState === 'running'; });
+  if (options.preferExisting && !session) session = linked.find(function (row) { return row.stageId === task.executionStageId; }) || linked[0];
   var created = false;
   if (!session) {
     created = true;

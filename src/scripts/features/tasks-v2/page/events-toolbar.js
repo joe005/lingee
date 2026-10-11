@@ -12,17 +12,20 @@ export function bindToolbarEvents() {
   els.tkSearch.addEventListener('input', function () { state.search = this.value; render(); });
 
   /* 布局切换 */
-  $$('.tk-layout-btn').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      state.layout = this.getAttribute('data-layout');
-      if (state.layout === 'list') {
-        state.activeViewId = 'all'; state.scope = 'all'; state.filters = []; state.search = '';
-        els.tkSearch.value = '';
-      }
-      if (state.viewMode === 'split' && state.layout === 'board') state.viewMode = 'slide';
-      render();
-    });
-  });
+  document.addEventListener('click', function (event) {
+    var button = event.target.closest('#view-tasks [data-layout]');
+    if (!button) return;
+    event.stopPropagation();
+    var layout = button.getAttribute('data-layout');
+    if (!['board', 'list'].includes(layout)) return;
+    state.layout = layout;
+    if (state.viewMode === 'split' && layout === 'board') state.viewMode = 'slide';
+    closeDisplayChoiceMenu();
+    els.tkDisplayPopover.classList.add('hidden');
+    els.tkDisplayBtn.setAttribute('aria-expanded', 'false');
+    render();
+  }, true);
+
 
   /* 显示设置 Popover */
   els.tkDisplayBtn.addEventListener('click', function (e) {

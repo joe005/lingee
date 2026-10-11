@@ -2,7 +2,7 @@ import { openTaskStatusConversation } from '../../composer.js';
 import { tkGetTasks, tkPeopleInProject, tkProjectsForCurrentUser } from '../data.js';
 import { openNewIssueCopy } from '../new-issue-ui.js';
 import { taskViewState } from '../ui-state.js';
-import { closeTaskLabelPicker } from './detail-panel.js';
+import { closeTaskLabelPicker, openListReviewPreview } from './detail-panel.js';
 import { closeViewMenu } from './events-views.js';
 import { openTaskModal, refreshFormAssignees } from './form-modal.js';
 import { closeDisplayChoiceMenu, closeFieldSettings, render, saveInlineTask } from './layout.js';
@@ -11,7 +11,7 @@ import { pageState } from './page-state.js';
 import { animateListSubtasks, visibleListColumnCount } from './render.js';
 import { els, persistViewState, state, subtaskSectionExpanded } from './state.js';
 import { _collapsedActivityIds, _expandedActivityIds, _showOlderActivityIds, closeDrawer, openDrawer, openDrawerArtifacts } from './subtasks.js';
-import { chooseFirstAssignee, confirmDeleteTask, filterAssigneeOptions, openBoardTaskSession, retryBlockedTask, showCardMenu, startTaskExecution } from './utils.js';
+import { chooseFirstAssignee, handleTaskCardPrimaryAction, confirmDeleteTask, confirmTaskStageApproval, filterAssigneeOptions, openBoardTaskSession, retryBlockedTask, showCardMenu, startTaskExecution } from './utils.js';
 /* 任务页 · 事件绑定 · 子任务、看板 / 列表点击与拖拽、列折叠、浮层关闭（拆分自 tasks-v2/index.js，逻辑未改） */
 export function bindBoardEvents() {
   /* 详情面板内：添加子任务 / 打开子任务 */
@@ -126,6 +126,13 @@ export function bindBoardEvents() {
       else if (state.groupBy === 'project' && groupKey !== 'none') { els.tkFormProject.value = groupKey; refreshFormAssignees(); }
       return;
     }
+    var boardListAction = e.target.closest('[data-list-task-action]');
+    if (boardListAction) {
+      var boardTaskId = Number(boardListAction.getAttribute('data-list-task-id'));
+      var boardActionName = boardListAction.getAttribute('data-list-task-action');
+      handleTaskCardPrimaryAction(boardTaskId, boardActionName, boardListAction);
+      return;
+    }
     var playBtnB = e.target.closest('[data-card-play]');
     if (playBtnB) { startTaskExecution(parseInt(playBtnB.getAttribute('data-card-play'), 10)); return; }
     var reviewBtn = e.target.closest('[data-card-review]');
@@ -180,12 +187,7 @@ export function bindBoardEvents() {
       var listAction = listActionBtn.getAttribute('data-list-task-action');
       var listTaskId = parseInt(listActionBtn.getAttribute('data-list-task-id'), 10);
       var listTask = tkGetTasks().find(function (row) { return row.id === listTaskId; });
-      if (listAction === 'review') openBoardTaskSession(listTask);
-      else if (listAction === 'start') startTaskExecution(listTaskId, {skipHandlerCheck:true});
-      else if (listAction === 'retry') retryBlockedTask(listTask, true);
-      else if (listAction === 'reply') { if (listTask) { closeDrawer(); openTaskStatusConversation(listTask); } }
-      else if (listAction === 'artifacts') openDrawerArtifacts(listTaskId);
-      else openDrawer(listTaskId);
+      handleTaskCardPrimaryAction(listTaskId, listAction, listActionBtn);
       return;
     }
     var toggleBtn = e.target.closest('[data-tk-toggle]');
@@ -318,6 +320,13 @@ export function bindBoardEvents() {
       persistViewState();
     }
   });
+
+  /* 捕获阶段收起卡片菜单，避免页面容器阻止冒泡后空白点击失效。 */
+  document.addEventListener('click', function (e) {
+    if (e.target.closest('.tk-card-menu,[data-card-more],#tkDrawerMore')) return;
+    document.querySelectorAll('.tk-card-menu').forEach(function (menu) { menu.remove(); });
+    els.tkDrawerMore?.setAttribute('aria-expanded', 'false');
+  }, true);
 
   /* 点击外部关闭弹出菜单 */
   document.addEventListener('click', function (e) {

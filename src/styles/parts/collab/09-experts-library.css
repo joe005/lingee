@@ -117,3 +117,9 @@
 
 /* 智能体与智能体团队卡片名称与管理端共用字号。 */
 #view-collab #cv-experts .x-card .card-title,#view-collab #cv-teams .x-card .card-title{font-size:var(--asset-card-title-size)}
+
+/* 与任务内容和顶部导航共用 1160px 内容宽度。滚动仍由页面内部负责。 */
+#view-collab :is(#cv-experts,#cv-teams)>.scroll{
+  box-sizing:border-box;width:calc(100% - 32px);max-width:1160px;
+  margin-left:auto;margin-right:auto;padding-left:0;padding-right:0;
+}

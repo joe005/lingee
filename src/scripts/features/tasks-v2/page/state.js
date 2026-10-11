@@ -22,7 +22,7 @@ export var LIST_STATUS_TABS = [
   { id:'done', name:'已完成', match:function (task) { return task.status === 'done' || tkIsMyStageDone(task); } },
 ];
 export var state = {
-  layout: 'board', viewMode: 'slide', scope: 'all', groupBy: 'status', sortBy: 'updatedAt', sortDir: 'desc',
+  layout: 'list', viewMode: 'slide', scope: 'all', groupBy: 'status', sortBy: 'updatedAt', sortDir: 'desc',
   search: '', filters: [], selectedIds: new Set(), activeViewId: 'all',
   listStatusTab: 'needs',
   showSubtasks: true,
@@ -128,7 +128,6 @@ export function restoreViewState() {
   catch (e) { return; }
   if (!saved || typeof saved !== 'object' || Array.isArray(saved)) return;
   var view = tkGetViews().find(function (v) { return v.id === saved.activeViewId; });
-  if (saved.activeViewId && !view) return;
   state.activeViewId = view ? view.id : 'all';
   state.scope = view && ['all','members','agents','my_assigned','in_progress'].includes(view.scope) ? view.scope : 'all';
   if (['board','list'].includes(saved.layout)) state.layout = saved.layout;
@@ -181,7 +180,7 @@ export function restoreViewState() {
 export function cacheEls() {
   var ids = [
     'tkViewTabs','tkViewAdd','tkViewMenu','tkViewMenuNew','tkViewManage','tkViewOverflow','tkViewOverflowBtn','tkOverflowMenu',
-    'tkSearch','tkFilterBtn','tkFilterLabel','tkFilterPanel','tkFilterPanelBody','tkFilterSubmenu','tkFilterChips','tkToolbarNewGroup','tkToolbarNew','tkToolbarNewArrow','tkToolbarNewMenu','tkImportExcel','tkExportExcelTemplate',
+    'tkSearch','tkFilterBtn','tkFilterLabel','tkFilterPanel','tkFilterPanelBody','tkFilterSubmenu','tkFilterChips','tkToolbarNewGroup','tkToolbarNew','tkToolbarNewArrow','tkToolbarNewMenu','tkImportExcel',
     'tkDisplayBtn','tkDisplayPopover','tkFieldsBtn','tkFieldsPopover','tkFieldsClose','tkFieldsSearch','tkFieldsList','tkFieldsSummary','tkGroupSelect','tkViewModeSelect','tkSortSelect','tkSortDirection','tkShowSubtasks','tkCardProperties','tkCardPropsSection',
     'tkLayoutToggle','tkBody','tkBoard','tkBoardScroll','tkList','tkListBody','tkListHead','tkSplitEmpty',
     'tkCheckAll','tkEmpty','tkResetFilter','tkBulkBar','tkBulkCount','tkBulkClear',

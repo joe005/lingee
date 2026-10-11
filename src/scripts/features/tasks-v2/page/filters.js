@@ -134,46 +134,50 @@ export function listStatusPool(ignoreProjectContext) {
 }
 
 export function filterListStatus(tasks) {
+  if (!pageState.projectListMode) {
+    var key = state.listStatusTab === 'running' ? 'in_progress' : state.listStatusTab;
+    return getGroupedTasks(tasks, 'status').find(function (group) { return group.key === key; })?.tasks || [];
+  }
   var tab = LIST_STATUS_TABS.find(function (item) { return item.id === state.listStatusTab; }) || LIST_STATUS_TABS[0];
   return tasks.filter(tab.match);
 }
 
 /* ---------- 分组 ---------- */
-export function getGroupedTasks(tasks) {
-  if (state.groupBy === 'none') return [{ key: 'all', name: '全部', tasks: tasks }];
+export function getGroupedTasks(tasks, groupBy = state.groupBy) {
+  if (groupBy === 'none') return [{ key: 'all', name: '全部', tasks: tasks }];
   var groups = {}, keys = [];
-  if (state.groupBy === 'status') {
-    /* 按处理职责归类，卡片保留实际状态；待规划仍并入待开始。 */
-    [{id:'backlog',name:'待开始',color:'gray'}, {id:'in_progress',name:'执行中',color:'blue'},
-      {id:'needs',name:'待我处理',color:'orange'}, {id:'done',name:'已完成',color:'green'}]
+  if (groupBy === 'status') {
+    /* 视觉稿顺序：待我处理、执行中、已完成；待开始与待规划并入待我处理，卡片保留实际状态。 */
+    [{id:'needs',name:'待我处理',color:'orange'}, {id:'in_progress',name:'执行中',color:'blue'},
+      {id:'done',name:'已完成',color:'green'}]
       .forEach(function (group) { groups[group.id] = {name:group.name,color:group.color,tasks:[]}; keys.push(group.id); });
-  } else if (state.groupBy === 'priority') {
+  } else if (groupBy === 'priority') {
     TK_PRIORITIES.forEach(function (p) { groups[p.id] = { name: p.name, color: p.color, tasks: [] }; keys.push(p.id); });
-  } else if (state.groupBy === 'assignee') {
+  } else if (groupBy === 'assignee') {
     TK_PEOPLE.forEach(function (p) { groups[p.id] = { name: p.name, color: p.color, tasks: [] }; keys.push(p.id); });
     groups.unassigned = { name: '未分配', color: 'gray', tasks: [] }; keys.push('unassigned');
-  } else if (state.groupBy === 'project') {
+  } else if (groupBy === 'project') {
     tkProjectsForCurrentUser().forEach(function (p) { groups[p.id] = { name: p.name, color: 'blue', tasks: [] }; keys.push(p.id); });
     groups.none = { name: '无项目', color: 'gray', tasks: [] }; keys.push('none');
   }
   tasks.forEach(function (t) {
-    var k = t[state.groupBy];
-    if (state.groupBy === 'status') {
-      if (k === 'planned') k = 'backlog';
+    var k = t[groupBy];
+    if (groupBy === 'status') {
+      if (k === 'planned' || k === 'backlog') k = 'needs';
       else if (['in_progress','in_review','blocked'].includes(k)) k = (k === 'in_review' || k === 'blocked' || taskConversationNeedsReply(t, true)) ? 'needs' : 'in_progress';
     }
     /* 已取消与个人已办的任务不上板；执行中/待审核/已阻塞等活跃任务即使本人处理过也保留 */
     if (t.status === 'cancelled' || (!['in_progress', 'in_review', 'blocked'].includes(t.status) && tkIsHandledByMe(t))) return;
     if (!k) {
-      if (state.groupBy === 'assignee') k = 'unassigned';
-      else if (state.groupBy === 'project') k = 'none';
+      if (groupBy === 'assignee') k = 'unassigned';
+      else if (groupBy === 'project') k = 'none';
       else k = keys[0];
     }
     if (!groups[k]) { groups[k] = { name: k, color: 'gray', tasks: [] }; keys.push(k); }
     groups[k].tasks.push(t);
   });
   /* 按状态分组时保留空列：状态卡片即使没有任务也显示，便于了解全部状态并拖拽流转 */
-  var keepEmptyGroups = state.groupBy === 'status';
+  var keepEmptyGroups = groupBy === 'status';
   return keys.filter(function (k) { return keepEmptyGroups || groups[k].tasks.length > 0; }).map(function (k) {
     return { key: k, name: groups[k].name, color: groups[k].color, tasks: groups[k].tasks };
   });

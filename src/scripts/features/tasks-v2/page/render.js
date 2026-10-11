@@ -1,3 +1,8 @@
+import needsColumnIcon from '../../../../assets/figma/task-board/needs.svg';
+import runningColumnIcon from '../../../../assets/figma/task-board/running.svg';
+import doneColumnIcon from '../../../../assets/figma/task-board/done.svg';
+import boardMoreIcon from '../../../../assets/figma/task-list/more.svg';
+import { taskExecutionStages } from '../task-execution.js';
 import { $$ } from '../../../core/dom.js';
 import { createDeliveryActivity } from '../../collab/delivery-activity.js';
 import { taskConversationNeedsReply } from '../../composer.js';
@@ -5,7 +10,7 @@ import { AV_KEYS, EX, xav } from '../../expert/data.js';
 import { taskExecutorTeam } from '../../expert/task-team.js';
 import { renderListPageTabs } from '../../shared/list-page-tabs.js';
 import { TK_FILTER_FIELDS, TK_OPERATORS, tkCanStartTask, tkCurrentStageHandlerId, tkCurrentUserId, tkGetPriorityObj, tkGetProjectName, tkGetViews, tkProjectById } from '../data.js';
-import { taskListKind } from '../list-kind.js';
+import { taskCardAction, taskListKind } from '../list-kind.js';
 import { applyTaskListFieldSettings, taskListVisibleColumnCount } from '../list-template.js';
 import { taskViewState } from '../ui-state.js';
 import { buildTaskTree, filterListStatus, getFilteredTasks, getGroupedTasks, listStatusPool, renderListTreeNodes, renderTreeNodes } from './filters.js';
@@ -21,11 +26,12 @@ export function renderViewBar() {
   var viewAction = els.tkViewAdd.closest('.tk-view-action');
   if (viewAction) viewAction.hidden = listMode;
   if (listMode) {
-    var pool = listStatusPool();
+    var groups = getGroupedTasks(getFilteredTasks(), 'status');
     els.tkViewTabs.innerHTML = LIST_STATUS_TABS.map(function (tab) {
-      var count = pool.filter(tab.match).length;
+      var groupKey = tab.id === 'running' ? 'in_progress' : tab.id;
+      var count = groups.find(function (group) { return group.key === groupKey; })?.tasks.length || 0;
       var active = tab.id === state.listStatusTab;
-      return '<button type="button" class="list-page-tab' + (active ? ' active' : '') + '" data-list-status="' + tab.id + '" role="tab" aria-selected="' + active + '"><span class="list-page-tab-name">' + tab.name + '</span><span class="tk-list-tab-count">' + count + '</span></button>';
+      return '<button type="button" class="list-page-tab' + (active ? ' active' : '') + '" data-list-status="' + tab.id + '" role="tab" aria-selected="' + active + '"><span class="list-page-tab-name">' + (tab.id === 'needs' ? '需我处理' : tab.name) + '</span><span class="tk-list-tab-count">' + count + '</span></button>';
     }).join('');
     els.tkViewOverflow.classList.add('hidden');
     return;
@@ -47,7 +53,7 @@ export function renderBoard() {
     var arrow = collapsed ? '18 15 12 9 6 15' : '6 9 12 15 18 9';
     return '<div class="tk-board-col' + (collapsed ? ' is-collapsed' : '') + '" data-group-key="' + g.key + '">'
       + '<div class="tk-board-col-head"><div class="tk-board-col-head-left">'
-      + statusSvg(g.key === 'needs' ? 'in_review' : g.key)
+      + (['needs','backlog','in_progress','done'].includes(g.key) ? '<img src="' + (g.key === 'done' ? doneColumnIcon : g.key === 'in_progress' ? runningColumnIcon : needsColumnIcon) + '" width="16" height="16" alt="">' : statusSvg(g.key))
       + '<span class="tk-board-col-name">' + escapeHtml(g.name) + '</span>'
       + '<span class="tk-board-col-count">' + g.tasks.length + '</span>'
       + '</div><div class="tk-board-col-head-right">'
@@ -99,6 +105,22 @@ export function renderCard(t, opts) {
     : t.status === 'in_review' ? '<button type="button" class="tk-card-action tk-card-action--primary" data-card-review="' + t.id + '">查看产物</button>'
     : t.status === 'blocked' && tkCurrentStageHandlerId(t) === tkCurrentUserId() ? '<button type="button" class="tk-card-action tk-card-action--primary" data-card-retry="' + t.id + '">重试</button>'
     : needsReply ? '<button type="button" class="tk-card-action" data-card-session="' + t.id + '">回复</button>' : '';
+  if (!pageState.projectListMode && document.querySelector('#cv-tasks-current #tkBoardScroll') === els.tkBoardScroll) {
+    var plan = taskExecutionStages(t);
+    var currentStage = plan.find(function (stage) { return stage.id === t.executionStageId; }) || (t.status === 'done' ? plan.at(-1) : plan[0]);
+    var sharedAction = taskCardAction(t);
+    var actionLabels = { [sharedAction.action]:sharedAction.label };
+    var boardActionName = sharedAction.action;
+    var boardAction = actionLabels[boardActionName] ? '<button type="button" class="tk-card-action" data-list-task-action="' + boardActionName + '" data-list-task-id="' + t.id + '">' + actionLabels[boardActionName] + '</button>' : '';
+    var boardStatus = t.status === 'done' ? '' : '<span class="tk-card-status" data-kind="' + cardState.kind + '">' + escapeHtml(cardState.kind === 'review' ? '待确认' : cardState.badge) + '</span>';
+    return '<div class="tk-card tk-card--figma' + sel + extraCls + (t.status === 'blocked' ? ' tk-card--blocked' : '') + '" draggable="true" data-task-id="' + t.id + '">'
+      + '<button type="button" class="tk-card-more" data-card-more="' + t.id + '" aria-label="更多任务操作" aria-haspopup="menu"><img src="' + boardMoreIcon + '" width="16" height="16" alt=""></button>'
+      + '<div class="tk-card-top-row">' + toggle + boardStatus + '<div class="tk-card-code">' + escapeHtml(t.code) + (props.project && t.project ? ' · ' + escapeHtml(tkGetProjectName(t.project)) : '') + '</div>' + childBadge + '</div>'
+      + '<div class="tk-card-copy"><div class="tk-card-title">' + escapeHtml(t.title) + '</div>'
+      + (t.desc ? '<div class="tk-card-description" title="' + escapeHtml(t.desc) + '">' + escapeHtml(t.desc) + '</div>' : '')
+      + '</div><div class="tk-card-tags">' + (t.issueType ? '<span class="tk-card-type">' + escapeHtml(t.issueType) + '</span>' : '') + (props.priority ? '<span class="tk-card-priority" data-priority="' + escapeHtml(t.priority) + '">' + escapeHtml(pri.name) + '</span>' : '') + (props.startDate && t.startDate ? '<span class="tk-card-due">' + fmtDate(t.startDate) + '</span>' : '') + '</div>'
+      + '<div class="tk-card-foot"><div class="tk-card-foot-left">' + teamAvatarHtml + '<span class="tk-card-stage">' + escapeHtml(currentStage?.name || '等待安排') + '</span></div><div class="tk-card-foot-actions">' + (boardAction || '<span class="tk-card-running-hint">' + escapeHtml(cardState.hint) + '</span>') + '</div></div></div>';
+  }
   return '<div class="tk-card' + sel + extraCls + '" draggable="true" data-task-id="' + t.id + '">'
     + '<button class="tk-card-more" data-card-more="' + t.id + '" data-tooltip="更多操作" aria-label="更多操作"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button>'
     + '<div class="tk-card-top-row">' + toggle + spacer + '<div class="tk-card-code">' + escapeHtml(t.code) + '</div>' + childBadge + stateBadge + '</div>'

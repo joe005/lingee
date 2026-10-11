@@ -202,14 +202,13 @@ export function bindViewEvents() {
         var delCount = state.selectedIds.size;
         if (!delCount) return;
         var ids = Array.from(state.selectedIds).filter(function (id) { return tkCanDeleteTask(tkGetTasks().find(function (task) { return task.id === id; })); });
-        var blocked = delCount - ids.length;
-        if (!ids.length) { hidePopover(); toast('所选任务均已开始或已经历阶段，不能删除', 'warning'); return; }
-        showTaskConfirm('确定删除选中的 ' + ids.length + ' 个任务吗？' + (blocked ? '另有 ' + blocked + ' 个已开始或已经历阶段的任务不会被删除。' : ''), function () {
+        if (!ids.length) { hidePopover(); toast('所选任务不存在或已被删除', 'warning'); return; }
+        showTaskConfirm('确定删除选中的 ' + ids.length + ' 个任务吗？', function () {
           ids.forEach(function (id) { tkDeleteTask(id); });
           state.selectedIds.clear();
           hidePopover();
           render();
-          toast('成功删除 ' + ids.length + ' 个任务' + (blocked ? '，' + blocked + ' 个不可删除已保留' : ''), 'success');
+          toast('成功删除 ' + ids.length + ' 个任务', 'success');
         });
       }
     });

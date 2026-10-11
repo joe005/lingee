@@ -1,0 +1,52 @@
+/* Figma 284:73937；只调整协作开发当前任务看板。 */
+#cv-tasks-current #tkBoardScroll{box-sizing:border-box;max-width:1192px;margin:0 auto;padding:0 16px 16px;gap:16px;align-items:stretch}
+#cv-tasks-current .tk-board-col{box-sizing:border-box;flex:1 0 300px;min-width:300px;max-height:100%;padding:10px;border:0;border-radius:24px;background:var(--fill-1)}
+#cv-tasks-current .tk-board-col-head{height:32px;min-height:32px;margin-bottom:10px;padding:0;border:0}
+#cv-tasks-current .tk-board-col-head-left{box-sizing:border-box;height:32px;padding:0 8px;gap:4px;border-radius:999px;background:var(--hover)}
+#cv-tasks-current .tk-board-col-name{font-size:14px;font-weight:500}
+#cv-tasks-current .tk-board-col-count{padding:0;border:0;background:transparent;font-size:14px}
+#cv-tasks-current .tk-board-col-count::before{content:'·';margin-right:4px}
+#cv-tasks-current .tk-board-col-body{padding:0;gap:10px;overscroll-behavior:contain;scrollbar-width:thin}
+#cv-tasks-current .tk-card--figma{box-sizing:border-box;flex:none;display:flex;flex-direction:column;gap:8px;min-height:0;margin:0;padding:16px;border:1px solid transparent;border-radius:20px;background:var(--bg);box-shadow:none}
+#cv-tasks-current .tk-card--figma:hover{border-color:var(--border-hover);box-shadow:none}
+#cv-tasks-current .tk-card--figma.selected{border-color:var(--brand);background:var(--brand-fill)}
+#cv-tasks-current .tk-card--figma.tk-card--blocked{border-color:var(--danger)}
+#cv-tasks-current .tk-card--figma .tk-card-top-row{min-height:24px;margin:0;gap:8px;padding:0}
+#cv-tasks-current .tk-card--figma .tk-card-code{flex:1;min-width:0;font-size:12px;font-weight:400;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#cv-tasks-current .tk-card--figma .tk-card-status{position:static;flex:none;height:24px;box-sizing:border-box;padding:3px 6px;border-radius:999px;font-size:12px;line-height:18px;font-weight:400;background:var(--fill-1);color:var(--text-secondary)}
+#cv-tasks-current .tk-card--figma .tk-card-status:is([data-kind=start],[data-kind=running]){color:var(--brand);background:var(--brand-fill)}
+#cv-tasks-current .tk-card--figma .tk-card-status[data-kind=review]{color:var(--warning);background:var(--warning-bg)}
+#cv-tasks-current .tk-card--figma .tk-card-status[data-kind=blocked]{color:var(--danger);background:var(--danger-bg)}
+#cv-tasks-current .tk-card--figma .tk-card-title{margin:0;padding:0;font-size:16px;font-weight:500;line-height:24px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#cv-tasks-current .tk-card--figma .tk-card-description{margin:0;font-size:14px;line-height:22px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text-secondary)}
+#cv-tasks-current .tk-card-tags{display:flex;align-items:center;gap:8px;min-height:24px;flex-wrap:wrap}
+#cv-tasks-current .tk-card-tags :is(.tk-card-priority,.tk-card-type){padding:2px 6px;border:1px solid var(--border);border-radius:6px;font-size:12px;line-height:18px;color:var(--text-secondary);background:transparent}
+#cv-tasks-current .tk-card-tags .tk-card-type{border-color:var(--border-focus);color:var(--brand)}
+#cv-tasks-current .tk-card-tags [data-priority=urgent]{color:var(--danger);border-color:var(--danger)}
+#cv-tasks-current .tk-card-tags [data-priority=high]{color:var(--warning);border-color:var(--warning)}
+#cv-tasks-current .tk-card--figma .tk-card-foot{gap:8px;margin-top:4px;padding-top:12px;min-height:28px;background:url('../../../assets/figma/task-board/divider.svg') top left/100% 1px no-repeat}
+#cv-tasks-current .tk-card--figma .tk-card-foot-left{min-width:0;gap:6px;flex:1}
+#cv-tasks-current .tk-card--figma .tk-card-team-avatar{width:24px;height:24px;border-radius:50%;flex:none}
+#cv-tasks-current .tk-card--figma .tk-card-team-avatars img:not(:first-child),#cv-tasks-current .tk-card--figma .tk-card-team-avatars-more{display:none}
+#cv-tasks-current .tk-card--figma .tk-card-stage{min-width:0;font-size:14px;font-weight:400;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#cv-tasks-current .tk-card-foot-actions{display:flex;align-items:center;gap:8px;min-width:0;max-width:65%}
+#cv-tasks-current .tk-card--figma .tk-card-more{position:absolute;top:12px;right:12px;display:grid;place-items:center;flex:none;width:28px;height:28px;opacity:0;border:1px solid var(--border);border-radius:8px;background:var(--bg)}
+#cv-tasks-current .tk-card--figma .tk-card-action{flex:none;height:28px;padding:0 8px;border:1px solid var(--border);border-radius:8px;background:var(--bg);font-size:14px;font-weight:400;color:var(--text);box-shadow:none}
+#cv-tasks-current .tk-card--figma :is(.tk-card-more,.tk-card-action):hover{border-color:var(--border-hover);background:var(--hover)}
+#cv-tasks-current .tk-card--figma :is(.tk-card-more,.tk-card-action):focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+#cv-tasks-current .tk-card-running-hint{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--text-secondary)}
+#cv-tasks-current .tk-card--figma.tk-card--child{margin-left:12px;border-left:2px solid var(--border-focus)}
+
+/* 标题与描述作为紧邻的正文组，标签和底部单独分区。 */
+#cv-tasks-current .tk-card-copy{display:flex;flex-direction:column;gap:4px;min-width:0;width:100%}
+#cv-tasks-current .tk-card--figma .tk-card-top-row{width:100%;justify-content:flex-start}
+#cv-tasks-current .tk-card--figma .tk-card-foot{box-sizing:content-box;width:100%;padding-bottom:0}
+#cv-tasks-current .tk-card--figma .tk-card-foot-left{overflow:hidden}
+#cv-tasks-current .tk-card--figma .tk-card-team-avatars{display:inline-flex;width:24px;flex:none}
+#cv-tasks-current .tk-card--figma .tk-card-team-avatars .tk-card-team-avatar{margin:0;border:0}
+
+#cv-tasks-current .tk-card--figma{position:relative}
+#cv-tasks-current .tk-card--figma .tk-card-more{pointer-events:none}
+#cv-tasks-current .tk-card--figma:hover .tk-card-more,#cv-tasks-current .tk-card--figma:focus-within .tk-card-more{opacity:1;pointer-events:auto}
+#cv-tasks-current .tk-card--figma .tk-card-top-row{padding-right:28px;box-sizing:border-box}
+@media(hover:none){#cv-tasks-current .tk-card--figma .tk-card-more{opacity:1;pointer-events:auto}}

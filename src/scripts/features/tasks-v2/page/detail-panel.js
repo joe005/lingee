@@ -1,3 +1,4 @@
+import { openTaskStatusConversation } from '../../composer.js';
 import { toast } from '../../../core/toast.js';
 import { mountAgentConfig, unmountAgentConfig } from '../../agent-config.js';
 import { agentCardByName, openAgentSubmit } from '../../agent-submit.js';
@@ -9,7 +10,7 @@ import { render } from './layout.js';
 import { pageState } from './page-state.js';
 import { DRAWER_WIDTH_STORAGE_KEY, els, state } from './state.js';
 import { openDrawer } from './subtasks.js';
-import { confirmTaskStageApproval, escapeHtml, openTaskConversationWithTask } from './utils.js';
+import { confirmTaskStageApproval, escapeHtml } from './utils.js';
 /* 任务页 · 任务详情面板（拆分自 tasks-v2/index.js，逻辑未改） */
 /* ---------- 任务详情面板 ---------- */
 export var propPickerOptions = {};
@@ -415,7 +416,7 @@ export function initListReviewPreviewEvents() {
     closeListReviewPreview(false);
     render();
     toast('已退回修改，正在打开任务会话', 'success');
-    openTaskConversationWithTask(task.id, 'revise');
+    openTaskStatusConversation(task, { preferExisting:true });
   });
   els.tkListReviewApprove.addEventListener('click', function () {
     var task = tkGetTasks().find(function (row) { return row.id === pageState.listReviewPreviewTaskId; });
@@ -612,7 +613,7 @@ export function setDrawerWidth(width, remember) {
 }
 export function applyDrawerWidth() {
   if (window.innerWidth <= 760) return;
-  setDrawerWidth(pageState.drawerPreferredWidth || Math.min(900, window.innerWidth * .75), false);
+  setDrawerWidth(pageState.drawerPreferredWidth || Math.min(640, window.innerWidth * .75), false);
 }
 export function syncDrawerClickaway() {
   els.tkDrawerClickaway.classList.toggle('hidden', state.viewMode !== 'slide' || !els.tkDrawer.classList.contains('show'));

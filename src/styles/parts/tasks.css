@@ -1,3 +1,6 @@
+@import "./tasks/figma-task-list.css";
+@import "./tasks/figma-task-board.css";
+@import "./tasks/figma-task-detail-create.css";
 /* ============================================================
    任务管理 v2 样式
    追加到 app.css 末尾，不影响已有样式顺序
@@ -1593,7 +1596,7 @@ input[type=date].tk-mc-pill{width:auto}
 .niu-create-head .niu-breadcrumb{margin:0}
 .niu-create-head-actions{display:flex;align-items:center;gap:8px;margin-left:auto}
 .niu-wizard-progress{flex:none;padding:12px 28px;border-bottom:1px solid var(--divider);background:var(--bg)}
-.niu-wizard-progress ol{display:flex;align-items:center;justify-content:flex-start;gap:10px;margin:0;padding:0;list-style:none}
+.niu-wizard-progress ol{display:flex;align-items:center;justify-content:center;gap:10px;margin:0;padding:0;list-style:none}
 .niu-wizard-progress li{display:flex;align-items:center;gap:7px;color:var(--text-soft);font-size:12px}
 .niu-wizard-progress li+li::before{content:"";width:28px;height:1px;margin-right:2px;background:var(--border-hover)}
 .niu-wizard-progress li span{display:grid;place-items:center;width:20px;height:20px;border:1px solid var(--border-hover);border-radius:50%;font-size:10px;font-weight:600}
@@ -1854,3 +1857,26 @@ td.niu-plan-empty{color:var(--text-secondary)}
 .tk-card-status[data-kind=review]{background:var(--warning-bg);color:var(--warning)}
 .tk-card-status[data-kind=question]{background:var(--brand-fill);color:var(--brand)}
 .tk-card-status[data-kind=blocked]{background:var(--danger-bg);color:var(--danger)}
+
+/* 阶段负责人选择：头像固定圆形，搜索区不随成员列表滚动。 */
+#niuPersonPopup {
+  display: flex;
+  flex-direction: column;
+  max-height: min(300px, calc(100vh - 16px));
+  overflow: hidden;
+}
+#niuPersonPopup input { flex: none; }
+#niuPersonOptions { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+#niuPersonOptions button > .niu-person-avatar {
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
+#niuPersonOptions button > span:not(.niu-person-avatar) {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

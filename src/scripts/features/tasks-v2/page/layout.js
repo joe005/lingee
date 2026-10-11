@@ -1,8 +1,9 @@
+import { taskConversationNeedsReply } from '../../composer.js';
 import { $$ } from '../../../core/dom.js';
 import { toast } from '../../../core/toast.js';
 import { tkAddTask, tkCanViewTask, tkGetTasks, tkPeopleInProject, tkProjectsForCurrentUser, tkSyncPeople } from '../data.js';
 import { syncDrawerClickaway } from './detail-panel.js';
-import { filterListStatus, getFilteredTasks, listStatusPool } from './filters.js';
+import { filterListStatus, getFilteredTasks, getGroupedTasks, listStatusPool } from './filters.js';
 import { openTaskModal } from './form-modal.js';
 import { taskNeedsMyAction } from '../list-kind.js';
 import { updateFilterButton } from './menus.js';
@@ -43,7 +44,7 @@ export function render() {
   els.tkToolbarNewGroup.classList.remove('hidden');
   els.tkBody.classList.toggle('is-split', split);
   els.tkDrawer.classList.toggle('mode-full', state.viewMode === 'full');
-  $$('[data-layout]', els.tkLayoutToggle).forEach(function (btn) {
+  $$('[data-layout]', tasksView).forEach(function (btn) {
     var active = btn.getAttribute('data-layout') === state.layout;
     btn.classList.toggle('active', active);
     btn.setAttribute('aria-pressed', String(active));
@@ -243,11 +244,14 @@ function updateCheckAll() {
     els.tkCheckAll.checked = tasks.length > 0 && tasks.every(function (t) { return state.selectedIds.has(t.id); });
   }
 }
-/* 协作开发菜单徽标与任务页「待我处理」页签使用相同的筛选口径。 */
+/* 菜单徽标跟随当前视图的待我处理计数，包含管理员可见的人工待办。 */
 export function updateCollabReviewBadge() {
   var badge = document.getElementById('collabReviewBadge');
   if (!badge) return;
-  var count = listStatusPool(true).filter(taskNeedsMyAction).length;
+  var count;
+  if (state.layout === 'board' && !pageState.projectListMode) {
+    count = getGroupedTasks(getFilteredTasks(), 'status').find(function (group) { return group.key === 'needs'; })?.tasks.length || 0;
+  } else count = pageState.projectListMode ? listStatusPool().filter(taskNeedsMyAction).length : getGroupedTasks(getFilteredTasks(), 'status').find(function (group) { return group.key === 'needs'; })?.tasks.length || 0;
   badge.textContent = String(count);
   badge.style.display = count > 0 ? '' : 'none';
   badge.setAttribute('data-tooltip', count + ' 个任务需要处理');

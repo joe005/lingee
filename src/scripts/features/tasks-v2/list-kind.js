@@ -52,3 +52,11 @@ export function taskListKind(task) {
 
 /* 列表三个页签与协作开发菜单徽标共用同一口径。 */
 export function taskNeedsMyAction(task) { return taskListKind(task).needsMe; }
+
+/* 看板和列表共用的任务卡片操作。 */
+export function taskCardAction(task) {
+  var info = taskListKind(task);
+  var action = task.status === 'in_review' ? 'review' : info.action;
+  var labels = {start:'AI 执行',review:'验收产物',retry:'重新执行',reply:'回复',artifacts:'查看产物',detail:'查看详情'};
+  return {action:action,label:labels[action] || info.label,primary:info.primary};
+}

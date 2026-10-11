@@ -2,7 +2,7 @@ import { initMyWork } from '../collab/my-work.js';
 import { initReviewCenter, renderReviewCenter } from '../collab/review-center.js';
 import { initWorkItemDetail, renderWorkItemDetail } from '../collab/work-item-detail.js';
 import { initTaskConfirm } from './confirm.js';
-import { tkEnsureWorkspaceDemoTasks, tkPruneOrphanTasks, tkSyncPeople } from './data.js';
+import { tkEnsureCompletedDemoTask, tkEnsureWorkspaceDemoTasks, tkPruneOrphanTasks, tkSyncPeople } from './data.js';
 import { initExecutionPlan } from './execution-plan.js';
 import { initTkFormExpertPicker } from './expert-picker.js';
 import { openIssueDetail } from './issue-detail.js';
@@ -59,6 +59,7 @@ export function initTasksV2() {
   restoreTaskLabelCatalog();
   tkPruneOrphanTasks();
   tkSyncPeople();
+  tkEnsureCompletedDemoTask();
   cacheEls();
   initListReviewPreviewEvents();
   /* 任务详情抽屉移至 body 顶层，使其在任意视图上都能叠加显示（原在 #view-tasks 内，父级 hidden 时 fixed 也不可见） */
@@ -93,6 +94,7 @@ export function initTasksV2() {
   document.addEventListener('cv-workspace-change',()=>{
     tkPruneOrphanTasks();
     tkEnsureWorkspaceDemoTasks();
+    tkEnsureCompletedDemoTask();
     Object.assign(taskViewState,{activeViewId:'all',scope:'all',filters:[],search:''});
     fillSelects();render();
   });

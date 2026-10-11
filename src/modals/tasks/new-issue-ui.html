@@ -1,6 +1,6 @@
     <div class="niu-overlay" id="niuCreateOverlay" hidden>
       <section class="niu-create" role="dialog" aria-modal="true" aria-labelledby="niuCreateHeading">
-        <header class="niu-create-head"><div class="niu-breadcrumb"><span id="niuCreateHeading">新建任务</span></div><div class="niu-create-head-actions"><div class="niu-create-mode" id="niuCreateMode"><button type="button" id="niuSmartCreate">✦ 智能创建</button></div><button type="button" class="niu-create-mode" id="niuSmartBackHead" hidden><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px;margin-right:4px"><path d="M8 3 4 7l4 4M4 7h16"/><path d="M16 21l4-4-4-4M20 17H4"/></svg>手动创建</button><button type="button" class="niu-icon-button" data-niu-close aria-label="关闭"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div></header>
+        <header class="niu-create-head"><div class="niu-breadcrumb"><span id="niuCreateHeading">新建任务</span></div><div class="niu-create-head-actions"><div class="niu-create-mode" id="niuCreateMode"><button type="button" id="niuSmartCreate"><img src="/src/assets/figma/task-dialog/smart.svg" width="16" height="16" alt=""> 智能创建</button></div><button type="button" class="niu-create-mode" id="niuSmartBackHead" hidden><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="vertical-align:-2px;margin-right:4px"><path d="M8 3 4 7l4 4M4 7h16"/><path d="M16 21l4-4-4-4M20 17H4"/></svg>手动创建</button><button type="button" class="niu-icon-button" data-niu-close aria-label="关闭"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div></header>
         <nav class="niu-wizard-progress" id="niuWizardProgress" aria-label="任务创建步骤"><ol><li data-niu-wizard-step="info" aria-current="step"><span>1</span><strong>任务信息</strong></li><li data-niu-wizard-step="plan"><span>2</span><strong>执行计划</strong></li></ol></nav>
         <div class="niu-create-scroll" id="niuCreateScroll">
           <section class="niu-create-section" id="niuInfoPane" aria-label="任务信息" tabindex="-1">
@@ -19,6 +19,7 @@
           </section>
           <section class="niu-create-section niu-create-section--plan" id="niuCreatePlanPane" aria-label="执行计划" tabindex="-1" hidden>
             <span id="niuCreateStageCount" hidden>0</span>
+            <div class="niu-create-plan-toolbar"><button type="button" class="niu-button niu-create-add-btn" id="niuCreateAdd">＋ 添加节点</button></div>
             <table class="niu-create-stage-table">
               <colgroup>
                 <col class="niu-col-index">
@@ -31,9 +32,9 @@
                 <tr>
                   <th>序号</th>
                   <th>执行阶段</th>
-                  <th>AI验收</th>
+                  <th>AI 审核</th>
                   <th>执行人</th>
-                  <th><button type="button" class="niu-button niu-create-add-btn" id="niuCreateAdd">＋ 添加节点</button></th>
+                  <th>操作</th>
                 </tr>
               </thead>
               <tbody id="niuCreateStageList"></tbody>
@@ -46,7 +47,7 @@
             </div>
           </section>
         </div>
-        <footer class="niu-create-foot" id="niuManualFooter"><div><button type="button" class="niu-button niu-button-ghost" data-niu-close>取消</button><button type="button" class="niu-button" id="niuWizardBack" hidden>上一步</button><button type="button" class="niu-button niu-button-primary" id="niuWizardNext">下一步</button><button type="button" class="niu-button" id="niuCreateSubmit" hidden>保存</button><button type="button" class="niu-button niu-button-primary" id="niuCreateStart" hidden><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 3 14h9l-1 8 10-12h-9z"/></svg>保存并启动</button></div></footer>
+        <footer class="niu-create-foot" id="niuManualFooter"><div><button type="button" class="niu-button niu-button-ghost" data-niu-close>取消</button><button type="button" class="niu-button" id="niuWizardBack" hidden>上一步</button><button type="button" class="niu-button niu-button-primary" id="niuWizardNext">下一步</button><button type="button" class="niu-button" id="niuCreateSubmit" hidden>保存</button><button type="button" class="niu-button niu-button-primary" id="niuCreateStart" hidden>保存并开始</button></div></footer>
         <footer class="niu-create-foot" id="niuSmartFooter" hidden><div><button type="button" class="niu-button niu-button-ghost" data-niu-close>取消</button><button type="button" class="niu-button niu-button-primary" id="niuSmartSubmit">开始创建</button></div></footer>
       </section>
     </div>
