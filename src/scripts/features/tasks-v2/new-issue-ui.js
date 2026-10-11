@@ -8,7 +8,7 @@ import { CV_MEMBERS, CV_PROJECTS } from '../collab/data.js';
 import { defaultStageAssigneeId } from './stage-owner.js';
 import { tbTeamStages } from '../collab/tb-core.js';
 import { TEAMS } from '../expert/store.js';
-import { TEAM_STAGE_SCENARIOS } from '../expert/data.js';
+import { EX, TEAM_STAGE_SCENARIOS } from '../expert/data.js';
 import { toast } from '../../core/toast.js';
 import { startTaskCreationChat } from '../composer.js';
 import { startTaskStage } from './task-execution.js';
@@ -126,6 +126,7 @@ function selectProject(projectId) {
     draftStages = defaultPlanStages(projectId);
     draftConfirmed = false;
     byId('niuCreateStageCount').textContent = String(draftStages.length);
+    renderPlan();
   }
   closePersonPopup();
   closeProjectPopup();
@@ -174,39 +175,31 @@ function setDefaultStageOwner(projectId) {
 
 /* 执行计划的执行阶段选项：任务所选智能体团队的每个交付阶段一项，逐个预置、不重复；项目不绑定团队，没选团队时没有阶段可选。 */
 const taskTeamOf = task => TEAMS.find(item => item.id === task?.teamId) || null;
-const planStageOptions = projectId => { const task = currentTask(); const team = taskTeamOf(task); return team ? tbTeamStages(team, task).map(stage => ({ name: stage.name, desc: stage.desc || '' })) : []; };
+const planStageOptions = projectId => { const task = currentTask(); const team = taskTeamOf(task); return team ? tbTeamStages(team, task).map(stage => ({ name: stage.name, desc: stage.desc || '', expertIds: stage.expertIds || [] })) : []; };
 
 /* 默认执行计划：按项目成员角色预选每个阶段的执行人；同角色多人先选第一人。 */
 function defaultPlanStages(projectId) {
   const project = tkProjectById(projectId);
   const people = tkPeopleInProject(projectId);
   return planStageOptions(projectId).map(stage => ({
-    id: crypto.randomUUID(), workType: stage.name, title: stage.name, description: stage.desc,
+    id: crypto.randomUUID(), workType: stage.name, title: stage.name, description: stage.desc, expertIds: (stage.expertIds || []).slice(),
     assigneeId: defaultStageAssigneeId(project, people, CV_MEMBERS, stage.name),
-    status: 'pending',
+    status: 'pending', requiresConfirmation: true,
   }));
 }
 
+/* 新建任务是一页式：任务名、描述、团队与类型、开发阶段同屏展示（与管理的新建任务一致），不再分步 */
 function setWizardStep(step) {
-  const plan = step === 'plan';
-  byId('niuInfoPane').hidden = plan;
-  byId('niuCreatePlanPane').hidden = !plan;
-  byId('niuCreateMode').hidden = plan || editingTaskId !== null;
-  byId('niuWizardBack').hidden = !plan;
-  byId('niuWizardNext').hidden = plan;
-  byId('niuCreateSubmit').hidden = !plan;
+  byId('niuInfoPane').hidden = false;
+  byId('niuCreateMode').hidden = editingTaskId !== null;
+  byId('niuCreateSubmit').hidden = false;
   /* 新建时「保存任务」是次要按钮、「保存并启动」是主按钮；编辑已有任务只有「保存修改」 */
   const creating = editingTaskId === null;
-  byId('niuCreateStart').hidden = !plan || !creating;
+  byId('niuCreateStart').hidden = !creating;
   byId('niuCreateSubmit').classList.toggle('niu-button-primary', !creating);
-  byId('niuCreateSubmit').textContent = creating ? '保存任务' : '保存';
-  byId('niuCreateOverlay').querySelectorAll('[data-niu-wizard-step]').forEach(item => {
-    if (item.dataset.niuWizardStep === step) item.setAttribute('aria-current', 'step');
-    else item.removeAttribute('aria-current');
-    item.toggleAttribute('data-complete', plan && item.dataset.niuWizardStep === 'info');
-  });
-  byId('niuCreateScroll').scrollTop = 0;
-  if (plan) renderPlan();
+  byId('niuCreateSubmit').textContent = creating ? '保存任务' : '保存修改';
+  renderPlan();
+  byId('niuCreateScroll').scrollTop = step === 'plan' ? byId('niuCreatePlanPane').offsetTop : 0;
 }
 
 function renderSmartProjectOptions() {
@@ -221,7 +214,6 @@ function setCreateMode(mode) {
   closeProjectPopup();
   closePersonPopup();
   byId('niuSmartPane').hidden = !smart;
-  byId('niuWizardProgress').hidden = smart;
   byId('niuManualFooter').hidden = smart;
   byId('niuSmartFooter').hidden = !smart;
   byId('niuCreateMode').hidden = smart || editingTaskId !== null;
@@ -233,7 +225,6 @@ function setCreateMode(mode) {
     return;
   }
   byId('niuInfoPane').hidden = true;
-  byId('niuCreatePlanPane').hidden = true;
   byId('niuCreateHeading').innerHTML = '智能创建任务 <span class="niu-smart-star">✦</span>';
   renderSmartProjectOptions();
   byId('niuCreateScroll').scrollTop = 0;
@@ -370,7 +361,6 @@ function selectCreateTab(tab) {
 function taskInfoValidationFields() {
   return [
     {input:byId('niuTitle'), control:byId('niuTitle'), valid:!!byId('niuTitle').value.trim()},
-    {input:byId('niuDescription'), control:byId('niuDescription'), valid:!!byId('niuDescription').value.trim()},
     {input:byId('niuProject'), control:byId('niuProjectTrigger'), valid:tkProjectsForCurrentUser().some(item => item.id === byId('niuProject').value)},
     {input:byId('niuTeam'), control:byId('niuTeam').nextElementSibling, valid:!!byId('niuTeam').value},
     {input:byId('niuType'), control:byId('niuType').nextElementSibling, valid:!!byId('niuType').value},
@@ -464,12 +454,16 @@ function renderPlan() {
     const completion = '<div class="niu-stage-completion"><span class="niu-stage-label">完成方式</span><div class="niu-stage-choice" role="group" aria-label="第 ' + (index + 1) + ' 节点完成方式"><button type="button" data-niu-confirm-mode="' + escapeHtml(stage.id) + '" data-required="false" aria-pressed="' + (!confirmation) + '"' + disabled + '>直接继续</button><button type="button" data-niu-confirm-mode="' + escapeHtml(stage.id) + '" data-required="true" aria-pressed="' + confirmation + '"' + disabled + '>需要确认</button></div>' + owner + '</div>';
     const remove = locked ? '' : '<button type="button" class="niu-stage-remove" data-niu-remove="' + escapeHtml(stage.id) + '" aria-label="移除第 ' + (index + 1) + ' 节点"><img src="' + stageTrashIcon + '" width="16" height="16" alt=""></button>';
     if (activePlanScope === 'create') {
-      const aiReview = !confirmation;
-      const reviewMode = '<label class="niu-auto-review-switch"><input type="checkbox" data-niu-review-mode="' + escapeHtml(stage.id) + '" aria-label="第 ' + (index + 1) + ' 节点 AI 验收"' + (aiReview ? ' checked' : '') + (locked ? ' disabled' : '') + '><span aria-hidden="true"></span></label>';
-      return '<tr class="niu-stage-row" data-niu-stage="' + escapeHtml(stage.id) + '"><td class="niu-stage-index">' + String(index + 1) + '</td><td><span class="niu-stage-name">' + escapeHtml(stage.workType || stage.title) + '</span></td><td class="niu-stage-review-cell">' + reviewMode + '</td><td>' + owner + '</td><td>' + remove + '</td></tr>';
+      const reviewMode = '<label class="niu-auto-review-switch"><input type="checkbox" data-niu-review-mode="' + escapeHtml(stage.id) + '" aria-label="第 ' + (index + 1) + ' 节点人工审核"' + (confirmation ? ' checked' : '') + (locked ? ' disabled' : '') + '><span aria-hidden="true"></span></label>';
+      const experts = (stage.expertIds?.length ? stage.expertIds : (stageOptions.find(row => row.name === stage.workType)?.expertIds || [])).filter(id => EX[id]);
+      const expertCell = '<div class="niu-stage-experts">' + (experts.length
+        ? experts.map(id => '<span class="niu-stage-expert" title="由智能体执行">✦ ' + escapeHtml(EX[id].name) + '</span>').join('')
+        : '<span class="niu-stage-expert niu-stage-expert--empty">未匹配智能体</span>') + '</div>';
+      const stageRemove = locked ? '' : '<button type="button" class="niu-stage-remove" data-niu-remove="' + escapeHtml(stage.id) + '" aria-label="移除第 ' + (index + 1) + ' 节点">×</button>';
+      return '<tr class="niu-stage-row" data-niu-stage="' + escapeHtml(stage.id) + '"><td class="niu-stage-index">' + String(index + 1).padStart(2, '0') + '</td><td><select data-niu-work-type="' + escapeHtml(stage.id) + '" class="niu-stage-select" aria-label="第 ' + (index + 1) + ' 执行阶段"' + disabled + '>' + options + '</select></td><td>' + expertCell + '</td><td class="niu-stage-review-cell">' + reviewMode + '</td><td>' + owner + '</td><td>' + stageRemove + '</td></tr>';
     }
     return '<div class="niu-stage" data-niu-stage="' + escapeHtml(stage.id) + '"><span class="niu-stage-index">' + String(index + 1) + '</span>' + fields + completion + remove + '</div>';
-  }).join('') : (activePlanScope === 'create' ? '<tr><td colspan="5" class="niu-plan-empty">' + (taskTeamOf(task) ? '还没有工作阶段。点击「＋ 添加节点」开始。' : '请先在任务信息里选择智能体团队，选完后加载执行阶段。') + '</td></tr>' : '<div class="niu-plan-empty">还没有工作阶段。添加阶段后可直接在分录中编辑。</div>');
+  }).join('') : (activePlanScope === 'create' ? '<tr><td colspan="6" class="niu-plan-empty">' + (taskTeamOf(task) ? '还没有工作阶段。点击「＋ 添加节点」开始。' : '请先选择智能体团队，选完后加载开发阶段。') + '</td></tr>' : '<div class="niu-plan-empty">还没有工作阶段。添加阶段后可直接在分录中编辑。</div>');
   if (activePlanScope === 'create') {
     byId('niuCreateAdd').disabled = locked;
     byId('niuCreateStageCount').textContent = String(draftStages.length);
@@ -513,7 +507,7 @@ function addStage() {
   const used = new Set(draftStages.map(stage => stage.workType));
   const next = planStageOptions(task.project).find(stage => !used.has(stage.name));
   if (!next) { toast('智能体团队的交付阶段已全部加入执行计划', 'warning'); return; }
-  draftStages.push({ id: crypto.randomUUID(), workType: next.name, title: next.name, description: next.desc, assigneeId: defaultStageAssigneeId(tkProjectById(task.project), tkPeopleInProject(task.project), CV_MEMBERS, next.name), status: 'pending' });
+  draftStages.push({ id: crypto.randomUUID(), workType: next.name, title: next.name, description: next.desc, expertIds: (next.expertIds || []).slice(), assigneeId: defaultStageAssigneeId(tkProjectById(task.project), tkPeopleInProject(task.project), CV_MEMBERS, next.name), status: 'pending', requiresConfirmation: true });
   draftConfirmed = false;
   renderPlan();
   const list = byId(activePlanScope === 'create' ? 'niuCreateStageList' : 'niuStageList');
@@ -532,7 +526,7 @@ function savePlan(confirm) {
   toast(confirm ? '执行计划已确认' : '执行计划已保存', 'success');
 }
 
-function initCreateSelects(selects = [byId('niuTeam'), byId('niuType'), byId('niuPriority')]) {
+function initCreateSelects(selects = [byId('niuTeam'), byId('niuType')]) {
   const caret = byId('niuProjectTrigger').querySelector('.niu-person-chevron');
   if (caret) caret.outerHTML = niuSelectCaret;
   initSelectDropdowns(selects, closeProjectPopup);
@@ -551,26 +545,24 @@ export function initNewIssueUI(renderCallback, detailCallback) {
   byId('niuPersonSearch').addEventListener('input', renderPersonOptions);
   byId('niuCreateSubmit').addEventListener('click', () => createTask(false));
   byId('niuCreateStart').addEventListener('click', () => createTask(true));
-  byId('niuWizardNext').addEventListener('click', () => {
-    if (validateTaskInfo()) { setWizardStep('plan'); byId('niuCreatePlanPane').focus({ preventScroll: true }); }
-  });
-  byId('niuWizardBack').addEventListener('click', () => { setWizardStep('info'); byId('niuInfoPane').focus({ preventScroll: true }); });
   byId('niuSmartCreate').addEventListener('click', () => setCreateMode('smart'));
   byId('niuSmartBackHead').addEventListener('click', () => setCreateMode('manual'));
   byId('niuSmartSubmit').addEventListener('click', submitSmartCreate);
   byId('niuSmartProject').addEventListener('change', event => selectProject(event.target.value));
   byId('niuTeam').addEventListener('change', () => {
     syncFlowOptions('需求');
-    if (activePlanScope !== 'create' || planLocked() || !selectedProjectId) return;
+    if (activePlanScope !== 'create' || planLocked()) return;
     draftStages = defaultPlanStages(selectedProjectId);
     draftConfirmed = false;
     byId('niuCreateStageCount').textContent = String(draftStages.length);
+    renderPlan();
   });
   byId('niuType').addEventListener('change', () => {
-    if (activePlanScope !== 'create' || planLocked() || !selectedProjectId) return;
+    if (activePlanScope !== 'create' || planLocked()) return;
     draftStages = defaultPlanStages(selectedProjectId);
     draftConfirmed = false;
     byId('niuCreateStageCount').textContent = String(draftStages.length);
+    renderPlan();
   });
   byId('niuSmartPrompt').addEventListener('keydown', event => {
     if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) { event.preventDefault(); submitSmartCreate(); }
@@ -592,7 +584,7 @@ export function initNewIssueUI(renderCallback, detailCallback) {
       if (planLocked()) return;
       const stage = draftStages.find(item => item.id === reviewMode.dataset.niuReviewMode);
       if (stage) {
-        stage.requiresConfirmation = !reviewMode.checked;
+        stage.requiresConfirmation = reviewMode.checked;
         draftConfirmed = false;
         renderPlan();
       }
@@ -612,6 +604,7 @@ export function initNewIssueUI(renderCallback, detailCallback) {
     const updateDescription = !stage.description || stage.description === previousDefault;
     stage.workType = select.value;
     stage.title = select.value;
+    stage.expertIds = (stageOptions.find(row => row.name === select.value)?.expertIds || []).slice();
     if (updateDescription) stage.description = stageOptions.find(row => row.name === select.value)?.desc || '';
     stage.assigneeId = defaultStageAssigneeId(tkProjectById(currentTask()?.project), tkPeopleInProject(currentTask()?.project), CV_MEMBERS, select.value);
     draftConfirmed = false;

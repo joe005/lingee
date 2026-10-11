@@ -57,8 +57,6 @@
 #tkDrawer.tk-drawer--latest .tk-feed-stage-row.is-current{border-color:var(--brand)}
 #tkDrawer.tk-drawer--latest .tk-feed-stage-row :is(th,td){display:block;border:0;background:transparent;padding:12px;height:auto;border-radius:0}
 #tkDrawer.tk-drawer--latest .tk-feed-stage-row .tk-stage-cell-mark{position:absolute;left:-28px;top:20px;padding:0}
-#tkDrawer.tk-drawer--latest .tk-stage-cell-mark::after{content:'';position:absolute;left:4px;top:12px;width:1px;height:76px;background:var(--border)}
-#tkDrawer.tk-drawer--latest .tk-feed-stage-row:last-of-type .tk-stage-cell-mark::after{display:none}
 #tkDrawer.tk-drawer--latest .tk-feed-stage-main{display:flex;flex-direction:column;gap:8px}
 #tkDrawer.tk-drawer--latest .tk-feed-stage-meta{order:-1;margin:0;font-size:16px;color:var(--text)}
 #tkDrawer.tk-drawer--latest .tk-feed-stage-name{font-size:14px;color:var(--text)}
@@ -134,3 +132,36 @@
 #tkDrawer.tk-drawer--latest .tk-feed-stage-detail .tk-artifact-summary { min-height:40px; padding:8px 12px; gap:8px; }
 #tkDrawer.tk-drawer--latest .tk-feed-stage-detail .tk-artifact-title { min-width:0; font-size:14px; font-weight:400; }
 #tkDrawer.tk-drawer--latest .tk-feed-stage-detail .tk-artifact-type { font-size:12px; background:var(--tag-bg); color:var(--text-secondary); }
+/* ---------- 新建任务：一页式，版式与管理的「新建研发任务」一致 ----------
+   任务名、任务描述 → 圆角卡片（所属项目 / 智能体团队 / 任务类型 + 开发阶段表）→ 取消 / 保存任务 / 保存并启动。
+   放在文件末尾以覆盖上面分步版本里的 display:contents 与两列网格。 */
+#niuCreateOverlay .niu-create{width:min(760px,calc(100vw - 32px));height:min(720px,calc(100dvh - 32px))}
+#niuCreateOverlay .niu-create-form{display:flex;flex-direction:column;gap:16px;padding:16px 24px 20px}
+#niuCreateOverlay .niu-create-form .niu-create-writing{display:flex;flex-direction:column;gap:16px;padding:0}
+#niuCreateOverlay .niu-create-form .niu-create-writing>.niu-field{grid-column:auto;order:0}
+#niuCreateOverlay .niu-create-form .niu-field>span{font-size:14px;font-weight:600;color:var(--text)}
+#niuCreateOverlay .niu-create-form .niu-create-writing .niu-field :is(input,textarea){font-size:14px;border-radius:12px}
+#niuCreateOverlay .niu-create-form .niu-create-writing .niu-field textarea{height:120px;min-height:96px}
+#niuCreateOverlay .niu-create-card{display:flex;flex-direction:column;gap:12px;padding:16px 16px 12px;border:1px solid var(--border);border-radius:16px;background:var(--bg)}
+#niuCreateOverlay .niu-create-card .niu-create-properties{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 16px;padding:0;border:0;background:transparent}
+#niuCreateOverlay .niu-create-card .niu-create-properties>.niu-field{order:0;gap:8px}
+#niuCreateOverlay .niu-create-card .niu-create-properties .niu-field :is(select,.niu-person-trigger){height:40px;min-height:40px;border-radius:12px;font-size:14px}
+#niuCreateOverlay .niu-create-section--plan{margin:0;padding:0;border:0}
+#niuCreateOverlay .niu-create-plan-title{margin:4px 0 8px;color:var(--text);font-size:14px;font-weight:600}
+#niuCreateOverlay .niu-create-section--plan .niu-create-stage-table{border:0;border-radius:0;overflow:visible;font-size:14px}
+#niuCreateOverlay .niu-create-section--plan .niu-create-stage-table thead th{height:40px;padding:0 8px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text-secondary)}
+#niuCreateOverlay .niu-create-section--plan .niu-create-stage-table thead th:nth-child(4){text-align:center}
+#niuCreateOverlay .niu-create-section--plan .niu-create-stage-table thead th:last-child{padding-right:0}
+#niuCreateOverlay .niu-create-section--plan .niu-stage-row{height:auto}
+#niuCreateOverlay .niu-create-section--plan .niu-stage-row td{height:auto;min-height:44px;padding:8px;vertical-align:middle}
+#niuCreateOverlay .niu-create-section--plan .niu-stage-row td:last-child{padding-right:0}
+#niuCreateOverlay .niu-col-index{width:44px}
+#niuCreateOverlay .niu-col-stage{width:150px}
+#niuCreateOverlay .niu-col-expert{width:auto}
+#niuCreateOverlay .niu-col-review{width:84px}
+#niuCreateOverlay .niu-col-owner{width:150px}
+#niuCreateOverlay .niu-col-action{width:112px}
+#niuCreateOverlay .niu-stage-experts{display:flex;flex-wrap:wrap;gap:4px}
+#niuCreateOverlay .niu-stage-expert{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:999px;background:var(--brand-fill);color:var(--brand);font-size:12px;line-height:1;white-space:nowrap}
+#niuCreateOverlay .niu-stage-expert--empty{background:var(--fill-1);color:var(--text-secondary)}
+@media(max-width:640px){#niuCreateOverlay .niu-create-card .niu-create-properties{grid-template-columns:1fr}#niuCreateOverlay .niu-col-expert{width:140px}}
