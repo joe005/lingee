@@ -135,7 +135,7 @@
 /* ---------- 新建任务：一页式，版式与管理的「新建研发任务」一致 ----------
    任务名、任务描述 → 圆角卡片（所属项目 / 智能体团队 / 任务类型 + 开发阶段表）→ 取消 / 保存任务 / 保存并启动。
    放在文件末尾以覆盖上面分步版本里的 display:contents 与两列网格。 */
-#niuCreateOverlay .niu-create{width:min(760px,calc(100vw - 32px));height:min(720px,calc(100dvh - 32px))}
+#niuCreateOverlay .niu-create{width:min(720px,calc(100vw - 32px));height:min(760px,calc(100dvh - 48px))}
 #niuCreateOverlay .niu-create-form{display:flex;flex-direction:column;gap:16px;padding:16px 24px 20px}
 #niuCreateOverlay .niu-create-form .niu-create-writing{display:flex;flex-direction:column;gap:16px;padding:0}
 #niuCreateOverlay .niu-create-form .niu-create-writing>.niu-field{grid-column:auto;order:0}
@@ -169,3 +169,11 @@
 
 /* 每组只连接下一阶段，最后一个圆点下不延伸连接线。 */
 #tkDrawer.tk-drawer--latest .tk-feed-stage-table tbody:last-of-type::before { display:none; }
+
+/* 与管理新建任务统一弹窗尺寸及头尾区域高度。 */
+#niuCreateOverlay .niu-create-head { box-sizing:border-box; min-height:56px; padding:16px 20px 12px; border-bottom:1px solid var(--divider); }
+#niuCreateOverlay .niu-create-form { padding:12px 20px 16px; }
+#niuCreateOverlay .niu-create-foot { padding:12px 20px; border-top:1px solid var(--divider); }
+
+#niuCreateOverlay .niu-create-foot .niu-button { display:inline-flex; align-items:center; justify-content:center; gap:4px; }
+#niuCreateOverlay #niuCreateStart svg { display:block; width:14px; height:14px; flex:none; }

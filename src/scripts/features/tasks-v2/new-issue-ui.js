@@ -130,7 +130,6 @@ function selectProject(projectId) {
   }
   closePersonPopup();
   closeProjectPopup();
-  if (projectId) { try { localStorage.setItem('lingee_task_last_project', projectId); } catch(e) {} }
 }
 
 function renderPersonOptions() {
@@ -193,11 +192,11 @@ function setWizardStep(step) {
   byId('niuInfoPane').hidden = false;
   byId('niuCreateMode').hidden = editingTaskId !== null;
   byId('niuCreateSubmit').hidden = false;
-  /* 新建时「保存任务」是次要按钮、「保存并启动」是主按钮；编辑已有任务只有「保存修改」 */
+  /* 新建时「保存」是次要按钮、「保存并启动」是主按钮；编辑已有任务只有「保存修改」 */
   const creating = editingTaskId === null;
   byId('niuCreateStart').hidden = !creating;
   byId('niuCreateSubmit').classList.toggle('niu-button-primary', !creating);
-  byId('niuCreateSubmit').textContent = creating ? '保存任务' : '保存修改';
+  byId('niuCreateSubmit').textContent = creating ? '保存' : '保存修改';
   renderPlan();
   byId('niuCreateScroll').scrollTop = step === 'plan' ? byId('niuCreatePlanPane').offsetTop : 0;
 }
@@ -281,8 +280,9 @@ export function openNewIssueCreate(projectId) {
   draftStages = [];
   draftConfirmed = false;
   byId('niuCreateStageCount').textContent = '0';
-  var lastProjectId = projectId || '';
-  if (!lastProjectId) { try { lastProjectId = localStorage.getItem('lingee_task_last_project') || ''; } catch(e) {} }
+  let lastCreated = {};
+  try { lastCreated = JSON.parse(localStorage.getItem('lingee_task_last_created_' + tkCurrentUserId()) || '{}') || {}; } catch (e) {}
+  var lastProjectId = projectId || lastCreated.project || '';
   selectedProjectId = projects.some(project => project.id === lastProjectId) ? lastProjectId : '';
   byId('niuProject').value = selectedProjectId;
   byId('niuProjectTrigger').classList.toggle('is-placeholder', !selectedProjectId);
@@ -290,7 +290,7 @@ export function openNewIssueCreate(projectId) {
   byId('niuTitle').value = '';
   byId('niuDescription').value = '';
   byId('niuPriority').value = 'medium';
-  fillTeamOptions('');
+  fillTeamOptions(lastCreated.teamId || '', '需求');
   setDefaultStageOwner(selectedProjectId);
   draftStages = selectedProjectId ? defaultPlanStages(selectedProjectId) : [];
   initialPlanSnapshot = JSON.stringify(draftStages);
@@ -425,6 +425,9 @@ function createTask(startNow) {
     executionPlan: draftStages.map(stage => ({ ...stage })),
     planStatus: 'draft',
   });
+  if (created) {
+    try { localStorage.setItem('lingee_task_last_created_' + tkCurrentUserId(), JSON.stringify({ project, teamId })); } catch (e) {}
+  }
   /* 「保存并启动」：创建人正好是第一阶段处理人时直接进入执行，否则只创建并提示 */
   let autoStarted = false;
   if (startNow && created) {
