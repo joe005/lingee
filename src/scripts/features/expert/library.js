@@ -1,5 +1,6 @@
 import { assetModesHtml, assetTagsHtml, isMoreAssets, syncAssetBrowser, cloudCardsHtml, teamWorkModes } from '../collab/expert-market.js';
 import { layerOf, layerVisible, layerActions, layerToolbar, handleLayerAction, assetSourceBadge } from './layers.js';
+import { UNLISTED_EXPERT_IDS } from './builtin-catalog.js';
 import { $, $$ } from '../../core/dom.js';
 import { summon } from './automatch.js';
 import { EX, EXPERTS, compChip, phraseHtml, skillInfo, tierInfo, xav, xesc } from './data.js';
@@ -71,7 +72,7 @@ function renderExpertGrid(){
   expertGrid.innerHTML = html || '<div class="x-empty">没有匹配的结果</div>';
   var tc=$('#teamTabCount'), ec=$('#expertTabCount');
   if(tc) tc.textContent=TEAMS.length;
-  if(ec) ec.textContent=EXPERTS.filter(function(e){return e.listed!==false}).length;
+  if(ec) ec.textContent=EXPERTS.filter(function(e){return e.listed!==false&&!UNLISTED_EXPERT_IDS.has(e.id)}).length;
 }
 var expertSearchInput=$('#expertSearchInput');
 

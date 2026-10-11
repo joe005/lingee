@@ -257,4 +257,6 @@ export const BUILTIN_SKILL_META={
     "tone": "blue"
   }
 };
+/* 与 Lingee Build 一致不单独展示的内置智能体（团队负责人、未启用的 shared 智能体）；按 id 判断，旧存档里的快照也不会把它们带回列表 */
+export const UNLISTED_EXPERT_IDS=new Set(BUILTIN_CATALOG.filter(e=>e.listed===false).map(e=>e.id));
 export function builtinAvatar(id){return avatars[id]||null;}

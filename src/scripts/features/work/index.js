@@ -2,6 +2,7 @@ import { $, $$ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
 import { setUrlState, showView } from '../../core/view.js';
 import { EXPERTS, MODEL_TIERS } from '../expert/data.js';
+import { UNLISTED_EXPERT_IDS } from '../expert/builtin-catalog.js';
 import { setChannel } from '../sidebar.js';
 import { WORK_CHAT_AGENTS, openWorkChat } from './chat.js';
 /* 工作板块：侧栏菜单（新任务 / 定时任务 / 智能体 / 技能 / 发现）、历史对话列表，
@@ -79,7 +80,7 @@ function ddOptions(kind) {
     /* 已发布的智能体（wc: 前缀）选中后发送会进入智能体对话页 */
     return [{ id: '', name: '自动匹配智能体', desc: '按任务内容选择合适的智能体' }].concat(
       WORK_CHAT_AGENTS.map(function (name) { return { id: 'wc:' + name, name: name, desc: '已发布智能体' }; }),
-      EXPERTS.filter(function (e) { return e.listed !== false; }).slice(0, 12).map(function (e) { return { id: e.id, name: e.name, desc: e.role || '智能体' }; }));
+      EXPERTS.filter(function (e) { return e.listed !== false && !UNLISTED_EXPERT_IDS.has(e.id); }).slice(0, 12).map(function (e) { return { id: e.id, name: e.name, desc: e.role || '智能体' }; }));
   }
   if (kind === 'model') return MODEL_TIERS.map(function (t) { return { id: t.id, name: t.label, desc: t.desc }; });
   return [{ id: '', name: '不分组', desc: '' }].concat(GROUPS.map(function (g) { return { id: g, name: g, desc: '' }; }));

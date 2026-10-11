@@ -1,4 +1,5 @@
 import { cvWorkspace, cvCurrentUserName, cvCanAccessWorkspace } from '../collab/data.js';
+import { UNLISTED_EXPERT_IDS } from './builtin-catalog.js';
 import { EX, MY_EXPERTS, rebuildExperts, xesc } from './data.js';
 import { TEAMS, saveTeams } from './store.js';
 import { toast } from '../../core/toast.js';
@@ -31,7 +32,7 @@ export function assetSourceBadge(kind,item){
   return `<span class="x-badge asset-source-badge asset-source-${layer}">${{builtin:'金蝶官方',shared:'企业自建',personal:'个人开发'}[layer]}</span>`;
 }
 export function layerVisible(kind,item){
-  if(kind==='expert'&&item.listed===false)return false; /* 与 Lingee Build 一致：团队负责人和非团队成员不单独展示，但仍可按 id 解析 */
+  if(kind==='expert'&&(item.listed===false||UNLISTED_EXPERT_IDS.has(item.id)))return false; /* 与 Lingee Build 一致：团队负责人和非团队成员不单独展示，但仍可按 id 解析 */
   const rec=records()[kind+':'+item.id];
   if(layerOf(kind,item)==='shared'){
     const tenantId=item.tenantId||rec?.workspace;

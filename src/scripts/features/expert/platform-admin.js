@@ -21,13 +21,13 @@ const now=()=>new Date().toLocaleString('zh-CN',{hour12:false});
 function read(name,fallback){try{const value=JSON.parse(localStorage.getItem(name));return value&&typeof value==='object'?value:clone(fallback);}catch(_){return clone(fallback);}}
 function write(name,value){try{localStorage.setItem(name,JSON.stringify(value));return true;}catch(_){return false;}}
 const originals={expert:EXPERTS.filter(e=>!e.mine).map(clone),team:PRESET_TEAMS.map(clone)};
-const retiredSeedKeys=new Set(['expert:frontend-engineer','expert:ux-designer','expert:cosmic-form','expert:cosmic-workflow','expert:cosmic-report','expert:cosmic-plugin','expert:cosmic-api','expert:cosmic-software-engineer','expert:cosmic-code-reviewer','expert:agent-development-expert','team:kingdee-saas-implementation','team:kingdee-secondary-dev']);
+const retiredSeedKeys=new Set(['expert:frontend-engineer','expert:ux-designer','expert:cosmic-form','expert:cosmic-workflow','expert:cosmic-report','expert:cosmic-plugin','expert:cosmic-api','expert:cloud-delivery-advisor','expert:cosmic-software-engineer','expert:cosmic-code-reviewer','expert:agent-development-expert','team:kingdee-saas-implementation','team:kingdee-secondary-dev']);
 const retiredDemoTeams=new Set(['team:cloud-delivery-team','team:tenant-ws-build-build-delivery-team']);
 function retiredSeed(item){
   if(!item)return false;
   const id=key(item.kind,item.id);
   /* 代码里已不存在的原厂种子（智能体、团队）视为下线，避免旧的本地存档残留在列表里；云端样例每次由代码补种，不在此列。 */
-  if(item.editor==='平台初始数据'&&['expert','team'].includes(item.kind)&&item.id!=='cloud-delivery-advisor'&&!originals[item.kind].some(o=>o.id===item.id))return true;
+  if(item.editor==='平台初始数据'&&['expert','team'].includes(item.kind)&&!originals[item.kind].some(o=>o.id===item.id))return true;
   return (item.editor==='平台初始数据'&&retiredSeedKeys.has(id))
     ||(retiredDemoTeams.has(id)&&['平台初始数据','租户示例数据'].includes(item.editor));
 }
@@ -84,20 +84,6 @@ function seed(){
     meta[id]={kind,id:item.id,status:'online',activeVersion:'1.0.0',pendingVersion:'',modified:now(),editor:'平台初始数据'};
     versions[id]=[{version:'1.0.0',data:snapshot,note:'初始标品定义',at:now(),author:'Lingee'}];
     installed[id]='1.0.0';changed=true;
-  }
-  /* 广场样例只发布到模拟云端，客户端需主动安装。 */
-  for(const [kind,id,name,base] of [
-    ['expert','cloud-delivery-advisor','交付顾问',originals.expert[0]]
-  ]){
-    const itemKey=key(kind,id);if(!base)continue;
-    if(meta[itemKey]){
-      const row=versions[itemKey]?.[0];
-      if(kind==='expert'&&meta[itemKey].editor==='平台初始数据'&&row&&!row.data.skills?.length&&base.skills?.length){row.data.skills=clone(base.skills);changed=true;}
-      continue;
-    }
-    const data={...clone(base),listed:undefined,id,name,desc:'云端发布的交付协作能力包，安装后可在官方列表中使用。'};
-    meta[itemKey]={kind,id,status:'online',activeVersion:'1.0.0',pendingVersion:'',modified:now(),editor:'平台初始数据'};
-    versions[itemKey]=[{version:'1.0.0',data,note:'新增交付协作能力与推荐提问。',at:now(),author:'Lingee'}];changed=true;
   }
   /* 租户管理演示数据只在缺失时补齐，不覆盖已有导入或审核结果。 */
   const tenantId='ws-build',tenantName=cvWorkspaceName(tenantId);
