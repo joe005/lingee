@@ -170,7 +170,7 @@ function renderMemberList(){
       +(e.ro?'<span class="x-badge x-badge-ro">只读</span>':'')+'</span>'
       +'<span class="x-mrow-d">'+xesc(e.desc)+'</span>'
       +'</span></button>';
-  }).join('') : '<div class="x-empty-sm">没有匹配的专家</div>';
+  }).join('') : '<div class="x-empty-sm">没有匹配的智能体</div>';
 }
 export function initTeamModal() {
   document.addEventListener('lingee:asset-edit-session',function(ev){

@@ -110,7 +110,7 @@ initManagerData();                /* 管理项目先注册给任务模块：管�
 initTasksV2();                    /* 任务管理 v2 */
 initInbox();                      /* 系统通知收件箱 */
 initAnalytics();                  /* 用户行为分析看板 */
-initPlatformAdmin();              /* 平台专家管理原型与本地更新 */
+initPlatformAdmin();              /* 平台智能体管理原型与本地更新 */
 initManager();                    /* 管理板块：项目列表与项目详情 */
 initWork();                       /* 工作板块：新任务首屏与历史对话 */
 initChatStageLayout();

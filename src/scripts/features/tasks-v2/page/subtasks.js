@@ -49,7 +49,7 @@ function renderDemoReviewReport(t, artifacts) {
     + '<p class="tk-agent-report-summary">' + escapeHtml(report.summary) + '</p>'
     + '<div class="tk-agent-report-label">交付与验证</div><ul class="tk-agent-report-evidence">' + report.evidence.map(function (item) { return '<li>' + escapeHtml(item) + '</li>'; }).join('') + '</ul>'
     + '<div class="tk-agent-report-review"><strong>请人工审核</strong><span>' + escapeHtml(report.review) + '</span></div>'
-    + '<details class="tk-agent-report-members"><summary>查看 ' + report.members.length + ' 位专家的执行记录</summary><div class="tk-agent-report-member-list">'
+    + '<details class="tk-agent-report-members"><summary>查看 ' + report.members.length + ' 位智能体的执行记录</summary><div class="tk-agent-report-member-list">'
     + report.members.map(function (member) { return '<div class="tk-agent-report-member"><span class="tk-agent-report-avatar">' + escapeHtml(member.name.slice(0, 1)) + '</span><div><div class="tk-agent-report-member-name">' + escapeHtml(member.name) + (member.lead ? '<em>组长</em>' : '') + '</div><p>' + escapeHtml(member.result) + '</p></div></div>'; }).join('')
     + '</div></details></section>';
 }
@@ -113,7 +113,7 @@ function renderTaskAgentFeedEntry(task, entry, artifacts) {
   var expert = EXPERTS.find(function (item) { return item.id === entry.expertId; });
   var stageArtifacts = artifacts.filter(function (artifact) { return artifact.stageId === entry.stageId; });
   var showRunFeedback = entry.state === 'running' || entry.state === 'blocked';
-  return '<article class="tk-feed-card tk-feed-card--agent is-' + entry.state + '" aria-label="专家执行：' + escapeHtml(entry.stage) + '">'
+  return '<article class="tk-feed-card tk-feed-card--agent is-' + entry.state + '" aria-label="智能体执行：' + escapeHtml(entry.stage) + '">'
     + '<header class="tk-feed-card-head tk-feed-card-head--agent"><img class="tk-feed-avatar tk-feed-avatar--agent" src="' + escapeHtml(xav(expert?.k)) + '" alt="">'
     + '<strong>' + escapeHtml(entry.author) + '</strong><span class="tk-feed-run-stage">· ' + escapeHtml(entry.stage) + '</span><time>' + escapeHtml(entry.time) + '</time></header>'
     + '<div class="tk-feed-card-content">'
@@ -143,7 +143,7 @@ function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml,
   var currentIndex = task.status === 'done' || task.status === 'cancelled' ? -1 : Math.max(0,plannedStages.findIndex(function (stage) { return stage.id === task.executionStageId; }));
   var project = tkProjectById(task.project);
   var team = taskExecutorTeam(task, project);
-  var currentDetail = latest ? latest.stage + ' · ' + latest.author : '尚未分派执行专家';
+  var currentDetail = latest ? latest.stage + ' · ' + latest.author : '尚未分派执行智能体';
   var latestLayout = pageState.taskDetailVersion === 'latest';
   var kindInfo = taskListKind(task);
   var feedback = activeRun ? renderTaskRunFeedback(activeRun)
@@ -158,7 +158,7 @@ function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml,
     + '<div class="tk-exec-card-head tk-agent-report-head">' + (pageState.taskDetailVersion === 'latest' ? renderTaskTeamAvatarGroup(team) : '<span class="tk-exec-card-mark tk-agent-report-mark" aria-hidden="true">✦</span>') + '<div class="tk-exec-card-identity tk-agent-report-heading"><strong>' + escapeHtml(team?.name || '任务智能体团队') + '</strong>'
      + (pageState.taskDetailVersion === 'v1' ? '<span>当前阶段 · ' + escapeHtml(currentDetail) + '</span>' : '') + '</div></div>'
      + '<div class="tk-feed-stage-overview-head"><strong>执行计划</strong></div>'
-    + (latestLayout ? '<div class="tk-feed-stage-table-wrap"><table class="tk-feed-stage-table"><caption class="sr-only">执行计划</caption><colgroup><col class="tk-stage-col-mark"><col class="tk-stage-col-name"><col class="tk-stage-col-expert"><col class="tk-stage-col-assignee"><col class="tk-stage-col-state"><col class="tk-stage-col-actions"></colgroup><thead class="sr-only"><tr><th>标记</th><th>阶段</th><th>执行专家</th><th>处理人</th><th>状态</th><th>操作</th></tr></thead>' : '<ol class="tk-feed-stage-list">') + plannedStages.map(function (stage, index) {
+    + (latestLayout ? '<div class="tk-feed-stage-table-wrap"><table class="tk-feed-stage-table"><caption class="sr-only">执行计划</caption><colgroup><col class="tk-stage-col-mark"><col class="tk-stage-col-name"><col class="tk-stage-col-expert"><col class="tk-stage-col-assignee"><col class="tk-stage-col-state"><col class="tk-stage-col-actions"></colgroup><thead class="sr-only"><tr><th>标记</th><th>阶段</th><th>执行智能体</th><th>处理人</th><th>状态</th><th>操作</th></tr></thead>' : '<ol class="tk-feed-stage-list">') + plannedStages.map(function (stage, index) {
       var entry = byId.get(stage.id);
       var state = entry?.state || 'pending';
       var label = state === 'done' ? '已完成' : state === 'running' ? '执行中' : state === 'review' ? '待审核' : state === 'blocked' ? '已阻塞' : index === currentIndex && task.status === 'backlog' && task.executionStageId ? '待开始' : '未开始';
@@ -302,7 +302,7 @@ function renderTaskSystemFeedGroup(events, isLatest) {
 function renderAgentStageComment(task, entry) {
   var expert = EXPERTS.find(function (item) { return item.id === entry.expertId; });
   var showRunFeedback = !!entry.run;
-  return '<article class="tk-feed-card tk-feed-card--agent is-' + entry.state + '" aria-label="专家执行：' + escapeHtml(entry.stage) + '">'
+  return '<article class="tk-feed-card tk-feed-card--agent is-' + entry.state + '" aria-label="智能体执行：' + escapeHtml(entry.stage) + '">'
     + '<header class="tk-feed-card-head tk-feed-card-head--agent"><img class="tk-feed-avatar tk-feed-avatar--agent" src="' + escapeHtml(xav(expert?.k)) + '" alt="">'
     + '<strong>' + escapeHtml(entry.author) + '</strong><span class="tk-feed-run-stage">· ' + escapeHtml(entry.stage) + '</span><time>' + escapeHtml(entry.createdAt) + '</time></header>'
     + '<div class="tk-feed-card-content">'

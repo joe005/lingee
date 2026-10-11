@@ -109,12 +109,12 @@ function appendAutoNote(){
   var av=isTeam
     ? teamById(activePick.id).members.slice(0,3).map(function(i){return '<img src="'+xav(EX[i].k)+'" alt="">'}).join('')
     : '<img src="'+xav(EX[activePick.id].k)+'" alt="">';
-  var why=isTeam?'这次要跨多个环节，交给一个智能体团队':'按你描述的内容匹配到这位专家';
+  var why=isTeam?'这次要跨多个环节，交给一个智能体团队':'按你描述的内容匹配到这位智能体';
   var note=document.createElement('div');
   note.className='auto-note';
   note.innerHTML='<span class="auto-note-av">'+av+'</span>'
-    +'<span class="auto-note-b">你没有指定专家，已自动匹配 <b>'+xesc(pickName())+'</b>'
-    +'<i>'+why+'。想换人，点下方输入框左侧的专家按钮。</i></span>';
+    +'<span class="auto-note-b">你没有指定智能体，已自动匹配 <b>'+xesc(pickName())+'</b>'
+    +'<i>'+why+'。想换人，点下方输入框左侧的智能体按钮。</i></span>';
   messagesList.appendChild(note);
 }
 

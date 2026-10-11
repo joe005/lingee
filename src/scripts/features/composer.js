@@ -76,7 +76,7 @@ export function openTaskExceptionHistory(task, onBack) {
   panel.className = 'task-exception-history';
   panel.innerHTML = '<div class="task-exception-intro"><span>历史会话 · ' + escapeHtml(String(task.code || '')) + '</span><strong>' + escapeHtml(String(task.title || '任务')) + '</strong><small>' + escapeHtml(String(run?.failedAt || task.createDate || '')) + '</small></div>'
     + '<div class="task-exception-message task-exception-user"><span>任务指令</span><p>' + escapeHtml(String(task.desc || task.title || '执行任务')) + '</p></div>'
-    + '<div class="task-exception-message task-exception-agent"><span>' + escapeHtml(String(run?.agentName || '执行专家')) + ' · 执行过程</span>'
+    + '<div class="task-exception-message task-exception-agent"><span>' + escapeHtml(String(run?.agentName || '执行智能体')) + ' · 执行过程</span>'
     + (steps.length ? '<ol>' + steps.map(function (step, index) { return '<li class="' + (index === steps.length - 1 ? 'is-error' : '') + '"><strong>' + escapeHtml(String(step[0] || '执行步骤')) + '</strong><p>' + escapeHtml(String(step[1] || '')) + '</p></li>'; }).join('') + '</ol>' : '<p>运行在当前阶段停止，未产生完整步骤记录。</p>')
     + '<div class="task-exception-error"><strong>执行异常</strong><p>' + escapeHtml(String(reason)) + '</p></div>'
     + (run?.next ? '<p class="task-exception-next">建议处理：' + escapeHtml(String(run.next)) + '</p>' : '') + '</div>';
@@ -114,9 +114,9 @@ export function openTaskSessionHistory(task, session, onBack, onContinue) {
     + session.messages.map(function (message) {
       return message.role === 'user'
         ? '<div class="task-exception-message task-exception-user"><span>我</span><p>' + escapeHtml(String(message.text || '')) + '</p></div>'
-        : '<div class="task-exception-message task-exception-agent"><span>' + escapeHtml(String(session.agentName || '执行专家')) + '</span><p>' + escapeHtml(String(message.text || '')) + '</p></div>';
+        : '<div class="task-exception-message task-exception-agent"><span>' + escapeHtml(String(session.agentName || '执行智能体')) + '</span><p>' + escapeHtml(String(message.text || '')) + '</p></div>';
     }).join('')
-    + (steps.length || session.error ? '<div class="task-exception-message task-exception-agent"><span>' + escapeHtml(String(session.agentName || '执行专家')) + ' · 执行过程</span>'
+    + (steps.length || session.error ? '<div class="task-exception-message task-exception-agent"><span>' + escapeHtml(String(session.agentName || '执行智能体')) + ' · 执行过程</span>'
       + (steps.length ? '<ol>' + steps.map(function (step, index) { return '<li class="' + (session.error && index === steps.length - 1 ? 'is-error' : '') + '"><strong>' + escapeHtml(String(step[0] || '执行步骤')) + '</strong><p>' + escapeHtml(String(step[1] || '')) + '</p></li>'; }).join('') + '</ol>' : '')
       + (session.error ? '<div class="task-exception-error"><strong>执行异常</strong><p>' + escapeHtml(String(session.error)) + '</p></div>' : '')
       + (session.next ? '<p class="task-exception-next">建议处理：' + escapeHtml(String(session.next)) + '</p>' : '') + '</div>' : '')
@@ -151,7 +151,7 @@ try {
   }).slice(0, 200).map(function (session) {
     session.exchanges = session.exchanges.filter(function (exchange) { return exchange && typeof exchange.prompt === 'string'; });
     /* 曾短暂改称「专家 / 专家团」时存下的会话标题，统一回到「智能体 / 智能体团队」 */
-    session.title = session.title.replace(/专家团/g, '智能体团队').replace(/^(创建|编辑)专家/, '$1智能体');
+    session.title = session.title.replace(/智能体团队/g, '智能体团队').replace(/^(创建|编辑)智能体/, '$1智能体');
     return session;
   });
 } catch (e) {}
@@ -608,7 +608,7 @@ export function startTaskCreationChat(projectId, initialPrompt) {
 }
 function appendAssetCreateAgent(html,editing){
   var response=appendAssistantMessage(null);
-  response.innerHTML='<div class="chat-agent-identity"><img class="task-create-avatar" src="'+xav('pm')+'" alt=""><strong>'+(editing?'专家编辑助手':'专家创建智能体')+'</strong><span class="chat-agent-state">对话'+(editing?'编辑':'创建')+' · 原型</span></div>'+html;
+  response.innerHTML='<div class="chat-agent-identity"><img class="task-create-avatar" src="'+xav('pm')+'" alt=""><strong>'+(editing?'智能体编辑助手':'智能体创建智能体')+'</strong><span class="chat-agent-state">对话'+(editing?'编辑':'创建')+' · 原型</span></div>'+html;
 }
 function assetCreateQuestionHtml(question,interactive){
   var selected=Array.isArray(question.selected)?question.selected:[];
@@ -621,7 +621,7 @@ function assetCreateQuestionHtml(question,interactive){
     +(interactive?'<small>也可以直接在下方输入回答</small>':'')+'</div>';
 }
 function builderSkillChip(){
-  return '<span class="builder-skill-mention" data-skill-mention="expert-builder" contenteditable="false" title="expert-builder · 创建专家和智能体团队"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="7" width="16" height="13" rx="4"/><path d="M12 3v4M8 12v2M16 12v2M9 17h6"/><circle cx="12" cy="2" r="1"/></svg><span>expert-builder</span></span>';
+  return '<span class="builder-skill-mention" data-skill-mention="expert-builder" contenteditable="false" title="expert-builder · 创建智能体和智能体团队"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="7" width="16" height="13" rx="4"/><path d="M12 3v4M8 12v2M16 12v2M9 17h6"/><circle cx="12" cy="2" r="1"/></svg><span>expert-builder</span></span>';
 }
 function builderInputText(){
   var copy=chatInput.cloneNode(true);copy.querySelectorAll('[data-skill-mention]').forEach(function(chip){chip.remove();});return copy.textContent.trim();
@@ -650,7 +650,7 @@ function renderAssetCreateChat(session){
   chatInput.setAttribute('data-placeholder',draft.status==='done'?'创建已完成':draft.status==='question'?'回答上面的问题…':'继续描述创建要求…');
   if(draft.status==='prompt'&&!draft.messages.length)chatInput.textContent=assetStarterPrompt(draft.kind);
   if(draft.status!=='done')ensureBuilderMention();
-  document.getElementById('chatExpertLabel').textContent='专家创建智能体';
+  document.getElementById('chatExpertLabel').textContent='智能体创建智能体';
   viewChat.classList.remove('preview-open');
   syncTogglePreviewBtn();
   hideAssetEditorPanel();
@@ -1013,7 +1013,7 @@ function renderChatTaskSide() {
   expertDropdown.classList.remove('open');
   expertDropdown.querySelector('[data-chip]').setAttribute('aria-disabled', task || assetSession ? 'true' : 'false');
   renderExpertChips();
-  if(assetSession?.assetCreate)document.getElementById('chatExpertLabel').textContent='专家创建智能体';
+  if(assetSession?.assetCreate)document.getElementById('chatExpertLabel').textContent='智能体创建智能体';
   if (task) {
     viewChat.classList.remove('preview-open');
     var preview = document.getElementById('chatPreviewSide');
@@ -1816,7 +1816,7 @@ function chatDoSend(){
   var assetEditing=chatSessions.find(function(row){return row.id===activeSessionId&&row.assetEdit;});
   if(assetEditing){
     var edit=assetEditing.assetEdit;
-    var field=/^(?:把|将)?(?:智能体|智能体团队|数字员工|专家团|专家)?(?:的)?(名称|名字|简介|说明|描述)(?:改为|改成|修改为|设为|设置为|：|:|是)\s*[「“]?(.+?)[」”]?\s*$/.exec(t);
+    var field=/^(?:把|将)?(?:智能体|智能体团队|数字员工|智能体团队|智能体)?(?:的)?(名称|名字|简介|说明|描述)(?:改为|改成|修改为|设为|设置为|：|:|是)\s*[「“]?(.+?)[」”]?\s*$/.exec(t);
     var target=field&&(field[1]==='名称'||field[1]==='名字'?(edit.kind==='team'?'teamName':'xeName'):(edit.kind==='team'?'teamDesc':'xeDesc'));
     var inputEl=target&&document.getElementById(target);
     if(inputEl){inputEl.value=field[2].replace(/^[「“]|[」”]$/g,'').trim();inputEl.dispatchEvent(new Event('input',{bubbles:true}));}

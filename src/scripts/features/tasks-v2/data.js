@@ -164,8 +164,8 @@ export function tkProjectsForCurrentUser() {
 
 export const TK_AGENTS = [
   { id: 'a1', name: '代码审查', avatar: 'C', color: '#495dff' },
-  { id: 'a2', name: '需求分析专家', avatar: 'R', color: '#08a040' },
-  { id: 'a3', name: '测试验证专家', avatar: 'T', color: '#ff8d42' },
+  { id: 'a2', name: '需求分析智能体', avatar: 'R', color: '#08a040' },
+  { id: 'a3', name: '测试验证智能体', avatar: 'T', color: '#ff8d42' },
 ];
 
 export const TK_PROJECTS = CV_PROJECTS;

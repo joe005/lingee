@@ -10,7 +10,7 @@ export function newAssetDraft(kind){
 export function assetStarterPrompt(kind){
   return kind==='team'
     ? '帮我创建一个[智能体团队名称]智能体团队，负责[要解决的问题]，成员包括[现有智能体名称]。'
-    : '帮我创建一个[专家名称]智能体，负责[主要职责]，擅长[主要工作]。我的经验是：[行业背景与相关经验]';
+    : '帮我创建一个[智能体名称]智能体，负责[主要职责]，擅长[主要工作]。我的经验是：[行业背景与相关经验]';
 }
 
 export function availableAssetMembers(){
@@ -43,7 +43,7 @@ function matchedAssetMembers(text){
 }
 
 const stripPlaceholders=text=>text.replace(/\[[^\]]+\]|［[^］]+］|X{2,}|…{2,}/gi,'').trim();
-const genericRequest=text=>/^(?:请)?(?:帮我)?(?:创建|开发|新增|做)(?:一个|一位|一支)?(?:专家|智能体|智能体团队|数字员工|专家团)[。！!]?$/u.test(text.replace(/\s+/g,''));
+const genericRequest=text=>/^(?:请)?(?:帮我)?(?:创建|开发|新增|做)(?:一个|一位|一支)?(?:智能体|智能体|智能体团队|数字员工|智能体团队)[。！!]?$/u.test(text.replace(/\s+/g,''));
 function inferredModes(text){
   const modes=WORK_MODES.filter(mode=>text.includes(mode));
   if(/开发|编码|编程|代码|实现/.test(text))modes.push('实现');
@@ -58,7 +58,7 @@ function inferredModes(text){
 function inferredName(text,kind){
   const explicit=text.match(/(?:名称|名字)\s*(?:是|为|[:：])\s*[「“]?([^，。；;\n」”]{2,36})|(?:命名为|叫做|叫)\s*[「“]?([^，。；;\n」”]{2,36})/);
   if(explicit)return (explicit[1]||explicit[2]).trim();
-  const noun=kind==='team'?'(?:智能体团队|专家团)':'(?:智能体|数字员工|专家)';
+  const noun=kind==='team'?'(?:智能体团队|智能体团队)':'(?:智能体|数字员工|智能体)';
   const intent=text.match(new RegExp('(?:创建|新增|做|开发)(?:一个|一位|一支)?\\s*([^，。；;\\n]{2,30})('+noun+')'));
   if(intent&&!/^(?:一个|一位|一支|专业|全能|通用)$/.test(intent[1].trim()))return intent[1].trim()+intent[2];
   return '';
@@ -107,7 +107,7 @@ export function commitAssetDraft(draft,scope){
   if(!desc)return {ok:false,message:'请填写职责或用途'};
   if(scope!=='personal')return {ok:false,message:'请先保存为个人，再到编辑页提交审核'};
   if(draft.kind==='expert'&&!draft.modes.length)return {ok:false,message:'请至少选择一项可承担的工作'};
-  if(draft.kind==='team'&&(!draft.members.length||draft.members.some(id=>!EX[id]||!layerVisible('expert',EX[id]))))return {ok:false,message:'请至少选择一位当前可用的专家'};
+  if(draft.kind==='team'&&(!draft.members.length||draft.members.some(id=>!EX[id]||!layerVisible('expert',EX[id]))))return {ok:false,message:'请至少选择一位当前可用的智能体'};
   const id='my-'+draft.kind+'-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
   const ownerId=assetOwnerKey();
   const item=draft.kind==='expert'

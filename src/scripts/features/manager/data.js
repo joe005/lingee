@@ -5,7 +5,7 @@ import { TK_TICKET_CODE_STATS } from '../tasks-v2/ticket-demo.js';
 import { tkAddTask, tkCanDeleteTask, tkCurrentStageHandlerId, tkDeleteTask, tkGetTasks, tkPruneOrphanTasks, tkSetTasks, tkSetExternalProjects } from '../tasks-v2/data.js';
 /* 管理板块数据：管理项目、项目任务、议题、项目知识库。
    与协作开发的项目 / 任务数据分开存放，避免管理项目出现在开发板块的项目列表里；
-   人员、智能体与智能体团队直接复用协作开发和专家模块的基础数据。 */
+   人员、智能体与智能体团队直接复用协作开发和智能体模块的基础数据。 */
 
 var PROJECTS_KEY = 'lingee-manager-projects-v1';
 var TASKS_KEY = 'lingee-manager-tasks-v1';

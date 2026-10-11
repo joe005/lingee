@@ -26,6 +26,8 @@ const retiredDemoTeams=new Set(['team:cloud-delivery-team','team:tenant-ws-build
 function retiredSeed(item){
   if(!item)return false;
   const id=key(item.kind,item.id);
+  /* 代码里已不存在的原厂种子（智能体、团队）视为下线，避免旧的本地存档残留在列表里；云端样例每次由代码补种，不在此列。 */
+  if(item.editor==='平台初始数据'&&['expert','team'].includes(item.kind)&&item.id!=='cloud-delivery-advisor'&&!originals[item.kind].some(o=>o.id===item.id))return true;
   return (item.editor==='平台初始数据'&&retiredSeedKeys.has(id))
     ||(retiredDemoTeams.has(id)&&['平台初始数据','租户示例数据'].includes(item.editor));
 }
@@ -230,7 +232,7 @@ function renderCards(){
     const face=team?`<span class="platform-faces">${(d.members||[]).slice(0,4).map(memberId=>{const expert=latest(key('expert',memberId))?.data;return expert?`<img src="${xav(expert.k)}" alt="">`:'';}).join('')}</span>`:`<img class="x-av" src="${xav(d.k)}" alt="">`;
     const source=xesc(m.tenantId?cvWorkspaceName(m.tenantId):'原厂'),tags=(team?d.domains:d.tags)||[],updated=String(row.at||'').replace(/:\d{2}$/,'');
     const status=visibleStatus(m);
-    return `<button type="button" class="app-card x-card platform-card" data-platform-card="${xesc(id)}"><div class="card-top">${face}<div class="card-titles"><div class="card-title-row"><span class="card-title">${xesc(d.name)}</span></div><div class="x-sub">${source} · ${team?'智能体团队 · '+(d.members||[]).length+' 位专家':xesc(d.role||'专家')}</div></div><span class="platform-card-version">V${row.version}${m.pendingVersion&&m.reviewSubmitted?' 待审核':''}</span></div><div class="card-desc">${xesc(d.desc||'暂无简介')}</div><div class="card-tags">${tags.slice(0,3).map(value=>`<span class="ptag">${xesc(value)}</span>`).join('')}</div><div class="platform-card-meta"><span class="platform-card-status ${status}">${status==='draft'?'草稿':status==='review'?'待审核':status==='offline'?'已下架':'已上架'}</span><time title="${xesc(row.at)}">更新于 ${xesc(updated)}</time></div></button>`;
+    return `<button type="button" class="app-card x-card platform-card" data-platform-card="${xesc(id)}"><div class="card-top">${face}<div class="card-titles"><div class="card-title-row"><span class="card-title">${xesc(d.name)}</span></div><div class="x-sub">${source} · ${team?'智能体团队 · '+(d.members||[]).length+' 位智能体':xesc(d.role||'智能体')}</div></div><span class="platform-card-version">V${row.version}${m.pendingVersion&&m.reviewSubmitted?' 待审核':''}</span></div><div class="card-desc">${xesc(d.desc||'暂无简介')}</div><div class="card-tags">${tags.slice(0,3).map(value=>`<span class="ptag">${xesc(value)}</span>`).join('')}</div><div class="platform-card-meta"><span class="platform-card-status ${status}">${status==='draft'?'草稿':status==='review'?'待审核':status==='offline'?'已下架':'已上架'}</span><time title="${xesc(row.at)}">更新于 ${xesc(updated)}</time></div></button>`;
   }).join('');
   const reviewStatuses=statusTab==='all'?['pending','rejected']:statusTab==='review'?['pending']:statusTab==='draft'?['rejected']:[];
   const reviewCards=reviewStatuses.length?renderAssetReviewCards(kw,{kind:tab,statuses:reviewStatuses,tenantId}):'';
@@ -465,7 +467,7 @@ let updateQueued=false,updateAttempt='';
 function updateSettings(){return read(UPDATE_SETTINGS_KEY,{})[getLoginAccount()]||{expert:false,team:false};}
 function showUpdateSettings(){
   const settings=updateSettings();
-  assetReviewDialog('更新设置',`<p>发现新版本时，是否自动更新已安装的专家和智能体团队？</p><div class="platform-update-options"><label><input type="checkbox" id="autoUpdateExperts" ${settings.expert?'checked':''}> 自动更新专家</label><label><input type="checkbox" id="autoUpdateTeams" ${settings.team?'checked':''}> 自动更新智能体团队</label></div><p class="platform-dialog-note">默认关闭，关闭时保留卡片更新提示，由你确认更新。开启后自动更新已安装内容，智能体团队缺失的成员一并安装；个人开发内容不受影响。原型仅在页面打开时检测。</p><div class="platform-dialog-error" id="updateSettingsError"></div>`,()=>{
+  assetReviewDialog('更新设置',`<p>发现新版本时，是否自动更新已安装的智能体和智能体团队？</p><div class="platform-update-options"><label><input type="checkbox" id="autoUpdateExperts" ${settings.expert?'checked':''}> 自动更新智能体</label><label><input type="checkbox" id="autoUpdateTeams" ${settings.team?'checked':''}> 自动更新智能体团队</label></div><p class="platform-dialog-note">默认关闭，关闭时保留卡片更新提示，由你确认更新。开启后自动更新已安装内容，智能体团队缺失的成员一并安装；个人开发内容不受影响。原型仅在页面打开时检测。</p><div class="platform-dialog-error" id="updateSettingsError"></div>`,()=>{
     const all=read(UPDATE_SETTINGS_KEY,{});all[getLoginAccount()]={expert:$('#autoUpdateExperts').checked,team:$('#autoUpdateTeams').checked};
     if(!write(UPDATE_SETTINGS_KEY,all)){$('#updateSettingsError').textContent='设置保存失败，请重试';return;}
     updateAttempt='';assetReviewClose();toast('更新设置已保存','success');scheduleAutoUpdate();
@@ -491,7 +493,7 @@ function scheduleAutoUpdate(){
     const error=validateInstall(rows);if(error){toast('自动更新失败：'+error+'，保留原版本','warning');return;}
     const next={...installed};for(const item of rows)next[item.id]=item.row.version;
     if(!write(INSTALL_KEY,next)){toast('自动更新保存失败，保留原版本','warning');return;}
-    installed=next;applyInstalled();toast('已自动更新 '+rows.length+' 项专家与智能体团队内容','success');
+    installed=next;applyInstalled();toast('已自动更新 '+rows.length+' 项智能体与智能体团队内容','success');
   },0);
 }
 function decorateClient(){
@@ -604,7 +606,7 @@ export function installCloudAsset(id){
   const body=`<div class="platform-install-target"><span class="platform-install-type">${kind}</span><strong>${xesc(row.data.name)}</strong></div>
     <div class="platform-install-versions"><div><span>当前版本</span><strong>${old?'V'+old:'未安装'}</strong></div><span class="platform-install-arrow" aria-hidden="true">→</span><div><span>目标版本</span><strong>V${row.version}</strong></div></div>
     <div class="platform-install-section"><strong>${reinstall?'版本内容':old?'本次更新':'版本内容'}</strong><p>${xesc(row.note||'暂无更新说明')}</p></div>
-    ${dependencyCount?`<div class="platform-install-dependency">将同步更新 ${dependencyCount} 位依赖的专家，确认后一起生效。</div>`:''}
+    ${dependencyCount?`<div class="platform-install-dependency">将同步更新 ${dependencyCount} 位依赖的智能体，确认后一起生效。</div>`:''}
     <details class="platform-install-demo"><summary>演示选项</summary><label><input type="checkbox" id="marketFailOnce"> 模拟本次安装失败</label></details>`;
   assetReviewDialog(reinstall?`重新安装${kind}`:old?`升级${kind}`:`安装${kind}`,body,()=>{
     const simulateFailure=$('#marketFailOnce')?.checked;
@@ -615,7 +617,7 @@ export function installCloudAsset(id){
       if(error)return assetReviewDialog('安装失败',`<p class="platform-dialog-error">${xesc(error)}，旧版本和个人配置保持不变。</p>`,()=>installCloudAsset(id),'重试');
       const next={...installed};for(const item of current)next[item.id]=item.row.version;
       if(!write(INSTALL_KEY,next))return assetReviewDialog('安装失败','<p>本地存储不可用，旧版本保持不变。</p>',()=>installCloudAsset(id),'重试');
-      installed=next;applyInstalled();assetReviewDialog('安装完成','<p>内容已安装，可在“我的”中的官方或租户标签查看；智能体团队缺失的成员专家已一并安装。</p>',null,'关闭');
+      installed=next;applyInstalled();assetReviewDialog('安装完成','<p>内容已安装，可在“我的”中的官方或租户标签查看；智能体团队缺失的成员智能体已一并安装。</p>',null,'关闭');
     },350);
   },reinstall?'确认重新安装':old?'确认升级':'确认安装');
 }

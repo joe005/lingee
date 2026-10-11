@@ -21,7 +21,7 @@ var forcedBuilder=null;
 function deleteMyExpert(id){
   var e=EX[id]; if(!e||!e.mine||layerOf('expert',e)!=='personal') return;
   var used=TEAMS.filter(function(t){ return t.members.indexOf(id)>=0; });
-  var msg='删除专家「'+e.name+'」？此操作不可撤销。';
+  var msg='删除智能体「'+e.name+'」？此操作不可撤销。';
   if(used.length) msg+='\n他还在 '+used.length+' 个智能体团队里，删除后会一并移出。';
   if(!window.confirm(msg)) return;
   set_MY_EXPERTS(MY_EXPERTS.filter(function(x){ return x.id!==id; }));
@@ -195,7 +195,7 @@ export function initExpertEditor() {
       var d=xeDraft;
       d.name=$('#xeName').value.trim(); d.desc=$('#xeDesc').value.trim();
       d.tags=splitList($('#xeTags').value); d.comp=splitList($('#xeComp').value);
-      if(!d.name){ setXeTab('base'); toast('请填写专家名称','warning'); $('#xeName').focus(); return; }
+      if(!d.name){ setXeTab('base'); toast('请填写智能体名称','warning'); $('#xeName').focus(); return; }
       if(!d.modes.length){ setXeTab('base'); toast('至少勾选一项「可承担的工作」，否则他在智能体团队里领不到任务','warning'); return; }
       var cmds=d.cmds.map(function(c){ return [String(c[0]||'').trim(),String(c[1]||'').trim()]; })
                      .filter(function(c){ return c[0]; });

@@ -60,7 +60,7 @@ function renderExpertChips(){
       dd.querySelector('[data-chip]')?.classList.toggle('muted', !lockedTeam);
       return;
     }
-    if(label) label.textContent = has ? pickName() : (pfx==='tkForm' ? '选择智能体团队' : '选择专家');
+    if(label) label.textContent = has ? pickName() : (pfx==='tkForm' ? '选择智能体团队' : '选择智能体');
     if(faces){
       faces.innerHTML = has
         ? (activePick.kind==='team'
@@ -89,7 +89,7 @@ function renderExpertPicker(pfx,kw){
     }).join('');
   }
   if(experts.length){
-    html+='<div class="pick-group">专家</div>'+experts.map(function(e){
+    html+='<div class="pick-group">智能体</div>'+experts.map(function(e){
       var on=activePick.kind==='expert'&&activePick.id===e.id;
       return '<div class="app-item x-opt'+(on?' checked':'')+'" data-pick-expert="'+e.id+'">'
         +'<img class="x-opt-av" src="'+xav(e.k)+'" alt="">'
@@ -97,7 +97,7 @@ function renderExpertPicker(pfx,kw){
         +(on?'<svg class="ic ic-sm menu-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>':'')+'</div>';
     }).join('');
   }
-  list.innerHTML = html || '<div class="x-empty-sm">没有匹配的专家或智能体团队</div>';
+  list.innerHTML = html || '<div class="x-empty-sm">没有匹配的智能体或智能体团队</div>';
 }
 /* tkForm（任务管理新建任务弹窗）专属：二级展开 + 产物确认人由 tasks-v2 注入，
    nt / chat 不受影响。 */

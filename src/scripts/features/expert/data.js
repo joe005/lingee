@@ -175,7 +175,7 @@ var EXPERTS=[
 var LEGACY_EXPERTS=EXPERTS;
 EXPERTS=BUILTIN_CATALOG;
 var BUILTIN_EXPERTS=EXPERTS;
-var MY_EXPERTS=[];                 /* 我自己创建的专家，落 localStorage */
+var MY_EXPERTS=[];                 /* 我自己创建的智能体，落 localStorage */
 var EX={};
 function rebuildExperts(){
   EXPERTS=BUILTIN_EXPERTS.concat(MY_EXPERTS);
@@ -277,7 +277,7 @@ var COMP_LEVELS={principal:'资深',advanced:'精通',practitioner:'熟练',awar
 
 /* ---------- 开工前需要的输入 ----------
    不再单独维护字段：需要什么输入，直接写进触发词的 [占位符] 里。
-   发出去时占位符没被替换，就在会话里追问，而不是让专家拿着空输入硬跑。 */
+   发出去时占位符没被替换，就在会话里追问，而不是让智能体拿着空输入硬跑。 */
 var ASK={
   '验收条件':{q:'这次做到什么程度算完成？',
     o:['用软件产品经理刚出的验收条件','我直接说，你记下来','先不定，按最小可用实现']},
