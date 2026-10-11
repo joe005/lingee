@@ -222,11 +222,11 @@
 #niuCreateOverlay .niu-stage-owner:not(:disabled):focus-visible,
 #niuCreateOverlay .niu-stage-owner[aria-expanded=true] { border-color:var(--brand); outline:none; box-shadow:none; background:var(--bg); }
 #niuCreateOverlay .niu-field .niu-invalid:not(:disabled):is(:hover,:focus) { border-color:var(--danger); }
-#niuCreateOverlay :is(.niu-button,.niu-icon-button,.niu-create-mode button,#niuSmartBackHead):not(:disabled):hover { background:var(--hover); }
-#niuCreateOverlay :is(.niu-button,.niu-icon-button,.niu-create-mode button,#niuSmartBackHead):not(:disabled):active { background:var(--active); }
-#niuCreateOverlay .niu-button-primary:not(:disabled):hover { background:var(--brand-hover); border-color:var(--brand-hover); }
-#niuCreateOverlay .niu-button-primary:not(:disabled):active { background:var(--brand-active); border-color:var(--brand-active); }
-#niuCreateOverlay :is(.niu-button,.niu-icon-button,.niu-create-mode button,#niuSmartBackHead):focus-visible { outline:2px solid var(--focus-ring); outline-offset:2px; }
+#niuCreateOverlay :is(.niu-button,.niu-icon-button,.niu-create-mode button,.niu-create-mode):not(.niu-button-primary):not(:disabled):hover { background-color:var(--hover); }
+#niuCreateOverlay :is(.niu-button,.niu-icon-button,.niu-create-mode button,.niu-create-mode):not(.niu-button-primary):not(:disabled):active { background-color:var(--active); }
+#niuCreateOverlay .niu-button-primary:not(:disabled):hover { background:var(--create-hover); border-color:var(--create-hover); }
+#niuCreateOverlay .niu-button-primary:not(:disabled):active { background:var(--create-active); border-color:var(--create-active); }
+#niuCreateOverlay :is(.niu-button,.niu-icon-button,.niu-create-mode button,.niu-create-mode):focus-visible { outline:2px solid var(--focus-ring); outline-offset:2px; }
 #niuCreateOverlay .niu-stage-remove:not(:disabled):hover { background:var(--danger-bg); }
 #niuCreateOverlay .niu-stage-remove:not(:disabled):active { background:var(--danger-bg); }
 
@@ -246,3 +246,5 @@
 #tkDrawer.tk-drawer--latest .tk-feed-activity-row strong { color:var(--text); font-weight:500; }
 #tkDrawer.tk-drawer--latest .tk-feed-activity-row time { color:var(--text-secondary); }
 #tkDrawer.tk-drawer--latest .tk-drawer-foot { border-top:0; }
+
+#niuCreateOverlay .niu-create-stage-table .niu-plan-empty { background:transparent; border:0; }

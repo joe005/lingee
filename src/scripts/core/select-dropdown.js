@@ -48,8 +48,14 @@ export function initSelectDropdowns(selects, onOpen = () => {}) {
       menu.hidden = false;
       trigger.setAttribute('aria-expanded', 'true');
       const rect = trigger.getBoundingClientRect();
-      menu.style.width = rect.width + 'px';
-      menu.style.left = rect.left + 'px';
+      const taskCreatePicker = ['chatTaskProjectSelect', 'chatTaskTeamSelect'].includes(select.id);
+      if (taskCreatePicker) {
+        menu.classList.add('niu-select-popup--task-create');
+        menu.style.minWidth = Math.min(rect.width, window.innerWidth - 16) + 'px';
+        menu.style.maxWidth = (window.innerWidth - 16) + 'px';
+        menu.style.width = 'max-content';
+      } else menu.style.width = rect.width + 'px';
+      menu.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - menu.offsetWidth - 8)) + 'px';
       menu.style.top = Math.max(8, rect.bottom + menu.offsetHeight + 8 <= window.innerHeight ? rect.bottom + 4 : rect.top - menu.offsetHeight - 4) + 'px';
       menu.querySelector('[aria-selected="true"]:not(:disabled)')?.focus();
       if (!menu.contains(document.activeElement)) menu.querySelector('button:not(:disabled)')?.focus();

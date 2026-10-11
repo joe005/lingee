@@ -667,3 +667,38 @@
 #view-chat .is-horizontal .chat-current-stage-row:not(:last-child)::after {
   left: calc(50% + 24px);
 }
+
+/* 智能创建入口与会话输入区采用一致的轻量控件。 */
+#view-chat .chat-task-project-picker { flex-wrap:wrap; padding:0; gap:8px; border-radius:0; background:transparent; color:var(--text); }
+#view-chat .task-builder-skill { height:32px; padding:0 8px; border-radius:8px; background:var(--brand-fill); color:var(--brand); font-size:14px; }
+#view-chat .chat-task-project-picker .task-builder-divider { display:none; }
+#view-chat .chat-task-project-picker #chatTaskProjectSelect + .shared-select-trigger { width:180px; min-width:0; flex:0 1 180px; }
+#view-chat .chat-task-project-picker #chatTaskTeamSelect + .shared-select-trigger { width:240px; min-width:0; flex:0 1 240px; }
+#view-chat .chat-task-project-picker .shared-select-trigger { height:32px; min-height:32px; padding:0 8px; border-radius:8px; font-size:14px; background:var(--bg); }
+
+/* 任务创建的关联选择沿用苍穹开发关联应用 chip 的外观。 */
+#view-chat .chat-task-project-picker .shared-select-trigger { width:auto; border:0; background:transparent; color:var(--text-muted); font-size:13px; font-weight:500; }
+#view-chat .chat-task-project-picker .shared-select-trigger:hover { background:var(--hover); }
+#view-chat .chat-task-project-picker .shared-select-trigger:active { background:var(--active); }
+#view-chat .chat-task-project-picker .shared-select-trigger:focus-visible { outline:2px solid var(--focus-ring); outline-offset:2px; }
+#view-chat .chat-task-project-picker #chatTaskTeamSelect + .shared-select-trigger { width:300px; flex-basis:300px; }
+
+/* 关联选择按文字自然排布，箭头紧随名称。 */
+#view-chat .chat-task-project-picker { gap:8px; margin-left:16px; }
+#view-chat .task-builder-skill { background:transparent; padding:0 8px 0 0; font-size:13px; }
+#view-chat .chat-task-project-picker #chatTaskProjectSelect + .shared-select-trigger,
+#view-chat .chat-task-project-picker #chatTaskTeamSelect + .shared-select-trigger { width:auto; flex:0 1 auto; max-width:320px; gap:6px; padding:0 8px; font-weight:400; }
+#view-chat .chat-task-project-picker .shared-select-trigger > span { flex:0 1 auto; }
+
+/* 智能创建关联条参考 cosmic-app-builder：一体式浅色胶囊。 */
+#view-chat .chat-task-project-picker { display:inline-flex; width:max-content; box-sizing:border-box; padding:4px 8px; gap:4px; border-radius:12px; background:var(--brand-fill); color:var(--brand); }
+#view-chat .chat-task-project-picker[hidden] { display:none; }
+#view-chat .task-builder-skill { padding:0 4px; font-size:14px; font-weight:500; }
+#view-chat .chat-task-project-picker .task-builder-divider { display:block; width:1px; height:16px; background:var(--border-focus); }
+#view-chat .chat-task-project-picker #chatTaskProjectSelect + .shared-select-trigger,
+#view-chat .chat-task-project-picker #chatTaskTeamSelect + .shared-select-trigger { height:28px; min-height:28px; padding:0 6px; background:transparent; color:var(--text); font-size:14px; font-weight:400; }
+#view-chat .chat-task-project-picker .shared-select-trigger:hover { background:var(--hover); }
+#view-chat .chat-task-project-picker .shared-select-trigger:active { background:var(--active); }
+
+.niu-select-popup--task-create button { gap:12px; }
+.niu-select-popup--task-create button > span { overflow:visible; text-overflow:clip; white-space:normal; overflow-wrap:anywhere; }

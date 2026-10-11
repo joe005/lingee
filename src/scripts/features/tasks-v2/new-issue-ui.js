@@ -91,9 +91,10 @@ function openProjectPopup() {
   popup.scrollTop = 0;
   byId('niuPersonOptions').scrollTop = 0;
   const rect = trigger.getBoundingClientRect();
+  popup.style.width = Math.min(rect.width, window.innerWidth - 16) + 'px';
   const ph = popup.offsetHeight;
   const goDown = rect.bottom + ph + 8 <= window.innerHeight;
-  popup.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - 260)) + 'px';
+  popup.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - popup.offsetWidth - 8)) + 'px';
   if (goDown) {
     popup.style.top = (rect.bottom + 4) + 'px';
     popup.style.bottom = 'auto';

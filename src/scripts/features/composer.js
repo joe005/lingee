@@ -400,6 +400,8 @@ function hideTaskQuestionPanel() {
 }
 function prepareTaskCreateDraft(draft, latestMessage) {
   var project = CV_PROJECTS.find(function (row) { return row.id === draft.projectId; });
+  var priorityMatch = String(latestMessage || draft.prompt || '').match(/(?:优先级(?:为|是|设为|改为|改成)?[：:\s]*)(紧急|高|中|低)/);
+  draft.priority = priorityMatch ? ({'紧急':'urgent','高':'high','中':'medium','低':'low'}[priorityMatch[1]]) : draft.priority || 'medium';
   var explicitType = String(latestMessage || '').match(/(?:改为|改成|类型是|类型为)(需求|缺陷)/);
   draft.issueType = explicitType?.[1] || draft.issueType || (/缺陷|Bug|报错|故障|修复/i.test(draft.prompt) ? '缺陷' : '需求');
   var draftTeam = teamById(draft.teamId || '');
@@ -439,6 +441,7 @@ function taskCreateRecommendation(draft) {
     + '- **标题**：' + draft.title + '\n'
     + '- **项目**：' + (project?.name || '当前项目') + '\n'
     + '- **类型**：' + draft.issueType + '\n'
+    + '- **优先级**：' + ({urgent:'紧急',high:'高',medium:'中',low:'低'}[draft.priority || 'medium']) + '\n'
     + '- **任务说明**：' + draft.description.replace(/\s+/g, ' ').slice(0, 300) + '\n\n'
     + '## 推荐执行计划\n'
     + stages.map(function (stage, index) {
@@ -557,7 +560,7 @@ function confirmTaskCreate(session) {
   if (!teamById(draft.teamId || '')) { toast('请先选择智能体团队', 'warning'); $('#chatTaskTeamSelect').focus(); return; }
   if (!stages.length) { toast('所选智能体团队没有可用执行阶段', 'warning'); return; }
   var owner = stages[0].assigneeId || '';
-  var task = tkAddTask({ title:draft.title, desc:draft.description, issueType:draft.issueType, status:'backlog', priority:'medium', dueDate:'',
+  var task = tkAddTask({ title:draft.title, desc:draft.description, issueType:draft.issueType, status:'backlog', priority:draft.priority || 'medium', dueDate:'',
     assignee:owner, createdBy:tkCurrentUserId(), project:draft.projectId, teamId:draft.teamId || '',
     labels:[], executionPlan:stages.map(function (stage) { return {...stage, id:crypto.randomUUID()}; }), planStatus:stages.every(function (stage) { return !!stage.assigneeId; }) ? 'confirmed' : 'draft' });
   session.taskId = task.id;
@@ -992,10 +995,10 @@ function syncTaskCreateProjectPicker(){
   picker.hidden=!session||session.taskCreate.status==='done';
   viewChat.classList.toggle('task-builder-session',!picker.hidden);
   if(picker.hidden)return;
-  select.innerHTML='<option value="">请选择项目</option>'+tkProjectsForCurrentUser().map(function(project){return '<option value="'+escapeHtml(project.id)+'">'+escapeHtml(project.name)+'</option>';}).join('');
+  select.innerHTML='<option value="" disabled hidden>选择项目</option>'+tkProjectsForCurrentUser().map(function(project){return '<option value="'+escapeHtml(project.id)+'">'+escapeHtml(project.name)+'</option>';}).join('');
   select.value=session.taskCreate.projectId||'';
   var teamSelect=$('#chatTaskTeamSelect');
-  teamSelect.innerHTML='<option value="">请选择智能体团队</option>'+TEAMS.map(function(team){return '<option value="'+escapeHtml(team.id)+'">'+escapeHtml(team.name)+'</option>';}).join('');
+  teamSelect.innerHTML='<option value="" disabled hidden>选择智能体团队</option>'+TEAMS.map(function(team){return '<option value="'+escapeHtml(team.id)+'">'+escapeHtml(team.name)+'</option>';}).join('');
   teamSelect.value=session.taskCreate.teamId||'';
 }
 function renderChatTaskSide() {
