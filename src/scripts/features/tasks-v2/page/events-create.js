@@ -3,7 +3,7 @@ import { TEAMS, set_activePick } from '../../expert/store.js';
 import { TK_LABELS, tkCurrentUserId, tkProjectById } from '../data.js';
 import { persistTaskLabelCatalog, taskLabelCatalog } from './detail-panel.js';
 import { closeModalAssigneeMenu, closeModalLabelPicker, closeTaskModal, openModalAssigneeMenu, openModalLabelPicker, openTaskModal, refreshFormAssignees, renderModalAssigneeTrigger, renderModalLabelOptions, renderModalLabelPicker, tkMcAgentSendMsg, tkMcSetMode, tkRenderMoreMenu } from './form-modal.js';
-import { downloadTaskTemplate, openImportModal, saveTask } from './import-excel.js';
+import { openImportModal, saveTask } from './import-excel.js';
 import { closeDisplayChoiceMenu, closeFieldSettings } from './layout.js';
 import { closeFilterPanel } from './menus.js';
 import { pageState } from './page-state.js';
@@ -31,11 +31,6 @@ export function bindCreateEvents() {
     els.tkToolbarNewMenu.classList.add('hidden');
     els.tkToolbarNewArrow.setAttribute('aria-expanded', 'false');
     openImportModal();
-  });
-  els.tkExportExcelTemplate.addEventListener('click', function () {
-    els.tkToolbarNewMenu.classList.add('hidden');
-    els.tkToolbarNewArrow.setAttribute('aria-expanded', 'false');
-    downloadTaskTemplate();
   });
   document.addEventListener('click', function (e) {
     if (els.tkToolbarNewMenu && !els.tkToolbarNewMenu.classList.contains('hidden') && !els.tkToolbarNewGroup.contains(e.target)) {
