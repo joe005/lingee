@@ -44,21 +44,42 @@
 #view-collab .cv-card-locked .config-row{opacity:.55}
 #view-collab .cv-card-locked .toggle{pointer-events:none}
 
-/* 任务、智能体与智能体团队共用同一文字导航。 */
-#view-collab:has(:is(#cv-tasks-current,#cv-experts,#cv-teams).active) #cvPageTitle { display:none; }
-#view-collab:has(:is(#cv-tasks-current,#cv-experts,#cv-teams).active) #cvTabNav {
+/* 任务、智能体、智能体团队与设置共用同一文字导航。 */
+#view-collab:has(:is(#cv-tasks-current,#cv-experts,#cv-teams,#cv-config).active) #cvPageTitle { display:none; }
+#view-collab:has(:is(#cv-tasks-current,#cv-experts,#cv-teams,#cv-config).active) #cvTabNav {
   position:relative; align-self:center; width:calc(100% - 32px); max-width:1160px;
   height:52px; min-height:52px; margin:0; padding:0; gap:12px;
   border:0; border-radius:0; background:transparent; overflow:visible;
 }
-#view-collab:has(:is(#cv-tasks-current,#cv-experts,#cv-teams).active) #cvTabNav .tab-nav-item {
+#view-collab:has(:is(#cv-tasks-current,#cv-experts,#cv-teams,#cv-config).active) #cvTabNav .tab-nav-item {
   height:28px; padding:0; border:0; border-radius:0; background:transparent;
   color:var(--text-secondary); font-size:18px; line-height:28px; font-weight:500; box-shadow:none;
 }
-#view-collab:has(:is(#cv-tasks-current,#cv-experts,#cv-teams).active) #cvTabNav .tab-nav-item--active { color:var(--text-title); }
-#view-collab:has(:is(#cv-tasks-current,#cv-experts,#cv-teams).active) #cvTabNav [data-cvview="config"] {
+#view-collab:has(:is(#cv-tasks-current,#cv-experts,#cv-teams,#cv-config).active) #cvTabNav .tab-nav-item--active { color:var(--text-title); }
+#view-collab:has(:is(#cv-tasks-current,#cv-experts,#cv-teams,#cv-config).active) #cvTabNav [data-cvview="config"] {
   margin-left:auto; margin-right:44px; width:36px; height:36px; font-size:0;
   background:url('../../../assets/figma/task-list/settings.svg') center / 16px 16px no-repeat;
 }
-#view-collab:has(:is(#cv-tasks-current,#cv-experts,#cv-teams).active) #cvTabNav .tab-nav-item:hover { color:var(--text-title); }
-#view-collab:has(:is(#cv-tasks-current,#cv-experts,#cv-teams).active) #cvTabNav .tab-nav-item:focus-visible { outline:2px solid var(--focus-ring); outline-offset:2px; }
+#view-collab:has(:is(#cv-tasks-current,#cv-experts,#cv-teams,#cv-config).active) #cvTabNav .tab-nav-item:hover { color:var(--text-title); }
+#view-collab:has(:is(#cv-tasks-current,#cv-experts,#cv-teams,#cv-config).active) #cvTabNav .tab-nav-item:focus-visible { outline:2px solid var(--focus-ring); outline-offset:2px; }
+
+#view-collab:has(#cv-config.active) #cvTabNav [data-cvview="config"] { display:none; }
+
+/* 三个目录的第二排页签共用任务页的尺寸与顶部基线。 */
+#view-collab:has(:is(#cv-experts,#cv-teams).active) { background:var(--canvas-bg); }
+#view-collab :is(#cv-experts,#cv-teams)>.scroll { padding-top:8px; }
+#view-collab :is(#cv-experts,#cv-teams) .expert-assets-toolbar {
+  min-height:40px; margin-bottom:20px; align-items:center;
+}
+#view-collab :is(#cv-experts,#cv-teams) .asset-primary-tabs {
+  height:40px; min-height:40px; padding:4px; gap:4px; margin:0;
+  border:0; border-radius:999px; background:var(--segment-track);
+}
+#view-collab :is(#cv-experts,#cv-teams) .asset-primary-tabs .list-page-tab {
+  height:32px; min-height:32px; padding:0 16px; gap:4px;
+  border:0; border-radius:999px; background:transparent; box-shadow:none;
+  color:var(--text-muted); font-size:14px; line-height:22px; font-weight:400;
+}
+#view-collab :is(#cv-experts,#cv-teams) .asset-primary-tabs .list-page-tab.active {
+  color:var(--text-title); background:var(--bg); font-weight:500; box-shadow:none;
+}

@@ -32,7 +32,7 @@
 #cv-tasks-current .tk-tools-right { gap:12px; }
 #cv-tasks-current #tkToolbarNew { height:32px; min-height:32px; border-radius:8px 0 0 8px; padding:0 12px; font-size:14px; font-weight:400; gap:4px; }
 #cv-tasks-current #tkToolbarNewArrow { height:32px; min-height:32px; align-self:center; border-radius:0 8px 8px 0; }
-#cv-tasks-current #view-tasks:not(.tk-project-list-mode) #tkDisplayBtn { position:absolute; top:-44px; right:0; width:36px; height:36px; padding:0; border:0; border-radius:8px; background:transparent; }
+#cv-tasks-current #view-tasks:not(.tk-project-list-mode) #tkDisplayBtn { display:none; }
 #cv-tasks-current #view-tasks:not(.tk-project-list-mode) .tk-list .tk-list-scroll {
   padding:0 16px 24px; background:var(--canvas-bg);
 }

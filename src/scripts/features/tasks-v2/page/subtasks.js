@@ -490,7 +490,7 @@ export function openDrawer(taskId) {
     els.tkDrawerBody.querySelector('.tk-drawer-tabs')?.remove();
     els.tkDrawerBody.querySelector('[data-tab-content="changelog"]')?.remove();
     sidebar.querySelectorAll('.tk-prop-row').forEach(function (row) {
-      if (['处理人', '创建者', '创建时间', '截止日期', '更新时间'].includes(row.querySelector('span')?.textContent?.trim())) row.remove();
+      if (['处理人', '创建者', '创建时间', '截止日期', '更新时间', '标签'].includes(row.querySelector('span')?.textContent?.trim())) row.remove();
     });
     els.tkDrawerBody.querySelectorAll('[data-action="blocked-retry"]').forEach(function (button) { button.remove(); });
     mainInner.prepend(sidebar);
