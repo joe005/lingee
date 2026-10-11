@@ -8,6 +8,7 @@ import { CV_MEMBERS, CV_PROJECTS } from '../collab/data.js';
 import { defaultStageAssigneeId } from './stage-owner.js';
 import { tbTeamStages } from '../collab/tb-core.js';
 import { TEAMS } from '../expert/store.js';
+import { TEAM_STAGE_SCENARIOS } from '../expert/data.js';
 import { toast } from '../../core/toast.js';
 import { startTaskCreationChat } from '../composer.js';
 import { startTaskStage } from './task-execution.js';
@@ -194,11 +195,10 @@ function setWizardStep(step) {
   byId('niuWizardBack').hidden = !plan;
   byId('niuWizardNext').hidden = plan;
   byId('niuCreateSubmit').hidden = !plan;
-  /* 新建时「保存任务」是次要按钮、「保存并启动」是主按钮；编辑已有任务只有「保存」 */
+  /* 新建时「保存」是次要按钮、「保存并开始」是主按钮；编辑已有任务只有「保存修改」 */
   const creating = editingTaskId === null;
   byId('niuCreateStart').hidden = !plan || !creating;
   byId('niuCreateSubmit').classList.toggle('niu-button-primary', !creating);
-  byId('niuCreateSubmit').textContent = creating ? '保存任务' : '保存';
   byId('niuCreateOverlay').querySelectorAll('[data-niu-wizard-step]').forEach(item => {
     if (item.dataset.niuWizardStep === step) item.setAttribute('aria-current', 'step');
     else item.removeAttribute('aria-current');
@@ -256,7 +256,7 @@ function renderOwner(projectId) {
 }
 
 /* 团队下拉：全部智能体团队，选完团队才加载执行阶段；项目不绑定团队，每个任务自己选 */
-/* 开发流程跟着团队走：没选团队时不可选，选了团队才加载「功能开发 / 缺陷修复」，默认功能开发；
+/* 任务类型读自智能体团队的开发流程（功能开发 / 缺陷修复）：没选团队时不可选，选了团队才加载，默认功能开发；
    功能开发存为任务类型「需求」、缺陷修复存为「缺陷」，阶段按此取路径 */
 function syncFlowOptions(issueType) {
   const select = byId('niuType');
@@ -265,7 +265,7 @@ function syncFlowOptions(issueType) {
     select.disabled = true;
     return;
   }
-  select.innerHTML = '<option value="需求">功能开发</option><option value="缺陷">缺陷修复</option>';
+  select.innerHTML = TEAM_STAGE_SCENARIOS.map(item => '<option value="' + (item.id === 'bug' ? '缺陷' : '需求') + '">' + escapeHtml(item.name) + '</option>').join('');
   select.value = issueType === '缺陷' ? '缺陷' : '需求';
   select.disabled = false;
 }

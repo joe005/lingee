@@ -15,4 +15,12 @@ function mgrTag(text, cls) {
   return '<span class="mgr-tag mgr-tag--' + cls + '">' + mgrEsc(text) + '</span>';
 }
 
-export { mgrDay, mgrEsc, mgrTag };
+/* 任务优先级标签：紧急 / 高 / 中 / 低（兼容中文取值），缺省按「中」 */
+function mgrPriorityTag(priority) {
+  var map = { urgent: ['紧急', 'danger'], high: ['高', 'warning'], medium: ['中', 'brand'], low: ['低', 'neutral'] };
+  var alias = { '紧急': 'urgent', '高': 'high', '中': 'medium', '低': 'low' };
+  var hit = map[alias[priority] || priority] || map.medium;
+  return mgrTag(hit[0], hit[1]);
+}
+
+export { mgrDay, mgrEsc, mgrPriorityTag, mgrTag };

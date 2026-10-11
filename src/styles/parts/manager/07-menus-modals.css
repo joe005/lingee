@@ -376,7 +376,7 @@
   font-size: 13px;
   text-align: center;
 }
-/* AI 验收开关 */
+/* 人工审核开关 */
 #view-manager .mgr-tn-review-switch {
   position: relative;
   display: inline-flex;

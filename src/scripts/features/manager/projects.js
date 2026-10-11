@@ -192,7 +192,7 @@ function syncSubtabs(showGoal) {
   $('#mgrPeInstruction').hidden = showGoal;
   document.querySelectorAll('[data-mgr-pe-subtab]').forEach(function (b) {
     b.hidden = dev && b.getAttribute('data-mgr-pe-subtab') === 'instruction';
-    if (b.getAttribute('data-mgr-pe-subtab') === 'goal') b.textContent = dev ? '描述' : '目标';
+    if (b.getAttribute('data-mgr-pe-subtab') === 'goal') b.innerHTML = dev ? '项目描述 <b aria-hidden="true">*</b>' : '目标';
     var on = (b.getAttribute('data-mgr-pe-subtab') === 'goal') === showGoal;
     b.classList.toggle('active', !dev && on);
     b.disabled = dev;
@@ -270,6 +270,7 @@ function submitProjectNew() {
   var tpl = currentTemplate();
   var dev = isDevKind();
   if (!name) { toast('请填写项目名称', 'error'); $('#mgrPeName').focus(); return; }
+  if (dev && !goal) { toast('开发类项目必须填写项目描述', 'error'); $('#mgrPeGoal').focus(); return; }
   if (dev && !repo) {
     $('#mgrPeRepoError').hidden = false;
     toast('开发类项目必须填写 Git 地址', 'error');

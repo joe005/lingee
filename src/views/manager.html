@@ -181,7 +181,7 @@
     </aside>
   </div>
 
-  <!-- 新建任务弹窗（对齐管理原型：核心信息 / 补充信息；研发任务可编辑执行阶段） -->
+  <!-- 新建任务弹窗（对齐管理原型：仅核心信息；研发任务可编辑执行阶段） -->
   <div class="sync-overlay mgr-modal" id="mgrTaskNewOverlay" style="display:none" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="mgrTnTitle">
     <div class="sync-modal mgr-tasknew-modal">
       <div class="sync-modal__header mgr-projedit-header">
@@ -191,11 +191,7 @@
         </button>
       </div>
       <div class="sync-modal__body mgr-tasknew-body">
-        <div class="mgr-tntabs" role="tablist" aria-label="新建任务页签">
-          <button type="button" class="mgr-tntab active" data-mgr-tntab="core" role="tab" aria-selected="true">核心信息</button>
-          <button type="button" class="mgr-tntab" data-mgr-tntab="extra" role="tab" aria-selected="false">补充信息</button>
-        </div>
-        <!-- 核心信息 -->
+        <!-- 新建任务只有核心信息，不再分页签 -->
         <div id="mgrTnCore">
           <div class="mgr-tn-field" id="mgrTnTypeField">
             <label>任务类型</label>
@@ -209,6 +205,7 @@
             <input type="text" id="mgrTnTitle" maxlength="80" placeholder="请输入任务名">
           </div>
           <div class="mgr-tn-field">
+            <label for="mgrTnDesc">任务描述</label>
             <textarea id="mgrTnDesc" rows="4" placeholder="说明任务背景、工作内容与期望结果。"></textarea>
             <div class="mgr-tn-desc-tools" data-mgr-tn-general-only>
               <button type="button" class="mgr-tn-tool" data-mgr-tn-tool="附件">＋ 附件</button>
@@ -242,7 +239,7 @@
             <textarea id="mgrTnAccept" rows="2" placeholder="请输入定性验收标准，例如：交付材料完整，结论清晰，并经项目负责人确认。"></textarea>
           </div>
           <!-- 研发任务：执行阶段（可编辑） -->
-          <!-- 研发任务：执行计划（对齐开发板块新建任务的执行计划表：执行阶段 / AI验收 / 执行人） -->
+          <!-- 研发任务：执行计划（对齐开发板块新建任务的执行计划表：开发阶段 / 智能体 / 人工审核 / 审核人） -->
           <div class="mgr-tn-rd" id="mgrTnRdPane" hidden>
             <div class="mgr-tn-grid">
               <div class="mgr-tn-field" id="mgrTnTeamField">
@@ -251,20 +248,20 @@
                 <p class="mgr-pe-error" id="mgrTnTeamError" hidden>请选择执行这条研发任务的智能体团队</p>
               </div>
               <div class="mgr-tn-field">
-                <label for="mgrTnFlow">开发流程 <b aria-hidden="true">*</b></label>
+                <label for="mgrTnFlow">任务类型 <b aria-hidden="true">*</b></label>
                 <select id="mgrTnFlow" disabled><option value="">请先选择智能体团队</option></select>
               </div>
             </div>
-            <div class="mgr-tn-rd-head">执行计划 <small id="mgrTnPlanHint">先选智能体团队，再按它的交付路径选择阶段</small></div>
+            <div class="mgr-tn-rd-head">开发阶段 <small id="mgrTnPlanHint"></small></div>
             <table class="mgr-tn-plan-table">
               <colgroup><col class="mgr-tn-col-index"><col><col class="mgr-tn-col-expert"><col class="mgr-tn-col-review"><col class="mgr-tn-col-owner"><col class="mgr-tn-col-action"></colgroup>
-              <thead><tr><th>序号</th><th>执行阶段</th><th>智能体</th><th>AI验收</th><th>审核人</th><th><button type="button" class="mgr-tn-plan-add" id="mgrTnStageAdd">＋ 添加节点</button></th></tr></thead>
+              <thead><tr><th>序号</th><th>执行阶段</th><th>智能体</th><th>人工审核</th><th>审核人</th><th><button type="button" class="mgr-tn-plan-add" id="mgrTnStageAdd">＋ 添加节点</button></th></tr></thead>
               <tbody id="mgrTnStages"></tbody>
             </table>
           </div>
         </div>
-        <!-- 补充信息 -->
-        <div id="mgrTnExtra" hidden>
+        <!-- 补充信息页签已去掉：这块字段不再展示，只保留 DOM 承载默认值，编辑任务时原值不被清空 -->
+        <div id="mgrTnExtra" hidden aria-hidden="true">
           <div class="mgr-tn-grid mgr-tn-general-only">
             <div class="mgr-tn-field">
               <label>父任务</label>

@@ -412,6 +412,11 @@
   margin-bottom: 8px;
   border-bottom: 1px solid var(--divider);
 }
+.mgr-scope .mgr-pe-subtab b {
+  margin-left: 2px;
+  color: var(--danger);
+  font-weight: 600;
+}
 .mgr-scope .mgr-pe-subtab[hidden] {
   display: none;
 }

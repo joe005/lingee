@@ -7,6 +7,7 @@ import {
 } from './data.js';
 import { CV_MEMBERS } from '../collab/data.js';
 import { tbTeamStages } from '../collab/tb-core.js';
+import { TEAM_STAGE_SCENARIOS } from '../expert/data.js';
 import { tkCurrentStageHandlerId, tkUpdateTask } from '../tasks-v2/data.js';
 import { startTaskStage } from '../tasks-v2/task-execution.js';
 import { defaultStageAssigneeId } from '../tasks-v2/stage-owner.js';
@@ -575,7 +576,7 @@ function renderTaskPanel() {
 /* ---------- 新建任务弹窗 ---------- */
 /* 研发任务的执行计划，对齐开发板块新建任务的执行计划表：
    执行阶段取自任务所选智能体团队的交付路径（项目不绑定团队，新建任务时选；智能体按阶段自动匹配），
-   每个节点展示执行的智能体，设置 AI 验收（默认关闭，可打开）与审核人；执行人按项目角色默认匹配。 */
+   每个节点展示执行的智能体，设置人工审核（默认勾选，可取消）与审核人；执行人按项目角色默认匹配。 */
 var draftStages = [];
 var draftTeamId = '';
 var planProject = null;
@@ -583,11 +584,11 @@ var planProject = null;
 function newStageId() {
   return typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'st-' + Math.random().toString(36).slice(2);
 }
-/* 开发流程决定阶段类型：功能开发取团队的交付范围，缺陷修复固定开发实现、测试验证 */
+/* 任务类型决定阶段：功能开发取团队的交付范围，缺陷修复固定开发实现、测试验证 */
 function flowIssueType() {
   return ($('#mgrTnFlow') || {}).value === 'bug' ? '缺陷' : '研发任务';
 }
-/* 开发流程跟着团队走：没选团队时不可选，选了团队才加载「功能开发 / 缺陷修复」，默认功能开发 */
+/* 任务类型读自智能体团队的开发流程（功能开发 / 缺陷修复）：没选团队时不可选，选了团队才加载，默认第一项 */
 function syncFlowSelect(preferred) {
   var flow = $('#mgrTnFlow');
   if (!draftTeam()) {
@@ -595,7 +596,7 @@ function syncFlowSelect(preferred) {
     flow.disabled = true;
     return;
   }
-  flow.innerHTML = '<option value="feature">功能开发</option><option value="bug">缺陷修复</option>';
+  flow.innerHTML = TEAM_STAGE_SCENARIOS.map(function (item) { return '<option value="' + mgrEsc(item.id) + '">' + mgrEsc(item.name) + '</option>'; }).join('');
   flow.value = preferred === 'bug' ? 'bug' : 'feature';
   flow.disabled = false;
 }
@@ -650,13 +651,11 @@ function renderStages() {
   var options = stageOptions(project);
   var members = mgrProjectMembers(project);
   var team = draftTeam();
-  $('#mgrTnPlanHint').textContent = team
-    ? '按「' + team.name + '」的交付路径选择阶段，智能体按阶段自动匹配'
-    : '先选择智能体团队，再按它的交付路径选择阶段';
   $('#mgrTnStageAdd').disabled = editLocked || !options.some(function (o) {
     return !draftStages.some(function (st) { return st.workType === o.name; });
   });
-  if (editLocked) $('#mgrTnPlanHint').textContent = '任务已启动，执行计划不能修改';
+  /* 平时不显示说明，只在任务已启动、阶段被锁定时提示 */
+  $('#mgrTnPlanHint').textContent = editLocked ? '任务已启动，开发阶段不能修改' : '';
   if (!draftStages.length) {
     body.innerHTML = '<tr><td colspan="6" class="mgr-tn-plan-empty">' + (team ? '还没有工作阶段。点击「＋ 添加节点」开始。' : '请先选择智能体团队，选完后加载执行阶段。') + '</td></tr>';
     return;
@@ -672,8 +671,8 @@ function renderStages() {
     return '<tr class="mgr-tn-plan-row" data-mgr-tn-stage="' + mgrEsc(st.id) + '"><td>' + String(n).padStart(2, '0') + '</td>' +
       '<td><select data-mgr-tn-stage-type="' + mgrEsc(st.id) + '" aria-label="第 ' + n + ' 执行阶段">' + opts + '</select>' +
       '</td><td>' + stageExpertsHtml(st) + '</td>' +
-      '<td><label class="mgr-tn-review-switch"><input type="checkbox" data-mgr-tn-stage-review="' + mgrEsc(st.id) + '" aria-label="第 ' + n + ' 节点 AI 验收"' +
-      (st.requiresConfirmation === false ? ' checked' : '') + '><span aria-hidden="true"></span></label></td>' +
+      '<td><label class="mgr-tn-review-switch"><input type="checkbox" data-mgr-tn-stage-review="' + mgrEsc(st.id) + '" aria-label="第 ' + n + ' 节点人工审核"' +
+      (st.requiresConfirmation === false ? '' : ' checked') + '><span aria-hidden="true"></span></label></td>' +
       '<td><select data-mgr-tn-stage-owner="' + mgrEsc(st.id) + '" aria-label="第 ' + n + ' 节点审核人">' + owners + '</select></td>' +
       '<td><button type="button" class="mgr-tn-stage-remove" data-mgr-tn-stage-remove="' + mgrEsc(st.id) + '" aria-label="移除第 ' + n + ' 节点">×</button></td></tr>';
   }).join('');
@@ -1056,7 +1055,7 @@ function initTaskNewModal() {
       return;
     }
     var reviewBox = e.target.closest('[data-mgr-tn-stage-review]');
-    if (reviewBox) { var rs = stageById(reviewBox.getAttribute('data-mgr-tn-stage-review')); if (rs) rs.requiresConfirmation = !reviewBox.checked; return; }
+    if (reviewBox) { var rs = stageById(reviewBox.getAttribute('data-mgr-tn-stage-review')); if (rs) rs.requiresConfirmation = reviewBox.checked; return; }
     var ownerSel = e.target.closest('[data-mgr-tn-stage-owner]');
     if (ownerSel) { var os = stageById(ownerSel.getAttribute('data-mgr-tn-stage-owner')); if (os) os.assigneeId = ownerSel.value; return; }
     if (e.target.matches('input[data-mgr-tn-collab]')) {
