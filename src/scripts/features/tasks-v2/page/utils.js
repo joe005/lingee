@@ -288,5 +288,6 @@ export function handleTaskCardPrimaryAction(taskId, action, trigger) {
   else if (action === 'retry') retryBlockedTask(task);
   else if (action === 'reply') { closeDrawer(); openTaskStatusConversation(task); }
   else if (action === 'artifacts') openDrawerArtifacts(task.id);
+  else if (action === 'detail' && task.status === 'in_progress') openBoardTaskSession(task);
   else openDrawer(task.id);
 }
