@@ -1,3 +1,4 @@
+import { TEAM_STAGE_SCENARIOS } from '../expert/data.js';
 import stageCurrent from '../../../assets/figma/task-list/stage-current.svg';
 import stagePending from '../../../assets/figma/task-list/stage-pending.svg';
 import stageComplete from '../../../assets/figma/task-list/stage-complete.svg';
@@ -7,6 +8,10 @@ import stageLinkComplete from '../../../assets/figma/task-list/stage-link-comple
 import moreIcon from '../../../assets/figma/task-list/more.svg';
 import { tkGetPerson, tkGetPriorityObj, tkGetProjectName, tkGetStatusObj } from './data.js';
 import { taskCardAction, taskListKind } from './list-kind.js';
+
+export function taskTypeLabel(type) {
+  return TEAM_STAGE_SCENARIOS.find(function (scenario) { return scenario.id === (type === '缺陷' ? 'bug' : 'feature'); })?.name || (type === '缺陷' ? '缺陷修复' : '功能开发');
+}
 
 /* 任务列表的共用行模板与列设置。任务页和项目详情挂载同一个列表实例，
    排序、折叠、选择、快捷新建及详情事件均由任务页的控制器处理。 */
@@ -40,7 +45,7 @@ function renderTaskListRow(t, opts, context) {
       + '<td class="tk-col-code"><span class="tk-row-code">' + context.escapeHtml(t.code) + '</span></td>'
       + '<td class="tk-col-title"' + tableIndentStyle + '><div class="tk-row-title-wrap">' + toggle + spacer + '<span class="tk-row-title-text">' + context.escapeHtml(t.title) + '</span>' + childBadge + '</div></td>'
       + '<td class="tk-col-status"><span class="tk-row-status">' + context.statusSvg(t.status) + context.escapeHtml(st.name) + '</span></td>'
-      + '<td class="tk-col-type">' + (t.issueType ? '<span class="tk-row-type" data-type="' + context.escapeHtml(t.issueType) + '">' + context.escapeHtml(t.issueType) + '</span>' : '—') + '</td>'
+      + '<td class="tk-col-type">' + (t.issueType ? '<span class="tk-row-type" data-type="' + context.escapeHtml(t.issueType) + '">' + context.escapeHtml(taskTypeLabel(t.issueType)) + '</span>' : '—') + '</td>'
       + '<td class="tk-col-priority"><span class="tk-row-priority">' + context.escapeHtml(pri.name) + '</span></td>'
       + '<td class="tk-col-assignee"><div class="tk-row-assignee">' + context.avatarSm(t.assignee) + '<span>' + context.escapeHtml(person.name) + '</span></div></td>'
       + '<td class="tk-col-project">' + context.escapeHtml(tkGetProjectName(t.project)) + '</td>'
@@ -73,7 +78,7 @@ function renderTaskListRow(t, opts, context) {
   var actionLabel = cardAction.label;
   var actionButton = '<button type="button" class="tk-list-action-btn' + (info.primary ? ' is-primary' : '') + '" data-list-task-action="' + cardAction.action + '" data-list-task-id="' + t.id + '" aria-label="' + e(info.label + '：' + t.title) + '">' + e(actionLabel) + '</button>';
   var typeTag = t.issueType
-    ? '<span class="tk-list-card-label tk-list-card-type" data-type="' + e(t.issueType) + '" title="任务类型：' + e(t.issueType) + '">' + e(t.issueType) + '</span>' : '';
+    ? '<span class="tk-list-card-label tk-list-card-type" data-type="' + e(t.issueType) + '" title="任务类型：' + e(taskTypeLabel(t.issueType)) + '">' + e(taskTypeLabel(t.issueType)) + '</span>' : '';
   var deleteShortcut = info.kind === 'review' || info.kind === 'blocked';
   var menuAttributes = ' data-card-more="' + t.id + '" aria-label="更多任务操作" aria-haspopup="menu"' + (deleteShortcut ? ' data-delete-only-menu' : '');
   var priorityTag = pri.name

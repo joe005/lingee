@@ -156,7 +156,7 @@ function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml,
     + '<div class="tk-exec-card-head tk-agent-report-head">' + (pageState.taskDetailVersion === 'latest' ? renderTaskTeamAvatarGroup(team) : '<span class="tk-exec-card-mark tk-agent-report-mark" aria-hidden="true">✦</span>') + '<div class="tk-exec-card-identity tk-agent-report-heading"><strong>' + escapeHtml(team?.name || '任务智能体团队') + '</strong>'
      + (pageState.taskDetailVersion === 'v1' ? '<span>当前阶段 · ' + escapeHtml(currentDetail) + '</span>' : '') + '</div></div>'
      + '<div class="tk-feed-stage-overview-head"><strong>执行计划</strong></div>'
-    + (latestLayout ? '<div class="tk-feed-stage-table-wrap"><table class="tk-feed-stage-table"><caption class="sr-only">执行计划</caption><colgroup><col class="tk-stage-col-mark"><col class="tk-stage-col-name"><col class="tk-stage-col-expert"><col class="tk-stage-col-assignee"><col class="tk-stage-col-state"><col class="tk-stage-col-actions"></colgroup><thead class="sr-only"><tr><th>标记</th><th>阶段</th><th>执行专家</th><th>处理人</th><th>状态</th><th>操作</th></tr></thead><tbody>' : '<ol class="tk-feed-stage-list">') + plannedStages.map(function (stage, index) {
+    + (latestLayout ? '<div class="tk-feed-stage-table-wrap"><table class="tk-feed-stage-table"><caption class="sr-only">执行计划</caption><colgroup><col class="tk-stage-col-mark"><col class="tk-stage-col-name"><col class="tk-stage-col-expert"><col class="tk-stage-col-assignee"><col class="tk-stage-col-state"><col class="tk-stage-col-actions"></colgroup><thead class="sr-only"><tr><th>标记</th><th>阶段</th><th>执行专家</th><th>处理人</th><th>状态</th><th>操作</th></tr></thead>' : '<ol class="tk-feed-stage-list">') + plannedStages.map(function (stage, index) {
       var entry = byId.get(stage.id);
       var state = entry?.state || 'pending';
       var label = state === 'done' ? '已完成' : state === 'running' ? '执行中' : state === 'review' ? '待审核' : state === 'blocked' ? '已阻塞' : index === currentIndex && task.status === 'backlog' && task.executionStageId ? '待开始' : '未开始';
@@ -169,7 +169,7 @@ function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml,
       var hasDetail = latestLayout && stageArtifacts.length > 0;
       if (!latestLayout) return '<li class="tk-feed-stage is-' + state + (isCurrent ? ' is-current' : '') + '" aria-label="' + escapeHtml(stage.name + '，处理人' + assignee + '，' + label) + '"' + (isCurrent ? ' aria-current="step"' : '') + '><span class="tk-feed-stage-mark" aria-hidden="true"></span><span class="tk-feed-stage-name">' + escapeHtml(stage.name) + '</span><span class="tk-feed-stage-assignee" title="处理人：' + escapeHtml(assignee) + '">处理人 <b>' + escapeHtml(assignee) + '</b></span><span class="tk-feed-stage-state">' + label + '</span>' + (isCurrent ? '<span class="tk-feed-stage-current-tag">当前</span>' : '') + '</li>';
       var detailHtml = hasDetail ? '<div class="tk-feed-stage-detail" id="' + detailId + '"><span class="tk-stage-artifacts-label">产物 · ' + stageArtifacts.length + '</span><div class="tk-artifacts-list">' + stageArtifacts.map(renderTaskArtifact).join('') + '</div></div>' : '';
-      return '<tr class="tk-feed-stage-row is-' + state + (isCurrent ? ' is-current' : '') + '"' + (isCurrent ? ' aria-current="step"' : '') + '>'
+      return '<tbody><tr class="tk-feed-stage-row is-' + state + (isCurrent ? ' is-current' : '') + '"' + (isCurrent ? ' aria-current="step"' : '') + '>'
         + '<td class="tk-stage-cell-mark"><span class="tk-feed-stage-mark" aria-hidden="true"></span></td>'
         + '<th scope="row" class="tk-feed-stage-main" colspan="5"><div class="tk-feed-stage-meta"><span class="tk-feed-stage-expert-content">'
           + (expert ? '<img src="' + escapeHtml(xav(expert.k)) + '" alt="">' : '<span class="tk-figma-person-avatar" aria-hidden="true">' + escapeHtml(assignee.slice(0, 1)) + '</span>')
@@ -179,8 +179,8 @@ function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml,
           + '<span class="tk-feed-stage-state">' + label + '</span></div>'
         + '<div class="tk-feed-stage-line"><span class="tk-feed-stage-name">' + escapeHtml(stage.name) + '</span></div></th>'
         + '</tr>'
-        + (detailHtml ? '<tr class="tk-feed-stage-extra is-' + state + (isCurrent ? ' is-current' : '') + '"><td colspan="6">' + detailHtml + '</td></tr>' : '');
-    }).join('') + (latestLayout ? '</tbody></table></div>' : '</ol>')
+        + (detailHtml ? '<tr class="tk-feed-stage-extra is-' + state + (isCurrent ? ' is-current' : '') + '"><td colspan="6">' + detailHtml + '</td></tr>' : '') + '</tbody>';
+    }).join('') + (latestLayout ? '</table></div>' : '</ol>')
     + (latestLayout ? '' : '<div class="tk-exec-card-feedback">' + feedback + nextAction + '</div>')
     + (latestLayout ? '' : historyButton + stageHistoryHtml) + '</section>';
 }

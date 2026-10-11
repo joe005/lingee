@@ -95,3 +95,17 @@
 /* 页面标题，与开发区列表页一致；项目详情自带标题，隐藏。 */
 #view-collab .cv-page-title{flex:none;margin:0;padding:22px 28px 0;color:var(--text);font-size:18px;font-weight:600;line-height:26px}
 #view-collab:has(#cv-members.active #cv-proj-detail:not(.hidden)) #cvPageTitle{display:none}
+
+/* 设置内容与顶部导航共用居中的内容宽度，左右留白一致。 */
+#view-collab #cv-config>.scroll {
+  box-sizing:border-box; width:100%; min-width:0; padding:24px 16px;
+}
+#view-collab #cv-config .config-layout {
+  box-sizing:border-box; width:100%; max-width:1160px; min-width:0;
+  margin-inline:auto; gap:24px;
+}
+#view-collab #cv-config .config-main { box-sizing:border-box; min-width:0; width:100%; }
+#view-collab #cv-config :is(.cv-integration-note,.cv-integration-provider,.cv-integration-empty) {
+  box-sizing:border-box; max-width:100%; overflow-wrap:anywhere;
+}
+@media(max-width:760px){#view-collab #cv-config .config-layout{gap:12px}}

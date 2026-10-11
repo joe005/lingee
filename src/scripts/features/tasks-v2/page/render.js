@@ -11,7 +11,7 @@ import { taskExecutorTeam } from '../../expert/task-team.js';
 import { renderListPageTabs } from '../../shared/list-page-tabs.js';
 import { TK_FILTER_FIELDS, TK_OPERATORS, tkCanStartTask, tkCurrentStageHandlerId, tkCurrentUserId, tkGetPriorityObj, tkGetProjectName, tkGetViews, tkProjectById } from '../data.js';
 import { taskCardAction, taskListKind } from '../list-kind.js';
-import { applyTaskListFieldSettings, taskListVisibleColumnCount } from '../list-template.js';
+import { applyTaskListFieldSettings, taskListVisibleColumnCount, taskTypeLabel } from '../list-template.js';
 import { taskViewState } from '../ui-state.js';
 import { buildTaskTree, filterListStatus, getFilteredTasks, getGroupedTasks, listStatusPool, renderListTreeNodes, renderTreeNodes } from './filters.js';
 import { render, showBoardOrList, showEmpty } from './layout.js';
@@ -118,7 +118,7 @@ export function renderCard(t, opts) {
       + '<div class="tk-card-top-row">' + toggle + boardStatus + '<div class="tk-card-code">' + escapeHtml(t.code) + (props.project && t.project ? ' · ' + escapeHtml(tkGetProjectName(t.project)) : '') + '</div>' + childBadge + '</div>'
       + '<div class="tk-card-copy"><div class="tk-card-title">' + escapeHtml(t.title) + '</div>'
       + (t.desc ? '<div class="tk-card-description" title="' + escapeHtml(t.desc) + '">' + escapeHtml(t.desc) + '</div>' : '')
-      + '</div><div class="tk-card-tags">' + (t.issueType ? '<span class="tk-card-type">' + escapeHtml(t.issueType) + '</span>' : '') + (props.priority ? '<span class="tk-card-priority" data-priority="' + escapeHtml(t.priority) + '">' + escapeHtml(pri.name) + '</span>' : '') + (props.startDate && t.startDate ? '<span class="tk-card-due">' + fmtDate(t.startDate) + '</span>' : '') + '</div>'
+      + '</div><div class="tk-card-tags">' + (t.issueType ? '<span class="tk-card-type">' + escapeHtml(taskTypeLabel(t.issueType)) + '</span>' : '') + (props.priority ? '<span class="tk-card-priority" data-priority="' + escapeHtml(t.priority) + '">' + escapeHtml(pri.name) + '</span>' : '') + (props.startDate && t.startDate ? '<span class="tk-card-due">' + fmtDate(t.startDate) + '</span>' : '') + '</div>'
       + '<div class="tk-card-foot"><div class="tk-card-foot-left">' + teamAvatarHtml + '<span class="tk-card-stage">' + escapeHtml(currentStage?.name || '等待安排') + '</span></div><div class="tk-card-foot-actions">' + (boardAction || '<span class="tk-card-running-hint">' + escapeHtml(cardState.hint) + '</span>') + '</div></div></div>';
   }
   return '<div class="tk-card' + sel + extraCls + '" draggable="true" data-task-id="' + t.id + '">'

@@ -51,12 +51,12 @@
 #tkDrawer.tk-drawer--latest .tk-exec-card-head{padding-bottom:16px;border-bottom:1px solid var(--divider)}
 #tkDrawer.tk-drawer--latest .tk-exec-card-identity{margin-left:auto;text-align:right}
 #tkDrawer.tk-drawer--latest .tk-feed-stage-overview-head{padding:16px 0;font-size:14px}
-#tkDrawer.tk-drawer--latest .tk-feed-stage-table{display:block;border-spacing:0}
-#tkDrawer.tk-drawer--latest .tk-feed-stage-table tbody{display:flex;flex-direction:column;gap:12px;padding-left:20px}
+#tkDrawer.tk-drawer--latest .tk-feed-stage-table{display:flex;flex-direction:column;gap:16px;border-spacing:0}
+#tkDrawer.tk-drawer--latest .tk-feed-stage-table tbody{display:flex;flex-direction:column;gap:12px;padding-left:24px}
 #tkDrawer.tk-drawer--latest .tk-feed-stage-row{position:relative;display:grid;grid-template-columns:minmax(0,1fr);align-items:center;min-height:76px;border:1px solid transparent;border-radius:16px;background:var(--fill-2)}
 #tkDrawer.tk-drawer--latest .tk-feed-stage-row.is-current{border-color:var(--brand)}
 #tkDrawer.tk-drawer--latest .tk-feed-stage-row :is(th,td){display:block;border:0;background:transparent;padding:12px;height:auto;border-radius:0}
-#tkDrawer.tk-drawer--latest .tk-feed-stage-row .tk-stage-cell-mark{position:absolute;left:-28px;top:20px;padding:0}
+#tkDrawer.tk-drawer--latest .tk-feed-stage-row .tk-stage-cell-mark{position:absolute;left:calc(8px - 24px - 1px);top:20px;width:10px;padding:0;transform:translateX(-50%)}
 #tkDrawer.tk-drawer--latest .tk-feed-stage-main{display:flex;flex-direction:column;gap:8px}
 #tkDrawer.tk-drawer--latest .tk-feed-stage-meta{order:-1;margin:0;font-size:16px;color:var(--text)}
 #tkDrawer.tk-drawer--latest .tk-feed-stage-name{font-size:14px;color:var(--text)}
@@ -89,7 +89,7 @@
 /* 执行计划：人员、角色与状态在首行，阶段名称在第二行。 */
 #tkDrawer.tk-drawer--latest .tk-feed-stage-table tbody { position:relative; gap:16px; }
 #tkDrawer.tk-drawer--latest .tk-feed-stage-table tbody::before {
-  content:''; position:absolute; left:8px; top:24px; bottom:24px; width:1px; background:var(--border);
+  content:''; position:absolute; left:8px; top:calc(20px + 1px + 5px); bottom:calc(-16px - 20px - 1px - 5px); width:1px; transform:translateX(-50%); background:var(--border);
 }
 #tkDrawer.tk-drawer--latest .tk-stage-cell-mark::after { display:none; }
 #tkDrawer.tk-drawer--latest .tk-feed-stage-row { background:var(--canvas-bg); }
@@ -165,3 +165,7 @@
 #niuCreateOverlay .niu-stage-expert{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:999px;background:var(--brand-fill);color:var(--brand);font-size:12px;line-height:1;white-space:nowrap}
 #niuCreateOverlay .niu-stage-expert--empty{background:var(--fill-1);color:var(--text-secondary)}
 @media(max-width:640px){#niuCreateOverlay .niu-create-card .niu-create-properties{grid-template-columns:1fr}#niuCreateOverlay .niu-col-expert{width:140px}}
+
+
+/* 每组只连接下一阶段，最后一个圆点下不延伸连接线。 */
+#tkDrawer.tk-drawer--latest .tk-feed-stage-table tbody:last-of-type::before { display:none; }
