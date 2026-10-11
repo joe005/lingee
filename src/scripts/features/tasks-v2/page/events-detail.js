@@ -10,7 +10,7 @@ import { render } from './layout.js';
 import { closeMentionPanel, createMentionPanel, insertMention, setMentionIndex } from './mention.js';
 import { pageState } from './page-state.js';
 import { TASK_START_LEGACY_KEY, els, renderTaskStartAction, state } from './state.js';
-import { closeDrawer, openDrawer, taskCommentTimestamp } from './subtasks.js';
+import { closeDrawer, jumpFloatingDrawerToDev, openDrawer, taskCommentTimestamp } from './subtasks.js';
 import { chooseFirstAssignee, confirmDeleteTask, escapeHtml, filterAssigneeOptions, handleTaskHeaderAction, openMyTaskSession, openTaskConversationWithTask, retryBlockedTask, showCardMenu, startTaskExecution, viewBlockedTaskSession } from './utils.js';
 /* 任务页 · 事件绑定 · 详情面板、评论 @ 提及、属性区（拆分自 tasks-v2/index.js，逻辑未改） */
 export function bindDetailEvents() {
@@ -74,6 +74,7 @@ export function bindDetailEvents() {
   if (els.tkDrawerChat) {
     els.tkDrawerChat.addEventListener('click', function () {
       if (!state.drawerTaskId) return;
+      if (pageState.drawerFloating) { jumpFloatingDrawerToDev(state.drawerTaskId); return; }
       if (pageState.taskDetailVersion === 'v1') openTaskConversationWithTask(state.drawerTaskId, 'start', true);
       else handleTaskHeaderAction();
     });

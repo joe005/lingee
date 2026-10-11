@@ -41,7 +41,7 @@ import { openDrawer } from './page/subtasks.js';
    - page/events.js：事件绑定入口
    对外接口保持从本文件导出，调用方不用改。 */
 export { tkOpenProjectTaskCreate, tkSetProjectListMode } from './page/layout.js';
-export { openTaskDetail, openTaskDetailFromSession } from './page/subtasks.js';
+export { openTaskDetail, openTaskDetailFloating, openTaskDetailFromSession } from './page/subtasks.js';
 export { startTaskExecutionFromSession } from './page/utils.js';
 /* ---------- 初始化 ---------- */
 var taskDataRenderQueued = false;

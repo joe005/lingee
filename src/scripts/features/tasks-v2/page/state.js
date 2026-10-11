@@ -1,4 +1,4 @@
-import { TK_PEOPLE, tkGetTasks, tkGetViews, tkIsMyStageDone, tkProjectsForCurrentUser } from '../data.js';
+import { TK_PEOPLE, tkCanViewTask, tkCurrentStageHandlerId, tkCurrentUserId, tkGetTasks, tkGetViews, tkIsMyStageDone, tkProjectsForCurrentUser } from '../data.js';
 import { taskListKind, taskNeedsMyAction } from '../list-kind.js';
 import { taskViewState } from '../ui-state.js';
 import { pageState } from './page-state.js';
@@ -60,6 +60,15 @@ export var TASK_START_PLAY_ICON = '<svg width="16" height="16" viewBox="0 0 24 2
 export var TASK_START_CHAT_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>';
 pageState.taskStartLegacy = false;
 
+/* 管理板块侧滑打开的详情：项目成员能看到项目内所有任务；只有当前阶段轮到自己时才保留执行操作，其余只读。 */
+export function drawerCanView(task) {
+  if (!task) return false;
+  if (tkCanViewTask(task)) return true;
+  return !!pageState.drawerFloating && tkProjectsForCurrentUser().some(function (project) { return project.id === task.project; });
+}
+export function drawerViewOnly() { return !!pageState.drawerFloating; }
+function drawerIsMine(task) { return !!task && tkCurrentStageHandlerId(task) === tkCurrentUserId(); }
+
 /* 详情主操作与列表卡片同一口径：只有轮到当前登录人时才出现，操作按任务状态变化。 */
 export function taskHeaderAction(task) {
   if (!task) return null;
@@ -85,7 +94,10 @@ export function renderTaskStartAction() {
   if (!button) return;
   if (pageState.taskDetailVersion === 'latest') {
     var task = tkGetTasks().find(function (row) { return row.id === state.drawerTaskId; });
+    var viewOnly = drawerViewOnly();
     var action = taskHeaderAction(task);
+    /* 管理板块里只读：轮到自己的任务保留一个按钮，点击跳到开发页签处理；不是自己阶段的不出按钮 */
+    if (viewOnly) action = action && drawerIsMine(task) ? {label:'在开发页签处理', action:'jump-dev'} : null;
     placeTaskActionButton(button, !!task);
     var deleteButton = els.tkDrawerFoot.querySelector('[data-detail-footer-delete]');
     if (!deleteButton) {
@@ -94,7 +106,9 @@ export function renderTaskStartAction() {
     var editable = task && ['backlog','planned'].includes(task.status)
       && ['backlog','planned'].includes(task.initialStatus || task.status)
       && !(task.statusHistory || []).some(function (change) { return !['backlog','planned'].includes(change.from) || !['backlog','planned'].includes(change.to); });
-    els.tkDrawerFoot.querySelector('[data-detail-footer-edit]').hidden = !editable;
+    els.tkDrawerFoot.querySelector('[data-detail-footer-edit]').hidden = !editable || viewOnly;
+    if (deleteButton || els.tkDrawerFoot.querySelector('[data-detail-footer-delete]')) els.tkDrawerFoot.querySelector('[data-detail-footer-delete]').hidden = viewOnly;
+    els.tkDrawer.classList.toggle('tk-drawer--viewonly', viewOnly);
     button.hidden = !action;
     if (!action) return;
     button.dataset.taskAction = action.action;

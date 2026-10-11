@@ -1,4 +1,6 @@
 import { toast } from '../../../core/toast.js';
+import { setNavActive, showView } from '../../../core/view.js';
+import { setChannel } from '../../sidebar.js';
 import { createDeliveryActivity } from '../../collab/delivery-activity.js';
 import { EX, EXPERTS, xav } from '../../expert/data.js';
 import { taskExecutorTeam } from '../../expert/task-team.js';
@@ -10,7 +12,7 @@ import { tkGetMySessions, tkTaskSessionTitle } from '../task-sessions.js';
 import { closeDocPreview, closeTaskLabelPicker, propPicker, renderDocPreviewPanel, renderTaskArtifact, renderTaskLabelTrigger, syncDrawerClickaway } from './detail-panel.js';
 import { closeMentionPanel } from './mention.js';
 import { pageState } from './page-state.js';
-import { els, renderTaskStartAction, state, subtaskSectionExpanded } from './state.js';
+import { drawerCanView, els, renderTaskStartAction, state, subtaskSectionExpanded } from './state.js';
 import { escapeHtml, statusSvg } from './utils.js';
 /* 任务页 · 详情面板的子任务区与活动记录（拆分自 tasks-v2/index.js，逻辑未改） */
 /* ---------- 子任务区域渲染（参考 Multica ProgressRing + ChevronDown） ---------- */
@@ -404,11 +406,40 @@ export function taskCommentTimestamp() {
 export function openTaskDetail(taskId) { openDrawer(Number(taskId)); }
 export function openTaskDetailFromSession(taskId) { openDrawer(Number(taskId)); }
 
+/* 管理板块等其他页面：任务页不可见时，把详情抽屉临时挂到 body 上侧滑展开，关闭后放回任务页。 */
+export function openTaskDetailFloating(taskId) {
+  var drawer = els.tkDrawer, away = els.tkDrawerClickaway;
+  if (!pageState.drawerHome && drawer.parentElement && drawer.parentElement.id !== 'chatDocViewerBody' && drawer.parentElement !== document.body) {
+    pageState.drawerHome = { parent: drawer.parentElement, next: drawer.nextSibling, awayParent: away.parentElement, awayNext: away.nextSibling };
+    document.body.appendChild(away);
+    document.body.appendChild(drawer);
+  }
+  pageState.drawerFloating = true;
+  openDrawer(Number(taskId));
+}
+/* 管理板块只读详情里的唯一按钮：放回任务页，切到开发页签并打开同一条任务，业务操作在那边做。 */
+export function jumpFloatingDrawerToDev(taskId) {
+  restoreDrawerHome();
+  setChannel('dev');
+  showView('tasks');
+  setNavActive('任务');
+  openDrawer(taskId);
+}
+function restoreDrawerHome() {
+  var home = pageState.drawerHome;
+  pageState.drawerFloating = false;
+  els.tkDrawer.classList.remove('tk-drawer--viewonly');
+  if (!home) return;
+  pageState.drawerHome = null;
+  home.parent.insertBefore(els.tkDrawer, home.next && home.next.parentNode === home.parent ? home.next : null);
+  home.awayParent.insertBefore(els.tkDrawerClickaway, home.awayNext && home.awayNext.parentNode === home.awayParent ? home.awayNext : null);
+}
+
 export function openDrawer(taskId) {
   closeTaskLabelPicker();
   var t = tkGetTasks().find(function (x) { return x.id === taskId; });
   if (!t) return;
-  if (!tkCanViewTask(t)) { toast('未参与该任务，无法查看', 'warning'); return; }
+  if (!drawerCanView(t)) { toast('未参与该任务，无法查看', 'warning'); return; }
   pageState.lastOpenedTaskId = taskId;
   if (pageState.flowAssigneeDraft.taskId !== taskId) {
     var savedAssignee = tkPeopleInProject(t.project).some(function (person) { return person.id === t.flowAssignee; }) ? t.flowAssignee : '';
@@ -563,10 +594,12 @@ export function closeDrawer() {
     els.tkSplitEmpty.classList.remove('hidden');
     els.tkListBody.querySelectorAll('tr.detail-active').forEach(function (row) { row.classList.remove('detail-active'); });
     state.drawerTaskId = null;
+    restoreDrawerHome();
     return;
   }
   pageState.drawerCloseTimer = setTimeout(function () {
     els.tkDrawer.classList.add('hidden');
+    restoreDrawerHome();
   }, 250);
   state.drawerTaskId = null;
 }

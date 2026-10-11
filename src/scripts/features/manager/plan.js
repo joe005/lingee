@@ -11,7 +11,7 @@ import { TEAM_STAGE_SCENARIOS } from '../expert/data.js';
 import { tkCurrentStageHandlerId, tkUpdateTask } from '../tasks-v2/data.js';
 import { startTaskStage } from '../tasks-v2/task-execution.js';
 import { defaultStageAssigneeId } from '../tasks-v2/stage-owner.js';
-import { openTaskDetail } from '../tasks-v2/index.js';
+import { openTaskDetailFloating } from '../tasks-v2/index.js';
 import { mgrDateGet, mgrDateSet } from './datepicker.js';
 import { mgrDay, mgrEsc } from './utils.js';
 /* 管理 · 项目详情「计划与任务」：状态筛选、列表 / 里程碑 / 甘特图三种视图、
@@ -547,11 +547,16 @@ function taskPanelHtml(task) {
     '<div class="mgr-tp-foot"><button type="button" class="mgr-btn mgr-btn--ghost" data-mgr-tp-edit>编辑</button>' +
     '<div class="mgr-tp-more"><button type="button" class="mgr-tp-more-btn" data-mgr-tp-more aria-haspopup="menu" aria-expanded="false" aria-label="更多操作">···</button>' +
     '<div class="mgr-tp-more-menu" role="menu" hidden>' +
-    (mgrIsDevTask(task) ? '<button type="button" role="menuitem" data-mgr-task-open="' + id + '">在开发板块打开任务</button>' : '') +
     '<button type="button" role="menuitem" data-mgr-task-issue="' + id + '">升级为议题</button>' +
     deleteMenuItem(task, id) + '</div></div></div>';
 }
 function openTaskPanel(id) {
+  var devTask = mgrTaskById(id);
+  if (devTask && mgrIsDevTask(devTask)) {
+    closeTaskPanel();
+    openTaskDetailFloating(devTask.id);
+    return;
+  }
   openTaskId = String(id);
   renderTaskPanel();
 }
@@ -1136,14 +1141,6 @@ export function initManagerPlan() {
       }
       openRowMenu = null;
       rerenderPlan();
-      return;
-    }
-    var openBtn = t.closest('[data-mgr-task-open]');
-    if (openBtn) {
-      openRowMenu = null;
-      rerenderPlan();
-      var devTask = mgrTaskById(openBtn.getAttribute('data-mgr-task-open'));
-      if (devTask && mgrIsDevTask(devTask)) { closeTaskPanel(); openTaskDetail(devTask.id); }
       return;
     }
     var perm = t.closest('[data-mgr-session-perm]');

@@ -9,7 +9,7 @@ import { taskNeedsMyAction } from '../list-kind.js';
 import { updateFilterButton } from './menus.js';
 import { pageState } from './page-state.js';
 import { applyListFieldSettings, latestListFieldVisibility, renderBoard, renderFilterChips, renderList, renderViewBar } from './render.js';
-import { LIST_FIELDS, els, persistViewState, state } from './state.js';
+import { LIST_FIELDS, drawerCanView, els, persistViewState, state } from './state.js';
 import { closeDrawer, openDrawer } from './subtasks.js';
 /* 任务页 · 空状态、布局切换、批量栏、全选、项目内列表模式、显示设置选项（拆分自 tasks-v2/index.js，逻辑未改） */
 /* ---------- 渲染：空状态 / 布局切换 / 批量栏 / 全选 ---------- */
@@ -34,7 +34,7 @@ export function render() {
   });
   if (state.drawerTaskId) {
     var openTask = tkGetTasks().find(function (item) { return item.id === state.drawerTaskId; });
-    if (!tkCanViewTask(openTask)) closeDrawer();
+    if (!drawerCanView(openTask)) closeDrawer();
   }
   var split = state.viewMode === 'split';
   if (split) state.layout = 'list';

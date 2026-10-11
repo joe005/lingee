@@ -616,5 +616,5 @@ export function applyDrawerWidth() {
   setDrawerWidth(pageState.drawerPreferredWidth || Math.min(640, window.innerWidth * .75), false);
 }
 export function syncDrawerClickaway() {
-  els.tkDrawerClickaway.classList.toggle('hidden', state.viewMode !== 'slide' || !els.tkDrawer.classList.contains('show'));
+  els.tkDrawerClickaway.classList.toggle('hidden', (state.viewMode !== 'slide' && !pageState.drawerFloating) || !els.tkDrawer.classList.contains('show'));
 }

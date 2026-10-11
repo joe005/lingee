@@ -248,3 +248,10 @@
 #tkDrawer.tk-drawer--latest .tk-drawer-foot { border-top:0; }
 
 #niuCreateOverlay .niu-create-stage-table .niu-plan-empty { background:transparent; border:0; }
+
+/* 管理板块侧滑打开的详情，不是自己阶段的任务只读：属性、标题、描述、附件和更多操作都不可点 */
+.tk-drawer--viewonly #tkDrawerMore,
+.tk-drawer--viewonly .tk-prop-row,
+.tk-drawer--viewonly .tk-attach-dropzone,
+.tk-drawer--viewonly [data-field="title"],
+.tk-drawer--viewonly [data-field="desc"]{pointer-events:none}
