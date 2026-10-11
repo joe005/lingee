@@ -80,7 +80,7 @@
 #cv-tasks-current .tk-list-stage-step:last-of-type { flex:0 0 14px; }
 #cv-tasks-current .tk-list-stage-step::after { display:none; }
 #cv-tasks-current .tk-list-stage-count { display:block; margin-left:8px; color:var(--text-secondary); font-size:12px; line-height:18px; font-weight:400; }
-#cv-tasks-current .tk-list-stage { overflow:auto; scrollbar-width:thin; }
+#cv-tasks-current .tk-list-stage { overflow-x:auto; overflow-y:hidden; padding:4px 0; scrollbar-width:thin; }
 @media(max-width:900px) {
   #cv-tasks-current .tk-list-card { grid-template-columns:minmax(0,1fr) auto; }
   #cv-tasks-current .tk-list-stage { display:none; }

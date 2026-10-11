@@ -977,13 +977,30 @@ export function tkPruneOrphanTasks(projectIds) {
 }
 /* 已完成演示任务只补充一次，用户删除后不自动恢复。 */
 export function tkEnsureCompletedDemoTask() {
+  // 旧完成样本只配置了部署交付；按所属团队补齐整个已完成路径。
+  var demoPlanChanged = false;
+  _tasks.filter(function (task) { return task.demoCompletedExample && task.executionPlan?.length === 1 && task.executionPlan[0].id === 'demo-completed-delivery'; }).forEach(function (task) {
+    var demoProject = CV_PROJECTS.find(function (row) { return row.id === task.project; });
+    var teamId = task.teamId || demoProject?.defaultTeam;
+    migrateDeliveryPlan(task, teamId);
+    if (task.executionPlan.length > 1) {
+      task.executionPlan = task.executionPlan.map(function (stage) { return {...stage, assigneeId:stage.assigneeId || task.assignee, status:'done'}; });
+      task.executionStageId = task.executionPlan[task.executionPlan.length - 1].id;
+      demoPlanChanged = true;
+    }
+  });
+  if (demoPlanChanged) persistTasks();
   var personId = tkCurrentUserId();
   var project = tkProjectsForCurrentUser().find(function (row) { return row.demoSeed; }) || tkProjectsForCurrentUser()[0];
   if (!personId || !project) return;
   var key = 'lingee_completed_demo_v1_' + project.id;
   try { if (localStorage.getItem(key)) return; } catch (e) { return; }
   if (!_tasks.some(function (task) { return task.demoCompletedExample && task.project === project.id; })) {
-    tkAddTask({ title:'客服工单查询与验收', desc:'完成客服工单查询、状态筛选及详情展示，已通过功能验证并交付。', issueType:'需求', status:'done', priority:'medium', project:project.id, assignee:personId, createdBy:personId, teamId:project.defaultTeam || '', demoCompletedExample:true, planStatus:'confirmed', executionStageId:'demo-completed-delivery', executionPlan:[{id:'demo-completed-delivery',workType:'部署交付',title:'部署交付',status:'done',assigneeId:personId,requiresConfirmation:false}], labels:[] });
+    var completedDemo = tkAddTask({ title:'客服工单查询与验收', desc:'完成客服工单查询、状态筛选及详情展示，已通过功能验证并交付。', issueType:'需求', status:'done', priority:'medium', project:project.id, assignee:personId, createdBy:personId, teamId:project.defaultTeam || '', demoCompletedExample:true, planStatus:'confirmed', executionStageId:'demo-completed-delivery', executionPlan:[{id:'demo-completed-delivery',workType:'部署交付',title:'部署交付',status:'done',assigneeId:personId,requiresConfirmation:false}], labels:[] });
+    migrateDeliveryPlan(completedDemo, completedDemo.teamId);
+    completedDemo.executionPlan = completedDemo.executionPlan.map(function (stage) { return {...stage, assigneeId:personId, status:'done'}; });
+    completedDemo.executionStageId = completedDemo.executionPlan[completedDemo.executionPlan.length - 1].id;
+    persistTasks();
   }
   try { localStorage.setItem(key, '1'); } catch (e) { /* 标记不可写时由任务标识去重 */ }
 }

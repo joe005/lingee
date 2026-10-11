@@ -138,11 +138,11 @@
 #niuCreateOverlay .niu-create-form{display:flex;flex-direction:column;gap:16px;padding:16px 24px 20px}
 #niuCreateOverlay .niu-create-form .niu-create-writing{display:flex;flex-direction:column;gap:16px;padding:0}
 #niuCreateOverlay .niu-create-form .niu-create-writing>.niu-field{grid-column:auto;order:0}
-#niuCreateOverlay .niu-create-form .niu-field>span{font-size:14px;font-weight:600;color:var(--text)}
+#niuCreateOverlay .niu-create-form .niu-field>span{font-size:14px;font-weight:400;color:var(--text-secondary)}
 #niuCreateOverlay .niu-create-form .niu-create-writing .niu-field :is(input,textarea){font-size:14px;border-radius:12px}
 #niuCreateOverlay .niu-create-form .niu-create-writing .niu-field textarea{height:120px;min-height:96px}
 #niuCreateOverlay .niu-create-card{display:flex;flex-direction:column;gap:12px;padding:16px 16px 12px;border:1px solid var(--border);border-radius:16px;background:var(--bg)}
-#niuCreateOverlay .niu-create-card .niu-create-properties{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 16px;padding:0;border:0;background:transparent}
+#niuCreateOverlay .niu-create-card .niu-create-properties{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 16px;padding:0;border:0;background:transparent}
 #niuCreateOverlay .niu-create-card .niu-create-properties>.niu-field{order:0;gap:8px}
 #niuCreateOverlay .niu-create-card .niu-create-properties .niu-field :is(select,.niu-person-trigger){height:40px;min-height:40px;border-radius:12px;font-size:14px}
 #niuCreateOverlay .niu-create-section--plan{margin:0;padding:0;border:0}
@@ -190,3 +190,59 @@
 #tkDrawer.tk-drawer--latest .tk-feed-activity-block { padding:0; border:0; border-radius:0; }
 #tkDrawer.tk-drawer--latest .tk-feed-activity-toggle:not(.tk-feed-activity-more) svg { order:1; }
 #tkDrawer.tk-drawer--latest .tk-feed-activity-rows { padding:12px; border:1px solid var(--border); border-radius:20px; }
+
+/* Figma 243:40321 / 304:82990：执行计划区域。 */
+#tkDrawer.tk-drawer--latest .tk-exec-card { margin-left:12px; padding:12px; }
+#tkDrawer.tk-drawer--latest .tk-exec-card-head { min-height:32px; padding-bottom:12px; border-bottom:1px dashed var(--border); }
+#tkDrawer.tk-drawer--latest .tk-exec-team-avatars { min-height:32px; padding-right:6px; }
+#tkDrawer.tk-drawer--latest .tk-exec-team-avatars img,
+#tkDrawer.tk-drawer--latest .tk-exec-team-avatars-more { width:32px; height:32px; margin-right:-6px; border-radius:50%; background:var(--canvas-bg); }
+#tkDrawer.tk-drawer--latest .tk-exec-team-avatars-more { color:var(--text); font-size:14px; font-weight:500; }
+#tkDrawer.tk-drawer--latest .tk-exec-card-identity strong { font-size:14px; font-weight:500; }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-overview-head { margin:0; border-top:0; padding:12px 0 8px; color:var(--text-secondary); font-size:14px; line-height:22px; }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-overview-head strong { font-weight:400; }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-table tbody { padding-left:36px; }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-table tbody::before { left:19px; top:27px; bottom:calc(-16px - 27px); }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-row { min-height:74px; }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-row .tk-stage-cell-mark { left:calc(19px - 36px - 1px); top:22px; }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-main { gap:4px; }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-expert-content { gap:6px; }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-expert-content strong { font-size:16px; line-height:24px; color:var(--text-title); }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-role { font-size:14px; line-height:22px; }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-row .tk-feed-stage-mark { box-sizing:border-box; width:10px; height:10px; border:2px solid var(--border-hover); background:var(--bg); }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-row.is-current .tk-feed-stage-mark { border-color:var(--brand); background:var(--bg); }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-row.is-done .tk-feed-stage-mark { border-color:var(--success); background:var(--bg); }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-row.is-blocked .tk-feed-stage-mark { border-color:var(--danger); background:var(--bg); }
+
+/* 新建任务控件交互：沿用现行共享选择器和按钮状态。 */
+#niuCreateOverlay .niu-field :is(input:not([type=hidden]),textarea,select,.niu-person-trigger,.niu-select-trigger):not(:disabled):hover,
+#niuCreateOverlay .niu-stage-owner:not(:disabled):hover { border-color:var(--border-hover); background:var(--bg); }
+#niuCreateOverlay .niu-field :is(input:not([type=hidden]),textarea,select,.niu-person-trigger,.niu-select-trigger):not(:disabled):focus,
+#niuCreateOverlay .niu-field :is(.niu-person-trigger,.niu-select-trigger)[aria-expanded=true],
+#niuCreateOverlay .niu-stage-owner:not(:disabled):focus-visible,
+#niuCreateOverlay .niu-stage-owner[aria-expanded=true] { border-color:var(--brand); outline:none; box-shadow:none; background:var(--bg); }
+#niuCreateOverlay .niu-field .niu-invalid:not(:disabled):is(:hover,:focus) { border-color:var(--danger); }
+#niuCreateOverlay :is(.niu-button,.niu-icon-button,.niu-create-mode button,#niuSmartBackHead):not(:disabled):hover { background:var(--hover); }
+#niuCreateOverlay :is(.niu-button,.niu-icon-button,.niu-create-mode button,#niuSmartBackHead):not(:disabled):active { background:var(--active); }
+#niuCreateOverlay .niu-button-primary:not(:disabled):hover { background:var(--brand-hover); border-color:var(--brand-hover); }
+#niuCreateOverlay .niu-button-primary:not(:disabled):active { background:var(--brand-active); border-color:var(--brand-active); }
+#niuCreateOverlay :is(.niu-button,.niu-icon-button,.niu-create-mode button,#niuSmartBackHead):focus-visible { outline:2px solid var(--focus-ring); outline-offset:2px; }
+#niuCreateOverlay .niu-stage-remove:not(:disabled):hover { background:var(--danger-bg); }
+#niuCreateOverlay .niu-stage-remove:not(:disabled):active { background:var(--danger-bg); }
+
+/* 阶段正文不继承历史粗体，状态标签按对应语义着色。 */
+#tkDrawer.tk-drawer--latest .tk-feed-stage-main { font-weight:400; gap:6px; }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-line .tk-feed-stage-name { font-size:14px; font-weight:400; line-height:22px; }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-row.is-done .tk-feed-stage-state { color:var(--success); background:var(--success-bg); }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-row.is-review .tk-feed-stage-state { color:var(--warning); background:var(--warning-bg); box-shadow:none; }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-row.is-blocked .tk-feed-stage-state { color:var(--danger); background:var(--danger-bg); box-shadow:none; }
+
+#tkDrawer.tk-drawer--latest .tk-feed-stage-detail .tk-artifact-type { display:none; }
+
+/* 操作记录对齐 Figma：纯文本行与无分割线底部。 */
+#tkDrawer.tk-drawer--latest .tk-feed-activity-lead { display:none; }
+#tkDrawer.tk-drawer--latest .tk-feed-activity-rows { gap:8px; }
+#tkDrawer.tk-drawer--latest .tk-feed-activity-row { gap:8px; line-height:18px; }
+#tkDrawer.tk-drawer--latest .tk-feed-activity-row strong { color:var(--text); font-weight:500; }
+#tkDrawer.tk-drawer--latest .tk-feed-activity-row time { color:var(--text-secondary); }
+#tkDrawer.tk-drawer--latest .tk-drawer-foot { border-top:0; }

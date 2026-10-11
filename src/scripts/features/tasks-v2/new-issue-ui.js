@@ -462,8 +462,8 @@ function renderPlan() {
       const expertCell = '<div class="niu-stage-experts">' + (experts.length
         ? experts.map(id => '<span class="niu-stage-expert" title="由智能体执行">✦ ' + escapeHtml(EX[id].name) + '</span>').join('')
         : '<span class="niu-stage-expert niu-stage-expert--empty">未匹配智能体</span>') + '</div>';
-      const stageRemove = locked ? '' : '<button type="button" class="niu-stage-remove" data-niu-remove="' + escapeHtml(stage.id) + '" aria-label="移除第 ' + (index + 1) + ' 节点">×</button>';
-      return '<tr class="niu-stage-row" data-niu-stage="' + escapeHtml(stage.id) + '"><td class="niu-stage-index">' + String(index + 1).padStart(2, '0') + '</td><td><select data-niu-work-type="' + escapeHtml(stage.id) + '" class="niu-stage-select" aria-label="第 ' + (index + 1) + ' 执行阶段"' + disabled + '>' + options + '</select></td><td>' + expertCell + '</td><td class="niu-stage-review-cell">' + reviewMode + '</td><td>' + owner + '</td><td>' + stageRemove + '</td></tr>';
+      const stageRemove = locked ? '' : '<button type="button" class="niu-stage-remove" data-niu-remove="' + escapeHtml(stage.id) + '" aria-label="移除第 ' + (index + 1) + ' 节点"><img src="' + stageTrashIcon + '" width="16" height="16" alt=""></button>';
+      return '<tr class="niu-stage-row" data-niu-stage="' + escapeHtml(stage.id) + '"><td class="niu-stage-index">' + String(index + 1) + '</td><td><select data-niu-work-type="' + escapeHtml(stage.id) + '" class="niu-stage-select" aria-label="第 ' + (index + 1) + ' 执行阶段"' + disabled + '>' + options + '</select></td><td>' + expertCell + '</td><td class="niu-stage-review-cell">' + reviewMode + '</td><td>' + owner + '</td><td>' + stageRemove + '</td></tr>';
     }
     return '<div class="niu-stage" data-niu-stage="' + escapeHtml(stage.id) + '"><span class="niu-stage-index">' + String(index + 1) + '</span>' + fields + completion + remove + '</div>';
   }).join('') : (activePlanScope === 'create' ? '<tr><td colspan="6" class="niu-plan-empty">' + (taskTeamOf(task) ? '还没有工作阶段。点击「＋ 添加节点」开始。' : '请先选择智能体团队，选完后加载开发阶段。') + '</td></tr>' : '<div class="niu-plan-empty">还没有工作阶段。添加阶段后可直接在分录中编辑。</div>');
@@ -529,7 +529,7 @@ function savePlan(confirm) {
   toast(confirm ? '执行计划已确认' : '执行计划已保存', 'success');
 }
 
-function initCreateSelects(selects = [byId('niuTeam'), byId('niuType')]) {
+function initCreateSelects(selects = [byId('niuTeam'), byId('niuType'), byId('niuPriority')]) {
   const caret = byId('niuProjectTrigger').querySelector('.niu-person-chevron');
   if (caret) caret.outerHTML = niuSelectCaret;
   initSelectDropdowns(selects, closeProjectPopup);
@@ -647,5 +647,5 @@ export function initNewIssueUI(renderCallback, detailCallback) {
     else if (!byId('niuProjectPopup').hidden) closeProjectPopup();
     else if (!byId('niuCreateOverlay').hidden || !byId('niuPlanOverlay').hidden) requestCloseOverlays();
   });
-  [byId('niuCreateOverlay'), byId('niuPlanOverlay')].forEach(overlay => overlay.addEventListener('click', event => { if (event.target === overlay) requestCloseOverlays(); }));
+  byId('niuPlanOverlay').addEventListener('click', event => { if (event.target === event.currentTarget) requestCloseOverlays(); });
 }

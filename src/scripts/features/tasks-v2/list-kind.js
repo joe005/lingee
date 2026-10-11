@@ -33,7 +33,8 @@ export function taskListKind(task) {
   }
   if (status === 'in_progress' && taskConversationNeedsReply(task, true)) {
     var question = taskConversationQuestion(task);
-    return { kind:'question', badge:'待回答', hint:'AI 正在等你回答' + (question ? '：' + question : ''), action:mine ? 'reply' : 'detail', label:mine ? '回答提问' : '查看详情', primary:mine, needsMe:mine };
+    var canReply = mine || taskConversationNeedsReply(task);
+    return { kind:'question', badge:'待回答', hint:'AI 正在等你回答' + (question ? '：' + question : ''), action:canReply ? 'reply' : 'detail', label:canReply ? '回复问题' : '查看会话', primary:canReply, needsMe:canReply };
   }
   if (status === 'blocked') {
     var blockedHint = (quoted ? quoted + '执行受阻' : '执行受阻') + (reason ? '：' + reason : '');
@@ -45,7 +46,7 @@ export function taskListKind(task) {
     return { kind:status === 'in_review' ? 'review' : 'waiting', badge:status === 'in_review' ? '待审核' : '待开始', hint:'当前阶段' + quoted + '由' + waitingName + '处理', action:'detail', label:'查看详情', needsMe:false };
   }
   if (status === 'in_progress') {
-    return { kind:'running', badge:'AI执行中', hint:'智能体团队正在执行' + quoted, action:'detail', label:'查看详情', needsMe:false };
+    return { kind:'running', badge:'AI执行中', hint:'智能体团队正在执行' + quoted, action:'detail', label:'查看会话', needsMe:false };
   }
   return { kind:'waiting', badge:tkGetStatusName(status) || '待开始', hint:quoted ? '当前阶段' + quoted : '等待开始执行', action:'detail', label:'查看详情', needsMe:false };
 }
@@ -57,6 +58,6 @@ export function taskNeedsMyAction(task) { return taskListKind(task).needsMe; }
 export function taskCardAction(task) {
   var info = taskListKind(task);
   var action = task.status === 'in_review' ? 'review' : info.action;
-  var labels = {start:'AI 执行',review:'验收产物',retry:'重新执行',reply:'回复',artifacts:'查看产物',detail:'查看详情'};
-  return {action:action,label:labels[action] || info.label,primary:info.primary};
+  var labels = {start:'AI 执行',review:'验收产物',retry:'重新执行',reply:'回复问题',artifacts:'查看产物',detail:'查看详情'};
+  return {action:action,label:['question', 'running'].includes(info.kind) ? info.label : labels[action] || info.label,primary:info.primary};
 }
