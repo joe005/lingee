@@ -176,7 +176,7 @@ function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml,
       }) : [];
       if (!latestLayout) return '<li class="tk-feed-stage is-' + state + (isCurrent ? ' is-current' : '') + '" aria-label="' + escapeHtml(stage.name + '，处理人' + assignee + '，' + label) + '"' + (isCurrent ? ' aria-current="step"' : '') + '><span class="tk-feed-stage-mark" aria-hidden="true"></span><span class="tk-feed-stage-name">' + escapeHtml(stage.name) + '</span><span class="tk-feed-stage-assignee" title="处理人：' + escapeHtml(assignee) + '">处理人 <b>' + escapeHtml(assignee) + '</b></span><span class="tk-feed-stage-state">' + label + '</span>' + (isCurrent ? '<span class="tk-feed-stage-current-tag">当前</span>' : '') + '</li>';
       var stageAction = isCurrent && kindInfo.primary ? {
-        start:{attr:'data-stage-start', label:'交给AI执行'}, review:{attr:'data-stage-review', label:'前往确认'},
+        start:{attr:'data-stage-start', label:'AI 执行'}, review:{attr:'data-stage-review', label:'验收产物'},
         reply:{attr:'data-stage-answer', label:'回答提问'}, retry:{attr:'data-stage-retry', label:'重试'},
       }[kindInfo.action] : null;
       var stageActionHtml = stageAction
@@ -192,11 +192,15 @@ function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml,
       var detailHtml = hasDetail ? '<div class="tk-feed-stage-detail" id="' + detailId + '"' + (inReviewStage ? '' : ' hidden') + '><div class="tk-delivery-artifacts"><div class="tk-artifacts-list">' + stageArtifacts.map(renderTaskArtifact).join('') + '</div></div></div>' : '';
       return '<tr class="tk-feed-stage-row is-' + state + (isCurrent ? ' is-current' : '') + (sessionsHtml ? ' has-extra' : '') + '"' + (isCurrent ? ' aria-current="step"' : '') + '>'
         + '<td class="tk-stage-cell-mark"><span class="tk-feed-stage-mark" aria-hidden="true"></span></td>'
-        + '<th scope="row" class="tk-feed-stage-main" colspan="4"><div class="tk-feed-stage-line"><span class="tk-feed-stage-name">' + escapeHtml(stage.name) + '</span>'
-        + (isCurrent && state === 'running' && task.status === 'in_progress'
+        + '<th scope="row" class="tk-feed-stage-main" colspan="4"><div class="tk-feed-stage-meta"><span class="tk-feed-stage-expert-content">'
+          + (expert ? '<img src="' + escapeHtml(xav(expert.k)) + '" alt="">' : '<span class="tk-figma-person-avatar" aria-hidden="true">' + escapeHtml(assignee.slice(0, 1)) + '</span>')
+          + '<strong>' + escapeHtml(assignee) + '</strong>'
+          + (expert?.role ? '<span class="tk-feed-stage-role">' + escapeHtml(expert.role) + '</span>' : '')
+          + '</span>'
+          + (isCurrent && state === 'running' && task.status === 'in_progress'
           ? '<button type="button" class="tk-feed-stage-state tk-feed-stage-state-action" data-stage-submit="' + escapeHtml(stage.id) + '" aria-label="' + escapeHtml(stage.name) + '执行完成，转为待审核" title="点击模拟 Agent 完成">' + label + '</button>'
           : '<span class="tk-feed-stage-state">' + label + '</span>') + '</div>'
-        + (showExpert ? '<div class="tk-feed-stage-meta"><span class="tk-feed-stage-expert-content" title="执行专家：' + escapeHtml(entry?.author || assignee) + '">' + (expert ? '<img src="' + escapeHtml(xav(expert.k)) + '" alt="">' : '<span class="tk-figma-person-avatar" aria-hidden="true">' + escapeHtml(assignee.slice(0, 1)) + '</span>') + '<span>' + escapeHtml(entry?.author || assignee) + '</span></span></div>' : '') + '</th>'
+        + '<div class="tk-feed-stage-line"><span class="tk-feed-stage-name">' + escapeHtml(stage.name) + '</span></div></th>'
         + '<td class="tk-stage-cell-actions">' + actions + '</td></tr>'
         + (sessionsHtml || detailHtml ? '<tr class="tk-feed-stage-extra is-' + state + (isCurrent ? ' is-current' : '') + '"' + (sessionsHtml || inReviewStage ? '' : ' hidden') + '><td colspan="6">' + sessionsHtml + detailHtml + '</td></tr>' : '');
     }).join('') + (latestLayout ? '</tbody></table></div>' : '</ol>')

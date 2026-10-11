@@ -5,7 +5,16 @@ import { $ } from './dom.js';
 
 
 /* ---------- toast ---------- */
-var toastEl=$('#toast'),toastT;
+var toastEl=$('#toast'),toastT,toastRemaining=0,toastStarted=0,toastHovered=false,toastPaused=true;
+function dismissToast(){clearTimeout(toastT);toastEl.classList.remove('show');}
+function resumeToast(){
+  if(toastHovered||toastEl.contains(document.activeElement)||!toastEl.classList.contains('show'))return;
+  clearTimeout(toastT);
+  toastPaused=false;
+  toastStarted=Date.now();
+  toastT=setTimeout(dismissToast,toastRemaining);
+}
+function pauseToast(){if(toastPaused)return;clearTimeout(toastT);toastPaused=true;toastRemaining=Math.max(0,toastRemaining-(Date.now()-toastStarted));}
 function toast(msg,type){
   var icon='';
   if(type==='error'){
@@ -15,14 +24,22 @@ function toast(msg,type){
   }else{
     icon='<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>';
   }
-  toastEl.innerHTML=icon+'<span class="toast-text">'+msg+'</span>';
+  toastEl.innerHTML=icon+'<span class="toast-text">'+msg+'</span><button type="button" class="toast-close" aria-label="关闭提示"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>';
   toastEl.className='toast'+(type?' '+type:'');
   toastEl.classList.add('show');
   clearTimeout(toastT);
-  toastT=setTimeout(function(){toastEl.classList.remove('show')},type==='error'?3000:2000);
+  toastRemaining=Math.max(type==='error'?6000:type==='warning'?5000:3000,Math.min(8000,String(msg).replace(/<[^>]*>/g,'').length*100));
+  toastPaused=true;
+  toastEl.setAttribute('role',type==='error'?'alert':'status');
+  toastEl.querySelector('.toast-close').addEventListener('click',dismissToast);
+  resumeToast();
 }
 
 export function initToast() {
+  toastEl.addEventListener('mouseenter',()=>{toastHovered=true;pauseToast();});
+  toastEl.addEventListener('mouseleave',()=>{toastHovered=false;resumeToast();});
+  toastEl.addEventListener('focusin',pauseToast);
+  toastEl.addEventListener('focusout',()=>setTimeout(resumeToast,0));
   /* 搜索框默认 readonly，用户点进去才可写。Chrome 不对只读输入框做自动填充，
      这是唯一能真正拦住的办法——type="search" 和 autocomplete="off" 它都不认。 */
   (function unlockSearchOnFocus(){

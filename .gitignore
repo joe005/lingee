@@ -57,3 +57,7 @@ serve-preview.mjs
 .env*
 !.env.example
 design-ref/
+
+# BEGIN expert-team local state
+/.expert-team/
+# END expert-team local state

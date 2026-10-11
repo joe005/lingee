@@ -15,13 +15,14 @@ function closeTaskConfirm(confirmed) {
   if (confirmed && action) action();
 }
 
-export function showTaskConfirm(message, action, title, confirmLabel, tone) {
+export function showTaskConfirm(message, action, title, confirmLabel, tone, cancelLabel) {
   const overlay = document.getElementById('tkConfirmOverlay');
   previousFocus = document.activeElement;
   confirmAction = action;
   document.getElementById('tkConfirmTitle').textContent = title || '确认删除';
   document.getElementById('tkConfirmMessage').textContent = message;
   document.getElementById('tkConfirmOk').textContent = confirmLabel || '删除';
+  document.getElementById('tkConfirmCancel').textContent = cancelLabel || '取消';
   overlay.dataset.tone = tone || 'danger';
   overlay.hidden = false;
   document.getElementById('tkConfirmCancel').focus();

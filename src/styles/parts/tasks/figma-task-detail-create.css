@@ -53,7 +53,7 @@
 #tkDrawer.tk-drawer--latest .tk-feed-stage-overview-head{padding:16px 0;font-size:14px}
 #tkDrawer.tk-drawer--latest .tk-feed-stage-table{display:block;border-spacing:0}
 #tkDrawer.tk-drawer--latest .tk-feed-stage-table tbody{display:flex;flex-direction:column;gap:12px;padding-left:20px}
-#tkDrawer.tk-drawer--latest .tk-feed-stage-row{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;min-height:76px;border:1px solid transparent;border-radius:16px;background:var(--fill-2)}
+#tkDrawer.tk-drawer--latest .tk-feed-stage-row{position:relative;display:grid;grid-template-columns:minmax(0,1fr);align-items:center;min-height:76px;border:1px solid transparent;border-radius:16px;background:var(--fill-2)}
 #tkDrawer.tk-drawer--latest .tk-feed-stage-row.is-current{border-color:var(--brand)}
 #tkDrawer.tk-drawer--latest .tk-feed-stage-row :is(th,td){display:block;border:0;background:transparent;padding:12px;height:auto;border-radius:0}
 #tkDrawer.tk-drawer--latest .tk-feed-stage-row .tk-stage-cell-mark{position:absolute;left:-28px;top:20px;padding:0}
@@ -81,3 +81,44 @@
 #niuCreateOverlay .niu-create-stage-table .niu-stage-remove:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 
 #niuCreateOverlay .niu-create-stage-table .niu-stage-name{display:block;padding:0 8px;color:var(--text);font-size:14px;line-height:22px}
+
+/* 阶段操作独占卡片底部，保持标题与执行人信息完整。 */
+#tkDrawer.tk-drawer--latest .tk-feed-stage-row .tk-stage-cell-actions {
+  display:flex; justify-content:flex-end; flex-wrap:wrap; gap:8px; padding-top:0;
+}
+#tkDrawer.tk-drawer--latest .tk-feed-stage-row .tk-stage-cell-actions:empty { display:none; }
+
+/* 执行计划：人员、角色与状态在首行，阶段名称在第二行。 */
+#tkDrawer.tk-drawer--latest .tk-feed-stage-table tbody { position:relative; gap:16px; }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-table tbody::before {
+  content:''; position:absolute; left:8px; top:24px; bottom:24px; width:1px; background:var(--border);
+}
+#tkDrawer.tk-drawer--latest .tk-stage-cell-mark::after { display:none; }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-row { background:var(--canvas-bg); }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-meta {
+  display:flex; align-items:center; gap:8px; min-width:0; flex-wrap:wrap; font-size:14px;
+}
+#tkDrawer.tk-drawer--latest .tk-feed-stage-expert-content { display:inline-flex; align-items:center; gap:8px; min-width:0; }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-expert-content strong { font-size:14px; font-weight:500; }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-role { color:var(--text-secondary); font-size:12px; }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-state {
+  padding:2px 6px; border:0; border-radius:999px; background:var(--segment-track);
+  color:var(--text-secondary); font-size:12px; line-height:20px;
+}
+#tkDrawer.tk-drawer--latest .is-current .tk-feed-stage-state { color:var(--brand); background:var(--brand-fill); }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-row.is-done .tk-feed-stage-mark { background:var(--success); }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-mark { position:relative; z-index:1; }
+#tkDrawer.tk-drawer--latest #tkDrawerMore { display:none; }
+#tkDrawer.tk-drawer--latest .tk-drawer-foot { align-items:center; gap:12px; padding:16px 20px; }
+#tkDrawer.tk-drawer--latest .tk-drawer-foot button {
+  display:inline-flex; align-items:center; justify-content:center; gap:4px;
+  height:36px; padding:0 12px; border-radius:12px; font:inherit; font-size:14px; cursor:pointer;
+}
+#tkDrawer.tk-drawer--latest .tk-drawer-foot button[hidden] { display:none; }
+#tkDrawer.tk-drawer--latest .tk-detail-delete { margin-right:auto; border:0; background:transparent; color:var(--text-secondary); }
+#tkDrawer.tk-drawer--latest .tk-detail-delete:hover { background:var(--danger-bg); color:var(--danger); }
+#tkDrawer.tk-drawer--latest .tk-detail-edit { border:1px solid var(--border-hover); background:var(--bg); color:var(--text); }
+#tkDrawer.tk-drawer--latest .tk-detail-edit:hover { background:var(--hover); }
+#tkDrawer.tk-drawer--latest .tk-drawer-foot.is-start-action #tkDrawerChat { width:auto; min-width:68px; }
+#tkDrawer.tk-drawer--latest .tk-drawer-foot button:focus-visible { outline:2px solid var(--focus-ring); outline-offset:2px; }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-meta .tk-feed-stage-expert-content img { width:24px; height:24px; border-radius:50%; object-fit:cover; }

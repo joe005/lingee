@@ -57,7 +57,7 @@
 }
 #view-collab:has(:is(#cv-tasks-current,#cv-experts,#cv-teams,#cv-config).active) #cvTabNav .tab-nav-item--active { color:var(--text-title); }
 #view-collab:has(:is(#cv-tasks-current,#cv-experts,#cv-teams,#cv-config).active) #cvTabNav [data-cvview="config"] {
-  margin-left:auto; margin-right:44px; width:36px; height:36px; font-size:0;
+  margin-left:auto; margin-right:0; width:36px; height:36px; font-size:0;
   background:url('../../../assets/figma/task-list/settings.svg') center / 16px 16px no-repeat;
 }
 #view-collab:has(:is(#cv-tasks-current,#cv-experts,#cv-teams,#cv-config).active) #cvTabNav .tab-nav-item:hover { color:var(--text-title); }
@@ -67,7 +67,7 @@
 
 /* 三个目录的第二排页签共用任务页的尺寸与顶部基线。 */
 #view-collab:has(:is(#cv-experts,#cv-teams).active) { background:var(--canvas-bg); }
-#view-collab :is(#cv-experts,#cv-teams)>.scroll { padding-top:8px; }
+#view-collab :is(#cv-experts,#cv-teams)>.scroll { padding-top:8px; background:transparent; }
 #view-collab :is(#cv-experts,#cv-teams) .expert-assets-toolbar {
   min-height:40px; margin-bottom:20px; align-items:center;
 }

@@ -65,7 +65,7 @@ export function taskHeaderAction(task) {
   if (!task) return null;
   if (task.status === 'planned') return {label:'加入待开始',action:'queue'};
   var info = taskListKind(task);
-  return info.primary ? {label:info.action === 'review' ? '前往确认' : info.label, action:info.action} : null;
+  return info.primary ? {label:info.action === 'review' ? '验收产物' : info.action === 'start' ? 'AI 执行' : info.label, action:info.action} : null;
 }
 
 function placeTaskActionButton(button, atBottom) {
@@ -86,7 +86,15 @@ export function renderTaskStartAction() {
   if (pageState.taskDetailVersion === 'latest') {
     var task = tkGetTasks().find(function (row) { return row.id === state.drawerTaskId; });
     var action = taskHeaderAction(task);
-    placeTaskActionButton(button, !!action && action.action !== 'queue');
+    placeTaskActionButton(button, !!task);
+    var deleteButton = els.tkDrawerFoot.querySelector('[data-detail-footer-delete]');
+    if (!deleteButton) {
+      els.tkDrawerFoot.insertAdjacentHTML('afterbegin', '<button type="button" class="tk-detail-delete" data-detail-footer-delete><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg>删除</button><button type="button" class="tk-detail-edit" data-detail-footer-edit>编辑</button>');
+    }
+    var editable = task && ['backlog','planned'].includes(task.status)
+      && ['backlog','planned'].includes(task.initialStatus || task.status)
+      && !(task.statusHistory || []).some(function (change) { return !['backlog','planned'].includes(change.from) || !['backlog','planned'].includes(change.to); });
+    els.tkDrawerFoot.querySelector('[data-detail-footer-edit]').hidden = !editable;
     button.hidden = !action;
     if (!action) return;
     button.dataset.taskAction = action.action;
