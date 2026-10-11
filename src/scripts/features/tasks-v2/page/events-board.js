@@ -86,11 +86,6 @@ export function bindBoardEvents() {
     }
   });
 
-  /* 重置筛选 */
-  els.tkResetFilter.addEventListener('click', function () {
-    state.filters = []; state.search = ''; els.tkSearch.value = ''; updateFilterButton(); render();
-  });
-
   /* 看板点击（列底新建 / 打开详情 / 多选 / 折叠子任务） */
   els.tkBoardScroll.addEventListener('click', function (e) {
     var toggleBtn = e.target.closest('[data-tk-toggle]');

@@ -168,7 +168,7 @@ function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml,
       var detailId = 'tkStageDetail' + index;
       var hasDetail = latestLayout && stageArtifacts.length > 0;
       if (!latestLayout) return '<li class="tk-feed-stage is-' + state + (isCurrent ? ' is-current' : '') + '" aria-label="' + escapeHtml(stage.name + '，处理人' + assignee + '，' + label) + '"' + (isCurrent ? ' aria-current="step"' : '') + '><span class="tk-feed-stage-mark" aria-hidden="true"></span><span class="tk-feed-stage-name">' + escapeHtml(stage.name) + '</span><span class="tk-feed-stage-assignee" title="处理人：' + escapeHtml(assignee) + '">处理人 <b>' + escapeHtml(assignee) + '</b></span><span class="tk-feed-stage-state">' + label + '</span>' + (isCurrent ? '<span class="tk-feed-stage-current-tag">当前</span>' : '') + '</li>';
-      var detailHtml = hasDetail ? '<div class="tk-feed-stage-detail" id="' + detailId + '"><span class="tk-stage-artifacts-label">产物 · ' + stageArtifacts.length + '</span><div class="tk-artifacts-list">' + stageArtifacts.map(renderTaskArtifact).join('') + '</div></div>' : '';
+      var detailHtml = hasDetail ? '<div class="tk-feed-stage-detail" id="' + detailId + '"><div class="tk-artifacts-list">' + stageArtifacts.map(renderTaskArtifact).join('') + '</div></div>' : '';
       return '<tbody><tr class="tk-feed-stage-row is-' + state + (isCurrent ? ' is-current' : '') + '"' + (isCurrent ? ' aria-current="step"' : '') + '>'
         + '<td class="tk-stage-cell-mark"><span class="tk-feed-stage-mark" aria-hidden="true"></span></td>'
         + '<th scope="row" class="tk-feed-stage-main" colspan="5"><div class="tk-feed-stage-meta"><span class="tk-feed-stage-expert-content">'
@@ -177,9 +177,9 @@ function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml,
           + (expert?.role ? '<span class="tk-feed-stage-role">' + escapeHtml(expert.role) + '</span>' : '')
           + '</span>'
           + '<span class="tk-feed-stage-state">' + label + '</span></div>'
-        + '<div class="tk-feed-stage-line"><span class="tk-feed-stage-name">' + escapeHtml(stage.name) + '</span></div></th>'
+        + '<div class="tk-feed-stage-line"><span class="tk-feed-stage-name">' + escapeHtml(stage.name) + '</span></div>' + detailHtml + '</th>'
         + '</tr>'
-        + (detailHtml ? '<tr class="tk-feed-stage-extra is-' + state + (isCurrent ? ' is-current' : '') + '"><td colspan="6">' + detailHtml + '</td></tr>' : '') + '</tbody>';
+        + '</tbody>';
     }).join('') + (latestLayout ? '</table></div>' : '</ol>')
     + (latestLayout ? '' : '<div class="tk-exec-card-feedback">' + feedback + nextAction + '</div>')
     + (latestLayout ? '' : historyButton + stageHistoryHtml) + '</section>';
@@ -273,17 +273,18 @@ function renderTaskSystemFeedGroup(events, isLatest) {
   var userCollapsed = _collapsedActivityIds.has(id);
   var expanded = userExpanded ? true : userCollapsed ? false : true;
   var count = events.length;
+  var activityTitle = pageState.taskDetailVersion === 'latest' ? '操作记录' : count + ' 条操作记录';
   if (!expanded) {
     return '<div class="tk-feed-activity-block" data-activity-id="' + id + '">'
       + '<button type="button" class="tk-feed-activity-toggle" data-activity-toggle="' + id + '"><svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m6 3 5 5-5 5"/></svg>'
-      + '<span>' + count + ' 条操作记录</span></button></div>';
+      + '<span>' + activityTitle + '</span></button></div>';
   }
   var hiddenOlder = isLatest && !_showOlderActivityIds.has(id) && count > ACTIVITY_VISIBLE_LIMIT
     ? count - ACTIVITY_VISIBLE_LIMIT : 0;
   var visible = hiddenOlder > 0 ? events.slice(-ACTIVITY_VISIBLE_LIMIT) : events;
   var showHeader = hiddenOlder === 0;
   return '<div class="tk-feed-activity-block" data-activity-id="' + id + '">'
-    + (showHeader ? '<button type="button" class="tk-feed-activity-toggle" data-activity-toggle="' + id + '"><svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m3 6 5 5 5-5"/></svg><span>' + count + ' 条操作记录</span></button>' : '')
+    + (showHeader ? '<button type="button" class="tk-feed-activity-toggle" data-activity-toggle="' + id + '"><svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m3 6 5 5 5-5"/></svg><span>' + activityTitle + '</span></button>' : '')
     + (hiddenOlder > 0 ? '<button type="button" class="tk-feed-activity-toggle tk-feed-activity-more" data-activity-older="' + id + '"><svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m6 3 5 5-5 5"/></svg><span>显示更多旧动态（' + hiddenOlder + ' 条）</span></button>' : '')
     + '<div class="tk-feed-activity-rows">'
     + visible.map(function (event) {

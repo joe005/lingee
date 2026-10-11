@@ -46,9 +46,9 @@
 #tkDrawer.tk-drawer--latest .tk-figma-description-row{grid-column:1/-1;display:flex;gap:12px;align-items:flex-start;font-size:14px}
 #tkDrawer.tk-drawer--latest .tk-figma-description-row>span{flex:none;width:64px;color:var(--text-secondary)}
 #tkDrawer.tk-drawer--latest .tk-drawer-desc{flex:1;min-width:0;min-height:0;margin:0;padding:0;font-size:14px;line-height:22px}
-#tkDrawer.tk-drawer--latest .tk-drawer-comments-head{display:none}
+#tkDrawer.tk-drawer--latest .tk-drawer-comments-head{display:flex;padding:0;margin-bottom:12px}
 #tkDrawer.tk-drawer--latest .tk-exec-card{padding:16px;border:1px solid var(--border);border-radius:20px;box-shadow:none;background:var(--bg)}
-#tkDrawer.tk-drawer--latest .tk-exec-card-head{padding-bottom:16px;border-bottom:1px solid var(--divider)}
+#tkDrawer.tk-drawer--latest .tk-exec-card-head{padding-bottom:16px;border-bottom:0}
 #tkDrawer.tk-drawer--latest .tk-exec-card-identity{margin-left:auto;text-align:right}
 #tkDrawer.tk-drawer--latest .tk-feed-stage-overview-head{padding:16px 0;font-size:14px}
 #tkDrawer.tk-drawer--latest .tk-feed-stage-table{display:flex;flex-direction:column;gap:16px;border-spacing:0}
@@ -124,10 +124,9 @@
 /* 阶段仅展示信息；产物使用一层文件列表，操作集中在详情底部。 */
 #tkDrawer.tk-drawer--latest .tk-feed-stage-extra { background:transparent; border-radius:0; }
 #tkDrawer.tk-drawer--latest .tk-feed-stage-extra>td { display:block; padding:0 12px; background:transparent; border:0; }
-#tkDrawer.tk-drawer--latest .tk-feed-stage-extra .tk-feed-stage-detail { margin:0; padding:0; border-radius:0; background:transparent; }
-#tkDrawer.tk-drawer--latest .tk-stage-artifacts-label { display:block; margin-bottom:8px; font-size:12px; color:var(--text-secondary); }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-main .tk-feed-stage-detail { min-width:0; margin:4px 0 0; padding:0; border-radius:0; background:transparent; }
 #tkDrawer.tk-drawer--latest .tk-feed-stage-detail .tk-artifacts-list { gap:8px; }
-#tkDrawer.tk-drawer--latest .tk-feed-stage-detail .tk-artifact { margin:0; border:1px solid var(--border); border-radius:8px; background:var(--bg); }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-detail .tk-artifact { margin:0; border:0; border-radius:12px; background:var(--neutral-50); }
 #tkDrawer.tk-drawer--latest .tk-feed-stage-detail .tk-artifact:hover { background:var(--hover); }
 #tkDrawer.tk-drawer--latest .tk-feed-stage-detail .tk-artifact-summary { min-height:40px; padding:8px 12px; gap:8px; }
 #tkDrawer.tk-drawer--latest .tk-feed-stage-detail .tk-artifact-title { min-width:0; font-size:14px; font-weight:400; }
@@ -177,3 +176,17 @@
 
 #niuCreateOverlay .niu-create-foot .niu-button { display:inline-flex; align-items:center; justify-content:center; gap:4px; }
 #niuCreateOverlay #niuCreateStart svg { display:block; width:14px; height:14px; flex:none; }
+
+/* 详情分为任务概览、动态、操作记录，采用一致的标题标记。 */
+#tkDrawer.tk-drawer--latest .tk-drawer-comments { border-top:0; padding-top:0; }
+#tkDrawer.tk-drawer--latest .tk-drawer-comments-title,
+#tkDrawer.tk-drawer--latest .tk-feed-activity-toggle:not(.tk-feed-activity-more) {
+  display:flex; align-items:center; gap:8px; color:var(--text); font-size:14px; font-weight:500;
+}
+#tkDrawer.tk-drawer--latest .tk-drawer-comments-title::before,
+#tkDrawer.tk-drawer--latest .tk-feed-activity-toggle:not(.tk-feed-activity-more)::before {
+  content:''; flex:none; width:3px; height:12px; border-radius:2px; background:var(--brand);
+}
+#tkDrawer.tk-drawer--latest .tk-feed-activity-block { padding:0; border:0; border-radius:0; }
+#tkDrawer.tk-drawer--latest .tk-feed-activity-toggle:not(.tk-feed-activity-more) svg { order:1; }
+#tkDrawer.tk-drawer--latest .tk-feed-activity-rows { padding:12px; border:1px solid var(--border); border-radius:20px; }

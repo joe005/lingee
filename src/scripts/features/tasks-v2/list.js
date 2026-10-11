@@ -596,8 +596,8 @@ function showEmpty() {
   var projects=tkProjectsForCurrentUser(),projectIds=new Set(projects.map(function(project){return project.id;}));
   var hasTasks=tkGetTasks().some(function(task){return tkCanViewTask(task)&&projectIds.has(task.project)&&(!projectListMode||task.project===projectListProjectId);});
   var message=els.tkEmpty.querySelector('p');
-  if(message)message.textContent=!projects.length?'还没有可参与的项目，请先到「项目」页创建项目或联系管理员':hasTasks?'没有匹配的任务':'项目中还没有任务，点击右上「新建」开始';
-  els.tkResetFilter.classList.toggle('hidden',!hasTasks);
+  if(message)message.textContent='暂无数据';
+
 }
 
 function showBoardOrList() {
@@ -1452,7 +1452,7 @@ $$('[data-bulk]').forEach(function (btn) {
 }
 
 function initTaskListRowEvents() {
-els.tkResetFilter.addEventListener('click', function () {
+els.tkResetFilter?.addEventListener('click', function () {
     taskViewState.filters = []; taskViewState.search = ''; els.tkSearch.value = ''; updateFilterButton(); render();
   });
 els.tkBoardScroll.addEventListener('click', function (e) {
