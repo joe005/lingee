@@ -166,9 +166,7 @@ export function bindBoardEvents() {
         else state.selectedIds.add(id);
         render();
       } else {
-        var task = tkGetTasks().find(function (row) { return row.id === id; });
-        if (task && ['in_progress','in_review','blocked'].includes(task.status)) openBoardTaskSession(task);
-        else openDrawer(id);
+        openDrawer(id);
       }
     }
   });
