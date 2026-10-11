@@ -21,7 +21,7 @@ const now=()=>new Date().toLocaleString('zh-CN',{hour12:false});
 function read(name,fallback){try{const value=JSON.parse(localStorage.getItem(name));return value&&typeof value==='object'?value:clone(fallback);}catch(_){return clone(fallback);}}
 function write(name,value){try{localStorage.setItem(name,JSON.stringify(value));return true;}catch(_){return false;}}
 const originals={expert:EXPERTS.filter(e=>!e.mine).map(clone),team:PRESET_TEAMS.map(clone)};
-const retiredSeedKeys=new Set(['expert:frontend-engineer','expert:ux-designer','expert:cosmic-form','expert:cosmic-workflow','expert:cosmic-report','expert:cosmic-plugin','expert:cosmic-api','team:kingdee-saas-implementation','team:kingdee-secondary-dev']);
+const retiredSeedKeys=new Set(['expert:frontend-engineer','expert:ux-designer','expert:cosmic-form','expert:cosmic-workflow','expert:cosmic-report','expert:cosmic-plugin','expert:cosmic-api','expert:cosmic-software-engineer','expert:cosmic-code-reviewer','expert:agent-development-expert','team:kingdee-saas-implementation','team:kingdee-secondary-dev']);
 const retiredDemoTeams=new Set(['team:cloud-delivery-team','team:tenant-ws-build-build-delivery-team']);
 function retiredSeed(item){
   if(!item)return false;
@@ -93,7 +93,7 @@ function seed(){
       if(kind==='expert'&&meta[itemKey].editor==='平台初始数据'&&row&&!row.data.skills?.length&&base.skills?.length){row.data.skills=clone(base.skills);changed=true;}
       continue;
     }
-    const data={...clone(base),id,name,desc:'云端发布的交付协作能力包，安装后可在官方列表中使用。'};
+    const data={...clone(base),listed:undefined,id,name,desc:'云端发布的交付协作能力包，安装后可在官方列表中使用。'};
     meta[itemKey]={kind,id,status:'online',activeVersion:'1.0.0',pendingVersion:'',modified:now(),editor:'平台初始数据'};
     versions[itemKey]=[{version:'1.0.0',data,note:'新增交付协作能力与推荐提问。',at:now(),author:'Lingee'}];changed=true;
   }
@@ -106,7 +106,7 @@ function seed(){
   for(const [slug,name,baseId,desc] of tenantExperts){
     const base=originals.expert.find(item=>item.id===baseId);if(!base)continue;
     const id=`tenant-${tenantId}-${slug}`,itemKey=key('expert',id);
-    const data={...clone(base),id,name,desc,source:'tenant',tenantId,by:tenantName};
+    const data={...clone(base),listed:undefined,id,name,desc,source:'tenant',tenantId,by:tenantName};
     if(meta[itemKey]){
       /* 未被租户改动的示例数据跟随代码刷新；1.1.0 演示版本只多一句说明。 */
       const history=versions[itemKey]||[];

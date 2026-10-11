@@ -53,13 +53,13 @@ export const BUILTIN_CATALOG=[
   {"id":"general-app-team-lead","k":"general-app-team-lead","name":"通用应用团队负责人","role":"通用应用团队负责人","by":"Lingee 内置","desc":"根据已批准的应用需求和设计生成少量可派发的纵向闭环实现任务","tags":["任务规划","纵向切片"],"modes":["分析","设计","规划","集成","评审","恢复"],"comp":["delivery.task-orchestration · principal","delivery.orchestration · principal","delivery.integration · advanced","architecture.boundaries-and-layering · advanced"],"skills":["builtin-skill:general-app-team-lead:skills/general-app-task-orchestration/","builtin-skill:general-app-team-lead:skills/delivery-coordination/"],"cmds":[["根据已批准的需求和设计生成可派发的纵向闭环实现任务","根据已批准的需求和设计生成可派发的纵向闭环实现任务"],["检查实现任务的需求覆盖和验证方式","检查实现任务的需求覆盖和验证方式"]],"source":"builtin","listed":false},
   {"id":"general-app-product-expert","k":"general-app-product-expert","name":"通用应用需求设计智能体","role":"通用应用需求设计智能体","by":"Lingee 内置","desc":"将用户明确目标和已有产品背景转化为可执行的产品需求","tags":["需求设计","产品基线","需求验收"],"modes":["analysis","design","review","recovery"],"comp":["product.baseline · principal","product.baseline-review · advanced"],"skills":["builtin-skill:general-app-product-expert:skills/product-baseline-closure/","builtin-skill:general-app-product-expert:skills/product-baseline-review/"],"cmds":[["把用户提供的产品背景和明确目标整理成产品需求","把用户提供的产品背景和明确目标整理成产品需求"],["为这个需求定义角色、旅程、规则和验收场景","为这个需求定义角色、旅程、规则和验收场景"]],"source":"builtin"},
   {"id":"general-app-architecture-expert","k":"general-app-architecture-expert","name":"通用应用系统设计智能体","role":"通用应用系统设计智能体","by":"Lingee 内置","desc":"读取产品需求和技术证据，将其转化为完整的技术系统设计，并对设计进行独立评审","tags":["系统设计","整体技术方案","分层架构","模块边界","公共模块复用","设计评审"],"modes":["analysis","design","integration","review","recovery"],"comp":["domain.modeling · principal","domain.business-rules · principal","domain.authorization-semantics · advanced","domain.calculation-semantics · advanced","architecture.boundaries-and-layering · principal","architecture.contracts-and-integration · principal","architecture.data-and-migration · advanced","architecture.reliability-and-operability · advanced"],"skills":["builtin-skill:general-app-architecture-expert:skills/system-design/","builtin-skill:general-app-architecture-expert:skills/system-design-review/"],"cmds":[["把这些需求和来源事实转化为一份包含边界、契约、数据、权限和必要技术决策的系统设计","把这些需求和来源事实转化为一份包含边界、契约、数据、权限和必要技术决策的系统设计"],["评审这份系统设计中的边界、数据、权限、外部连接和兼容性风险","评审这份系统设计中的边界、数据、权限、外部连接和兼容性风险"]],"source":"builtin"},
-  {"id":"general-app-development-expert","k":"general-app-development-expert","name":"通用应用开发智能体","role":"通用应用开发智能体","by":"Lingee 内置","desc":"实现并集成通用应用变更，提供开发侧验证证据；独立 QA 验收由 QA 负责","tags":["软件实现","开发侧验证"],"modes":["实现","集成","开发侧验证"],"comp":["engineering.implementation · principal","engineering.integration · advanced"],"skills":["builtin-skill:general-app-development-expert:skills/general-app-implementation/","builtin-skill:general-app-development-expert:skills/general-app-diagnosis/","builtin-skill:general-app-development-expert:skills/general-app-vertical-slice/","builtin-skill:general-app-development-expert:skills/general-app-builder/"],"cmds":[["追踪这项通用应用变更，实现最小完整修复并补充定向单元测试","追踪这项通用应用变更，实现最小完整修复并补充定向单元测试"]],"source":"builtin"},
-  {"id":"general-app-qa-expert","k":"general-app-qa-expert","name":"测试与代码审查智能体","role":"测试与代码审查智能体","by":"Lingee 内置","desc":"检查需求与设计完整度，审阅开发提供的单元测试证据，并通过端到端接口、安全和浏览器测试独立验收应用","tags":["质量保障","独立验证"],"modes":["分析","设计","评审","验证","测试编写","浏览器测试"],"comp":["quality.verification · principal","quality.test-construction · advanced","quality.security-verification · advanced","contract-design · advanced","concurrent-commit-model · advanced"],"skills":["builtin-skill:general-app-qa-expert:skills/quality-verification/","builtin-skill:general-app-qa-expert:skills/test-planning/","builtin-skill:general-app-qa-expert:skills/defect-reproduction/","builtin-skill:general-app-qa-expert:skills/performance-capacity/","builtin-skill:general-app-qa-expert:skills/security-verification/","builtin-skill:general-app-qa-expert:skills/contract-driven-code-review/"],"cmds":[["检查需求和设计完整度，审阅开发提供的单元测试证据，并执行适用的端到端接口、安全和浏览器验收","检查需求和设计完整度，审阅开发提供的单元测试证据，并执行适用的端到端接口、安全和浏览器验收"],["对照需求和设计文档检查这份验证报告","对照需求和设计文档检查这份验证报告"]],"source":"builtin"},
+  {"id":"general-app-development-expert","k":"general-app-development-expert","name":"通用应用开发智能体","role":"通用应用开发智能体","by":"Lingee 内置","desc":"实现并集成通用应用变更，提供开发侧验证证据；独立 QA 验收由 QA 负责","tags":["软件实现","开发侧验证"],"modes":["实现","集成","开发侧验证"],"comp":["engineering.implementation · principal","engineering.integration · advanced"],"skills":["builtin-skill:general-app-development-expert:skills/general-app-implementation/"],"cmds":[["追踪这项通用应用变更，实现最小完整修复并补充定向单元测试","追踪这项通用应用变更，实现最小完整修复并补充定向单元测试"]],"source":"builtin"},
+  {"id":"general-app-qa-expert","k":"general-app-qa-expert","name":"测试与代码审查智能体","role":"测试与代码审查智能体","by":"Lingee 内置","desc":"检查需求与设计完整度，审阅开发提供的单元测试证据，并通过端到端接口、安全和浏览器测试独立验收应用","tags":["质量保障","独立验证"],"modes":["分析","设计","评审","验证","测试编写","浏览器测试"],"comp":["quality.verification · principal","quality.test-construction · advanced","quality.security-verification · advanced","contract-design · advanced","concurrent-commit-model · advanced"],"skills":["builtin-skill:general-app-qa-expert:skills/quality-verification/","builtin-skill:general-app-qa-expert:skills/security-verification/","builtin-skill:general-app-qa-expert:skills/contract-driven-code-review/"],"cmds":[["检查需求和设计完整度，审阅开发提供的单元测试证据，并执行适用的端到端接口、安全和浏览器验收","检查需求和设计完整度，审阅开发提供的单元测试证据，并执行适用的端到端接口、安全和浏览器验收"],["对照需求和设计文档检查这份验证报告","对照需求和设计文档检查这份验证报告"]],"source":"builtin"},
   {"id":"cosmic-api-engineer","k":"cosmic-api-engineer","name":"苍穹API开发智能体","role":"苍穹API开发智能体","by":"Lingee 内置","desc":"负责苍穹零代码 API、Custom API 与 API 扩展插件的设计和交付","tags":["API","OpenAPI"],"modes":["分析","设计","实现","集成","评审","验证","恢复"],"comp":["api.zero-code · principal","api.custom · advanced","api.extension · advanced","api.verification · advanced"],"skills":["builtin-skill:cosmic-api-engineer:app-build-api.md"],"cmds":[["设计并交付苍穹 API","设计并交付苍穹 API"]],"source":"builtin"},
   {"id":"cosmic-architect","k":"cosmic-architect","name":"苍穹架构师","role":"苍穹架构师","by":"Lingee 内置","desc":"在已验证的平台边界内设计苍穹元数据模型与运行时扩展","tags":["软件架构","可靠性"],"modes":["analysis","design","integration","review","recovery"],"comp":["architecture.system-design · principal","architecture.reliability · advanced"],"skills":["builtin-skill:cosmic-architect:skills/architecture-design/"],"cmds":[["评审架构并闭合主要风险","评审架构并闭合主要风险"]],"source":"builtin"},
   {"id":"cosmic-metadata-expert","k":"cosmic-metadata-expert","name":"苍穹元数据智能体","role":"苍穹元数据智能体","by":"Lingee 内置","desc":"通过原生 app-build 完成苍穹元数据建模、字段、属性、规则、操作和界面配置","tags":["元数据","表单配置"],"modes":["分析","设计","实现","集成","评审","验证","恢复"],"comp":["metadata.modeling · principal","metadata.modification · principal","metadata.ui · advanced","metadata.api · advanced","metadata.verification · advanced"],"skills":["builtin-skill:cosmic-metadata-expert:skills/cosmic-metadata-delivery/","builtin-skill:cosmic-metadata-expert:builtin:app-build"],"cmds":[["创建苍穹表单和实体","创建苍穹表单和实体"],["修改字段、规则、操作和布局","修改字段、规则、操作和布局"]],"source":"builtin"},
-  {"id":"cosmic-product-manager","k":"cosmic-product-manager","name":"苍穹产品智能体","role":"苍穹产品智能体","by":"Lingee 内置","desc":"将苍穹应用目标转化为理解元数据边界且可验证的需求","tags":["需求分析","验收设计"],"modes":["分析","设计","评审"],"comp":["product.requirements · principal","product.acceptance-design · advanced"],"skills":["builtin-skill:cosmic-product-manager:skills/requirements-closure/"],"cmds":[["将这个目标整理为有范围的验收条件","将这个目标整理为有范围的验收条件"]],"source":"builtin"},
-  {"id":"cosmic-qa-engineer","k":"cosmic-qa-engineer","name":"苍穹质量智能体","role":"苍穹质量智能体","by":"Lingee 内置","desc":"独立验证苍穹元数据、运行时行为、回归影响与交付风险","tags":["质量保障","独立验证"],"modes":["分析","设计","评审","验证"],"comp":["quality.verification · principal","quality.regression-analysis · advanced"],"skills":["builtin-skill:cosmic-qa-engineer:skills/quality-verification/"],"cmds":[["制定并执行风险驱动的验证计划","制定并执行风险驱动的验证计划"]],"source":"builtin"},
+  {"id":"cosmic-product-manager","k":"cosmic-product-manager","name":"苍穹产品智能体","role":"苍穹产品智能体","by":"Lingee 内置","desc":"将苍穹应用目标转化为理解元数据边界且可验证的需求","tags":["需求分析","验收设计"],"modes":["分析","设计","评审"],"comp":["product.requirements · principal","product.acceptance-design · advanced"],"skills":["builtin-skill:cosmic-product-manager:skills/requirements-closure/","builtin-skill:cosmic-product-manager:skills/cosmic-requirements-spec/"],"cmds":[["将这个目标整理为有范围的验收条件","将这个目标整理为有范围的验收条件"]],"source":"builtin"},
+  {"id":"cosmic-qa-engineer","k":"cosmic-qa-engineer","name":"苍穹质量智能体","role":"苍穹质量智能体","by":"Lingee 内置","desc":"独立验证苍穹元数据、运行时行为、回归影响与交付风险","tags":["质量保障","独立验证"],"modes":["分析","设计","评审","验证"],"comp":["quality.verification · principal","quality.regression-analysis · advanced"],"skills":["builtin-skill:cosmic-qa-engineer:skills/quality-verification/","builtin-skill:cosmic-qa-engineer:skills/cosmic-e2e-test/"],"cmds":[["制定并执行风险驱动的验证计划","制定并执行风险驱动的验证计划"]],"source":"builtin"},
   {"id":"cosmic-team-lead","k":"cosmic-team-lead","name":"苍穹团队负责人","role":"苍穹团队负责人","by":"Lingee 内置","desc":"负责苍穹整单目标，衔接需求、开发与验收能力，按需协调独立工作","tags":["交付管理","开发任务编排"],"modes":["分析","设计","规划","集成","评审","恢复"],"comp":["delivery.orchestration · principal","delivery.task-orchestration · principal","metadata.modeling · awareness","api.zero-code · awareness"],"skills":["builtin-skill:cosmic-team-lead:skills/cosmic-development-task-orchestration/","builtin-skill:cosmic-team-lead:skills/cosmic-delivery-coordination/"],"cmds":[["按智能体分工编排苍穹实施任务","按智能体分工编排苍穹实施任务"]],"source":"builtin","listed":false},
   {"id":"cosmic-ui-designer","k":"cosmic-ui-designer","name":"苍穹 UI 设计师","role":"苍穹 UI 设计师","by":"Lingee 内置","desc":"基于需求为苍穹应用表单和页面创建视觉原型","tags":["原型设计","界面设计"],"modes":["分析","设计","评审"],"comp":["ui.prototype · advanced"],"skills":["builtin-skill:cosmic-ui-designer:skills/ui-prototype/"],"cmds":[["为这个苍穹表单创建视觉原型","为这个苍穹表单创建视觉原型"]],"source":"builtin"},
   {"id":"kwc-frontend-engineer","k":"kwc-frontend-engineer","name":"苍穹KWC前端智能体","role":"苍穹KWC前端智能体","by":"Lingee 内置","desc":"开发苍穹应用 KWC 自定义页面、组件、页面元数据和 KingScript 脚本控制器","tags":["KWC","前端"],"modes":["分析","设计","实现","集成","验证","恢复"],"comp":["kwc.project-init · advanced","kwc.component-dev · advanced","kwc.page-dev · advanced","kwc.controller-dev · advanced","kwc.deploy · advanced"],"skills":["builtin-skill:kwc-frontend-engineer:kd-frontend-development.md"],"cmds":[["为这个苍穹应用开发一个 KWC 自定义页面","为这个苍穹应用开发一个 KWC 自定义页面"]],"source":"builtin"},
@@ -141,21 +141,6 @@ export const BUILTIN_SKILL_META={
     "desc": "Implement and verify scoped general-application changes across the complete affected call chain.",
     "tone": "blue"
   },
-  "builtin-skill:general-app-development-expert:skills/general-app-diagnosis/": {
-    "name": "通用应用诊断",
-    "desc": "Diagnose general-application defects by reproducing current behavior, tracing the call chain, and proving the root cause before repair.",
-    "tone": "blue"
-  },
-  "builtin-skill:general-app-development-expert:skills/general-app-vertical-slice/": {
-    "name": "通用应用纵向切片",
-    "desc": "Deliver a real end-to-end vertical slice for a general application and validate its business, technical, and runtime boundaries.",
-    "tone": "blue"
-  },
-  "builtin-skill:general-app-development-expert:skills/general-app-builder/": {
-    "name": "通用应用 Builder",
-    "desc": "Implement a general-application module from the confirmed requirements and system design, using the global UI baseline and selected implementation recipes.",
-    "tone": "blue"
-  },
   "builtin-skill:general-app-product-expert:skills/product-baseline-closure/": {
     "name": "需求设计闭合",
     "desc": "Convert explicit user goals and provided product context into one executable product requirements document with functional and acceptance coverage.",
@@ -169,21 +154,6 @@ export const BUILTIN_SKILL_META={
   "builtin-skill:general-app-qa-expert:skills/quality-verification/": {
     "name": "通用应用质量验证",
     "desc": "Independently plan and execute risk-based verification for a general application, reproduce failures, and issue traceable quality evidence.",
-    "tone": "blue"
-  },
-  "builtin-skill:general-app-qa-expert:skills/test-planning/": {
-    "name": "测试计划",
-    "desc": "Convert application acceptance, invariants, risk labels, and change impact into an executable verification plan and test matrix.",
-    "tone": "blue"
-  },
-  "builtin-skill:general-app-qa-expert:skills/defect-reproduction/": {
-    "name": "缺陷复现",
-    "desc": "Reproduce general-application defects with a minimal replayable case, classify the broken contract, and define repair acceptance evidence.",
-    "tone": "blue"
-  },
-  "builtin-skill:general-app-qa-expert:skills/performance-capacity/": {
-    "name": "性能与容量验证",
-    "desc": "Generate and execute authorized k6-based performance verification for general applications, including load scenarios, resource conditions, and comparison evidence.",
     "tone": "blue"
   },
   "builtin-skill:general-app-qa-expert:skills/security-verification/": {
@@ -274,6 +244,16 @@ export const BUILTIN_SKILL_META={
   "builtin-skill:general-app-deployment-expert:skills/cloudbase-deployment/": {
     "name": "腾讯云开发 CloudBase 部署",
     "desc": "CloudBase 的工具、参考资料与已知问题",
+    "tone": "blue"
+  },
+  "builtin-skill:cosmic-product-manager:skills/cosmic-requirements-spec/": {
+    "name": "苍穹需求分析",
+    "desc": "将苍穹应用目标转化为理解元数据边界且可验证的需求规格。",
+    "tone": "blue"
+  },
+  "builtin-skill:cosmic-qa-engineer:skills/cosmic-e2e-test/": {
+    "name": "苍穹端到端测试",
+    "desc": "对苍穹应用元数据和运行时行为执行端到端验证，覆盖回归影响与交付风险。",
     "tone": "blue"
   }
 };
