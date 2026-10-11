@@ -83,6 +83,12 @@
 #view-collab :is(#cv-experts,#cv-teams) .asset-primary-tabs .list-page-tab.active {
   color:var(--text-title); background:var(--bg); font-weight:500; box-shadow:none;
 }
+#view-collab :is(#cv-experts,#cv-teams) .asset-primary-tabs .list-page-tab:not(.active):hover {
+  background:var(--hover); color:var(--text);
+}
+#view-collab :is(#cv-experts,#cv-teams) .asset-primary-tabs .list-page-tab:focus-visible {
+  outline:2px solid var(--focus-ring); outline-offset:2px;
+}
 
 /* 三个页签的新建入口沿用任务页截图的紧凑规格。 */
 #view-collab :is(#cv-experts,#cv-teams) .asset-create-btn,

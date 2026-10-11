@@ -12,6 +12,21 @@ import { chooseFirstAssignee, filterAssigneeOptions } from './utils.js';
 /* 任务页 · 事件绑定 · 新建任务（列头 + 弹窗）（拆分自 tasks-v2/index.js，逻辑未改） */
 export function bindCreateEvents() {
   /* 新建任务（列头 + 模态弹窗） */
+  var isMac = /Mac|iPhone|iPad|iPod/i.test(navigator.userAgentData?.platform || navigator.platform || '');
+  els.tkToolbarNew.dataset.tooltip = '新建（' + (isMac ? '⌘N' : 'Ctrl+N') + '）';
+  els.tkToolbarNew.setAttribute('aria-keyshortcuts', isMac ? 'Meta+N' : 'Control+N');
+  document.addEventListener('keydown', function (e) {
+    if (e.defaultPrevented || e.isComposing || e.key.toLowerCase() !== 'n' || e.altKey || e.shiftKey) return;
+    if (!(isMac ? e.metaKey && !e.ctrlKey : e.ctrlKey && !e.metaKey)) return;
+    if (!els.tkToolbarNew.getClientRects().length) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    if (e.repeat || !document.getElementById('niuCreateOverlay').hidden) return;
+    if (document.querySelector('[role="dialog"]:not([hidden])')?.getClientRects().length) return;
+    els.tkToolbarNewMenu.classList.add('hidden');
+    els.tkToolbarNewArrow.setAttribute('aria-expanded', 'false');
+    openTaskModal(null);
+  }, true);
   els.tkToolbarNew.addEventListener('click', function () { openTaskModal(null); });
   els.tkToolbarNewArrow.addEventListener('click', function (e) {
     e.stopPropagation();

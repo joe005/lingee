@@ -20,6 +20,12 @@
 #cv-tasks-current #view-tasks:not(.tk-project-list-mode).tk-list-mode .tk-view-tabs .list-page-tab.active {
   color:var(--text-title); background:var(--bg); font-weight:500;
 }
+#cv-tasks-current #view-tasks:not(.tk-project-list-mode).tk-list-mode .tk-view-tabs .list-page-tab:not(.active):hover {
+  background:var(--hover); color:var(--text);
+}
+#cv-tasks-current #view-tasks:not(.tk-project-list-mode).tk-list-mode .tk-view-tabs .list-page-tab:focus-visible {
+  outline:2px solid var(--focus-ring); outline-offset:2px;
+}
 #cv-tasks-current .tk-list-tab-count::before { content:'·'; margin-right:4px; }
 .tk-layout-shortcuts { display:none; }
 #cv-tasks-current .tk-layout-shortcuts { display:flex; align-items:center; gap:12px; }

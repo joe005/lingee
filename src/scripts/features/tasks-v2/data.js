@@ -778,7 +778,13 @@ function taskMinuteNow() {
 function taskDeliveryTeam(task) {
   return cvStampTaskTeam(task) || undefined;
 }
+function ensureTaskIssueType(task) {
+  if (task.issueType) return false;
+  task.issueType = isBugTask(task) ? '缺陷' : '需求';
+  return true;
+}
 function tkSeedTask(t) {
+  ensureTaskIssueType(t);
   migrateDeliveryPlan(t, taskDeliveryTeam(t));
   var people = tkPeopleInProject(t.project).filter(function (person) { return TK_DEMO_PERSON_IDS.includes(person.id); });
   var seeded = Object.assign({
@@ -945,6 +951,14 @@ try {
     localStorage.setItem('lingee_delivery_stages_bug_20261010', '1');
   }
 } catch (e) { /* 存储不可用时不影响当前页面 */ }
+// 在所有补种与缓存迁移结束后补全类型，避免后加入的模拟任务漏处理。
+var taskIssueTypesChanged = false;
+_tasks.forEach(function (task) {
+  if (ensureTaskIssueType(task)) taskIssueTypesChanged = true;
+});
+try {
+  if (taskIssueTypesChanged) persistTasks();
+} catch (e) { /* 存储不可用时仍保留内存中的类型 */ }
 function persistTasks() {
   localStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(_tasks));
   if (typeof document !== 'undefined') document.dispatchEvent(new Event('lingee:tasks-changed'));
@@ -966,7 +980,7 @@ function persistViews() {
 
 _tasks.forEach(cvStampTaskTeam);
 export function tkGetTasks() { return _tasks; }
-export function tkSetTasks(arr) { _tasks = arr; persistTasks(); }
+export function tkSetTasks(arr) { arr.forEach(ensureTaskIssueType); _tasks = arr; persistTasks(); }
 /* 只在明确删除工作区后，按该工作区的项目 ID 清理任务；刷新时不能据未恢复的项目列表删数据。 */
 export function tkPruneOrphanTasks(projectIds) {
   if(!Array.isArray(projectIds)||!projectIds.length)return;
@@ -1019,6 +1033,7 @@ export function tkEnsureWorkspaceDemoTasks() {
   return true;
 }
 export function tkAddTask(task) {
+  ensureTaskIssueType(task);
   var now = taskMinuteNow();
   task.id = _nextId++;
   task.code = 'T' + String(1000000 + task.id);

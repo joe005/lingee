@@ -67,3 +67,5 @@
 #view-collab #cv-tasks-current :is(.tk-card-action,.tk-list-action-btn):focus-visible {
   outline:2px solid var(--focus-ring); outline-offset:2px;
 }
+
+#cv-tasks-current .tk-board-col-toggle { display:none; }
