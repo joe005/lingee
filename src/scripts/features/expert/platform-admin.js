@@ -25,6 +25,7 @@ const retiredSeedKeys=new Set(['expert:frontend-engineer','expert:ux-designer','
 const retiredDemoTeams=new Set(['team:cloud-delivery-team','team:tenant-ws-build-build-delivery-team']);
 function retiredSeed(item){
   if(!item)return false;
+  if(item.editor==='租户示例数据')return true; /* 租户示例数据已取消，旧存档里的一并下线 */
   const id=key(item.kind,item.id);
   /* 代码里已不存在的原厂种子（智能体、团队）视为下线，避免旧的本地存档残留在列表里；云端样例每次由代码补种，不在此列。 */
   if(item.editor==='平台初始数据'&&['expert','team'].includes(item.kind)&&!originals[item.kind].some(o=>o.id===item.id))return true;
@@ -84,51 +85,6 @@ function seed(){
     meta[id]={kind,id:item.id,status:'online',activeVersion:'1.0.0',pendingVersion:'',modified:now(),editor:'平台初始数据'};
     versions[id]=[{version:'1.0.0',data:snapshot,note:'初始标品定义',at:now(),author:'Lingee'}];
     installed[id]='1.0.0';changed=true;
-  }
-  /* 租户管理演示数据只在缺失时补齐，不覆盖已有导入或审核结果。 */
-  const tenantId='ws-build',tenantName=cvWorkspaceName(tenantId);
-  const tenantExperts=[
-    ['build-requirements','业务需求','software-product-manager','梳理租户业务流程、需求边界和验收标准。'],
-    ['build-delivery','交付实施','software-team-lead','协调租户项目的实施计划、成员分工与交付验收。']
-  ];
-  for(const [slug,name,baseId,desc] of tenantExperts){
-    const base=originals.expert.find(item=>item.id===baseId);if(!base)continue;
-    const id=`tenant-${tenantId}-${slug}`,itemKey=key('expert',id);
-    const data={...clone(base),listed:undefined,id,name,desc,source:'tenant',tenantId,by:tenantName};
-    if(meta[itemKey]){
-      /* 未被租户改动的示例数据跟随代码刷新；1.1.0 演示版本只多一句说明。 */
-      const history=versions[itemKey]||[];
-      if(meta[itemKey].editor==='租户示例数据'&&history.every(row=>row.author===tenantName)){
-        history.forEach((row,index)=>{
-          const next=index===0?data:{...clone(data),desc:data.desc+' 支持最新企业交付规范。'};
-          if(index===0&&row.note!=='租户示例智能体'){row.note='租户示例智能体';changed=true;}
-          if(JSON.stringify(row.data)!==JSON.stringify(next)){row.data=clone(next);changed=true;}
-        });
-      }
-      continue;
-    }
-    meta[itemKey]={kind:'expert',id,source:'tenant',tenantId,status:'online',activeVersion:'1.0.0',pendingVersion:'',modified:now(),editor:'租户示例数据'};
-    versions[itemKey]=[{version:'1.0.0',data,note:'租户示例智能体',at:now(),author:tenantName}];changed=true;
-  }
-  /* 企业自建示例展示租户管理上架后，客户端获取最新发布版本。 */
-  const tenantMemberIds=tenantExperts.map(([slug])=>`tenant-${tenantId}-${slug}`);
-  for(const memberId of tenantMemberIds){
-    const itemKey=key('expert',memberId),item=meta[itemKey],history=versions[itemKey];
-    if(item?.editor!=='租户示例数据'||item.status!=='online'||item.pendingVersion||history?.length!==1||history[0].version!=='1.0.0')continue;
-    const data=clone(history[0].data);data.desc=data.desc+' 支持最新企业交付规范。';
-    history.push({version:'1.1.0',data,note:'企业自建演示更新：补充最新交付规范。',at:now(),author:tenantName});
-    item.activeVersion='1.1.0';item.modified=now();changed=true;
-  }
-  const demoTeamId=`tenant-${tenantId}-enterprise-delivery`,demoTeamKey=key('team',demoTeamId);
-  const demoTeamDesc='使用租户管理中最新上架的需求与交付智能体，协同完成企业项目交付。';
-  if(meta[demoTeamKey]?.editor==='租户示例数据')for(const row of versions[demoTeamKey]||[]){
-    if(row.author===tenantName&&row.data.desc!==demoTeamDesc){row.data.desc=demoTeamDesc;changed=true;}
-  }
-  if(!meta[demoTeamKey]&&tenantMemberIds.every(id=>meta[key('expert',id)])){
-    const data={id:demoTeamId,name:'企业交付智能体团队',source:'tenant',tenantId,by:tenantName,preset:true,desc:demoTeamDesc,members:tenantMemberIds,leadId:tenantMemberIds[0],domains:['企业交付','团队协作'],cmds:[]};
-    meta[demoTeamKey]={kind:'team',id:demoTeamId,source:'tenant',tenantId,status:'online',activeVersion:'1.1.0',pendingVersion:'',modified:now(),editor:'租户示例数据'};
-    versions[demoTeamKey]=[{version:'1.0.0',data:clone(data),note:'企业交付智能体团队初始版本。',at:now(),author:tenantName},{version:'1.1.0',data:clone(data),note:'演示更新：获取最新上架成员，补充企业协作说明。',at:now(),author:tenantName}];
-    changed=true;
   }
   /* 已安装的 1.0.0 保持不变；尚未改动的原厂种子发布 1.1.0 演示版本。 */
   for(const [kind,id,note,extraTag] of SEED_DEMO_UPDATES){

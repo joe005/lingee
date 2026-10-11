@@ -3,7 +3,7 @@ import { layerOf, layerVisible, layerActions, layerToolbar, handleLayerAction, a
 import { UNLISTED_EXPERT_IDS } from './builtin-catalog.js';
 import { $, $$ } from '../../core/dom.js';
 import { summon } from './automatch.js';
-import { EX, EXPERTS, compChip, phraseHtml, skillInfo, tierInfo, xav, xesc } from './data.js';
+import { EX, EXPERTS, phraseHtml, skillInfo, xav, xesc } from './data.js';
 import { submitAssetForReview } from './asset-review.js';
 import { deleteMyExpert, openExpertEditor } from './editor.js';
 import { knSecHtml, resetKnDetail, saveKnDetail } from './knowledge.js';
@@ -21,10 +21,6 @@ var expertGrid=$('#expertGrid');
 function facesHtml(ids,n){
   return '<span class="x-faces">'+ids.slice(0,n||4).map(function(i){
     return '<img src="'+xav(EX[i].k)+'" alt="">'; }).join('')+'</span>';
-}
-function tierChip(tier){
-  var t=tierInfo(tier);
-  return '<span class="ptag ptag-tier" title="'+xesc(t.desc)+'">'+xesc(t.label)+'</span>';
 }
 function renderExpertGrid(){
   if(!expertGrid) return;
@@ -88,15 +84,16 @@ function openExpertModal(id){
     +'</div></div>'
     +'<button class="modal-close" type="button" data-x-close aria-label="关闭">×</button>';
 
+  /* 概览与 Lingee Build 的智能体详情一致：简介、标签、常见触发词（单行文字），没有能力项和模型级别 */
+  var tags=e.tags||[];
   var overview='<div class="x-sec x-desc">'+xesc(e.desc)+'</div>'
-    +(e.cmds.length?'<div class="x-sec"><div class="x-sec-t">常见触发词</div>'
+    +(tags.length?'<div class="x-sec"><div class="x-sec-t">标签</div><div class="x-chips">'
+    +tags.map(function(tag){return '<span class="ptag">'+xesc(tag)+'</span>'}).join('')+'</div></div>':'')
+    +(e.cmds.length?'<div class="x-sec"><div class="x-sec-t x-sec-t-row"><span>常见触发词</span><span class="x-sec-hint">点击任意一条将带着该智能体开启新会话</span></div>'
     +e.cmds.map(function(c){return '<button type="button" class="x-cmd" data-cmd="'+xesc(c[0])+'" data-cmd-of="'+e.id+'">'
-      +'<span class="x-cmd-b"><span class="x-cmd-q">“'+phraseHtml(c[0])+'”</span>'
-      +(c[1]?'<span class="x-cmd-d">'+xesc(c[1])+'</span>':'')+'</span>'
+      +'<span class="x-cmd-b"><span class="x-cmd-q">'+phraseHtml(c[0])+'</span></span>'
       +'<svg class="x-cmd-go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H7l-4 3v-6.5A8 8 0 0 1 11 4h2a8 8 0 0 1 8 8z"/></svg>'
-      +'</button>'}).join('')+'</div>':'')
-    +'<div class="x-sec"><div class="x-sec-t">能力项</div><div class="x-chips">'+e.comp.map(compChip).join('')+'</div></div>'
-    +'<div class="x-sec"><div class="x-sec-t">模型级别</div><div class="x-chips">'+tierChip(e.tier)+'</div></div>';
+      +'</button>'}).join('')+'</div>':'');
 
   var skills=e.skills||[];
   var skillsHtml='<div class="x-skill-head"><strong>关联技能</strong><span>'+skills.length+'</span></div>'

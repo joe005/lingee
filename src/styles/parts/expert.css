@@ -119,6 +119,8 @@
 .x-av-lg { width: 46px; height: 46px; border-radius: 12px; }
 .x-sec { margin-bottom: 18px; }
 .x-sec-t { font-size: 11.5px; color: var(--text-soft); letter-spacing: 0.04em; margin-bottom: 8px; }
+.x-sec-t-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.x-sec-hint { color: var(--text-soft); letter-spacing: 0; }
 .x-desc { color: var(--text-secondary); font-size: 13.5px; line-height: 1.65; }
 .x-chips { display: flex; flex-wrap: wrap; gap: 5px; }
 .x-ul { margin: 0; padding-left: 17px; color: var(--text-secondary); font-size: 13px; }
