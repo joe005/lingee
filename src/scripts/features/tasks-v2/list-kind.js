@@ -4,7 +4,7 @@ import { taskConversationNeedsReply, taskConversationQuestion } from '../compose
 
 /* 任务列表卡片与详情主操作共用的「轮到谁」判定。
    同一条任务对不同登录人展示不同：当前阶段处理人看到可操作的卡片，其他人只能查看进展。
-   action 取值：start 开始执行 / review 验收产物 / reply 回答提问 / retry 重新执行 / detail 查看详情 / artifacts 查看产物。 */
+   action 取值：start 开始执行 / review 验收产物 / reply 回答提问 / retry 重试 / detail 查看详情 / artifacts 查看产物。 */
 function currentStageName(task) {
   var plan = Array.isArray(task.executionPlan) ? task.executionPlan : [];
   var stage = plan.find(function (row) { return row.id === task.executionStageId; })
@@ -58,6 +58,6 @@ export function taskNeedsMyAction(task) { return taskListKind(task).needsMe; }
 export function taskCardAction(task) {
   var info = taskListKind(task);
   var action = task.status === 'in_review' ? 'review' : info.action;
-  var labels = {start:'AI 执行',review:'验收产物',retry:'重新执行',reply:'回复问题',artifacts:'查看产物',detail:'查看详情'};
+  var labels = {start:'AI 执行',review:'验收产物',retry:'重试',reply:'回复问题',artifacts:'查看产物',detail:'查看详情'};
   return {action:action,label:['question', 'running'].includes(info.kind) ? info.label : labels[action] || info.label,primary:info.primary};
 }

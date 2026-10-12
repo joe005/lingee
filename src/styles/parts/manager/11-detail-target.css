@@ -239,6 +239,11 @@
 }
 
 /* 新建项目 · 模板「更多」展开 */
+#mgrProjEditOverlay #mgrPeTplChips { display:block; }
+#mgrProjEditOverlay .mgr-pe-tpl.active { border-color:var(--brand); color:var(--brand); }
+#mgrProjEditOverlay .mgr-pe-tpl-first-row { display:flex; flex-wrap:nowrap; gap:8px; overflow-x:auto; padding:4px; }
+#mgrProjEditOverlay .mgr-pe-tpl-first-row .mgr-pe-tpl { flex:none; white-space:nowrap; padding:6px 8px; }
+#mgrProjEditOverlay .mgr-pe-tpl-extra-row { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
 .mgr-scope .mgr-pe-tpl-more {
   display: inline-flex;
   align-items: center;

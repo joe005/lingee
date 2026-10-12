@@ -154,14 +154,15 @@
 #niuCreateOverlay .niu-create-section--plan .niu-stage-row{height:auto}
 #niuCreateOverlay .niu-create-section--plan .niu-stage-row td{height:auto;min-height:44px;padding:8px;vertical-align:middle}
 #niuCreateOverlay .niu-create-section--plan .niu-stage-row td:last-child{padding-right:0}
-#niuCreateOverlay .niu-col-index{width:44px}
-#niuCreateOverlay .niu-col-stage{width:150px}
+#niuCreateOverlay .niu-col-index{width:40px}
+#niuCreateOverlay .niu-col-stage{width:96px}
 #niuCreateOverlay .niu-col-expert{width:auto}
 #niuCreateOverlay .niu-col-review{width:84px}
-#niuCreateOverlay .niu-col-owner{width:150px}
-#niuCreateOverlay .niu-col-action{width:112px}
-#niuCreateOverlay .niu-stage-experts{display:flex;flex-wrap:wrap;gap:4px}
-#niuCreateOverlay .niu-stage-expert{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:999px;background:var(--brand-fill);color:var(--brand);font-size:12px;line-height:1;white-space:nowrap}
+#niuCreateOverlay .niu-col-owner{width:136px}
+#niuCreateOverlay .niu-col-action{width:96px}
+#niuCreateOverlay .niu-stage-name{display:block;font-size:14px;line-height:1.5;overflow-wrap:anywhere;color:var(--text)}
+#niuCreateOverlay .niu-stage-experts{display:flex;flex-wrap:wrap;gap:4px;min-width:0;max-width:100%}
+#niuCreateOverlay .niu-stage-expert{display:inline-flex;align-items:center;box-sizing:border-box;min-width:0;max-width:100%;min-height:22px;padding:4px 8px;border-radius:12px;background:var(--brand-fill);color:var(--brand);font-size:12px;line-height:1.5;white-space:normal;overflow-wrap:anywhere}
 #niuCreateOverlay .niu-stage-expert--empty{background:var(--fill-1);color:var(--text-secondary)}
 @media(max-width:640px){#niuCreateOverlay .niu-create-card .niu-create-properties{grid-template-columns:1fr}#niuCreateOverlay .niu-col-expert{width:140px}}
 

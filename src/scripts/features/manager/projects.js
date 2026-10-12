@@ -130,14 +130,7 @@ function openProject(id) {
 /* ---------- 新建项目弹窗 ---------- */
 function currentTemplate() { return TEMPLATES.find(function (t) { return t.id === pickedTemplate; }); }
 function isDevKind() { return pickedKind === 'dev'; }
-function renderKinds() {
-  document.querySelectorAll('[data-mgr-pe-kind]').forEach(function (b) {
-    var on = b.getAttribute('data-mgr-pe-kind') === pickedKind;
-    b.classList.toggle('active', on);
-    b.setAttribute('aria-checked', String(on));
-  });
-  $('#mgrPeTplField').hidden = isDevKind();
-}
+function renderKinds() { renderTemplates(); }
 function pickKind(kind) {
   if (pickedKind === kind) return;
   pickedKind = kind;
@@ -155,15 +148,16 @@ function renderTemplates() {
   var extra = TEMPLATES.slice(TEMPLATE_VISIBLE);
   var open = templatesExpanded || extra.some(function (t) { return t.id === pickedTemplate; });
   var chip = function (t) {
-    var on = pickedTemplate === t.id;
+    var on = !isDevKind() && pickedTemplate === t.id;
     return '<button type="button" class="mgr-pe-tpl' + (on ? ' active' : '') + '" data-mgr-pe-tpl="' + mgrEsc(t.id) + '" role="radio" aria-checked="' + on + '">' + mgrEsc(t.name) + '</button>';
   };
-  $('#mgrPeTplChips').innerHTML = TEMPLATES.slice(0, TEMPLATE_VISIBLE).map(chip).join('') +
-    (open ? extra.map(chip).join('') : '') +
+  $('#mgrPeTplChips').innerHTML =  '<div class="mgr-pe-tpl-first-row">' + chip(TEMPLATES[0]) +
+    '<button type="button" class="mgr-pe-tpl' + (isDevKind() ? ' active' : '') + '" data-mgr-pe-kind="dev" role="radio" aria-checked="' + isDevKind() + '">开发项目</button>' +
+    TEMPLATES.slice(1, TEMPLATE_VISIBLE).map(chip).join('') +
     (extra.length
       ? '<button type="button" class="mgr-pe-tpl mgr-pe-tpl-more" data-mgr-pe-tpl-more aria-expanded="' + open + '">' + (open ? '收起' : '更多') +
         '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>'
-      : '');
+      : '') + '</div>' + (open ? '<div class="mgr-pe-tpl-extra-row">' + extra.map(chip).join('') + '</div>' : '');
 }
 function syncDevExtra() {
   $('#mgrPeDevExtra').hidden = !isDevKind();
@@ -172,7 +166,8 @@ function syncDevExtra() {
   $('#mgrPeBranchError').hidden = true;
 }
 function pickTemplate(id) {
-  var changed = pickedTemplate !== id;
+  var changed = pickedTemplate !== id || isDevKind();
+  pickedKind = 'general';
   pickedTemplate = id;
   var tpl = currentTemplate();
   if (changed) $('#mgrPeGoal').value = tpl ? tpl.goal : '';

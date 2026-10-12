@@ -361,6 +361,7 @@ function selectCreateTab(tab) {
 function taskInfoValidationFields() {
   return [
     {input:byId('niuTitle'), control:byId('niuTitle'), valid:!!byId('niuTitle').value.trim()},
+    {input:byId('niuDescription'), control:byId('niuDescription'), valid:!!byId('niuDescription').value.trim()},
     {input:byId('niuProject'), control:byId('niuProjectTrigger'), valid:tkProjectsForCurrentUser().some(item => item.id === byId('niuProject').value)},
     {input:byId('niuTeam'), control:byId('niuTeam').nextElementSibling, valid:!!byId('niuTeam').value},
     {input:byId('niuType'), control:byId('niuType').nextElementSibling, valid:!!byId('niuType').value},
@@ -390,6 +391,14 @@ function validateTaskInfo() {
   return true;
 }
 
+function taskSaveMessage(project, stages) {
+  const firstOwnerId = stages[0]?.assigneeId;
+  const person = tkPeopleInProject(project).find(item => item.id === firstOwnerId);
+  return person && firstOwnerId !== tkCurrentUserId()
+    ? '保存成功，任务已分配给「' + escapeHtml(person.name) + '」'
+    : '保存成功';
+}
+
 function createTask(startNow) {
   if (!validateTaskInfo()) return;
   const title = byId('niuTitle').value.trim();
@@ -415,7 +424,7 @@ function createTask(startNow) {
     renderTasks();
     refreshTaskDetail(task.id);
     closeOverlays();
-    toast('任务已保存', 'success');
+    toast(taskSaveMessage(project, patch.executionPlan || task.executionPlan || []), 'success');
     return;
   }
   const created = tkAddTask({
@@ -430,14 +439,15 @@ function createTask(startNow) {
   }
   /* 「保存并启动」：创建人正好是第一阶段处理人时直接进入执行，否则只创建并提示 */
   let autoStarted = false;
-  if (startNow && created) {
+  let startWarning = '';
+  if (startNow && created && created.executionPlan?.[0]?.assigneeId === tkCurrentUserId()) {
     const started = startTaskStage(created);
     autoStarted = !!started.ok;
-    if (!started.ok) toast(started.message || '任务已创建，但暂时无法自动开始', 'warning');
+    if (!started.ok) startWarning = started.message || '任务已创建，但暂时无法自动开始';
   }
   renderTasks();
   closeOverlays();
-  toast(autoStarted ? '任务已创建并开始执行' : '任务和执行计划草案已创建', 'success');
+  toast(startWarning || (autoStarted ? '保存成功，已开始执行' : taskSaveMessage(project, created?.executionPlan || draftStages)), startWarning ? 'warning' : 'success');
 }
 
 function renderPlan() {
@@ -461,7 +471,7 @@ function renderPlan() {
       const expertCell = '<div class="niu-stage-experts">' + (experts.length
         ? experts.map(id => '<span class="niu-stage-expert" title="由智能体执行">✦ ' + escapeHtml(EX[id].name) + '</span>').join('')
         : '<span class="niu-stage-expert niu-stage-expert--empty">未匹配智能体</span>') + '</div>';
-      return '<tr class="niu-stage-row" data-niu-stage="' + escapeHtml(stage.id) + '"><td class="niu-stage-index">' + String(index + 1) + '</td><td><select data-niu-work-type="' + escapeHtml(stage.id) + '" class="niu-stage-select" aria-label="第 ' + (index + 1) + ' 执行阶段"' + disabled + '>' + options + '</select></td><td>' + expertCell + '</td><td class="niu-stage-review-cell">' + reviewMode + '</td><td>' + owner + '</td></tr>';
+      return '<tr class="niu-stage-row" data-niu-stage="' + escapeHtml(stage.id) + '"><td class="niu-stage-index">' + String(index + 1) + '</td><td><span class="niu-stage-name">' + escapeHtml(stage.workType || stage.title || '') + '</span></td><td>' + expertCell + '</td><td class="niu-stage-review-cell">' + reviewMode + '</td><td>' + owner + '</td></tr>';
     }
     return '<div class="niu-stage" data-niu-stage="' + escapeHtml(stage.id) + '"><span class="niu-stage-index">' + String(index + 1) + '</span>' + fields + completion + '</div>';
   }).join('') : (activePlanScope === 'create' ? '<tr><td colspan="5" class="niu-plan-empty">' + (taskTeamOf(task) ? '还没有工作阶段。' : '请先选择智能体团队，选完后加载开发阶段。') + '</td></tr>' : '<div class="niu-plan-empty">还没有工作阶段。添加阶段后可直接在分录中编辑。</div>');

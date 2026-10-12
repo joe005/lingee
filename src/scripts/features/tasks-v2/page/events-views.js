@@ -208,7 +208,7 @@ export function bindViewEvents() {
           state.selectedIds.clear();
           hidePopover();
           render();
-          toast('成功删除 ' + ids.length + ' 个任务', 'success');
+          toast('删除成功', 'success');
         });
       }
     });
