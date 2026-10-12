@@ -1,4 +1,3 @@
-import stageTrashIcon from '../../../assets/figma/task-dialog/trash.svg';
 import { showTaskConfirm } from './confirm.js';
 import { initSelectDropdowns, niuSelectCaret } from '../../core/select-dropdown.js';
 /* 新版任务界面原型。复用当前任务数据；执行计划只在当前页面会话中保存。 */
@@ -399,7 +398,7 @@ function createTask(startNow) {
   const issueType = byId('niuType').value;
   const teamId = byId('niuTeam').value;
   const owner = selectedOwnerId;
-  if (!planLocked() && !draftStages.length) { toast('请至少添加一个执行阶段', 'warning'); selectCreateTab('plan'); byId('niuCreateAdd').focus(); return; }
+  if (!planLocked() && !draftStages.length) { toast('请先选择智能体团队，加载开发阶段', 'warning'); selectCreateTab('info'); byId('niuTeam').focus(); return; }
   const originalProject = editingTaskId === null ? null : tkGetTasks().find(item => item.id === editingTaskId)?.project;
   const unassignedStage = (!planLocked() || project !== originalProject) && draftStages.find(stage => !tkPeopleInProject(project).some(person => person.id === stage.assigneeId));
   if (unassignedStage) { toast('请为节点选择当前项目的执行人', 'warning'); selectCreateTab('plan'); byId('niuCreateStageList').querySelector('[data-niu-owner-stage="' + CSS.escape(unassignedStage.id) + '"]')?.focus(); return; }
@@ -456,20 +455,17 @@ function renderPlan() {
     const owner = '<button type="button" class="niu-stage-owner" data-niu-owner-stage="' + escapeHtml(stage.id) + '" aria-haspopup="listbox" aria-expanded="false" aria-label="选择第 ' + (index + 1) + ' 节点执行人"' + disabled + '>' + escapeHtml(personName(task.project, stage.assigneeId, '')) + niuSelectCaret + '</button>';
     const fields = '<div class="niu-stage-fields"><label><span>执行阶段</span><select data-niu-work-type="' + escapeHtml(stage.id) + '" aria-label="第 ' + (index + 1) + ' 执行阶段"' + disabled + '>' + options + '</select></label><label><span>阶段工作说明</span><input data-niu-description="' + escapeHtml(stage.id) + '" value="' + escapeHtml(stage.description || '') + '" placeholder="填写本节点要完成的工作" aria-label="第 ' + (index + 1) + ' 阶段工作说明"' + disabled + '></label></div>';
     const completion = '<div class="niu-stage-completion"><span class="niu-stage-label">完成方式</span><div class="niu-stage-choice" role="group" aria-label="第 ' + (index + 1) + ' 节点完成方式"><button type="button" data-niu-confirm-mode="' + escapeHtml(stage.id) + '" data-required="false" aria-pressed="' + (!confirmation) + '"' + disabled + '>直接继续</button><button type="button" data-niu-confirm-mode="' + escapeHtml(stage.id) + '" data-required="true" aria-pressed="' + confirmation + '"' + disabled + '>需要确认</button></div>' + owner + '</div>';
-    const remove = locked ? '' : '<button type="button" class="niu-stage-remove" data-niu-remove="' + escapeHtml(stage.id) + '" aria-label="移除第 ' + (index + 1) + ' 节点"><img src="' + stageTrashIcon + '" width="16" height="16" alt=""></button>';
     if (activePlanScope === 'create') {
       const reviewMode = '<label class="niu-auto-review-switch"><input type="checkbox" data-niu-review-mode="' + escapeHtml(stage.id) + '" aria-label="第 ' + (index + 1) + ' 节点人工审核"' + (confirmation ? ' checked' : '') + (locked ? ' disabled' : '') + '><span aria-hidden="true"></span></label>';
       const experts = (stage.expertIds?.length ? stage.expertIds : (stageOptions.find(row => row.name === stage.workType)?.expertIds || [])).filter(id => EX[id]);
       const expertCell = '<div class="niu-stage-experts">' + (experts.length
         ? experts.map(id => '<span class="niu-stage-expert" title="由智能体执行">✦ ' + escapeHtml(EX[id].name) + '</span>').join('')
         : '<span class="niu-stage-expert niu-stage-expert--empty">未匹配智能体</span>') + '</div>';
-      const stageRemove = locked ? '' : '<button type="button" class="niu-stage-remove" data-niu-remove="' + escapeHtml(stage.id) + '" aria-label="移除第 ' + (index + 1) + ' 节点"><img src="' + stageTrashIcon + '" width="16" height="16" alt=""></button>';
-      return '<tr class="niu-stage-row" data-niu-stage="' + escapeHtml(stage.id) + '"><td class="niu-stage-index">' + String(index + 1) + '</td><td><select data-niu-work-type="' + escapeHtml(stage.id) + '" class="niu-stage-select" aria-label="第 ' + (index + 1) + ' 执行阶段"' + disabled + '>' + options + '</select></td><td>' + expertCell + '</td><td class="niu-stage-review-cell">' + reviewMode + '</td><td>' + owner + '</td><td>' + stageRemove + '</td></tr>';
+      return '<tr class="niu-stage-row" data-niu-stage="' + escapeHtml(stage.id) + '"><td class="niu-stage-index">' + String(index + 1) + '</td><td><select data-niu-work-type="' + escapeHtml(stage.id) + '" class="niu-stage-select" aria-label="第 ' + (index + 1) + ' 执行阶段"' + disabled + '>' + options + '</select></td><td>' + expertCell + '</td><td class="niu-stage-review-cell">' + reviewMode + '</td><td>' + owner + '</td></tr>';
     }
-    return '<div class="niu-stage" data-niu-stage="' + escapeHtml(stage.id) + '"><span class="niu-stage-index">' + String(index + 1) + '</span>' + fields + completion + remove + '</div>';
-  }).join('') : (activePlanScope === 'create' ? '<tr><td colspan="6" class="niu-plan-empty">' + (taskTeamOf(task) ? '还没有工作阶段。点击「＋ 添加节点」开始。' : '请先选择智能体团队，选完后加载开发阶段。') + '</td></tr>' : '<div class="niu-plan-empty">还没有工作阶段。添加阶段后可直接在分录中编辑。</div>');
+    return '<div class="niu-stage" data-niu-stage="' + escapeHtml(stage.id) + '"><span class="niu-stage-index">' + String(index + 1) + '</span>' + fields + completion + '</div>';
+  }).join('') : (activePlanScope === 'create' ? '<tr><td colspan="5" class="niu-plan-empty">' + (taskTeamOf(task) ? '还没有工作阶段。' : '请先选择智能体团队，选完后加载开发阶段。') + '</td></tr>' : '<div class="niu-plan-empty">还没有工作阶段。添加阶段后可直接在分录中编辑。</div>');
   if (activePlanScope === 'create') {
-    byId('niuCreateAdd').disabled = locked;
     byId('niuCreateStageCount').textContent = String(draftStages.length);
     byId('niuCreateStageList').innerHTML = stageList;
     initCreateSelects(Array.from(byId('niuCreateStageList').querySelectorAll('select')));
@@ -483,7 +479,6 @@ function renderPlan() {
   byId('niuPlanConfirm').disabled = !draftStages.length || draftStages.some(stage => !stage.assigneeId);
   byId('niuPlanSave').disabled = locked;
   if (locked) byId('niuPlanConfirm').disabled = true;
-  byId('niuAddToggle').disabled = locked;
   byId('niuPlanConfirm').textContent = draftConfirmed ? '已确认计划' : '确认计划';
   byId('niuStageList').innerHTML = stageList;
   initCreateSelects(Array.from(byId('niuStageList').querySelectorAll('select')));
@@ -502,20 +497,6 @@ export function openNewIssuePlan(taskId) {
   closeOverlays();
   byId('niuPlanOverlay').hidden = false;
   renderPlan();
-}
-
-function addStage() {
-  if (planLocked()) { toast('任务已启动，执行计划已锁定', 'warning'); return; }
-  const task = currentTask();
-  if (!task?.project) { toast('请先选择所属项目', 'warning'); selectCreateTab('info'); byId('niuProjectTrigger').focus(); return; }
-  const used = new Set(draftStages.map(stage => stage.workType));
-  const next = planStageOptions(task.project).find(stage => !used.has(stage.name));
-  if (!next) { toast('智能体团队的交付阶段已全部加入执行计划', 'warning'); return; }
-  draftStages.push({ id: crypto.randomUUID(), workType: next.name, title: next.name, description: next.desc, expertIds: (next.expertIds || []).slice(), assigneeId: defaultStageAssigneeId(tkProjectById(task.project), tkPeopleInProject(task.project), CV_MEMBERS, next.name), status: 'pending', requiresConfirmation: true });
-  draftConfirmed = false;
-  renderPlan();
-  const list = byId(activePlanScope === 'create' ? 'niuCreateStageList' : 'niuStageList');
-  list.querySelector('.niu-stage:last-child select')?.focus();
 }
 
 function savePlan(confirm) {
@@ -571,8 +552,6 @@ export function initNewIssueUI(renderCallback, detailCallback) {
   byId('niuSmartPrompt').addEventListener('keydown', event => {
     if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) { event.preventDefault(); submitSmartCreate(); }
   });
-  byId('niuAddToggle').addEventListener('click', () => addStage());
-  byId('niuCreateAdd').addEventListener('click', () => addStage());
   byId('niuPlanSave').addEventListener('click', () => savePlan(false));
   byId('niuPlanConfirm').addEventListener('click', () => savePlan(true));
   document.addEventListener('input', event => {
@@ -626,14 +605,6 @@ export function initNewIssueUI(renderCallback, detailCallback) {
     }
     const owner = event.target.closest('[data-niu-owner-stage]');
     if (owner) { openPersonPopup('stage', owner.dataset.niuOwnerStage); return; }
-    const remove = event.target.closest('[data-niu-remove]');
-    if (remove) {
-      if (planLocked()) return;
-      draftStages = draftStages.filter(stage => stage.id !== remove.dataset.niuRemove);
-      draftConfirmed = false;
-      renderPlan();
-      return;
-    }
     if (event.target.closest('[data-niu-close]')) requestCloseOverlays();
     const projectOption = event.target.closest('[data-niu-project]');
     if (projectOption) { selectProject(projectOption.dataset.niuProject); return; }

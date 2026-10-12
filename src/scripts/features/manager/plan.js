@@ -656,13 +656,10 @@ function renderStages() {
   var options = stageOptions(project);
   var members = mgrProjectMembers(project);
   var team = draftTeam();
-  $('#mgrTnStageAdd').disabled = editLocked || !options.some(function (o) {
-    return !draftStages.some(function (st) { return st.workType === o.name; });
-  });
   /* 平时不显示说明，只在任务已启动、阶段被锁定时提示 */
   $('#mgrTnPlanHint').textContent = editLocked ? '任务已启动，开发阶段不能修改' : '';
   if (!draftStages.length) {
-    body.innerHTML = '<tr><td colspan="6" class="mgr-tn-plan-empty">' + (team ? '还没有工作阶段。点击「＋ 添加节点」开始。' : '请先选择智能体团队，选完后加载执行阶段。') + '</td></tr>';
+    body.innerHTML = '<tr><td colspan="5" class="mgr-tn-plan-empty">' + (team ? '还没有工作阶段。' : '请先选择智能体团队，选完后加载执行阶段。') + '</td></tr>';
     return;
   }
   body.innerHTML = draftStages.map(function (st, i) {
@@ -678,21 +675,9 @@ function renderStages() {
       '</td><td>' + stageExpertsHtml(st) + '</td>' +
       '<td><label class="mgr-tn-review-switch"><input type="checkbox" data-mgr-tn-stage-review="' + mgrEsc(st.id) + '" aria-label="第 ' + n + ' 节点人工审核"' +
       (st.requiresConfirmation === false ? '' : ' checked') + '><span aria-hidden="true"></span></label></td>' +
-      '<td><select data-mgr-tn-stage-owner="' + mgrEsc(st.id) + '" aria-label="第 ' + n + ' 节点审核人">' + owners + '</select></td>' +
-      '<td><button type="button" class="mgr-tn-stage-remove" data-mgr-tn-stage-remove="' + mgrEsc(st.id) + '" aria-label="移除第 ' + n + ' 节点">×</button></td></tr>';
+      '<td><select data-mgr-tn-stage-owner="' + mgrEsc(st.id) + '" aria-label="第 ' + n + ' 节点审核人">' + owners + '</select></td></tr>';
   }).join('');
   if (editLocked) body.querySelectorAll('select, input, button').forEach(function (el) { el.disabled = true; });
-}
-function addStage() {
-  var project = planProject;
-  if (!project) return;
-  var used = new Set(draftStages.map(function (st) { return st.workType; }));
-  var next = stageOptions(project).find(function (o) { return !used.has(o.name); });
-  if (!next) { toast('智能体团队的交付阶段已全部加入执行计划', 'warning'); return; }
-  draftStages.push(stageFromOption(project, next));
-  renderStages();
-  var selects = document.querySelectorAll('#mgrTnStages [data-mgr-tn-stage-type]');
-  if (selects.length) selects[selects.length - 1].focus();
 }
 function stageById(id) { return draftStages.find(function (st) { return st.id === id; }); }
 /* 保存时串成顺序依赖：每个节点依赖上一个节点 */
@@ -889,7 +874,7 @@ function saveTaskEdit(project, rd, title) {
     patch.teamId = draftTeamId;
     patch.issueType = flowIssueType();
     var stages = collectStages();
-    if (!stages.length) { toast('研发任务至少保留一个执行阶段', 'error'); return; }
+    if (!stages.length) { toast('请先选择智能体团队，加载开发阶段', 'error'); return; }
     if (stages.some(function (st) { return !st.assigneeId; })) { toast('请为每个执行阶段选择审核人', 'error'); return; }
     patch.executionPlan = stages;
     patch.assignee = stages[0].assigneeId;
@@ -914,7 +899,7 @@ function saveTaskNew(start) {
   if (rd && !mgrTeam(draftTeamId)) { $('#mgrTnTeamError').hidden = false; toast('请选择智能体团队', 'error'); $('#mgrTnTeam').focus(); return; }
   var autoStart = rd && start;
   var stages = rd ? collectStages() : [];
-  if (rd && !stages.length) { toast('研发任务至少保留一个执行阶段', 'error'); return; }
+  if (rd && !stages.length) { toast('请先选择智能体团队，加载开发阶段', 'error'); return; }
   if (rd && stages.some(function (st) { return !st.assigneeId; })) { toast('请为每个执行阶段选择审核人', 'error'); return; }
   var members = mgrProjectMembers(project);
   var collaborators = checkedCollaborators();
@@ -1016,14 +1001,6 @@ function initTaskNewModal() {
     }
     var tool = t.closest('[data-mgr-tn-tool]');
     if (tool) { toast('「' + tool.getAttribute('data-mgr-tn-tool') + '」入口（演示占位）'); return; }
-    if (t.closest('#mgrTnStageAdd')) { addStage(); return; }
-    var rmStage = t.closest('[data-mgr-tn-stage-remove]');
-    if (rmStage) {
-      var rid = rmStage.getAttribute('data-mgr-tn-stage-remove');
-      draftStages = draftStages.filter(function (st) { return st.id !== rid; });
-      renderStages();
-      return;
-    }
     if (t.closest('#mgrTnSubAdd')) { addSubRow(); return; }
     var rmSub = t.closest('[data-mgr-tn-sub-remove]');
     if (rmSub) {

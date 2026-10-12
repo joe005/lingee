@@ -1719,7 +1719,7 @@ td.niu-plan-empty{padding:18px 0;text-align:center;color:var(--text-soft);font-s
 .niu-stage-continuous{display:block;padding:2px 1px;color:var(--text-secondary);font-size:11px}
 .niu-stage-completion .niu-stage-owner{height:30px}
 .niu-create .niu-stage-remove{margin-top:18px}
-.niu-plan .niu-stage{grid-template-columns:32px minmax(0,1fr) minmax(220px,.8fr) 24px;align-items:start;gap:12px;padding:14px}
+.niu-plan .niu-stage{grid-template-columns:32px minmax(0,1fr) minmax(220px,.8fr);align-items:start;gap:12px;padding:14px}
 .niu-plan .niu-stage-remove{margin-top:18px}
 .niu-plan .niu-stage-columns{display:none}
 @media(max-width:760px){
@@ -1728,10 +1728,9 @@ td.niu-plan-empty{padding:18px 0;text-align:center;color:var(--text-soft);font-s
   .niu-create-mode button{padding:0 7px}
   .niu-create-section{margin:0;padding:22px 20px}
   .niu-smart-create{padding:24px 20px}
-  .niu-plan .niu-stage{grid-template-columns:28px minmax(0,1fr) 24px}
+  .niu-plan .niu-stage{grid-template-columns:28px minmax(0,1fr)}
   .niu-stage-fields{grid-column:2;grid-template-columns:1fr}
   .niu-stage-completion{grid-column:2;grid-row:2}
-  .niu-plan .niu-stage-remove{grid-column:3;grid-row:1;margin-top:0}
 }
 @media(max-width:620px){.niu-create .niu-create-properties{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.niu-col-review{width:84px}.niu-col-owner{width:120px}.niu-col-action{width:84px}.niu-create-add-btn{padding:0 6px}}
 @media(max-width:480px){.niu-create-section-head{flex-wrap:wrap}.niu-create-section-head .niu-button{margin-left:46px}.niu-create .niu-create-properties{display:grid;grid-template-columns:1fr}}
