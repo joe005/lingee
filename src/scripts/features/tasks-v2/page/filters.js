@@ -163,11 +163,12 @@ export function getGroupedTasks(tasks, groupBy = state.groupBy) {
   tasks.forEach(function (t) {
     var k = t[groupBy];
     if (groupBy === 'status') {
-      if (k === 'planned' || k === 'backlog') k = 'needs';
+      if (k === 'done') k = 'done';
+      else if (k === 'planned' || k === 'backlog') k = 'needs';
       else if (['in_progress','in_review','blocked'].includes(k)) k = (k === 'in_review' || k === 'blocked' || taskConversationNeedsReply(t, true)) ? 'needs' : 'in_progress';
     }
-    /* 已取消与个人已办的任务不上板；执行中/待审核/已阻塞等活跃任务即使本人处理过也保留 */
-    if (t.status === 'cancelled' || (!['in_progress', 'in_review', 'blocked'].includes(t.status) && tkIsHandledByMe(t))) return;
+    /* 已办任务保留在已完成分组，仅排除已取消任务。 */
+    if (t.status === 'cancelled') return;
     if (!k) {
       if (groupBy === 'assignee') k = 'unassigned';
       else if (groupBy === 'project') k = 'none';

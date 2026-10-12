@@ -98,6 +98,8 @@ export function tkIsMyCurrentStage(task) {
 export function tkIsMyStageDone(task) {
   var me = tkCurrentUserId();
   if (!me || !task || task.status === 'cancelled') return false;
+  // 整体完成以任务状态为准，兼容阶段状态未同步和审核人参与的记录。
+  if (task.status === 'done') return tkWasTaskHandler(task);
   var plan = Array.isArray(task.executionPlan) ? task.executionPlan : [];
   if (!plan.length) return task.status === 'done' && task.assignee === me;
   var didStage = plan.some(function (stage) { return stage && stage.status === 'done' && stage.assigneeId === me; });
