@@ -278,20 +278,20 @@
 }
 #mgrNav .mgr-side-label {
   padding: 0 8px 4px;
-  color: var(--text-soft);
-  font-size: 11.5px;
+  color: var(--text-secondary);
+  font-size: 12px;
   font-weight: 600;
 }
 #mgrNav .mgr-side-sub {
   padding: 2px 8px 4px;
-  color: var(--text-soft);
-  font-size: 11px;
+  color: var(--text-secondary);
+  font-size: 12px;
 }
 #mgrNav .mgr-side-item {
-  padding: 6px 8px;
+  padding: 8px;
   border-radius: 8px;
-  color: var(--text-secondary);
-  font-size: 12.5px;
+  color: var(--text);
+  font-size: 13px;
   line-height: 1.5;
   cursor: pointer;
   overflow: hidden;
@@ -318,9 +318,9 @@
   border: none;
   border-radius: 8px;
   background: none;
-  color: var(--text);
+  color: var(--text-secondary);
   font: inherit;
-  font-size: 12.5px;
+  font-size: 12px;
   cursor: pointer;
   text-align: left;
 }
@@ -335,7 +335,7 @@
   flex: none;
   width: 15px;
   height: 15px;
-  color: var(--text-soft);
+  color: var(--text-secondary);
 }
 #mgrNav .mgr-side-folder-name {
   flex: 1;
@@ -348,7 +348,7 @@
   flex: none;
   width: 14px;
   height: 14px;
-  color: var(--text-soft);
+  color: var(--text-secondary);
   transition: transform 0.15s;
 }
 #mgrNav .mgr-side-folder.expanded .mgr-side-chevron {
@@ -362,10 +362,10 @@
   display: block;
 }
 #mgrNav .mgr-side-child {
-  padding: 5px 8px 5px 30px;
+  padding: 8px 8px 8px 24px;
   border-radius: 8px;
-  color: var(--text-secondary);
-  font-size: 12px;
+  color: var(--text);
+  font-size: 13px;
   line-height: 1.5;
   cursor: pointer;
   overflow: hidden;
@@ -396,7 +396,7 @@
 }
 #mgrNav .mgr-side-label,
 #mgrNav .mgr-side-sub {
-  color: var(--text-label);
+  color: var(--text-muted);
 }
 #view-manager .mgr-project-desc {
   margin: 0;
