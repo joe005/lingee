@@ -50,6 +50,7 @@
 }
 .team-hint { font-size: 12px; color: var(--text-secondary); margin: -4px 0 12px; }
 /* 内置团查看态：一句话说明，不摆只读表单 */
+#teamModal .team-desc-text { margin: 0; color: var(--text-secondary); font-size: 14px; line-height: 1.6; white-space: pre-wrap; }
 .team-count {
   font-size: 12px; font-weight: 400; color: var(--text-secondary);
   background: var(--fill-1); border-radius: 5px; padding: 1px 7px; margin-left: 6px;

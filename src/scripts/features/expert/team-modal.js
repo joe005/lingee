@@ -60,6 +60,9 @@ function populateTeamModal(id,editing){
   /* 内置团：标题已经是名字，不重复摆一份只读表单；自建团编辑时显示可编辑的名称 + 说明 */
   $('#teamEditFields').classList.toggle('hidden', teamDraft.preset||!teamEditMode);
   $('#teamName').value=teamDraft.name; $('#teamDesc').value=teamDraft.desc;
+  /* 查看态（内置团或未进入编辑）以只读文字展示团队说明 */
+  $('#teamDescText').textContent=teamDraft.desc||'暂无说明';
+  $('#teamDescView').classList.toggle('hidden', !teamDraft.preset&&teamEditMode);
   setTeamPanelBadge(false);
   $('#teamResetBtn').hidden=!(teamEditMode&&!teamDraft.preset);
   /* 内置团最常用的动作是发起对话，主按钮给它；自建团主按钮还是保存 */
