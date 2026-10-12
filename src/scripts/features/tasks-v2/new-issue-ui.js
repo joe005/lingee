@@ -10,7 +10,6 @@ import { TEAMS } from '../expert/store.js';
 import { EX, TEAM_STAGE_SCENARIOS } from '../expert/data.js';
 import { toast } from '../../core/toast.js';
 import { startTaskCreationChat } from '../composer.js';
-import { startTaskStage } from './task-execution.js';
 
 let renderTasks = () => {};
 let refreshTaskDetail = () => {};
@@ -438,16 +437,16 @@ function createTask(startNow) {
     try { localStorage.setItem('lingee_task_last_created_' + tkCurrentUserId(), JSON.stringify({ project, teamId })); } catch (e) {}
   }
   /* 「保存并启动」：创建人正好是第一阶段处理人时直接进入执行，否则只创建并提示 */
-  let autoStarted = false;
-  let startWarning = '';
-  if (startNow && created && created.executionPlan?.[0]?.assigneeId === tkCurrentUserId()) {
-    const started = startTaskStage(created);
-    autoStarted = !!started.ok;
-    if (!started.ok) startWarning = started.message || '任务已创建，但暂时无法自动开始';
-  }
+  const shouldStart = startNow && created && created.executionPlan?.[0]?.assigneeId === tkCurrentUserId();
   renderTasks();
   closeOverlays();
-  toast(startWarning || (autoStarted ? '保存成功，已开始执行' : taskSaveMessage(project, created?.executionPlan || draftStages)), startWarning ? 'warning' : 'success');
+  if (shouldStart) {
+    import('./page/utils.js').then(function (taskActions) {
+      taskActions.startTaskExecution(created.id);
+    });
+    return;
+  }
+  toast(taskSaveMessage(project, created?.executionPlan || draftStages), 'success');
 }
 
 function renderPlan() {

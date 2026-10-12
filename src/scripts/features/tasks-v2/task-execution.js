@@ -1,6 +1,8 @@
 import { builtinDeliveryStages, deliveryStagesFor } from '../expert/delivery-stages.js';
 import { STAGES } from '../expert/data.js';
-import { tkCurrentStageHandlerId, tkCurrentUserId, tkGetTasks, tkGetTaskArtifacts, tkUpdateTask, tkCanViewTask, tkProjectById } from './data.js';
+import { toast } from '../../core/toast.js';
+import { escapeHtml } from './ui-utils.js';
+import { tkCurrentStageHandlerId, tkCurrentUserId, tkGetPerson, tkGetTasks, tkGetTaskArtifacts, tkUpdateTask, tkCanViewTask, tkProjectById } from './data.js';
 
 const pendingStageReviews = new Map();
 
@@ -90,6 +92,22 @@ export function submitTaskStage(task) {
   tkUpdateTask(task.id, {status:'in_review', executionStageId:stage.id, executionPlan:stagePlan(task,stage.id,'review'), executionArtifacts:artifacts});
   if (task.executionPlan?.find(function (row) { return row.id === stage.id; })?.requiresConfirmation === false) {
     const approved = reviewTaskStage(task, true);
+    if (approved.ok && approved.next) {
+      // 等当前会话保存完成后再发起下一阶段，避免新会话覆盖本阶段结果。
+      setTimeout(async function () {
+        const current = tkGetTasks().find(function (row) { return row.id === task.id; });
+        if (!current || current.status !== 'backlog' || current.executionStageId !== approved.next.id) return;
+        if (tkCurrentStageHandlerId(current) !== tkCurrentUserId()) {
+          toast('「' + escapeHtml(stage.name) + '」已完成，已流转给「' + escapeHtml(tkGetPerson(tkCurrentStageHandlerId(current)).name) + '」，下一阶段待开始', 'success', 3000);
+          return;
+        }
+        const nextStageActions = await import('./page/utils.js');
+        const latest = tkGetTasks().find(function (row) { return row.id === task.id; });
+        if (latest?.status === 'backlog' && latest.executionStageId === approved.next.id) {
+          nextStageActions.startTaskExecution(task.id, {automatic:true, previousStageName:stage.name});
+        }
+      }, 0);
+    }
     return approved.ok ? {ok:true, stage:stage, autoReviewed:true, next:approved.next, done:approved.done} : approved;
   }
   return {ok:true, stage:stage};

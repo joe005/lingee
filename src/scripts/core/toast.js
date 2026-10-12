@@ -15,7 +15,7 @@ function resumeToast(){
   toastT=setTimeout(dismissToast,toastRemaining);
 }
 function pauseToast(){if(toastPaused)return;clearTimeout(toastT);toastPaused=true;toastRemaining=Math.max(0,toastRemaining-(Date.now()-toastStarted));}
-function toast(msg,type){
+function toast(msg,type,duration){
   var icon='';
   if(type==='error'){
     icon='<svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v5M12 16v.5"/></svg>';
@@ -29,6 +29,7 @@ function toast(msg,type){
   toastEl.classList.add('show');
   clearTimeout(toastT);
   toastRemaining=Math.max(type==='error'?6000:type==='warning'?5000:3000,Math.min(8000,String(msg).replace(/<[^>]*>/g,'').length*100));
+  if(Number.isFinite(duration)&&duration>0)toastRemaining=duration;
   toastPaused=true;
   toastEl.setAttribute('role',type==='error'?'alert':'status');
   toastEl.querySelector('.toast-close').addEventListener('click',dismissToast);

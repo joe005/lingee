@@ -82,7 +82,9 @@ export function startTaskExecution(taskId, options) {
     return;
   }
   openTaskConversationWithTask(taskId, 'start', true);
-  toast('已进入' + (started.stage?.name || '当前节点') + '，会话已发起并运行中', 'success');
+  toast(options?.automatic
+    ? '「' + escapeHtml(options.previousStageName) + '」已完成，已自动发起「' + escapeHtml(started.stage?.name || '下一阶段') + '」新会话并开始执行'
+    : '已进入' + (started.stage?.name || '当前节点') + '，会话已发起并运行中', 'success', options?.automatic ? 3000 : undefined);
 }
 export function startTaskExecutionFromSession(taskId) {
   startTaskExecution(Number(taskId));

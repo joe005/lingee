@@ -18,13 +18,28 @@ export function bindToolbarEvents() {
     event.stopPropagation();
     var layout = button.getAttribute('data-layout');
     if (!['board', 'list'].includes(layout)) return;
+    var changed = state.layout !== layout;
     state.layout = layout;
     if (state.viewMode === 'split' && layout === 'board') state.viewMode = 'slide';
     closeDisplayChoiceMenu();
     els.tkDisplayPopover.classList.add('hidden');
     els.tkDisplayBtn.setAttribute('aria-expanded', 'false');
     render();
+    if (changed && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      var content = layout === 'board' ? els.tkBoard : els.tkList;
+      content.getAnimations().forEach(function (animation) { animation.cancel(); });
+      content.animate([{opacity:0}, {opacity:1}], {duration:120, easing:'ease-out'});
+    }
   }, true);
+  document.addEventListener('keydown', function (event) {
+    var button = event.target.closest('#view-tasks .tk-layout-shortcuts [data-layout]');
+    if (!button || !['ArrowLeft','ArrowRight','Home','End'].includes(event.key)) return;
+    event.preventDefault();
+    var buttons = Array.from(button.parentElement.querySelectorAll('[data-layout]'));
+    var index = event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1 : (buttons.indexOf(button) + (event.key === 'ArrowRight' ? 1 : -1) + buttons.length) % buttons.length;
+    buttons[index].focus();
+    buttons[index].click();
+  });
 
 
   /* 显示设置 Popover */

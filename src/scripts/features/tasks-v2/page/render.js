@@ -31,7 +31,7 @@ export function renderViewBar() {
       var groupKey = tab.id === 'running' ? 'in_progress' : tab.id;
       var count = groups.find(function (group) { return group.key === groupKey; })?.tasks.length || 0;
       var active = tab.id === state.listStatusTab;
-      return '<button type="button" class="list-page-tab' + (active ? ' active' : '') + '" data-list-status="' + tab.id + '" role="tab" aria-selected="' + active + '"><span class="list-page-tab-name">' + (tab.id === 'needs' ? '需我处理' : tab.name) + '</span><span class="tk-list-tab-count">' + count + '</span></button>';
+      return '<button type="button" class="list-page-tab' + (active ? ' active' : '') + '" data-list-status="' + tab.id + '" role="tab" aria-selected="' + active + '"><span class="list-page-tab-name">' + tab.name + '</span><span class="tk-list-tab-count">' + count + '</span></button>';
     }).join('');
     els.tkViewOverflow.classList.add('hidden');
     return;
