@@ -148,8 +148,8 @@
 #niuCreateOverlay .niu-create-section--plan{margin:0;padding:0;border:0}
 #niuCreateOverlay .niu-create-plan-title{margin:4px 0 8px;color:var(--text);font-size:14px;font-weight:600}
 #niuCreateOverlay .niu-create-section--plan .niu-create-stage-table{border:0;border-radius:0;overflow:visible;font-size:14px}
-#niuCreateOverlay .niu-create-section--plan .niu-create-stage-table thead th{height:40px;padding:0 8px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text-secondary)}
-#niuCreateOverlay .niu-create-section--plan .niu-create-stage-table thead th:nth-child(4){text-align:center}
+#niuCreateOverlay .niu-create-section--plan .niu-create-stage-table thead th{height:40px;padding:0 8px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text-secondary);text-align:left}
+#niuCreateOverlay .niu-create-section--plan .niu-create-stage-table thead th:first-child{text-align:center}
 #niuCreateOverlay .niu-create-section--plan .niu-create-stage-table thead th:last-child{padding-right:0}
 #niuCreateOverlay .niu-create-section--plan .niu-stage-row{height:auto}
 #niuCreateOverlay .niu-create-section--plan .niu-stage-row td{height:auto;min-height:44px;padding:8px;vertical-align:middle}

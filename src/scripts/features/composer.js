@@ -1256,11 +1256,11 @@ function closeChatDocViewer() {
   if (!viewer || viewer.hidden) return;
   clearTimeout(chatDocViewerCloseTimer);
   viewer.classList.remove('show');
-  viewChat.classList.remove('doc-open');
   syncTogglePreviewBtn();
   chatDocViewerCloseTimer = setTimeout(function () {
     viewer.hidden = true;
     viewer.style.width = '';
+    viewChat.classList.remove('doc-open');
   }, 250);
 }
 /* 默认保留约 500px 会话区，其余空间给产物预览；拖拽时会话区保底 360px。 */
