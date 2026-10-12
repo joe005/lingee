@@ -442,7 +442,7 @@ function createTask(startNow) {
   closeOverlays();
   if (shouldStart) {
     import('./page/utils.js').then(function (taskActions) {
-      taskActions.startTaskExecution(created.id);
+      taskActions.startTaskExecution(created.id, {fromSave:true});
     });
     return;
   }

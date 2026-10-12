@@ -98,7 +98,7 @@ export function submitTaskStage(task) {
         const current = tkGetTasks().find(function (row) { return row.id === task.id; });
         if (!current || current.status !== 'backlog' || current.executionStageId !== approved.next.id) return;
         if (tkCurrentStageHandlerId(current) !== tkCurrentUserId()) {
-          toast('「' + escapeHtml(stage.name) + '」已完成，已流转给「' + escapeHtml(tkGetPerson(tkCurrentStageHandlerId(current)).name) + '」，下一阶段待开始', 'success', 3000);
+          toast(escapeHtml(stage.name) + '已完成，已流转给「' + escapeHtml(tkGetPerson(tkCurrentStageHandlerId(current)).name) + '」', 'success', 3000);
           return;
         }
         const nextStageActions = await import('./page/utils.js');

@@ -73,7 +73,7 @@
 #cv-tasks-current .tk-list-priority[data-priority="high"] { background:transparent; color:var(--warning); border-color:var(--warning-bg); }
 #cv-tasks-current .tk-list-priority[data-priority="urgent"] { background:transparent; color:var(--danger); border-color:var(--danger-bg); }
 #cv-tasks-current .tk-list-card-actions { gap:12px; }
-#cv-tasks-current .tk-list-action-btn { min-width:0; height:28px; padding:0 8px; border-radius:8px; font-size:14px; font-weight:400; }
+#cv-tasks-current .tk-list-action-btn { box-sizing:border-box; min-width:calc(4em + 18px); justify-content:center; height:28px; padding:0 8px; border-radius:8px; font-size:14px; font-weight:400; }
 #cv-tasks-current .tk-list-action-btn.is-primary { color:var(--text); border-color:var(--border-hover); }
 #cv-tasks-current .tk-list-card-more { position:static; opacity:1; display:grid; place-items:center; flex:none; width:28px; height:28px; padding:0; border:1px solid var(--border-hover); border-radius:8px; background:var(--bg); cursor:pointer; }
 #cv-tasks-current .tk-list-card-more:hover { background:var(--hover); }
