@@ -127,7 +127,6 @@ function initComposer() {
   queueMicrotask(renderChatSessions);
   document.addEventListener('lingee:auth-changed', renderChatSessions);
   document.addEventListener('lingee:sidebar-filter', renderChatSessions);
-  document.addEventListener('lingee:local-env-changed', renderChatSessions);
   document.getElementById('chatSessionList').addEventListener('click', function (event) {
     var entry = event.target.closest('[data-chat-session]');
     if (entry) openChatSession(entry.getAttribute('data-chat-session'));

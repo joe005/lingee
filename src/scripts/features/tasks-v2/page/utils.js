@@ -62,7 +62,7 @@ export function retryBlockedTask(task) {
   if (ldIsEnvBlocked(task)) {
     var resume = function () { ldRestoreEnvBlocked(task); startTaskExecution(task.id); };
     if (ldProjectStatus(task.project).ready) resume();
-    else ldOpenSetup(task.project, { resumeLabel:'完成并继续执行', onReady:resume });
+    else ldOpenSetup(task.project, { resumeLabel:'完成并执行', onReady:resume });
     return;
   }
   closeDrawer();

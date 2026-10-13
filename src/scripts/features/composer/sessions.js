@@ -1,4 +1,3 @@
-import { ldSidebarProjectExtra } from '../collab/local-dev.js';
 import { assetOwnerKey } from '../expert/layers.js';
 import { activePick } from '../expert/store.js';
 import { tkCurrentStageHandlerId, tkCurrentUserId, tkGetProjectName, tkGetTasks, tkProjectsForCurrentUser } from '../tasks-v2/data.js';
@@ -186,7 +185,7 @@ function renderChatSessions() {
           ? '<button type="button" class="chat-project-more" data-chat-project-toggle="' + attrId + '"><span class="txt">展开显示</span></button>'
           : '');
     return '<div class="chat-project-folder' + (collapsed ? ' collapsed' : '') + '" data-chat-project="' + attrId + '">'
-      + '<button type="button" class="chat-project-title" aria-expanded="' + !collapsed + '">' + folderIcon + '<span class="txt">' + escapeHtml(name) + '</span><span class="chat-project-chevron"><svg viewBox="0 0 16 16" fill="none">' + chevronIcon + '</svg></span></button>' + ldSidebarProjectExtra(id)
+      + '<button type="button" class="chat-project-title" aria-expanded="' + !collapsed + '">' + folderIcon + '<span class="txt">' + escapeHtml(name) + '</span><span class="chat-project-chevron"><svg viewBox="0 0 16 16" fill="none">' + chevronIcon + '</svg></span></button>'
       + '<div class="chat-project-sessions">' + sessionsHtml + '</div></div>';
   }).join('');
 }

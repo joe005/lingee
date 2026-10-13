@@ -6,11 +6,10 @@ import { tkCurrentUserId, tkGetPerson, tkGetTasks, tkProjectById, tkProjectsForC
    - Git 随客户端内置，不要求用户安装；
    - Git 认证按平台（主机）配置一次访问令牌，所有项目共用；
    - 项目与本机目录绑定一次（自动拉取到默认目录或使用已有目录），以后对话和任务都用这个目录。
-   入口：左侧栏项目分组的齿轮、协作开发顶部「本地环境」、进入时的提醒，都打开同一个「项目设置」弹窗。
+   入口在协作开发「设置」页签（智能体团队之后）：Git 认证列表与各项目状态，可打开项目设置；进入时另有一次提醒。
    配置按「登录人 + 本机」保存在浏览器本地存储里，演示时可在项目设置里模拟新设备清空。 */
 
 var LD_KEY = 'lingee_local_dev_v1';
-var LD_GIT_VERSION = '2.47.1';
 var setupProjectId = '';
 var setupOnReady = null;
 var setupDirMode = 'auto';
@@ -19,7 +18,6 @@ var setupPulling = 0;
 var authHost = '';
 var authOnSaved = null;
 var reminderShown = false;
-var panelChecks = null;
 var settingsProjectId = '';
 
 /* ---------- 存储 ---------- */
@@ -52,7 +50,9 @@ export function ldRepoInfo(project) {
   var platform = /github/i.test(host) ? 'GitHub' : /gitee/i.test(host) ? 'Gitee' : /codeup|aliyun/i.test(host) ? '云效 Codeup' : 'GitLab';
   return { repo:repo, host:host, name:name, platform:platform, baseBranch:project.baseBranch || 'main' };
 }
+/* 项目目录：默认放在 ~/Lingee/<仓库名>，也可以为每个项目指定已有目录 */
 function ldDefaultPath(info) { return '~/Lingee/' + info.name; }
+function ldDirText(binding) { return (binding.mode === 'existing' ? '指定目录' : '默认目录') + ' · '; }
 function ldNow() {
   var d = new Date();
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0')
@@ -65,11 +65,17 @@ function ldNow() {
 var LD_LOCAL_CREDS = [
   { host:'github.com', platform:'GitHub', source:'macOS 钥匙串' },
 ];
+function ldGitUsername() {
+  var me = tkGetPerson(tkCurrentUserId()) || {};
+  var prefix = String(me.email || '').split('@')[0].replace(/\*/g, '');
+  return prefix || 'user' + String(me.id || tkCurrentUserId() || '').replace(/\D/g, '');
+}
+function ldAuthUser(auth) { return auth.username || ldGitUsername(); }
 function ldDetectLocalCreds() {
   var mine = ldMine(), me = tkGetPerson(tkCurrentUserId());
   var found = LD_LOCAL_CREDS.filter(function (cred) { return !mine.auths[cred.host]; });
   found.forEach(function (cred) {
-    mine.auths[cred.host] = { platform:cred.platform, account:me?.name || '当前用户', source:'local', sourceLabel:cred.source,
+    mine.auths[cred.host] = { platform:cred.platform, username:ldGitUsername(), account:me?.name || '当前用户', source:'local', sourceLabel:cred.source,
       scopes:['read_repository','write_repository'], expiresAt:'', savedAt:ldNow() };
   });
   mine.detectedAt = ldNow();
@@ -80,13 +86,10 @@ function ldRunDetect(btn) {
   if (btn) { btn.disabled = true; btn.textContent = '检测中…'; }
   setTimeout(function () {
     var found = ldDetectLocalCreds();
-    toast(found.length ? '检测到 ' + found.length + ' 个可用的本机凭据：' + found.map(function (cred) { return ldEsc(cred.host); }).join('、') : '没有发现新的可用凭据，可以手动新增认证', found.length ? 'success' : 'info');
+    toast(found.length ? '检测到 ' + found.map(function (cred) { return ldEsc(cred.host); }).join('、') : '本机没有可用凭据', found.length ? 'success' : 'info');
     if ($('#ldSetupOverlay').style.display !== 'none') renderSetup();
     refreshProjectPanel();
   }, 600);
-}
-function ldAuthSourceText(auth) {
-  return auth.source === 'local' ? '来自' + (auth.sourceLabel || '本机凭据') : '访问令牌' + (auth.expiresAt ? ' · 有效期至 ' + auth.expiresAt : '');
 }
 
 /* ---------- 就绪判断 ---------- */
@@ -103,6 +106,20 @@ export function ldProjectStatus(projectId) {
   var authOk = !!auth && !auth.expired;
   return { needed:true, ready:authOk && !!binding, info:info, auth:auth, authOk:authOk, binding:binding,
     reason:!auth ? '未配置 ' + info.host + ' 的 Git 认证' : auth.expired ? info.host + ' 的访问令牌已过期' : !binding ? '项目尚未绑定本地目录' : '' };
+}
+/* 项目里的 Git 认证从「设置」已有的认证中选择；与仓库不同平台的不可选，最后一项可新增 */
+function ldAuthSelect(projectId) {
+  var info = ldProjectStatus(projectId).info, auths = ldMine().auths;
+  var hosts = Object.keys(auths);
+  var current = auths[info.host] ? info.host : '';
+  return '<select class="ld-input ld-select ld-auth-pick" data-ld-auth-pick="' + ldEsc(projectId) + '" aria-label="选择 Git 认证">'
+    + (current ? '' : '<option value="" selected disabled>选择认证</option>')
+    + hosts.map(function (host) {
+      var auth = ldAuthFor(host), match = host === info.host;
+      return '<option value="' + ldEsc(host) + '"' + (host === current ? ' selected' : '') + (match ? '' : ' disabled') + '>'
+        + ldEsc(ldAuthUser(auth)) + ' · ' + ldEsc(host) + (match ? (auth.expired ? '（已过期）' : '') : '（平台不一致）') + '</option>';
+    }).join('')
+    + '<option value="__add">＋ 添加认证…</option></select>';
 }
 function ldMyDevProjects() {
   return tkProjectsForCurrentUser().filter(function (project) { return !!ldRepoInfo(project); });
@@ -124,7 +141,7 @@ export function ldBlockTaskForEnv(task, reason) {
     executionPlan:Array.isArray(task.executionPlan) ? task.executionPlan.map(function (row) { return stage && row.id === stage.id ? Object.assign({}, row, {status:'blocked'}) : row; }) : task.executionPlan,
     blockedRun:{ kind:'local-env', resumeStatus:task.status, agentName:'Lingee 客户端', failedAt:ldNow(), duration:'0秒',
       reason:'本地开发环境未就绪：' + reason + '。',
-      next:'在「准备本地开发环境」中完成 Git 认证和本地目录绑定，配好后自动继续执行。',
+      next:'配置本地环境后自动继续执行。',
       steps:[['执行前环境自检', reason + '，未开始执行。']] },
     comments:(task.comments || []).concat({ kind:'comment', authorId:tkCurrentUserId(), createdAt:ldNow(), status:'blocked', assignee:task.assignee,
       text:'自动启动前检测到本地开发环境未就绪（' + reason + '），已转为已阻塞。' }),
@@ -147,10 +164,10 @@ export function ldGateTaskStart(task, options) {
   if (status.ready) return true;
   if (options?.automatic) {
     ldBlockTaskForEnv(task, status.reason);
-    toast('「' + ldEsc(task.title) + '」自动启动失败：本地开发环境未就绪，已转为已阻塞', 'warning');
+    toast('「' + ldEsc(task.title) + '」未启动：本地环境未配置', 'warning');
     return false;
   }
-  ldOpenSetup(task.project, { resumeLabel:'完成并开始执行', onReady:options?.onReady });
+  ldOpenSetup(task.project, { resumeLabel:'完成并执行', onReady:options?.onReady });
   return false;
 }
 
@@ -171,39 +188,28 @@ function renderSetup() {
   var info = status.info, project = tkProjectById(setupProjectId);
   if (!info) return;
   $('#ldSetupSub').textContent = project.name;
-  var stepDone = function (done, n) { return '<span class="ld-step-mark' + (done ? ' is-done' : '') + '" aria-hidden="true">' + (done ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>' : n) + '</span>'; };
-  var auth = status.auth;
-  var authHtml = '<li class="ld-step' + (status.authOk ? ' is-done' : ' is-current') + '">' + stepDone(status.authOk, 1)
-    + '<div class="ld-step-main"><div class="ld-step-title">Git 认证<span class="ld-step-meta">' + ldEsc(info.host) + ' · ' + ldEsc(info.platform) + '</span></div>'
-    + (status.authOk
-      ? '<p class="ld-step-text">已认证为 ' + ldEsc(auth.account) + '（' + ldEsc(ldAuthSourceText(auth)) + '）。每个平台只需配置一次，所有项目共用。</p>'
-      : '<p class="ld-step-text">' + (auth?.expired ? '访问令牌已过期，请重新认证。' : '可以先检测本机已有的 Git 凭据，没有再配置访问令牌。') + '</p>')
-    + '</div><div class="ld-step-actions">' + (status.authOk ? '' : '<button type="button" class="ld-btn" data-ld-detect>检测本机</button>')
-    + '<button type="button" class="ld-btn' + (status.authOk ? '' : ' ld-btn--primary') + '" data-ld-auth-open="' + ldEsc(info.host) + '">' + (status.authOk ? '重新认证' : '配置令牌') + '</button></div></li>';
-  var binding = status.binding, dirHtml;
+  var mark = function (done, n) { return '<span class="ld-step-mark' + (done ? ' is-done' : '') + '" aria-hidden="true">' + (done ? '✓' : n) + '</span>'; };
+  var auth = status.auth, binding = status.binding;
+  var authHtml = '<li class="ld-step">' + mark(status.authOk, 1)
+    + '<div class="ld-step-main"><div class="ld-step-title">Git 认证</div><p class="ld-step-text">' + (status.authOk ? ldEsc(ldAuthUser(auth)) + ' · ' + ldEsc(info.host) : ldEsc(info.host) + (auth?.expired ? ' · 令牌已过期' : ' · 未认证')) + '</p></div>'
+    + '<div class="ld-step-actions">' + (status.authOk ? '' : '<button type="button" class="ld-btn" data-ld-detect>检测本机</button>') + ldAuthSelect(setupProjectId) + '</div></li>';
+  var dirHtml;
   if (binding && !setupPulling) {
-    dirHtml = '<li class="ld-step is-done">' + stepDone(true, 2) + '<div class="ld-step-main"><div class="ld-step-title">本地目录</div>'
-      + '<p class="ld-step-text"><code>' + ldEsc(binding.path) + '</code> · ' + (binding.mode === 'existing' ? '使用已有目录' : '已拉取') + ' · ' + ldEsc(binding.branch) + '</p></div>'
-      + '<button type="button" class="ld-btn" data-ld-rebind>更改</button></li>';
+    dirHtml = '<li class="ld-step">' + mark(true, 2) + '<div class="ld-step-main"><div class="ld-step-title">项目目录</div><p class="ld-step-text"><code>' + ldEsc(binding.path) + '</code></p></div>'
+      + '<div class="ld-step-actions"><button type="button" class="ld-btn" data-ld-rebind>更改</button></div></li>';
   } else {
     var disabled = !status.authOk || setupPulling ? ' disabled' : '';
-    dirHtml = '<li class="ld-step' + (status.authOk ? ' is-current' : '') + '">' + stepDone(false, 2) + '<div class="ld-step-main"><div class="ld-step-title">本地目录</div>'
-      + (status.authOk ? '' : '<p class="ld-step-text">完成 Git 认证后，再拉取代码或选择已有目录。</p>')
+    dirHtml = '<li class="ld-step">' + mark(false, 2) + '<div class="ld-step-main"><div class="ld-step-title">项目目录</div>'
       + '<div class="ld-choice" role="radiogroup" aria-label="本地目录">'
-      + '<label class="ld-choice-item"><input type="radio" name="ldDirMode" value="auto"' + (setupDirMode === 'auto' ? ' checked' : '') + disabled + '><span><strong>自动拉取（推荐）</strong><small>拉取到 <code>' + ldEsc(ldDefaultPath(info)) + '</code></small></span></label>'
-      + '<label class="ld-choice-item"><input type="radio" name="ldDirMode" value="existing"' + (setupDirMode === 'existing' ? ' checked' : '') + disabled + '><span><strong>使用已有目录</strong><small>本机已有这个仓库时选择，会校验远端地址是否一致</small></span></label>'
+      + '<label class="ld-choice-item"><input type="radio" name="ldDirMode" value="auto"' + (setupDirMode === 'auto' ? ' checked' : '') + disabled + '><span>默认目录 <code>' + ldEsc(ldDefaultPath(info)) + '</code></span></label>'
+      + '<label class="ld-choice-item"><input type="radio" name="ldDirMode" value="existing"' + (setupDirMode === 'existing' ? ' checked' : '') + disabled + '><span>指定目录（本机已有这个仓库时）</span></label>'
       + '</div>'
-      + (setupDirMode === 'existing' ? '<div class="ld-path-row"><input type="text" class="ld-input" id="ldExistingPath" readonly placeholder="未选择目录" value="' + ldEsc(setupExistingPath) + '" aria-label="已有目录"><button type="button" class="ld-btn" data-ld-pick-dir' + disabled + '>选择目录…</button></div>' : '')
-      + (setupPulling ? '<div class="ld-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + setupPulling + '"><span style="width:' + setupPulling + '%"></span></div><p class="ld-step-text">' + (setupDirMode === 'existing' ? '正在校验目录…' : '正在拉取代码… ' + setupPulling + '%') + '</p>' : '')
-      + '</div><button type="button" class="ld-btn ld-btn--primary" data-ld-bind' + disabled + '>' + (setupDirMode === 'existing' ? '绑定目录' : '开始拉取') + '</button></li>';
+      + (setupDirMode === 'existing' ? '<div class="ld-path-row"><input type="text" class="ld-input" id="ldExistingPath" readonly placeholder="未选择" value="' + ldEsc(setupExistingPath) + '" aria-label="已有目录"><button type="button" class="ld-btn" data-ld-pick-dir' + disabled + '>选择…</button></div>' : '')
+      + (setupPulling ? '<div class="ld-progress" role="progressbar" aria-label="' + (setupDirMode === 'existing' ? '校验目录' : '拉取代码') + '" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + setupPulling + '"><span style="width:' + setupPulling + '%"></span></div>' : '')
+      + '</div><div class="ld-step-actions"><button type="button" class="ld-btn ld-btn--primary" data-ld-bind' + disabled + '>' + (setupPulling ? (setupDirMode === 'existing' ? '校验中…' : '拉取中…') : setupDirMode === 'existing' ? '绑定' : '拉取') + '</button></div></li>';
   }
-  var ready = status.ready && !setupPulling;
-  var readyHtml = '<li class="ld-step' + (ready ? ' is-done' : '') + '">' + stepDone(ready, 3) + '<div class="ld-step-main"><div class="ld-step-title">就绪</div>'
-    + '<p class="ld-step-text">' + (ready ? '环境已就绪，这个项目的对话和任务都会在 <code>' + ldEsc(binding.path) + '</code> 中执行。' : '以上两步完成后，任务即可在本机执行。') + '</p></div></li>';
-  $('#ldSetupBody').innerHTML = '<div class="ld-repo"><span class="ld-repo-label">代码仓库</span><code>' + ldEsc(info.repo) + '</code><span class="ld-tag">' + ldEsc(info.baseBranch) + '</span></div>'
-    + '<p class="ld-desc">Git 已随 Lingee 客户端内置（' + LD_GIT_VERSION + '），无需另行安装。</p>'
-    + '<ol class="ld-steps">' + authHtml + dirHtml + readyHtml + '</ol>';
-  $('#ldSetupDone').disabled = !ready;
+  $('#ldSetupBody').innerHTML = '<ol class="ld-steps">' + authHtml + dirHtml + '</ol>';
+  $('#ldSetupDone').disabled = !(status.ready && !setupPulling);
 }
 function bindProjectDir() {
   var status = ldProjectStatus(setupProjectId);
@@ -227,7 +233,7 @@ function bindProjectDir() {
     ldSaveMine(mine);
     renderSetup();
     refreshProjectPanel();
-    toast(mode === 'existing' ? '已绑定本地目录' : '代码已拉取到 ' + ldEsc(path), 'success');
+    toast(mode === 'existing' ? '已绑定目录' : '代码已拉取', 'success');
   }, 320);
 }
 function finishSetup() {
@@ -236,7 +242,7 @@ function finishSetup() {
   closeSetup();
   hideReminder();
   if (done) done();
-  else toast('本地开发环境已就绪', 'success');
+  else toast('本地环境已就绪', 'success');
 }
 function closeSetup() {
   setupOnReady = null;
@@ -250,9 +256,9 @@ export function ldOpenAuth(host, platform, onSaved) {
   authHost = host;
   authOnSaved = onSaved || null;
   var saved = host ? ldMine().auths[host] : null;
-  $('#ldAuthTitle').textContent = host ? 'Git 认证' : '新增 Git 认证';
+  $('#ldAuthTitle').textContent = host ? 'Git 认证' : '添加 Git 认证';
   $('#ldAuthHost').value = host;
-  $('#ldAuthHost').placeholder = '如 git.kingdee.com';
+  $('#ldAuthHost').placeholder = 'git.kingdee.com';
   $('#ldAuthPlatform').value = saved?.platform || platform || 'GitLab';
   $('#ldAuthToken').value = '';
   $('#ldAuthToken').type = 'password';
@@ -264,7 +270,7 @@ export function ldOpenAuth(host, platform, onSaved) {
   ldShow('#ldAuthOverlay');
   setTimeout(function () { (host ? $('#ldAuthToken') : $('#ldAuthHost')).focus(); }, 0);
 }
-function syncAuthCreateLabel() { $('#ldAuthCreate').textContent = '去 ' + $('#ldAuthPlatform').value + ' 创建访问令牌'; }
+function syncAuthCreateLabel() { /* 获取令牌的链接文案固定，平台切换时无需更新 */ }
 function setAuthError(text) {
   var el = $('#ldAuthError');
   el.textContent = text;
@@ -274,30 +280,30 @@ function setAuthError(text) {
 function setAuthBusy(busy) {
   var btn = $('#ldAuthSubmit');
   btn.disabled = busy;
-  btn.textContent = busy ? '验证中…' : '验证并保存';
+  btn.textContent = busy ? '验证中…' : '保存';
 }
 function submitAuth() {
   var host = $('#ldAuthHost').value.trim().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
   var token = $('#ldAuthToken').value.trim();
-  if (!host) { setAuthError('请填写 Git 平台地址'); $('#ldAuthHost').focus(); return; }
-  if (!token) { setAuthError('请粘贴访问令牌'); $('#ldAuthToken').focus(); return; }
+  if (!host) { setAuthError('请填写平台地址'); $('#ldAuthHost').focus(); return; }
+  if (!token) { setAuthError('请填写令牌'); $('#ldAuthToken').focus(); return; }
   setAuthError('');
   setAuthBusy(true);
   setTimeout(function () {
     setAuthBusy(false);
     /* 演示校验：过短视为格式错误；含 expired / bad 视为无效；含 readonly 视为缺少写权限 */
-    if (token.length < 8) { setAuthError('令牌格式不正确，请粘贴完整的访问令牌'); return; }
-    if (/expired|bad/i.test(token)) { setAuthError('令牌无效或已过期，请重新创建后再粘贴'); return; }
-    if (/readonly/i.test(token)) { setAuthError('权限不足：令牌缺少 write_repository，无法推送代码'); return; }
+    if (token.length < 8) { setAuthError('令牌格式不正确'); return; }
+    if (/expired|bad/i.test(token)) { setAuthError('令牌无效或已过期'); return; }
+    if (/readonly/i.test(token)) { setAuthError('令牌缺少写权限'); return; }
     var me = tkGetPerson(tkCurrentUserId());
     var expires = new Date(Date.now() + 90 * 864e5).toISOString().slice(0, 10);
     var mine = ldMine();
-    mine.auths[host] = { platform:$('#ldAuthPlatform').value, account:me?.name || '当前用户', source:'token', scopes:['read_repository','write_repository'], expiresAt:expires, savedAt:ldNow() };
+    mine.auths[host] = { platform:$('#ldAuthPlatform').value, username:ldGitUsername(), account:me?.name || '当前用户', source:'token', scopes:['read_repository','write_repository'], expiresAt:expires, savedAt:ldNow() };
     ldSaveMine(mine);
     var done = authOnSaved;
     ldHide('#ldAuthOverlay');
     authOnSaved = null;
-    toast('已认证为 ' + ldEsc(me?.name || '当前用户') + '，令牌有效期至 ' + expires, 'success');
+    toast('认证成功', 'success');
     if ($('#ldSetupOverlay').style.display !== 'none') renderSetup();
     refreshProjectPanel();
     if (done) done();
@@ -310,12 +316,12 @@ function showReminder() {
   var el = $('#ldReminder');
   if (!el || !pending.length) return;
   reminderShown = true;
-  el.innerHTML = '<div class="ld-reminder-head"><strong>本地开发环境未就绪</strong><button type="button" class="sync-modal__close" data-ld-reminder-close aria-label="关闭提醒"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>'
-    + '<p>' + pending.length + ' 个开发项目需要先完成 Git 认证和本地目录配置，否则任务自动启动时会被阻塞。</p>'
+  el.innerHTML = '<div class="ld-reminder-head"><strong>本地环境未配置</strong><button type="button" class="sync-modal__close" data-ld-reminder-close aria-label="关闭提醒"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>'
+    + '<p>配置后任务才能在本机执行。</p>'
     + '<ul>' + pending.slice(0, 3).map(function (project) {
-      return '<li><span>' + ldEsc(project.name) + '</span><button type="button" class="ld-btn ld-btn--primary" data-ld-setup-open="' + ldEsc(project.id) + '">去配置</button></li>';
+      return '<li><span>' + ldEsc(project.name) + '</span><button type="button" class="ld-btn ld-btn--primary" data-ld-setup-open="' + ldEsc(project.id) + '">配置</button></li>';
     }).join('') + '</ul>'
-    + (pending.length > 3 ? '<p class="ld-reminder-more">其余项目可在顶部「本地环境」或左侧栏项目的设置中配置</p>' : '');
+    + (pending.length > 3 ? '<p class="ld-reminder-more">还有 ' + (pending.length - 3) + ' 个，见「设置」</p>' : '');
   el.hidden = false;
 }
 function hideReminder() { var el = $('#ldReminder'); if (el) el.hidden = true; }
@@ -325,7 +331,6 @@ export function ldOpenProjectSettings(projectId) {
   var project = tkProjectById(projectId);
   if (!project) { toast('项目不存在或已移除', 'warning'); return; }
   settingsProjectId = projectId;
-  panelChecks = null;
   $('#ldProjectSub').textContent = project.name;
   renderProjectSettings();
   ldShow('#ldProjectOverlay');
@@ -337,109 +342,86 @@ function renderProjectSettings() {
 function closeProjectSettings() { settingsProjectId = ''; ldHide('#ldProjectOverlay'); }
 function renderProjectPanel(project) {
   var status = ldProjectStatus(project.id);
-  if (!status.needed) return '<div class="ld-panel"><p class="ld-empty">该项目未配置代码仓库，不需要本地开发环境。</p></div>';
+  if (!status.needed) return '<div class="ld-panel"><p class="ld-empty">该项目没有代码仓库。</p></div>';
   var info = status.info, auth = status.auth, binding = status.binding;
-  var badge = function (ok, okText, badText) { return '<span class="ld-state ' + (ok ? 'is-ok' : 'is-warn') + '">' + (ok ? '✓ ' + okText : '! ' + badText) + '</span>'; };
-  var checks = panelChecks && panelChecks.projectId === project.id ? panelChecks : null;
-  var checkRow = function (label, ok, text, fix) {
-    return '<li class="' + (ok ? 'is-ok' : 'is-warn') + '"><span class="ld-check-mark" aria-hidden="true">' + (ok ? '✓' : '!') + '</span><span class="ld-check-label">' + label + '</span><span class="ld-check-text">' + text + '</span>' + (!ok && fix ? fix : '') + '</li>';
+  var row = function (label, value, actions) {
+    return '<div class="ld-kv-row"><dt>' + label + '</dt><dd>' + value + '</dd><div class="ld-kv-actions">' + (actions || '') + '</div></div>';
   };
+  var muted = function (text) { return '<span class="ld-muted">' + text + '</span>'; };
   return '<div class="ld-panel">'
-    + '<div class="ld-panel-head' + (status.ready ? '' : ' is-warn') + '"><p>' + (status.ready ? '本地开发环境已就绪，这个项目的对话和任务在本机执行。' : '本地开发环境未就绪：' + ldEsc(status.reason) + '，任务自动启动时会被阻塞。') + '</p>'
-    + (status.ready ? badge(true, '已就绪', '') : '<button type="button" class="ld-btn ld-btn--primary" data-ld-setup-open="' + ldEsc(project.id) + '">去配置</button>') + '</div>'
-    + '<section class="ld-card"><h3>代码仓库<small>在 Manage 项目中维护，这里只读</small></h3><dl class="ld-dl">'
-    + '<div><dt>仓库地址</dt><dd><code>' + ldEsc(info.repo) + '</code></dd></div>'
-    + '<div><dt>基准分支</dt><dd>' + ldEsc(info.baseBranch) + '</dd></div>'
-    + '<div><dt>任务分支</dt><dd><code>feature/&lt;任务编号&gt;</code>，开始执行时从基准分支拉取</dd></div></dl></section>'
-    + '<section class="ld-card"><h3>Git 认证<small>按平台配置一次，所有项目共用，只对你本人生效</small></h3><div class="ld-row">'
-    + '<div class="ld-row-main"><strong>' + ldEsc(info.host) + '</strong><span>' + ldEsc(auth?.platform || info.platform) + (auth ? ' · 已认证为 ' + ldEsc(auth.account) + ' · ' + ldEsc(ldAuthSourceText(auth)) : '') + '</span></div>'
-    + badge(status.authOk, '已认证', auth?.expired ? '已过期' : '未认证')
-    + '<div class="ld-row-actions">' + (auth ? '' : '<button type="button" class="ld-btn" data-ld-detect>检测本机</button>') + '<button type="button" class="ld-btn' + (status.authOk ? '' : ' ld-btn--primary') + '" data-ld-auth-open="' + ldEsc(info.host) + '">' + (auth ? '重新认证' : '配置令牌') + '</button>'
-    + (auth ? '<button type="button" class="ld-btn ld-btn--danger" data-ld-auth-remove="' + ldEsc(info.host) + '">解除认证</button>' : '') + '</div></div></section>'
-    + '<section class="ld-card"><h3>本地目录<small>只对这台电脑生效</small></h3>'
-    + (binding
-      ? '<div class="ld-row"><div class="ld-row-main"><strong><code>' + ldEsc(binding.path) + '</code></strong><span>' + (binding.mode === 'existing' ? '使用已有目录' : '自动拉取') + ' · 当前分支 ' + ldEsc(binding.branch) + ' · 最近同步 ' + ldEsc(binding.syncedAt) + '</span></div>'
-        + '<div class="ld-row-actions"><button type="button" class="ld-btn" data-ld-reveal>在访达中打开</button><button type="button" class="ld-btn" data-ld-ide>用 IDE 打开</button><button type="button" class="ld-btn" data-ld-pull>立即拉取</button><button type="button" class="ld-btn" data-ld-rebind-project>更改目录</button></div></div>'
-      : '<div class="ld-row"><div class="ld-row-main"><strong>尚未绑定本地目录</strong><span>首次使用时自动拉取到 <code>' + ldEsc(ldDefaultPath(info)) + '</code>，也可以选择本机已有的仓库目录</span></div>'
-        + '<div class="ld-row-actions"><button type="button" class="ld-btn ld-btn--primary" data-ld-setup-open="' + ldEsc(project.id) + '">绑定目录</button></div></div>')
-    + '</section>'
-    + '<section class="ld-card"><h3>环境检测<small>任务执行前会自动检测；有问题时可在这里手动检测</small></h3>'
-    + (checks ? '<ul class="ld-checks">'
-      + checkRow('内置 Git', true, 'Git ' + LD_GIT_VERSION + '（随客户端内置）')
-      + checkRow('Git 认证', checks.authOk, checks.authOk ? '令牌有效，具备读写权限' : '未配置或已过期', '<button type="button" class="ld-btn" data-ld-auth-open="' + ldEsc(info.host) + '">去认证</button>')
-      + checkRow('远端连通', checks.authOk, checks.authOk ? '可以访问 ' + ldEsc(info.host) : '认证后才能检测', '')
-      + checkRow('本地目录', checks.bound, checks.bound ? '目录存在，远端地址与项目一致' : '尚未绑定', '<button type="button" class="ld-btn" data-ld-setup-open="' + ldEsc(project.id) + '">绑定目录</button>')
-      + '</ul>' : '')
-    + '<div class="ld-card-foot"><button type="button" class="ld-btn" data-ld-check="' + ldEsc(project.id) + '">' + (checks ? '重新检测' : '检测环境') + '</button>'
-    + '<button type="button" class="ld-link" data-ld-reset>模拟新设备（清空本机配置）</button></div></section>'
+    + (status.ready ? '' : '<div class="ld-warn"><span>' + ldEsc(status.reason) + '</span><button type="button" class="ld-btn ld-btn--primary" data-ld-setup-open="' + ldEsc(project.id) + '">配置</button></div>')
+    + '<dl class="ld-kv">'
+    + row('代码仓库', '<code>' + ldEsc(info.repo.replace(/^https?:\/\//, '')) + '</code>' + muted(' · ' + ldEsc(info.baseBranch)))
+    + row('Git 认证', status.authOk ? ldEsc(ldAuthUser(auth)) + muted(' · ' + ldEsc(info.host)) : muted(auth?.expired ? '令牌已过期' : '未认证'),
+        ldAuthSelect(project.id))
+    + row('项目目录', binding ? ldDirText(binding) + '<code>' + ldEsc(binding.path) + '</code>' : muted('未设置'),
+        binding ? '<button type="button" class="ld-btn" data-ld-reveal>打开</button><button type="button" class="ld-btn" data-ld-rebind-project>更改</button>'
+          : '<button type="button" class="ld-btn" data-ld-setup-open="' + ldEsc(project.id) + '">设置</button>')
+    + '</dl>'
+    + '<button type="button" class="ld-link ld-reset" data-ld-reset>演示：清空本机配置</button>'
     + '</div>';
 }
 function refreshProjectPanel() {
   renderNavStatus();
-  if ($('#ldNavPop') && !$('#ldNavPop').hidden) renderNavPop();
+  renderLocalPage();
   if (settingsProjectId) renderProjectSettings();
-  /* 左侧栏项目分组的未就绪标记随之刷新 */
-  document.dispatchEvent(new CustomEvent('lingee:local-env-changed'));
-}
-/* 左侧栏项目分组：未就绪显示橙点，悬停出现设置齿轮 */
-export function ldSidebarProjectExtra(projectId) {
-  var status = ldProjectStatus(projectId);
-  if (!status.needed) return '';
-  return '<button type="button" class="ld-sb-gear' + (status.ready ? '' : ' is-warn') + '" data-ld-project-settings="' + ldEsc(projectId) + '" aria-label="项目设置' + (status.ready ? '' : '（本地开发环境未就绪）') + '" title="' + (status.ready ? '项目设置' : '本地开发环境未就绪，点击配置') + '">'
-    + '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.08a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.08a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.08a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>'
-    + (status.ready ? '' : '<span class="ld-sb-dot" aria-hidden="true"></span>') + '</button>';
 }
 
-/* ---------- 顶部导航「本地环境」常驻入口 ---------- */
+/* ---------- 协作开发「设置」页签 ---------- */
 function renderNavStatus() {
-  var btn = $('#ldNavStatus');
-  if (!btn) return;
-  var projects = ldMyDevProjects();
-  btn.hidden = !projects.length;
-  if (!projects.length) return;
-  var pending = projects.filter(function (project) { return !ldProjectStatus(project.id).ready; }).length;
-  btn.classList.toggle('is-warn', pending > 0);
-  btn.querySelector('.ld-nav-text').textContent = pending ? pending + ' 个项目环境未就绪' : '本地环境已就绪';
-  btn.setAttribute('aria-label', '本地开发环境：' + (pending ? pending + ' 个项目未就绪' : '全部已就绪'));
+  var dot = $('#ldTabDot');
+  if (!dot) return;
+  dot.hidden = !ldMyDevProjects().some(function (project) { return !ldProjectStatus(project.id).ready; });
 }
-function renderNavPop() {
-  var pop = $('#ldNavPop');
+var LD_ICONS = {
+  key: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7.5" cy="15.5" r="4.5"/><path d="m10.7 12.3 9.8-9.8"/><path d="m16 7 3 3"/><path d="m18.5 4.5 2 2"/></svg>',
+  repo: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="8" r="2"/><path d="M6 7v10"/><path d="M18 10c0 4-6 3-12 7"/></svg>',
+  edit: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>',
+};
+function ldListHead(cols) {
+  return '<li class="ld-list-head" aria-hidden="true"><span class="ld-list-main">' + cols[0] + '</span><span class="ld-list-col">' + cols[1] + '</span><span class="ld-col-state">' + cols[2] + '</span><span class="ld-col-act">' + cols[3] + '</span></li>';
+}
+function ldCardHead(icon, title, actions) {
+  return '<div class="ld-set-head"><h2>' + LD_ICONS[icon] + title + '</h2>' + (actions ? '<div class="ld-row-actions">' + actions + '</div>' : '') + '</div>';
+}
+function renderLocalPage() {
+  var page = $('#ldPage');
+  if (!page || !$('#cv-local')?.classList.contains('active')) return;
+  var mine = ldMine();
   var projects = ldMyDevProjects();
-  var auths = ldMine().auths;
-  var hosts = Object.keys(auths);
-  pop.innerHTML = '<div class="ld-pop-head"><strong>本地开发环境</strong><span>Git ' + LD_GIT_VERSION + ' 已随客户端内置</span></div>'
-    + '<div class="ld-pop-section"><div class="ld-pop-section-head"><h4>Git 认证</h4><div class="ld-row-actions"><button type="button" class="ld-btn" data-ld-detect>检测本机凭据</button><button type="button" class="ld-btn" data-ld-auth-new>＋ 新增</button></div></div>'
-    + (hosts.length ? '<ul>' + hosts.map(function (host) {
-      var auth = ldAuthFor(host), ok = !auth.expired;
-      return '<li><span class="ld-pop-name"><strong>' + ldEsc(host) + '</strong><small>' + ldEsc(auth.account) + ' · ' + ldEsc(ldAuthSourceText(auth)) + '</small></span>'
-        + '<span class="ld-state ' + (ok ? 'is-ok' : 'is-warn') + '">' + (ok ? '✓ 可用' : '! 已过期') + '</span>'
-        + '<button type="button" class="ld-btn" data-ld-auth-open="' + ldEsc(host) + '">更新</button></li>';
+  var hosts = Object.keys(mine.auths);
+  var authCard = ldCardHead('key', 'Git 认证', '<button type="button" class="ld-set-btn" data-ld-detect>检测本机</button><button type="button" class="ld-set-btn" data-ld-auth-new>添加</button>')
+    + (hosts.length ? '<ul class="ld-list" aria-label="Git 认证">' + ldListHead(['平台', '用户名', '状态', '操作']) + hosts.map(function (host) {
+      var auth = ldAuthFor(host);
+      return '<li><span class="ld-list-main"><strong>' + ldEsc(host) + '</strong><span>' + ldEsc(auth.platform) + '</span></span>'
+        + '<span class="ld-list-col">' + ldEsc(ldAuthUser(auth)) + '</span>'
+        + '<span class="ld-col-state"><span class="ld-state ' + (auth.expired ? 'is-warn' : 'is-ok') + '">' + (auth.expired ? '已过期' : '可用') + '</span></span>'
+        + '<span class="ld-col-act"><button type="button" class="ld-set-btn" data-ld-auth-open="' + ldEsc(host) + '">更换</button></span></li>';
     }).join('') + '</ul>'
-      : '<p class="ld-pop-empty">还没有可用的 Git 认证。可以检测本机已有凭据，或新增访问令牌。</p>')
-    + (ldMine().detectedAt ? '<p class="ld-pop-note">最近检测：' + ldEsc(ldMine().detectedAt) + '</p>' : '') + '</div>'
-    + '<div class="ld-pop-section"><h4>项目</h4><ul>' + projects.map(function (project) {
+      : '<div class="ld-set-empty">暂无认证</div>');
+  var projectCard = ldCardHead('repo', '我的项目<small>来自 Manage 中我参与或负责的项目</small>')
+    + (projects.length ? '<ul class="ld-list" aria-label="我的项目">' + ldListHead(['项目', '项目目录', '状态', '操作']) + projects.map(function (project) {
       var st = ldProjectStatus(project.id);
-      return '<li><span class="ld-pop-name"><strong>' + ldEsc(project.name) + '</strong><small>' + (st.ready ? ldEsc(st.binding.path) : ldEsc(st.reason)) + '</small></span>'
-        + '<span class="ld-state ' + (st.ready ? 'is-ok' : 'is-warn') + '">' + (st.ready ? '✓ 已就绪' : '! 未就绪') + '</span>'
-        + (st.ready ? '<button type="button" class="ld-btn" data-ld-project-settings="' + ldEsc(project.id) + '">设置</button>' : '<button type="button" class="ld-btn ld-btn--primary" data-ld-setup-open="' + ldEsc(project.id) + '">去配置</button>') + '</li>';
-    }).join('') + '</ul></div>';
-}
-function toggleNavPop(open) {
-  var pop = $('#ldNavPop'), btn = $('#ldNavStatus');
-  if (!pop || !btn) return;
-  if (open) {
-    renderNavPop();
-    var rect = btn.getBoundingClientRect();
-    pop.hidden = false;
-    pop.style.top = (rect.bottom + 8) + 'px';
-    pop.style.left = Math.max(16, Math.min(rect.right - pop.offsetWidth, window.innerWidth - pop.offsetWidth - 16)) + 'px';
-  } else pop.hidden = true;
-  btn.setAttribute('aria-expanded', String(!!open));
+      /* 没设置过的项目按默认目录展示，拉取后才算就绪 */
+      var dir = st.binding || { mode:'auto', path:ldDefaultPath(st.info) };
+      return '<li><span class="ld-list-main"><strong>' + ldEsc(project.name) + '</strong><span>' + ldEsc(st.info.host) + '</span></span>'
+        + '<span class="ld-list-col"><span class="ld-dir-mode">' + (dir.mode === 'existing' ? '指定' : '默认') + '</span><code>' + ldEsc(dir.path) + '</code></span>'
+        + '<span class="ld-col-state"><span class="ld-state ' + (st.ready ? 'is-ok' : 'is-warn') + '">' + (st.ready ? '已就绪' : st.authOk ? '未拉取' : '未认证') + '</span></span>'
+        + '<span class="ld-col-act">' + (st.ready ? '<button type="button" class="ld-set-btn" data-ld-project-settings="' + ldEsc(project.id) + '">设置</button>'
+          : '<button type="button" class="ld-set-btn ld-set-btn--primary" data-ld-setup-open="' + ldEsc(project.id) + '">配置</button>') + '</span></li>';
+    }).join('') + '</ul>'
+      : '<div class="ld-set-empty">你参与的项目都没有代码仓库</div>');
+  page.innerHTML = '<section class="ld-set-card">' + authCard + '</section>'
+    + '<section class="ld-set-card">' + projectCard + '</section>'
+    + '<button type="button" class="ld-link ld-reset" data-ld-reset>演示：清空本机配置</button>';
 }
 
-function currentPanelProjectId() {
-  var btn = document.querySelector('.ld-panel [data-ld-check]');
-  return btn ? btn.getAttribute('data-ld-check') : '';
+function currentPanelProjectId() { return settingsProjectId; }
+
+/* 选择后重绘，下拉恢复为当前生效的认证 */
+function refreshAfterPick() {
+  if ($('#ldSetupOverlay').style.display !== 'none') renderSetup();
+  refreshProjectPanel();
 }
 
 /* ---------- 显示与事件 ---------- */
@@ -449,7 +431,9 @@ function ldHide(sel) { var el = $(sel); el.style.display = 'none'; el.setAttribu
 export function initLocalDev() {
   if (!$('#ldSetupOverlay')) return;
   renderNavStatus();
-  window.addEventListener('resize', function () { toggleNavPop(false); });
+  /* 切到「设置」页签时渲染页面 */
+  var panel = $('#cv-local');
+  if (panel) new MutationObserver(renderLocalPage).observe(panel, { attributes:true, attributeFilter:['class'] });
   document.addEventListener('click', function (e) {
     var t = e.target;
     if (!(t instanceof Element)) return;
@@ -458,7 +442,7 @@ export function initLocalDev() {
     if (t.closest('[data-ld-auth-close]') || t.id === 'ldAuthOverlay') { ldHide('#ldAuthOverlay'); authOnSaved = null; return; }
     if (t.closest('#ldSetupDone')) { finishSetup(); return; }
     if (t.closest('#ldAuthSubmit')) { submitAuth(); return; }
-    if (t.closest('#ldAuthCreate')) { toast('已在浏览器打开 ' + ldEsc($('#ldAuthHost').value || authHost) + ' 的令牌创建页（名称与权限已预填，演示）'); return; }
+    if (t.closest('#ldAuthCreate')) { toast('已打开 ' + ldEsc($('#ldAuthHost').value || authHost) + ' 的令牌创建页，权限已预填（演示）'); return; }
     if (t.closest('#ldAuthEye')) {
       var input = $('#ldAuthToken'), show = input.type === 'password';
       input.type = show ? 'text' : 'password';
@@ -470,35 +454,19 @@ export function initLocalDev() {
     if (authOpen) {
       var host = authOpen.getAttribute('data-ld-auth-open');
       var pid = setupProjectId && $('#ldSetupOverlay').style.display !== 'none' ? setupProjectId : currentPanelProjectId();
-      toggleNavPop(false);
       ldOpenAuth(host, authOpen.getAttribute('data-ld-platform') || ldProjectStatus(pid).info?.platform);
       return;
     }
-    var authRemove = t.closest('[data-ld-auth-remove]');
-    if (authRemove) {
-      var mine = ldMine();
-      delete mine.auths[authRemove.getAttribute('data-ld-auth-remove')];
-      ldSaveMine(mine);
-      panelChecks = null;
-      refreshProjectPanel();
-      toast('已解除认证，使用该平台的项目需要重新认证', 'success');
-      return;
-    }
     var setupOpen = t.closest('[data-ld-setup-open]');
-    if (setupOpen) { hideReminder(); toggleNavPop(false); ldOpenSetup(setupOpen.getAttribute('data-ld-setup-open')); return; }
-    if (t.closest('#ldNavStatus')) { toggleNavPop($('#ldNavPop').hidden); return; }
-    if (t.closest('[data-ld-auth-new]')) { toggleNavPop(false); ldOpenAuth('', 'GitLab'); return; }
+    if (setupOpen) { hideReminder(); ldOpenSetup(setupOpen.getAttribute('data-ld-setup-open')); return; }
+    if (t.closest('[data-ld-auth-new]')) { ldOpenAuth('', 'GitLab'); return; }
     var detect = t.closest('[data-ld-detect]');
     if (detect) { ldRunDetect(detect); return; }
     var projectSettings = t.closest('[data-ld-project-settings]');
     if (projectSettings) {
-      e.preventDefault();
-      e.stopPropagation();
-      toggleNavPop(false);
       ldOpenProjectSettings(projectSettings.getAttribute('data-ld-project-settings'));
       return;
     }
-    if (!t.closest('#ldNavPop') && $('#ldNavPop') && !$('#ldNavPop').hidden) toggleNavPop(false);
     if (t.closest('[data-ld-reminder-close]')) { hideReminder(); return; }
     if (t.closest('[data-ld-bind]')) { bindProjectDir(); return; }
     if (t.closest('[data-ld-pick-dir]')) {
@@ -518,40 +486,29 @@ export function initLocalDev() {
       ldOpenSetup(pidRebind);
       return;
     }
-    if (t.closest('[data-ld-reveal]')) { toast('已在访达中打开项目目录（演示）'); return; }
-    if (t.closest('[data-ld-ide]')) { toast('已用默认 IDE 打开项目目录（演示）'); return; }
-    if (t.closest('[data-ld-pull]')) {
-      var pidPull = currentPanelProjectId(), m3 = ldMine();
-      if (!ldProjectStatus(pidPull).authOk) { toast('Git 认证未配置或已过期，请先认证', 'warning'); return; }
-      if (m3.bindings[pidPull]) { m3.bindings[pidPull].syncedAt = ldNow(); ldSaveMine(m3); }
-      refreshProjectPanel();
-      toast('已拉取最新代码', 'success');
-      return;
-    }
-    var check = t.closest('[data-ld-check]');
-    if (check) {
-      var st = ldProjectStatus(check.getAttribute('data-ld-check'));
-      panelChecks = { projectId:check.getAttribute('data-ld-check'), authOk:st.authOk, bound:!!st.binding };
-      refreshProjectPanel();
-      return;
-    }
+    if (t.closest('[data-ld-reveal]')) { toast('已在访达中打开（演示）'); return; }
     if (t.closest('[data-ld-reset]')) {
       ldSaveMine({ auths:{}, bindings:{} });
-      panelChecks = null;
       reminderShown = false;
       refreshProjectPanel();
-      toast('已清空本机的 Git 认证和目录绑定，下次进入协作开发会提醒配置', 'success');
+      toast('已清空本机配置', 'success');
     }
   });
   document.addEventListener('change', function (e) {
     var t = e.target;
     if (t instanceof HTMLInputElement && t.name === 'ldDirMode') { setupDirMode = t.value; renderSetup(); return; }
+    if (t instanceof HTMLSelectElement && t.hasAttribute('data-ld-auth-pick')) {
+      var pickInfo = ldProjectStatus(t.getAttribute('data-ld-auth-pick')).info;
+      if (t.value === '__add') { ldOpenAuth(pickInfo.host, pickInfo.platform); refreshAfterPick(); return; }
+      toast('已选择 ' + ldEsc(t.value) + ' 的认证', 'success');
+      refreshAfterPick();
+      return;
+    }
     if (t instanceof HTMLSelectElement && t.id === 'ldAuthPlatform') syncAuthCreateLabel();
   });
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Enter' && e.target instanceof HTMLElement && e.target.id === 'ldAuthToken') { e.preventDefault(); submitAuth(); return; }
     if (e.key !== 'Escape') return;
-    if ($('#ldNavPop') && !$('#ldNavPop').hidden) { toggleNavPop(false); $('#ldNavStatus').focus(); return; }
     if ($('#ldAuthOverlay').style.display !== 'none') { e.stopPropagation(); ldHide('#ldAuthOverlay'); authOnSaved = null; }
     else if ($('#ldSetupOverlay').style.display !== 'none') { e.stopPropagation(); closeSetup(); }
     else if ($('#ldProjectOverlay').style.display !== 'none') { e.stopPropagation(); closeProjectSettings(); }
