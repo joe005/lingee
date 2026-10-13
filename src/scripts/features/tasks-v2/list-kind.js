@@ -39,7 +39,7 @@ export function taskListKind(task) {
   if (status === 'blocked') {
     var blockedHint = (quoted ? quoted + '执行受阻' : '执行受阻') + (reason ? '：' + reason : '');
     return mine
-      ? { kind:'blocked', badge:'已阻塞', hint:blockedHint, action:'retry', label:'重试', primary:true, needsMe:true }
+      ? { kind:'blocked', badge:'已阻塞', hint:blockedHint, action:'retry', label:task.blockedRun?.kind === 'local-env' ? '去配置' : '重试', primary:true, needsMe:true }
       : { kind:'blocked', badge:'已阻塞', hint:blockedHint, action:'detail', label:'查看详情', needsMe:false };
   }
   if (status === 'backlog' || status === 'in_review') {
@@ -58,6 +58,6 @@ export function taskNeedsMyAction(task) { return taskListKind(task).needsMe; }
 export function taskCardAction(task) {
   var info = taskListKind(task);
   var action = task.status === 'in_review' ? 'review' : info.action;
-  var labels = {start:'AI 执行',review:'验收产物',retry:'重试',reply:'回复问题',artifacts:'查看产物',detail:'查看详情'};
+  var labels = {start:'AI 执行',review:'验收产物',retry:task.blockedRun?.kind === 'local-env' ? '去配置' : '重试',reply:'回复问题',artifacts:'查看产物',detail:'查看详情'};
   return {action:action,label:['question', 'running'].includes(info.kind) ? info.label : labels[action] || info.label,primary:info.primary};
 }

@@ -19,6 +19,7 @@ import { cvOpenReviewDetail, cvReviewPass, cvReviewReject, cvSubmitReview, cvSwi
 import { cvApplyReviewFilters, cvClickReviewStat, cvClickStat, cvCloseSyncModal, cvCloseTaskModal, cvConfirmExec, cvConfirmReview, cvConfirmTransfer, cvConfirmTwist, cvOpenSyncModal, cvOpenTaskModal, cvSaveSyncTask, cvSelectCollabMode, cvSelectPersonItem, cvStartSyncTask, cvToggleSyncDropdown } from './tasks.js';
 import { cvApplyFilters, cvInited, cvPendingProj, cvPendingTab, cvSwitchFilter, cvSwitchView, set_cvInited, set_cvPendingProj, set_cvPendingTab } from './view.js';
 import { summon } from '../expert/automatch.js';
+import { initLocalDev } from './local-dev.js';
 import { EX } from '../expert/data.js';
 import { openExpertEditor } from '../expert/editor.js';
 import { startAssetCreationChat } from '../composer.js';
@@ -57,6 +58,7 @@ var cvExpertSearch=$('#cvExpertSearch');
 var cvExpertSections=$('#cvExpertSections');
 
 export function initCollab() {
+  initLocalDev();
   setConversationOpener(cvOpenConversation);
   initExpertMarket({expert:cvRenderExperts,team:renderExpertGrid});
   cvRemoveLingeePrototypeTasks();

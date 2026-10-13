@@ -1,6 +1,7 @@
 import { toast } from '../../../core/toast.js';
 import { input, setNavActive, showView } from '../../../core/view.js';
 import { cvSwitchView } from '../../collab/view.js';
+import { ldGateTaskStart, ldIsEnvBlocked, ldOpenSetup, ldProjectStatus, ldRestoreEnvBlocked } from '../../collab/local-dev.js';
 import { continueBlockedTaskConversation, openTaskExceptionHistory, openTaskSessionHistory, openTaskStatusConversation, sendComposerText, setComposerTaskReference } from '../../composer.js';
 import { renderExpertChips } from '../../expert/chips.js';
 import { set_activePick } from '../../expert/store.js';
@@ -57,6 +58,13 @@ function startTaskConversationRun(task, origin) {
 export function retryBlockedTask(task) {
   if (task?.status !== 'blocked') return;
   if (tkCurrentStageHandlerId(task) !== tkCurrentUserId()) { toast('仅当前阶段处理人可重试', 'warning'); return; }
+  /* 本地环境未就绪导致的阻塞：「去配置」打开准备面板，就绪后恢复并重新开始执行 */
+  if (ldIsEnvBlocked(task)) {
+    var resume = function () { ldRestoreEnvBlocked(task); startTaskExecution(task.id); };
+    if (ldProjectStatus(task.project).ready) resume();
+    else ldOpenSetup(task.project, { resumeLabel:'完成并继续执行', onReady:resume });
+    return;
+  }
   closeDrawer();
   openTaskStatusConversation(task);
   tkUpdateTask(task.id, { status:'in_progress', comments:(task.comments || []).concat({
@@ -70,6 +78,8 @@ export function retryBlockedTask(task) {
 export function startTaskExecution(taskId, options) {
   var task = tkGetTasks().find(function (row) { return row.id === taskId; });
   if (!task) return;
+  /* 本地执行前自检：手动开始时弹出准备面板，自动启动时转为已阻塞 */
+  if (!ldGateTaskStart(task, Object.assign({}, options, { onReady:function () { startTaskExecution(taskId, options); } }))) { render(); return; }
   var started = startTaskStage(task, options);
   if (!started.ok) { if (started.message) toast(started.message, 'warning'); else openDrawer(taskId); return; }
   scheduleTaskStageStartedNotice(taskId, started.stage?.id);

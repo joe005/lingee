@@ -1,3 +1,4 @@
+import { ldSidebarProjectExtra } from './collab/local-dev.js';
 import { billTemplateWithTokens } from '../core/bill-template.js';
 import { $, $$ } from '../core/dom.js';
 import { toast } from '../core/toast.js';
@@ -310,7 +311,7 @@ function renderChatSessions() {
           ? '<button type="button" class="chat-project-more" data-chat-project-toggle="' + attrId + '"><span class="txt">展开显示</span></button>'
           : '');
     return '<div class="chat-project-folder' + (collapsed ? ' collapsed' : '') + '" data-chat-project="' + attrId + '">'
-      + '<button type="button" class="chat-project-title" aria-expanded="' + !collapsed + '">' + folderIcon + '<span class="txt">' + escapeHtml(name) + '</span><span class="chat-project-chevron"><svg viewBox="0 0 16 16" fill="none">' + chevronIcon + '</svg></span></button>'
+      + '<button type="button" class="chat-project-title" aria-expanded="' + !collapsed + '">' + folderIcon + '<span class="txt">' + escapeHtml(name) + '</span><span class="chat-project-chevron"><svg viewBox="0 0 16 16" fill="none">' + chevronIcon + '</svg></span></button>' + ldSidebarProjectExtra(id)
       + '<div class="chat-project-sessions">' + sessionsHtml + '</div></div>';
   }).join('');
 }
@@ -2203,6 +2204,7 @@ export function initComposer() {
   queueMicrotask(renderChatSessions);
   document.addEventListener('lingee:auth-changed', renderChatSessions);
   document.addEventListener('lingee:sidebar-filter', renderChatSessions);
+  document.addEventListener('lingee:local-env-changed', renderChatSessions);
   document.getElementById('chatSessionList').addEventListener('click', function (event) {
     var entry = event.target.closest('[data-chat-session]');
     if (entry) openChatSession(entry.getAttribute('data-chat-session'));

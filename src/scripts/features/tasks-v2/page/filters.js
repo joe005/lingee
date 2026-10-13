@@ -1,5 +1,5 @@
-import { taskConversationNeedsReply } from '../../composer.js';
-import { TK_PEOPLE, TK_PRIORITIES, TK_STATUSES, tkCanViewTask, tkGetPerson, tkGetProjectName, tkGetTasks, tkInMyTaskList, tkIsHandledByMe, tkProjectsForCurrentUser, tkWasTaskHandler } from '../data.js';
+import { TK_PEOPLE, TK_PRIORITIES, TK_STATUSES, tkCanViewTask, tkCurrentStageHandlerId, tkCurrentUserId, tkGetPerson, tkGetProjectName, tkGetTasks, tkInMyTaskList, tkIsHandledByMe, tkIsMyStageDone, tkProjectsForCurrentUser, tkWasTaskHandler } from '../data.js';
+import { taskNeedsMyAction } from '../list-kind.js';
 import { renderTaskListTreeNodes } from '../list-template.js';
 import { taskExecutionStages } from '../task-execution.js';
 import { pageState } from './page-state.js';
@@ -164,8 +164,11 @@ export function getGroupedTasks(tasks, groupBy = state.groupBy) {
     var k = t[groupBy];
     if (groupBy === 'status') {
       if (k === 'done') k = 'done';
-      else if (k === 'planned' || k === 'backlog') k = 'needs';
-      else if (['in_progress','in_review','blocked'].includes(k)) k = (k === 'in_review' || k === 'blocked' || taskConversationNeedsReply(t, true)) ? 'needs' : 'in_progress';
+      /* 按「我的阶段」分组：待我处理＝轮到我开始、验收、回答或重试；执行中＝我所在阶段正在执行；
+         我负责的阶段已做完、后续由他人处理的任务归入已完成。 */
+      else if (taskNeedsMyAction(t) || ((k === 'planned' || k === 'backlog') && tkCurrentStageHandlerId(t) === tkCurrentUserId())) k = 'needs';
+      else if (tkIsMyStageDone(t)) k = 'done';
+      else k = 'in_progress';
     }
     /* 已办任务保留在已完成分组，仅排除已取消任务。 */
     if (t.status === 'cancelled') return;

@@ -10,6 +10,7 @@ import { tbTeamStages } from '../collab/tb-core.js';
 import { TEAM_STAGE_SCENARIOS } from '../expert/data.js';
 import { tkCurrentStageHandlerId, tkUpdateTask } from '../tasks-v2/data.js';
 import { startTaskStage } from '../tasks-v2/task-execution.js';
+import { ldGateTaskStart } from '../collab/local-dev.js';
 import { defaultStageAssigneeId } from '../tasks-v2/stage-owner.js';
 import { openTaskDetailFloating } from '../tasks-v2/index.js';
 import { mgrDateGet, mgrDateSet } from './datepicker.js';
@@ -946,6 +947,8 @@ function saveTaskNew(start) {
   }
   /* 「保存并启动」：创建人正好是第一阶段审核人时直接进入执行 */
   if (autoStart) {
+    /* 研发任务在本地客户端执行：本机环境未就绪时不启动，转为已阻塞，由第一阶段处理人在开发页签「去配置」 */
+    if (!ldGateTaskStart(task, {automatic:true})) { document.dispatchEvent(new Event('lingee:mgr-tasks-changed')); return; }
     var started = startTaskStage(task);
     if (started.ok) { document.dispatchEvent(new Event('lingee:mgr-tasks-changed')); toast('研发任务已创建并开始执行', 'success'); return; }
     toast(started.message || '暂时无法自动开始', 'warning');

@@ -1,0 +1,69 @@
+<!-- 本地开发 · 准备环境与 Git 认证弹窗。
+     开发在 Lingee 桌面客户端本地执行：Git 随客户端内置，用户只需按平台配置一次访问令牌，
+     再为项目绑定本地目录（自动拉取或使用已有目录）。内容由 features/collab/local-dev.js 渲染。 -->
+<div class="sync-overlay ld-overlay" id="ldSetupOverlay" style="display:none" aria-hidden="true">
+  <div class="sync-modal ld-modal" role="dialog" aria-modal="true" aria-labelledby="ldSetupTitle">
+    <div class="sync-modal__header">
+      <div class="ld-modal-head">
+        <span class="sync-modal__title" id="ldSetupTitle">准备本地开发环境</span>
+        <span class="ld-modal-sub" id="ldSetupSub"></span>
+      </div>
+      <button type="button" class="sync-modal__close" data-ld-setup-close aria-label="关闭"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="sync-modal__body" id="ldSetupBody"></div>
+    <div class="sync-modal__footer">
+      <button type="button" class="sync-modal__btn sync-modal__btn--ghost" data-ld-setup-close>稍后配置</button>
+      <button type="button" class="sync-modal__btn sync-modal__btn--primary" id="ldSetupDone" disabled>完成</button>
+    </div>
+  </div>
+</div>
+<div class="sync-overlay ld-overlay" id="ldProjectOverlay" style="display:none" aria-hidden="true">
+  <div class="sync-modal ld-modal ld-modal--project" role="dialog" aria-modal="true" aria-labelledby="ldProjectTitle">
+    <div class="sync-modal__header">
+      <div class="ld-modal-head">
+        <span class="sync-modal__title" id="ldProjectTitle">项目设置</span>
+        <span class="ld-modal-sub" id="ldProjectSub"></span>
+      </div>
+      <button type="button" class="sync-modal__close" data-ld-project-close aria-label="关闭"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="sync-modal__body" id="ldProjectBody"></div>
+  </div>
+</div>
+<div class="sync-overlay ld-overlay ld-overlay--top" id="ldAuthOverlay" style="display:none" aria-hidden="true">
+  <div class="sync-modal ld-modal ld-modal--auth" role="dialog" aria-modal="true" aria-labelledby="ldAuthTitle" aria-describedby="ldAuthDesc">
+    <div class="sync-modal__header">
+      <span class="sync-modal__title" id="ldAuthTitle">Git 认证</span>
+      <button type="button" class="sync-modal__close" data-ld-auth-close aria-label="关闭"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="sync-modal__body">
+      <p class="ld-desc" id="ldAuthDesc">配置 Git 平台的访问令牌，用于拉取和推送代码。每个平台只需配置一次，所有项目共用。</p>
+      <div class="ld-field">
+        <label for="ldAuthHost">Git 平台</label>
+        <div class="ld-auth-row">
+          <input type="text" id="ldAuthHost" class="ld-input" autocomplete="off" spellcheck="false">
+          <select id="ldAuthPlatform" class="ld-input ld-select" aria-label="平台类型">
+            <option value="GitLab">GitLab</option>
+            <option value="GitHub">GitHub</option>
+            <option value="Gitee">Gitee</option>
+            <option value="云效 Codeup">云效 Codeup</option>
+          </select>
+        </div>
+      </div>
+      <div class="ld-field">
+        <label for="ldAuthToken">访问令牌 <b aria-hidden="true">*</b></label>
+        <div class="ld-token-wrap">
+          <input type="password" id="ldAuthToken" class="ld-input" placeholder="Access Token / Personal Access Token" autocomplete="off" spellcheck="false" aria-describedby="ldAuthHelp ldAuthError">
+          <button type="button" class="ld-icon-btn" id="ldAuthEye" aria-label="显示令牌" aria-pressed="false"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        </div>
+        <p class="ld-help" id="ldAuthHelp">需要权限：<code>read_repository</code>、<code>write_repository</code>。<button type="button" class="ld-link" id="ldAuthCreate">去 GitLab 创建访问令牌</button>（名称与权限已预填，创建后复制回来即可）</p>
+        <p class="ld-error" id="ldAuthError" role="alert" hidden></p>
+      </div>
+    </div>
+    <div class="sync-modal__footer">
+      <button type="button" class="sync-modal__btn sync-modal__btn--ghost" data-ld-auth-close>取消</button>
+      <button type="button" class="sync-modal__btn sync-modal__btn--primary" id="ldAuthSubmit">验证并保存</button>
+    </div>
+  </div>
+</div>
+<div class="ld-nav-pop" id="ldNavPop" role="dialog" aria-label="本地开发环境" hidden></div>
+<div class="ld-reminder" id="ldReminder" role="status" aria-live="polite" hidden></div>

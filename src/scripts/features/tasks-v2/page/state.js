@@ -1,4 +1,4 @@
-import { TK_PEOPLE, tkCanViewTask, tkCurrentStageHandlerId, tkCurrentUserId, tkGetTasks, tkGetViews, tkProjectsForCurrentUser } from '../data.js';
+import { TK_PEOPLE, tkCanViewTask, tkCurrentStageHandlerId, tkCurrentUserId, tkGetTasks, tkGetViews, tkIsMyStageDone, tkProjectsForCurrentUser } from '../data.js';
 import { taskListKind, taskNeedsMyAction } from '../list-kind.js';
 import { taskViewState } from '../ui-state.js';
 import { pageState } from './page-state.js';
@@ -17,9 +17,9 @@ export var DEFAULT_LIST_FIELD_ORDER = LIST_FIELDS.map(function(field) { return f
    其余未完成任务（AI 执行中或等待他人处理）归入执行中。 */
 export var LIST_STATUS_TABS = [
   { id:'needs', name:'待我处理', match:function (task) { return taskNeedsMyAction(task); } },
-  { id:'running', name:'执行中', match:function (task) { return task.status !== 'done' && task.status !== 'cancelled' && !taskNeedsMyAction(task); } },
-  /* 已完成仅表示整个任务完成，个人阶段完成不改变任务分组。 */
-  { id:'done', name:'已完成', match:function (task) { return task.status === 'done'; } },
+  { id:'running', name:'执行中', match:function (task) { return task.status !== 'done' && task.status !== 'cancelled' && !taskNeedsMyAction(task) && !tkIsMyStageDone(task); } },
+  /* 已完成：任务整体完成，或我负责的阶段已做完（后续阶段由他人处理） */
+  { id:'done', name:'已完成', match:function (task) { return task.status === 'done' || tkIsMyStageDone(task); } },
 ];
 export var state = {
   layout: 'list', viewMode: 'slide', scope: 'all', groupBy: 'status', sortBy: 'updatedAt', sortDir: 'desc',
