@@ -1,0 +1,1 @@
+export default {id:'83',date:'2026-10-05',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'智能体开发',author:'wuhc2023',body:'功能·智能体开发：智能体配置补充本地/云端测试、提交上架审核确认、领域与模型选择、更新日志及 Work 对话中的技能与工具调用展示，并同步完善问卷调研演示脚本。'};

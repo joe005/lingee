@@ -1,0 +1,1 @@
+export default {id:'46',date:'2026-09-25',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'协作开发',author:'吴宏超',team:'项目与设置体验优化',body:'项目与设置体验优化：项目新增只读编码和六色文件夹图标，卡片按状态分组；设置新增配置审计日志，角色收敛为成员和管理员；支持工作区创建、切换与删除确认，并按工作区隔离协作数据。'};

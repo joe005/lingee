@@ -1,0 +1,1 @@
+export default {id:'48',date:'2026-09-26',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'Joe wu',team:'任务创建与执行概览',body:'任务创建与执行概览：新建任务可选择专家团，统一展示交付进度与结果；示例任务覆盖不同执行阶段，并按运行、审核和最终验收流转。'};

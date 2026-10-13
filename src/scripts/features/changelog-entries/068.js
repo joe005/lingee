@@ -1,0 +1,1 @@
+export default {id:'68',date:'2026-09-30',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'平台与协作开发',author:'wuhc2023',body:'功能·平台与协作开发：智能创建支持项目内持续会话与阶段确认；平台空间新增专家和专家团 ZIP 导入、版本上架、导出及客户端更新原型，项目卡片可直达任务清单，项目详情、成员和产物预览同步优化。'};

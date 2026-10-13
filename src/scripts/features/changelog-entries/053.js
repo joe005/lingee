@@ -1,0 +1,1 @@
+export default {id:'53',date:'2026-09-27',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'项目管理',author:'Joe',body:'项目列表默认卡片视图，整卡进入详情；项目概览仅负责人可修改，其他人只读，代码仓库和描述必填，项目编码不可修改；新建任务须明确所属项目。'};

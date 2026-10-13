@@ -1,0 +1,1 @@
+export default {id:'72',date:'2026-10-02',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'平台管理',author:'wuhc2023',body:'功能·平台管理：原厂和租户管理补齐导入简介、自动版本、审核通过/驳回、历史版本与 ZIP 导出，并按角色隔离审核权限；智能创建任务直接进入 task-builder 对话并选择项目，数字员工生成完成后点击卡片打开配置侧栏。'};

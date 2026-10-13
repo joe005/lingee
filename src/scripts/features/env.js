@@ -1101,3 +1101,10 @@ export function initEnvDisconnect() {
     });
   }
 }
+
+/* ERP 环境：配置、授权、断开三段初始化，顺序 == 原 main.js */
+export function initEnvArea() {
+  initEnvConfig();                /*  971 */
+  initEnvAuth();                  /* 1161 */
+  initEnvDisconnect();            /* 1614 */
+}

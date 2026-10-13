@@ -1,0 +1,1 @@
+export default {id:'55',date:'2026-09-27',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'wuhc2023',body:'功能·任务管理：新版任务与项目支持成员权限、项目删除及阶段流转，执行会话按项目归档并模拟流式输出、关联任务与产物，本机开发服务新增 SQLite 局域网共享数据。'};

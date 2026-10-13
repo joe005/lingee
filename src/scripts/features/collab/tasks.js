@@ -213,3 +213,24 @@ export function initCollabTasks() {
 }
 
 export { cvApplyReviewFilters, cvClickReviewStat, cvClickStat, cvCloseSyncModal, cvCloseTaskModal, cvConfirmExec, cvConfirmReview, cvConfirmTransfer, cvConfirmTwist, cvNormalizeTask, cvOpenSyncModal, cvOpenTaskModal, cvSaveSyncTask, cvSelectCollabMode, cvSelectPersonItem, cvStartSyncTask, cvToggleSyncDropdown };
+
+/* 内联事件（onclick="cvApplyReviewFilters(…)" 等）用到的函数挂到 window。
+   由 collab/index.js 的 initCollab() 在末尾调用，注册时机与拆分前一致；本文件新增内联函数时加在这里。 */
+export function exposeCollabTaskGlobals() {
+  window.cvApplyReviewFilters=cvApplyReviewFilters;
+  window.cvClickStat=cvClickStat;
+  window.cvClickReviewStat=cvClickReviewStat;
+  window.cvOpenSyncModal=cvOpenSyncModal;
+  window.cvCloseSyncModal=cvCloseSyncModal;
+  window.cvSelectCollabMode=cvSelectCollabMode;
+  window.cvToggleSyncDropdown=cvToggleSyncDropdown;
+  window.cvSaveSyncTask=cvSaveSyncTask;
+  window.cvStartSyncTask=cvStartSyncTask;
+  window.cvOpenTaskModal=cvOpenTaskModal;
+  window.cvCloseTaskModal=cvCloseTaskModal;
+  window.cvSelectPersonItem=cvSelectPersonItem;
+  window.cvConfirmExec=cvConfirmExec;
+  window.cvConfirmTransfer=cvConfirmTransfer;
+  window.cvConfirmTwist=cvConfirmTwist;
+  window.cvConfirmReview=cvConfirmReview;
+}

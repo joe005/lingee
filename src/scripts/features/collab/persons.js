@@ -166,3 +166,12 @@ export function initCollabPersons(){
 }
 
 export { cvClosePersonEdit, cvDeletePerson, cvOpenPersonNew, cvRenderPermTable, cvSavePersonEdit };
+
+/* 内联事件（onclick="cvOpenPersonNew(…)" 等）用到的函数挂到 window。
+   由 collab/index.js 的 initCollab() 在末尾调用，注册时机与拆分前一致；本文件新增内联函数时加在这里。 */
+export function exposeCollabPersonGlobals() {
+  window.cvOpenPersonNew=cvOpenPersonNew;
+  window.cvClosePersonEdit=cvClosePersonEdit;
+  window.cvSavePersonEdit=cvSavePersonEdit;
+  window.cvRenderPermTable=cvRenderPermTable;
+}

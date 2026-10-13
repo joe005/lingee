@@ -1,0 +1,1 @@
+export default {id:'88',date:'2026-10-09',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务协作',author:'Joe',body:'功能·任务协作：统一现行页面普通单选下拉与新建入口，精简项目表单，新增会话执行阶段横向方案与右键切换，统一内置智能体团队交付阶段并同步示例及缓存迁移。'};

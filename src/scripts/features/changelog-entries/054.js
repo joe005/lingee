@@ -1,0 +1,1 @@
+export default {id:'54',date:'2026-09-27',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'修复',module:'任务管理',author:'wuhc2023',body:'任务执行按计划逐节点进行 AI 对话和人工审核，详情在阶段节点集中展示处理人、专家头像、状态与可展开的产物；新建任务刷新后可恢复，项目卡片进度实时更新。'};

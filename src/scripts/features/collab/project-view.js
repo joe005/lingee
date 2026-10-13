@@ -1190,3 +1190,18 @@ function cvInitProjectViewMenu(){
 document.addEventListener('DOMContentLoaded',cvInitProjectViewMenu);
 
 export { cvCloseFeatureEdit, cvCloseManualSplit, cvCloseProjectSplit, cvConfirmManualSplit, cvConfirmProjectSplit, cvHideProjectDetail, cvOpenManualSplit, cvOpenProjectDetail, cvOpenProjectSplit, cvRenderProjectDetail, cvRenderProjectList, cvResetProjectListState, cvSaveFeatureEdit };
+
+/* 内联事件（onclick="cvRenderProjectList(…)" 等）用到的函数挂到 window。
+   由 collab/index.js 的 initCollab() 在末尾调用，注册时机与拆分前一致；本文件新增内联函数时加在这里。 */
+export function exposeCollabProjectGlobals() {
+  window.cvRenderProjectList=cvRenderProjectList;
+  window.cvResetProjectListState=cvResetProjectListState;
+  window.cvRenderProjectDetail=cvRenderProjectDetail;
+  window.cvCloseProjectSplit=cvCloseProjectSplit;
+  window.cvConfirmProjectSplit=cvConfirmProjectSplit;
+  window.cvOpenManualSplit=cvOpenManualSplit;
+  window.cvCloseManualSplit=cvCloseManualSplit;
+  window.cvConfirmManualSplit=cvConfirmManualSplit;
+  window.cvCloseFeatureEdit=cvCloseFeatureEdit;
+  window.cvSaveFeatureEdit=cvSaveFeatureEdit;
+}

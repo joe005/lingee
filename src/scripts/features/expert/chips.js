@@ -1,8 +1,8 @@
 import { $, $$ } from '../../core/dom.js';
 import { layerVisible } from './layers.js';
 import { brandEl, navItems, setNavActive, showView } from '../../core/view.js';
-import { cvInit } from '../collab/index.js';
-import { cvSwitchView } from '../collab/view.js';
+import '../collab/index.js';   /* 不再调用其函数（改发 lingee:collab-nav 事件），保留以维持模块求值顺序 */
+import '../collab/view.js';
 import { closeAll } from '../dropdown.js';
 import { EX, EXPERTS, xav, xesc } from './data.js';
 import { forcedBuilder, set_forcedBuilder } from './editor.js';
@@ -230,7 +230,7 @@ export function initExpertChips() {
       }
       if(ev.target.closest('[data-goto-experts]')){
         dd.classList.remove('open');
-        showView('collab'); setNavActive('协作开发'); cvInit(); cvSwitchView('teams');
+        showView('collab'); setNavActive('协作开发'); document.dispatchEvent(new CustomEvent('lingee:collab-nav',{detail:{tab:'teams'}}));
       }
     });
 

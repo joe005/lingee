@@ -43,43 +43,43 @@ npm run format       # 格式化 src
 在同目录的 `persons.js`。这些片段构建后仍合为一个 `dist/index.html`。
 
 ```
-index.html                    只有 47 行：外壳 + <!--#include --> 清单
+index.html                    外壳 + <!--#include --> 清单（新页面用 #include-dir 自动引入）
 
 src/
-├─ views/                     9 个视图各一份 HTML 片段
-│  ├─ login.html  sidebar.html  home.html  newtask.html  chat.html
-│  └─ apps.html   collab.html   skills.html  agents.html  settings.html
-│                 design.html  overlays.html
-├─ modals/                    15 个弹窗各一份 HTML 片段
-│  ├─ team.html               智能体团队配置（单页：团队 + 触发词，没有运行流程）
-│  ├─ expert-detail.html      智能体详情
-│  ├─ expert-edit.html        创建 / 编辑我的智能体
-│  ├─ member.html             智能体团队加成员
-│  ├─ knowledge-pick.html     智能体知识页签「＋ 添加」弹出的目录选择器
-│  ├─ env-*.html              ERP 环境配置 / 授权 / 断开（5 个）
-│  └─ attach.html  new-app.html  shortcut.html  collab.html  …
+├─ views/                     各视图一份 HTML 片段
+│  ├─ login.html  sidebar.html  home.html  newtask.html  chat.html  apps.html …
+│  ├─ collab.html  collab/    协作开发容器与各页签片段
+│  ├─ tasks.html   tasks/     任务页
+│  └─ pages/                  新页面放这里，自动引入（见 src/scripts/pages/README.md）
+├─ modals/                    弹窗片段，按页面分目录
+│  ├─ expert.html  expert/    智能体与智能体团队：团队配置、成员、详情、编辑、知识目录
+│  ├─ env.html     env/       ERP 环境配置 / 授权 / 断开
+│  ├─ collab.html  collab/    协作开发弹窗（含 collab-scoped.html 引入的 .cv-scope 弹窗）
+│  ├─ tasks/  manager.html    任务页、管理板块
+│  ├─ attach.html  new-app.html  shortcut.html  agent-submit.html …
+│  └─ pages/                  新页面的弹窗，自动引入
 ├─ styles/
 │  ├─ tokens.css              设计令牌，全站唯一来源
 │  ├─ app.css                 只剩一份有序的 @import 清单
-│  └─ parts/                  22 个分区样式，顺序即层叠顺序
+│  └─ parts/                  分区样式，顺序即层叠顺序
+│     ├─ tasks.css → tasks/01..10-*.css   任务页，编号即层叠顺序
+│     ├─ manager.css → manager/01..13-*.css
+│     └─ collab.css → collab/*.css
 ├─ scripts/
-│  ├─ main.js                 入口：只做 import + 按原顺序调用各模块的 init
+│  ├─ main.js                 入口：只做 import + 按原顺序调用各区域的 init
 │  ├─ core/                   dom / toast / view（视图切换、侧边栏导航）
 │  ├─ boot/                   route（启动路由）、test-param
+│  ├─ pages/                  新页面脚本，导出 init() 即自动接线
 │  └─ features/
-│     ├─ login.js  sidebar.js  changelog.js  dropdown.js  tooltip.js
-│     ├─ composer.js          输入框、发送、＋按钮菜单
-│     ├─ chat.js  apps.js  attach-app.js  shortcuts.js  env.js
-│     ├─ design/              Design System：交互 / 令牌 / 图标 / 组件预览
-│     ├─ expert/              智能体与智能体团队：data / store / library /
-│     │                       automatch / editor / knowledge /
-│     │                       team-modal / chips
-│     ├─ collab/              协作开发：data / view / tasks / reviews /
-│     │                       chat / experts / projects / config / index
-│     ├─ manager/             管理板块：data / plan / detail / projects /
-│                             nav / index（视图 views/manager.html，
-│                             弹窗 modals/manager.html，样式 parts/manager.css 汇总引入 parts/manager/ 下按界面分的文件）
-│     └─ work/                工作板块：index（视图 views/work.html，样式 parts/work.css）
+│     ├─ login.js  sidebar.js  dropdown.js  tooltip.js  chat.js  apps.js  env.js …
+│     ├─ changelog.js + changelog-entries/   更新日志：一条记录一个文件
+│     ├─ composer.js + composer/             输入框、发送、会话、任务对话（composer.js 只做转发）
+│     ├─ design/              Design System（entry.js 是本区域初始化入口）
+│     ├─ expert/              智能体与智能体团队（entry.js 是本区域初始化入口）
+│     ├─ collab/              协作开发（entry.js 初始化入口；data.js 转发到 data/）
+│     ├─ tasks-v2/            任务页（index.js 初始化；page/ 按区域；data.js 转发到 data/）
+│     ├─ manager/             管理板块：data / plan / detail / projects / nav / index
+│     └─ work/                工作板块
 └─ artifacts/
    └─ purchase-order.html     单据产物模板，经 ?raw 导入
 ```
@@ -99,8 +99,12 @@ src/
 `transformIndexHtml` 阶段替换成文件内容。页面最终仍是一份完整的静态 HTML，
 脚本执行时 DOM 已经就绪——和拆分前逐字节一致，没有任何运行时注入。
 
-新增一个视图 / 弹窗：在 `src/views/` 或 `src/modals/` 放一个片段，
-再去 `index.html` 加一行 `<!--#include -->`。位置就是它在 DOM 里的位置。
+新增一个**独立页面**：按 [src/scripts/pages/README.md](src/scripts/pages/README.md)
+把 HTML、弹窗、脚本放进各自的 `pages/` 目录，`<!--#include-dir -->` 与
+`scripts/pages/index.js` 会自动引入，不用改 `index.html`、`main.js`、`core/view.js`、`boot/route.js`。
+
+给已有页面加片段：在该页面自己的片段文件里 `<!--#include -->`（如 `src/modals/expert.html`、
+`src/modals/collab-scoped.html`），位置就是它在 DOM 里的位置。
 
 ### 部署路径与刷新
 
@@ -151,6 +155,12 @@ CloudBase Hosting 自动用 `404.html` 处理 SPA 刷新，无需额外配置错
 导出的 `init*()` 函数里，由 [src/scripts/main.js](src/scripts/main.js)
 按拆分前的原始顺序调用——入口里每行后面的注释就是它在原 6515 行
 `main.js` 里的行号。**调整调用顺序前先确认没有依赖**。
+
+**模块求值顺序也不能变。** `tasks-v2/data/store.js`、`collab/data/workspace-projects.js`、
+`composer/sessions.js` 等在模块求值期就会拼装种子、迁移缓存，依赖先求值的模块。
+拆分大文件时保留了原来的转发入口（`composer.js`、`tasks-v2/data.js`、`collab/data.js`），
+入口先按原顺序裸 `import` 原依赖，再 `export … from` 各子文件；个别文件里
+`import './x.js';   /* 保留以维持模块求值顺序 */` 也是这个原因，不要删。
 
 跨模块共享的可变状态（`activePick`、`TEAMS`、`cvProject` 等）用 ES module
 的 live binding 读取；ES 的 import 绑定是只读的，所以写入要走对应模块导出的

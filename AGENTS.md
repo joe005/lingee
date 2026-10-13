@@ -68,7 +68,9 @@ skill 里，两处不重复；改 `tokens.css` 时同步改 DESIGN.md 色值表�
 
 1. `src/styles/app.css` 里的 `@import` 顺序等于拆分前的行顺序，**不可调整**
 2. 模块只放声明，副作用放进导出的 `init*()`，由 `src/scripts/main.js` 按
-   原始顺序调用；入口里的行号注释指向拆分前的位置
+   原始顺序调用；入口里的行号注释指向拆分前的位置。智能体、协作开发、Design System
+   各有 `entry.js` 汇总本区域的初始化，本区域新增模块在 `entry.js` 接线，不改 `main.js`；
+   模块求值顺序同样不可调整，标注「保留以维持模块求值顺序」的裸 `import` 不要删
 3. 跨模块写共享状态要走 `set_xxx()`——ES 的 import 绑定只读
 
 改完跑 `npm run check`（模块自检与设计规范自检）再跑 `npm run build`。
@@ -104,6 +106,12 @@ skill 里，两处不重复；改 `tokens.css` 时同步改 DESIGN.md 色值表�
   `src/scripts/features/expert/` 模块。
 - 设置：`src/views/collab/settings.html`、`src/modals/collab/settings.html`、
   `src/styles/parts/collab/*settings*.css`、`persons.js`、`config.js`。历史团队数据迁移保留在 `squads.js`。
+- 协作开发的 `.cv-scope` 弹窗（新建任务、拆分、功能编辑、人员编辑、加入项目、产物文件）在
+  `src/modals/collab/`，由 `src/modals/collab-scoped.html` 引入；内联 `onclick="cvXxx()"`
+  用到的函数在各自模块末尾的 `exposeCollab*Globals()` 里挂到 `window`，新增时改所属模块，
+  不改 `collab/index.js`。
+- 智能体与智能体团队的弹窗在 `src/modals/expert/`（`src/modals/expert.html` 引入），
+  ERP 环境弹窗在 `src/modals/env/`（`src/modals/env.html` 引入）。
 - 共享导航与容器留在 `src/views/collab.html`；共享 CSS 文件名带 `shared`，
   `src/styles/parts/collab.css` 的导入顺序保留原有层叠关系。`data.js`、
   `view.js`、`index.js` 是跨页模块，修改前先确认接口影响。
@@ -127,25 +135,27 @@ skill 里，两处不重复；改 `tokens.css` 时同步改 DESIGN.md 色值表�
 
 ### 变更记录：仅在提交推送时更新
 
-`CHANGELOG.md` 和 `src/scripts/features/changelog.js`（页面内的「更新日志」消息通知）
+`CHANGELOG.md` 和 `src/scripts/features/changelog-entries/`（页面内的「更新日志」消息通知，一条一个文件）
 是同一份变更说明的两个落点，只在用户要求提交推送的那次操作里一起写，平时不动。
 
-1. 日常修改任务不读、不写、不预留这两处：功能开发、调试、重构、样式调整的过程中
+1. 日常修改任务不读、不写、不预留这两处（`CHANGELOG.md` 与 `changelog-entries/`）：功能开发、调试、重构、样式调整的过程中
    都不追加记录，收尾只跑 `npm run check` 和 `npm run build`，避免拉长任务时间。
 2. 一次推送聚合成一条记录，范围取本次待推送的提交（如 `git log origin/main..HEAD`），
    不逐条罗列 commit；更新人按提交者填写，同一更新人同一天的多次变更合并为一条。
-3. 说明文案只写一句，两处共用：`CHANGELOG.md` 表格的「变更内容」列与 `changelog.js`
+3. 说明文案只写一句，两处共用：`CHANGELOG.md` 表格的「变更内容」列与页面记录
    的 `body` 使用同一句摘要；`body` 写成 `<标题>：<同一句摘要>`，标题由 `type` 和
    `module` 组合而成，不另起文案，不再使用 `1. 2. 3.` 编号加 `<br>` 换行的罗列格式。
+   页面记录一条一个文件：`src/scripts/features/changelog-entries/<id 三位补零>.js`，
+   内容为 `export default {id,date,iconBg,iconColor,type,module,author,body};`，
+   页面按 id 倒序展示，不用改 `changelog.js`。
 4. 版本号遵循 SemVer：MAJOR 对应不兼容变更、MINOR 对应新功能、PATCH 对应修复与优化。
-5. `changelog.js` 新增条目分配递增 `id`，并在同文件的 `changelogIcons` 中补对应图标，
-   日期使用当天日期。
+5. 新增条目分配递增 `id`（取 `changelog-entries/` 里最大编号加一），日期使用当天日期。
 6. 只记录核心功能变更，小 BUG 修复与细节调整不记录；若本次推送全是这类小事，
    两处都不新增内容，直接提交推送。
 7. 顺序为先写两处记录，再跑 `npm run check` 和 `npm run build`，然后连同代码改动
    一起提交并推送，保证记录与代码在同一次推送内；不要在推送之后再补一次提交。
 8. `CHANGELOG.md` 配了 git union 合并（`.gitattributes`），两人同时在表格顶部加行时会自动保留双方；
-   `changelog.js` 仍可能冲突，冲突时两条都保留并把后合入的 `id` 改成下一个号。
+   页面记录各自一个文件不会冲突，若两人用了同一个 `id`，后合入的一方把文件名和 `id` 改成下一个号。
 
 ### 多人协作约定
 
@@ -153,16 +163,29 @@ skill 里，两处不重复；改 `tokens.css` 时同步改 DESIGN.md 色值表�
    把同事未提交的修改带上。
 2. 以下是跨页共享文件，改之前在群里说一声，改动尽量小且单独提交：
    `src/scripts/main.js`、`src/styles/app.css`、`src/views/sidebar.html`、
-   `src/scripts/features/tasks-v2/data.js`、`src/scripts/features/collab/data.js`、
-   `src/scripts/features/manager/data.js`、`src/styles/tokens.css`。
-3. 页面之间只通过数据模块导出的函数和 `lingee:*` 自定义事件协作，不直接改别的页面的
-   DOM 或内部状态；需要新的跨页接口时在对应 data.js 里加导出函数。
-4. 两个大页面已按区域拆分，改动放进对应文件，不要再往入口文件里堆代码：
+   `src/scripts/features/manager/data.js`、`src/styles/tokens.css`，以及
+   `src/scripts/features/tasks-v2/data/`、`src/scripts/features/collab/data/` 下的数据文件
+   （人员主数据在 `collab/data/people.js`，任务存储在 `tasks-v2/data/store.js`）。
+   `composer.js`、`tasks-v2/data.js`、`collab/data.js` 现在只做转发，只在新增对外函数时加一行。
+3. 新增独立页面按 `src/scripts/pages/README.md`：HTML 放 `src/views/pages/`、弹窗放
+   `src/modals/pages/`、脚本放 `src/scripts/pages/`，自动引入与接线，不改 `index.html`、
+   `main.js`、`core/view.js`、`boot/route.js`；侧栏项写 `data-nav-view`。
+4. 页面之间只通过数据模块导出的函数和 `lingee:*` 自定义事件协作，不直接改别的页面的
+   DOM 或内部状态；需要新的跨页接口时在对应 data.js 里加导出函数。打开协作开发某页签用
+   `lingee:collab-nav` 事件（`detail.tab`），不直接调用协作模块的函数。
+5. 大页面已按区域拆分，改动放进对应文件，不要再往入口文件里堆代码：
    - 任务页：`src/scripts/features/tasks-v2/index.js` 只做初始化，代码在 `tasks-v2/page/` 下
      （`render.js` 看板与列表、`detail-panel.js` / `subtasks.js` 详情、`form-modal.js` 新建编辑、
      `filters.js` 筛选排序、`events-*.js` 各区域事件等，文件头有说明）。跨模块共享且会被重新赋值的
      变量挂在 `page/page-state.js` 的 `pageState` 上，新增这类变量也放这里。
    - 管理板块样式：`src/styles/parts/manager.css` 只按顺序引入 `parts/manager/01..13-*.css`，
      编号即层叠顺序；新规则放进对应界面文件，需要覆盖前面规则时放编号更大的文件。
-5. 合并遇到冲突且涉及同事的业务取舍（文案、阶段、字段口径）时，不要替对方决定，
+   - 任务页样式：`src/styles/parts/tasks.css` 只按顺序引入 `parts/tasks/figma-*.css` 与
+     `parts/tasks/01..10-*.css`，规则同管理板块。
+   - 对话与输入框：`src/scripts/features/composer.js` 只做转发，代码在 `composer/` 下；
+     任务相关的对话在 `composer/task-*.js`（任务页负责人维护），其余为对话页
+     （`messages.js`、`sessions.js`、`send.js`、`stream.js`、`doc-viewer.js`、`init.js` 等，文件头有说明）。
+   - 任务数据：`tasks-v2/data/`（常量、人员、权限、产物、种子、查询、存储）；
+     协作数据：`collab/data/`（项目与工作区、人员、项目存储、卡片、演示细节）。
+6. 合并遇到冲突且涉及同事的业务取舍（文案、阶段、字段口径）时，不要替对方决定，
    保留对方改动（如 `git stash`）并告知对方。

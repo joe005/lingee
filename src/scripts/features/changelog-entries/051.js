@@ -1,0 +1,1 @@
+export default {id:'51',date:'2026-09-26',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'Joe wu',team:'新建任务专家团确认人',body:'新建任务专家团确认人：新建任务弹窗悬停展开专家团交付阶段二级面板，各阶段可用自定义下拉指定产物确认人，选择后面板保持展开以继续配置。'};

@@ -1,0 +1,1 @@
+export default {id:'71',date:'2026-10-02',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'kingdee',body:'功能·任务管理：任务页默认进入列表视图，新增“需要我处理、执行中、已完成”状态页签与实时数量，列表改为进度卡片，按状态提供“交给AI执行、查看验收产物、重新执行”快捷操作；待验收产物支持 Markdown、代码和 HTML 多文件切换预览，任务详情主操作下移，项目任务清单继续保持原表格和独立工具栏。'};

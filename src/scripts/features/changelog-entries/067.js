@@ -1,0 +1,1 @@
+export default {id:'67',date:'2026-09-29',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'Joe',body:'功能·任务管理：任务看板按状态提供开始、回复与确认快捷操作，产物统一为五类阶段文档并通过确认弹窗流转；任务会话增加执行阶段、处理人、任务编码与专家团展示，支持阻塞、提问、待确认、按账号隔离预制会话及刷新后恢复会话和预览；本地共享数据库迁至 data.nosync。'};

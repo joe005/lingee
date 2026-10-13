@@ -1,0 +1,1 @@
+export default {id:'81',date:'2026-10-04',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'登录与权限',author:'wuhc2023',body:'功能·登录与权限：原厂管理、租户管理（云端）入口和协作开发的“项目”“设置”页签仅张工可见，其他账号不显示且不能直接打开；侧栏“最近会话”支持折叠收起。'};

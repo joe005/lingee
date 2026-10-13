@@ -11,7 +11,7 @@ import { initHoverDropdowns, initFormDropdowns } from './features/dropdown.js';
 import { initAttachApp, initAttachModal } from './features/attach-app.js';
 import { initViewSwitch, initSidebarNav, initHomeCards } from './core/view.js';
 import { initPreview, initHistoryPanel } from './features/chat.js';
-import { initEnvConfig, initEnvAuth, initEnvDisconnect } from './features/env.js';
+import { initEnvArea } from './features/env.js';
 import { initApps, initNewAppModal, initAppsNewDropdown } from './features/apps.js';
 import { initAgentSubmit } from './features/agent-submit.js';
 import { initAgentConfig } from './features/agent-config.js';
@@ -21,23 +21,12 @@ import { initPromptEnhance } from './features/prompt-enhance.js';
 import { initTestParam } from './boot/test-param.js';
 import { initTooltip } from './features/tooltip.js';
 import { initShortcuts } from './features/shortcuts.js';
-import { initDesignSystem } from './features/design/index.js';
-import { initDesignComponents } from './features/design/components.js';
+import { initDesignArea } from './features/design/entry.js';
 import { initRoute } from './boot/route.js';
-import { initExpertData } from './features/expert/data.js';
-import { initExpertLibrary } from './features/expert/library.js';
-import { initAutoMatch } from './features/expert/automatch.js';
-import { initExpertEditor } from './features/expert/editor.js';
-import { initExpertKnowledge } from './features/expert/knowledge.js';
-import { initTeamModal } from './features/expert/team-modal.js';
-import { initExpertChips } from './features/expert/chips.js';
-import { initCollabView, initCollabTabs } from './features/collab/view.js';
-import { initCollabTasks } from './features/collab/tasks.js';
-import { initCollabProjects } from './features/collab/projects.js';
-import { initPersonPicker } from './features/collab/person-picker.js';
-import { initCollabConfig } from './features/collab/config.js';
-import { initCollab } from './features/collab/index.js';
+import { initExpertArea } from './features/expert/entry.js';
+import { initCollabArea } from './features/collab/entry.js';
 import { initTasksV2 } from './features/tasks-v2/index.js';
+import { initCollabWorkbench } from './features/collab/workbench.js';
 import { initInbox } from './features/inbox/index.js';
 import { _authedUser } from './features/login.js';
 import { withBase } from './core/base-path.js';
@@ -47,6 +36,7 @@ import { initManager } from './features/manager/index.js';
 import { initManagerData } from './features/manager/data.js';
 import { initWork } from './features/work/index.js';
 import { initAgentDemo } from './features/agent-demo.js';
+import { initPages } from './pages/index.js';
 
 /* 产物预览与应用共用同一份设计令牌 */
 const billTemplateWithTokens = billTemplate.replace(
@@ -67,9 +57,7 @@ initViewSwitch();                 /*  776  core/view.js */
 initPreview();                    /*  827  features/chat.js */
 initUserMenu();                   /*  905  features/sidebar.js */
 initFormDropdowns();              /*  955  features/dropdown.js */
-initEnvConfig();                  /*  971  features/env.js */
-initEnvAuth();                    /* 1161  features/env.js */
-initEnvDisconnect();              /* 1614  features/env.js */
+initEnvArea();                    /*  971–1614  features/env.js：配置 / 授权 / 断开 */
 initSidebarIcons();               /* 2061  features/sidebar.js */
 initSidebarNav();                 /* 2180  core/view.js */
 initApps();                       /* 2208  features/apps.js */
@@ -89,25 +77,13 @@ initAppsNewDropdown();            /* 3177  features/apps.js */
 initTestParam();                  /* 3269  boot/test-param.js */
 initTooltip();                    /* 3277  features/tooltip.js */
 initShortcuts();                  /* 3308  features/shortcuts.js */
-initDesignSystem();               /* 3389  features/design/index.js */
-initDesignComponents();           /* 3796  features/design/components.js */
+initDesignArea();                 /* 3389–3796  features/design/entry.js */
 initRoute();                      /* 4181  boot/route.js */
-initExpertData();                 /* 4234  features/expert/data.js */
-initExpertLibrary();              /* 4627  features/expert/library.js */
-initAutoMatch();                  /* 4759  features/expert/automatch.js */
-initExpertEditor();               /* 4885  features/expert/editor.js */
-initExpertKnowledge();            /*       features/expert/knowledge.js（拆分后新增） */
-initTeamModal();                  /* 5034  features/expert/team-modal.js */
-initExpertChips();                /* 5261  features/expert/chips.js */
-initCollabView();                 /* 5714  features/collab/view.js */
-initCollabTasks();                /* 5767  features/collab/tasks.js */
-initCollabTabs();                 /* 6189  features/collab/view.js */
-initCollabProjects();             /* 6287  features/collab/projects.js */
-initPersonPicker();
-initCollabConfig();               /* 6370  features/collab/config.js */
-initCollab();                     /* 6445  features/collab/index.js */
+initExpertArea();                 /* 4234–5261  features/expert/entry.js：智能体与智能体团队 */
+initCollabArea();                 /* 5714–6445  features/collab/entry.js：协作开发 */
 initManagerData();                /* 管理项目先注册给任务模块：管理板块新建的开发任务在开发板块可见 */
 initTasksV2();                    /* 任务管理 v2 */
+initCollabWorkbench();            /* 协作开发工作台骨架：原在 initTasksV2() 末尾，顺序不变 */
 initInbox();                      /* 系统通知收件箱 */
 initAnalytics();                  /* 用户行为分析看板 */
 initPlatformAdmin();              /* 平台智能体管理原型与本地更新 */
@@ -116,6 +92,7 @@ initWork();                       /* 工作板块：新任务首屏与历史对�
 initChatStageLayout();
 initPageSelectDropdowns();         /* 现行页面普通单选字段统一组件 */
 initAgentDemo();                  /* 智能体开发演示：对话创建、沙箱测试、提交与 Work 使用 */
+initPages();                      /* 新页面：src/scripts/pages/*.js 自动接线，不用改本文件 */
 
 /* 全局 ESC 关闭弹窗：找到最上层的可见 overlay，触发其关闭按钮点击 */
 document.addEventListener('keydown', function (e) {

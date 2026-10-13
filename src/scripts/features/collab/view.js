@@ -155,3 +155,11 @@ export function set_cvPendingProj(v){ cvPendingProj=v; return v; }
 export function set_cvPendingTab(v){ cvPendingTab=v; return v; }
 
 export { cvAddSidebarConversation, cvApplyFilters, cvGetFilterVal, cvInited, cvLastTab, cvPendingProj, cvPendingTab, cvShowPanel, cvSwitchFilter, cvSwitchSub, cvSwitchView, cvToast };
+
+/* 内联事件（onclick="cvSwitchView(…)" 等）用到的函数挂到 window。
+   由 collab/index.js 的 initCollab() 在末尾调用，注册时机与拆分前一致；本文件新增内联函数时加在这里。 */
+export function exposeCollabViewGlobals() {
+  window.cvSwitchView=cvSwitchView;
+  window.cvSwitchFilter=cvSwitchFilter;
+  window.cvApplyFilters=cvApplyFilters;
+}

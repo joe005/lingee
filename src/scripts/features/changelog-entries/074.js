@@ -1,0 +1,1 @@
+export default {id:'74',date:'2026-10-02',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理与平台管理',author:'wuhc2023',body:'功能·任务管理与平台管理：任务列表按当前处理职责与阶段评审权限展示；平台导入改为对话框选择 ZIP 并进入解析扫描流程；协作数据、任务看板与云端市场通过注入接口解耦。'};

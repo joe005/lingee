@@ -1,0 +1,1 @@
+export default {id:'78',date:'2026-10-04',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'平台管理',author:'wuhc2023',body:'功能·平台管理：审核驳回记入该资产的历史版本（含原因、审核人、时间和提交说明），已驳回的审核单在草稿和全部中展示，管理员可直接查看驳回原因。'};

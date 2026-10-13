@@ -1,0 +1,1 @@
+export default {id:'69',date:'2026-10-01',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'平台与协作开发',author:'wuhc2023',body:'功能·平台与协作开发：管理平台与协作开发支持数字员工、专家团分层浏览、对话创建及审核安装，专家团安装自动补齐成员；智能创建任务支持生成建议后持续对话调整并确认创建，新增王工演示登录账号。'};

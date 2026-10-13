@@ -1,0 +1,98 @@
+/* 任务页签：与专家、智能体团队的来源筛选一致，使用描边胶囊；工具栏与列表同底色、同边距。 */
+#view-tasks:not(.tk-project-list-mode) .tk-toolbar{padding:16px 28px 6px;border-bottom:0}
+#view-tasks.tk-list-mode:not(.tk-project-list-mode) .tk-toolbar{background:var(--bg)}
+#view-tasks:not(.tk-project-list-mode) .tk-toolbar .tk-view-bar{height:34px;gap:8px}
+#view-tasks:not(.tk-project-list-mode) .tk-view-tabs{gap:8px}
+#view-tasks:not(.tk-project-list-mode) .tk-view-tabs .list-page-tab{gap:6px;height:34px;box-sizing:border-box;padding:0 16px;border:1px solid transparent;border-radius:var(--asset-pill-radius);background:transparent;color:var(--text-secondary);font-size:var(--tb-body-size);font-weight:400}
+#view-tasks:not(.tk-project-list-mode) .tk-view-tabs .list-page-tab:hover{background:var(--hover);color:var(--text)}
+#view-tasks:not(.tk-project-list-mode) .tk-view-tabs .list-page-tab.active{border-color:var(--brand);background:var(--brand-fill);color:var(--brand);font-weight:500}
+#view-tasks:not(.tk-project-list-mode) .tk-view-tabs .tk-list-tab-count,
+#view-tasks:not(.tk-project-list-mode) .tk-view-tabs .list-page-tab.active .tk-list-tab-count{min-width:0;height:auto;padding:0;border-radius:0;background:transparent;color:inherit;font-size:inherit;font-weight:inherit}
+#view-tasks:not(.tk-project-list-mode) :is(.tk-display-btn,.tk-view-add,.tk-view-overflow-btn){width:34px;height:34px;padding:0;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:var(--text-secondary)}
+#view-tasks:not(.tk-project-list-mode) :is(.tk-display-btn,.tk-view-add,.tk-view-overflow-btn):hover{background:var(--hover);color:var(--text)}
+#view-tasks:not(.tk-project-list-mode) :is(.tk-display-btn,.tk-view-add,.tk-view-overflow-btn):focus-visible{outline:2px solid var(--border-focus);outline-offset:2px}
+#view-tasks:not(.tk-project-list-mode) .tk-list .tk-list-scroll{padding:6px 28px 24px}
+#view-tasks:not(.tk-project-list-mode) .tk-list .tk-table td.tk-list-card-cell{border-radius:12px}
+@media(max-width:620px){#view-tasks:not(.tk-project-list-mode) .tk-toolbar{padding:12px 12px 4px}#view-tasks:not(.tk-project-list-mode) .tk-list .tk-list-scroll{padding:4px 10px 12px}}
+
+.tk-card-menu-item.is-disabled{opacity:.45;cursor:not-allowed}.tk-card-menu-item.is-disabled:hover{background:transparent}
+
+/* 新建任务下拉沿用全站线性 caret 与白底菜单。 */
+.niu-create .niu-person-trigger.is-placeholder>span:first-child{color:var(--text-soft)}
+.niu-create .niu-select-caret{width:14px;height:14px;flex:none;color:var(--text-secondary)}
+.niu-create .niu-custom-select-source{display:none}
+.niu-create .niu-select-trigger>span:first-child{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.niu-person-popup{box-sizing:border-box;border:1px solid var(--border);border-radius:12px;background:var(--bg);box-shadow:var(--menu-shadow);padding:4px;color:var(--text)}
+.niu-person-popup input{height:36px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:14px}
+.niu-person-popup input::placeholder{color:var(--text-soft);opacity:1}
+.niu-person-popup input:hover{border-color:var(--border-hover)}
+.niu-person-popup input:focus{border-color:var(--border-focus);outline:none;box-shadow:none}
+.niu-person-popup button{min-height:32px;padding:8px 12px;gap:8px;border-radius:8px;color:var(--text);font-size:14px;font-weight:400}
+.niu-person-popup button:hover{background:var(--hover);color:var(--text)}
+.niu-person-popup button[aria-selected=true]{background:var(--brand-fill)}
+.niu-person-popup button:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}
+.niu-person-popup button>span:first-child{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.niu-person-popup button b,.niu-person-popup button svg{flex:none;margin-left:auto;color:var(--brand)}
+.niu-person-popup p{color:var(--text-secondary)}
+
+.niu-create .niu-create-writing .niu-field .niu-invalid,.niu-create .niu-create-properties .niu-field .niu-invalid{border-color:var(--danger);box-shadow:none}
+.niu-create .niu-create-writing .niu-field .niu-invalid:focus,.niu-create .niu-create-properties .niu-field .niu-invalid:focus{border-color:var(--danger);box-shadow:0 0 0 2px var(--danger-bg)}
+
+/* 任务表单与属性菜单的统一规格。 */
+.niu-plan .niu-select-caret,.niu-stage-owner .niu-select-caret{width:14px;height:14px;flex:none;color:var(--text-secondary)}
+.niu-create-stage-table select.niu-custom-select-source,.niu-plan select.niu-custom-select-source{display:none}
+.niu-create-stage-table .niu-select-trigger,.niu-create-stage-table .niu-stage-owner{display:flex;align-items:center;justify-content:space-between;box-sizing:border-box;width:100%;min-width:0;height:32px;min-height:32px;padding:4px 8px;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--text);font-size:13px;font-weight:400}
+.niu-create-stage-table .niu-select-trigger:hover,.niu-create-stage-table .niu-stage-owner:hover{border-color:var(--border-hover);background:var(--hover)}
+.niu-plan .niu-select-trigger>span:first-child{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.niu-plan .niu-select-trigger{font-size:13px}
+.niu-select-trigger:disabled,.niu-stage-owner:disabled{opacity:.5;cursor:not-allowed}
+.niu-create-stage-table .niu-select-trigger:focus-visible,.niu-create-stage-table .niu-stage-owner:focus-visible,.niu-plan .niu-select-trigger:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+td.niu-plan-empty{color:var(--text-secondary)}
+.niu-stage-inline-field>span,.niu-stage-fields label>span,.niu-stage-label,.niu-stage-choice button,.niu-stage-continuous{font-size:12px}
+.tk-prop-menu{border-radius:12px}
+.tk-prop-menu-item{box-sizing:border-box;min-height:32px;padding:8px 12px;border-radius:8px;font-size:14px;line-height:1.4}
+.niu-create .niu-create-writing .niu-field :is(input,textarea):focus,.niu-create .niu-create-properties .niu-field :is(select,.niu-person-trigger):focus,.niu-smart-fields .niu-field :is(select,textarea):focus{border-color:var(--border-focus);box-shadow:none}
+.niu-create .niu-create-writing .niu-field :is(input,textarea):focus-visible,.niu-create .niu-create-properties .niu-person-trigger:focus-visible,.niu-person-popup input:focus-visible,.niu-plan .niu-person-trigger:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+.niu-create .niu-create-writing .niu-field .niu-invalid:focus,.niu-create .niu-create-properties .niu-field .niu-invalid:focus{border-color:var(--danger);box-shadow:0 0 0 2px var(--danger-bg)}
+
+/* 表单聚焦仅改变边框颜色，避免外圈与光晕叠加。 */
+.niu-create .niu-create-writing .niu-field :is(input,textarea):focus,
+.niu-create .niu-create-writing .niu-field :is(input,textarea):focus-visible,
+.niu-create .niu-create-properties .niu-field :is(select,.niu-person-trigger):focus,
+.niu-create .niu-create-properties .niu-field :is(select,.niu-person-trigger):focus-visible,
+.niu-smart-fields .niu-field :is(select,textarea):focus,
+.niu-smart-fields .niu-field :is(select,textarea):focus-visible,
+.niu-person-popup input:focus,
+.niu-person-popup input:focus-visible{border-color:var(--brand);outline:none;box-shadow:none}
+.niu-create .niu-create-writing .niu-field .niu-invalid:focus,
+.niu-create .niu-create-writing .niu-field .niu-invalid:focus-visible,
+.niu-create .niu-create-properties .niu-field .niu-invalid:focus,
+.niu-create .niu-create-properties .niu-field .niu-invalid:focus-visible{border-color:var(--danger);outline:none;box-shadow:none}
+
+.tk-card-status{display:inline-flex;align-items:center;flex:none;padding:2px 8px;border-radius:4px;background:var(--fill-1);color:var(--text-secondary);font-size:12px;line-height:1.4}
+.tk-card-status[data-kind=review]{background:var(--warning-bg);color:var(--warning)}
+.tk-card-status[data-kind=question]{background:var(--brand-fill);color:var(--brand)}
+.tk-card-status[data-kind=blocked]{background:var(--danger-bg);color:var(--danger)}
+
+/* 阶段负责人选择：头像固定圆形，搜索区不随成员列表滚动。 */
+#niuPersonPopup {
+  display: flex;
+  flex-direction: column;
+  max-height: min(300px, calc(100vh - 16px));
+  overflow: hidden;
+}
+#niuPersonPopup input { flex: none; }
+#niuPersonOptions { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+#niuPersonOptions button > .niu-person-avatar {
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
+#niuPersonOptions button > span:not(.niu-person-avatar) {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

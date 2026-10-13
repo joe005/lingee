@@ -1,8 +1,9 @@
 /* 跨页公共入口：仅分发给已注册的页面处理器，不修改页面内部 DOM。 */
 let issueNavigation = null;
 
+/* 各页面登记自己负责的跳转处理器（issue / workItem / review），多次调用合并 */
 export function initIssueNavigation(handlers) {
-  issueNavigation = handlers;
+  issueNavigation = Object.assign(issueNavigation || {}, handlers);
 }
 
 function dispatchIssueNavigation(name, id, options) {

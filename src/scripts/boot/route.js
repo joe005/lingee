@@ -1,5 +1,5 @@
 import { $, $$ } from '../core/dom.js';
-import { navItems, setNavActive, showView } from '../core/view.js';
+import { navItems, setNavActive, setNavActiveByView, showView } from '../core/view.js';
 import { chatAppDd, selectChatApp } from '../features/attach-app.js';
 import { set_cvPendingProj, set_cvPendingTab } from '../features/collab/view.js';
 import { appendAssistantMessage, appendUserMessage, messagesList, restoreChatSession, simulateAIResponse } from '../features/composer.js';
@@ -21,6 +21,9 @@ var _origSearch=location.search;
 /* showView() 对认不出的名字会把九个视图全部隐藏（线上曾因此登录后一片空白），
    所以路径段必须先过白名单，认不出就按「没指定」处理，走默认/localStorage 恢复 */
 var VIEW_NAMES=['home','newtask','chat','apps','collab','skills','agents','settings','design','experts','tasks','changelog','inbox','platform','manager','work'];
+/* 新页面（src/views/pages/）在视图根元素上写 data-route，自动加入白名单 */
+var PAGE_ROUTES=$$('.view[data-route]').map(function(v){ return v.getAttribute('data-route'); });
+VIEW_NAMES=VIEW_NAMES.concat(PAGE_ROUTES);
 var _seg=_pathParts[0]||'';
 var dsViewParam=VIEW_NAMES.indexOf(_seg)>=0 ? _seg : '';
 var dsSearch;
@@ -75,6 +78,7 @@ export function initRoute() {
     else if(dsViewParam==='agents') setNavActive('智能体开发');
     else if(dsViewParam==='apps') setNavActive('应用开发');
     else if(dsViewParam==='tasks') setNavActive('任务');
+    else if(PAGE_ROUTES.indexOf(dsViewParam)>=0) setNavActiveByView(dsViewParam);
     else if(dsViewParam==='platform') setNavActive(getPlatformIdentity()?.role==='tenant'?'租户管理（云端）':'原厂管理（云端）');
     else if(dsViewParam==='collab'){
       setNavActive('协作开发');

@@ -1,0 +1,1 @@
+export default {id:'87',date:'2026-10-09',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'智能体开发',author:'liangpingxian',body:'功能·智能体开发：新增设备运维（6.1 / 6.2）与销售履约演示场景，开发板块新会话可通过 agent-builder 调用 skill-builder 创建智能体并自动绑定技能，支持独立测试会话、提交审核后发布，设备巡检维修系统改建在金蝶 ERP 元数据上并由苍穹应用开发智能体团队交付；项目统一在 Manage 立项，协作开发移除项目页签。'};

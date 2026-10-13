@@ -1,0 +1,1 @@
+export default {id:'50',date:'2026-09-26',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'liangpingxian',team:'任务会话与产物预览',body:'任务会话与产物预览：任务详情新增「我的会话」，可查看并回到自己围绕任务发起的会话；交付物文档改为右侧弹出预览并按任务生成内容；侧边栏新增专家团演示会话。'};

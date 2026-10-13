@@ -1,7 +1,5 @@
 import { $, $$ } from './dom.js';
 import { appDd } from '../features/attach-app.js';
-import { cvInit } from '../features/collab/index.js';
-import { cvSwitchView } from '../features/collab/view.js';
 import { closeAll } from '../features/dropdown.js';
 import { withBase } from './base-path.js';
 /* 视图切换、侧边栏导航、首页卡片、Logo 回首页
@@ -26,6 +24,10 @@ function navText(n){
 function setNavActive(name){
   navItems.forEach(function(n){ n.classList.toggle('active', navText(n)===name); });
 }
+/* 新页面的侧栏项写 data-nav-view="视图名"，按视图名高亮，不依赖菜单文字 */
+function setNavActiveByView(view){
+  navItems.forEach(function(n){ n.classList.toggle('active', n.dataset.navView===view); });
+}
 function applyMode(mode,fromChip){
   modeItems.forEach(function(m){ m.classList.toggle('checked', m.getAttribute('data-val')===mode); });
   appDd.classList.remove('error');
@@ -36,7 +38,9 @@ function applyMode(mode,fromChip){
 }
 
 /* ---------- view switching ---------- */
-var viewHome=$('#view-home'), viewNew=$('#view-newtask'), viewChat=$('#view-chat'), viewApps=$('#view-apps'), viewSkills=$('#view-skills'), viewAgents=$('#view-agents'), viewCollab=$('#view-collab'), viewDesign=$('#view-design'), viewSettings=$('#view-settings'), viewAnalytics=$('#view-analytics'), viewTasks=$('#view-tasks'), viewChangelog=$('#view-changelog'), viewInbox=$('#view-inbox'), viewPlatform=$('#view-platform'), viewManager=$('#view-manager'), viewWork=$('#view-work'), viewWorkChat=$('#view-work-chat');
+/* 所有视图按 id="view-<名称>" 自动登记；新页面放进 src/views/pages/ 即可被 showView 切换 */
+var allViews=$$('.view[id^="view-"]');
+var viewChat=$('#view-chat'), viewDesign=$('#view-design'), viewTasks=$('#view-tasks'), viewPlatform=$('#view-platform');
 var tasksStandaloneParent=viewTasks.parentNode, tasksStandaloneNext=viewTasks.nextSibling;
 function setTasksEmbedded(embedded, container){
   var target=embedded ? (container||$('#cv-tasks-current')) : tasksStandaloneParent;
@@ -60,23 +64,11 @@ function showView(which){
     if(window.cvRestoreProjectTaskBoard)window.cvRestoreProjectTaskBoard();
     setTasksEmbedded(false);
   }
-  viewHome.classList.toggle('hidden', which!=='home');
-  viewNew.classList.toggle('hidden', which!=='newtask');
-  viewChat.classList.toggle('hidden', which!=='chat');
-  viewApps.classList.toggle('hidden', which!=='apps');
-  viewSkills.classList.toggle('hidden', which!=='skills');
-  viewAgents.classList.toggle('hidden', which!=='agents');
-  viewCollab.classList.toggle('hidden', which!=='collab');
-  viewDesign.classList.toggle('hidden', which!=='design');
-  viewSettings.classList.toggle('hidden', which!=='settings');
-  viewAnalytics.classList.toggle('hidden', which!=='analytics');
-  viewTasks.classList.toggle('hidden', which!=='tasks' && !(which==='collab' && viewTasks.classList.contains('pj-embedded-task-view')));
-  viewChangelog.classList.toggle('hidden', which!=='changelog');
-  viewInbox.classList.toggle('hidden', which!=='inbox');
-  viewPlatform.classList.toggle('hidden', which!=='platform');
-  viewManager.classList.toggle('hidden', which!=='manager');
-  viewWork.classList.toggle('hidden', which!=='work');
-  if(viewWorkChat) viewWorkChat.classList.toggle('hidden', which!=='work-chat');
+  allViews.forEach(function(v){
+    /* 任务视图可嵌在协作开发的项目详情里，此时随协作开发一起显示 */
+    if(v===viewTasks) v.classList.toggle('hidden', which!=='tasks' && !(which==='collab' && viewTasks.classList.contains('pj-embedded-task-view')));
+    else v.classList.toggle('hidden', which!==v.id.slice(5));
+  });
   $('.sidebar').classList.toggle('hidden', which==='design');
   closeAll(null);
   if(which!=='design') setUrlState('/'+which);
@@ -109,6 +101,7 @@ export function initSidebarNav() {
     if(n.dataset.platformNav)n.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();n.click();}});
     n.addEventListener('click',function(){
       var name=navText(n);
+      if(n.dataset.navView){ setNavActiveByView(n.dataset.navView); showView(n.dataset.navView); return; }
       setNavActive(name);
       if(name==='应用开发' || name==='苍穹应用'){
         showView('apps');
@@ -118,8 +111,8 @@ export function initSidebarNav() {
         showView('agents');
       }else if(name==='协作开发'){
         showView('collab');
-        cvInit();
-        cvSwitchView('tasks');
+        /* 协作开发自己监听：初始化并切到任务页签（collab/index.js），再通知其他订阅方 */
+        document.dispatchEvent(new CustomEvent('lingee:collab-nav'));
         document.dispatchEvent(new CustomEvent('lingee:collab-menu-open'));
       }else if(name==='任务'){
         if(window.cvLeaveProjectTasks)window.cvLeaveProjectTasks();
@@ -203,4 +196,4 @@ export function initHomeCards() {
   }
 }
 
-export { applyMode, brandEl, input, modeItems, navItems, setNavActive, setTasksEmbedded, setUrlState, showView, viewChat, viewDesign, viewTasks };
+export { applyMode, brandEl, input, modeItems, navItems, setNavActive, setNavActiveByView, setTasksEmbedded, setUrlState, showView, viewChat, viewDesign, viewTasks };

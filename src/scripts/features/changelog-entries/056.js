@@ -1,0 +1,1 @@
+export default {id:'56',date:'2026-09-28',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'wuhc2023',body:'功能·任务管理：任务执行会话支持连续流式输出，展示专家团头像和可恢复产物；产物生成后自动转待审核，并同步显示任务状态。'};

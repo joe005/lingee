@@ -1,6 +1,3 @@
-import { initMyWork } from '../collab/my-work.js';
-import { initReviewCenter, renderReviewCenter } from '../collab/review-center.js';
-import { initWorkItemDetail, renderWorkItemDetail } from '../collab/work-item-detail.js';
 import { initTaskConfirm } from './confirm.js';
 import { tkEnsureCompletedDemoTask, tkEnsureWorkspaceDemoTasks, tkPruneOrphanTasks, tkSyncPeople } from './data.js';
 import { initExecutionPlan } from './execution-plan.js';
@@ -101,9 +98,7 @@ export function initTasksV2() {
   // 隐藏骨架在旧初始化结束后接线，不改变现有事件顺序和首屏。
   initExecutionPlan();
   initNewIssueUI(render, function (taskId) { if (state.drawerTaskId === taskId) openDrawer(taskId); });
-  initMyWork();
-  initWorkItemDetail();
-  initReviewCenter();
-  initIssueNavigation({ issue: openIssueDetail, workItem: renderWorkItemDetail, review: renderReviewCenter });
+  /* 协作开发的工作台骨架改由 collab/workbench.js 初始化（main.js 紧接本函数调用） */
+  initIssueNavigation({ issue: openIssueDetail });
 }
 /* propFieldKeys 见 page/detail-panel.js */

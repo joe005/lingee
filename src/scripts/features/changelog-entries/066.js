@@ -1,0 +1,1 @@
+export default {id:'66',date:'2026-09-29',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'协作开发',author:'wuhc2023',body:'功能·协作开发：项目列表和详情重构分组、搜索筛选、显示设置与权限化编辑，产物支持侧栏预览、全屏、筛选和下载；新建任务支持两步式智能创建及逐阶段执行人和自动审核配置，任务管理新增 Excel 模板下载与导入。'};

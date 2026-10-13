@@ -1,0 +1,1 @@
+export default {id:'82',date:'2026-10-04',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'协作开发',author:'liangpingxian',body:'功能·协作开发：新增“问卷调研系统建设”演示场景，项目、任务、应用开发、技能和智能体开发页预置问卷数据，执行计划按阶段显示对应智能体。'};

@@ -18,15 +18,18 @@
   if(b){if(p===b)p='/';else if(p.indexOf(b+'/')===0)p=p.slice(b.length)||'/';}
   var seg=p.replace(/^\/+|\/+$/g,'').split('/')[0]||'';
   var VN=['home','newtask','chat','apps','collab','skills','agents','settings','design','experts','tasks','changelog','inbox','platform','manager','work'];var NP=[];
+  /* NP：src/views/pages/ 里新页面声明的 data-route，由构建插件 html-include 填入 */
+  function known(x){return VN.indexOf(x)>=0||NP.indexOf(x)>=0;}
   var v='';
-  if(VN.indexOf(seg)>=0)v=seg;
+  if(known(seg))v=seg;
   else{var ov=new URLSearchParams(location.search).get('view');
-    if(ov&&VN.indexOf(ov)>=0)v=ov;
+    if(ov&&known(ov))v=ov;
     else{var s=localStorage.getItem('lingeeUrlState')||'';
-      if(s){var m=s.match(/\/([^\/?]+)/);if(m&&VN.indexOf(m[1])>=0)v=m[1];}}}
+      if(s){var m=s.match(/\/([^\/?]+)/);if(m&&known(m[1]))v=m[1];}}}
   if(v==='experts')v='collab';
   if(!v)v='newtask';
   document.documentElement.setAttribute('data-initial-view',v);
+  if(NP.indexOf(v)>=0){var st=document.createElement('style');st.textContent='html[data-initial-view="'+v+'"] #view-'+v+'{display:flex!important}';document.head.appendChild(st);}
 })();
 </script>
 <style>
@@ -75,34 +78,22 @@
 <!--#include "src/views/manager.html" -->
 <!--#include "src/views/work.html" -->
   <!--#include "src/views/work-chat.html" -->
+  <!--#include-dir "src/views/pages" -->
   </main>
 
 <!--#include "src/views/overlays.html" -->
 <!--#include "src/modals/attach.html" -->
 <!--#include "src/modals/new-app.html" -->
-<!--#include "src/modals/team.html" -->
-<!--#include "src/modals/member.html" -->
-<!--#include "src/modals/expert-detail.html" -->
-<!--#include "src/modals/expert-edit.html" -->
-<!--#include "src/modals/knowledge-pick.html" -->
+<!--#include "src/modals/expert.html" -->
 <!--#include "src/modals/platform-update.html" -->
-<!--#include "src/modals/env-config.html" -->
-<!--#include "src/modals/env-authorize.html" -->
-<!--#include "src/modals/erp-consent.html" -->
-<!--#include "src/modals/env-disconnect.html" -->
-<!--#include "src/modals/env-auth-confirm.html" -->
+<!--#include "src/modals/env.html" -->
 <!--#include "src/modals/source-app-menu.html" -->
 <!--#include "src/modals/shortcut.html" -->
 <!--#include "src/modals/collab.html" -->
 <!--#include "src/modals/manager.html" -->
+<!--#include-dir "src/modals/pages" -->
 <div class="cv-scope">
-<!--#include "src/modals/new-task.html" -->
-<!--#include "src/modals/split-task.html" -->
-<!--#include "src/modals/manual-split.html" -->
-<!--#include "src/modals/feature-edit.html" -->
-<!--#include "src/modals/person-edit.html" -->
-<!--#include "src/modals/add-to-project.html" -->
-<!--#include "src/modals/art-files.html" -->
+<!--#include "src/modals/collab-scoped.html" -->
 <!--#include "src/modals/agent-submit.html" -->
 </div>
 <script type="module" src="./src/scripts/bootstrap.js"></script>

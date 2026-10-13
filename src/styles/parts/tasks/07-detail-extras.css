@@ -1,0 +1,115 @@
+/* ---------- 任务详情子任务区域（参考 Multica ProgressRing + ChevronDown） ---------- */
+.tk-subtasks{margin:40px 0}
+.tk-subtasks-empty{margin:24px 0}
+.tk-subtask-empty-add{display:inline-flex;align-items:center;gap:6px;padding:0;border:0;background:transparent;color:var(--text-secondary);font:inherit;font-size:12px;cursor:pointer}
+.tk-subtask-empty-add:hover{color:var(--text)}
+.tk-subtask-head{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.tk-subtasks.is-collapsed .tk-subtask-head{margin-bottom:0}
+.tk-subtask-toggle{display:inline-flex;align-items:center;gap:6px;padding:4px 0;border:0;background:transparent;color:var(--text);font:inherit;font-size:14px;font-weight:600;cursor:pointer}
+.tk-subtask-toggle:hover{color:var(--text-secondary)}
+.tk-subtask-toggle svg{flex:none;color:var(--text-secondary);transition:transform .18s ease}
+.tk-subtask-toggle[aria-expanded="false"] svg{transform:rotate(-90deg)}
+.tk-subtask-progress-ring{flex:none;transition:opacity .15s}
+.tk-subtask-badge{font-size:11px;color:var(--text-secondary);background:var(--fill-1);padding:2px 7px;border-radius:5px;font-variant-numeric:tabular-nums}
+.tk-subtask-add-btn{margin-left:auto;width:28px;height:28px;display:grid;place-items:center;border:0;border-radius:6px;background:transparent;color:var(--text-secondary);cursor:pointer;transition:background .15s,color .15s}
+.tk-subtask-add-btn:hover{background:var(--hover);color:var(--text)}
+.tk-subtask-list{display:flex;flex-direction:column;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.tk-subtask-list[hidden]{display:none}
+.tk-subtask-row{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border:0;border-bottom:1px solid var(--border);background:var(--bg);text-align:left;font:inherit;font-size:12px;cursor:pointer;transition:background .12s}
+.tk-subtask-row:last-child{border-bottom:0}
+.tk-subtask-row:hover{background:var(--hover)}
+.tk-subtask-status{flex:none;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:11px;line-height:1}
+.tk-subtask-status-dot{display:block;width:10px;height:10px;border-radius:50%}
+.tk-subtask-title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);font-weight:500}
+.tk-subtask-meta{flex:none;font-size:11px;color:var(--text-soft)}
+
+/* ---------- mac 文件夹风格展开/收起动效 ---------- */
+@keyframes tkCardExpandIn{from{opacity:0;transform:translateY(-8px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes tkCardExpandOut{from{opacity:1;transform:translateY(0) scale(1)}to{opacity:0;transform:translateY(-8px) scale(.96)}}
+.tk-row-collapse-ghost{position:fixed;z-index:20;pointer-events:none;transform-origin:top center}
+.tk-just-expanded .tk-card--child{animation:tkCardExpandIn .28s cubic-bezier(.34,1.3,.64,1) both;transform-origin:top center}
+.tk-card.tk-leaving{animation:tkCardExpandOut .22s cubic-bezier(.4,0,.2,1) both;transform-origin:top center}
+
+/* 看板保持简洁；列表显示「需要我处理 / 执行中 / 已完成」快速页签。 */
+#view-tasks:not(.tk-list-mode) #tkViewBar{display:none}
+
+/* ---------- 任务详情「我的会话」：只列当前用户的会话标题，默认折叠 ---------- */
+.tk-my-sessions{margin:0 0 32px}
+.tk-my-sessions-head{display:flex;align-items:center;gap:8px;min-width:0}
+.tk-my-sessions:not(.is-collapsed) .tk-my-sessions-head{margin-bottom:6px}
+.tk-my-sessions-toggle{display:inline-flex;align-items:center;gap:6px;flex:none;padding:4px 0;border:0;background:transparent;color:var(--text);font:inherit;font-size:14px;font-weight:600;cursor:pointer}
+.tk-my-sessions-toggle:hover{color:var(--text-secondary)}
+.tk-my-sessions-toggle svg{flex:none;color:var(--text-secondary);transition:transform .18s ease}
+.tk-my-sessions-toggle[aria-expanded="false"] svg{transform:rotate(-90deg)}
+.tk-my-sessions-count{flex:none;font-size:11px;color:var(--text-secondary);background:var(--fill-1);padding:2px 7px;border-radius:5px;font-variant-numeric:tabular-nums}
+.tk-my-sessions-list{display:flex;flex-direction:column;gap:2px;padding-left:20px}
+.tk-my-sessions-list[hidden]{display:none}
+.tk-my-session-row{display:flex;align-items:center;width:100%;padding:6px 8px;border:0;border-radius:6px;background:transparent;text-align:left;font:inherit;font-size:13px;color:var(--text);cursor:pointer;transition:background .15s}
+.tk-my-session-row:hover{background:var(--hover)}
+.tk-my-session-row:focus-visible{outline:2px solid var(--brand);outline-offset:-2px}
+.tk-my-session-title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.task-session-continue{display:flex;justify-content:center;padding-top:4px}
+.task-session-continue-btn{height:34px;padding:0 16px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font:inherit;font-size:13px;font-weight:500;cursor:pointer}
+.task-session-continue-btn:hover{background:var(--hover)}
+/* ---------- 文档预览侧边栏（占位挤开模式） ---------- */
+.tk-doc-preview{width:0;min-width:0;flex-shrink:0;border-left:0 solid var(--divider);overflow:hidden;background:var(--bg);transition:width .25s ease,border-left-width .25s ease;display:flex;flex-direction:column;position:relative}
+.tk-doc-preview.resizing{transition:none}
+.tk-doc-preview.show{width:min(880px,80vw);border-left-width:1px}
+.tk-doc-preview-resize{position:absolute;z-index:3;top:0;bottom:0;left:-5px;width:10px;cursor:col-resize;touch-action:none}
+.tk-doc-preview-resize:after{content:'';position:absolute;top:50%;left:4px;width:2px;height:48px;border-radius:2px;background:var(--border-focus);opacity:0;transform:translateY(-50%);transition:opacity .15s}
+.tk-doc-preview-resize:hover:after,.tk-doc-preview-resize:focus-visible:after{opacity:1}
+/* 产物预览页签栏：浏览器式多开，两个以上产物同时打开时出现。 */
+.tk-doc-preview-tabs{display:flex;align-items:flex-end;gap:2px;flex-shrink:0;padding:6px 8px 0;border-bottom:1px solid var(--divider);overflow-x:auto;scrollbar-width:thin}
+.tk-doc-preview-tabs::-webkit-scrollbar{height:3px}
+.tk-doc-preview-tab{display:inline-flex;align-items:center;gap:7px;flex:none;max-width:220px;min-height:30px;padding:0 9px;border:1px solid transparent;border-bottom:0;border-radius:7px 7px 0 0;background:transparent;color:var(--text-secondary);font:inherit;font-size:12px;line-height:1;cursor:pointer}
+.tk-doc-preview-tab:hover{background:var(--hover);color:var(--text)}
+.tk-doc-preview-tab:focus-visible{outline:2px solid var(--border-focus);outline-offset:-2px}
+.tk-doc-preview-tab.is-active{border-color:var(--divider);background:var(--bg);color:var(--text);font-weight:600}
+.tk-doc-preview-tab-icon{flex:none;display:grid;place-items:center;width:18px;height:18px}
+.tk-doc-preview-tab-icon img{width:16px;height:16px;object-fit:contain;display:block}
+.tk-doc-preview-tab-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tk-doc-preview-tab-close{flex:none;display:grid;place-items:center;width:18px;height:18px;border-radius:4px;color:var(--text-soft);opacity:0;transition:opacity .15s,background .15s,color .15s}
+.tk-doc-preview-tab:hover .tk-doc-preview-tab-close,.tk-doc-preview-tab.is-active .tk-doc-preview-tab-close{opacity:1}
+.tk-doc-preview-tab-close:hover{background:var(--danger-bg);color:var(--danger)}
+.tk-doc-preview-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding:12px 16px;border-bottom:1px solid var(--divider);flex-shrink:0}
+.tk-doc-preview-title{display:flex;align-items:center;gap:10px;min-width:0}
+.tk-doc-preview-icon{flex:none;display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:var(--brand-fill);color:var(--brand);overflow:hidden}
+.tk-doc-preview-icon img{width:100%;height:100%;object-fit:contain;display:block}
+.tk-doc-preview-title strong{display:block;font-size:14px;font-weight:600;color:var(--text);line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tk-doc-preview-title span{display:block;font-size:12px;color:var(--text-secondary);line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tk-doc-preview-close{flex:none;display:flex;align-items:center;justify-content:center;width:28px;height:28px;border:none;background:transparent;color:var(--text-secondary);cursor:pointer;border-radius:6px}
+.tk-doc-preview-close:hover{background:var(--hover);color:var(--text)}
+.tk-doc-preview-meta{display:flex;flex-wrap:wrap;gap:12px 32px;padding:12px 16px;border-bottom:1px solid var(--divider);flex-shrink:0;margin:0}
+.tk-doc-preview-meta>div{display:flex;flex-direction:column;gap:2px}
+.tk-doc-preview-meta dt{font-size:11px;color:var(--text-soft);margin:0}
+.tk-doc-preview-meta dd{font-size:12px;color:var(--text);font-weight:500;margin:0}
+.tk-doc-preview-body{flex:1;overflow-y:auto;padding:16px 20px 24px;min-width:0}
+.tk-doc-preview-body.is-website{display:flex;flex-direction:column;padding:12px 16px 16px;overflow:hidden}
+.tk-site-preview{display:flex;flex:1;flex-direction:column;min-height:0;border:1px solid var(--border);border-radius:10px;background:var(--bg);overflow:hidden}
+.tk-site-bar{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--border);background:var(--hover)}
+.tk-site-dots{display:inline-flex;gap:5px}
+.tk-site-dots i{width:9px;height:9px;border-radius:50%;background:var(--border-hover)}
+.tk-site-url{flex:1;min-width:0;padding:4px 10px;border-radius:6px;background:var(--bg);border:1px solid var(--border);color:var(--text-secondary);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tk-site-badge{flex:none;padding:2px 8px;border-radius:999px;background:var(--success-bg);color:var(--success);font-size:11px}
+.tk-site-frame{display:block;flex:1;width:100%;min-height:420px;border:0;background:var(--bg)}
+.tk-doc-preview-section{margin:0 0 20px}
+.tk-doc-preview-section:last-child{margin-bottom:0}
+.tk-doc-preview-section h4{margin:0 0 6px;font-size:13px;font-weight:600;color:var(--text)}
+.tk-doc-preview-section p{margin:0 0 8px;font-size:13px;color:var(--text-secondary);line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere}
+.tk-doc-article{font-size:13px;color:var(--text-secondary);line-height:1.7}
+.tk-doc-article-title{font-size:16px;font-weight:600;color:var(--text);margin:0 0 12px;line-height:1.4}
+.tk-doc-list{margin:4px 0 10px;padding-left:20px;font-size:13px;color:var(--text-secondary);line-height:1.7}
+.tk-doc-list li{margin:2px 0}
+.tk-doc-table-wrap{overflow-x:auto;margin:6px 0 10px}
+.tk-doc-table{width:100%;border-collapse:collapse;font-size:12px}
+.tk-doc-table th,.tk-doc-table td{border:1px solid var(--border);padding:5px 8px;text-align:left}
+.tk-doc-table th{background:var(--fill-1);color:var(--text);font-weight:500;white-space:nowrap}
+.tk-doc-table td{color:var(--text-secondary)}
+.tk-doc-code{margin:6px 0 10px;padding:10px 12px;background:var(--fill-1);border-radius:6px;overflow-x:auto;font-size:12px;line-height:1.6;color:var(--text)}
+.tk-doc-note{margin:6px 0 10px;padding:8px 12px;background:var(--brand-fill);border-radius:6px;font-size:12px;color:var(--text);line-height:1.6}
+@media(max-width:760px){
+  .tk-doc-preview.show{width:100%;border-left:0;border-top:1px solid var(--divider)}
+}
+@media(max-width:1100px){
+  .tk-body.is-split .tk-doc-preview.show{width:100%;border-left:0;border-top:1px solid var(--divider)}
+}

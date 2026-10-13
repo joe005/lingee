@@ -1,0 +1,1 @@
+export default {id:'85',date:'2026-10-08',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'功能',module:'任务管理',author:'Joe',body:'功能·任务管理：完善任务新建与必填校验、统一下拉和状态标签，支持已有阻塞会话重试，将人工审核、阻塞与待回复任务归入待我处理，限制他人任务查看权限并记住看板与列表选择。'};

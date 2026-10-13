@@ -1,0 +1,1 @@
+export default {id:'49',date:'2026-09-26',iconBg:'var(--brand-fill)',iconColor:'var(--brand)',type:'优化',module:'任务管理',author:'Joe wu',team:'任务创建与详情优化',body:'任务创建与详情优化：多人协作改为按专家分工指定负责人，交付物改为侧边栏预览并扩充内容，异常任务可查看历史会话，审核退回跳转会话二次修改。'};
