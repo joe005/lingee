@@ -1,4 +1,5 @@
 import { $ } from '../../core/dom.js';
+import { DELETE_ICON } from '../../core/delete-icon.js';
 import { toast } from '../../core/toast.js';
 import {
   TASK_STATUSES, mgrAddIssue, mgrCanDeleteTask, mgrCanManageProject, mgrCreateDevTask, mgrDeleteTask, mgrCreateTask, mgrCurrentPersonId, mgrExpert, mgrHasSessionPerm, mgrIsDevTask,
@@ -143,12 +144,11 @@ var MENU_ICONS = {
   sub: '<path d="M12 5v14M5 12h14"/>',
   start: '<path d="M13 2 3 14h9l-1 8 10-12h-9z"/>',
   void: '<circle cx="12" cy="12" r="9"/><path d="m5.6 5.6 12.8 12.8"/>',
-  del: '<path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/>',
 };
 function menuItem(act, key, label, enabled, danger, reason) {
   return '<button type="button" role="menuitem" class="mgr-row-act' + (danger ? ' mgr-menu-danger' : '') + '"' +
     (enabled ? ' data-mgr-task-act="' + act + '" data-mgr-task-key="' + mgrEsc(key) + '"' : ' disabled title="' + mgrEsc(reason || '当前状态不可用') + '"') + '>' +
-    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + MENU_ICONS[act === 'force' ? 'start' : act] + '</svg>' + label + '</button>';
+    (act === 'del' ? DELETE_ICON : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + MENU_ICONS[act === 'force' ? 'start' : act] + '</svg>') + label + '</button>';
 }
 function rowActionsHtml(task, key) {
   var rd = mgrIsDevTask(task) || isRdTask(task);
@@ -162,7 +162,7 @@ function rowActionsHtml(task, key) {
   }
   items += menuItem('void', key, '作废任务', st !== 'done' && st !== 'cancelled', false, '已完成或已取消的任务不能作废');
   items += canDeleteTaskHere(task)
-    ? '<button type="button" role="menuitem" class="mgr-row-act mgr-menu-danger" data-mgr-task-delete="' + mgrEsc(key) + '"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + MENU_ICONS.del + '</svg>删除任务</button>'
+    ? '<button type="button" role="menuitem" class="mgr-row-act mgr-menu-danger" data-mgr-task-delete="' + mgrEsc(key) + '">' + DELETE_ICON + '删除任务</button>'
     : menuItem('del', key, '删除任务', false, true, '只有未开始的任务，且需项目负责人或任务创建人才能删除');
   var open = openRowMenu === key;
   return '<button type="button" class="mgr-row-edit" aria-label="编辑任务"' +

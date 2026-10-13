@@ -40,7 +40,7 @@
 .tk-manage-item-actions{display:flex;align-items:center;gap:4px}
 .tk-manage-item-actions button{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border:none;background:transparent;color:var(--text-secondary);cursor:pointer;border-radius:5px}
 .tk-manage-item-actions button:hover{background:var(--hover);color:var(--text)}
-.tk-manage-item-actions .tk-manage-del:hover{color:var(--danger)}
+.tk-manage-item-actions .tk-manage-del:hover{background:var(--danger-bg);color:var(--danger)}
 
 /* ---------- 弹出菜单 ---------- */
 .tk-popover{position:absolute;background:var(--bg);border:1px solid var(--border);border-radius:8px;box-shadow:var(--menu-shadow);padding:4px;z-index:50;min-width:140px;display:none}

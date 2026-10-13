@@ -1,4 +1,6 @@
 import { $, $$ } from '../../core/dom.js';
+import { requestDeleteConfirmation } from '../../core/delete-confirm.js';
+import { DELETE_ICON } from '../../core/delete-icon.js';
 import { renderListPageTabs } from '../shared/list-page-tabs.js';
 import { toast } from '../../core/toast.js';
 import { CV_MEMBERS, CV_PROJECTS, CV_TASKS, cvCurrentUserName, cvDeleteProjectRecord, cvPeopleInProject, cvPersistProjects, cvProject, cvProjectById, cvProjectInWorkspace } from './data.js';
@@ -553,7 +555,7 @@ function cvRenderModuleResults(epics){
   if(!list.length){el.innerHTML='<div class="pj-module-empty">'+(epics.length?'没有符合进度筛选的任务。':'还没有任务，可按需创建。')+'</div>'+ungroupedHtml;return;}
   if(cvModuleView==='list'){el.innerHTML=cvFeaturesHtml(list)+ungroupedHtml;return;}
   el.innerHTML='<div class="pj-module-table" role="table" aria-label="任务列表"><div class="pj-module-tr pj-module-th" role="row"><span role="columnheader">任务</span><span role="columnheader">子任务</span><span role="columnheader">进度</span><span role="columnheader">操作</span></div>'
-    +list.map(function(f){var m=cvModuleMetrics(f);var id=xesc(f.boardId);return '<div class="pj-module-tr" role="row"><div class="pj-module-name" role="cell"><button type="button" class="pj-module-open" data-ft-tasks-toggle="'+id+'" aria-expanded="'+!cvModuleTasksCollapsed(f.boardId)+'" aria-label="查看'+xesc(f.title)+'下的子任务"><b>'+xesc(f.title)+'</b><small>'+xesc(f.desc||'暂无描述')+'</small></button></div><span role="cell"><button type="button" class="pj-module-count" data-ft-tasks-toggle="'+id+'" aria-expanded="'+!cvModuleTasksCollapsed(f.boardId)+'">'+m.total+' 个子任务 · '+m.done+' 已完成 '+(cvModuleTasksCollapsed(f.boardId)?'▸':'▾')+'</button></span><span class="pj-module-progress" role="cell"><i><em style="width:'+m.progress+'%"></em></i>'+m.progress+'%</span><span class="pj-module-actions" role="cell"><button type="button" data-ft-split="'+id+'" title="智能拆解">✧</button><button type="button" data-ft-push="'+id+'" title="新增任务">＋</button><button type="button" data-ft-edit="'+id+'" title="编辑任务">✎</button><button type="button" data-ft-del="'+id+'" title="删除任务">×</button></span></div>'+cvModuleTasksHtml(f);}).join('')+'</div>'+ungroupedHtml;
+    +list.map(function(f){var m=cvModuleMetrics(f);var id=xesc(f.boardId);return '<div class="pj-module-tr" role="row"><div class="pj-module-name" role="cell"><button type="button" class="pj-module-open" data-ft-tasks-toggle="'+id+'" aria-expanded="'+!cvModuleTasksCollapsed(f.boardId)+'" aria-label="查看'+xesc(f.title)+'下的子任务"><b>'+xesc(f.title)+'</b><small>'+xesc(f.desc||'暂无描述')+'</small></button></div><span role="cell"><button type="button" class="pj-module-count" data-ft-tasks-toggle="'+id+'" aria-expanded="'+!cvModuleTasksCollapsed(f.boardId)+'">'+m.total+' 个子任务 · '+m.done+' 已完成 '+(cvModuleTasksCollapsed(f.boardId)?'▸':'▾')+'</button></span><span class="pj-module-progress" role="cell"><i><em style="width:'+m.progress+'%"></em></i>'+m.progress+'%</span><span class="pj-module-actions" role="cell"><button type="button" data-ft-split="'+id+'" title="智能拆解">✧</button><button type="button" data-ft-push="'+id+'" title="新增任务">＋</button><button type="button" data-ft-edit="'+id+'" title="编辑任务">✎</button><button type="button" data-ft-del="'+id+'" title="删除任务">'+DELETE_ICON+'</button></span></div>'+cvModuleTasksHtml(f);}).join('')+'</div>'+ungroupedHtml;
 }
 function cvFeaturesHtml(epics){
   if(!epics||!epics.length) return '';
@@ -569,7 +571,7 @@ function cvFeaturesHtml(epics){
       +'<button type="button" class="ft-act ft-act--split" data-ft-split="'+f.boardId+'" title="智能拆解"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z"/></svg></button>'
       +'<button type="button" class="ft-act ft-act--push" data-ft-push="'+f.boardId+'" title="新增任务"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>'
       +'<button type="button" class="ft-act" data-ft-edit="'+f.boardId+'" title="编辑"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"/></svg></button>'
-      +'<button type="button" class="ft-act ft-act--del" data-ft-del="'+f.boardId+'" title="删除"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>'
+      +'<button type="button" class="ft-act ft-act--del" data-ft-del="'+f.boardId+'" title="删除">' + DELETE_ICON + '</button>'
       +'</div>'+cvModuleTasksHtml(f)
       +'</div>';
   }).join('')+'</div>';
@@ -619,11 +621,11 @@ function cvSaveFeatureEdit(){
   cvRenderProjectDetail();
   toast('已保存任务：'+title,'success');
 }
-function cvDeleteFeature(fid){
+async function cvDeleteFeature(fid){
   var p=cvProjectById(cvProjCur); if(!p) return;
   var f=cvCurFeature(fid); if(!f) return;
   var children=CV_TASKS.filter(function(t){return t.parentTaskId===fid;});
-  if(!window.confirm('删除任务「'+f.title+'」？其 '+children.length+' 个子任务会保留为独立任务。')) return;
+  if(!await requestDeleteConfirmation('删除任务「'+f.title+'」？其 '+children.length+' 个子任务会保留为独立任务。')) return;
   children.forEach(function(t){t.parentTaskId=null;});
   CV_TASKS.splice(CV_TASKS.indexOf(f),1);
   tbSave();

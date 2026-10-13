@@ -4,7 +4,7 @@ import { taskConversationNeedsReply, taskConversationQuestion } from '../compose
 
 /* 任务列表卡片与详情主操作共用的「轮到谁」判定。
    同一条任务对不同登录人展示不同：当前阶段处理人看到可操作的卡片，其他人只能查看进展。
-   action 取值：start 开始执行 / review 验收产物 / reply 回答提问 / retry 重试 / detail 查看详情 / artifacts 查看产物。 */
+   action 取值：start 开始执行 / review 评审产物 / reply 回答提问 / retry 重试 / detail 查看详情 / artifacts 查看产物。 */
 function currentStageName(task) {
   var plan = Array.isArray(task.executionPlan) ? task.executionPlan : [];
   var stage = plan.find(function (row) { return row.id === task.executionStageId; })
@@ -29,7 +29,7 @@ export function taskListKind(task) {
     return { kind:'start', badge:'待开始', hint:'轮到你开始执行' + quoted, action:'start', label:'交给AI执行', primary:true, needsMe:true };
   }
   if (status === 'in_review' && mine) {
-    return { kind:'review', badge:'待审核', hint:'智能体团队已提交' + quoted + '产物，等待你确认', action:'review', label:'查看并验收产物', primary:true, needsMe:true };
+    return { kind:'review', badge:'待评审', hint:'智能体团队已提交' + quoted + '产物，等待你确认', action:'review', label:'评审产物', primary:true, needsMe:true };
   }
   if (status === 'in_progress' && taskConversationNeedsReply(task, true)) {
     var question = taskConversationQuestion(task);
@@ -43,7 +43,7 @@ export function taskListKind(task) {
       : { kind:'blocked', badge:'已阻塞', hint:blockedHint, action:'detail', label:'查看详情', needsMe:false };
   }
   if (status === 'backlog' || status === 'in_review') {
-    return { kind:status === 'in_review' ? 'review' : 'waiting', badge:status === 'in_review' ? '待审核' : '待开始', hint:'当前阶段' + quoted + '由' + waitingName + '处理', action:'detail', label:'查看详情', needsMe:false };
+    return { kind:status === 'in_review' ? 'review' : 'waiting', badge:status === 'in_review' ? '待评审' : '待开始', hint:'当前阶段' + quoted + '由' + waitingName + '处理', action:'detail', label:'查看详情', needsMe:false };
   }
   if (status === 'in_progress') {
     return { kind:'running', badge:'AI执行中', hint:'智能体团队正在执行' + quoted, action:'detail', label:'查看会话', needsMe:false };
@@ -58,6 +58,6 @@ export function taskNeedsMyAction(task) { return taskListKind(task).needsMe; }
 export function taskCardAction(task) {
   var info = taskListKind(task);
   var action = task.status === 'in_review' ? 'review' : info.action;
-  var labels = {start:'AI 执行',review:'验收产物',retry:task.blockedRun?.kind === 'local-env' ? '去配置' : '重试',reply:'回复问题',artifacts:'查看产物',detail:'查看详情'};
+  var labels = {start:'AI 执行',review:'评审产物',retry:task.blockedRun?.kind === 'local-env' ? '去配置' : '重试',reply:'回复问题',artifacts:'查看产物',detail:'查看详情'};
   return {action:action,label:['question', 'running'].includes(info.kind) ? info.label : labels[action] || info.label,primary:info.primary};
 }

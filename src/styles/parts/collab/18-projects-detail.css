@@ -268,7 +268,8 @@
 #view-collab .pj-module-actions button{width:26px;height:26px;border:1px solid var(--border);border-radius:6px;background:#fff;color:var(--text-secondary);cursor:pointer;font:inherit;font-size:15px}
 #view-collab .pj-module-actions button:hover{border-color:var(--brand);color:var(--brand)}
 #view-collab .pj-module-actions button:nth-child(2){background:var(--brand);border-color:var(--brand);color:#fff}
-#view-collab .pj-module-actions button:last-child:hover{border-color:var(--danger);color:var(--danger)}
+#view-collab .pj-module-actions button:last-child:hover{border-color:var(--danger);background:var(--danger-bg);color:var(--danger)}
+#view-collab .pj-module-actions button:last-child svg{width:16px;height:16px}
 @media(max-width:900px){#view-collab .pj-module-toolbar{align-items:flex-start}#view-collab .pj-module-controls{width:100%}}
 #view-collab .pj-plan-head .pj-plan-k{margin-bottom:0}
 #view-collab .pj-plan-hint{font-size:12.5px;color:var(--text-soft);line-height:1.6}
@@ -351,7 +352,8 @@
 #view-collab .ft-act--split:hover{background:var(--brand);color:#fff}
 #view-collab .ft-act--push{background:var(--brand);border-color:var(--brand);color:#fff}
 #view-collab .ft-act--push:hover{background:var(--brand-hover);color:#fff}
-#view-collab .ft-act--del:hover{border-color:var(--danger);color:var(--danger)}
+#view-collab .ft-act--del:hover{border-color:var(--danger);background:var(--danger-bg);color:var(--danger)}
+#view-collab .ft-act--del svg{width:16px;height:16px}
 #view-collab .ft-files{font-size:11px;color:var(--brand);background:var(--brand-fill);border-radius:4px;padding:1px 6px;flex:none}
 #view-collab .ft-item-desc{font-size:12.5px;color:var(--text-secondary);line-height:1.55}
 #view-collab .ft-item-files{font-size:12px;color:var(--text-soft)}
@@ -521,7 +523,7 @@
 #cvModals .pj-members-modal-footer{border-top:0}
 @media(max-width:760px){#view-collab #cv-proj-detail:has(.pj-detail-main--artifacts.has-preview) .pj-crumb,#view-collab #cv-proj-detail:has(.pj-detail-main--artifacts.has-preview) .pj-detail-tabs,#view-collab #cv-proj-detail:has(.pj-detail-main--artifacts.has-preview) .pj-detail-main--artifacts{width:100%}#view-collab #cv-proj-detail .pj-detail-main--artifacts.has-preview{flex-direction:column}#view-collab #cv-proj-detail .pj-detail-main--artifacts.has-preview .pj-artifacts-list-pane{flex:0 0 42%;padding:8px 16px}#view-collab #cv-proj-detail .pj-artifact-preview{position:relative;inset:auto;width:100%;height:auto;border-top:1px solid var(--border);border-left:0}#view-collab #cv-proj-detail .pj-artifact-preview.is-fullscreen{position:absolute;inset:0;height:100%}#view-collab #cv-proj-detail:has(.pj-detail-main--artifacts.has-preview) .pj-detail-delete{position:static}}
 #view-collab #cv-proj-detail .pj-detail-delete{order:2;margin-left:8px;min-height:32px;padding:0 12px;border:1px solid var(--border);border-radius:7px;background:transparent;color:var(--text-secondary);font:inherit;font-size:12px;cursor:pointer}
-#view-collab #cv-proj-detail .pj-detail-delete:hover{color:var(--danger);border-color:var(--danger)}
+#view-collab #cv-proj-detail .pj-detail-delete:hover{color:var(--danger);border-color:var(--danger-bg);background:var(--danger-bg)}
 #view-collab #cv-proj-detail .pj-detail-delete:focus-visible{outline:2px solid var(--border-focus);outline-offset:2px}
 #view-collab #cv-proj-detail .pj-detail-edit,#view-collab #cv-proj-detail .pj-detail-save{order:3;margin-left:8px}
 #view-collab #cv-proj-detail .pj-crumb-name{margin-right:auto}

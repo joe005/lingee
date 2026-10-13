@@ -14,6 +14,7 @@ import { closeDrawer, openDrawer } from './subtasks.js';
 /* 任务页 · 空状态、布局切换、批量栏、全选、项目内列表模式、显示设置选项（拆分自 tasks-v2/index.js，逻辑未改） */
 /* ---------- 渲染：空状态 / 布局切换 / 批量栏 / 全选 ---------- */
 export function showEmpty() {
+  els.tkEmpty.querySelector('p').textContent = state.search.trim() ? '未找到匹配任务' : '暂无数据';
   els.tkBoard.classList.add('hidden'); els.tkList.classList.add('hidden'); els.tkEmpty.classList.remove('hidden');
 }
 export function showBoardOrList() {

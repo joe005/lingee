@@ -1,4 +1,5 @@
 import { toast } from '../../../core/toast.js';
+import { DELETE_ICON } from '../../../core/delete-icon.js';
 import { setNavActive, showView } from '../../../core/view.js';
 import { setChannel } from '../../sidebar.js';
 import { createDeliveryActivity } from '../../collab/delivery-activity.js';
@@ -6,8 +7,9 @@ import { EX, EXPERTS, xav } from '../../expert/data.js';
 import { taskExecutorTeam } from '../../expert/task-team.js';
 import { TK_PRIORITIES, TK_STATUSES, tkCanViewTask, tkGetPerson, tkGetStatusName, tkGetStatusObj, tkGetTaskArtifacts, tkGetTasks, tkPeopleInProject, tkProjectById, tkProjectsForCurrentUser } from '../data.js';
 import { taskListKind } from '../list-kind.js';
+import { taskTypeLabel } from '../list-template.js';
 import { getDemoPreRun, getDemoStageRun } from '../run-feedback.js';
-import { taskExecutionStages } from '../task-execution.js';
+import { taskExecutionStages, taskStageAgentName } from '../task-execution.js';
 import { tkGetMySessions, tkTaskSessionTitle } from '../task-sessions.js';
 import { closeDocPreview, closeTaskLabelPicker, propPicker, renderDocPreviewPanel, renderTaskArtifact, renderTaskLabelTrigger, syncDrawerClickaway } from './detail-panel.js';
 import { closeMentionPanel } from './mention.js';
@@ -115,7 +117,7 @@ function renderTaskAgentFeedEntry(task, entry, artifacts) {
   var showRunFeedback = entry.state === 'running' || entry.state === 'blocked';
   return '<article class="tk-feed-card tk-feed-card--agent is-' + entry.state + '" aria-label="智能体执行：' + escapeHtml(entry.stage) + '">'
     + '<header class="tk-feed-card-head tk-feed-card-head--agent"><img class="tk-feed-avatar tk-feed-avatar--agent" src="' + escapeHtml(xav(expert?.k)) + '" alt="">'
-    + '<strong>' + escapeHtml(entry.author) + '</strong><span class="tk-feed-run-stage">· ' + escapeHtml(entry.stage) + '</span><time>' + escapeHtml(entry.time) + '</time></header>'
+    + '<strong>' + escapeHtml(entry.author) + '</strong><span class="tk-feed-run-stage">· ' + escapeHtml(entry.stage) + '</span><time>' + escapeHtml(activityDisplayTime(entry.time)) + '</time></header>'
     + '<div class="tk-feed-card-content">'
     + (showRunFeedback ? renderTaskRunFeedback(getDemoStageRun(task, entry), true) : '')
     + (entry.state === 'running' ? '' : '<p class="' + (entry.state === 'blocked' ? 'tk-feed-run-error' : '') + '">' + escapeHtml(entry.state === 'blocked' ? task.blockedRun?.reason || entry.text : entry.text) + '</p>')
@@ -149,7 +151,7 @@ function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml,
   var feedback = activeRun ? renderTaskRunFeedback(activeRun)
     : latest ? '<div class="tk-exec-feedback-line is-' + currentState + '"><span class="tk-exec-feedback-icon" aria-hidden="true">' + renderTaskRunIndicator(currentState === 'blocked' ? 'failed' : 'completed') + '</span>'
       + '<p>' + escapeHtml(currentState === 'blocked' ? task.blockedRun?.reason || latest.text : currentState === 'review' ? task.reviewReport?.review || latest.text : task.completedRun?.result || latest.text) + '</p>'
-      + '<time>' + escapeHtml(latest.time) + '</time></div>'
+      + '<time>' + escapeHtml(activityDisplayTime(latest.time)) + '</time></div>'
     : renderTaskPreRunFeedback(task);
   var nextAction = currentState === 'blocked' && task.blockedRun ? '<div class="tk-exec-next"><strong>下一步</strong><span>' + escapeHtml(task.blockedRun.next) + '</span>'
     + '<button type="button" class="tk-blocked-run-retry" data-action="blocked-retry">重试任务</button></div>' : '';
@@ -157,11 +159,11 @@ function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml,
   return '<section class="tk-feed-stage-overview tk-exec-card is-' + currentState + '" aria-label="执行概览">'
     + '<div class="tk-exec-card-head tk-agent-report-head">' + (pageState.taskDetailVersion === 'latest' ? renderTaskTeamAvatarGroup(team) : '<span class="tk-exec-card-mark tk-agent-report-mark" aria-hidden="true">✦</span>') + '<div class="tk-exec-card-identity tk-agent-report-heading"><strong>' + escapeHtml(team?.name || '任务智能体团队') + '</strong>'
      + (pageState.taskDetailVersion === 'v1' ? '<span>当前阶段 · ' + escapeHtml(currentDetail) + '</span>' : '') + '</div></div>'
-     + '<div class="tk-feed-stage-overview-head"><strong>执行计划</strong></div>'
+     + (latestLayout ? '' : '<div class="tk-feed-stage-overview-head"><strong>执行计划</strong></div>')
     + (latestLayout ? '<div class="tk-feed-stage-table-wrap"><table class="tk-feed-stage-table"><caption class="sr-only">执行计划</caption><colgroup><col class="tk-stage-col-mark"><col class="tk-stage-col-name"><col class="tk-stage-col-expert"><col class="tk-stage-col-assignee"><col class="tk-stage-col-state"><col class="tk-stage-col-actions"></colgroup><thead class="sr-only"><tr><th>标记</th><th>阶段</th><th>执行智能体</th><th>处理人</th><th>状态</th><th>操作</th></tr></thead>' : '<ol class="tk-feed-stage-list">') + plannedStages.map(function (stage, index) {
       var entry = byId.get(stage.id);
       var state = entry?.state || 'pending';
-      var label = state === 'done' ? '已完成' : state === 'running' ? '执行中' : state === 'review' ? '待审核' : state === 'blocked' ? '已阻塞' : index === currentIndex && task.status === 'backlog' && task.executionStageId ? '待开始' : '未开始';
+      var label = index === currentIndex && state === 'running' && kindInfo.kind === 'question' ? '待回答' : state === 'done' ? '已完成' : state === 'running' ? '执行中' : state === 'review' ? '待评审' : state === 'blocked' ? '已阻塞' : index === currentIndex && task.status === 'backlog' && task.executionStageId ? '待开始' : '未开始';
       var assignee = tkGetPerson(stage.assigneeId || task.assignee).name;
       var isCurrent = index === currentIndex;
       var expert = entry && EXPERTS.find(function (item) { return item.id === entry.expertId; });
@@ -196,17 +198,18 @@ function renderTaskPreRunFeedback(task) {
 
 function renderTaskHumanFeedEntry(event) {
   var entry = event.entry;
-  var author = event.type === 'delivery' ? entry.author : tkGetPerson(entry.authorId).name;
+  var author = event.type === 'delivery' ? entry.author : entry.author || tkGetPerson(entry.authorId).name;
   var content = event.type === 'delivery' ? entry.text : entry.text || '';
   return '<article class="tk-feed-card tk-feed-card--human" aria-label="' + escapeHtml(author) + '的评论">'
     + '<header class="tk-feed-card-head"><span class="tk-feed-avatar tk-feed-avatar--human" aria-hidden="true">' + escapeHtml(author.slice(0, 1)) + '</span>'
-    + '<strong>' + escapeHtml(author) + '</strong><time>' + escapeHtml(event.time) + '</time></header>'
+    + '<strong>' + escapeHtml(author) + '</strong><time>' + escapeHtml(activityDisplayTime(event.time)) + '</time></header>'
     + '<div class="tk-feed-card-content">'
     + '<p>' + escapeHtml(content) + '</p></div></article>';
 }
 
 function feedLeadIcon(event) {
   var entry = event.entry;
+  if (entry.kind === 'agent-run') return '<span class="tk-feed-activity-avatar" aria-hidden="true">' + escapeHtml((entry.author || '智').slice(0, 1)) + '</span>';
   if (event.type === 'status') return statusSvg(entry.to);
   if (event.type === 'delivery') {
     var sid = entry.stageId || '';
@@ -218,14 +221,17 @@ function feedLeadIcon(event) {
   return statusSvg(entry.status || 'in_progress');
 }
 
+function activityDisplayTime(value) {
+  return String(value || '').replace(/^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}):\d{2}$/, '$1');
+}
+
 function taskStatusActivityEvents(task, activity) {
   var lastExpert = activity.filter(function (entry) { return entry.expertId; }).at(-1);
   var initialStatus = task.initialStatus || task.status;
-  var creator = tkGetPerson(task.createdBy).name;
   var assignee = tkGetPerson(task.assignee).name;
   var transitions = [];
-  function add(from, to, time, author) {
-    transitions.push({ type:'status', time:time, entry:{ from:from, to:to, author:author } });
+  function add(from, to, time, author, message, sortTime) {
+    transitions.push({ type:'status', time:time, sortTime:sortTime || time, entry:{ from:from, to:to, author:author, message:message } });
   }
   /* 预置任务自带状态历史时以历史为准，不再补同一目标状态的推断记录。 */
   var recorded = new Set((task.statusHistory || []).map(function (change) { return change.to; }));
@@ -233,19 +239,56 @@ function taskStatusActivityEvents(task, activity) {
     add('in_progress', 'in_review', task.reviewReport?.completedAt || task.createDate + ' 16:40', lastExpert.author);
   }
   if (initialStatus === 'done' && !recorded.has('done')) add('in_review', 'done', task.createDate + ' 17:00', assignee);
-  if (initialStatus === 'blocked' && lastExpert && !recorded.has('blocked')) add('in_progress', 'blocked', lastExpert.time, lastExpert.author);
-  if (initialStatus === 'cancelled') add('backlog', 'cancelled', task.createDate + ' 09:16', creator);
-  (task.statusHistory || []).forEach(function (change) {
-    add(change.from, change.to, change.time, tkGetPerson(change.authorId).name);
+  var history = task.statusHistory || [];
+  var previousSortTime = '';
+  history.forEach(function (change, historyIndex) {
+    // 兼容所有旧任务：同轮自动完成已含提交结果，不再重复展示提交评审。
+    if (change.to === 'in_review' && change.stageId) {
+      var recordedPlan = task.executionPlan?.find(row => row.id === change.stageId);
+      if (recordedPlan?.requiresConfirmation === false && (change.demo || change.seedRecord)) return;
+      var followingCompletion = history.slice(historyIndex + 1).find(row => row.stageId === change.stageId);
+      if (followingCompletion?.from === 'in_review' && ['backlog','done'].includes(followingCompletion.to)
+        && (followingCompletion.actorKind === 'agent' || (followingCompletion.actorKind === 'system' && followingCompletion.message?.includes('已自动通过')))) return;
+    }
+    if (change.creationStart || ![
+      'planned:in_progress','backlog:in_progress',
+      'in_progress:in_review',
+      'in_review:backlog','in_review:done',
+    ].includes(change.from + ':' + change.to)) return;
+    var normalizedTime = String(change.time || '').length === 16 ? change.time + ':00' : String(change.time || '');
+    previousSortTime = normalizedTime > previousSortTime ? normalizedTime : previousSortTime;
+    var message = change.message?.replace('已自动通过', '执行完成');
+    var namedStage = taskExecutionStages(task).find(row => row.id === change.stageId);
+    var stagePlan = task.executionPlan?.find(row => row.id === change.stageId);
+    var automaticSeedCompletion = stagePlan?.requiresConfirmation === false && (change.demo || change.seedRecord) && change.from === 'in_review' && ['backlog','done'].includes(change.to);
+    if (automaticSeedCompletion && namedStage) {
+      var stages = taskExecutionStages(task);
+      var next = stages[stages.findIndex(row => row.id === change.stageId) + 1];
+      message = '「' + namedStage.name + '」执行完成' + (change.to === 'done' ? '，任务已完成' : next ? '，流转至「' + next.name + '」' : '');
+    }
+    var stageLabel = namedStage ? '「' + namedStage.name + '」' : '';
+    if (!message && change.to === 'in_review') message = stageLabel + '执行完成，提交评审';
+    if (!message && change.to === 'done') message = stageLabel + '评审通过，任务已完成';
+    if (!message && change.from === 'in_review' && change.to === 'backlog') message = stageLabel + '评审通过，流转至下一阶段';
+    if (!message && change.to === 'in_progress' && ['backlog','planned'].includes(change.from)) {
+      var following = history.slice(historyIndex + 1);
+      var boundary = following.findIndex(row => row.to === 'in_progress');
+      var submit = (boundary < 0 ? following : following.slice(0, boundary)).find(row => row.stageId && row.to === 'in_review');
+      var stage = taskExecutionStages(task).find(row => row.id === (change.stageId || submit?.stageId));
+      if (stage) message = '开始执行「' + stage.name + '」';
+      else message = '开始执行任务';
+    }
+    add(change.from, change.to, change.time, automaticSeedCompletion ? taskStageAgentName(task, change.stageId) : (change.actorKind === 'system' && change.message?.includes('已自动通过')) || (change.actorKind === 'agent' && (change.author === '执行智能体' || change.author?.includes('、'))) ? taskStageAgentName(task, change.stageId) : change.author || tkGetPerson(change.authorId).name, message, previousSortTime);
   });
   return transitions;
 }
 
 function taskActivityMessage(event) {
   var entry = event.entry;
+  if (event.type === 'status' && entry.message) return entry.message;
   if (event.type === 'status') return '状态从 ' + tkGetStatusName(entry.from) + ' 改为 ' + tkGetStatusName(entry.to);
   if (event.type === 'delivery') {
-    if (entry.stageId === 'kickoff') return '创建了这个任务';
+    if (entry.stageId === 'kickoff') return entry.creationStart ? '创建并启动了这个任务' : '创建了这个任务';
     if (entry.stageId === 'status-flow') return '状态从 ' + tkGetStatusName('backlog') + ' 改为 ' + tkGetStatusName('in_progress');
     if (entry.stageId === 'assignee') {
       var assigneeName = entry.text.match(/「([^」]+)」/)?.[1];
@@ -264,21 +307,32 @@ function taskActivityMessage(event) {
   return entry.text || '更新了任务';
 }
 
-export var _expandedActivityIds = new Set();
 export var _collapsedActivityIds = new Set();
 export var _showOlderActivityIds = new Set();
+var ACTIVITY_COLLAPSED_STORAGE_KEY = 'lingee_tasks_activity_collapsed';
+export function restoreCollapsedActivity() {
+  try {
+    var saved = JSON.parse(localStorage.getItem(ACTIVITY_COLLAPSED_STORAGE_KEY) || '[]');
+    if (Array.isArray(saved)) _collapsedActivityIds = new Set(saved.filter(Number.isInteger));
+  } catch (e) { /* 本地存储不可用时使用当前页面状态 */ }
+}
+export function toggleCollapsedActivity(taskId) {
+  if (_collapsedActivityIds.has(taskId)) _collapsedActivityIds.delete(taskId);
+  else _collapsedActivityIds.add(taskId);
+  try { localStorage.setItem(ACTIVITY_COLLAPSED_STORAGE_KEY, JSON.stringify(Array.from(_collapsedActivityIds))); }
+  catch (e) { /* 本地存储不可用时仍可折叠 */ }
+  return _collapsedActivityIds.has(taskId);
+}
 var ACTIVITY_VISIBLE_LIMIT = 8;
 
-function renderTaskSystemFeedGroup(events, isLatest) {
-  var id = 'act-' + events[0].time.replace(/[^0-9]/g, '') + '-' + events.length;
-  var userExpanded = _expandedActivityIds.has(id);
-  var userCollapsed = _collapsedActivityIds.has(id);
-  var expanded = userExpanded ? true : userCollapsed ? false : true;
+function renderTaskSystemFeedGroup(events, isLatest, taskId) {
+  var id = String(taskId);
+  var expanded = !_collapsedActivityIds.has(taskId);
   var count = events.length;
   var activityTitle = pageState.taskDetailVersion === 'latest' ? '操作记录' : count + ' 条操作记录';
   if (!expanded) {
     return '<div class="tk-feed-activity-block" data-activity-id="' + id + '">'
-      + '<button type="button" class="tk-feed-activity-toggle" data-activity-toggle="' + id + '"><svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m6 3 5 5-5 5"/></svg>'
+      + '<button type="button" class="tk-feed-activity-toggle" data-activity-toggle="' + id + '" aria-expanded="false"><svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m6 3 5 5-5 5"/></svg>'
       + '<span>' + activityTitle + '</span></button></div>';
   }
   var hiddenOlder = isLatest && !_showOlderActivityIds.has(id) && count > ACTIVITY_VISIBLE_LIMIT
@@ -286,16 +340,16 @@ function renderTaskSystemFeedGroup(events, isLatest) {
   var visible = hiddenOlder > 0 ? events.slice(-ACTIVITY_VISIBLE_LIMIT) : events;
   var showHeader = hiddenOlder === 0;
   return '<div class="tk-feed-activity-block" data-activity-id="' + id + '">'
-    + (showHeader ? '<button type="button" class="tk-feed-activity-toggle" data-activity-toggle="' + id + '"><svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m3 6 5 5 5-5"/></svg><span>' + activityTitle + '</span></button>' : '')
+    + (showHeader ? '<button type="button" class="tk-feed-activity-toggle" data-activity-toggle="' + id + '" aria-expanded="true"><svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m3 6 5 5 5-5"/></svg><span>' + activityTitle + '</span></button>' : '')
     + (hiddenOlder > 0 ? '<button type="button" class="tk-feed-activity-toggle tk-feed-activity-more" data-activity-older="' + id + '"><svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m6 3 5 5-5 5"/></svg><span>显示更多旧动态（' + hiddenOlder + ' 条）</span></button>' : '')
     + '<div class="tk-feed-activity-rows">'
     + visible.map(function (event) {
       var entry = event.entry;
-      var author = event.type === 'delivery' || event.type === 'status' ? entry.author : tkGetPerson(entry.authorId).name;
+      var author = event.type === 'delivery' || event.type === 'status' ? entry.author : entry.author || tkGetPerson(entry.authorId).name;
       var message = taskActivityMessage(event);
       return '<div class="tk-feed-activity-row"><span class="tk-feed-activity-lead">' + feedLeadIcon(event) + '</span>'
         + '<strong>' + escapeHtml(author) + '</strong><span class="tk-feed-activity-message" title="' + escapeHtml(message) + '">' + escapeHtml(message) + '</span>'
-        + '<time>' + escapeHtml(event.time) + '</time></div>';
+        + '<time>' + escapeHtml(activityDisplayTime(event.time)) + '</time></div>';
     }).join('') + '</div></div>';
 }
 
@@ -304,7 +358,7 @@ function renderAgentStageComment(task, entry) {
   var showRunFeedback = !!entry.run;
   return '<article class="tk-feed-card tk-feed-card--agent is-' + entry.state + '" aria-label="智能体执行：' + escapeHtml(entry.stage) + '">'
     + '<header class="tk-feed-card-head tk-feed-card-head--agent"><img class="tk-feed-avatar tk-feed-avatar--agent" src="' + escapeHtml(xav(expert?.k)) + '" alt="">'
-    + '<strong>' + escapeHtml(entry.author) + '</strong><span class="tk-feed-run-stage">· ' + escapeHtml(entry.stage) + '</span><time>' + escapeHtml(entry.createdAt) + '</time></header>'
+    + '<strong>' + escapeHtml(entry.author) + '</strong><span class="tk-feed-run-stage">· ' + escapeHtml(entry.stage) + '</span><time>' + escapeHtml(activityDisplayTime(entry.createdAt)) + '</time></header>'
     + '<div class="tk-feed-card-content">'
     + (showRunFeedback ? renderTaskRunFeedback(entry.run) : '')
     + '<p>' + escapeHtml(entry.text) + '</p>'
@@ -313,7 +367,9 @@ function renderAgentStageComment(task, entry) {
     + '</div></article>';
 }
 function renderTaskComments(t) {
-  var comments = t.comments || [];
+  var comments = (t.comments || []).filter(entry => entry.kind !== 'agent-run' && entry.kind !== 'flow' && entry.kind !== 'status' && !(!entry.kind && entry.assignee)
+    && !(entry.kind === 'comment' && entry.text === '已提交重试，保留上次失败运行记录。')
+    && !(entry.kind === 'flow' && entry.author && (t.statusHistory || []).some(change => (change.message?.includes('已自动通过') || (change.actorKind === 'agent' && change.message?.includes('执行完成'))) && change.time === entry.createdAt)));
   var project = tkProjectById(t.project);
   var activity = createDeliveryActivity(t, project, {
     creator:tkGetPerson(t.createdBy).name,
@@ -328,14 +384,18 @@ function renderTaskComments(t) {
     return latestLayout ? Object.assign({}, artifact, {author:deliveredStages.get(artifact.stageId).author}) : artifact;
   });
   var reportHtml = renderDemoReviewReport(t, artifacts) + renderDemoBlockedRun(t, artifacts) + renderDemoCompletedRun(t, artifacts);
-  var events = activity.map(function (entry, index) {
+  var events = activity.filter(function (entry) {
+    return !['status-flow','assignee'].includes(entry.stageId) && entry.state !== 'blocked';
+  }).map(function (entry, index) {
+    if (entry.stageId === 'kickoff') entry = {...entry,time:t.createdAt || entry.time,creationStart:!!t.createdAndStarted};
     return { type:'delivery', time:entry.time, index:index, entry:entry };
   }).concat(taskStatusActivityEvents(t, activity).map(function (event, index) {
     return Object.assign({index:activity.length + index}, event);
   }), comments.map(function (entry, index) {
+    if (entry.kind === 'agent-run') entry = {...entry, author:(entry.author === '执行智能体' || entry.author?.includes('、')) ? taskStageAgentName(t, entry.stageId) : entry.author, text:(entry.text || '').replace(/（第 \d+ 次）$/, '')};
     return { type:'comment', time:entry.createdAt || '', index:activity.length + 10 + index, entry:entry };
   })).sort(function (left, right) {
-    return left.time.localeCompare(right.time) || left.index - right.index;
+    return String(left.sortTime || left.time).localeCompare(String(right.sortTime || right.time)) || left.index - right.index;
   });
   if (!events.length) return latestLayout ? '<div class="tk-feed">' + renderTaskDeliveryOverview(t, activity, artifacts, '', 0, reportHtml) + '<div class="tk-drawer-comments-empty">暂无操作记录</div></div>' : reportHtml || '<div class="tk-drawer-comments-empty">暂无动态</div>';
   var sections = [];
@@ -359,7 +419,7 @@ function renderTaskComments(t) {
   var commentsHtml = sections.filter(function (section) { return section.kind === 'comment'; }).map(function (section) { return renderTaskHumanFeedEntry(section.event); }).join('');
   var agentStageHtml = sections.filter(function (section) { return section.kind === 'agent-stage'; }).map(function (section) { return renderAgentStageComment(t, section.event.entry); }).join('');
   return '<div class="tk-feed" aria-label="任务动态">' + renderTaskDeliveryOverview(t, activity, artifacts, stageHistoryHtml, stageSections.length, reportHtml)
-    + agentStageHtml + commentsHtml + (systemEvents.length ? renderTaskSystemFeedGroup(systemEvents, false) : '') + '</div>';
+    + agentStageHtml + commentsHtml + (systemEvents.length ? renderTaskSystemFeedGroup(systemEvents, false, t.id) : '') + '</div>';
 }
 
 /* 流转操作记录：kind 为 'flow'；历史数据没有 kind，用 assignee 字段识别。 */
@@ -382,8 +442,8 @@ function renderTaskChangelog(t) {
   (t.statusHistory || []).forEach(function (change) {
     entries.push({
       time: change.time,
-      user: tkGetPerson(change.authorId).name,
-      action: '状态从「' + tkGetStatusName(change.from) + '」变更为「' + tkGetStatusName(change.to) + '」',
+      user: change.author || tkGetPerson(change.authorId).name,
+      action: change.message || '状态从「' + tkGetStatusName(change.from) + '」变更为「' + tkGetStatusName(change.to) + '」',
     });
   });
   (t.comments || []).forEach(function (entry) {
@@ -392,7 +452,7 @@ function renderTaskChangelog(t) {
   });
   entries.sort(function (left, right) { return String(left.time).localeCompare(String(right.time)); });
   return entries.map(function (entry) {
-    return '<div class="tk-drawer-changelog-item"><span class="tk-drawer-changelog-time">' + escapeHtml(entry.time) + '</span><span class="tk-drawer-changelog-user">' + escapeHtml(entry.user) + '</span>' + escapeHtml(entry.action) + '</div>';
+    return '<div class="tk-drawer-changelog-item"><span class="tk-drawer-changelog-time">' + escapeHtml(activityDisplayTime(entry.time)) + '</span><span class="tk-drawer-changelog-user">' + escapeHtml(entry.user) + '</span>' + escapeHtml(entry.action) + '</div>';
   }).join('');
 }
 
@@ -479,7 +539,7 @@ export function openDrawer(taskId) {
           '</div>' +
           '<div class="tk-attach-list" id="tkAttachList"></div>' +
         '</div>' +
-        '<div class="tk-drawer-comments"><div class="tk-drawer-comments-head"><div class="tk-drawer-comments-title">动态</div></div>' +
+        '<div class="tk-drawer-comments"><div class="tk-drawer-comments-head"><div class="tk-drawer-comments-title">执行计划</div></div>' +
           renderTaskComments(t) +
         '</div>' +
       '</div>' +
@@ -492,6 +552,7 @@ export function openDrawer(taskId) {
         propPicker('状态', t.status, statusOpts) +
         propPicker('处理人', t.assignee, peopleOpts) +
         propPicker('项目', t.project, projOpts) +
+        (pageState.taskDetailVersion === 'latest' ? '<div class="tk-prop-row"><span>任务类型</span><span class="tk-prop-val">' + escapeHtml(taskTypeLabel(t.issueType || (t.labels?.includes('缺陷') ? '缺陷' : '需求'))) + '</span></div>' : '') +
         propPicker('优先级', t.priority, priOpts) +
         propPicker('截止日期', t.dueDate, null, true) +
         '<div class="tk-prop-row"><span>标签</span>' + renderTaskLabelTrigger(t) + '</div>' +
@@ -536,7 +597,7 @@ export function openDrawer(taskId) {
         var item = document.createElement('div');
         item.className = 'tk-attach-item';
         var sz = f.size < 1024 ? f.size + 'B' : f.size < 1048576 ? (f.size/1024).toFixed(1)+'KB' : (f.size/1048576).toFixed(1)+'MB';
-        item.innerHTML = '<span class="tk-attach-item-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span><span class="tk-attach-item-name">' + escapeHtml(f.name) + '</span>' + (sz ? '<span class="tk-attach-item-size">' + sz + '</span>' : '') + '<button class="tk-attach-item-btn" data-tooltip="预览" aria-label="预览"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="tk-attach-item-btn" data-tooltip="下载" aria-label="下载"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button><button class="tk-attach-item-btn tk-attach-item-remove" data-attach-remove data-tooltip="删除" aria-label="删除"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>';
+        item.innerHTML = '<span class="tk-attach-item-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span><span class="tk-attach-item-name">' + escapeHtml(f.name) + '</span>' + (sz ? '<span class="tk-attach-item-size">' + sz + '</span>' : '') + '<button class="tk-attach-item-btn" data-tooltip="预览" aria-label="预览"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="tk-attach-item-btn" data-tooltip="下载" aria-label="下载"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button><button class="tk-attach-item-btn tk-attach-item-remove" data-attach-remove data-tooltip="删除" aria-label="删除">' + DELETE_ICON + '</button>';
         al.appendChild(item);
       });
     }

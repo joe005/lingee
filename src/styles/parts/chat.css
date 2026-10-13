@@ -702,3 +702,14 @@
 
 .niu-select-popup--task-create button { gap:12px; }
 .niu-select-popup--task-create button > span { overflow:visible; text-overflow:clip; white-space:normal; overflow-wrap:anywhere; }
+
+/* 阶段审核方式与执行状态分开表达。 */
+#chatCurrentStage .chat-current-stage-row-main > strong { display:flex; align-items:center; gap:4px; flex-wrap:wrap; }
+#chatCurrentStage .chat-stage-audit-mode { flex:none; padding:0 4px; border-radius:4px; background:var(--tag-bg); color:var(--text-secondary); font-size:11px; font-weight:500; line-height:18px; white-space:nowrap; }
+
+/* 横向步骤条审核方式独立排布，不挤占阶段标题。 */
+#view-chat .is-horizontal .chat-current-stage-list { grid-template-rows:24px auto 18px 18px 18px; }
+#view-chat .is-horizontal .chat-current-stage-row { grid-row:span 5; }
+#view-chat .is-horizontal .chat-stage-audit-mode { order:2; padding:0; background:transparent; font-size:12px; font-weight:400; line-height:18px; color:var(--text-secondary); }
+#view-chat .is-horizontal .chat-current-stage-status { order:3; }
+#view-chat .is-horizontal .chat-current-stage-row-main small { order:4; }

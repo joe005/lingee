@@ -159,6 +159,7 @@
   .agent-card-menu-item{display:flex;align-items:center;gap:8px;width:100%;height:34px;padding:0 10px;border:0;border-radius:8px;background:transparent;color:var(--text);font:inherit;font-size:13px;text-align:left;cursor:pointer}
   .agent-card-menu-item:hover,.agent-card-menu-item:focus-visible{background:var(--hover);outline:none}
   .agent-card-menu-item .ic{width:15px;height:15px;color:var(--text-secondary)}
+  .agent-card-menu-item.is-danger,.agent-card-menu-item.is-danger .ic{color:var(--danger)}
   .agent-card-menu-item.is-danger:hover,.agent-card-menu-item.is-danger:hover .ic{background:var(--danger-bg);color:var(--danger)}
   .agent-card-menu-item[hidden]{display:none}
   .agent-submit-overlay{position:fixed;inset:0;z-index:9100;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.32)}
@@ -176,3 +177,7 @@
   .agent-submit-ok{border:0;background:var(--brand);color:#fff}
   .agent-submit-ok:hover{background:var(--brand-hover)}
   :is(.agent-submit-cancel,.agent-submit-ok):focus-visible{outline:2px solid var(--border-focus);outline-offset:2px}
+
+/* 开发菜单页面与协作开发的设计稿内容宽度对齐。 */
+:is(#view-apps,#view-agents,#view-skills) { padding-left:16px; padding-right:16px; box-sizing:border-box; }
+:is(#view-apps,#view-agents,#view-skills) > * { max-width:1160px; box-sizing:border-box; }

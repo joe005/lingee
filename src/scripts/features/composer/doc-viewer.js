@@ -154,3 +154,8 @@ function set_chatViewerTabs(v){ chatViewerTabs=v; return v; }
 function set_chatViewerActiveKey(v){ chatViewerActiveKey=v; return v; }
 
 export { chatViewerActiveKey, chatViewerTabs, closeChatDocViewer, initChatDocViewerResize, openChatDocViewer, openChatTaskViewer, renderChatViewerTab, setChatDocViewerWidth, set_chatViewerActiveKey, set_chatViewerTabs };
+
+export function refreshMountedTaskDetail(taskId) {
+  var selected = chatViewerTabs.find(tab => tab.key === chatViewerActiveKey);
+  if (selected?.kind === "task" && selected.taskId === taskId) mountChatTaskDrawer(taskId, ++chatTaskMountVersion);
+}

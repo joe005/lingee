@@ -1,4 +1,5 @@
 import { $$ } from '../../../core/dom.js';
+import { DELETE_ICON } from '../../../core/delete-icon.js';
 import { toast } from '../../../core/toast.js';
 import { TK_PEOPLE, TK_PRIORITIES, tkAddView, tkGetViews, tkIsProjectOwner, tkProjectsForCurrentUser, tkUpdateTask } from '../data.js';
 import { getFilteredTasks } from './filters.js';
@@ -23,7 +24,7 @@ export function filterOptionsFor(section) {
      「N 个任务」即点选该项后列表显示的数量；协作开发徽标与默认口径一致。 */
   var tasks = getFilteredTasks(section);
   if (section === 'status') return [
-    ['planned','待规划'],['backlog','待开始'],['in_progress','执行中'],['in_review','待审核'],
+    ['planned','待规划'],['backlog','待开始'],['in_progress','执行中'],['in_review','待评审'],
     ['blocked','已阻塞'],['done','已完成'],
     /* 「已取消」「已办」先隐藏，不提供筛选入口 */
   ].map(function (o) { return { value:o[0], label:o[1], count:tasks.filter(function (t) { return t.status === o[0]; }).length }; });
@@ -140,7 +141,7 @@ export function openManageViews() {
   els.tkManageList.innerHTML = views.map(function (v) {
     return '<div class="tk-manage-item" data-view-id="' + v.id + '"><div><span class="tk-manage-item-name">' + escapeHtml(v.name) + '</span>' + (v.builtin ? '<span class="tk-manage-item-builtin">内置</span>' : '') + '</div><div class="tk-manage-item-actions">'
       + (v.builtin ? '' : '<button data-rename-view="' + v.id + '" data-tooltip="重命名" aria-label="重命名"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>')
-      + (v.builtin ? '' : '<button class="tk-manage-del" data-del-view="' + v.id + '" data-tooltip="删除" aria-label="删除"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>')
+      + (v.builtin ? '' : '<button class="tk-manage-del" data-del-view="' + v.id + '" data-tooltip="删除" aria-label="删除">' + DELETE_ICON + '</button>')
       + '</div></div>';
   }).join('');
   els.tkManageViewsOverlay.classList.remove('hidden');

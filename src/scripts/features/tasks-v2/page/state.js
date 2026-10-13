@@ -2,6 +2,7 @@ import { TK_PEOPLE, tkCanViewTask, tkCurrentStageHandlerId, tkCurrentUserId, tkG
 import { taskListKind, taskNeedsMyAction } from '../list-kind.js';
 import { taskViewState } from '../ui-state.js';
 import { pageState } from './page-state.js';
+import { DELETE_ICON } from '../../../core/delete-icon.js';
 /* 任务页 · 任务页状态、常量与元素缓存（拆分自 tasks-v2/index.js，逻辑未改） */
 /* ---------- 状态 ---------- */
 export var LIST_FIELDS = [
@@ -72,9 +73,10 @@ function drawerIsMine(task) { return !!task && tkCurrentStageHandlerId(task) ===
 /* 详情主操作与列表卡片同一口径：只有轮到当前登录人时才出现，操作按任务状态变化。 */
 export function taskHeaderAction(task) {
   if (!task) return null;
+  if (task.status === 'in_review') return {label:'评审产物',action:'review'};
   if (task.status === 'planned') return {label:'加入待开始',action:'queue'};
   var info = taskListKind(task);
-  return info.primary ? {label:info.action === 'review' ? '验收产物' : info.action === 'start' ? 'AI 执行' : info.label, action:info.action} : null;
+  return info.primary ? {label:info.action === 'review' ? '评审产物' : info.action === 'start' ? 'AI 执行' : info.label, action:info.action} : null;
 }
 
 function placeTaskActionButton(button, atBottom) {
@@ -99,15 +101,8 @@ export function renderTaskStartAction() {
     /* 管理板块里只读：轮到自己的任务保留一个按钮，点击跳到开发页签处理；不是自己阶段的不出按钮 */
     if (viewOnly) action = action && drawerIsMine(task) ? {label:'在开发页签处理', action:'jump-dev'} : null;
     placeTaskActionButton(button, !!task);
-    var deleteButton = els.tkDrawerFoot.querySelector('[data-detail-footer-delete]');
-    if (!deleteButton) {
-      els.tkDrawerFoot.insertAdjacentHTML('afterbegin', '<button type="button" class="tk-detail-delete" data-detail-footer-delete><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg>删除</button><button type="button" class="tk-detail-edit" data-detail-footer-edit>编辑</button>');
-    }
-    var editable = task && ['backlog','planned'].includes(task.status)
-      && ['backlog','planned'].includes(task.initialStatus || task.status)
-      && !(task.statusHistory || []).some(function (change) { return !['backlog','planned'].includes(change.from) || !['backlog','planned'].includes(change.to); });
-    els.tkDrawerFoot.querySelector('[data-detail-footer-edit]').hidden = !editable || viewOnly;
-    if (deleteButton || els.tkDrawerFoot.querySelector('[data-detail-footer-delete]')) els.tkDrawerFoot.querySelector('[data-detail-footer-delete]').hidden = viewOnly;
+    els.tkDrawerFoot.querySelectorAll('[data-detail-footer-delete],[data-detail-footer-edit]').forEach(function (item) { item.remove(); });
+    els.tkDrawerFoot.hidden = !action;
     els.tkDrawer.classList.toggle('tk-drawer--viewonly', viewOnly);
     button.hidden = !action;
     if (!action) return;

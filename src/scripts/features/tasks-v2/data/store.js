@@ -94,7 +94,7 @@ try {
     localStorage.setItem('lingee_tasks_cosmic_wuxf_v1', '1');
   }
 } catch (e) { /* 本地存储不可用时跳过 */ }
-  /* 「待审核/待开始/已阻塞」预置任务补充：每次加载按编号幂等补种，缺则补回（含被删与漏补场景，刷新自愈），不改写已有任务。 */
+  /* 「待评审/待开始/已阻塞」预置任务补充：每次加载按编号幂等补种，缺则补回（含被删与漏补场景，刷新自愈），不改写已有任务。 */
 try {
   var wuxfReviewCodes = new Set(['T1001207', 'T1001208', 'T1001209', 'T1001210', 'T1001211']);
   var wuxfExistingCodes = new Set(_tasks.map(function (task) { return task.code; }));

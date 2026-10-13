@@ -75,7 +75,7 @@ function prepareTaskCreateDraft(draft, latestMessage) {
       || (people.some(function (person) { return person.id === tkCurrentUserId(); }) ? tkCurrentUserId() : people[0]?.id) || '';
   });
   if (!Array.isArray(draft.autoReviewStages)) draft.autoReviewStages = draft.autoReview ? allStages.map(function (stage) { return stage.name; }) : [];
-  if (/全部人工审核|不要(?:自动审核|AI\s*验收)|无需(?:自动审核|AI\s*验收)/.test(instruction)) draft.autoReviewStages = [];
+  if (/全部人工评审|不要(?:自动审核|AI\s*验收)|无需(?:自动审核|AI\s*验收)/.test(instruction)) draft.autoReviewStages = [];
   else if (/自动审核|AI\s*验收/.test(instruction)) {
     var reviewClauses = instruction.split(/[。！？；;，,\n]/).filter(function (part) { return /自动审核|AI\s*验收/.test(part); }).join(' ');
     var namedStages = allStages.filter(function (stage) { return reviewClauses.includes(stage.name); });

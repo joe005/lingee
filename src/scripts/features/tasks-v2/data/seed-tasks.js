@@ -93,7 +93,7 @@ function tkConvertCvTasks(projectId, startId) {
 }
 /* 与吴晓锋种子任务内容重叠的三条团队任务不进入任务列表，控制「执行中」预置数量。 */
 const TK_COSMIC_TRIM_CODES = new Set(['T1000077', 'T1000092', 'T1000095']);
-/* 待审核保留三条有完整执行计划的样本：1203、1207、1208。 */
+/* 待评审保留三条有完整执行计划的样本：1203、1207、1208。 */
 const TK_COSMIC_REVIEW_TRIM_CODES = new Set(['T1000076', 'T1000078', 'T1000085', 'T1000088', 'T1000091', 'T1000097']);
 TK_TASKS.push(...tkConvertCvTasks('cosmic-app-dev', 75).filter(function (task) {
   return !TK_COSMIC_TRIM_CODES.has(task.code) && !TK_COSMIC_REVIEW_TRIM_CODES.has(task.code);
@@ -145,7 +145,7 @@ const TK_COSMIC_WUXF_TASKS = [
       { id:'s6', workType:'部署交付', title:'部署交付', description:'产出 editor-value-shapes.json 并归档', assigneeId:'p40', status:'pending' },
     ] },
   { id:1203, code:'T1001203', title:'规则动作类型序列化槽位验证', status:'in_review', priority:'high', assignee:'p23', createdBy:'p23', project:'cosmic-app-dev', labels:['需求'], createDate:'2026-09-18', dueDate:'2026-10-08',
-    desc:'验证 32 个规则动作类型由字节码注解得到的序列化槽位，并与采购订单规则配置清单交叉核对：LockFieldAction 应为 Fields:List<FieldId> + GroupName/RET/Description/ActionType/Id/Seq；SummaryToField 为四槽位 {FieldId,FieldKey,FieldName,SumType:int}。测试验证产物已生成，等待审核。',
+    desc:'验证 32 个规则动作类型由字节码注解得到的序列化槽位，并与采购订单规则配置清单交叉核对：LockFieldAction 应为 Fields:List<FieldId> + GroupName/RET/Description/ActionType/Id/Seq；SummaryToField 为四槽位 {FieldId,FieldKey,FieldName,SumType:int}。测试验证产物已生成，等待评审。',
     executionStageId:'s5',
     statusHistory:[
       { from:'backlog', to:'in_progress', time:'2026-09-19 11:00:00', authorId:'p23' },
@@ -211,7 +211,7 @@ const TK_COSMIC_WUXF_TASKS = [
       { id:'s6', workType:'部署交付', title:'部署交付', description:'集成差异清单到 app-build 契约', assigneeId:'p40', status:'done' },
     ] },
   { id:1207, code:'T1001207', title:'属性继承链取值域合并验证', status:'in_review', priority:'high', assignee:'p23', createdBy:'p23', project:'cosmic-app-dev', labels:['需求'], createDate:'2026-09-25', dueDate:'2026-10-14',
-    desc:'验证 37 个取值域随模型类型变化的属性按 DomainModelTypeDefiners 继承链的覆盖合并结果，与 property-by-model-type.json 及 element-property-map.json 交叉核对，确认局部覆盖优先于全局定义、34 个模型类型的继承链无断链。测试验证产物已生成，等待审核。',
+    desc:'验证 37 个取值域随模型类型变化的属性按 DomainModelTypeDefiners 继承链的覆盖合并结果，与 property-by-model-type.json 及 element-property-map.json 交叉核对，确认局部覆盖优先于全局定义、34 个模型类型的继承链无断链。测试验证产物已生成，等待评审。',
     executionStageId:'s5',
     statusHistory:[
       { from:'backlog', to:'in_progress', time:'2026-09-26 09:20:00', authorId:'p23' },
@@ -226,7 +226,7 @@ const TK_COSMIC_WUXF_TASKS = [
       { id:'s6', workType:'部署交付', title:'部署交付', description:'产出 domain-value-merge-report.json 并归档', assigneeId:'p39', status:'pending' },
     ] },
   { id:1208, code:'T1001208', title:'复杂属性参数表单与转换器映射核对', status:'in_review', priority:'medium', assignee:'p23', createdBy:'p23', project:'cosmic-app-dev', labels:['需求'], createDate:'2026-09-24', dueDate:'2026-10-11',
-    desc:'核对 150 个 btnedit 复杂属性的 ide_* 参数表单与 100 个转换器注册表的映射关系，逐条确认 alias 只读契约与 EntryId 写入路由，关闭未证实的映射项；核对结论与 complex-property-routes.json 对齐后归档。映射核对清单已生成，等待审核。',
+    desc:'核对 150 个 btnedit 复杂属性的 ide_* 参数表单与 100 个转换器注册表的映射关系，逐条确认 alias 只读契约与 EntryId 写入路由，关闭未证实的映射项；核对结论与 complex-property-routes.json 对齐后归档。映射核对清单已生成，等待评审。',
     executionStageId:'s5',
     statusHistory:[
       { from:'backlog', to:'in_progress', time:'2026-09-25 10:40:00', authorId:'p23' },
@@ -285,7 +285,7 @@ const TK_COSMIC_WUXF_TASKS = [
 ];
 TK_TASKS.push(...TK_COSMIC_WUXF_TASKS);
 
-/* 问卷调研系统建设：演示汇报的贯穿场景，覆盖已完成、待审核（含一次驳回）、执行中、阻塞、待开始和待规划。 */
+/* 问卷调研系统建设：演示汇报的贯穿场景，覆盖已完成、待评审（含一次驳回）、执行中、阻塞、待开始和待规划。 */
 const TK_SURVEY_TASKS = [
   { id:1300, code:'T1001300', title:'问卷调研需求梳理与验收标准', status:'done', priority:'high', assignee:'p04', createdBy:'p22', project:'survey', labels:['需求'], issueType:'需求', createDate:'2026-09-07', dueDate:'2026-09-14',
     desc:'梳理问卷调研全流程需求：问卷设计、发放、回收、分析四个环节；明确首期范围与非目标（不做付费问卷和外部样本采购）；每条需求附可观察的验收条件。',

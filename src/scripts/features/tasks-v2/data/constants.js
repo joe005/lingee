@@ -6,7 +6,7 @@ const TK_STATUSES = [
   { id: 'planned',     name: '待规划', color: 'gray',   icon: 'dotted' },
   { id: 'backlog',     name: '待开始', color: 'gray',   icon: 'circle' },
   { id: 'in_progress', name: '执行中', color: 'orange', icon: 'half' },
-  { id: 'in_review',  name: '待审核', color: 'green',  icon: 'three_quarters' },
+  { id: 'in_review',  name: '待评审', color: 'green',  icon: 'three_quarters' },
   { id: 'blocked',   name: '已阻塞', color: 'red',    icon: 'slash' },
   { id: 'done',       name: '已完成', color: 'blue',   icon: 'check' },
   { id: 'cancelled',  name: '已取消', color: 'gray',   icon: 'cross' },

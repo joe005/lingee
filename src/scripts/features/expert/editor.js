@@ -1,6 +1,7 @@
 import { submitAssetForReview } from './asset-review.js';
 import { layerOf } from './layers.js';
 import { $, $$ } from '../../core/dom.js';
+import { requestDeleteConfirmation } from '../../core/delete-confirm.js';
 import { toast } from '../../core/toast.js';
 import { renderExpertChips } from './chips.js';
 import { AV_KEYS, EX, MODEL_TIERS, MY_EXPERTS, WORK_MODES, rebuildExperts, set_MY_EXPERTS, skillCatalog, skillInfo, xav, xesc } from './data.js';
@@ -18,12 +19,12 @@ import { hideAssetEditorPanel, showAssetEditorPanel } from './editor-panel.js';
 /* ---------- 编辑我的专家 ---------- */
 var forcedBuilder=null;
 
-function deleteMyExpert(id){
+async function deleteMyExpert(id){
   var e=EX[id]; if(!e||!e.mine||layerOf('expert',e)!=='personal') return;
   var used=TEAMS.filter(function(t){ return t.members.indexOf(id)>=0; });
   var msg='删除智能体「'+e.name+'」？此操作不可撤销。';
   if(used.length) msg+='\n他还在 '+used.length+' 个智能体团队里，删除后会一并移出。';
-  if(!window.confirm(msg)) return;
+  if(!await requestDeleteConfirmation(msg)) return;
   set_MY_EXPERTS(MY_EXPERTS.filter(function(x){ return x.id!==id; }));
   rebuildExperts();
   TEAMS.forEach(function(t){

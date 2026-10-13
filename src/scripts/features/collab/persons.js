@@ -1,4 +1,5 @@
 import { $ } from '../../core/dom.js';
+import { requestDeleteConfirmation } from '../../core/delete-confirm.js';
 import { toast } from '../../core/toast.js';
 import { CV_MEMBERS, CV_PROJECTS, CV_TASKS, CV_WORKSPACES, cvIsMe, cvPeopleInWorkspace, cvPersistProjects, cvPersistWorkspaces, cvPersonById, cvWorkspace, cvWorkspaceById, cvWorkspaceRole } from './data.js';
 import { cvRenderProjectDetail, cvRenderProjectList } from './project-view.js';
@@ -64,7 +65,7 @@ function cvSavePersonEdit(){
   toast('已添加协作人员：'+person.name);
 }
 
-function cvDeletePerson(pid){
+async function cvDeletePerson(pid){
   var p=cvPersonById(pid); if(!p) return;
   if(cvIsMe(p)){ toast('不能移除自己','warning'); return; }
   var workspace=cvWorkspaceById(cvWorkspace)||CV_WORKSPACES.find(function(w){return (w.peopleIds||[]).includes(pid);});
@@ -76,7 +77,7 @@ function cvDeletePerson(pid){
   if(CV_PROJECTS.some(function(project){return inScope(project)&&(project.members||[]).length===1&&project.members[0]===pid;})){
     toast('该人员是某项目的唯一成员，请先为项目添加其他成员','warning');return;
   }
-  if(!window.confirm('确定移除「'+p.name+'」的协作关联吗？此操作不会删除灵基账号。'))return;
+  if(!await requestDeleteConfirmation('确定移除「'+p.name+'」的协作关联吗？此操作不会删除灵基账号。', { title:'确认移除', confirmLabel:'确认移除' }))return;
   var affected=CV_PROJECTS.filter(function(project){return inScope(project)&&project.members?.includes(pid);});
   var previousMembers=affected.map(function(project){return project.members.slice();});
   var previousPeople=workspace.peopleIds.slice();

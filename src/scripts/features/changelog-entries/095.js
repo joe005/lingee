@@ -1,0 +1,1 @@
+export default {"id":"95","date":"2026-10-13","iconBg":"var(--brand-fill)","iconColor":"var(--brand)","type":"功能","module":"任务与界面","author":"Joe","body":"功能·任务与界面：完善任务操作记录与预制历史迁移，统一阶段评审、产物会话入口、列表和看板筛选及详情菜单，按视觉稿优化文字色阶、页面留白和阶段排版，并统一删除确认与图标。"};

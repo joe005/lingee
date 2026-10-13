@@ -20,8 +20,8 @@ export function getFilteredTasks(skipField) {
   else if (scope === 'agents') tasks = tasks.filter(function (t) { return t.assignee && t.assignee.charAt(0) === 'a'; });
   else if (scope === 'my_assigned') tasks = tasks.filter(tkWasTaskHandler);
   else if (scope === 'in_progress') tasks = tasks.filter(function (t) { return t.status === 'in_progress'; });
-  if (state.search) {
-    var q = state.search.toLowerCase();
+  if (state.search.trim()) {
+    var q = state.search.trim().toLowerCase();
     tasks = tasks.filter(function (t) {
       return t.title.toLowerCase().indexOf(q) >= 0 || t.code.toLowerCase().indexOf(q) >= 0 || (t.desc && t.desc.toLowerCase().indexOf(q) >= 0);
     });

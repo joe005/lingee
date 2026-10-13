@@ -10,7 +10,7 @@ import { closeFilterPanel, handleDragEnd, handleDragLeave, handleDragOver, handl
 import { pageState } from './page-state.js';
 import { animateListSubtasks, visibleListColumnCount } from './render.js';
 import { els, persistViewState, state, subtaskSectionExpanded } from './state.js';
-import { _collapsedActivityIds, _expandedActivityIds, _showOlderActivityIds, closeDrawer, openDrawer, openDrawerArtifacts } from './subtasks.js';
+import { _showOlderActivityIds, closeDrawer, openDrawer, openDrawerArtifacts, toggleCollapsedActivity } from './subtasks.js';
 import { chooseFirstAssignee, handleTaskCardPrimaryAction, confirmDeleteTask, confirmTaskStageApproval, filterAssigneeOptions, openBoardTaskSession, retryBlockedTask, showCardMenu, startTaskExecution } from './utils.js';
 /* 任务页 · 事件绑定 · 子任务、看板 / 列表点击与拖拽、列折叠、浮层关闭（拆分自 tasks-v2/index.js，逻辑未改） */
 export function bindBoardEvents() {
@@ -48,11 +48,15 @@ export function bindBoardEvents() {
     }
     var actToggle = e.target.closest('[data-activity-toggle]');
     if (actToggle) {
-      var aid = actToggle.getAttribute('data-activity-toggle');
-      if (_expandedActivityIds.has(aid)) { _expandedActivityIds.delete(aid); _collapsedActivityIds.add(aid); }
-      else if (_collapsedActivityIds.has(aid)) { _collapsedActivityIds.delete(aid); _expandedActivityIds.add(aid); }
-      else { _expandedActivityIds.add(aid); }
+      var aid = Number(actToggle.getAttribute('data-activity-toggle'));
+      var scrollArea = els.tkDrawerBody.querySelector('.tk-drawer-main');
+      var scrollTarget = scrollArea && getComputedStyle(scrollArea).overflowY !== 'visible' ? scrollArea : els.tkDrawerBody;
+      var scrollTop = scrollTarget.scrollTop;
+      toggleCollapsedActivity(aid);
       openDrawer(state.drawerTaskId);
+      scrollTarget = els.tkDrawerBody.querySelector('.tk-drawer-main');
+      scrollTarget = scrollTarget && getComputedStyle(scrollTarget).overflowY !== 'visible' ? scrollTarget : els.tkDrawerBody;
+      scrollTarget.scrollTop = scrollTop;
       return;
     }
     var actOlder = e.target.closest('[data-activity-older]');
@@ -132,7 +136,7 @@ export function bindBoardEvents() {
     if (playBtnB) { startTaskExecution(parseInt(playBtnB.getAttribute('data-card-play'), 10)); return; }
     var reviewBtn = e.target.closest('[data-card-review]');
     if (reviewBtn) {
-      openDrawerArtifacts(Number(reviewBtn.getAttribute('data-card-review')));
+      handleTaskCardPrimaryAction(Number(reviewBtn.getAttribute('data-card-review')), 'review', reviewBtn);
       return;
     }
     var sessionBtn = e.target.closest('[data-card-session]');
@@ -332,6 +336,13 @@ export function bindBoardEvents() {
   });
   document.addEventListener('keydown', function (e) {
     if (e.key !== 'Escape') return;
+    var cardMenus = document.querySelectorAll('.tk-card-menu');
+    if (cardMenus.length) {
+      cardMenus.forEach(function (menu) { menu.remove(); });
+      var anchor = document.querySelector('[data-card-more][aria-expanded="true"],#tkDrawerMore[aria-expanded="true"]');
+      if (anchor) { anchor.setAttribute('aria-expanded', 'false'); anchor.focus(); }
+      e.preventDefault(); return;
+    }
     var hadOpen = false;
     if (pageState.displayChoiceMenu) { closeDisplayChoiceMenu(true); e.preventDefault(); return; }
     if (!els.tkFilterPanel.classList.contains('hidden')) { closeFilterPanel(); hadOpen = true; }

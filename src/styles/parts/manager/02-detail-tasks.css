@@ -762,6 +762,11 @@
 #view-manager .mgr-tp-more-menu .mgr-menu-danger {
   color: var(--danger);
 }
+#view-manager .mgr-row-menu .mgr-menu-danger:hover,
+#view-manager .mgr-tp-more-menu .mgr-menu-danger:hover {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
 .mgr-scope #mgrTaskDeleteOverlay {
   z-index: 240;
 }

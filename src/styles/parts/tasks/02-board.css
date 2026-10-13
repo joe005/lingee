@@ -57,8 +57,11 @@
 .tk-card-menu{position:fixed;background:var(--bg);border:1px solid var(--border);border-radius:8px;box-shadow:var(--menu-shadow);padding:4px;min-width:140px;z-index:200;animation:tk-menu-in .12s ease}
 .tk-card-menu-item{display:flex;align-items:center;gap:8px;padding:7px 12px;font-size:13px;color:var(--text);border-radius:6px;cursor:pointer;white-space:nowrap}
 .tk-card-menu-item:hover{background:var(--hover)}
-.tk-card-menu-item.danger{color:var(--danger)}
-.tk-card-menu-item.danger:hover{background:var(--danger-bg)}
+.tk-card-menu-item.danger{color:var(--text)}
+.tk-card-menu-item:is(button){width:100%;border:0;background:transparent;font-family:inherit;text-align:left}
+.tk-card-menu-item.danger:is(button):hover{background:var(--danger-bg);color:var(--danger)}
+.tk-card-menu-item:is(button):focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}
+.tk-card-menu-item.danger:hover{background:var(--danger-bg);color:var(--danger)}
 .tk-drawer-more-menu{z-index:202}
 .tk-col-actions{width:40px;text-align:center;position:relative}
 .tk-col-actions .tk-card-more{position:static;opacity:1}
@@ -99,6 +102,11 @@
 #view-tasks:not(.tk-project-list-mode) .tk-toolbar .tk-view-bar{height:30px;min-width:0;flex:1 1 auto;padding:0}
 #view-tasks:not(.tk-project-list-mode) .tk-toolbar .tk-view-tabs{min-width:0}
 #view-tasks:not(.tk-project-list-mode) .tk-tools-left,#view-tasks:not(.tk-project-list-mode) .tk-filter-chips{display:none}
+#cv-tasks-current #view-tasks:not(.tk-project-list-mode):not(.tk-list-mode) .tk-tools-left{display:flex;margin-right:auto;min-width:0}
+#cv-tasks-current #view-tasks:not(.tk-project-list-mode):not(.tk-list-mode) .tk-filter-btn{display:inline-flex;flex:none;white-space:nowrap}
+#cv-tasks-current #view-tasks:not(.tk-project-list-mode):not(.tk-list-mode) .tk-search-wrap{box-sizing:border-box;height:36px;min-width:0;border-radius:10px;background:var(--bg)}
+#cv-tasks-current #view-tasks:not(.tk-project-list-mode):not(.tk-list-mode) .tk-search-wrap input{min-width:0;width:180px;font:inherit;font-size:14px}
+@media(max-width:600px){#cv-tasks-current #view-tasks:not(.tk-project-list-mode):not(.tk-list-mode) .tk-tools-left{flex:1 1 100%}#cv-tasks-current #view-tasks:not(.tk-project-list-mode):not(.tk-list-mode) .tk-search-wrap{width:100%}#cv-tasks-current #view-tasks:not(.tk-project-list-mode):not(.tk-list-mode) .tk-search-wrap input{width:100%}}
 #view-tasks.tk-project-list-mode #tkViewBar{display:none}
 .tk-list-tab-count{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:18px;padding:0 5px;border-radius:9px;background:var(--fill-1);color:var(--text-secondary);font-size:11px;font-weight:500;font-variant-numeric:tabular-nums;box-sizing:border-box}
 .list-page-tab.active .tk-list-tab-count{background:var(--brand-fill);color:var(--brand)}

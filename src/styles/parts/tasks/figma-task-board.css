@@ -24,7 +24,7 @@
 #cv-tasks-current .tk-card-tags .tk-card-type{border-color:var(--border-focus);color:var(--brand)}
 #cv-tasks-current .tk-card-tags [data-priority=urgent]{color:var(--danger);border-color:var(--danger)}
 #cv-tasks-current .tk-card-tags [data-priority=high]{color:var(--warning);border-color:var(--warning)}
-#cv-tasks-current .tk-card--figma .tk-card-foot{gap:8px;margin-top:4px;padding-top:12px;min-height:28px;background:url('../../../assets/figma/task-board/divider.svg') top left/100% 1px no-repeat}
+#cv-tasks-current .tk-card--figma .tk-card-foot{gap:8px;margin-top:0;padding-top:0;min-height:28px;border-top:0;background:none}
 #cv-tasks-current .tk-card--figma .tk-card-foot-left{min-width:0;gap:6px;flex:1}
 #cv-tasks-current .tk-card--figma .tk-card-team-avatar{width:24px;height:24px;border-radius:50%;flex:none}
 #cv-tasks-current .tk-card--figma .tk-card-team-avatars img:not(:first-child),#cv-tasks-current .tk-card--figma .tk-card-team-avatars-more{display:none}
@@ -69,3 +69,23 @@
 }
 
 #cv-tasks-current .tk-board-col-toggle { display:none; }
+
+/* Figma 284:73937 的文字色阶与状态标签；仅作用于当前任务看板。 */
+#cv-tasks-current #tkBoardScroll {
+  --board-processing-text:#2970ff;
+  --board-processing-bg:rgba(77,137,255,.08);
+  --board-review-text:#ff7700;
+  --board-review-bg:rgba(255,119,0,.08);
+  --board-blocked-text:#f12234;
+  --board-blocked-bg:rgba(241,34,52,.08);
+}
+#cv-tasks-current .tk-card--figma .tk-card-title { color:var(--neutral-900); }
+#cv-tasks-current .tk-card--figma .tk-card-code { color:var(--neutral-500); }
+#cv-tasks-current .tk-card--figma .tk-card-stage,
+#cv-tasks-current .tk-board-col-name,
+#cv-tasks-current .tk-board-col-count,
+#cv-tasks-current .tk-card--figma .tk-card-status { color:var(--neutral-600); }
+#view-collab #cv-tasks-current .tk-card--figma .tk-card-action { color:var(--neutral-700); }
+#cv-tasks-current .tk-card--figma .tk-card-status:is([data-kind=start],[data-kind=running]) { color:var(--board-processing-text); background:var(--board-processing-bg); }
+#cv-tasks-current .tk-card--figma .tk-card-status:is([data-kind=review],[data-kind=question]) { color:var(--board-review-text); background:var(--board-review-bg); }
+#cv-tasks-current .tk-card--figma .tk-card-status[data-kind=blocked] { color:var(--board-blocked-text); background:var(--board-blocked-bg); }

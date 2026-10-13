@@ -1,4 +1,5 @@
 import { $, $$ } from '../core/dom.js';
+import { DELETE_ICON } from '../core/delete-icon.js';
 import { toast } from '../core/toast.js';
 import { syncTogglePreviewBtn } from './chat.js';
 import { agentCardByName, agentCardStatus, openAgentSubmit } from './agent-submit.js';
@@ -90,7 +91,7 @@ var PROFILES = {
 };
 var DEFAULT_SKILLS_HTML = '';
 function profile() { return PROFILES[agentName] || PROFILES['设备故障诊断助手']; }
-var TRASH_ICON = '<svg class="ic" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2 4h12M13 4l-1.1 8.9a1.6 1.6 0 0 1-1.6 1.4H5.7a1.6 1.6 0 0 1-1.6-1.4L3 4M5.5 4l.3-1.2A1.6 1.6 0 0 1 7.4 1.6h1.2a1.6 1.6 0 0 1 1.6 1.2L10.5 4M9.3 7.3V11M6.7 7.3V11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+var TRASH_ICON = DELETE_ICON;
 
 function esc(v) { return String(v).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 function pad(n) { return String(n).padStart(2, '0'); }

@@ -1,3 +1,4 @@
+import { initDemoOperationHistory } from './demo-operation-history.js';
 import { initTaskConfirm } from './confirm.js';
 import { tkEnsureCompletedDemoTask, tkEnsureWorkspaceDemoTasks, tkPruneOrphanTasks, tkSyncPeople } from './data.js';
 import { initExecutionPlan } from './execution-plan.js';
@@ -15,7 +16,7 @@ import { initImportEvents } from './page/import-excel.js';
 import { render, updateCollabReviewBadge } from './page/layout.js';
 import { pageState } from './page/page-state.js';
 import { DRAWER_WIDTH_STORAGE_KEY, TASK_DETAIL_VERSION_STORAGE_KEY, TASK_START_LEGACY_KEY, cacheEls, els, renderTaskStartAction, restoreViewState, state } from './page/state.js';
-import { openDrawer } from './page/subtasks.js';
+import { openDrawer, restoreCollapsedActivity } from './page/subtasks.js';
 /* 任务页入口：只负责初始化。页面代码按区域拆在 ./page/ 下（2026-10-10 从本文件拆出，逻辑未改）：
    - page/artifacts.js：任务产物的文件类型图标、文件名与格式标签
    - page/state.js：任务页状态、常量与元素缓存
@@ -57,6 +58,7 @@ export function initTasksV2() {
   tkPruneOrphanTasks();
   tkSyncPeople();
   tkEnsureCompletedDemoTask();
+  initDemoOperationHistory();
   cacheEls();
   initListReviewPreviewEvents();
   /* 任务详情抽屉移至 body 顶层，使其在任意视图上都能叠加显示（原在 #view-tasks 内，父级 hidden 时 fixed 也不可见） */
@@ -66,6 +68,7 @@ export function initTasksV2() {
   try { pageState.taskDetailVersion = localStorage.getItem(TASK_DETAIL_VERSION_STORAGE_KEY) === 'v1' ? 'v1' : 'latest'; } catch (e) { pageState.taskDetailVersion = 'latest'; }
   renderTaskStartAction();
   restoreViewState();
+  restoreCollapsedActivity();
   initColumnResize();
   try {
     var storedWidth = Number(localStorage.getItem(DRAWER_WIDTH_STORAGE_KEY));
@@ -92,6 +95,7 @@ export function initTasksV2() {
     tkPruneOrphanTasks();
     tkEnsureWorkspaceDemoTasks();
     tkEnsureCompletedDemoTask();
+    initDemoOperationHistory();
     Object.assign(taskViewState,{activeViewId:'all',scope:'all',filters:[],search:''});
     fillSelects();render();
   });

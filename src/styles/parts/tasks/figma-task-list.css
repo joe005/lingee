@@ -42,7 +42,6 @@
 #cv-tasks-current .tk-tools-right { gap:12px; }
 #cv-tasks-current #tkToolbarNew { height:32px; min-height:32px; border-radius:8px 0 0 8px; padding:0 12px; font-size:14px; font-weight:400; gap:4px; }
 #cv-tasks-current #tkToolbarNewArrow { height:32px; min-height:32px; align-self:center; border-radius:0 8px 8px 0; }
-#cv-tasks-current #view-tasks:not(.tk-project-list-mode) #tkDisplayBtn { display:none; }
 #cv-tasks-current #view-tasks:not(.tk-project-list-mode) .tk-list .tk-list-scroll {
   padding:0 16px 24px; background:var(--canvas-bg);
 }
@@ -120,3 +119,23 @@
 #cv-tasks-current #view-tasks:not(.tk-project-list-mode) #tkDisplayBtn:hover { background-color:var(--hover); }
 
 #cv-tasks-current .tk-list-stage-step:not(.is-current) .tk-list-stage-dot { margin-left:2px; }
+
+/* 列表与看板共用筛选入口，已选条件按需展示。 */
+#cv-tasks-current #view-tasks:not(.tk-project-list-mode) .tk-tools-left { display:flex; align-items:center; gap:8px; }
+#cv-tasks-current #view-tasks:not(.tk-project-list-mode):not(.tk-list-mode) .tk-filter-btn,
+#cv-tasks-current #view-tasks:not(.tk-project-list-mode) .tk-filter-btn { display:inline-flex; height:32px; box-sizing:border-box; border-radius:8px; }
+#cv-tasks-current #view-tasks:not(.tk-project-list-mode) .tk-filter-chips:not(.hidden) { display:flex; box-sizing:border-box; align-self:center; width:calc(100% - 32px); max-width:1160px; padding:0 0 12px; border:0; }
+
+/* 筛选开放后工具栏按实际可用宽度换行，避免覆盖页签。 */
+#cv-tasks-current #view-tasks:not(.tk-project-list-mode) .tk-toolbar { height:auto; min-height:48px; flex-wrap:wrap; gap:12px; }
+#cv-tasks-current #view-tasks:not(.tk-project-list-mode) .tk-toolbar .tk-view-bar { flex:0 0 auto; max-width:100%; min-width:0; }
+#cv-tasks-current #view-tasks:not(.tk-project-list-mode) .tk-toolbar .tk-view-tabs { flex:none; }
+#cv-tasks-current #view-tasks:not(.tk-project-list-mode) .tk-tools-left { flex:0 1 auto; min-width:0; margin-left:auto; }
+#cv-tasks-current #view-tasks:not(.tk-project-list-mode) .tk-search-wrap { width:180px; min-width:100px; max-width:100%; box-sizing:border-box; }
+#cv-tasks-current #view-tasks:not(.tk-project-list-mode) .tk-search-wrap input { width:100%; min-width:0; }
+#cv-tasks-current #view-tasks:not(.tk-project-list-mode) .tk-filter-btn { flex:none; white-space:nowrap; padding:0 10px; }
+#cv-tasks-current #view-tasks:not(.tk-project-list-mode) .tk-tools-right { flex:none; margin-left:0; }
+
+/* 看板搜索与筛选左对齐，视图切换和新建靠右。 */
+#cv-tasks-current #view-tasks:not(.tk-project-list-mode):not(.tk-list-mode) .tk-tools-left { margin-left:0; margin-right:auto; }
+#cv-tasks-current #view-tasks:not(.tk-project-list-mode):not(.tk-list-mode) .tk-tools-right { margin-left:auto; }

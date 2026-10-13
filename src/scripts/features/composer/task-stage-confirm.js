@@ -10,7 +10,7 @@ import { chatViewerActiveKey, chatViewerTabs, closeChatDocViewer, set_chatViewer
 /* 任务对话：会话内「确认」按钮——确认产物、流转下一阶段（拆自 composer.js） */
 
 /* ---------- 任务会话「确认」按钮：执行结束确认产物、流转下一阶段 ---------- */
-/* 只在本轮回复结束、任务进入待审核后显示；点击与任务详情「通过审核」同一条流转链路。 */
+/* 只在本轮回复结束、任务进入待评审后显示；点击与任务详情「通过审核」同一条流转链路。 */
 function chatStageConfirmInfo() {
   if (viewChat.classList.contains('task-exception-open')) return null;
   var task = tkGetTasks().find(function (row) { return row.id === activeSessionTaskId; });

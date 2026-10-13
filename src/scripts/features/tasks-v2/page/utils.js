@@ -7,10 +7,11 @@ import { renderExpertChips } from '../../expert/chips.js';
 import { set_activePick } from '../../expert/store.js';
 import { showTaskConfirm, showTaskStageConfirm } from '../confirm.js';
 import { TK_DELETE_BLOCKED_REASON, TK_STATUSES, tkCanDeleteTask, tkCanStartTask, tkCurrentStageHandlerId, tkCurrentUserId, tkDeleteTask, tkGetPerson, tkGetTasks, tkProjectById, tkUpdateTask } from '../data.js';
-import { openNewIssueCopy } from '../new-issue-ui.js';
+import { openNewIssueCopy, openNewIssueEdit } from '../new-issue-ui.js';
 import { reviewTaskStage, scheduleTaskStageStartedNotice, startTaskStage } from '../task-execution.js';
 import { TASK_SESSION_STATUS, tkAddTaskSession, tkGetMySessions, tkLatestStageSession, tkTaskSessionOpeningMessage, tkTaskSessionTitle } from '../task-sessions.js';
 import { openListReviewPreview } from './detail-panel.js';
+import { DELETE_ICON } from '../../../core/delete-icon.js';
 import { openTaskModal } from './form-modal.js';
 import { render } from './layout.js';
 import { pageState } from './page-state.js';
@@ -110,7 +111,7 @@ export function handleTaskHeaderAction() {
   } else if (action === 'start') {
     startTaskExecution(task.id);
   } else if (action === 'retry') retryBlockedTask(task);
-  else if (action === 'review') openListReviewPreview(task.id, els.tkDrawerChat);
+  else if (action === 'review') { closeDrawer(); openTaskStatusConversation(task, {preferExisting:true}); }
   else if (action === 'reply') { closeDrawer(); openTaskStatusConversation(task); }
 }
 function returnToTaskDetail(task) {
@@ -162,20 +163,33 @@ function openBlockedTaskSession(task) {
   });
 }
 export function showCardMenu(taskId, anchorEl, detailOnly) {
+  var sameMenuOpen = anchorEl.getAttribute('aria-expanded') === 'true' && !!document.querySelector('.tk-card-menu');
+  document.querySelectorAll('[data-card-more][aria-expanded="true"],#tkDrawerMore[aria-expanded="true"]').forEach(function (button) { button.setAttribute('aria-expanded', 'false'); });
   document.querySelectorAll('.tk-card-menu').forEach(function(m){m.remove();});
+  if (sameMenuOpen) return;
+  anchorEl.setAttribute('aria-expanded', 'true');
+  var task = tkGetTasks().find(function (row) { return row.id === Number(taskId); });
+  var editable = task && ['backlog','planned'].includes(task.status)
+    && ['backlog','planned'].includes(task.initialStatus || task.status)
+    && !(task.statusHistory || []).some(function (change) { return !['backlog','planned'].includes(change.from) || !['backlog','planned'].includes(change.to); });
   var menu = document.createElement('div');
   menu.className = 'tk-card-menu' + (detailOnly ? ' tk-drawer-more-menu' : '') + ' show';
   var itemSvg = {
     chat: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>',
     subtask: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>',
-    delete: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>'
+    delete: DELETE_ICON
   };
   menu.innerHTML = ''
+    + (editable ? '<div class="tk-card-menu-item" data-card-task="' + taskId + '" data-card-action="edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 3 5 5M4 20l4-1 13-13a2.8 2.8 0 0 0-4-4L4 15l-1 6Z"/></svg><span>编辑</span></div>' : '')
     + (detailOnly || anchorEl.hasAttribute('data-delete-only-menu') || anchorEl.closest('.tk-card') || anchorEl.closest('.tk-list-card')?.querySelector('[data-list-task-action="start"]') || !tkCanStartTask(tkGetTasks().find(function (task) { return task.id === Number(taskId); })) ? '' : '<div class="tk-card-menu-item" data-card-task="' + taskId + '" data-card-action="chat">' + (pageState.taskStartLegacy ? TASK_START_CHAT_ICON : TASK_START_PLAY_ICON) + '<span>' + (pageState.taskStartLegacy ? '发起会话' : '开始执行') + '</span></div>')
     + (tkCanDeleteTask(tkGetTasks().find(function (task) { return task.id === Number(taskId); }))
-      ? '<div class="tk-card-menu-item danger" data-card-task="' + taskId + '" data-card-action="delete">' + itemSvg.delete + '<span>删除</span></div>'
-      : '<div class="tk-card-menu-item danger is-disabled" aria-disabled="true" title="' + TK_DELETE_BLOCKED_REASON + '" data-card-task="' + taskId + '" data-card-action="delete">' + itemSvg.delete + '<span>删除</span></div>');
+      ? '<button type="button" role="menuitem" class="tk-card-menu-item danger" data-card-task="' + taskId + '" data-card-action="delete">' + itemSvg.delete + '<span>删除</span></button>'
+      : '<button type="button" role="menuitem" class="tk-card-menu-item danger is-disabled" aria-disabled="true" title="' + TK_DELETE_BLOCKED_REASON + '" data-card-task="' + taskId + '" data-card-action="delete">' + itemSvg.delete + '<span>删除</span></button>');
   document.body.appendChild(menu);
+  var closeObserver = new MutationObserver(function () {
+    if (!menu.isConnected) { anchorEl.setAttribute('aria-expanded', 'false'); closeObserver.disconnect(); }
+  });
+  closeObserver.observe(document.body, {childList:true});
   menu.querySelectorAll('[data-card-action]').forEach(function(item) {
     item.addEventListener('click', function() {
       if (item.getAttribute('aria-disabled') === 'true') { toast(TK_DELETE_BLOCKED_REASON, 'warning'); return; }
@@ -188,9 +202,10 @@ export function showCardMenu(taskId, anchorEl, detailOnly) {
   });
   var rect = anchorEl.getBoundingClientRect();
   var top = rect.bottom + 4;
-  var left = rect.right - menu.offsetWidth;
+  var left = Math.min(rect.right - menu.offsetWidth, window.innerWidth - menu.offsetWidth - 8);
   if (left < 8) left = 8;
   if (top + menu.offsetHeight > window.innerHeight) top = rect.top - menu.offsetHeight - 4;
+  top = Math.max(8, top);
   menu.style.top = top + 'px';
   menu.style.left = left + 'px';
 }
@@ -219,7 +234,8 @@ export function confirmDeleteTask(taskId) {
   });
 }
 function handleCardAction(act, aid) {
-  if (act === 'chat') startTaskExecution(aid);
+  if (act === 'edit') openNewIssueEdit(aid);
+  else if (act === 'chat') startTaskExecution(aid);
   else if (act === 'delete') confirmDeleteTask(aid);
   else if (act === 'copy') openNewIssueCopy(aid);
   else if (act === 'subtask') openTaskModal(null, aid);
@@ -295,11 +311,11 @@ export function priWeight(p) {
 export function handleTaskCardPrimaryAction(taskId, action, trigger) {
   var task = tkGetTasks().find(function (row) { return row.id === Number(taskId); });
   if (!task) return;
-  if (action === 'review') openListReviewPreview(task.id, trigger);
+  if (action === 'review') { closeDrawer(); openTaskStatusConversation(task, {preferExisting:true}); }
   else if (action === 'start') startTaskExecution(task.id, {skipHandlerCheck:true});
   else if (action === 'retry') retryBlockedTask(task);
   else if (action === 'reply') { closeDrawer(); openTaskStatusConversation(task); }
   else if (action === 'artifacts') openDrawerArtifacts(task.id);
-  else if (action === 'detail' && task.status === 'in_progress') openBoardTaskSession(task);
+  else if (action === 'detail') { closeDrawer(); openTaskStatusConversation(task, {preferExisting:true}); }
   else openDrawer(task.id);
 }

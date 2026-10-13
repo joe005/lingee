@@ -112,12 +112,12 @@ export function renderCard(t, opts) {
     var actionLabels = { [sharedAction.action]:sharedAction.label };
     var boardActionName = sharedAction.action;
     var boardAction = actionLabels[boardActionName] ? '<button type="button" class="tk-card-action" data-list-task-action="' + boardActionName + '" data-list-task-id="' + t.id + '">' + actionLabels[boardActionName] + '</button>' : '';
-    var boardStatus = t.status === 'done' ? '' : '<span class="tk-card-status" data-kind="' + cardState.kind + '">' + escapeHtml(cardState.kind === 'review' ? '待确认' : cardState.badge) + '</span>';
+    var boardStatus = t.status === 'done' ? '' : '<span class="tk-card-status" data-kind="' + cardState.kind + '">' + escapeHtml(cardState.kind === 'review' ? '待评审' : cardState.badge) + '</span>';
     return '<div class="tk-card tk-card--figma' + sel + extraCls + (t.status === 'blocked' ? ' tk-card--blocked' : '') + '" draggable="true" data-task-id="' + t.id + '">'
       + '<button type="button" class="tk-card-more" data-card-more="' + t.id + '" aria-label="更多任务操作" aria-haspopup="menu"><img src="' + boardMoreIcon + '" width="16" height="16" alt=""></button>'
       + '<div class="tk-card-top-row">' + toggle + boardStatus + '<div class="tk-card-code">' + escapeHtml(t.code) + (props.project && t.project ? ' · ' + escapeHtml(tkGetProjectName(t.project)) : '') + '</div>' + childBadge + '</div>'
       + '<div class="tk-card-copy"><div class="tk-card-title">' + escapeHtml(t.title) + '</div>'
-      + (t.desc ? '<div class="tk-card-description" title="' + escapeHtml(t.desc) + '">' + escapeHtml(t.desc) + '</div>' : '')
+      + (props.description && t.desc ? '<div class="tk-card-description" title="' + escapeHtml(t.desc) + '">' + escapeHtml(t.desc) + '</div>' : '')
       + '</div><div class="tk-card-tags">' + (t.issueType ? '<span class="tk-card-type">' + escapeHtml(taskTypeLabel(t.issueType)) + '</span>' : '') + (props.priority ? '<span class="tk-card-priority" data-priority="' + escapeHtml(t.priority) + '">' + escapeHtml(pri.name) + '</span>' : '') + (props.startDate && t.startDate ? '<span class="tk-card-due">' + fmtDate(t.startDate) + '</span>' : '') + '</div>'
       + '<div class="tk-card-foot"><div class="tk-card-foot-left">' + teamAvatarHtml + '<span class="tk-card-stage">' + escapeHtml(currentStage?.name || '等待安排') + '</span></div><div class="tk-card-foot-actions">' + (boardAction || '<span class="tk-card-running-hint">' + escapeHtml(cardState.hint) + '</span>') + '</div></div></div>';
   }

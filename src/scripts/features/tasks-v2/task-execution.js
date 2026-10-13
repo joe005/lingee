@@ -1,10 +1,24 @@
 import { builtinDeliveryStages, deliveryStagesFor } from '../expert/delivery-stages.js';
-import { STAGES } from '../expert/data.js';
+import { EX, STAGES } from '../expert/data.js';
 import { toast } from '../../core/toast.js';
 import { escapeHtml } from './ui-utils.js';
 import { tkCurrentStageHandlerId, tkCurrentUserId, tkGetPerson, tkGetTasks, tkGetTaskArtifacts, tkUpdateTask, tkCanViewTask, tkProjectById } from './data.js';
 
+import { tbTeamStages } from '../collab/tb-core.js';
+import { taskExecutorTeam } from '../expert/task-team.js';
+
 const pendingStageReviews = new Map();
+
+export function taskStageAgentName(task, stageId) {
+  const entry = task.executionPlan?.find(row => row.id === stageId);
+  const stage = taskExecutionStages(task).find(row => row.id === stageId);
+  const team = taskExecutorTeam(task, tkProjectById(task.project));
+  const matched = tbTeamStages(team, task).find(row => row.name === stage?.name || row.name === entry?.workType);
+  const ids = task.expertId ? [task.expertId] : entry?.expertIds?.length ? entry.expertIds : matched?.expertIds || [];
+  const executorId = entry?.executionExpertId || ids.find(id => EX[id]);
+  return EX[executorId]?.name || '执行智能体';
+}
+
 
 export function taskExecutionStages(task) {
   return Array.isArray(task?.executionPlan) && task.executionPlan.length
@@ -58,7 +72,9 @@ export function startTaskStage(task, options) {
   if (!stage) return {ok:false};
   var assigneeId = currentHandlerId || tkCurrentUserId() || task.assignee;
   tkUpdateTask(task.id, {status:'in_progress', assignee:assigneeId, executionStageId:stage.id, executionPlan:stagePlan(task,stage.id,'running'),
-    planStatus:task.executionPlan?.length ? 'confirmed' : task.planStatus});
+    ...(options?.fromSave ? {createdAndStarted:true} : {}),
+    planStatus:task.executionPlan?.length ? 'confirmed' : task.planStatus,
+    statusHistory:(task.statusHistory || []).concat({from:task.status,to:'in_progress',authorId:tkCurrentUserId(),stageId:stage.id,time:flowTimestamp(),creationStart:!!options?.fromSave,message:'开始执行「' + stage.name + '」'})});
   return {ok:true, stage:stage};
 }
 
@@ -80,18 +96,22 @@ export function submitTaskStage(task) {
     var template = tkGetTaskArtifacts(task).find(function (artifact) { return artifact.id === templateId; });
     artifacts = artifacts.concat(template ? {
       ...template, id:'stage-' + stage.id, stageId:stage.id,
-      status:'待审核', date:date,
+      status:'待评审', date:date,
     } : {
       id:'stage-' + stage.id, stageId:stage.id, type:'技术文档',
       docTitle:'《' + task.title + '》阶段执行记录', summary:stage.desc || task.title,
-      status:'待审核', date:date, author:'执行 Agent',
+      status:'待评审', date:date, author:'执行 Agent',
       sections:[{heading:'执行目标',blocks:[{p:stage.desc || task.desc || task.title}]},
         {heading:'提交说明',blocks:[{p:'本阶段产物已生成，等待项目负责人确认；确认后提交并流转。'}]}],
     });
   }
-  tkUpdateTask(task.id, {status:'in_review', executionStageId:stage.id, executionPlan:stagePlan(task,stage.id,'review'), executionArtifacts:artifacts});
+  const agentName = taskStageAgentName(task, stage.id);
+  const time = flowTimestamp();
+  tkUpdateTask(task.id, {status:'in_review', executionStageId:stage.id, executionPlan:stagePlan(task,stage.id,'review'), executionArtifacts:artifacts,
+    statusHistory:(task.statusHistory || []).concat({from:'in_progress',to:'in_review',author:agentName,actorKind:'agent',stageId:stage.id,time,message:'「' + stage.name + '」执行完成，提交评审'}),
+    comments:task.comments || []});
   if (task.executionPlan?.find(function (row) { return row.id === stage.id; })?.requiresConfirmation === false) {
-    const approved = reviewTaskStage(task, true);
+    const approved = reviewTaskStage(task, true, {automatic:true});
     if (approved.ok && approved.next) {
       // 等当前会话保存完成后再发起下一阶段，避免新会话覆盖本阶段结果。
       setTimeout(async function () {
@@ -149,7 +169,7 @@ function flowTimestamp() {
     + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
 }
 
-export function reviewTaskStage(task, approved) {
+export function reviewTaskStage(task, approved, options) {
   if (task?.status !== 'in_review') return {ok:false};
   var stages = taskExecutionStages(task);
   var index = stages.findIndex(function (stage) { return stage.id === task.executionStageId; });
@@ -179,6 +199,17 @@ export function reviewTaskStage(task, approved) {
       return artifact.stageId === stage.id ? {...artifact, status:'已通过'} : artifact;
     });
     if (artifacts.length) patch.executionArtifacts = artifacts;
+  }
+  if (options?.automatic && approved) {
+    var automaticHistory = (task.statusHistory || []).slice();
+    var submitted = automaticHistory.at(-1);
+    if (submitted?.stageId === stage.id && submitted.to === 'in_review' && submitted.actorKind === 'agent') automaticHistory.pop();
+    patch.statusHistory = automaticHistory.concat({from:task.status,to:patch.status,author:taskStageAgentName(task, stage.id),actorKind:'agent',stageId:stage.id,time:flowTimestamp(),message:'「' + stage.name + '」执行完成' + (next ? '，流转至「' + next.name + '」' : '，任务已完成')});
+    if (patch.comments) patch.comments = task.comments || [];
+  } else {
+    patch.statusHistory = (task.statusHistory || []).concat({from:task.status,to:patch.status,authorId:tkCurrentUserId(),actorKind:'person',stageId:stage.id,time:flowTimestamp(),message:'「' + stage.name + '」' + (approved ? '评审通过' + (next ? '，流转至「' + next.name + '」' : '，任务已完成') : '评审未通过，继续执行')});
+    // 阶段审核与流转合并为一条操作记录。
+    if (patch.comments) patch.comments = task.comments || [];
   }
   tkUpdateTask(task.id, patch);
   /* 交付智能体的任务：「提交上架」阶段通过后，智能体开发里的对应智能体同步为已提交 */

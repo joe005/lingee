@@ -134,9 +134,9 @@
   .agent-config-kb-tag{padding:0 8px;border:1px solid var(--brand);border-radius:4px;font-size:12px;line-height:20px;color:var(--brand)}
   .agent-config-kb-type{font-size:12px;color:var(--text-secondary)}
   .agent-config-kb-del{margin-left:auto;width:28px;height:28px;border:0;border-radius:6px;background:transparent;color:var(--text-secondary);display:flex;align-items:center;justify-content:center;cursor:pointer}
-  .agent-config-kb-del:hover{background:var(--hover);color:var(--danger)}
+  .agent-config-kb-del:hover{background:var(--danger-bg);color:var(--danger)}
   .agent-config-kb-del:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
-  .agent-config-kb-del .ic{width:16px;height:16px}
+  .agent-config-kb-del svg{width:16px;height:16px}
   .agent-config-kb-card-name{margin-top:10px;font-size:14px;color:var(--text);overflow-wrap:anywhere}
   .agent-config-kb-card-sub{margin-top:6px;font-size:12px;color:var(--text-secondary)}
 

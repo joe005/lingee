@@ -1,6 +1,7 @@
 import { submitAssetForReview } from './asset-review.js';
 import { layerOf, layerVisible } from './layers.js';
 import { $, $$ } from '../../core/dom.js';
+import { requestDeleteConfirmation } from '../../core/delete-confirm.js';
 import { toast } from '../../core/toast.js';
 import { summon } from './automatch.js';
 import { renderExpertChips } from './chips.js';
@@ -245,9 +246,9 @@ export function initTeamModal() {
       var c=ev.target.closest('[data-tm-cmd]');
       if(c){ teamDraft.cmds[+c.getAttribute('data-tm-cmd')][+c.getAttribute('data-f')]=c.value; markTeamDirty(); }
     });
-    $('#teamDeleteBtn').addEventListener('click',function(){
+    $('#teamDeleteBtn').addEventListener('click',async function(){
       var t=teamById(teamEditingId); if(!t||layerOf('team',t)!=='personal') return;
-      if(!window.confirm('删除智能体团队「'+t.name+'」？此操作不可撤销。')) return;
+      if(!await requestDeleteConfirmation('删除智能体团队「'+t.name+'」？此操作不可撤销。')) return;
       set_TEAMS(TEAMS.filter(function(x){ return x.id!==t.id; }));
       if(activePick.kind==='team'&&activePick.id===t.id) clearPick();
       hideAssetEditorPanel(); teamModal.classList.remove('show');

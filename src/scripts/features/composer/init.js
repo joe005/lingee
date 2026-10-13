@@ -18,7 +18,7 @@ import { handleAssetCreateMessage, renderAssetCreateChat } from './asset-chat.js
 import { openChatSession } from './session-open.js';
 import { answerTaskQuestion, renderChatTaskSide, renderConversationTaskReference } from './task-conversation.js';
 import { clearChatTaskSide, confirmChatStage } from './task-stage-confirm.js';
-import { chatViewerActiveKey, chatViewerTabs, closeChatDocViewer, initChatDocViewerResize, openChatTaskViewer, renderChatViewerTab, setChatDocViewerWidth, set_chatViewerActiveKey } from './doc-viewer.js';
+import { chatViewerActiveKey, chatViewerTabs, closeChatDocViewer, refreshMountedTaskDetail, initChatDocViewerResize, openChatTaskViewer, renderChatViewerTab, setChatDocViewerWidth, set_chatViewerActiveKey } from './doc-viewer.js';
 import { chatPreviewCloseBtn, chatResizer, listBodyEl, listCheckAll, previewRefreshBtn, previewUrlInput, previewVp, renderMcpList, sortState, sortTypeMap, switchPreviewTab } from './preview.js';
 import { chatDoSend, chatInput, chatSendBtn, doSend, refreshChatSend } from './send.js';
 import { bindAddDropdown } from './plus-menu.js';
@@ -153,6 +153,10 @@ function initComposer() {
   document.addEventListener('lingee:task-updated', function (event) {
     if (event.detail?.task?.id === conversationTaskId) renderConversationTaskReference();
     if (event.detail?.task?.id === activeSessionTaskId) renderChatTaskSide();
+    var selected = chatViewerTabs.find(function (tab) { return tab.key === chatViewerActiveKey; });
+    if (selected?.kind === 'task' && selected.taskId === event.detail?.task?.id) {
+      refreshMountedTaskDetail(selected.taskId);
+    }
   });
   document.getElementById('chatStageConfirmBtn').addEventListener('click', confirmChatStage);
   document.getElementById('chatCurrentStageToggle').addEventListener('click', function () {

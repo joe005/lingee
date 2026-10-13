@@ -8,7 +8,7 @@ import { taskExecutionStages } from '../tasks-v2/task-execution.js';
 import { tkAnswerTaskSessionQuestion, tkGetMySessions, tkTaskSessionOpeningMessage } from '../tasks-v2/task-sessions.js';
 import { appendAssistantMessage, appendUserMessage, escapeHtml, messagesList, resolveChatTeam, scrollChatBottom, statusConversationOpeningText, taskStageArtifact } from './messages.js';
 import { closeTaskExceptionHistory } from './task-history.js';
-import { activeResponseRun, activeSessionId, activeSessionTaskId, addSessionExchange, chatSessions, conversationTaskId, createChatSession, finishSessionExchange, isMyChatSession, renderChatSessions, saveChatSessions, seedCosmicDemoSessions, set_activeResponseRun } from './sessions.js';
+import { taskConversationNeedsReply, activeResponseRun, activeSessionId, activeSessionTaskId, addSessionExchange, chatSessions, conversationTaskId, createChatSession, finishSessionExchange, isMyChatSession, renderChatSessions, saveChatSessions, seedCosmicDemoSessions, set_activeResponseRun } from './sessions.js';
 import { openChatSession } from './session-open.js';
 import { refreshChatStageConfirm } from './task-stage-confirm.js';
 import { openChatDocViewer } from './doc-viewer.js';
@@ -227,12 +227,16 @@ function renderChatTaskSide() {
       if (row.id === task.executionStageId && state !== 'done' && task.status === 'blocked') state = 'blocked';
       else if (row.id === task.executionStageId && state !== 'done' && task.status === 'in_review') state = 'review';
       else if (row.id === task.executionStageId && task.status === 'in_progress' && state === 'pending') state = 'running';
-      var label = state === 'done' ? '已完成' : state === 'running' ? '执行中' : state === 'review' ? '待审核' : state === 'blocked' ? '已阻塞' : index === stageIndex && task.status === 'backlog' ? '待开始' : '未开始';
+      var label = row.id === task.executionStageId && state === 'running' && taskConversationNeedsReply(task, true) ? '待回答' : state === 'done' ? '已完成' : state === 'running' ? '执行中' : state === 'review' ? '待评审' : state === 'blocked' ? '已阻塞' : index === stageIndex && task.status === 'backlog' ? '待开始' : '未开始';
       var handlerId = row.id === task.executionStageId ? tkCurrentStageHandlerId(task) || row.assigneeId : row.assigneeId || (!task.executionPlan?.length ? task.assignee : '');
       var handlerName = people.find(function (person) { return person.id === handlerId; })?.name || '待分配';
       var indexContent = state === 'done' ? '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4.5 10 3.5 3.5 7.5-8"/></svg>' : index + 1;
+      var autoPass = planStage?.requiresConfirmation === false;
+      var auditBadge = '<span class="chat-stage-audit-mode">' + (autoPass ? '自动审核' : '人工评审') + '</span>';
+      var reviewerText = '评审人 ' + escapeHtml(handlerName);
+      var horizontalStages = stagePanel.classList.contains('is-horizontal');
       var isNextStage = row.id === task.executionStageId && task.status !== 'done' && state !== 'done';
-      return '<li class="chat-current-stage-row is-' + state + (isNextStage ? ' is-current' : '') + '"' + (isNextStage ? ' aria-current="step"' : '') + '><span class="chat-current-stage-index" aria-label="第' + (index + 1) + '阶段' + (state === 'done' ? '已完成' : '') + '">' + indexContent + '</span><span class="chat-current-stage-row-main"><strong>' + escapeHtml(row.name || '未命名阶段') + '</strong><small><span class="chat-current-stage-handler-label">处理人 </span>' + escapeHtml(handlerName) + '</small></span><span class="chat-current-stage-status">' + label + '</span></li>';
+      return '<li class="chat-current-stage-row is-' + state + (isNextStage ? ' is-current' : '') + '"' + (isNextStage ? ' aria-current="step"' : '') + '><span class="chat-current-stage-index" aria-label="第' + (index + 1) + '阶段' + (state === 'done' ? '已完成' : '') + '">' + indexContent + '</span><span class="chat-current-stage-row-main"><strong>' + escapeHtml(row.name || '未命名阶段') + (horizontalStages ? '' : auditBadge) + '</strong>' + (horizontalStages ? auditBadge : '') + '<small>' + reviewerText + '</small></span><span class="chat-current-stage-status">' + label + '</span></li>';
     }).join('');
   } else { stagePanel.removeAttribute('data-task-id'); stagePanel.removeAttribute('data-session-id'); }
   /* 任务会话不提供历史版本入口，应用开发的 workspace 会话保留。 */

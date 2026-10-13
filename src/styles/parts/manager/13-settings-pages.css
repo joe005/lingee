@@ -56,6 +56,14 @@
   border-color: var(--border-hover);
   background: var(--hover);
 }
+#view-manager .mgr-pg-btn[data-mgr-pg-del] {
+  color: var(--text-secondary);
+}
+#view-manager .mgr-pg-btn[data-mgr-pg-del]:hover:not(:disabled) {
+  border-color: var(--danger-bg);
+  background: var(--danger-bg);
+  color: var(--danger);
+}
 #view-manager .mgr-pg-btn:focus-visible,
 #view-manager .mgr-pg-check:focus-visible,
 #view-manager .mgr-pg-input:focus-visible {

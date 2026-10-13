@@ -13,6 +13,8 @@
   }
   .ctx-item:hover{background:var(--neutral-50);color:var(--neutral-900)}
   .ctx-item .ic{width:16px;height:16px;color:var(--neutral-600);flex:none}
+  .ctx-item.danger,.ctx-item.danger .ic{color:var(--danger)}
+  .ctx-item.danger:hover{background:var(--danger-bg);color:var(--danger)}
   .ctx-item .ctx-right{margin-left:auto;color:var(--text-soft);width:14px;height:14px;flex:none}
   .ctx-sep{height:1px;background:var(--border);margin:4px 6px}
 
