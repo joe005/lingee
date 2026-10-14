@@ -6,8 +6,10 @@ import { tkCurrentStageHandlerId, tkCurrentUserId, tkGetPerson, tkProjectById, t
    - Git 随客户端内置，不要求用户安装；
    - Git 账号按平台（主机）登录一次，所有项目按仓库主机自动匹配，不在项目里另选；
      一期登录方式：浏览器登录（平台已开启时）、访问令牌；不检测或配置 SSH。
-   - 项目拉取到本机目录一次（默认目录或已有目录）；
-   设置页和顶部「本地环境」浮层里每个项目只有一个「初始化」：登录账号（本机已有凭据就直接用），再选目录并下载；
+   - 项目初始化到本机目录一次：默认是工作区目录下的「项目名」文件夹（与任务执行同一目录），可改为工作区目录内的其他文件夹；
+     目录里已有该仓库就直接使用，否则在原目录就地初始化并保留已有文件；
+   设置页和顶部「本地环境」浮层里每个项目只有一个「初始化」：先在弹窗确认账号与目录（可更改目录），再初始化；
+   「我的项目」列出本人参与的全部研发项目，没配仓库的标「未配置仓库」，SSH 地址标「SSH 仓库」不检测；
    设置页打开时不检测，展示上次检测结果（按人保存），点「检测」才检测；没有 Git 时引导下载；
    任务开始前未就绪时走对话（「本地环境配置」技能，composer/local-env-chat.js，本模块发 lingee:local-env-chat 事件打开）；
    换账号、改目录在「项目设置」弹窗里。
@@ -17,15 +19,15 @@ import { tkCurrentStageHandlerId, tkCurrentUserId, tkGetPerson, tkProjectById, t
 
 var LD_KEY = 'lingee_local_dev_v1';
 var dirProjectId = '';
-var dirMode = 'auto';
-var dirExistingPath = '';
+var dirMode = 'auto';        /* 初始化弹窗：auto 默认目录，existing 自定义目录 */
+var dirPath = '';            /* 自定义目录 */
+var dirSettings = false;     /* 项目设置：同一弹窗，主按钮为「保存」 */
 var dirPulling = 0;
 var authHost = '';
 var authOnSaved = null;
 var authCustom = false;      /* 「添加账号」：由用户选择平台，自建 GitLab 填写地址 */
 var authPlatform = 'GitLab';
 var detecting = false;
-var dirOptionsOpen = false;
 var dirOnReady = null;
 var dirRun = 0;
 var authRun = 0;
@@ -82,11 +84,13 @@ function ldRemoteProtocol(url) { return /^https?:\/\//i.test(String(url || '').t
 export function ldCloneUrl(info) { return info.httpsRepo; }
 function ldAuthProtocol() { return 'https'; }
 function ldBindingProtocol(binding) { return binding?.protocol || 'https'; }
-/* 项目目录：默认放在工作区旁的 ~/lingeebuild/repositories/<平台主机>/<仓库路径>，也可以为每个项目指定已有目录。
-   用完整路径而不是仓库名：不同组织下同名的仓库不会撞到同一个目录；同一个仓库的多个项目共用一份代码 */
-export function ldDefaultPath(info) { return '~/lingeebuild/repositories/' + info.host.replace(/[^\w.-]/g, '-') + '/' + (info.path || info.name).replace(/[^\w./-]/g, '-'); }
-/* 本机配置写在仓库外，不改动仓库文件；项目指令（AGENTS.md 等）随仓库维护，不在每台电脑上生成 */
-export function ldLocalConfigPath(projectId) { return '~/.lingee/projects/' + projectId + '.json'; }
+/* 项目目录：与任务执行（harness）同一目录。默认为工作区目录下的「项目名」文件夹，可改为工作区目录内的其他文件夹；
+   任务执行只接受工作区目录内的目录，所以不能选 ~/Projects 等其他位置。工作区目录按登录身份区分，演示固定一个。 */
+export var LD_WORKSPACE_ROOT = '~/lingeebuild/workspaces/<身份>';
+export function ldDefaultPath(project) { return LD_WORKSPACE_ROOT + '/' + String(project?.name || project?.id || 'project').replace(/[\\/:*?"<>|]/g, '-'); }
+export function ldInsideWorkspace(path) { return String(path || '').indexOf(LD_WORKSPACE_ROOT + '/') === 0; }
+/* 项目目录绑定：与任务执行共用，写在工作区目录的 .lingee-project-bindings 下，不改动仓库文件 */
+export function ldLocalConfigPath(projectId) { return LD_WORKSPACE_ROOT + '/.lingee-project-bindings/' + projectId + '.json'; }
 function ldNow() {
   var d = new Date();
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0')
@@ -118,6 +122,7 @@ export function ldGitUsername() {
   return prefix || 'user' + String(me.id || tkCurrentUserId() || '').replace(/\D/g, '');
 }
 export function ldAuthUser(auth) { return auth.username || ldGitUsername(); }
+export function ldAuthEmail(auth) { return auth ? auth.email || tkGetPerson(tkCurrentUserId())?.email || '' : ''; }
 /* 账号下方的来源说明；界面上不出现令牌本身 */
 export function ldSourceLabel(auth) {
   if (auth.source === 'local') return '本机凭据';
@@ -163,13 +168,15 @@ function ldAuthFor(host, userId) {
   return Object.assign({}, auth, { expired: !!auth.expiresAt && auth.expiresAt < new Date().toISOString().slice(0, 10) });
 }
 /* 账号按仓库主机自动匹配；写权限针对具体仓库，保存账号时判断不了，拉取或绑定目录时校验并记在 binding.writable 上 */
-var LD_STATUS_LABELS = { ready:'已就绪', download:'未初始化', login:'未登录', expired:'凭据失效', noaccess:'无权访问', offline:'无法连接', mismatch:'目录不匹配', git:'Git 不可用', invalid:'地址无效', unchecked:'待检测' };
+var LD_STATUS_LABELS = { ready:'已就绪', download:'未初始化', login:'未登录', expired:'凭据失效', noaccess:'无权访问', offline:'无法连接', mismatch:'目录不匹配', git:'Git 不可用', invalid:'地址无效', norepo:'未配置仓库', ssh:'SSH 仓库', unchecked:'待检测' };
 /* 状态颜色：已就绪绿，未初始化黄，地址无效、凭据失效红，其余橙 */
-function ldStatusTone(key) { return key === 'ready' ? 'is-ok' : key === 'download' ? 'is-pending' : key === 'invalid' || key === 'expired' ? 'is-danger' : key === 'unchecked' ? 'is-muted' : 'is-warn'; }
+function ldStatusTone(key) { return key === 'ready' ? 'is-ok' : key === 'download' ? 'is-pending' : key === 'invalid' || key === 'expired' ? 'is-danger' : ['unchecked', 'norepo', 'ssh'].includes(key) ? 'is-muted' : 'is-warn'; }
 export function ldProjectStatus(projectId, userId) {
   var info = ldRepoInfo(tkProjectById(projectId));
   if (!info) return { needed:false, ready:true };
-  if (!info.valid) return { needed:true, ready:false, invalid:true, info:info, key:'invalid', label:'地址无效', reason:'仓库地址「' + info.repo + '」不是有效的 HTTPS 地址，请在项目设置中修正' };
+  if (!info.valid) return { needed:true, ready:false, invalid:true, info:info, key:'invalid', label:'地址无效', reason:'仓库地址「' + info.repo + '」不是有效的仓库地址，请在项目设置中修正' };
+  /* 一期本页只管 HTTPS；SSH 地址按本机已有 SSH 配置使用，不检测、不初始化 */
+  if (ldRemoteProtocol(info.repo) !== 'https') return { needed:false, ready:true, ssh:true, info:info, key:'ssh', label:'SSH 仓库', reason:'SSH 地址按本机已有 SSH 配置使用，本页只管理 HTTPS 账号' };
   if (ldStateOf(userId).gitMissing) return { needed:true, ready:false, info:info, key:'git', label:'Git 不可用', reason:'本机没有安装 Git，安装后点「检测」' };
   var auth = ldAuthFor(info.host, userId);
   var binding = ldStateOf(userId).bindings[projectId] || null;
@@ -188,25 +195,25 @@ export function ldProjectStatus(projectId, userId) {
       : key === 'noaccess' ? ldAuthUser(auth) + ' 没有该仓库的访问权限，请更换账号或联系项目管理员' : '' };
 
 }
+/* 有仓库的项目；设置页「我的项目」另外列出没配仓库的项目 */
 function ldMyDevProjects() {
   return tkProjectsForCurrentUser().filter(function (project) { return !!ldRepoInfo(project); });
 }
 function ldProjectsOnHost(host) {
   return ldMyDevProjects().filter(function (project) { return ldRepoInfo(project).host === host; });
 }
-/* 需要本人配置的项目；地址无效的要到 Manage 修正，不算在内 */
+/* 需要本人配置的项目；地址无效的要到 Manage 修正，SSH 仓库不检测，都不算在内 */
 export function ldPendingProjects() {
   return ldMyDevProjects().filter(function (project) { var status = ldProjectStatus(project.id); return !status.ready && !status.invalid; });
 }
 
 /* ---------- 项目目录 ---------- */
-/* 一期默认下载 HTTPS；指定目录在绑定前校验协议和仓库。 */
+/* 记录项目目录绑定（任务执行读同一份）；mode 为 auto（默认目录）或 existing（更改过的目录） */
 export function ldBindDir(projectId, path, mode) {
   var info = ldRepoInfo(tkProjectById(projectId));
   var mine = ldMine();
   var auth = info ? mine.auths[info.host] : null;
-  var protocol = mode === 'existing' ? ldRemoteProtocol(ldDirRemote(info, path)) : ldAuthProtocol(auth);
-  mine.bindings[projectId] = { path:path, mode:mode, protocol:protocol, branch:info?.baseBranch || 'main', writable:ldPushCheck(auth), syncedAt:ldNow() };
+  mine.bindings[projectId] = { path:path, mode:mode, protocol:ldAuthProtocol(auth), branch:info?.baseBranch || 'main', writable:ldPushCheck(auth), syncedAt:ldNow() };
   ldSaveMine(mine);
   ldRefresh();
 }
@@ -216,20 +223,22 @@ export function ldMarkInitialized(projectId) {
   mine.bindings[projectId].initializedAt = ldNow();
   ldSaveMine(mine);
 }
-/* 读取目录的 origin 远端，统一写法后与项目仓库比较。
-   演示：已有目录默认使用 HTTPS；路径含 https / ssh 时用对应协议，含 other / 别的 视为别的仓库 */
-export function ldDirRemote(info, path) {
-  if (/other|别的/.test(path)) return 'https://' + info.host + '/someone/other.git';
-  if (/https/i.test(path)) return info.httpsRepo;
-  if (/ssh/i.test(path)) return info.sshRepo;
-  return info.httpsRepo;
+/* 校验所选目录（真实客户端读取目录里的仓库与目录标记）：
+   - 必须在工作区目录内；目录里是别的仓库、已被其他项目使用、或已有文件与仓库文件同名时失败，原目录和原绑定不变；
+   - 原目录下还有任务工作区时不允许更改目录（进行中的任务封存时要找原执行目录）。
+   演示：路径含 outside 视为工作区外，含 other / 别的 视为别的仓库，含 used 视为已被其他项目使用，含 conflict 视为同名文件冲突，
+   项目设置里路径含 busy 的原目录视为还有任务工作区。 */
+export function ldCheckDir(projectId, path) {
+  var current = ldMine().bindings[projectId];
+  if (!ldInsideWorkspace(path) || /outside/i.test(path)) return '项目目录必须在工作区目录（' + LD_WORKSPACE_ROOT + '）内';
+  if (current && current.path !== path && /busy/i.test(current.path)) return '原目录下还有任务工作区，请等任务完成并封存后再更改目录';
+  if (/other|别的/.test(path)) return '目录里的仓库与项目仓库地址不一致';
+  if (/used/i.test(path)) return '该目录已被其他项目使用';
+  if (/conflict/i.test(path)) return '目录里已有文件与仓库文件同名，Git 未覆盖。请移走或改名这些文件后重试';
+  return '';
 }
-export function ldCheckExistingDir(info, path) {
-  if (ldRemoteProtocol(ldDirRemote(info, path)) !== 'https') return '一期只支持 HTTPS，请使用默认目录或选择 HTTPS 仓库目录，原目录保持不变';
-  return ldRemoteKey(ldDirRemote(info, path)) === ldRemoteKey(info.repo) ? '' : '该目录的远端地址与项目仓库不一致';
-}
-/* 演示：系统目录选择器固定返回 ~/Projects/<仓库名> */
-function ldPickExistingDir(info) { return '~/Projects/' + info.name; }
+/* 演示：系统目录选择器打开在工作区目录，固定返回其中的 <仓库名> 文件夹 */
+function ldPickDir(info) { return LD_WORKSPACE_ROOT + '/' + info.name; }
 
 /* ---------- 打开智能配置（对话） ----------
    由「本地环境配置」技能在对话里完成，一次对话只配置一个项目：检查 Git → Git 账号 → 项目目录 → 拉取代码 → 初始化本机配置。
@@ -308,20 +317,21 @@ function ldQuickSetup(projectId) {
   ldOpenDirModal(projectId);
 }
 
-/* ---------- 更改项目目录（设置页） ----------
-   已就绪项目在「项目设置」里更改目录。新目录拉取或校验成功后才替换原绑定。 */
-export function ldOpenDirModal(projectId, onReady) {
+/* ---------- 初始化项目 / 更改项目目录 ----------
+   初始化前在弹窗里选择默认目录或自定义目录（工作区目录内）；已初始化的项目在「项目设置」里更改目录。
+   目录里已有该仓库就直接使用，否则在原目录就地初始化并保留已有文件；校验失败时原目录和原绑定不变。 */
+export function ldOpenDirModal(projectId, onReady, settings) {
   var project = tkProjectById(projectId);
   if (!ldRepoInfo(project)) { toast('该项目未配置代码仓库', 'warning'); return; }
   var binding = ldMine().bindings[projectId];
   dirProjectId = projectId;
   dirRun++;
   dirOnReady = onReady || null;
-  dirOptionsOpen = false;
-  dirMode = binding?.mode === 'existing' && ldBindingProtocol(binding) === 'https' ? 'existing' : 'auto';
-  dirExistingPath = binding?.mode === 'existing' ? binding.path : '';
+  dirSettings = !!settings && !!binding;
+  dirMode = binding && binding.path !== ldDefaultPath(project) ? 'existing' : 'auto';
+  dirPath = dirMode === 'existing' ? binding.path : '';
   dirPulling = 0;
-  $('#ldDirTitle').textContent = binding && ldProjectStatus(projectId).ready && !onReady ? '更改项目目录' : '初始化项目';
+  $('#ldDirTitle').textContent = dirSettings ? '项目设置' : '初始化项目';
   $('#ldDirSub').textContent = project.name;
   $('#ldDirSub').title = project.name;
   renderDirModal();
@@ -332,47 +342,40 @@ function renderDirModal() {
   var info = status.info;
   if (!info) return;
   var busy = dirPulling ? ' disabled' : '';
-  var first = !status.binding;
-  /* 同一个仓库的其他项目已经拉到默认目录时直接共用，不重复拉取 */
-  var mine = ldMine(), defaultPath = status.binding?.mode === 'auto' && status.protocolOk ? status.binding.path : ldDefaultPath(info);
-  var sharedWith = ldMyDevProjects().find(function (project) { return project.id !== dirProjectId && mine.bindings[project.id]?.path === defaultPath; });
-  var target = dirMode === 'existing' ? dirExistingPath : defaultPath;
-  $('#ldDirBody').innerHTML = (status.authOk ? '<p class="ld-dir-account"><span title="' + ldEsc(ldAuthUser(status.auth) + ' · ' + info.host) + '">账号：' + ldEsc(ldAuthUser(status.auth)) + ' · ' + ldEsc(info.host) + '</span><button type="button" class="ld-link" data-ld-auth-open="' + ldEsc(info.host) + '"' + busy + '>更换账号</button></p>'
+  var defaultPath = ldDefaultPath(tkProjectById(dirProjectId));
+  var target = dirMode === 'existing' ? dirPath : defaultPath;
+  $('#ldDirBody').innerHTML = (dirSettings && !status.ready ? '<div class="ld-warn"><span>' + ldEsc(status.reason) + '</span></div>' : '')
+    + (status.authOk ? '<p class="ld-dir-account"><span title="' + ldEsc(ldAuthUser(status.auth) + ' · ' + info.host) + '">账号：' + ldEsc(ldAuthUser(status.auth)) + ' · ' + ldEsc(info.host) + '</span><button type="button" class="ld-link" data-ld-auth-open="' + ldEsc(info.host) + '"' + busy + '>更换账号</button></p>'
       : '<div class="ld-warn"><span>未登录 ' + ldEsc(info.host) + ' 的 Git 账号，登录后才能下载代码</span><button type="button" class="ld-btn ld-btn--primary" data-ld-auth-open="' + ldEsc(info.host) + '">登录</button></div>')
-    + '<div class="ld-field-label">代码保存位置</div>'
-    + '<div class="ld-dir-target"><span class="ld-dir-mode">' + (dirMode === 'existing' ? '指定' : '默认') + '</span><code title="' + ldEsc(target) + '">' + ldEsc(target || '未选择') + '</code></div>'
-    + '<button type="button" class="ld-link" data-ld-dir-options aria-expanded="' + dirOptionsOpen + '" aria-controls="ldDirOptions"' + busy + '>' + (dirOptionsOpen ? '收起位置选项' : '更改位置 / 使用已有代码') + '</button>'
-    + '<div id="ldDirOptions"' + (dirOptionsOpen ? '' : ' hidden') + '>'
-    + '<div class="ld-choice" role="radiogroup" aria-label="项目目录">'
-    + '<label class="ld-choice-item"><input type="radio" name="ldDirMode" value="auto"' + (dirMode === 'auto' ? ' checked' : '') + busy + '><span>默认目录<code class="ld-choice-path" title="' + ldEsc(defaultPath) + '">' + ldEsc(defaultPath) + '</code>'
-      + (sharedWith ? '<span class="ld-muted">（已由「' + ldEsc(sharedWith.name) + '」拉取，直接共用）</span>' : '') + '</span></label>'
-    + '<label class="ld-choice-item"><input type="radio" name="ldDirMode" value="existing"' + (dirMode === 'existing' ? ' checked' : '') + busy + '><span>使用本机已有代码<small class="ld-choice-hint">不重新下载，只校验目录是不是该项目的 HTTPS 仓库，原代码不会修改</small></span></label>'
+    + '<div class="ld-field-label">代码仓库</div><p class="ld-dir-repo"><code title="' + ldEsc(info.repo) + '">' + ldEsc(info.repo.replace(/^https?:\/\//, '')) + '</code></p>'
+    + '<div class="ld-field-label" id="ldDirModeLabel">项目目录</div>'
+    + '<div class="ld-choice" role="radiogroup" aria-labelledby="ldDirModeLabel">'
+    + '<label class="ld-choice-item"><input type="radio" name="ldDirMode" value="auto"' + (dirMode === 'auto' ? ' checked' : '') + busy + '><span>默认目录<code class="ld-choice-path" title="' + ldEsc(defaultPath) + '">' + ldEsc(defaultPath) + '</code></span></label>'
+    + '<label class="ld-choice-item"><input type="radio" name="ldDirMode" value="existing"' + (dirMode === 'existing' ? ' checked' : '') + busy + '><span>自定义目录<small class="ld-choice-hint">选择工作区目录内的文件夹；已有该仓库就直接使用，否则在该目录下载代码，已有文件保留</small></span></label>'
     + '</div>'
-    + (dirMode === 'existing' ? '<div class="ld-path-row"><input type="text" class="ld-input" id="ldExistingPath" readonly placeholder="未选择" value="' + ldEsc(dirExistingPath) + '" aria-label="已有目录"><button type="button" class="ld-btn" data-ld-pick-dir' + busy + '>选择…</button></div>'
-      : '')
-    + '</div>'
+    + (dirMode === 'existing' ? '<div class="ld-path-row"><input type="text" class="ld-input" id="ldExistingPath" readonly placeholder="未选择" value="' + ldEsc(dirPath) + '" aria-label="自定义目录"><button type="button" class="ld-btn" data-ld-pick-dir' + busy + '>选择…</button></div>' : '')
+    + (dirSettings ? '<button type="button" class="ld-link" data-ld-reveal>打开目录</button>' : '')
     + (!status.writeOk ? '<div class="ld-warn"><span>' + ldEsc(status.reason) + '</span><button type="button" class="ld-btn" data-ld-auth-open="' + ldEsc(info.host) + '">更换账号</button></div>' : '')
-    + (dirPulling ? '<div class="ld-progress" role="progressbar" aria-label="' + (dirMode === 'existing' ? '校验目录' : '拉取代码') + '" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + dirPulling + '"><span style="width:' + dirPulling + '%"></span></div>' : '');
+    + (dirPulling ? '<div class="ld-progress" role="progressbar" aria-label="初始化" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + dirPulling + '"><span style="width:' + dirPulling + '%"></span></div>' : '');
   var done = $('#ldDirDone');
-  done.disabled = !status.authOk || !!dirPulling || (dirMode === 'existing' && !dirExistingPath);
-  done.textContent = dirPulling ? (dirMode === 'existing' ? '校验中…' : '下载中…') : !first && status.ready && !dirOnReady ? '保存目录' : '初始化';
+  /* 项目设置：目录改了才能保存，保存即在新目录完成初始化 */
+  done.disabled = !status.authOk || !!dirPulling || !target || (dirSettings && target === status.binding?.path);
+  done.textContent = dirPulling ? '初始化中…' : dirSettings ? '保存' : '初始化';
 }
 function submitDirModal() {
   var status = ldProjectStatus(dirProjectId);
   if (!status.authOk || dirPulling) return;
-  if (dirMode === 'existing') {
-    if (!dirExistingPath) { toast('请先选择目录', 'warning'); return; }
-    var error = ldCheckExistingDir(status.info, dirExistingPath);
-    if (error) { toast(error + '，请重新选择', 'error'); return; }
-  }
-  var path = dirMode === 'existing' ? dirExistingPath : status.binding?.mode === 'auto' && status.protocolOk ? status.binding.path : ldDefaultPath(status.info);
+  if (dirMode === 'existing' && !dirPath) { toast('请先选择目录', 'warning'); return; }
+  var path = dirMode === 'existing' ? dirPath : ldDefaultPath(tkProjectById(dirProjectId));
+  var error = ldCheckDir(dirProjectId, path);
+  if (error) { toast(ldEsc(error), 'error'); return; }
   var projectId = dirProjectId, mode = dirMode, first = !status.binding;
   dirPulling = 8;
   renderDirModal();
   var run = ++dirRun;
   var timer = setInterval(function () {
     if (dirProjectId !== projectId || run !== dirRun) { clearInterval(timer); return; }
-    dirPulling = Math.min(100, dirPulling + (mode === 'existing' ? 46 : 23));
+    dirPulling = Math.min(100, dirPulling + 23);
     if (dirPulling < 100) { renderDirModal(); return; }
     clearInterval(timer);
     dirPulling = 0;
@@ -383,12 +386,13 @@ function submitDirModal() {
     ldRecordChecks(after.info.host);
     var done = dirOnReady;
     closeDirModal();
-    if (after.ready) toast(first ? '「' + ldEsc(tkProjectById(projectId)?.name || '') + '」已就绪，代码在 ' + ldEsc(path) : mode === 'existing' ? '已更改为指定目录' : '代码已拉取到默认目录', 'success');
+    toast(first ? '「' + ldEsc(tkProjectById(projectId)?.name || '') + '」已就绪，代码在 ' + ldEsc(path) : '项目目录已更改为 ' + ldEsc(path), 'success');
     if (done) done();
   }, 320);
 }
 function closeDirModal() {
   dirProjectId = '';
+  dirSettings = false;
   dirRun++;
   dirOnReady = null;
   dirPulling = 0;
@@ -487,16 +491,12 @@ function saveAuth(host, entry) {
 }
 
 /* ---------- 项目设置弹窗 ---------- */
+/* 项目设置与初始化共用同一弹窗布局（账号、代码仓库、项目目录二选一），只有标题和主按钮不同 */
 export function ldOpenProjectSettings(projectId) {
   var project = tkProjectById(projectId);
   if (!project) { toast('项目不存在或已移除', 'warning'); return; }
-  settingsProjectId = projectId;
   toggleNavPop(false);
-  $('#ldProjectTitle').textContent = '项目设置';
-  $('#ldProjectSub').textContent = project.name;
-  $('#ldProjectSub').title = project.name;
-  renderProjectSettings();
-  ldShow('#ldProjectOverlay');
+  ldOpenDirModal(projectId, null, true);
 }
 function renderProjectSettings() {
   var project = tkProjectById(settingsProjectId);
@@ -519,8 +519,8 @@ function renderProjectPanel(project) {
     + '<dl class="ld-kv">'
     + row('Git 账号', authValue, authAction)
     + row('代码仓库', '<code title="' + ldEsc(info.repo) + '">' + ldEsc(info.repo.replace(/^https?:\/\//, '')) + '</code>' + muted(' · ' + ldEsc(info.baseBranch)))
-    + row('项目目录', binding ? '<span class="ld-dir-mode">' + (binding.mode === 'existing' ? '指定' : '默认') + '</span><code title="' + ldEsc(binding.path) + '">' + ldEsc(binding.path) + '</code>' : muted('未设置'),
-        binding ? '<button type="button" class="ld-btn" data-ld-reveal>打开</button><button type="button" class="ld-btn" data-ld-dir-open="' + ldEsc(project.id) + '"' + (status.authOk ? '' : ' disabled title="请先登录 Git 账号"') + '>更改</button>'
+    + row('项目目录', binding ? '<code title="' + ldEsc(binding.path) + '">' + ldEsc(binding.path) + '</code>' : muted('未初始化'),
+        binding ? '<button type="button" class="ld-btn" data-ld-dir-open="' + ldEsc(project.id) + '"' + (status.authOk ? '' : ' disabled title="请先登录 Git 账号"') + '>更改目录</button><button type="button" class="ld-btn" data-ld-reveal>打开</button>'
           : '<button type="button" class="ld-btn" data-ld-dir-open="' + ldEsc(project.id) + '"' + (status.authOk ? '' : ' disabled title="请先登录 Git 账号"') + '>设置</button>')
     + '</dl>'
     + '</div>';
@@ -571,7 +571,7 @@ var LD_ICONS = {
   refresh: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>',
   plus: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>',
   key: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7.5" cy="15.5" r="4.5"/><path d="m10.7 12.3 9.8-9.8"/><path d="m16 7 3 3"/><path d="m18.5 4.5 2 2"/></svg>',
-  repo: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="8" r="2"/><path d="M6 7v10"/><path d="M18 10c0 4-6 3-12 7"/></svg>',
+  folder: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7.5A2.5 2.5 0 0 1 5.5 5h3.6l2 2.2h7.4A2.5 2.5 0 0 1 21 9.7v7.8a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5z"/></svg>',
 };
 function ldListHead(cols) {
   return '<li class="ld-list-head" aria-hidden="true"><span class="ld-list-main">' + cols[0] + '</span><span class="ld-list-col">' + cols[1] + '</span><span class="ld-col-state">' + cols[2] + '</span><span class="ld-col-act">' + cols[3] + '</span></li>';
@@ -582,7 +582,7 @@ function ldCardHead(icon, title, actions) {
 /* ---------- 检测结果 ----------
    设置页打开时不检测，展示上次结果；点「检测」或登录、初始化成功后更新（只更新相关平台）。
    结果按登录人保存（真实客户端存本机配置目录，只有状态，不含凭据）。 */
-var LD_PUBLIC_HOSTS = ['gitee.com'];
+var LD_PUBLIC_HOSTS = ['github.com', 'gitee.com'];
 var LD_GIT_DOWNLOAD = /Windows/i.test(navigator.userAgent) ? 'https://git-scm.com/download/win' : /Mac/i.test(navigator.userAgent) ? 'https://git-scm.com/download/mac' : 'https://git-scm.com/downloads';
 function ldAccountKey(host) {
   if (ldMine().gitMissing) return 'git';
@@ -614,7 +614,7 @@ function ldDetect() {
     renderNavStatus();
   }, 900);
 }
-/* 只列项目用到的平台、已登录的平台，以及 Gitee 等公有平台 */
+/* 只列项目用到的平台、已登录的平台，以及 GitHub、Gitee 公有平台 */
 function ldSettingsHosts() {
   var hosts = ldMyDevProjects().map(function (project) { return ldRepoInfo(project); }).filter(function (info) { return info.valid; }).map(function (info) { return info.host; });
   return [...new Set(hosts.concat(Object.keys(ldMine().auths), LD_PUBLIC_HOSTS))];
@@ -634,8 +634,18 @@ function renderLocalPage() {
   if (!page || !$('#cv-local')?.classList.contains('active')) return;
   var mine = ldMine();
   var checks = mine.checks || { projects:{}, accounts:{} };
-  var projects = ldMyDevProjects();
-  var pending = projects.filter(function (project) { var key = checks.projects[project.id]; return key && !['ready', 'invalid'].includes(key); }).length;
+  /* 列出本人参与的全部项目：有仓库的在前，没配仓库的标「未配置仓库」 */
+  var all = tkProjectsForCurrentUser();
+  var projects = all.filter(function (project) { return !!ldRepoInfo(project); }).concat(all.filter(function (project) { return !ldRepoInfo(project); }));
+  /* 未初始化读本地即可判断，不用检测；其余按上次检测结果 */
+  var keyOf = function (project) {
+    var st = ldProjectStatus(project.id);
+    if (!st.info) return 'norepo';
+    if (st.invalid || st.ssh) return st.key;
+    if (checks.projects[project.id] === 'git') return 'git';
+    return st.binding ? checks.projects[project.id] : 'download';
+  };
+  var pending = projects.filter(function (project) { var key = keyOf(project); return key && !['ready', 'invalid', 'norepo', 'ssh'].includes(key); }).length;
   var gitMissing = Object.values(checks.accounts).includes('git') || Object.values(checks.projects).includes('git');
   var banner = gitMissing ? '<div class="ld-set-banner" role="alert"><span>本机没有安装 Git，安装后点「检测」。</span><button type="button" class="ld-set-btn ld-set-btn--primary" data-ld-download-git>下载 Git</button></div>' : '';
   var actions = (checks.checkedAt && !detecting ? '<span class="ld-checked-at">上次检测 ' + ldEsc(checks.checkedAt) + '</span>' : '')
@@ -645,26 +655,30 @@ function renderLocalPage() {
     + '<ul class="ld-list ld-list--auth" aria-label="Git 账号">' + ldListHead(['平台', '账号', '状态', '操作']) + ldSettingsHosts().map(function (host) {
       var auth = ldAuthFor(host);
       var key = checks.accounts[host];
-      var account = auth ? '<strong title="' + ldEsc(ldAuthUser(auth)) + '">' + ldEsc(auth.source === 'local' ? '本机凭据' : ldAuthUser(auth)) + '</strong><span>' + ldEsc(ldAccountSource(auth)) + '</span>' : '<span>—</span>';
+      /* 显示用户名，下方为邮箱与来源；演示邮箱取登录人邮箱，真实客户端取平台账号接口（取不到时只显示来源） */
+      var detail = [ldAuthEmail(auth), auth ? ldAccountSource(auth) : ''].filter(Boolean).join(' · ');
+      var account = auth ? '<strong title="' + ldEsc(ldAuthUser(auth)) + '">' + ldEsc(ldAuthUser(auth)) + '</strong><span title="' + ldEsc(detail) + '">' + ldEsc(detail) + '</span>' : '<span>—</span>';
       return '<li><span class="ld-list-main"><strong>' + ldEsc(ldHostPlatform(host)) + '</strong><span>' + ldEsc(host) + '</span></span>'
         + '<span class="ld-list-col ld-list-user">' + account + '</span>'
         + '<span class="ld-col-state">' + ldStateTag(key, LD_ACCOUNT_LABELS) + '</span>'
         + '<span class="ld-col-act"><button type="button" class="ld-set-btn' + (auth ? '' : ' ld-set-btn--primary') + '" data-ld-auth-open="' + ldEsc(host) + '">' + (auth ? '重新登录' : '登录') + '</button></span></li>';
     }).join('') + '</ul>';
-  var projectCard = ldCardHead('repo', '我的项目' + (pending ? '<small class="ld-set-count">' + pending + ' 个项目还没初始化</small>' : ''))
+  var projectCard = ldCardHead('folder', '我的项目' + (pending ? '<small class="ld-set-count">' + pending + ' 个项目需要处理</small>' : ''))
     + (projects.length ? '<ul class="ld-list" aria-label="我的项目">' + ldListHead(['项目', '项目目录', '状态', '操作']) + projects.map(function (project) {
       var st = ldProjectStatus(project.id);
-      var key = st.invalid ? 'invalid' : checks.projects[project.id];
-      /* 没初始化过的项目按默认目录展示 */
-      var dir = st.binding || { mode:'auto', path:ldDefaultPath(st.info) };
-      return '<li><span class="ld-list-main"><strong title="' + ldEsc(project.name) + '">' + ldEsc(project.name) + '</strong><span title="' + ldEsc(st.info.repo) + '">' + ldEsc(st.info.repo) + '</span></span>'
-        + '<span class="ld-list-col">' + (st.invalid ? '—' : '<span class="ld-dir-mode">' + (dir.mode === 'existing' ? '指定' : '默认') + '</span><code title="' + ldEsc(dir.path) + '">' + ldEsc(dir.path) + '</code>') + '</span>'
-        + '<span class="ld-col-state" title="' + ldEsc(key && key !== 'ready' ? st.reason : '') + '">' + ldStateTag(key) + '</span>'
-        + '<span class="ld-col-act">' + (st.invalid ? '<span class="ld-muted" title="' + ldEsc(st.reason) + '">在项目设置中修正</span>'
-          : key === 'ready' ? '<button type="button" class="ld-set-btn ld-set-btn--primary" data-ld-project-settings="' + ldEsc(project.id) + '">设置</button>'
-          : '<button type="button" class="ld-set-btn ld-set-btn--primary" data-ld-quick="' + ldEsc(project.id) + '">初始化</button>') + '</span></li>';
+      var key = keyOf(project);
+      /* 未初始化的项目不显示路径，目录在初始化弹窗里选择 */
+      var dir = st.binding;
+      var reason = key === 'norepo' ? '项目没有配置代码仓库，请在项目设置中填写仓库地址' : st.reason;
+      return '<li><span class="ld-list-main"><strong title="' + ldEsc(project.name) + '">' + ldEsc(project.name) + '</strong><span title="' + ldEsc(st.info?.repo || '') + '">' + ldEsc(st.info?.repo || '—') + '</span></span>'
+        + '<span class="ld-list-col">' + (dir && !st.invalid && !st.ssh ? '<code title="' + ldEsc(dir.path) + '">' + ldEsc(dir.path) + '</code>' : '—') + '</span>'
+        + '<span class="ld-col-state" title="' + ldEsc(key && key !== 'ready' ? reason : '') + '">' + ldStateTag(key) + '</span>'
+        + '<span class="ld-col-act">' + (key === 'invalid' || key === 'norepo' ? '<span class="ld-muted" title="' + ldEsc(reason) + '">在项目设置中修正</span>'
+          : key === 'ssh' ? '<span class="ld-muted">—</span>'
+          : key === 'download' ? '<button type="button" class="ld-set-btn ld-set-btn--primary" data-ld-quick="' + ldEsc(project.id) + '">初始化</button>'
+          : '<button type="button" class="ld-set-btn ld-set-btn--primary" data-ld-project-settings="' + ldEsc(project.id) + '">设置</button>') + '</span></li>';
     }).join('') + '</ul>'
-      : '<div class="ld-set-empty">你参与的项目都没有代码仓库</div>');
+      : '<div class="ld-set-empty">暂无项目</div>');
   page.innerHTML = banner
     + '<section class="ld-set-card">' + authCard + '</section>'
     + '<section class="ld-set-card">' + projectCard + '</section>'
@@ -722,9 +736,8 @@ export function initLocalDev() {
     var quick = t.closest('[data-ld-quick]');
     if (quick) { toggleNavPop(false); ldQuickSetup(quick.getAttribute('data-ld-quick')); return; }
     if (t.closest('[data-ld-open-settings]')) { toggleNavPop(false); window.cvSwitchView?.('local'); return; }
-    if (t.closest('[data-ld-dir-options]')) { dirOptionsOpen = !dirOptionsOpen; renderDirModal(); return; }
     if (t.closest('[data-ld-pick-dir]')) {
-      dirExistingPath = ldPickExistingDir(ldProjectStatus(dirProjectId).info);
+      dirPath = ldPickDir(ldProjectStatus(dirProjectId).info);
       renderDirModal();
       return;
     }

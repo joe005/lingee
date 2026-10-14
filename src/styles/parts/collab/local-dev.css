@@ -147,6 +147,8 @@
 .ld-dir-account{display:flex;align-items:center;gap:8px;min-width:0;margin:0 0 16px;font-size:14px;line-height:22px;color:var(--text-secondary)}
 .ld-dir-account>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ld-dir-account .ld-link{flex:none;font-size:14px}
+.ld-dir-repo{min-width:0;margin:4px 0 16px;font-size:13px;line-height:20px;color:var(--text-title)}
+.ld-dir-repo code{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ld-field-label{margin-bottom:8px;font-size:14px;font-weight:500;color:var(--text)}
 .ld-auth-lead{margin:0 0 16px;font-size:14px;line-height:22px;color:var(--text-secondary)}
 .ld-auth-modes span{color:var(--text-secondary)}

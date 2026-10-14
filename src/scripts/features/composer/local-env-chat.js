@@ -126,7 +126,7 @@ function initProject(session) {
   var env = session.localEnv, id = envId(env), status = ldProjectStatus(id);
   if (status.ready && !env.skipped) {
     ldMarkInitialized(id);
-    tools(env, '编辑了 1 个文件', [[ldLocalConfigPath(id), '项目目录、默认分支、Git 账号']]);
+    tools(env, '编辑了 1 个文件', [[ldLocalConfigPath(id), '项目目录绑定（与任务执行共用）']]);
     say(env, '「' + escapeHtml(projectName(id)) + '」的本地环境已就绪，代码在 ' + code(status.binding.path) + '。本机配置写在仓库之外，仓库文件不受影响。');
   } else {
     say(env, '「' + escapeHtml(projectName(id)) + '」这次没有配置好' + (status.reason ? '（' + escapeHtml(status.reason) + '）' : '') + '，点「继续配置」即可重试。');
