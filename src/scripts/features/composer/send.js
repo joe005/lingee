@@ -15,6 +15,7 @@ import { builderInputText, handleAssetCreateMessage, renderAssetEditChat } from 
 import { answerTaskQuestion, getConversationTask, renderChatTaskSide, renderConversationTaskReference } from './task-conversation.js';
 import { chatViewerActiveKey, chatViewerTabs, closeChatDocViewer, set_chatViewerActiveKey, set_chatViewerTabs } from './doc-viewer.js';
 import { simulateAIResponse } from './stream.js';
+import { handleLocalEnvSend } from './local-env-chat.js';
 /* 对话：新会话与对话页的发送、发送拦截器（拆自 composer.js） */
 
 /* 演示流程（如新会话里用智能体开发创建设备故障诊断助手）可接管首页发送；返回 true 表示已处理 */
@@ -111,6 +112,7 @@ function chatDoSend(){
   var t=builderInputText();
   if(!t){ chatInput.focus(); return; }
   if(chatSendInterceptor&&chatSendInterceptor(t)){ chatInput.innerHTML=''; refreshChatSend(); return; }
+  if(handleLocalEnvSend(t)){ chatInput.innerHTML=''; refreshChatSend(); chatInput.focus(); return; }
   var assetEditing=chatSessions.find(function(row){return row.id===activeSessionId&&row.assetEdit;});
   if(assetEditing){
     var edit=assetEditing.assetEdit;

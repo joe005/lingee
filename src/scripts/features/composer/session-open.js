@@ -16,6 +16,7 @@ import { refreshChatStageConfirm } from './task-stage-confirm.js';
 import { chatViewerActiveKey, chatViewerTabs, closeChatDocViewer, openChatDocViewer, set_chatViewerActiveKey, set_chatViewerTabs } from './doc-viewer.js';
 import { appendTaskReadingSummary, renderMarkdown, simulateAIResponse } from './stream.js';
 import { chatInput } from './send.js';
+import { openLocalEnvSession } from './local-env-chat.js';
 /* 对话：打开历史会话（拆自 composer.js） */
 
 function openChatSession(sessionId) {
@@ -58,6 +59,7 @@ function openChatSession(sessionId) {
     renderChatSessions();
     return;
   }
+  if (session.localEnv) { openLocalEnvSession(session); return; }
   if (session.taskCreate) {
     set_activePick({kind:'expert', id:'software-product-manager', auto:false});
     renderExpertChips();

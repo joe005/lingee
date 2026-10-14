@@ -1,19 +1,18 @@
-<!-- 本地开发 · 准备环境与 Git 认证弹窗。
-     开发在 Lingee 桌面客户端本地执行：Git 随客户端内置，用户只需按平台配置一次访问令牌，
-     再为项目绑定本地目录（自动拉取或使用已有目录）。内容由 features/collab/local-dev.js 渲染。 -->
-<div class="sync-overlay ld-overlay" id="ldSetupOverlay" style="display:none" aria-hidden="true">
-  <div class="sync-modal ld-modal" role="dialog" aria-modal="true" aria-labelledby="ldSetupTitle">
+<!-- 本地开发 · 项目设置、初始化项目 / 更改项目目录、登录或添加 Git 账号弹窗，以及顶部「本地环境」状态浮层。
+     智能配置在对话里由「本地环境配置」技能完成（composer/local-env-chat.js）。内容由 features/collab/local-dev.js 渲染。 -->
+<div class="sync-overlay ld-overlay" id="ldDirOverlay" style="display:none" aria-hidden="true">
+  <div class="sync-modal ld-modal" role="dialog" aria-modal="true" aria-labelledby="ldDirTitle">
     <div class="sync-modal__header">
       <div class="ld-modal-head">
-        <span class="sync-modal__title" id="ldSetupTitle">配置本地环境</span>
-        <span class="ld-modal-sub" id="ldSetupSub"></span>
+        <span class="sync-modal__title" id="ldDirTitle">更改项目目录</span>
+        <span class="ld-modal-sub" id="ldDirSub"></span>
       </div>
-      <button type="button" class="sync-modal__close" data-ld-setup-close aria-label="关闭"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      <button type="button" class="sync-modal__close" data-ld-dir-close aria-label="关闭"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
-    <div class="sync-modal__body" id="ldSetupBody"></div>
+    <div class="sync-modal__body" id="ldDirBody"></div>
     <div class="sync-modal__footer">
-      <button type="button" class="sync-modal__btn sync-modal__btn--ghost" data-ld-setup-close>稍后</button>
-      <button type="button" class="sync-modal__btn sync-modal__btn--primary" id="ldSetupDone" disabled>完成</button>
+      <button type="button" class="sync-modal__btn sync-modal__btn--ghost" data-ld-dir-close>取消</button>
+      <button type="button" class="sync-modal__btn sync-modal__btn--primary" id="ldDirDone" disabled>初始化</button>
     </div>
   </div>
 </div>
@@ -32,35 +31,37 @@
 <div class="sync-overlay ld-overlay ld-overlay--top" id="ldAuthOverlay" style="display:none" aria-hidden="true">
   <div class="sync-modal ld-modal ld-modal--auth" role="dialog" aria-modal="true" aria-labelledby="ldAuthTitle">
     <div class="sync-modal__header">
-      <span class="sync-modal__title" id="ldAuthTitle">Git 认证</span>
+      <div class="ld-modal-head">
+        <span class="sync-modal__title" id="ldAuthTitle">登录 Git 账号</span>
+        <span class="ld-modal-sub" id="ldAuthSub"></span>
+      </div>
       <button type="button" class="sync-modal__close" data-ld-auth-close aria-label="关闭"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
     <div class="sync-modal__body">
-      <div class="ld-field">
-        <label for="ldAuthHost">平台</label>
-        <div class="ld-auth-row">
-          <input type="text" id="ldAuthHost" class="ld-input" autocomplete="off" spellcheck="false">
-          <select id="ldAuthPlatform" class="ld-input ld-select" aria-label="平台类型">
-            <option value="GitLab">GitLab</option>
-            <option value="GitHub">GitHub</option>
-            <option value="Gitee">Gitee</option>
-            <option value="云效 Codeup">云效 Codeup</option>
-          </select>
+      <!-- 平台通常已知（标题下注明主机和类型）；「添加账号」时选择平台，自建 GitLab 填写地址。一期只用访问令牌 -->
+      <div class="ld-field" id="ldAuthPlatformBox" hidden>
+        <span class="ld-field-label" id="ldAuthPlatformLabel">平台</span>
+        <div class="ld-segment" role="radiogroup" aria-labelledby="ldAuthPlatformLabel">
+          <button type="button" class="ld-segment-item" role="radio" data-ld-auth-platform="GitLab">GitLab</button>
+          <button type="button" class="ld-segment-item" role="radio" data-ld-auth-platform="GitHub">GitHub</button>
+          <button type="button" class="ld-segment-item" role="radio" data-ld-auth-platform="Gitee">Gitee</button>
         </div>
       </div>
-      <div class="ld-field">
-        <div class="ld-label-row"><label for="ldAuthToken">访问令牌</label><button type="button" class="ld-link" id="ldAuthCreate">如何获取？</button></div>
-        <div class="ld-token-wrap">
-          <input type="password" id="ldAuthToken" class="ld-input" autocomplete="off" spellcheck="false" aria-describedby="ldAuthError">
-          <button type="button" class="ld-icon-btn" id="ldAuthEye" aria-label="显示令牌" aria-pressed="false"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
-        </div>
-        <p class="ld-error" id="ldAuthError" role="alert" hidden></p>
+      <div class="ld-field" id="ldAuthHostBox" hidden>
+        <label for="ldAuthHost">平台地址</label>
+        <input type="text" id="ldAuthHost" class="ld-input ld-auth-host" autocomplete="off" spellcheck="false" placeholder="如 git.kingdee.com" aria-describedby="ldAuthError">
       </div>
+      <div class="ld-field ld-field--token">
+        <div class="ld-label-row"><label for="ldAuthToken">访问令牌</label><button type="button" class="ld-link" id="ldAuthCreate">去平台创建</button></div>
+        <input type="password" id="ldAuthToken" class="ld-input ld-auth-token" autocomplete="off" spellcheck="false" aria-describedby="ldAuthHint ldAuthError">
+        <p class="ld-hint ld-hint--line" id="ldAuthHint"></p>
+      </div>
+      <p class="ld-error" id="ldAuthError" role="alert" hidden></p>
     </div>
     <div class="sync-modal__footer">
       <button type="button" class="sync-modal__btn sync-modal__btn--ghost" data-ld-auth-close>取消</button>
-      <button type="button" class="sync-modal__btn sync-modal__btn--primary" id="ldAuthSubmit">保存</button>
+      <button type="button" class="sync-modal__btn sync-modal__btn--primary" id="ldAuthSubmit">验证并登录</button>
     </div>
   </div>
 </div>
-<div class="ld-reminder" id="ldReminder" role="status" aria-live="polite" hidden></div>
+<div class="ld-nav-pop" id="ldNavPop" role="dialog" aria-label="本地环境未就绪" hidden></div>

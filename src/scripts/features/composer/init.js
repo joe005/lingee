@@ -23,6 +23,7 @@ import { chatPreviewCloseBtn, chatResizer, listBodyEl, listCheckAll, previewRefr
 import { chatDoSend, chatInput, chatSendBtn, doSend, refreshChatSend } from './send.js';
 import { bindAddDropdown } from './plus-menu.js';
 import { initTaskMention, taskPicker } from './task-mention.js';
+import { initLocalEnvChat } from './local-env-chat.js';
 /* 对话：initComposer / initPlusMenu 事件接线（拆自 composer.js），由 main.js 按原顺序调用 */
 
 var RECENT_CHATS_COLLAPSED_KEY = 'lingee-recent-chats-collapsed-v1';
@@ -45,6 +46,7 @@ function initRecentChatsToggle() {
 }
 function initComposer() {
   initRecentChatsToggle();
+  initLocalEnvChat();
   $('#chatTaskProjectSelect').addEventListener('change',function(event){
     var session=chatSessions.find(function(row){return row.id===activeSessionId&&row.taskCreate;});
     var projectId=event.target.value;

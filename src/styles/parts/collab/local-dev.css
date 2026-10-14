@@ -1,7 +1,7 @@
 /* 本地开发：准备环境面板、Git 认证弹窗、项目设置弹窗、「设置」页签、进入时的提醒卡片。
    弹窗复用 .sync-modal 容器；层级高于任务抽屉（201）与其浮层（250），以便从任务详情里直接打开。 */
 .ld-overlay{z-index:260;background:var(--overlay)}
-#ldSetupOverlay{z-index:261}
+#ldDirOverlay{z-index:261}
 .ld-overlay--top{z-index:262}
 .cv-scope .ld-modal{width:520px;max-width:calc(100vw - 32px)}
 .cv-scope .ld-modal--auth{width:480px}
@@ -30,6 +30,29 @@
 .ld-progress{height:6px;margin-top:12px;overflow:hidden;border-radius:999px;background:var(--hover)}
 .ld-progress span{display:block;height:100%;border-radius:inherit;background:var(--brand);transition:width .25s}
 
+/* 一键配置 */
+.ld-auto{margin-bottom:12px;padding:16px;border:1px solid var(--border);border-radius:12px;background:var(--fill-1)}
+.ld-auto-head{display:flex;align-items:center;gap:12px}
+.ld-auto-icon{display:inline-grid;flex:none;place-items:center;width:32px;height:32px;border-radius:8px;background:var(--success-bg);font-size:14px;font-weight:600;color:var(--success)}
+.ld-auto-title{display:flex;flex:1;flex-direction:column;gap:2px;min-width:0}
+.ld-auto-title strong{font-size:14px;font-weight:600;color:var(--text)}
+.ld-auto-title span{font-size:12px;color:var(--text-secondary)}
+.ld-auto-steps{display:flex;flex-direction:column;gap:8px;margin:12px 0 0;padding:0;list-style:none}
+.ld-auto-step{display:flex;align-items:flex-start;gap:12px}
+.ld-auto-step.is-todo .ld-step-title{color:var(--text-secondary);font-weight:500}
+.ld-auto-step.is-wait .ld-step-mark{background:var(--warning-bg);color:var(--warning)}
+.ld-auto-step.is-running .ld-step-mark{background:var(--brand-fill)}
+.ld-auto-wait{margin-top:8px;align-items:center}
+.ld-auto-done{margin:12px 0 0;font-size:14px;font-weight:500;color:var(--success)}
+.ld-spin{width:12px;height:12px;border:2px solid var(--border-focus);border-top-color:var(--brand);border-radius:50%;animation:ld-spin .8s linear infinite}
+@keyframes ld-spin{to{transform:rotate(360deg)}}
+.ld-manual-toggle{display:block;margin:0 0 4px;font-size:13px}
+.ld-auto-dir{display:flex;align-items:flex-start;gap:12px;margin-top:12px;padding-top:12px;border-top:1px solid var(--divider)}
+.ld-auto-dir-label{flex:none;width:64px;font-size:14px;line-height:22px;color:var(--text-secondary)}
+.ld-auto-dir .ld-choice{margin-top:0}
+.ld-auto-dir .ld-path-row{margin-top:8px}
+.ld-auto-dir-body{flex:1;min-width:0}
+
 /* 表单 */
 .ld-field{margin-bottom:16px}
 .ld-field>label{display:block;margin-bottom:6px;font-size:14px;font-weight:500;color:var(--text)}
@@ -41,8 +64,6 @@
 .ld-input::placeholder{color:var(--text-soft)}
 .ld-auth-row{display:flex;gap:8px}
 .ld-auth-row .ld-input:first-child{flex:1;min-width:0}
-.ld-select{flex:none;width:140px;padding-right:8px}
-.ld-auth-pick{width:auto;min-width:200px;max-width:280px;height:32px;font-size:13px}
 .ld-token-wrap{position:relative}
 .ld-token-wrap .ld-input{width:100%;padding-right:40px}
 .ld-icon-btn{position:absolute;top:4px;right:4px;display:inline-grid;place-items:center;width:28px;height:28px;border:0;border-radius:6px;background:transparent;color:var(--text-secondary);cursor:pointer;transition:background .15s}
@@ -61,17 +82,6 @@
 .ld-btn:focus-visible,.ld-link:focus-visible,.ld-icon-btn:focus-visible,.ld-choice-item input:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 .cv-scope .ld-modal .sync-modal__btn:disabled{opacity:.5;cursor:not-allowed}
 
-/* 提醒卡片：进入协作开发时右下角提示，不打断当前操作 */
-.ld-reminder{position:fixed;right:24px;bottom:24px;z-index:150;box-sizing:border-box;width:360px;max-width:calc(100vw - 32px);padding:16px;border:1px solid var(--border);border-radius:12px;background:var(--bg);box-shadow:var(--menu-shadow)}
-.ld-reminder[hidden]{display:none}
-.ld-reminder-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.ld-reminder-head strong{font-size:14px;font-weight:600;color:var(--text)}
-.ld-reminder p{margin:8px 0 0;font-size:13px;line-height:20px;color:var(--text-secondary)}
-.ld-reminder ul{display:flex;flex-direction:column;gap:8px;margin:12px 0 0;padding:0;list-style:none}
-.ld-reminder li{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:14px;color:var(--text)}
-.ld-reminder li span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ld-reminder-more{font-size:12px}
-
 /* 项目设置弹窗内容：标签 + 值 + 按钮的一行式 */
 .ld-panel{display:flex;flex-direction:column;gap:12px}
 .ld-empty{margin:0;font-size:14px;color:var(--text-secondary)}
@@ -79,15 +89,19 @@
 .ld-kv{margin:0}
 .ld-kv-row{display:flex;align-items:center;gap:12px;min-height:48px;border-bottom:1px solid var(--divider)}
 .ld-kv-row:last-child{border-bottom:0}
-.ld-kv-row dt{flex:none;width:72px;font-size:14px;color:var(--text-secondary)}
+.ld-kv-row dt{flex:none;width:80px;font-size:14px;color:var(--text-secondary)}
 .ld-kv-row dd{flex:1;min-width:0;margin:0;overflow:hidden;font-size:14px;color:var(--text);text-overflow:ellipsis;white-space:nowrap}
 .ld-kv-row dd code{word-break:normal}
 .ld-kv-actions{display:flex;flex:none;gap:8px}
 .ld-muted{color:var(--text-secondary)}
+.ld-step-text--warn{color:var(--warning)}
 .ld-reset{align-self:flex-start;font-size:12px}
 .ld-state{flex:none;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:500;white-space:nowrap}
 .ld-state.is-ok{background:var(--success-bg);color:var(--success)}
 .ld-state.is-warn{background:var(--warning-bg);color:var(--warning)}
+.ld-state.is-pending{background:var(--pending-bg);color:var(--pending)}
+.ld-state.is-danger{background:var(--danger-bg);color:var(--danger)}
+.ld-state.is-muted{padding:0;background:none;font-weight:400;color:var(--text-secondary)}
 .ld-row-actions{display:flex;flex-wrap:wrap;gap:8px}
 
 /* 协作开发「设置」页签：与任务、智能体同宽，灰画布上的白卡 */
@@ -107,31 +121,158 @@
 .ld-set-btn--primary:hover{border-color:var(--brand-hover);background:var(--brand-hover)}
 .ld-set-btn:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 .ld-set-empty{font-size:14px;color:var(--text-secondary)}
-.ld-list{margin:0;padding:0;list-style:none}
-.ld-list li{display:flex;align-items:center;gap:16px;min-height:56px;border-bottom:1px solid var(--divider)}
-.ld-list li:last-child{border-bottom:0}
+.ld-list{display:flex;flex-direction:column;gap:8px;margin:0;padding:0;list-style:none}
+/* 与管理「空间设置」一致：白卡里每一行是独立的描边圆角条目 */
+.ld-list li{display:flex;align-items:center;gap:16px;min-height:60px;padding:8px 16px;border:1px solid var(--border);border-radius:12px;transition:background .15s}
+.ld-list li:not(.ld-list-head):hover{background:var(--fill-1)}
 .ld-list-main{display:flex;flex:1;flex-direction:column;gap:2px;min-width:0}
 .ld-list-main strong{overflow:hidden;font-size:14px;font-weight:500;color:var(--text);text-overflow:ellipsis;white-space:nowrap}
 .ld-list-main span{font-size:12px;color:var(--text-secondary)}
 .ld-list-col{flex:1.4;min-width:0;overflow:hidden;font-size:14px;color:var(--text-secondary);text-overflow:ellipsis;white-space:nowrap}
-.ld-list .ld-list-head{min-height:40px;font-size:12px;font-weight:500;color:var(--text-secondary)}
+.ld-list .ld-list-head{min-height:32px;padding-top:0;padding-bottom:0;border-color:transparent;font-size:12px;font-weight:500;color:var(--text-secondary)}
 .ld-list .ld-list-head .ld-list-main{flex-direction:row}
 .ld-col-state{flex:none;width:72px}
-.ld-col-act{display:flex;flex:none;justify-content:flex-end;width:72px}
+.ld-col-act{display:flex;flex:none;justify-content:flex-end;width:96px}
+.ld-col-act{gap:8px}
+.ld-list--auth .ld-col-act{width:184px}
+.ld-list-user{display:flex;flex-direction:column;gap:2px}
+.ld-list-user strong{overflow:hidden;font-size:14px;font-weight:400;color:var(--text);text-overflow:ellipsis}
+.ld-list-user span{font-size:12px;color:var(--text-secondary)}
+.ld-auth-modes{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-top:16px;font-size:13px}
+.ld-hint{margin:8px 0 0;font-size:12px;line-height:20px;color:var(--text-secondary)}
+.ld-label-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+.ld-label-row label{font-size:14px;font-weight:500;color:var(--text)}
+/* 登录弹窗：默认一句说明 + 一个主按钮；SSH 两步，密钥与端口收进「高级设置」 */
+.ld-auth-host{width:100%}
+.ld-dir-account{display:flex;align-items:center;gap:8px;min-width:0;margin:0 0 16px;font-size:14px;line-height:22px;color:var(--text-secondary)}
+.ld-dir-account>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ld-dir-account .ld-link{flex:none;font-size:14px}
+.ld-field-label{margin-bottom:8px;font-size:14px;font-weight:500;color:var(--text)}
+.ld-auth-lead{margin:0 0 16px;font-size:14px;line-height:22px;color:var(--text-secondary)}
+.ld-auth-modes span{color:var(--text-secondary)}
+.ld-auth-row .ld-port{flex:none;width:96px}
 .ld-dir-mode{display:inline-block;margin-right:8px;padding:2px 6px;border-radius:4px;background:var(--tag-bg);font-size:12px;color:var(--text-secondary)}
 .ld-list-col code{color:var(--text)}
 .ld-page .ld-reset{align-self:flex-start}
-#view-collab #cvTabNav .ld-tab-dot{display:inline-block;width:6px;height:6px;margin-left:4px;border-radius:50%;background:var(--warning);vertical-align:top}
-#view-collab #cvTabNav .ld-tab-dot[hidden]{display:none}
+/* 顶部导航右上角「本地环境」状态：有未就绪项目时橙色提示，点开浮层逐个配置；在「设置」页签里不显示 */
+#view-collab #cvTabNav .ld-nav-status{display:inline-flex;align-items:center;gap:6px;height:var(--control-h-sm);margin-left:auto;padding:0 12px;border:0;border-radius:999px;background:var(--warning-bg);font:inherit;font-size:13px;font-weight:500;color:var(--warning);white-space:nowrap;cursor:pointer;transition:background .15s}
+#view-collab #cvTabNav .ld-nav-status[hidden],#view-collab:has(#cv-local.active) #cvTabNav .ld-nav-status{display:none}
+#view-collab #cvTabNav .ld-nav-status:hover{background:var(--hover)}
+#view-collab #cvTabNav .ld-nav-status:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+#view-collab #cvTabNav .ld-nav-status:not([hidden])~[data-cvview="config"]{margin-left:8px}
+.ld-nav-dot{width:8px;height:8px;border-radius:50%;background:var(--warning)}
+.ld-nav-pop{position:fixed;z-index:150;box-sizing:border-box;width:400px;max-width:calc(100vw - 32px);max-height:min(480px,calc(100vh - 96px));overflow-y:auto;padding:12px;border-radius:12px;background:var(--bg);box-shadow:var(--menu-shadow)}
+.ld-nav-pop[hidden]{display:none}
+.ld-pop-head{display:flex;flex-direction:column;gap:2px;padding:4px 4px 8px;border-bottom:1px solid var(--divider)}
+.ld-pop-head strong{font-size:14px;font-weight:600;color:var(--text)}
+.ld-pop-head span{font-size:12px;color:var(--text-secondary)}
+.ld-pop-list{margin:4px 0 0;padding:0;list-style:none}
+.ld-pop-list li{display:flex;align-items:center;gap:8px;padding:8px 4px}
+.ld-pop-name{display:flex;flex:1;flex-direction:column;gap:2px;min-width:0}
+.ld-pop-name strong{overflow:hidden;font-size:14px;font-weight:500;color:var(--text);text-overflow:ellipsis;white-space:nowrap}
+.ld-pop-name small{overflow:hidden;font-size:12px;color:var(--text-secondary);text-overflow:ellipsis;white-space:nowrap}
+.ld-pop-actions{display:flex;flex:none;gap:8px}
+.ld-pop-actions .ld-btn{height:28px;padding:0 8px;font-size:12px}
+.ld-pop-more{margin:4px 4px 0;font-size:12px}
+.ld-list:not(.ld-list--auth) .ld-col-act{width:184px}
+
+/* 「设置」页签：有未就绪项目时的顶部提示，首次配置走对话 */
+.ld-set-banner{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 16px 12px 24px;border-radius:var(--r-card);background:var(--warning-bg);font-size:14px;line-height:22px;color:var(--text)}
+.ld-set-banner span{flex:1;min-width:0}
+/* 更改目录弹窗、登录弹窗的补充说明 */
+.ld-note{margin:12px 0 0;font-size:12px;line-height:20px;color:var(--text-secondary)}
+.ld-modal .ld-warn{margin-bottom:12px}
+
+/* 对话里的「本地环境配置」技能（composer/local-env-chat.js）：正文、工具调用摘要、进行中提示 */
+#view-chat .ld-msg-text{margin:0 0 12px;font-size:14px;line-height:24px;color:var(--text);overflow-wrap:anywhere}
+#view-chat .ld-msg-text ul,#view-chat .ld-msg-text ol{margin:8px 0;padding-left:20px}
+#view-chat .ld-msg-text li{margin:2px 0}
+#view-chat .ld-msg-text code{padding:1px 4px;border-radius:4px;background:var(--tag-bg);font-family:Monaco,Menlo,monospace;font-size:12px;color:var(--text)}
+#view-chat .ld-tool{margin:0 0 12px}
+#view-chat .ld-tool-sum{display:inline-flex;align-items:center;gap:6px;padding:0;border:0;background:none;font:inherit;font-size:14px;line-height:22px;color:var(--text-secondary);cursor:pointer;transition:color .15s}
+#view-chat .ld-tool-sum:hover{color:var(--text)}
+#view-chat .ld-tool-sum:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px;border-radius:4px}
+#view-chat .ld-tool-chevron{transition:transform .15s}
+#view-chat .ld-tool.is-open .ld-tool-chevron{transform:rotate(90deg)}
+#view-chat .ld-tool-detail{display:flex;flex-direction:column;gap:8px;margin:8px 0 0 6px;padding:4px 0 4px 14px;border-left:2px solid var(--divider)}
+#view-chat .ld-tool-row{display:flex;flex-direction:column;gap:2px;min-width:0}
+#view-chat .ld-tool-row code{font-family:Monaco,Menlo,monospace;font-size:12px;line-height:20px;color:var(--text);overflow-wrap:anywhere}
+#view-chat .ld-tool-row span{font-size:12px;line-height:20px;color:var(--text-secondary)}
+#view-chat .ld-thinking{display:flex;align-items:center;gap:8px;margin:0 0 12px;font-size:14px;line-height:22px;color:var(--text-secondary)}
+#view-chat .ld-thinking.is-shimmer{background:linear-gradient(90deg,var(--text-secondary) 0%,var(--text-soft) 50%,var(--text-secondary) 100%);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:ld-shimmer 1.6s linear infinite}
+@keyframes ld-shimmer{to{background-position:-200% 0}}
+#view-chat .ld-thinking .ld-link{font-size:14px}
+#view-chat .ld-msg-hint{margin:-4px 0 12px;font-size:13px;line-height:20px;color:var(--text-secondary)}
+#view-chat .ld-msg-actions{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}
+
+/* 提问面板：占据输入框位置，与客户端 AskUserQuestion 一致 */
+#view-chat .chat-container.ld-asking #chatComposerWrap{display:none}
+#view-chat .ld-ask{box-sizing:border-box;flex:none;width:min(900px,calc(100% - 40px));max-height:50vh;margin:0 auto 20px;padding:20px;overflow-y:auto;border-radius:var(--r-card);background:var(--bg);box-shadow:var(--card-shadow)}
+#view-chat .ld-ask-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
+#view-chat .ld-ask-head strong{font-size:16px;font-weight:500;line-height:24px;color:var(--text);overflow-wrap:anywhere}
+#view-chat .ld-ask-head strong code{font-family:Monaco,Menlo,monospace;font-size:14px}
+#view-chat .ld-ask-head span{flex:none;font-size:14px;color:var(--text-secondary)}
+#view-chat .ld-ask-options{display:flex;flex-direction:column;gap:4px}
+#view-chat .ld-ask-option{display:flex;align-items:center;gap:16px;width:100%;box-sizing:border-box;padding:12px 16px;border:0;border-radius:12px;background:transparent;font:inherit;text-align:left;cursor:pointer;transition:background .15s}
+#view-chat .ld-ask-option:hover{background:var(--fill-1)}
+#view-chat .ld-ask-option.is-on{background:var(--hover)}
+#view-chat .ld-ask-option:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}
+#view-chat .ld-ask-no{display:inline-grid;flex:none;place-items:center;width:28px;height:28px;box-sizing:border-box;border:1px solid var(--border-hover);border-radius:50%;font-size:14px;color:var(--text-secondary)}
+#view-chat .ld-ask-option.is-on .ld-ask-no{border-color:var(--brand);background:var(--brand);color:var(--bg)}
+#view-chat .ld-ask-body{display:flex;flex:1;flex-direction:column;gap:4px;min-width:0}
+#view-chat .ld-ask-label{display:flex;align-items:center;gap:8px;font-size:16px;line-height:24px;color:var(--text)}
+#view-chat .ld-ask-label em{padding:0 8px;border:1px solid var(--border-focus);border-radius:999px;background:var(--brand-fill);font-size:12px;font-style:normal;font-weight:500;line-height:20px;color:var(--brand)}
+#view-chat .ld-ask-desc{font-size:14px;line-height:22px;color:var(--text-secondary);overflow-wrap:anywhere}
+#view-chat .ld-ask-foot{display:flex;align-items:center;gap:16px;margin-top:16px}
+#view-chat .ld-ask-rec{display:inline-flex;align-items:center;gap:6px;margin-right:auto;padding:0;border:0;background:none;font:inherit;font-size:14px;color:var(--text);cursor:pointer}
+#view-chat .ld-ask-rec:hover{color:var(--brand)}
+#view-chat .ld-ask-skip{padding:0;border:0;background:none;font:inherit;font-size:14px;color:var(--text);cursor:pointer}
+#view-chat .ld-ask-skip:hover{color:var(--brand)}
+#view-chat .ld-ask-ok{height:var(--control-h);padding:0 16px;border:0;border-radius:10px;background:var(--brand);font:inherit;font-size:14px;font-weight:500;color:var(--bg);cursor:pointer;transition:background .15s,opacity .15s}
+#view-chat .ld-ask-ok:hover:not(:disabled){background:var(--brand-hover)}
+#view-chat .ld-ask-ok:disabled{opacity:.4;cursor:not-allowed}
+#view-chat .ld-ask-rec:focus-visible,#view-chat .ld-ask-skip:focus-visible,#view-chat .ld-ask-ok:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px;border-radius:6px}
 
 @media (max-width:600px){
+  .ld-set-banner{flex-direction:column;align-items:flex-start}
+  #view-chat .ld-ask{width:calc(100% - 32px);padding:16px}
+  #view-chat .ld-ask-option{gap:12px;padding:12px}
   .ld-auth-row{flex-direction:column}
-  .ld-select{width:100%}
   .ld-step{flex-wrap:wrap}
   .ld-step>.ld-btn,.ld-step>.ld-step-actions{margin-left:36px}
   .ld-list-col,.ld-list-head{display:none}
   .ld-list li{gap:8px}
 }
 @media (prefers-reduced-motion:reduce){
+  #view-chat .ld-thinking.is-shimmer{animation:none;color:var(--text-secondary);background:none}
+  #view-chat .ld-tool-chevron,#view-chat .ld-ask-option,#view-chat .ld-ask-ok{transition:none}
   .ld-progress span,.ld-btn,.ld-input,.ld-icon-btn{transition:none}
+  .ld-spin{animation:none}
+}
+
+/* 设置页：检测与添加账号、未初始化计数、演示入口 */
+.ld-set-btn{min-width:72px;justify-content:center}
+.ld-set-btn:disabled{opacity:.5;cursor:not-allowed}
+.ld-checked-at{font-size:12px;color:var(--text-secondary);white-space:nowrap}
+.ld-set-head h2 small.ld-set-count{color:var(--warning)}
+.ld-set-head .ld-row-actions{align-items:center}
+.ld-demo-links{display:flex;flex-wrap:wrap;gap:16px}
+/* 初始化弹窗：代码保存位置与选项 */
+.ld-dir-target{display:flex;align-items:center;gap:8px;min-width:0;margin-bottom:12px}
+.ld-dir-target code{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ld-dir-target .ld-dir-mode{margin-right:0}
+.ld-choice-item>span{display:flex;flex-direction:column;gap:2px}
+.ld-choice-path{overflow:hidden;font-size:12px;color:var(--text-secondary);text-overflow:ellipsis;white-space:nowrap}
+.ld-choice-hint{font-size:12px;line-height:20px;color:var(--text-secondary)}
+/* 登录弹窗：平台选择（添加账号）、令牌说明单行 */
+.ld-segment{display:flex;gap:8px}
+.ld-segment-item{flex:1;height:var(--control-h-sm);border:1px solid var(--border);border-radius:8px;background:var(--bg);font:inherit;font-size:14px;font-weight:500;color:var(--text);cursor:pointer;transition:background .15s,border-color .15s,color .15s}
+.ld-segment-item:hover{background:var(--hover)}
+.ld-segment-item.is-on{border-color:var(--brand);background:var(--brand-fill);color:var(--brand)}
+.ld-segment-item:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+.ld-field--token{margin-bottom:0}
+.ld-auth-token{width:100%}
+.ld-hint--line{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (prefers-reduced-motion:reduce){
+  .ld-list li,.ld-segment-item{transition:none}
 }
