@@ -228,3 +228,5 @@
 .tk-st-orange{background:var(--dot-orange)}
 .tk-st-green{background:var(--success)}
 .tk-st-red{background:var(--danger)}
+
+.tk-list-review-actions button[hidden] { display:none; }

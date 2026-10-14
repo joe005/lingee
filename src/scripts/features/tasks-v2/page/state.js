@@ -73,8 +73,7 @@ function drawerIsMine(task) { return !!task && tkCurrentStageHandlerId(task) ===
 /* 详情主操作与列表卡片同一口径：只有轮到当前登录人时才出现，操作按任务状态变化。 */
 export function taskHeaderAction(task) {
   if (!task) return null;
-  if (task.status === 'in_review') return {label:'评审产物',action:'review'};
-  if (task.status === 'planned') return {label:'加入待开始',action:'queue'};
+  if (task.status === 'planned') return drawerIsMine(task) ? {label:'加入待开始',action:'queue'} : null;
   var info = taskListKind(task);
   return info.primary ? {label:info.action === 'review' ? '评审产物' : info.action === 'start' ? 'AI 执行' : info.label, action:info.action} : null;
 }

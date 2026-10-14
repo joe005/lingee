@@ -96,3 +96,6 @@ td.niu-plan-empty{color:var(--text-secondary)}
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* 当前任务列表与看板隐藏通用筛选入口。 */
+#cv-tasks-current #view-tasks:not(.tk-project-list-mode) #tkFilterBtn { display:none; }

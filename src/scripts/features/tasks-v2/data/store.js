@@ -96,13 +96,20 @@ try {
 } catch (e) { /* 本地存储不可用时跳过 */ }
   /* 「待评审/待开始/已阻塞」预置任务补充：每次加载按编号幂等补种，缺则补回（含被删与漏补场景，刷新自愈），不改写已有任务。 */
 try {
-  var wuxfReviewCodes = new Set(['T1001207', 'T1001208', 'T1001209', 'T1001210', 'T1001211']);
+  var wuxfReviewCodes = new Set(['T1001207', 'T1001208', 'T1001209', 'T1001210', 'T1001211', 'T1001212', 'T1001213']);
   var wuxfExistingCodes = new Set(_tasks.map(function (task) { return task.code; }));
   var wuxfReviewAdds = TK_COSMIC_WUXF_TASKS.filter(function (task) { return wuxfReviewCodes.has(task.code) && !wuxfExistingCodes.has(task.code); });
   if (wuxfReviewAdds.length) {
     _tasks.push(...wuxfReviewAdds);
     persistTasks();
   }
+} catch (e) { /* 本地存储不可用时保留内存数据 */ }
+/* 精简吴晓锋历史预制样本；用户新建任务 ID 不在此名单。 */
+try {
+  const removedCodes = new Set(['T1001201','T1001203','T1001204','T1001205','T1001208']);
+  const before = _tasks.length;
+  _tasks = _tasks.filter(task => !(task.project === 'cosmic-app-dev' && removedCodes.has(task.code) && [1201,1203,1204,1205,1208].includes(task.id)));
+  if (_tasks.length !== before) persistTasks();
 } catch (e) { /* 本地存储不可用时保留内存数据 */ }
 /* 「执行中」预置任务精简：从已保存的本地数据一次性移除三条与吴晓锋种子重叠的团队任务（幂等）。 */
 try {

@@ -111,7 +111,8 @@ export function handleTaskHeaderAction() {
   } else if (action === 'start') {
     startTaskExecution(task.id);
   } else if (action === 'retry') retryBlockedTask(task);
-  else if (action === 'review') { closeDrawer(); openTaskStatusConversation(task, {preferExisting:true}); }
+  else if (['start','review','retry','reply'].includes(action) && tkCurrentStageHandlerId(task) !== tkCurrentUserId()) { toast('仅当前阶段处理人可操作', 'warning'); return; }
+  if (action === 'review') { closeDrawer(); openListReviewPreview(task.id, els.tkDrawerChat); }
   else if (action === 'reply') { closeDrawer(); openTaskStatusConversation(task); }
 }
 function returnToTaskDetail(task) {
@@ -311,11 +312,12 @@ export function priWeight(p) {
 export function handleTaskCardPrimaryAction(taskId, action, trigger) {
   var task = tkGetTasks().find(function (row) { return row.id === Number(taskId); });
   if (!task) return;
-  if (action === 'review') { closeDrawer(); openTaskStatusConversation(task, {preferExisting:true}); }
-  else if (action === 'start') startTaskExecution(task.id, {skipHandlerCheck:true});
+  if (['start','review','retry','reply'].includes(action) && tkCurrentStageHandlerId(task) !== tkCurrentUserId()) { toast('仅当前阶段处理人可操作', 'warning'); return; }
+  if (action === 'review') { closeDrawer(); openListReviewPreview(task.id, trigger || els.tkDrawerChat); }
+  else if (action === 'start') startTaskExecution(task.id);
   else if (action === 'retry') retryBlockedTask(task);
   else if (action === 'reply') { closeDrawer(); openTaskStatusConversation(task); }
-  else if (action === 'artifacts') openDrawerArtifacts(task.id);
+  else if (action === 'artifacts') { closeDrawer(); openListReviewPreview(task.id, trigger, {readOnly:true}); }
   else if (action === 'detail') { closeDrawer(); openTaskStatusConversation(task, {preferExisting:true}); }
   else openDrawer(task.id);
 }

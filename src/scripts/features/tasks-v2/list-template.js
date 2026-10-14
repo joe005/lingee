@@ -7,7 +7,7 @@ import stageLink from '../../../assets/figma/task-list/stage-link.svg';
 import stageLinkComplete from '../../../assets/figma/task-list/stage-link-complete.svg';
 import moreIcon from '../../../assets/figma/task-list/more.svg';
 import { tkGetPerson, tkGetPriorityObj, tkGetProjectName, tkGetStatusObj } from './data.js';
-import { taskCardAction, taskListKind } from './list-kind.js';
+import { taskCardStatus, taskCardAction, taskListKind } from './list-kind.js';
 
 export function taskTypeLabel(type) {
   return TEAM_STAGE_SCENARIOS.find(function (scenario) { return scenario.id === (type === '缺陷' ? 'bug' : 'feature'); })?.name || (type === '缺陷' ? '缺陷修复' : '功能开发');
@@ -79,13 +79,14 @@ function renderTaskListRow(t, opts, context) {
   var actionButton = '<button type="button" class="tk-list-action-btn' + (info.primary ? ' is-primary' : '') + '" data-list-task-action="' + cardAction.action + '" data-list-task-id="' + t.id + '" aria-label="' + e(info.label + '：' + t.title) + '">' + e(actionLabel) + '</button>';
   var typeTag = t.issueType
     ? '<span class="tk-list-card-label tk-list-card-type" data-type="' + e(t.issueType) + '" title="任务类型：' + e(taskTypeLabel(t.issueType)) + '">' + e(taskTypeLabel(t.issueType)) + '</span>' : '';
+  var cardStatus = taskCardStatus(t);
   var deleteShortcut = info.kind === 'review' || info.kind === 'blocked';
   var menuAttributes = ' data-card-more="' + t.id + '" aria-label="更多任务操作" aria-haspopup="menu"' + (deleteShortcut ? ' data-delete-only-menu' : '');
   var priorityTag = pri.name
     ? '<span class="tk-list-card-label tk-list-priority" data-priority="' + e(t.priority) + '" title="优先级：' + e(pri.name) + '">' + e(pri.name) + '</span>' : '';
   return '<tr class="tk-row tk-list-card-row' + sel + (context.drawerTaskId === t.id ? ' detail-active' : '') + (depth ? ' tk-row--child' : '') + (hasChildren ? ' tk-row--parent' : '') + '" data-task-id="' + t.id + '" data-depth="' + depth + '" tabindex="0">'
     + '<td class="tk-list-card-cell" colspan="11"><div class="tk-list-card tk-list-card--' + info.kind + '">'
-    + '<div class="tk-list-card-main"><div class="tk-list-card-meta"><span class="tk-list-status" data-kind="' + info.kind + '">' + e(info.kind === 'review' ? '待评审' : info.badge) + '</span><span class="tk-list-card-code">' + e(t.code) + '</span>'
+    + '<div class="tk-list-card-main"><div class="tk-list-card-meta"><span class="tk-list-status" data-kind="' + cardStatus.kind + '">' + e(cardStatus.badge) + '</span><span class="tk-list-card-code">' + e(t.code) + '</span>'
     + (t.project ? '<span class="tk-list-card-project">' + e(tkGetProjectName(t.project)) + '</span>' : '') + '</div>'
     + '<div class="tk-list-card-title"><button type="button" class="tk-list-card-title-btn" title="' + e(t.title) + '">' + e(t.title) + '</button>' + toggle + childBadge + '</div>'
     + '<p class="tk-list-card-desc" title="' + e(hintTitle) + '">' + e(descText || info.hint) + '</p>'

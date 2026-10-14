@@ -14,6 +14,11 @@ import { _showOlderActivityIds, closeDrawer, openDrawer, openDrawerArtifacts, to
 import { chooseFirstAssignee, handleTaskCardPrimaryAction, confirmDeleteTask, confirmTaskStageApproval, filterAssigneeOptions, openBoardTaskSession, retryBlockedTask, showCardMenu, startTaskExecution } from './utils.js';
 /* 任务页 · 事件绑定 · 子任务、看板 / 列表点击与拖拽、列折叠、浮层关闭（拆分自 tasks-v2/index.js，逻辑未改） */
 export function bindBoardEvents() {
+  els.tkBoardScroll.addEventListener('change', function (e) {
+    if (!e.target.matches('[data-board-done-filter]')) return;
+    pageState.boardDoneFilter = e.target.value;
+    render();
+  });
   /* 详情面板内：添加子任务 / 打开子任务 */
   els.tkDrawerBody.addEventListener('click', function (e) {
     var sessionsToggle = e.target.closest('[data-stage-sessions-toggle]');

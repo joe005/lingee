@@ -89,3 +89,11 @@
 #cv-tasks-current .tk-card--figma .tk-card-status:is([data-kind=start],[data-kind=running]) { color:var(--board-processing-text); background:var(--board-processing-bg); }
 #cv-tasks-current .tk-card--figma .tk-card-status:is([data-kind=review],[data-kind=question]) { color:var(--board-review-text); background:var(--board-review-bg); }
 #cv-tasks-current .tk-card--figma .tk-card-status[data-kind=blocked] { color:var(--board-blocked-text); background:var(--board-blocked-bg); }
+
+#cv-tasks-current :is(.tk-list-status,.tk-card-status):is([data-kind="stage_done"],[data-kind="done"]) { color:var(--success); background:var(--success-bg); }
+
+#cv-tasks-current .tk-board-done-filter { height:32px; width:128px; max-width:100%; padding:0 12px; border:1px solid var(--border); border-radius:24px; background:transparent; color:var(--neutral-700); font:inherit; font-size:14px; cursor:pointer; }
+#cv-tasks-current .tk-board-done-filter:focus-visible { outline:2px solid var(--focus-ring); outline-offset:2px; }
+#cv-tasks-current .tk-board-filter-empty { display:flex; align-items:center; justify-content:center; flex:1; width:100%; box-sizing:border-box; padding:24px 12px; color:var(--text-secondary); font-size:14px; text-align:center; }
+
+#cv-tasks-current [data-board-done-filter] + .shared-select-trigger { width:128px; height:32px; min-height:32px; padding:0 12px; border:1px solid var(--border); border-radius:24px; background:transparent; color:var(--neutral-700); font-size:14px; }

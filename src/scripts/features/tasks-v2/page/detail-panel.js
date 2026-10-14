@@ -3,7 +3,7 @@ import { toast } from '../../../core/toast.js';
 import { mountAgentConfig, unmountAgentConfig } from '../../agent-config.js';
 import { agentCardByName, openAgentSubmit } from '../../agent-submit.js';
 import { isWebsiteArtifact, renderArtifactBlocks, renderWebsitePreview } from '../../collab/run-artifacts.js';
-import { TK_LABELS, tkGetProjectName, tkGetTaskArtifacts, tkGetTasks, tkUpdateTask } from '../data.js';
+import { TK_LABELS, tkCanViewTask, tkCurrentStageHandlerId, tkCurrentUserId, tkGetProjectName, tkGetTaskArtifacts, tkGetTasks, tkUpdateTask } from '../data.js';
 import { approveAndSubmitAgent, isAgentSubmitStep, reviewTaskStage, taskExecutionStages } from '../task-execution.js';
 import { artifactFileName, artifactFormat, artifactFormatLabel, artifactIcon } from './artifacts.js';
 import { render } from './layout.js';
@@ -343,6 +343,10 @@ function reviewArtifactSamples(task, artifacts) {
   return normalized;
 }
 function listReviewArtifacts(task) {
+  if (pageState.listReviewPreviewReadOnly) {
+    var completed = new Set((task.executionPlan || []).filter(stage => stage.status === 'done').map(stage => stage.id));
+    return tkGetTaskArtifacts(task).filter(artifact => task.status === 'done' || completed.has(artifact.stageId));
+  }
   var stageId = task.executionStageId;
   var generated = (task.executionArtifacts || []).filter(function (artifact) { return artifact.stageId === stageId; });
   var artifacts = generated.length ? generated : tkGetTaskArtifacts(task).filter(function (artifact) { return artifact.stageId === stageId; });
@@ -358,7 +362,7 @@ function closeListReviewPreview(restoreFocus) {
 }
 function renderListReviewPreview() {
   var task = tkGetTasks().find(function (row) { return row.id === pageState.listReviewPreviewTaskId; });
-  if (!task || task.status !== 'in_review') { closeListReviewPreview(false); return; }
+  if (!task || (!pageState.listReviewPreviewReadOnly && task.status !== 'in_review')) { closeListReviewPreview(false); return; }
   var artifacts = listReviewArtifacts(task);
   var active = artifacts.find(function (artifact) { return artifact.id === pageState.listReviewPreviewArtifactId; }) || artifacts[0];
   pageState.listReviewPreviewArtifactId = active?.id || null;
@@ -371,6 +375,9 @@ function renderListReviewPreview() {
     return '<button type="button" class="tk-list-review-tab' + (selected ? ' is-active' : '') + '" role="tab" aria-selected="' + selected + '" data-list-review-artifact="' + escapeHtml(artifact.id) + '"><img src="' + artifactIcon(artifact) + '" alt=""><span>' + escapeHtml(artifact.fileName || artifact.docTitle || artifact.type) + '</span><small>' + escapeHtml(artifactFormatLabel(artifact)) + '</small></button>';
   }).join('');
   els.tkListReviewBody.innerHTML = active ? renderReviewArtifactPreview(active) : '<div class="tk-list-review-empty">当前阶段暂无可预览产物</div>';
+  var canReview = !pageState.listReviewPreviewReadOnly && task.status === 'in_review' && tkCurrentStageHandlerId(task) === tkCurrentUserId();
+  els.tkListReviewApprove.hidden = !canReview;
+  els.tkListReviewRevise.hidden = true;
   var agentSubmit = isAgentSubmitStep(task);
   els.tkListReviewApprove.textContent = agentSubmit ? '通过并提交上架' : '通过验收';
   els.tkListReviewHint.textContent = agentSubmit
@@ -378,9 +385,10 @@ function renderListReviewPreview() {
     : '请核对产物内容。需要调整时可返回任务会话继续修改。';
   els.tkListReviewBody.scrollTop = 0;
 }
-export function openListReviewPreview(taskId, trigger) {
+export function openListReviewPreview(taskId, trigger, options = {}) {
   var task = tkGetTasks().find(function (row) { return row.id === Number(taskId); });
-  if (!task || task.status !== 'in_review') { toast('任务状态已变化，请刷新后重试', 'warning'); return; }
+  if (!task || !tkCanViewTask(task) || (!options.readOnly && (task.status !== 'in_review' || tkCurrentStageHandlerId(task) !== tkCurrentUserId()))) { toast('任务状态或处理权限已变化', 'warning'); return; }
+  pageState.listReviewPreviewReadOnly = !!options.readOnly;
   pageState.listReviewPreviewTaskId = task.id;
   pageState.listReviewPreviewArtifactId = null;
   pageState.listReviewPreviewFocus = trigger || document.activeElement;
@@ -420,6 +428,7 @@ export function initListReviewPreviewEvents() {
   });
   els.tkListReviewApprove.addEventListener('click', function () {
     var task = tkGetTasks().find(function (row) { return row.id === pageState.listReviewPreviewTaskId; });
+    if (pageState.listReviewPreviewReadOnly || !task || tkCurrentStageHandlerId(task) !== tkCurrentUserId()) return;
     if (isAgentSubmitStep(task)) {
       /* 测试通过 + 提交上架合为一步：复用智能体开发的「提交上架审核」确认 */
       var card = agentCardByName(task.deliversAgent);

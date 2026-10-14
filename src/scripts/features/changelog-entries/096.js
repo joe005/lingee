@@ -1,0 +1,1 @@
+export default {"id":"96","date":"2026-10-14","iconBg":"var(--brand-fill)","iconColor":"var(--brand)","type":"功能","module":"任务","author":"Joe","body":"功能·任务：任务列表与看板区分阶段完成和全部完成并支持完成类型筛选，限制阶段操作仅对当前处理人开放，恢复侧边产物查看与评审面板，精简并补齐吴晓锋预制样本，优化视图切换和空态展示。"};

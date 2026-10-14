@@ -139,3 +139,13 @@
 /* 看板搜索与筛选左对齐，视图切换和新建靠右。 */
 #cv-tasks-current #view-tasks:not(.tk-project-list-mode):not(.tk-list-mode) .tk-tools-left { margin-left:0; margin-right:auto; }
 #cv-tasks-current #view-tasks:not(.tk-project-list-mode):not(.tk-list-mode) .tk-tools-right { margin-left:auto; }
+
+#cv-tasks-current :is(.tk-list-status,.tk-card-status):is([data-kind="stage_done"],[data-kind="done"]) { color:var(--success); background:var(--success-bg); }
+
+/* 看板／列表切换只展示图标。 */
+#cv-tasks-current .tk-layout-shortcuts .tk-layout-btn { width:36px; min-width:36px; flex:0 0 36px; padding:0; }
+#cv-tasks-current .tk-layout-shortcuts .tk-layout-btn > span { display:none; }
+
+#cv-tasks-current .tk-layout-shortcuts .tk-layout-btn img { filter:brightness(0); opacity:.64; }
+#cv-tasks-current .tk-layout-shortcuts .tk-layout-btn.active img { opacity:.94; }
+#cv-tasks-current .tk-layout-shortcuts .tk-layout-btn:not(.active):hover img { opacity:.82; }

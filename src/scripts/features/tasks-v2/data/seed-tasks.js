@@ -283,6 +283,12 @@ const TK_COSMIC_WUXF_TASKS = [
       { id:'s5', workType:'部署交付', title:'部署交付', description:'归档扫描结果与异常处理记录', assigneeId:'p40', status:'pending' },
     ] },
 ];
+TK_COSMIC_WUXF_TASKS.push(...[{"id": 1212, "code": "T1001212", "title": "设计器元模型抽取结果校验规则梳理", "desc": "梳理抽取结果的字段完整性、继承链与取值域校验规则，正在由智能体整理需求与验收条件。", "status": "in_progress", "priority": "medium", "assignee": "p23", "createdBy": "p23", "project": "cosmic-app-dev", "teamId": "cosmic-app-dev", "labels": ["需求"], "issueType": "需求", "createDate": "2026-10-14", "dueDate": "2026-10-21", "executionStageId": "requirements", "executionPlan": [{"id": "requirements", "title": "需求分析", "workType": "需求分析", "assigneeId": "p23", "status": "running", "requiresConfirmation": true}, {"id": "implementation", "title": "开发实现", "workType": "开发实现", "assigneeId": "p30", "status": "pending", "requiresConfirmation": true}, {"id": "verification", "title": "测试验证", "workType": "测试验证", "assigneeId": "p33", "status": "pending", "requiresConfirmation": true}]}, {"id": 1213, "code": "T1001213", "title": "操作注册表双运行时差异口径确认", "desc": "核对苍穹双运行时操作注册表差异，智能体等待吴晓锋确认映射口径后继续生成需求产物。", "status": "in_progress", "priority": "medium", "assignee": "p23", "createdBy": "p23", "project": "cosmic-app-dev", "teamId": "cosmic-app-dev", "labels": ["需求"], "issueType": "需求", "createDate": "2026-10-14", "dueDate": "2026-10-21", "executionStageId": "requirements", "executionPlan": [{"id": "requirements", "title": "需求分析", "workType": "需求分析", "assigneeId": "p23", "status": "running", "requiresConfirmation": true}, {"id": "implementation", "title": "开发实现", "workType": "开发实现", "assigneeId": "p30", "status": "pending", "requiresConfirmation": true}, {"id": "verification", "title": "测试验证", "workType": "测试验证", "assigneeId": "p33", "status": "pending", "requiresConfirmation": true}]}]);
+/* 已完成视角保留 1202、1206、1207 三个预制样本。 */
+const removedWuxfDemoIds = new Set([1201,1203,1204,1205,1208]);
+for (let index = TK_COSMIC_WUXF_TASKS.length - 1; index >= 0; index--) {
+  if (removedWuxfDemoIds.has(TK_COSMIC_WUXF_TASKS[index].id)) TK_COSMIC_WUXF_TASKS.splice(index, 1);
+}
 TK_TASKS.push(...TK_COSMIC_WUXF_TASKS);
 
 /* 问卷调研系统建设：演示汇报的贯穿场景，覆盖已完成、待评审（含一次驳回）、执行中、阻塞、待开始和待规划。 */

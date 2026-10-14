@@ -33,6 +33,8 @@ try {
 /* 苍穹项目会话样本：稳定 ID 让已有本地会话与用户回复在刷新后保留。
    response 仅为任务数据缺失时的兜底，正常展示由 demoExchangeText 按统一文案格式生成。 */
 var COSMIC_DEMO_SESSIONS = [
+  {id:'cosmicdemo9',title:'设计器元模型抽取结果校验规则梳理',taskId:1212,demoState:'running',exchanges:[{prompt:'梳理抽取结果校验规则。',done:false,response:'正在整理字段完整性、继承链与取值域校验规则。'}]},
+  {id:'cosmicdemo10',title:'操作注册表双运行时差异口径确认',taskId:1213,demoState:'question',exchanges:[],demoQuestion:{text:'双运行时注册表存在不同映射，需求清单应采用哪种口径？',options:['以当前苍穹运行时为准，另列差异','保留两套映射并标注适用版本'],answer:''}},
   {id:'cosmicdemo1',title:'操作元模型四张注册表抽取方案设计',taskId:1201,demoState:'running',exchanges:[{prompt:'开始执行操作元模型四张注册表抽取方案设计。',done:false,response:'当前阶段正在执行，完成后提交产物。'}]},
   {id:'cosmicdemo2',title:'编辑器提交形状与 EntryId 冲突裁决实现',taskId:1202,demoState:'running',demoArtifact:true,exchanges:[{prompt:'开始执行编辑器提交形状与 EntryId 冲突裁决实现。',done:false,response:'当前阶段正在执行，完成后提交产物。'}]},
   {id:'cosmicdemo3',title:'规则动作类型序列化槽位验证',taskId:1203,demoState:'ended',demoArtifact:true,exchanges:[{prompt:'开始执行规则动作类型序列化槽位验证。',done:true,response:'当前阶段已完成，请确认产物。'}]},

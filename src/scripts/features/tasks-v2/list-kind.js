@@ -1,10 +1,10 @@
-import { tkCanStartTask, tkCurrentStageHandlerId, tkCurrentUserId, tkGetPerson, tkGetStatusName } from './data.js';
+import { tkIsMyStageDone, tkCanStartTask, tkCurrentStageHandlerId, tkCurrentUserId, tkGetPerson, tkGetStatusName } from './data.js';
 import { taskExecutionStages } from './task-execution.js';
 import { taskConversationNeedsReply, taskConversationQuestion } from '../composer.js';
 
 /* 任务列表卡片与详情主操作共用的「轮到谁」判定。
    同一条任务对不同登录人展示不同：当前阶段处理人看到可操作的卡片，其他人只能查看进展。
-   action 取值：start 开始执行 / review 评审产物 / reply 回答提问 / retry 重试 / detail 查看详情 / artifacts 查看产物。 */
+   action 取值：start 开始执行 / review 评审产物 / reply 回答提问 / retry 重试 / detail 查看会话 / artifacts 查看产物。 */
 function currentStageName(task) {
   var plan = Array.isArray(task.executionPlan) ? task.executionPlan : [];
   var stage = plan.find(function (row) { return row.id === task.executionStageId; })
@@ -33,22 +33,22 @@ export function taskListKind(task) {
   }
   if (status === 'in_progress' && taskConversationNeedsReply(task, true)) {
     var question = taskConversationQuestion(task);
-    var canReply = mine || taskConversationNeedsReply(task);
+    var canReply = mine;
     return { kind:'question', badge:'待回答', hint:'AI 正在等你回答' + (question ? '：' + question : ''), action:canReply ? 'reply' : 'detail', label:canReply ? '回复问题' : '查看会话', primary:canReply, needsMe:canReply };
   }
   if (status === 'blocked') {
     var blockedHint = (quoted ? quoted + '执行受阻' : '执行受阻') + (reason ? '：' + reason : '');
     return mine
       ? { kind:'blocked', badge:'已阻塞', hint:blockedHint, action:'retry', label:task.blockedRun?.kind === 'local-env' ? '去配置' : '重试', primary:true, needsMe:true }
-      : { kind:'blocked', badge:'已阻塞', hint:blockedHint, action:'detail', label:'查看详情', needsMe:false };
+      : { kind:'blocked', badge:'已阻塞', hint:blockedHint, action:'detail', label:'查看会话', needsMe:false };
   }
   if (status === 'backlog' || status === 'in_review') {
-    return { kind:status === 'in_review' ? 'review' : 'waiting', badge:status === 'in_review' ? '待评审' : '待开始', hint:'当前阶段' + quoted + '由' + waitingName + '处理', action:'detail', label:'查看详情', needsMe:false };
+    return { kind:status === 'in_review' ? 'review' : 'waiting', badge:status === 'in_review' ? '待评审' : '待开始', hint:'当前阶段' + quoted + '由' + waitingName + '处理', action:'detail', label:'查看会话', needsMe:false };
   }
   if (status === 'in_progress') {
     return { kind:'running', badge:'AI执行中', hint:'智能体团队正在执行' + quoted, action:'detail', label:'查看会话', needsMe:false };
   }
-  return { kind:'waiting', badge:tkGetStatusName(status) || '待开始', hint:quoted ? '当前阶段' + quoted : '等待开始执行', action:'detail', label:'查看详情', needsMe:false };
+  return { kind:'waiting', badge:tkGetStatusName(status) || '待开始', hint:quoted ? '当前阶段' + quoted : '等待开始执行', action:'detail', label:'查看会话', needsMe:false };
 }
 
 /* 列表三个页签与协作开发菜单徽标共用同一口径。 */
@@ -56,8 +56,15 @@ export function taskNeedsMyAction(task) { return taskListKind(task).needsMe; }
 
 /* 看板和列表共用的任务卡片操作。 */
 export function taskCardAction(task) {
+  if (task.status !== 'done' && tkIsMyStageDone(task)) return {action:'artifacts',label:'查看产物',primary:false};
   var info = taskListKind(task);
-  var action = task.status === 'in_review' ? 'review' : info.action;
-  var labels = {start:'AI 执行',review:'评审产物',retry:task.blockedRun?.kind === 'local-env' ? '去配置' : '重试',reply:'回复问题',artifacts:'查看产物',detail:'查看详情'};
+  var action = info.action;
+  var labels = {start:'AI 执行',review:'评审产物',retry:task.blockedRun?.kind === 'local-env' ? '去配置' : '重试',reply:'回复问题',artifacts:'查看产物',detail:'查看会话'};
   return {action:action,label:['question', 'running'].includes(info.kind) ? info.label : labels[action] || info.label,primary:info.primary};
+}
+
+/* 阶段完成是个人视角的展示标签，不改变任务状态或操作权限。 */
+export function taskCardStatus(task) {
+  if (task.status !== "done" && tkIsMyStageDone(task)) return {kind:"stage_done",badge:"阶段完成"};
+  return taskListKind(task);
 }
