@@ -10,6 +10,7 @@ import { TEAMS } from '../expert/store.js';
 import { EX, TEAM_STAGE_SCENARIOS } from '../expert/data.js';
 import { toast } from '../../core/toast.js';
 import { startTaskCreationChat } from '../composer.js';
+import { ldIsDevProject } from '../collab/local-dev.js';
 
 let renderTasks = () => {};
 let refreshTaskDetail = () => {};
@@ -43,6 +44,8 @@ const byId = id => document.getElementById(id);
 const currentTask = () => activePlanScope === 'create'
   ? { project: byId('niuProject').value, assignee: selectedOwnerId, title: byId('niuTitle').value, desc: byId('niuDescription').value, issueType: byId('niuType').value, teamId: byId('niuTeam').value }
   : tkGetTasks().find(task => task.id === currentTaskId);
+/* 所属空间下拉只列开发项目（Manage 的会议、预算等普通空间不列）；校验和已有任务仍按全部可见项目 */
+const devProjects = () => tkProjectsForCurrentUser().filter(ldIsDevProject);
 const projectName = id => tkProjectsForCurrentUser().find(project => project.id === id)?.name || '项目';
 const personName = (projectId, id, fallback = '待分配') => tkPeopleInProject(projectId).find(person => person.id === id)?.name || fallback;
 const hasTaskStarted = task => !['planned', 'backlog'].includes(task.status)
@@ -75,8 +78,8 @@ function closeProjectPopup() {
 
 function renderProjectOptions() {
   const query = byId('niuProjectSearch').value.trim().toLocaleLowerCase();
-  const projects = tkProjectsForCurrentUser().filter(project => project.name.toLocaleLowerCase().includes(query));
-  byId('niuProjectOptions').innerHTML = projects.length ? projects.map(project => '<button type="button" role="option" aria-selected="' + (project.id === selectedProjectId) + '" data-niu-project="' + escapeHtml(project.id) + '"><span>' + escapeHtml(project.name) + '</span><b>' + (project.id === selectedProjectId ? '✓' : '') + '</b></button>').join('') : '<p>没有匹配的项目</p>';
+  const projects = devProjects().filter(project => project.name.toLocaleLowerCase().includes(query));
+  byId('niuProjectOptions').innerHTML = projects.length ? projects.map(project => '<button type="button" role="option" aria-selected="' + (project.id === selectedProjectId) + '" data-niu-project="' + escapeHtml(project.id) + '"><span>' + escapeHtml(project.name) + '</span><b>' + (project.id === selectedProjectId ? '✓' : '') + '</b></button>').join('') : '<p>没有匹配的空间</p>';
 }
 
 function openProjectPopup() {
@@ -142,7 +145,7 @@ function renderPersonOptions() {
 function openPersonPopup(target, stageId) {
   if (target === 'stage' && planLocked()) return;
   const projectId = currentTask()?.project;
-  if (!projectId) { toast('请先选择项目', 'warning'); byId('niuProject').focus(); return; }
+  if (!projectId) { toast('请先选择空间', 'warning'); byId('niuProject').focus(); return; }
   personPopupTarget = target;
   personPopupStageId = stageId || '';
   const list = byId(activePlanScope === 'create' ? 'niuCreateStageList' : 'niuStageList');
@@ -201,8 +204,8 @@ function setWizardStep(step) {
 }
 
 function renderSmartProjectOptions() {
-  const projects = tkProjectsForCurrentUser();
-  byId('niuSmartProject').innerHTML = '<option value="">请选择所属项目</option>' + projects.map(project => '<option value="' + escapeHtml(project.id) + '">' + escapeHtml(project.name) + '</option>').join('');
+  const projects = devProjects();
+  byId('niuSmartProject').innerHTML = '<option value="">请选择所属空间</option>' + projects.map(project => '<option value="' + escapeHtml(project.id) + '">' + escapeHtml(project.name) + '</option>').join('');
   byId('niuSmartProject').value = projects.some(project => project.id === selectedProjectId) ? selectedProjectId : '';
 }
 
@@ -232,7 +235,7 @@ function setCreateMode(mode) {
 function submitSmartCreate() {
   const projectId = byId('niuSmartProject').value;
   const prompt = byId('niuSmartPrompt').value.trim();
-  if (!tkProjectsForCurrentUser().some(project => project.id === projectId)) { toast('请选择所属项目', 'warning'); byId('niuSmartProject').focus(); return; }
+  if (!tkProjectsForCurrentUser().some(project => project.id === projectId)) { toast('请选择所属空间', 'warning'); byId('niuSmartProject').focus(); return; }
   if (!prompt) { toast('请输入任务描述', 'warning'); byId('niuSmartPrompt').focus(); return; }
   selectProject(projectId);
   closeOverlays();
@@ -269,7 +272,7 @@ function fillTeamOptions(selectedId, issueType) {
 
 export function openNewIssueCreate(projectId) {
   const projects = tkProjectsForCurrentUser();
-  if (!projects.length) { toast('请先加入项目再创建任务', 'warning'); return; }
+  if (!projects.length) { toast('请先加入空间再创建任务', 'warning'); return; }
   closeOverlays();
   activePlanScope = 'create';
   currentTaskId = null;
@@ -493,7 +496,7 @@ function renderPlan() {
   initCreateSelects(Array.from(byId('niuStageList').querySelectorAll('select')));
   const teamName = TEAMS.find(team => team.id === task.teamId)?.name || '未设置';
   const statusName = TK_STATUSES.find(status => status.id === task.status)?.name || '待办';
-  byId('niuPlanAside').innerHTML = '<dl><div><dt>状态</dt><dd>' + escapeHtml(statusName) + '</dd></div><div><dt>所属项目</dt><dd>' + escapeHtml(projectName(task.project)) + '</dd></div><div><dt>智能体团队</dt><dd>' + escapeHtml(teamName) + '</dd></div><div><dt>任务负责人</dt><dd>' + escapeHtml(personName(task.project, task.assignee)) + '</dd></div><div><dt>计划进度</dt><dd>' + completed + ' / ' + draftStages.length + '</dd></div></dl><div class="niu-progress"><span style="width:' + (draftStages.length ? completed / draftStages.length * 100 : 0) + '%"></span></div><p>工作类型决定每个阶段的职责。计划确认后再开始执行。</p>';
+  byId('niuPlanAside').innerHTML = '<dl><div><dt>状态</dt><dd>' + escapeHtml(statusName) + '</dd></div><div><dt>所属空间</dt><dd>' + escapeHtml(projectName(task.project)) + '</dd></div><div><dt>智能体团队</dt><dd>' + escapeHtml(teamName) + '</dd></div><div><dt>任务负责人</dt><dd>' + escapeHtml(personName(task.project, task.assignee)) + '</dd></div><div><dt>计划进度</dt><dd>' + completed + ' / ' + draftStages.length + '</dd></div></dl><div class="niu-progress"><span style="width:' + (draftStages.length ? completed / draftStages.length * 100 : 0) + '%"></span></div><p>工作类型决定每个阶段的职责。计划确认后再开始执行。</p>';
 }
 
 export function openNewIssuePlan(taskId) {
@@ -615,6 +618,11 @@ export function initNewIssueUI(renderCallback, detailCallback) {
     const owner = event.target.closest('[data-niu-owner-stage]');
     if (owner) { openPersonPopup('stage', owner.dataset.niuOwnerStage); return; }
     if (event.target.closest('[data-niu-close]')) requestCloseOverlays();
+    if (event.target.closest('[data-niu-project-new]')) {
+      closeProjectPopup();
+      document.dispatchEvent(new CustomEvent('lingee:repo-project-new', { detail: { onCreated: projectId => selectProject(projectId) } }));
+      return;
+    }
     const projectOption = event.target.closest('[data-niu-project]');
     if (projectOption) { selectProject(projectOption.dataset.niuProject); return; }
     const plan = event.target.closest('[data-niu-plan]');

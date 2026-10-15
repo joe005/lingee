@@ -1,5 +1,6 @@
 import { initSelectDropdowns } from '../../core/select-dropdown.js';
 import { $ } from '../../core/dom.js';
+import { gitRepoUrlError } from '../../core/git-url.js';
 import { toast } from '../../core/toast.js';
 import { CV_MEMBERS, cvCurrentUserName, cvPersonById } from '../collab/data.js';
 import { tkBranchNameError } from '../tasks-v2/git-branch.js';
@@ -236,6 +237,7 @@ function openProjectNew() {
   $('#mgrPeGoal').value = '';
   $('#mgrPeInstruction').value = '';
   $('#mgrPeRepo').value = '';
+  $('#mgrPeRepo').removeAttribute('aria-invalid');
   $('#mgrPeBaseBranch').value = 'main';
   $('#mgrPeBaseBranchCustom').value = '';
   $('#mgrPeBaseBranchCustom').hidden = true;
@@ -266,9 +268,13 @@ function submitProjectNew() {
   var dev = isDevKind();
   if (!name) { toast('请填写项目名称', 'error'); $('#mgrPeName').focus(); return; }
   if (dev && !goal) { toast('开发类项目必须填写项目描述', 'error'); $('#mgrPeGoal').focus(); return; }
-  if (dev && !repo) {
+  /* Git 地址只做静态校验（Manage 所在环境可能连不上代码平台），能否连通由 Build 客户端检测 */
+  var repoErr = dev ? (repo ? gitRepoUrlError(repo) : '开发类项目必须填写 Git 地址') : '';
+  if (repoErr) {
+    $('#mgrPeRepoError').textContent = repoErr;
     $('#mgrPeRepoError').hidden = false;
-    toast('开发类项目必须填写 Git 地址', 'error');
+    $('#mgrPeRepo').setAttribute('aria-invalid', 'true');
+    toast(repo ? 'Git 地址格式不正确' : '开发类项目必须填写 Git 地址', 'error');
     $('#mgrPeRepo').focus();
     return;
   }
@@ -332,6 +338,7 @@ function initProjectNewModal() {
   });
   overlay.addEventListener('input', function (e) {
     if (e.target.id === 'mgrPeBaseBranchCustom') $('#mgrPeBranchError').hidden = true;
+    if (e.target.id === 'mgrPeRepo') { $('#mgrPeRepoError').hidden = true; e.target.removeAttribute('aria-invalid'); }
   });
   overlay.addEventListener('change', function (e) {
     if (e.target.id === 'mgrPeBaseBranch') {
@@ -343,6 +350,14 @@ function initProjectNewModal() {
   });
   overlay.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') { e.stopPropagation(); closeProjectNew(); }
+  });
+  /* 离开 Git 地址输入框时就提示格式问题，不等到点提交 */
+  $('#mgrPeRepo').addEventListener('blur', function (e) {
+    var err = gitRepoUrlError(e.target.value);
+    if (!err) return;
+    $('#mgrPeRepoError').textContent = err;
+    $('#mgrPeRepoError').hidden = false;
+    e.target.setAttribute('aria-invalid', 'true');
   });
   $('#mgrPeSubmit').addEventListener('click', submitProjectNew);
 }
@@ -474,6 +489,7 @@ function openRepoSettings(trigger) {
   syncRepoCustom();
   $('#mgrRepoUrlRequired').hidden = !p.containsRd;
   setRepoError('');
+  $('#mgrRepoUrl').removeAttribute('aria-invalid');
   var overlay = $('#mgrProjRepoOverlay');
   overlay.style.display = 'flex';
   overlay.setAttribute('aria-hidden', 'false');
@@ -493,6 +509,8 @@ function saveRepoSettings() {
   var baseSel = $('#mgrRepoBase').value;
   var base = (baseSel === '__custom' ? $('#mgrRepoBaseCustom').value : baseSel).trim();
   if (!repo && p.containsRd) { setRepoError('包含研发任务的项目必须填写 Git 地址'); $('#mgrRepoUrl').focus(); return; }
+  var urlErr = gitRepoUrlError(repo);
+  if (urlErr) { setRepoError(urlErr); $('#mgrRepoUrl').setAttribute('aria-invalid', 'true'); $('#mgrRepoUrl').focus(); return; }
   var err = repo ? tkBranchNameError(base) : '';
   if (err) { setRepoError(err); (baseSel === '__custom' ? $('#mgrRepoBaseCustom') : $('#mgrRepoBase')).focus(); return; }
   if (!mgrSetProjectRepo(p, repo, base)) { setRepoError('保存失败，请重试'); return; }
@@ -511,7 +529,7 @@ function initRepoSettings() {
     var custom = syncRepoCustom();
     if (!custom.hidden) custom.focus();
   });
-  overlay.addEventListener('input', function () { setRepoError(''); });
+  overlay.addEventListener('input', function () { setRepoError(''); $('#mgrRepoUrl').removeAttribute('aria-invalid'); });
   overlay.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeRepoSettings(); return; }
     if (e.key === 'Enter' && e.target.tagName === 'INPUT' && !e.isComposing) { e.preventDefault(); saveRepoSettings(); }

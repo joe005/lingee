@@ -7,6 +7,7 @@ import { closeDisplayChoiceMenu, closeFieldSettings, positionPopover, render } f
 import { pageState } from './page-state.js';
 import { els, state } from './state.js';
 import { escapeHtml, statusSvg } from './utils.js';
+import { updateSpaceButton } from './space-filter.js';
 /* 任务页 · 筛选菜单、视图管理、弹出菜单、拖拽（拆分自 tasks-v2/index.js，逻辑未改） */
 /* ---------- 筛选菜单 ---------- */
 pageState.activeFilterSection = '';
@@ -16,7 +17,8 @@ export var filterSections = [
   ['priority','优先级','<path d="M4 19v-2M9 19v-6M14 19V9M19 19V4"/>'],
   ['assignee','处理人','<circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/>'],
   ['creator','创建者','<circle cx="10" cy="8" r="4"/><path d="M3 21v-2a7 7 0 0 1 12-5M16 20l5-5M18 13l3 3"/>'],
-  ['project','项目','<path d="M3 5h7l2 2h9v13H3z"/>'],
+  /* 与工具栏「空间」切换共用同一份条件 */
+  ['project','空间','<path d="M3 5h7l2 2h9v13H3z"/>'],
   /* 「日期」「标签」字段已去除，不提供筛选入口 */
 ];
 export function filterOptionsFor(section) {
@@ -39,6 +41,7 @@ export function updateFilterButton() {
   var count = state.filters.length;
   els.tkFilterLabel.textContent = count ? count + ' 个筛选' : '筛选';
   els.tkFilterBtn.classList.toggle('has-filters', count > 0);
+  updateSpaceButton();
 }
 export function renderFilterMenu() {
   els.tkFilterPanelBody.innerHTML = filterSections.map(function (section) {

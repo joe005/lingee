@@ -474,6 +474,9 @@
   flex: 1 1 auto;
   min-width: 0;
 }
+.mgr-scope .mgr-repo-row > input[aria-invalid="true"] {
+  border-color: var(--danger);
+}
 .mgr-scope .mgr-repo-branch {
   position: relative;
   display: flex;

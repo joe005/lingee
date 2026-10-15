@@ -9,7 +9,7 @@ export var LIST_FIELDS = [
   { id:'code', name:'编号' }, { id:'title', name:'标题', required:true },
   { id:'status', name:'状态' }, { id:'type', name:'任务类型' },
   { id:'priority', name:'优先级' }, { id:'assignee', name:'处理人' },
-  { id:'project', name:'项目' },
+  { id:'project', name:'空间' },
   { id:'created', name:'创建时间' },
   { id:'desc', name:'描述' },
 ];

@@ -32,6 +32,13 @@
 .niu-person-popup button[aria-selected=true]{background:var(--brand-fill)}
 .niu-person-popup button:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}
 .niu-person-popup button>span:first-child{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* 所属空间下拉：列表单独滚动，底部「新建空间」固定可见，不用滚到最后（项目还没建时直接从代码仓库新建，不用去 Manage） */
+#niuProjectPopup:not([hidden]){display:flex;flex-direction:column;overflow:hidden}
+#niuProjectPopup>input{flex:none}
+#niuProjectOptions{flex:1;min-height:0;overflow-y:auto}
+#niuProjectPopup .niu-project-new{flex:none}
+.niu-person-popup .niu-project-new{margin-top:4px;border-top:1px solid var(--divider);border-radius:0 0 8px 8px;color:var(--brand)}
+.niu-person-popup .niu-project-new:hover{background:var(--brand-fill);color:var(--brand)}
 .niu-person-popup button b,.niu-person-popup button svg{flex:none;margin-left:auto;color:var(--brand)}
 .niu-person-popup p{color:var(--text-secondary)}
 
@@ -99,3 +106,13 @@ td.niu-plan-empty{color:var(--text-secondary)}
 
 /* 当前任务列表与看板隐藏通用筛选入口。 */
 #cv-tasks-current #view-tasks:not(.tk-project-list-mode) #tkFilterBtn { display:none; }
+/* 空间切换：工具栏左侧「全部空间 ▾」，列表和看板共用；项目任务清单里空间已固定，不显示 */
+.tk-space-btn{gap:6px;max-width:220px}
+.tk-space-btn #tkSpaceLabel{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tk-space-btn .tk-space-caret{flex:none;color:var(--text-secondary)}
+#view-tasks.tk-project-list-mode .tk-space-btn{display:none}
+.tk-space-popup:not([hidden]){display:flex;flex-direction:column;width:280px;max-height:360px;overflow:hidden}
+.tk-space-popup>input{flex:none;margin-bottom:4px}
+#tkSpaceOptions{flex:1;min-height:0;overflow-y:auto}
+.tk-space-popup button small{flex:none;font-size:12px;color:var(--text-secondary)}
+.tk-space-popup button b{width:14px;text-align:center}

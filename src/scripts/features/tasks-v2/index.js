@@ -17,6 +17,7 @@ import { render, updateCollabReviewBadge } from './page/layout.js';
 import { pageState } from './page/page-state.js';
 import { DRAWER_WIDTH_STORAGE_KEY, TASK_DETAIL_VERSION_STORAGE_KEY, TASK_START_LEGACY_KEY, cacheEls, els, renderTaskStartAction, restoreViewState, state } from './page/state.js';
 import { openDrawer, restoreCollapsedActivity } from './page/subtasks.js';
+import { initSpaceFilter } from './page/space-filter.js';
 /* 任务页入口：只负责初始化。页面代码按区域拆在 ./page/ 下（2026-10-10 从本文件拆出，逻辑未改）：
    - page/artifacts.js：任务产物的文件类型图标、文件名与格式标签
    - page/state.js：任务页状态、常量与元素缓存
@@ -79,6 +80,7 @@ export function initTasksV2() {
   initTkFormExpertPicker();
   initImportEvents();
   bindEvents();
+  initSpaceFilter();
   document.addEventListener('lingee:collab-menu-open', openCollabTaskList);
   render();
   document.addEventListener('lingee:auth-changed', render);

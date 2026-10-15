@@ -1,0 +1,1 @@
+export default {"id":"98","date":"2026-10-15","iconBg":"var(--brand-fill)","iconColor":"var(--brand)","type":"功能","module":"开发空间","author":"wuhc2023","body":"功能·开发空间：Build 内可直接新建开发空间（粘贴 Git 地址自动检查、选择基准分支与本机目录，创建后在 Manage 可见），新建任务与对话只列开发空间并改称「所属空间」，任务页新增「全部空间」统一过滤；Git 地址在 Manage 新建与修改时做静态格式校验（与 Build 共用规则，支持 http/https），设置页对地址不规范、无法连接、仓库不存在的项目直接提示原因和处理人。"};

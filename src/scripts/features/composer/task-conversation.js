@@ -4,6 +4,7 @@ import { syncTogglePreviewBtn } from '../chat.js';
 import { renderExpertChips } from '../expert/chips.js';
 import { TEAMS } from '../expert/store.js';
 import { tkCurrentStageHandlerId, tkGetTasks, tkPeopleInProject, tkProjectsForCurrentUser } from '../tasks-v2/data.js';
+import { ldIsDevProject } from '../collab/local-dev.js';
 import { taskExecutionStages } from '../tasks-v2/task-execution.js';
 import { tkAnswerTaskSessionQuestion, tkGetMySessions, tkTaskSessionOpeningMessage } from '../tasks-v2/task-sessions.js';
 import { appendAssistantMessage, appendUserMessage, escapeHtml, messagesList, resolveChatTeam, scrollChatBottom, statusConversationOpeningText, taskStageArtifact } from './messages.js';
@@ -165,7 +166,9 @@ function syncTaskCreateProjectPicker(){
   picker.hidden=!session||session.taskCreate.status==='done';
   viewChat.classList.toggle('task-builder-session',!picker.hidden);
   if(picker.hidden)return;
-  select.innerHTML='<option value="" disabled hidden>选择项目</option>'+tkProjectsForCurrentUser().map(function(project){return '<option value="'+escapeHtml(project.id)+'">'+escapeHtml(project.name)+'</option>';}).join('');
+  /* 与新建任务一致，只列开发项目；从某个项目发起时保留该项目 */
+  var projects=tkProjectsForCurrentUser().filter(function(project){return ldIsDevProject(project)||project.id===session.taskCreate.projectId;});
+  select.innerHTML='<option value="" disabled hidden>选择项目</option>'+projects.map(function(project){return '<option value="'+escapeHtml(project.id)+'">'+escapeHtml(project.name)+'</option>';}).join('');
   select.value=session.taskCreate.projectId||'';
   var teamSelect=$('#chatTaskTeamSelect');
   teamSelect.innerHTML='<option value="" disabled hidden>选择智能体团队</option>'+TEAMS.map(function(team){return '<option value="'+escapeHtml(team.id)+'">'+escapeHtml(team.name)+'</option>';}).join('');

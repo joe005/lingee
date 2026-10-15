@@ -9,7 +9,7 @@
             </div>
             <div class="niu-create-card">
               <div class="niu-create-properties" aria-label="任务属性">
-                <div class="niu-field"><span>所属项目 <b>*</b></span><input type="hidden" id="niuProject"><button type="button" class="niu-person-trigger" id="niuProjectTrigger" aria-haspopup="listbox" aria-expanded="false" aria-label="选择所属项目"><span id="niuProjectName"></span><span class="niu-person-chevron" aria-hidden="true">⌄</span></button></div>
+                <div class="niu-field"><span>所属空间 <b>*</b></span><input type="hidden" id="niuProject"><button type="button" class="niu-person-trigger" id="niuProjectTrigger" aria-haspopup="listbox" aria-expanded="false" aria-label="选择所属空间"><span id="niuProjectName"></span><span class="niu-person-chevron" aria-hidden="true">⌄</span></button></div>
                 <label class="niu-field"><span>智能体团队 <b>*</b></span><select id="niuTeam" required aria-label="选择执行任务的智能体团队"><option value=""></option></select></label>
                 <label class="niu-field"><span>任务类型 <b>*</b></span><select id="niuType" required aria-label="选择任务类型" disabled><option value="">请先选择智能体团队</option></select></label>
                 <label class="niu-field"><span>优先级</span><select id="niuPriority" aria-label="选择优先级"><option value="urgent">紧急</option><option value="high">高</option><option value="medium" selected>中</option><option value="low">低</option></select></label>
@@ -41,7 +41,7 @@
           </section>
           <section class="niu-create-section niu-smart-create" id="niuSmartPane" aria-labelledby="niuCreateHeading" tabindex="-1" hidden>
             <div class="niu-smart-fields">
-              <label class="niu-field"><span>所属项目 <b>*</b></span><select id="niuSmartProject" required aria-label="选择任务所属项目"><option value="">请选择所属项目</option></select></label>
+              <label class="niu-field"><span>所属空间 <b>*</b></span><select id="niuSmartProject" required aria-label="选择任务所属空间"><option value="">请选择所属空间</option></select></label>
               <label class="niu-field"><span>任务描述 <b>*</b></span><textarea id="niuSmartPrompt" rows="7" placeholder="一句话告诉我需要创建什么任务" required></textarea></label>
             </div>
           </section>
@@ -56,5 +56,5 @@
         <div class="niu-plan-layout"><main class="niu-plan-main"><div class="niu-plan-content"><div class="niu-plan-intro"><div><h3 id="niuPlanTab">执行计划</h3><p>安排执行节点和完成方式。无需确认的节点完成后会直接进入下一节点。</p></div></div><div class="niu-plan-banner" id="niuPlanBanner"></div><div class="niu-stage-columns" aria-hidden="true"><span>序号</span><span>执行阶段</span><span>阶段工作说明</span><span>完成方式</span></div><div class="niu-stage-list" id="niuStageList"></div></div></main><aside class="niu-plan-aside" id="niuPlanAside"></aside></div>
       </section>
     </div>
-    <div class="niu-person-popup" id="niuProjectPopup" role="listbox" hidden><input type="search" id="niuProjectSearch" placeholder="搜索项目" aria-label="搜索项目" autocomplete="off"><div id="niuProjectOptions"></div></div>
+    <div class="niu-person-popup" id="niuProjectPopup" role="listbox" hidden><input type="search" id="niuProjectSearch" placeholder="搜索空间" aria-label="搜索空间" autocomplete="off"><div id="niuProjectOptions"></div><button type="button" class="niu-project-new" data-niu-project-new><span>＋ 新建空间</span></button></div>
     <div class="niu-person-popup" id="niuPersonPopup" role="listbox" hidden><input type="search" id="niuPersonSearch" placeholder="搜索项目成员" aria-label="搜索项目成员" autocomplete="off"><div id="niuPersonOptions"></div></div>
