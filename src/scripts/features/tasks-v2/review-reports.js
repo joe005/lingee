@@ -1,6 +1,7 @@
 /* 待审核任务的本地演示报告。成员名称始终取智能体团队主数据，报告内容不代表真实执行。 */
 import { taskExecutorTeam } from '../expert/task-team.js';
 import { EXPERTS } from '../expert/data.js';
+import { equipmentDemoId } from './equipment-demo.js';
 import { tkProjectById } from './data.js';
 
 const REVIEW_REPORT_CONTENT = {
@@ -70,7 +71,7 @@ const ROLE_RESULTS = {
 };
 
 export function createDemoReviewReport(task) {
-  var content = REVIEW_REPORT_CONTENT[task.id];
+  var content = REVIEW_REPORT_CONTENT[equipmentDemoId(task)];
   if (!content || task.status !== 'in_review') return null;
   var project = tkProjectById(task.project);
   var team = taskExecutorTeam(task, project);

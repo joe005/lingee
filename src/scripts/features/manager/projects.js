@@ -2,107 +2,62 @@ import { initSelectDropdowns } from '../../core/select-dropdown.js';
 import { $ } from '../../core/dom.js';
 import { gitRepoUrlError } from '../../core/git-url.js';
 import { toast } from '../../core/toast.js';
-import { CV_MEMBERS, cvCurrentUserName, cvPersonById } from '../collab/data.js';
+import { cvCurrentUserName, cvPersonById } from '../collab/data.js';
 import { tkBranchNameError } from '../tasks-v2/git-branch.js';
 import {
   mgrAddProject, mgrCanManageProject, mgrMemberRole, mgrRenameError, mgrRenameProject, mgrSetProjectRepo, mgrCurrentPersonId, mgrDeleteProject, mgrProjectById,
-  mgrProjectIssues, mgrProjectTasks, mgrProjects,
+  mgrProjectTasks, mgrProjects, mgrSpaceTeamId, mgrTeam, mgrTeams,
 } from './data.js';
 import { renderDetail, resetDetailTab } from './detail.js';
-import { closeTaskPanel, resetPlanState } from './plan.js';
-import { openInvite } from './invite.js';
+import { closeTaskPanel, openTaskNew, resetPlanState } from './plan.js';
 import { hideSettings, openSettings } from './settings.js';
-import { mgrEsc, mgrTag } from './utils.js';
-/* 管理 · 项目：管理项目卡片栅格、进入 / 返回项目详情、新建项目弹窗。 */
+import { hideSubPage } from './space-pages.js';
+import { mgrEsc } from './utils.js';
+/* 管理 · 空间（对齐产品）：空间卡片栅格与搜索、进入 / 返回空间详情、新建空间弹窗、底部对话创建任务。 */
 
 var openProjectId = null;
 var onRouteChange = function () {};
 
-var CARD_CHEVRON = '<svg class="mgr-mcard-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>';
-
-/* 新建项目先选类型：开发项目需要 Git 地址（智能体团队在新建任务时再选）；通用项目再选模板 */
+/* 新建空间模板：通用模板填目标 / 空间指令和智能体团队；「测试研发项目模版」是开发空间，填空间目标（预填）与 Git 地址 */
 var TEMPLATES = [
   { id: 'blank', name: '空白', goal: '' },
-  { id: 'budget', name: '预算目标制定', goal: '围绕年度预算目标拆解编制任务，按里程碑推进并沉淀编制产物' },
-  { id: 'month', name: '月度经营分析', goal: '按月归集经营数据，输出差异归因与改进建议' },
-  { id: 'ceo', name: 'CEO月度会议', goal: '围绕 CEO 月度会议组织议题收集、材料准备与决议跟进' },
-  { id: 'adhoc', name: '临时决策会', goal: '为临时性决策快速组织背景调研与方案对比' },
-  { id: 'ar', name: '应收改善', goal: '压降应收账期，建立回款跟进机制' },
-  { id: 'inv', name: '库存周转优化', goal: '提升库存周转率，清理长龄库存并优化补货参数' },
+  { id: 'exec', name: '高管会议', goal: '围绕高管会议组织议题收集、材料准备与决议跟进' },
+  { id: 'budget', name: '预算目标', goal: '围绕年度预算目标拆解编制任务，按里程碑推进并沉淀编制产物' },
+  { id: 'talent', name: '人才布局', goal: '盘点关键岗位与人才梯队，形成招聘与培养计划' },
+  { id: 'devtest', name: '测试研发项目模版', goal: '完成研发项目的需求交付与上线', dev: true },
 ];
 var pickedTemplate = 'blank';
-var pickedKind = 'general';   /* 项目类型：general 通用项目 / dev 开发项目 */
-var pickedMembers = [];       /* 新建时额外邀请的成员 { id, admin }；创建人固定为负责人和成员 */
+var pickedTeams = [];         /* 新建空间时添加的智能体团队 ID */
 
-/* ---------- 列表（项目首页：待你处理 + 全部项目） ---------- */
-var TODO_PREVIEW = 3;
-var todoExpanded = false;
+/* ---------- 列表（空间首页：空间卡片栅格） ---------- */
 var projectQuery = '';
 
 function ownerAvatar(name) {
   return '<span class="mgr-home-owner-avatar" aria-hidden="true">' + mgrEsc((name || '?')[0]) + '</span>';
 }
 function cardHtml(p) {
-  var tags = p.mgrOk
-    ? mgrTag('运行正常', 'done')
-    : (p.mgrRisk ? mgrTag(p.mgrRisk + ' 处风险', 'danger') : '') + (p.mgrDecide ? mgrTag(p.mgrDecide + ' 件待决策', 'warning') : '');
-  return '<div class="mgr-mcard" data-mgr-project="' + mgrEsc(p.id) + '" role="button" tabindex="0" aria-label="查看项目：' + mgrEsc(p.name) + '">' +
+  return '<div class="mgr-mcard" data-mgr-project="' + mgrEsc(p.id) + '" role="button" tabindex="0" aria-label="进入空间：' + mgrEsc(p.name) + '">' +
     '<h3 class="mgr-mcard-title">' + mgrEsc(p.name) + '</h3>' +
-    '<p class="mgr-mcard-desc">' + mgrEsc(p.desc) + '</p>' +
-    '<div class="mgr-mcard-foot"><span class="mgr-mcard-owner">' + ownerAvatar(p.owner) + '<span>' + mgrEsc(p.owner || '未指定') + '</span></span>' +
-    '<span class="mgr-mcard-tags">' + tags + '</span></div></div>';
+    '<p class="mgr-mcard-desc">' + mgrEsc(p.goal || p.desc || '') + '</p>' +
+    '<div class="mgr-mcard-foot"><span class="mgr-mcard-owner">' + ownerAvatar(p.owner) + '<span>' + mgrEsc(p.owner || '未指定') + '</span></span></div></div>';
 }
-/* 项目首页暂时只展示开发类项目（含研发任务）；非开发类的预置演示项目不出现，但用户自己新建的项目（含空白类）都要显示，否则创建后看不到 */
+/* 空间首页暂时只展示开发类空间（含研发任务）；非开发类的预置演示空间不出现，但用户自己新建的空间（含空白类）都要显示，否则创建后看不到 */
 function homeProjects() { return mgrProjects().filter(function (p) { return p.containsRd || p.custom; }); }
-/* 待你处理：分给我的未完成任务 + 我能管理的项目里待处理的议题 */
-function pendingItems() {
-  var me = mgrCurrentPersonId();
-  var items = [];
-  homeProjects().forEach(function (p) {
-    mgrProjectIssues(p.id).forEach(function (i) {
-      if (i.status === '待处理' && mgrCanManageProject(p)) items.push({ kind: '议题', title: i.title, project: p, meta: i.time || '' });
-    });
-    if (!me) return;
-    mgrProjectTasks(p.id).forEach(function (t) {
-      if (t.assignee !== me || t.status === 'done' || t.status === 'cancelled' || t.status === 'in_review') return;
-      items.push({ kind: '任务', title: t.title || t.name || '未命名任务', project: p, meta: t.dueDate ? '截止 ' + t.dueDate : '' });
-    });
-  });
-  return items;
-}
-function renderTodos() {
-  var items = pendingItems();
-  var shown = todoExpanded ? items : items.slice(0, TODO_PREVIEW);
-  $('#mgrTodoCount').textContent = items.length;
-  var all = $('#mgrTodoAll');
-  all.hidden = items.length <= TODO_PREVIEW;
-  all.setAttribute('aria-expanded', String(todoExpanded));
-  all.firstChild.textContent = todoExpanded ? '收起 ' : '全部 ';
-  $('#mgrTodoList').innerHTML = items.length
-    ? shown.map(function (it) {
-      return '<button type="button" class="mgr-todo-row" data-mgr-project="' + mgrEsc(it.project.id) + '">' +
-        '<span class="mgr-todo-kind">' + it.kind + '</span><span class="mgr-todo-title">' + mgrEsc(it.title) + '</span>' +
-        '<span class="mgr-todo-project">' + mgrEsc(it.project.name) + '</span>' +
-        (it.meta ? '<span class="mgr-todo-meta">' + mgrEsc(it.meta) + '</span>' : '') + '</button>';
-    }).join('')
-    : '<div class="mgr-todo-empty"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>暂无待办</div>';
-}
 function renderList() {
   var all = homeProjects();
   var q = projectQuery.trim().toLocaleLowerCase();
   var list = q ? all.filter(function (p) { return (p.name + ' ' + (p.owner || '')).toLocaleLowerCase().includes(q); }) : all.slice();
-  /* 按最近修改时间倒序；没改过的演示项目没有 updatedAt，排在后面并保持原有顺序（sort 稳定） */
+  /* 按最近修改时间倒序；没改过的演示空间没有 updatedAt，排在后面并保持原有顺序（sort 稳定） */
   list.sort(function (a, b) { return (b.updatedAt || 0) - (a.updatedAt || 0); });
-  $('#mgrHomeCount').textContent = all.length;
-  $('#mgrAllCount').textContent = all.length;
-  renderTodos();
   $('#mgrProjCards').innerHTML = list.length
     ? list.map(cardHtml).join('')
-    : '<div class="mgr-empty">' + (q ? '没有匹配的项目。' : '还没有管理项目，点右上角「＋ 新建项目」创建。') + '</div>';
+    : '<div class="mgr-empty">' + (q ? '没有匹配的空间。' : '还没有空间，点右上角「新建空间」创建。') + '</div>';
+  renderAskSpaces();
 }
 function showList() {
   openProjectId = null;
   hideSettings();
+  hideSubPage();
   closeTaskPanel();
   $('#mgrProjDetail').classList.add('hidden');
   $('#mgrProjList').classList.remove('hidden');
@@ -111,16 +66,16 @@ function showList() {
 }
 function openProject(id) {
   var p = mgrProjectById(id);
-  if (!p) { toast('未找到该项目'); return false; }
+  if (!p) { toast('未找到该空间'); return false; }
   openProjectId = id;
   hideSettings();
+  hideSubPage();
   resetDetailTab(p);
   resetPlanState();
   toggleMoreMenu(false);
   closeTaskPanel();
   $('#mgrProjList').classList.add('hidden');
   $('#mgrProjDetail').classList.remove('hidden');
-  $('#mgrProjCrumbName').textContent = p.name;
   renderDetail(p);
   var scroll = $('#mgrProjDetail .mgr-scroll');
   if (scroll) scroll.scrollTop = 0;
@@ -128,68 +83,71 @@ function openProject(id) {
   return true;
 }
 
-/* ---------- 新建项目弹窗 ---------- */
-function currentTemplate() { return TEMPLATES.find(function (t) { return t.id === pickedTemplate; }); }
-function isDevKind() { return pickedKind === 'dev'; }
-function renderKinds() { renderTemplates(); }
-function pickKind(kind) {
-  if (pickedKind === kind) return;
-  pickedKind = kind;
-  var tpl = currentTemplate();
-  $('#mgrPeGoal').value = isDevKind() ? '' : tpl ? tpl.goal : '';
-  renderKinds();
-  syncSubtabs(true);
-  syncDevExtra();
-  $('#mgrPeName').focus();
+/* ---------- 底部对话：描述想创建的任务，AI 拆解规划（原型：打开带入内容的新建任务弹窗） ---------- */
+var askSpaceId = '';
+function renderAskSpaces() {
+  var menu = $('#mgrAskSpaceMenu');
+  if (!menu) return;
+  menu.innerHTML = homeProjects().map(function (p) {
+    var on = p.id === askSpaceId;
+    return '<button type="button" class="mgr-ask-space-option' + (on ? ' is-on' : '') + '" role="option" aria-selected="' + on + '" data-mgr-ask-space="' + mgrEsc(p.id) + '">' + mgrEsc(p.name) + '</button>';
+  }).join('') || '<div class="mgr-ask-space-empty">还没有空间</div>';
+  var picked = askSpaceId ? mgrProjectById(askSpaceId) : null;
+  if (!picked) askSpaceId = '';
+  $('#mgrAskSpaceLabel').textContent = picked ? picked.name : '选择空间';
 }
-/* 模板默认只显示前 5 个，其余通过「更多」展开；选中的模板在折叠区时自动展开 */
-var TEMPLATE_VISIBLE = 5;
-var templatesExpanded = false;
-function renderTemplates() {
-  var extra = TEMPLATES.slice(TEMPLATE_VISIBLE);
-  var open = templatesExpanded || extra.some(function (t) { return t.id === pickedTemplate; });
-  var chip = function (t) {
-    var on = !isDevKind() && pickedTemplate === t.id;
-    return '<button type="button" class="mgr-pe-tpl' + (on ? ' active' : '') + '" data-mgr-pe-tpl="' + mgrEsc(t.id) + '" role="radio" aria-checked="' + on + '">' + mgrEsc(t.name) + '</button>';
-  };
-  $('#mgrPeTplChips').innerHTML =  '<div class="mgr-pe-tpl-first-row">' + chip(TEMPLATES[0]) +
-    '<button type="button" class="mgr-pe-tpl' + (isDevKind() ? ' active' : '') + '" data-mgr-pe-kind="dev" role="radio" aria-checked="' + isDevKind() + '">开发项目</button>' +
-    TEMPLATES.slice(1, TEMPLATE_VISIBLE).map(chip).join('') +
-    (extra.length
-      ? '<button type="button" class="mgr-pe-tpl mgr-pe-tpl-more" data-mgr-pe-tpl-more aria-expanded="' + open + '">' + (open ? '收起' : '更多') +
-        '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>'
-      : '') + '</div>' + (open ? '<div class="mgr-pe-tpl-extra-row">' + extra.map(chip).join('') + '</div>' : '');
+function toggleAskSpaces(open) {
+  var menu = $('#mgrAskSpaceMenu');
+  var btn = $('#mgrAskSpaceBtn');
+  if (!menu || !btn) return;
+  var show = open === undefined ? menu.hidden : open;
+  menu.hidden = !show;
+  btn.setAttribute('aria-expanded', String(show));
 }
-function syncDevExtra() {
-  $('#mgrPeDevExtra').hidden = !isDevKind();
-  syncSubtabs(!$('#mgrPeGoal').hidden);
-  $('#mgrPeRepoError').hidden = true;
-  $('#mgrPeBranchError').hidden = true;
+/* 第一句（冒号前）作任务名（不超过 30 字），全文作任务描述 */
+function draftFrom(text, project) {
+  var first = text.split(/[\n。！？!?；;：:]/).map(function (x) { return x.trim(); }).filter(Boolean)[0] || text;
+  return { title: first.length > 30 ? first.slice(0, 30) : first, desc: text, teamId: mgrSpaceTeamId(project) };
 }
-function pickTemplate(id) {
-  var changed = pickedTemplate !== id || isDevKind();
-  pickedKind = 'general';
-  pickedTemplate = id;
-  var tpl = currentTemplate();
-  if (changed) $('#mgrPeGoal').value = tpl ? tpl.goal : '';
-  renderTemplates();
-  syncSubtabs(true);
-  syncDevExtra();
-  $('#mgrPeName').focus();
+function createTaskFromAsk(project, input) {
+  var text = input.value.trim();
+  if (!text) { toast('先描述你想创建的任务'); input.focus(); return; }
+  input.value = '';
+  openTaskNew(null, { kind: project.containsRd ? 'rd' : 'general', project: project, draft: draftFrom(text, project) });
 }
 
-function syncSubtabs(showGoal) {
+/* ---------- 新建空间弹窗 ---------- */
+function currentTemplate() { return TEMPLATES.find(function (t) { return t.id === pickedTemplate; }) || TEMPLATES[0]; }
+function isDevKind() { return !!currentTemplate().dev; }
+function renderTemplates() {
+  $('#mgrPeTplChips').innerHTML = TEMPLATES.map(function (t) {
+    var on = pickedTemplate === t.id;
+    return '<button type="button" class="mgr-pe-tpl' + (on ? ' active' : '') + '" data-mgr-pe-tpl="' + mgrEsc(t.id) + '" role="radio" aria-checked="' + on + '">' + mgrEsc(t.name) + '</button>';
+  }).join('');
+}
+function pickTemplate(id) {
+  if (pickedTemplate === id) return;
+  pickedTemplate = id;
+  $('#mgrPeGoal').value = currentTemplate().goal;
+  renderTemplates();
+  syncKind(true);
+  $('#mgrPeName').focus();
+}
+/* 开发空间：目标改为「空间目标」普通标签，隐藏空间指令与智能体团队，显示 Git 地址；通用空间恢复「目标 / 空间指令」页签 */
+function syncKind(showGoal) {
   var dev = isDevKind();
   if (dev) showGoal = true;
   var tabs = $('#mgrProjEditForm .mgr-pe-subtabs');
   tabs.classList.toggle('mgr-pe-subtabs--plain', dev);
   tabs.setAttribute('role', dev ? 'group' : 'tablist');
   $('#mgrPeGoal').hidden = !showGoal;
+  $('#mgrPeGoal').placeholder = dev ? '' : '为什么建立这个空间，需要达成什么经营结果';
   $('#mgrPeInstruction').hidden = showGoal;
   document.querySelectorAll('[data-mgr-pe-subtab]').forEach(function (b) {
-    b.hidden = dev && b.getAttribute('data-mgr-pe-subtab') === 'instruction';
-    if (b.getAttribute('data-mgr-pe-subtab') === 'goal') b.innerHTML = dev ? '项目描述 <b aria-hidden="true">*</b>' : '目标';
-    var on = (b.getAttribute('data-mgr-pe-subtab') === 'goal') === showGoal;
+    var isGoal = b.getAttribute('data-mgr-pe-subtab') === 'goal';
+    b.hidden = dev && !isGoal;
+    if (isGoal) b.innerHTML = (dev ? '空间目标' : '目标') + ' <b aria-hidden="true">*</b>';
+    var on = isGoal === showGoal;
     b.classList.toggle('active', !dev && on);
     b.disabled = dev;
     if (dev) {
@@ -200,27 +158,29 @@ function syncSubtabs(showGoal) {
       b.setAttribute('aria-selected', String(on));
     }
   });
+  $('#mgrPeDevExtra').hidden = !dev;
+  $('#mgrPeTeamField').hidden = dev;
+  $('#mgrPeRepoError').hidden = true;
+  $('#mgrPeBranchError').hidden = true;
 }
-/* ---------- 项目成员（创建人固定；其他人沿用项目详情里的「邀请成员」弹窗添加） ---------- */
-function renderMemberChips() {
-  var me = cvPersonById(mgrCurrentPersonId());
-  $('#mgrPeMemberChips').innerHTML =
-    (me ? '<span class="mgr-pe-member-chip is-fixed" title="创建人默认为项目负责人">' + mgrEsc(me.name) + '<small>负责人</small></span>' : '') +
-    pickedMembers.map(function (x) { return { m: cvPersonById(x.id), admin: x.admin }; }).filter(function (x) { return x.m; }).map(function (x) {
-      return '<span class="mgr-pe-member-chip">' + mgrEsc(x.m.name) + (x.admin ? '<small>项目管理员</small>' : '') +
-        '<button type="button" class="mgr-pe-member-remove" data-mgr-pe-member-remove="' + mgrEsc(x.m.id) + '" aria-label="移除成员 ' + mgrEsc(x.m.name) + '">×</button></span>';
-    }).join('') +
-    '<button type="button" class="mgr-pe-member-add" id="mgrPeMemberAdd" aria-haspopup="dialog">＋ 邀请成员</button>';
+/* ---------- 智能体团队（通用空间） ---------- */
+function renderTeamChips() {
+  $('#mgrPeTeamChips').innerHTML = pickedTeams.map(function (id) { return mgrTeam(id); }).filter(Boolean).map(function (t) {
+    return '<span class="mgr-pe-member-chip">' + mgrEsc(t.name) +
+      '<button type="button" class="mgr-pe-member-remove" data-mgr-pe-team-remove="' + mgrEsc(t.id) + '" aria-label="移除智能体团队 ' + mgrEsc(t.name) + '">×</button></span>';
+  }).join('');
 }
-function inviteForNewProject(trigger) {
-  openInvite(null, trigger, {
-    taken: function () { return [mgrCurrentPersonId()].concat(pickedMembers.map(function (x) { return x.id; })); },
-    onConfirm: function (ids, admin) {
-      ids.forEach(function (id) { if (!pickedMembers.some(function (x) { return x.id === id; })) pickedMembers.push({ id: id, admin: admin }); });
-      renderMemberChips();
-      $('#mgrPeMemberAdd').focus();
-    },
-  });
+function toggleTeamPop(open) {
+  var pop = $('#mgrPeTeamPop');
+  var show = open === undefined ? pop.hidden : open;
+  if (show) {
+    var list = mgrTeams().filter(function (t) { return pickedTeams.indexOf(t.id) < 0; });
+    pop.innerHTML = list.length
+      ? list.map(function (t) { return '<button type="button" class="mgr-pe-team-option" role="option" data-mgr-pe-team-pick="' + mgrEsc(t.id) + '">' + mgrEsc(t.name) + '</button>'; }).join('')
+      : '<p class="mgr-tn-sub-empty">智能体团队都已添加</p>';
+  }
+  pop.hidden = !show;
+  $('#mgrPeTeamAdd').setAttribute('aria-expanded', String(show));
 }
 function selectedBaseBranch() {
   var v = $('#mgrPeBaseBranch').value;
@@ -229,10 +189,10 @@ function selectedBaseBranch() {
 function openProjectNew() {
   var overlay = $('#mgrProjEditOverlay');
   pickedTemplate = 'blank';
-  pickedKind = 'general';
-  templatesExpanded = false;
-  renderKinds();
+  pickedTeams = [];
   renderTemplates();
+  renderTeamChips();
+  toggleTeamPop(false);
   $('#mgrPeName').value = '';
   $('#mgrPeGoal').value = '';
   $('#mgrPeInstruction').value = '';
@@ -241,12 +201,9 @@ function openProjectNew() {
   $('#mgrPeBaseBranch').value = 'main';
   $('#mgrPeBaseBranchCustom').value = '';
   $('#mgrPeBaseBranchCustom').hidden = true;
-  pickedMembers = [];
-  renderMemberChips();
   initSelectDropdowns([$('#mgrPeBaseBranch')]);
   $('#mgrPeBaseBranch').dispatchEvent(new Event('change', { bubbles: true }));
-  syncSubtabs(true);
-  syncDevExtra();
+  syncKind(true);
   overlay.style.display = 'flex';
   overlay.setAttribute('aria-hidden', 'false');
   $('#mgrPeName').focus();
@@ -266,15 +223,20 @@ function submitProjectNew() {
   var repo = $('#mgrPeRepo').value.trim();
   var tpl = currentTemplate();
   var dev = isDevKind();
-  if (!name) { toast('请填写项目名称', 'error'); $('#mgrPeName').focus(); return; }
-  if (dev && !goal) { toast('开发类项目必须填写项目描述', 'error'); $('#mgrPeGoal').focus(); return; }
+  if (!name) { toast('请填写空间名称', 'error'); $('#mgrPeName').focus(); return; }
+  if (!goal) {
+    toast(dev ? '请填写空间目标' : '请填写目标', 'error');
+    syncKind(true);
+    $('#mgrPeGoal').focus();
+    return;
+  }
   /* Git 地址只做静态校验（Manage 所在环境可能连不上代码平台），能否连通由 Build 客户端检测 */
-  var repoErr = dev ? (repo ? gitRepoUrlError(repo) : '开发类项目必须填写 Git 地址') : '';
+  var repoErr = dev ? (repo ? gitRepoUrlError(repo) : '请填写 Git 地址') : '';
   if (repoErr) {
     $('#mgrPeRepoError').textContent = repoErr;
     $('#mgrPeRepoError').hidden = false;
     $('#mgrPeRepo').setAttribute('aria-invalid', 'true');
-    toast(repo ? 'Git 地址格式不正确' : '开发类项目必须填写 Git 地址', 'error');
+    toast(repo ? 'Git 地址格式不正确' : '请填写 Git 地址', 'error');
     $('#mgrPeRepo').focus();
     return;
   }
@@ -293,25 +255,24 @@ function submitProjectNew() {
   var id = 'proj-' + Date.now();
   var me = mgrCurrentPersonId();
   var project = {
-    id: id, name: name, desc: goal || name + '（管理板块创建）', goal: goal,
+    id: id, name: name, desc: goal, goal: goal,
     instruction: dev ? '' : $('#mgrPeInstruction').value.trim(),
     dot: ['blue', 'orange', 'green'][mgrProjects().length % 3],
-    containsRd: dev, space: 'manage',
+    containsRd: dev, space: 'manage', template: tpl.id,
     status: 'planned', priority: '中', owner: cvCurrentUserName() || '未指定',
     repo: dev ? repo : '', baseBranch: dev ? baseBranch : '', code: repoCode(repo, id),
-    start: '', end: '', milestones: [], members: (me ? [me] : []).concat(pickedMembers.map(function (x) { return x.id; }).filter(function (id) { return id !== me; })), memberRoles: {},
-    adminIds: pickedMembers.filter(function (x) { return x.admin && x.id !== me; }).map(function (x) { return x.id; }),
-    projectExperts: [], updatedAt: Date.now(),
+    start: '', end: '', milestones: [], members: me ? [me] : [], memberRoles: {}, adminIds: [],
+    teamIds: dev ? [] : pickedTeams.slice(), projectExperts: [], updatedAt: Date.now(),
   };
   /* 岗位按岗位标签默认推断，之后可在「成员与权限」里调整 */
-  project.members.forEach(function (id) {
-    var person = cvPersonById(id);
+  project.members.forEach(function (pid) {
+    var person = cvPersonById(pid);
     var role = person ? mgrMemberRole(project, person) : '';
-    if (role) project.memberRoles[id] = role;
+    if (role) project.memberRoles[pid] = role;
   });
-  if (!mgrAddProject(project)) { toast('项目保存失败，请重试', 'error'); return; }
+  if (!mgrAddProject(project)) { toast('空间保存失败，请重试', 'error'); return; }
   closeProjectNew();
-  toast('已创建项目：' + mgrEsc(name) + '（' + (dev ? '开发项目' : tpl ? mgrEsc(tpl.name) : '通用项目') + '）', 'success');
+  toast('已创建空间：' + mgrEsc(name), 'success');
   if (!openProjectId) renderList();
 }
 
@@ -320,25 +281,39 @@ function initProjectNewModal() {
   overlay.addEventListener('click', function (e) {
     var t = e.target;
     if (t === overlay || t.closest('[data-mgr-projedit-close]')) { closeProjectNew(); return; }
-    var memberRm = t.closest('[data-mgr-pe-member-remove]');
-    if (memberRm) {
-      var rmId = memberRm.getAttribute('data-mgr-pe-member-remove');
-      pickedMembers = pickedMembers.filter(function (x) { return x.id !== rmId; });
-      renderMemberChips();
+    var teamRm = t.closest('[data-mgr-pe-team-remove]');
+    if (teamRm) {
+      var rmId = teamRm.getAttribute('data-mgr-pe-team-remove');
+      pickedTeams = pickedTeams.filter(function (x) { return x !== rmId; });
+      renderTeamChips();
       return;
     }
-    if (t.closest('#mgrPeMemberAdd')) { inviteForNewProject(t.closest('#mgrPeMemberAdd')); return; }
-    if (t.closest('[data-mgr-pe-tpl-more]')) { templatesExpanded = !templatesExpanded; renderTemplates(); return; }
-    var kindBtn = t.closest('[data-mgr-pe-kind]');
-    if (kindBtn) { pickKind(kindBtn.getAttribute('data-mgr-pe-kind')); return; }
+    var teamPick = t.closest('[data-mgr-pe-team-pick]');
+    if (teamPick) {
+      pickedTeams.push(teamPick.getAttribute('data-mgr-pe-team-pick'));
+      renderTeamChips();
+      toggleTeamPop(false);
+      $('#mgrPeTeamAdd').focus();
+      return;
+    }
+    if (t.closest('#mgrPeTeamAdd')) { toggleTeamPop(); return; }
+    if (!t.closest('#mgrPeTeamPop')) toggleTeamPop(false);
     var tplBtn = t.closest('[data-mgr-pe-tpl]');
     if (tplBtn) { pickTemplate(tplBtn.getAttribute('data-mgr-pe-tpl')); return; }
     var sub = t.closest('[data-mgr-pe-subtab]');
-    if (sub) { syncSubtabs(sub.getAttribute('data-mgr-pe-subtab') === 'goal'); return; }
+    if (sub) { syncKind(sub.getAttribute('data-mgr-pe-subtab') === 'goal'); return; }
   });
   overlay.addEventListener('input', function (e) {
     if (e.target.id === 'mgrPeBaseBranchCustom') $('#mgrPeBranchError').hidden = true;
     if (e.target.id === 'mgrPeRepo') { $('#mgrPeRepoError').hidden = true; e.target.removeAttribute('aria-invalid'); }
+  });
+  /* 离开 Git 地址输入框时就提示格式问题，不等到点「创建」 */
+  $('#mgrPeRepo').addEventListener('blur', function (e) {
+    var err = gitRepoUrlError(e.target.value);
+    if (!err) return;
+    $('#mgrPeRepoError').textContent = err;
+    $('#mgrPeRepoError').hidden = false;
+    e.target.setAttribute('aria-invalid', 'true');
   });
   overlay.addEventListener('change', function (e) {
     if (e.target.id === 'mgrPeBaseBranch') {
@@ -349,21 +324,16 @@ function initProjectNewModal() {
     }
   });
   overlay.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') { e.stopPropagation(); closeProjectNew(); }
-  });
-  /* 离开 Git 地址输入框时就提示格式问题，不等到点提交 */
-  $('#mgrPeRepo').addEventListener('blur', function (e) {
-    var err = gitRepoUrlError(e.target.value);
-    if (!err) return;
-    $('#mgrPeRepoError').textContent = err;
-    $('#mgrPeRepoError').hidden = false;
-    e.target.setAttribute('aria-invalid', 'true');
+    if (e.key !== 'Escape') return;
+    e.stopPropagation();
+    if (!$('#mgrPeTeamPop').hidden) { toggleTeamPop(false); $('#mgrPeTeamAdd').focus(); return; }
+    closeProjectNew();
   });
   $('#mgrPeSubmit').addEventListener('click', submitProjectNew);
 }
 
-/* ---------- 删除项目 ----------
-   仅负责人（或系统管理员）可删；不校验项目下已有任务，删除时任务一并清理。 */
+/* ---------- 删除空间 ----------
+   仅负责人（或系统管理员）可删；不校验空间下已有任务，删除时任务一并清理。 */
 var pendingDelete = null;
 
 function toggleMoreMenu(open) {
@@ -375,7 +345,7 @@ function toggleMoreMenu(open) {
   btn.setAttribute('aria-expanded', String(show));
 }
 function deleteBlockReason(p) {
-  if (!mgrCanManageProject(p)) return '只有项目负责人或系统管理员可以删除项目';
+  if (!mgrCanManageProject(p)) return '只有空间负责人或系统管理员可以删除空间';
   return '';
 }
 function requestDelete(trigger) {
@@ -384,7 +354,7 @@ function requestDelete(trigger) {
   var reason = deleteBlockReason(p);
   if (reason) { toast(reason, 'warning'); return; }
   pendingDelete = { projectId: p.id, trigger: trigger || null };
-  $('#mgrProjDeleteMessage').textContent = '删除「' + p.name + '」后不可恢复，项目下的任务（' + mgrProjectTasks(p.id).length + ' 项）和议题会一并删除，确定删除？';
+  $('#mgrProjDeleteMessage').textContent = '删除「' + p.name + '」后不可恢复，空间下的任务（' + mgrProjectTasks(p.id).length + ' 项）和议题会一并删除，确定删除？';
   var overlay = $('#mgrProjDeleteOverlay');
   overlay.style.display = 'flex';
   overlay.setAttribute('aria-hidden', 'false');
@@ -401,20 +371,20 @@ function closeDelete(restoreFocus) {
 function confirmDelete() {
   if (!pendingDelete) return;
   var p = mgrProjectById(pendingDelete.projectId);
-  if (!p) { closeDelete(false); toast('项目已不存在', 'warning'); showList(); return; }
+  if (!p) { closeDelete(false); toast('空间已不存在', 'warning'); showList(); return; }
   /* 弹窗打开期间任务或权限可能已变化，确认时再查一次 */
-  if (deleteBlockReason(p)) { closeDelete(false); toast('项目权限已变化，请重新检查', 'warning'); return; }
+  if (deleteBlockReason(p)) { closeDelete(false); toast('空间权限已变化，请重新检查', 'warning'); return; }
   if (!mgrDeleteProject(p.id)) { toast('删除失败，请重试', 'error'); return; }
   closeDelete(false);
   showList();
-  toast('项目已删除', 'success');
+  toast('空间已删除', 'success');
 }
-/* ---------- 重命名项目 ---------- */
+/* ---------- 重命名空间 ---------- */
 var renameTrigger = null;
 function requestRename(trigger) {
   var p = mgrProjectById(openProjectId);
   if (!p) return;
-  if (!mgrCanManageProject(p)) { toast('只有项目负责人或系统管理员可以重命名项目', 'warning'); return; }
+  if (!mgrCanManageProject(p)) { toast('只有空间负责人或系统管理员可以重命名空间', 'warning'); return; }
   renameTrigger = trigger || null;
   var input = $('#mgrProjRenameInput');
   input.value = p.name;
@@ -440,15 +410,14 @@ function closeRename(restoreFocus) {
 }
 function confirmRename() {
   var p = mgrProjectById(openProjectId);
-  if (!p) { closeRename(false); toast('项目已不存在', 'warning'); return; }
+  if (!p) { closeRename(false); toast('空间已不存在', 'warning'); return; }
   var name = $('#mgrProjRenameInput').value;
   if (name.trim() === p.name) { closeRename(); return; }
   var err = mgrRenameError(p, name);
   if (err) { setRenameError(err); $('#mgrProjRenameInput').focus(); return; }
   if (!mgrRenameProject(p, name)) { setRenameError('保存失败，请重试'); return; }
-  $('#mgrProjCrumbName').textContent = p.name;
   closeRename();
-  toast('项目已重命名', 'success');
+  toast('空间已重命名', 'success');
 }
 function initProjectRename() {
   var overlay = $('#mgrProjRenameOverlay');
@@ -463,7 +432,7 @@ function initProjectRename() {
   });
 }
 
-/* ---------- 项目设置 · 代码仓库 ---------- */
+/* ---------- 空间设置 · 代码仓库 ---------- */
 var BASE_PRESETS = ['main', 'master', 'develop'];
 var repoTrigger = null;
 function setRepoError(msg) {
@@ -479,7 +448,7 @@ function syncRepoCustom() {
 function openRepoSettings(trigger) {
   var p = mgrProjectById(openProjectId);
   if (!p) return;
-  if (!mgrCanManageProject(p)) { toast('只有项目负责人或系统管理员可以修改项目设置', 'warning'); return; }
+  if (!mgrCanManageProject(p)) { toast('只有空间负责人或系统管理员可以修改空间设置', 'warning'); return; }
   repoTrigger = trigger || null;
   $('#mgrRepoUrl').value = p.repo || '';
   var base = p.baseBranch || 'main';
@@ -504,11 +473,11 @@ function closeRepoSettings(restoreFocus) {
 }
 function saveRepoSettings() {
   var p = mgrProjectById(openProjectId);
-  if (!p) { closeRepoSettings(false); toast('项目已不存在', 'warning'); return; }
+  if (!p) { closeRepoSettings(false); toast('空间已不存在', 'warning'); return; }
   var repo = $('#mgrRepoUrl').value.trim();
   var baseSel = $('#mgrRepoBase').value;
   var base = (baseSel === '__custom' ? $('#mgrRepoBaseCustom').value : baseSel).trim();
-  if (!repo && p.containsRd) { setRepoError('包含研发任务的项目必须填写 Git 地址'); $('#mgrRepoUrl').focus(); return; }
+  if (!repo && p.containsRd) { setRepoError('包含研发任务的空间必须填写 Git 地址'); $('#mgrRepoUrl').focus(); return; }
   var urlErr = gitRepoUrlError(repo);
   if (urlErr) { setRepoError(urlErr); $('#mgrRepoUrl').setAttribute('aria-invalid', 'true'); $('#mgrRepoUrl').focus(); return; }
   var err = repo ? tkBranchNameError(base) : '';
@@ -573,15 +542,31 @@ export function initManagerProjects(routeChanged) {
     if (t.closest('[data-mgr-proj-rename]')) { toggleMoreMenu(false); requestRename($('[data-mgr-proj-more]')); return; }
     var del = t.closest('[data-mgr-proj-delete]');
     if (del) { toggleMoreMenu(false); requestDelete($('[data-mgr-proj-more]')); return; }
-    if (t.closest('#mgrListAskSend')) {
-      var input = $('#mgrListAskInput');
-      var q = input.value.trim();
-      if (!q) { toast('先输入想问的问题'); return; }
-      input.value = '';
-      toast('已收到提问（演示）：「' + mgrEsc(q) + '」，AI 会基于项目上下文作答');
+    if (t.closest('#mgrAskSpaceBtn')) { toggleAskSpaces(); return; }
+    var spaceOpt = t.closest('[data-mgr-ask-space]');
+    if (spaceOpt) {
+      askSpaceId = spaceOpt.getAttribute('data-mgr-ask-space');
+      renderAskSpaces();
+      toggleAskSpaces(false);
+      $('#mgrListAskInput').focus();
       return;
     }
-    if (t.closest('#mgrTodoAll')) { todoExpanded = !todoExpanded; renderTodos(); return; }
+    if (!t.closest('.mgr-ask-space')) toggleAskSpaces(false);
+    if (t.closest('[data-mgr-ask-expert]')) { toast('选择专家（演示）：默认由灵基按任务内容匹配'); return; }
+    if (t.closest('#mgrListAskSend')) {
+      var picked = askSpaceId ? mgrProjectById(askSpaceId) : null;
+      if (!picked) { toast('请先选择空间', 'warning'); toggleAskSpaces(true); return; }
+      var input = $('#mgrListAskInput');
+      if (!input.value.trim()) { toast('先描述你想创建的任务'); input.focus(); return; }
+      openProject(picked.id);
+      createTaskFromAsk(picked, input);
+      return;
+    }
+    if (t.closest('#mgrPdAskSend')) {
+      var cur = mgrProjectById(openProjectId);
+      if (cur) createTaskFromAsk(cur, $('#mgrPdAskInput'));
+      return;
+    }
     var card = t.closest('#mgrProjList [data-mgr-project]');
     if (card) openProject(card.getAttribute('data-mgr-project'));
   });
@@ -596,9 +581,14 @@ export function initManagerProjects(routeChanged) {
       $('[data-mgr-proj-more]').focus();
       return;
     }
+    if (e.key === 'Escape' && e.target.closest && e.target.closest('.mgr-ask-space') && !$('#mgrAskSpaceMenu').hidden) {
+      toggleAskSpaces(false);
+      $('#mgrAskSpaceBtn').focus();
+      return;
+    }
     if (e.key !== 'Enter' && e.key !== ' ') return;
-    if (e.target.id === 'mgrListAskInput') {
-      if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); $('#mgrListAskSend').click(); }
+    if (e.target.id === 'mgrListAskInput' || e.target.id === 'mgrPdAskInput') {
+      if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); $(e.target.id === 'mgrListAskInput' ? '#mgrListAskSend' : '#mgrPdAskSend').click(); }
       return;
     }
     var card = e.target.closest && e.target.closest('#mgrProjCards [data-mgr-project]');

@@ -16,7 +16,7 @@ import { defaultStageAssigneeId } from '../tasks-v2/stage-owner.js';
 import { openTaskDetailFloating } from '../tasks-v2/index.js';
 import { mgrDateGet, mgrDateSet } from './datepicker.js';
 import { mgrDay, mgrEsc } from './utils.js';
-/* 管理 · 项目详情「计划与任务」：状态筛选、列表 / 里程碑 / 甘特图三种视图、
+/* 管理 · 空间详情「计划与任务」：状态筛选、列表 / 里程碑 / 甘特图三种视图、
    右侧滑入的任务详情，以及新建任务弹窗（核心信息 / 补充信息，研发任务可编辑执行阶段）。 */
 
 var STATUS_CHIPS = [
@@ -126,7 +126,7 @@ function filteredTasks(project) {
   return list;
 }
 
-/* 删除入口：未开始的任务，且当前用户是项目负责人 / 系统管理员或任务创建人 */
+/* 删除入口：未开始的任务，且当前用户是空间负责人 / 系统管理员或任务创建人 */
 function canDeleteTaskHere(task) {
   var project = mgrProjectById(task.project);
   if (!project || !mgrCanDeleteTask(task)) return false;
@@ -163,7 +163,7 @@ function rowActionsHtml(task, key) {
   items += menuItem('void', key, '作废任务', st !== 'done' && st !== 'cancelled', false, '已完成或已取消的任务不能作废');
   items += canDeleteTaskHere(task)
     ? '<button type="button" role="menuitem" class="mgr-row-act mgr-menu-danger" data-mgr-task-delete="' + mgrEsc(key) + '">' + DELETE_ICON + '删除任务</button>'
-    : menuItem('del', key, '删除任务', false, true, '只有未开始的任务，且需项目负责人或任务创建人才能删除');
+    : menuItem('del', key, '删除任务', false, true, '只有未开始的任务，且需空间负责人或任务创建人才能删除');
   var open = openRowMenu === key;
   return '<button type="button" class="mgr-row-edit" aria-label="编辑任务"' +
     (editable ? ' data-mgr-task-act="edit" data-mgr-task-key="' + mgrEsc(key) + '" data-tooltip="编辑任务"' : ' disabled title="已完成的任务不能编辑"') + '>' +
@@ -257,7 +257,7 @@ function milestoneViewHtml(project, tasks) {
     ? '<div class="mgr-ms-card"><div class="mgr-ms-card-head"><strong>未挂里程碑</strong><span class="mgr-ms-count">' + g.top.length +
       ' 项</span></div><div class="mgr-ms-card-tasks">' + g.top.map(msTaskHtml).join('') + '</div></div>'
     : '';
-  return '<div class="mgr-ms-cards">' + (cards + rest || '<div class="mgr-empty">项目未设置里程碑</div>') + '</div>';
+  return '<div class="mgr-ms-cards">' + (cards + rest || '<div class="mgr-empty">空间未设置里程碑</div>') + '</div>';
 }
 
 /* ---------- 甘特图视图 ----------
@@ -407,7 +407,7 @@ function planWorkspaceHtml(project) {
     '<p class="mgr-footnote" id="mgrPdPermNote"' + (canOpenSession ? ' hidden' : '') + '>当前演示角色无执行会话查看权限，仅展示任务元数据与执行状态。</p>';
 }
 
-/* 当前打开的项目（以任务区上的 data-mgr-proj 为准） */
+/* 当前打开的空间（以任务区上的 data-mgr-proj 为准） */
 function currentPlanProject() {
   var area = $('#mgrPdTaskArea');
   var id = area ? area.getAttribute('data-mgr-proj') : null;
@@ -444,7 +444,7 @@ function closeRowMenu() {
 var pendingTaskDelete = null;
 function requestTaskDelete(key, trigger) {
   var task = mgrTaskById(key);
-  if (!task || !canDeleteTaskHere(task)) { toast('只有未开始的任务可以删除，且需项目负责人或任务创建人操作', 'warning'); return; }
+  if (!task || !canDeleteTaskHere(task)) { toast('只有未开始的任务可以删除，且需空间负责人或任务创建人操作', 'warning'); return; }
   pendingTaskDelete = { key: String(key), trigger: trigger || null };
   $('#mgrTaskDeleteMessage').textContent = '删除「' + task.title + '」后不可恢复，确定删除？';
   var overlay = $('#mgrTaskDeleteOverlay');
@@ -488,7 +488,7 @@ function setPlanView(mode) {
   });
   rerenderPlan();
 }
-/* 切换项目时重置筛选状态 */
+/* 切换空间时重置筛选状态 */
 function resetPlanState() {
   statusFilter = 'all';
   searchText = '';
@@ -581,8 +581,8 @@ function renderTaskPanel() {
 
 /* ---------- 新建任务弹窗 ---------- */
 /* 研发任务的执行计划，对齐开发板块新建任务的执行计划表：
-   执行阶段取自任务所选智能体团队的交付路径（项目不绑定团队，新建任务时选；智能体按阶段自动匹配），
-   每个节点展示执行的智能体，设置人工审核（默认勾选，可取消）与审核人；执行人按项目角色默认匹配。 */
+   执行阶段取自任务所选智能体团队的交付路径（空间不绑定团队，新建任务时选；智能体按阶段自动匹配），
+   每个节点展示执行的智能体，设置人工审核（默认勾选，可取消）与审核人；执行人按空间角色默认匹配。 */
 var draftStages = [];
 var draftTeamId = '';
 var planProject = null;
@@ -738,7 +738,7 @@ function openTaskNew(parentId, opts) {
   editingKey = editTask ? mgrTaskKey(editTask) : null;
   editLocked = false;
   var project = editTask ? mgrProjectById(editTask.project) : (opts && opts.project) || currentPlanProject();
-  if (!project) { toast('请先打开项目详情', 'warning'); return; }
+  if (!project) { toast('请先打开空间详情', 'warning'); return; }
   var rdKind = editTask ? mgrIsDevTask(editTask) || isRdTask(editTask) : !!(opts && opts.kind === 'rd');
   taskNewProjectId = project.id;
   var overlay = $('#mgrTaskNewOverlay');
@@ -777,7 +777,7 @@ function openTaskNew(parentId, opts) {
   var popup = $('#mgrTnCollabPopup');
   popup.innerHTML = mgrProjectMembers(project).map(function (m) {
     return '<label class="mgr-tn-collab-row"><input type="checkbox" data-mgr-tn-collab="' + mgrEsc(m.id) + '"><span>' + mgrEsc(m.name) + '</span></label>';
-  }).join('') || '<p class="mgr-tn-sub-empty">项目暂无成员</p>';
+  }).join('') || '<p class="mgr-tn-sub-empty">空间暂无成员</p>';
   popup.hidden = true;
   $('#mgrTnAiMenu').hidden = true;
   fillTeamSelect('');
@@ -785,7 +785,7 @@ function openTaskNew(parentId, opts) {
   renderStages();
 
   var tasks = mgrProjectTasks(project.id).filter(function (t) { return mgrIsDevTask(t) === rdKind; });
-  fillSelect('#mgrTnParent', '<option value="">无（挂在本项目根任务下）</option>' + tasks.map(function (t) {
+  fillSelect('#mgrTnParent', '<option value="">无（挂在本空间根任务下）</option>' + tasks.map(function (t) {
     return '<option value="' + mgrEsc(mgrTaskKey(t)) + '">' + mgrEsc((t.code || '') + ' ' + t.title) + '</option>';
   }).join(''));
   fillSelect('#mgrTnPre', '<option value="">无（不设前序）</option>' + tasks.map(function (t) {
@@ -802,6 +802,13 @@ function openTaskNew(parentId, opts) {
   var subField = $('#mgrTnSubs').closest('.mgr-tn-field');
   if (subField) subField.hidden = !!editTask || rdKind;
   if (editTask) fillEditTask(editTask, rdKind);
+  /* 从空间底部对话发起：带入用户描述，研发任务预选空间的智能体团队 */
+  var draft = !editTask && opts && opts.draft;
+  if (draft) {
+    $('#mgrTnTitle').value = draft.title || '';
+    $('#mgrTnDesc').value = draft.desc || '';
+    if (rdKind && draft.teamId) { fillTeamSelect(draft.teamId); syncFlowSelect('feature'); resetDraftStages(project); renderStages(); }
+  }
   overlay.style.display = 'flex';
   overlay.setAttribute('aria-hidden', 'false');
   $('#mgrTnTitle').focus();
@@ -892,7 +899,7 @@ function saveTaskEdit(project, rd, title) {
 }
 function saveTaskNew(start) {
   var project = mgrProjectById(taskNewProjectId);
-  if (!project) { toast('请先打开项目详情', 'warning'); return; }
+  if (!project) { toast('请先打开空间详情', 'warning'); return; }
   var rd = !!document.querySelector('[data-mgr-tntype="rd"].active');
   var title = $('#mgrTnTitle').value.trim();
   if (!title) { toast('请输入任务名', 'error'); $('#mgrTnTitle').focus(); return; }

@@ -12,4 +12,5 @@
 @import './manager/10-drawer-feed.css';   /* 任务详情抽屉、项目动态 */
 @import './manager/11-detail-target.css';   /* 项目详情目标规格（覆盖前面的详情样式） */
 @import './manager/12-rd-tasks.css';   /* 研发任务页签、行操作菜单、新建 / 编辑任务弹窗尺寸 */
-@import './manager/13-settings-pages.css';   /* 项目设置 · 功能页面 */
+@import './manager/13-settings-pages.css';   /* 空间设置 · 首页板块（旧版功能页面样式） */
+@import './manager/14-space.css';   /* 空间：列表头、底部对话、右栏与子页面、首页板块设置、成员与智能体、小灵、AI 组织 */

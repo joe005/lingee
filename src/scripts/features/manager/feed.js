@@ -2,7 +2,7 @@ import { $ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
 import { TASK_STATUSES, mgrIsDevTask, mgrPersonName, mgrProjectIssues, mgrProjectKnowledge, mgrProjectTasks, mgrTaskKey } from './data.js';
 import { mgrEsc } from './utils.js';
-/* 管理 · 项目动态：活动流。由任务创建、状态变更和知识库归档汇总成时间线，
+/* 管理 · 空间动态：活动流。由任务创建、状态变更和知识库归档汇总成时间线，
    可按来源（人工 / 智能体 / 风险 / 系统）、任务和关键词过滤。 */
 
 var SOURCES = [['all', '全部'], ['human', '人工'], ['agent', '智能体'], ['risk', '风险'], ['system', '系统']];
@@ -76,7 +76,7 @@ function collect(p) {
   mgrProjectKnowledge(p.id).forEach(function (k) {
     items.push({
       time: String(k.archivedAt || ''), action: '知识库归档', source: 'agent', tone: 'kb',
-      actor: k.agent || '智能体', taskKey: '', task: '', text: '「' + k.title + '」归档到项目知识库',
+      actor: k.agent || '智能体', taskKey: '', task: '', text: '「' + k.title + '」归档到空间知识库',
     });
   });
   return items.filter(function (x) { return x.time; })
@@ -103,7 +103,7 @@ export function feedHtml(p) {
   }).slice(0, MAX_ITEMS);
   return '<div class="mgr-fd">' +
     '<div class="mgr-fd-head"><h2 class="mgr-fd-title"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>活动流</h2>' +
-    '<span class="mgr-fd-sub">项目中所有人机协作活动的实时记录</span>' +
+    '<span class="mgr-fd-sub">空间中所有人机协作活动的实时记录</span>' +
     '<label class="mgr-fd-search"><input type="search" id="mgrFdSearch" value="' + mgrEsc(query) + '" placeholder="搜索任务、议题、智能体、操作人" autocomplete="off" aria-label="搜索活动">' +
     '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg></label>' +
     '<button type="button" class="mgr-fd-export" data-mgr-fd-export><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>导出</button></div>' +
@@ -143,7 +143,7 @@ export function initManagerFeed(rerender) {
   pane.addEventListener('change', function (e) {
   });
 }
-/* 切换项目 / 重新进入详情时清空过滤条件 */
+/* 切换空间 / 重新进入详情时清空过滤条件 */
 export function resetFeed() {
   sourceFilter = 'all';
   taskFilter = '';

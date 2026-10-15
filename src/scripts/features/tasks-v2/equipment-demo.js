@@ -114,8 +114,14 @@ export const TK_EQUIPMENT_TASKS = [
 ];
 
 /* 演示任务的定制产物；未定制的阶段沿用通用产物。 */
+/* 在「设备巡检维修系统建设」空间里用底部对话新建的「故障报修…」需求，复用 T1001503 的演示产物与审核报告 */
+export function equipmentDemoId(task) {
+  if (!task) return null;
+  if (task.id !== 1503 && task.project === 'equipment' && /故障报修/.test(task.title || '')) return 1503;
+  return task.id;
+}
 export function equipmentArtifactDocs(task, people) {
-  if (task.id === 1503) return repairArtifacts(task, people);
+  if (equipmentDemoId(task) === 1503) return repairArtifacts(task, people);
   if (task.id === 1506) return diagnosisAgentArtifacts(task);
   return null;
 }

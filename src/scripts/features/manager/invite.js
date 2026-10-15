@@ -3,12 +3,12 @@ import { toast } from '../../core/toast.js';
 import { CV_MEMBERS } from '../collab/data.js';
 import { mgrAddProjectMembers, mgrCanManageProject, mgrProjectById } from './data.js';
 import { mgrEsc } from './utils.js';
-/* 管理 · 邀请成员：勾选尚未加入的灵基人员，指定本次加入的项目内角色（项目管理员 / 成员）后一次添加。
-   人员取协作开发的人员数据（CV_MEMBERS），与「项目成员」弹窗共用；岗位角色在项目成员里再调整。 */
+/* 管理 · 邀请成员：勾选尚未加入的灵基人员，指定本次加入的空间内角色（空间管理员 / 成员）后一次添加。
+   人员取协作开发的人员数据（CV_MEMBERS），与「空间成员」弹窗共用；岗位角色在空间成员里再调整。 */
 
 var projectId = null;
 var trigger = null;
-var draft = null;   /* 新建项目时的草稿模式：{ taken: () => 已选人员 ID, onConfirm(ids, asAdmin) }，不写入任何项目 */
+var draft = null;   /* 新建空间时的草稿模式：{ taken: () => 已选人员 ID, onConfirm(ids, asAdmin) }，不写入任何空间 */
 var picked = new Set();
 var query = '';
 
@@ -39,14 +39,14 @@ function renderList() {
         '<span class="mgr-inv-name">' + mgrEsc(m.name) + '</span>' +
         (m.dept ? '<small class="mgr-inv-dept">' + mgrEsc(m.dept) + '</small>' : '') + '</label>';
     }).join('')
-    : '<div class="mgr-inv-empty">' + (query.trim() ? '没有匹配的人员' : '所有人员都已在项目中') + '</div>';
+    : '<div class="mgr-inv-empty">' + (query.trim() ? '没有匹配的人员' : '所有人员都已在空间中') + '</div>';
 }
 function openInvite(id, from, draftOptions) {
   draft = draftOptions || null;
   if (!draft) {
     var p = mgrProjectById(id);
     if (!p) return;
-    if (!mgrCanManageProject(p)) { toast('只有项目负责人、项目管理员或系统管理员可以邀请成员', 'warning'); return; }
+    if (!mgrCanManageProject(p)) { toast('只有空间负责人、空间管理员或系统管理员可以邀请成员', 'warning'); return; }
   }
   projectId = draft ? null : id;
   trigger = from || null;
@@ -83,12 +83,12 @@ function confirmInvite() {
   }
   var p = projectId ? mgrProjectById(projectId) : null;
   if (!p || !picked.size) return;
-  if (!mgrCanManageProject(p)) { toast('项目权限已变化，无法邀请成员', 'warning'); return; }
+  if (!mgrCanManageProject(p)) { toast('空间权限已变化，无法邀请成员', 'warning'); return; }
   var asAdmin = $('#mgrInviteOverlay input[name="mgrInviteRole"]:checked').value === 'admin';
   var count = picked.size;
   if (!mgrAddProjectMembers(p, Array.from(picked), asAdmin)) { toast('添加失败，请重试', 'error'); return; }
   closeInvite();
-  toast('已添加 ' + count + ' 名' + (asAdmin ? '项目管理员' : '成员'), 'success');
+  toast('已添加 ' + count + ' 名' + (asAdmin ? '空间管理员' : '成员'), 'success');
 }
 
 export function initManagerInvite() {

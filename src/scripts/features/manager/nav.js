@@ -1,15 +1,19 @@
 import { $, $$ } from '../../core/dom.js';
-import { toast } from '../../core/toast.js';
 import { setUrlState, showView } from '../../core/view.js';
 import { setChannel } from '../sidebar.js';
-import { mgrProjectById } from './data.js';
+import { renderAssistant, renderOrg } from './assistant.js';
+import { mgrProjects } from './data.js';
 import { currentProjectId, openProject, showList } from './projects.js';
-/* 管理 · 侧栏菜单与路由：/manager?m=<菜单>&proj=<项目>。
-   本次演示只开放「项目」菜单；决策中心、AI组织与「我的项目」下的提问保留入口，点击给出提示。 */
+import { mgrEsc } from './utils.js';
+/* 管理 · 侧栏菜单与路由（对齐产品）：小灵 / 空间 / AI 组织，地址 /manager?m=<菜单>&proj=<空间>。
+   「我的空间 · 默认」下的会话进入小灵；「空间」目录树按空间列表渲染，点空间名进入空间详情。 */
 
-var MENU_LABELS = { 'ceo-home': '决策中心', 'organization-management': 'AI组织', 'ceo-projects': '项目' };
-var DEMO_MENU = 'ceo-projects';
+var PANELS = { xiaoling: 'xiaoling', 'ceo-projects': 'projects', 'organization-management': 'org' };
+var DEFAULT_MENU = 'ceo-projects';
+var currentMenu = DEFAULT_MENU;
 var pendingRoute = null;
+
+var FOLDER_ICON = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>';
 
 function setMenuActive(menu) {
   $$('#mgrNav .mgr-nav-item').forEach(function (n) {
@@ -18,32 +22,45 @@ function setMenuActive(menu) {
 }
 function syncUrl() {
   if ($('#view-manager').classList.contains('hidden')) return;
-  var proj = currentProjectId();
-  setUrlState('/manager?m=' + DEMO_MENU + (proj ? '&proj=' + encodeURIComponent(proj) : ''));
+  var proj = currentMenu === DEFAULT_MENU ? currentProjectId() : null;
+  setUrlState('/manager?m=' + currentMenu + (proj ? '&proj=' + encodeURIComponent(proj) : ''));
+  syncSideSpaces();
 }
-/* 打开管理板块：切到「管理」页签、显示管理视图，再进入项目列表或指定项目 */
-function openManager(projectId) {
+function showPanel(menu) {
+  currentMenu = PANELS[menu] ? menu : DEFAULT_MENU;
+  var panel = PANELS[currentMenu];
+  $$('#view-manager > .mgr-panel').forEach(function (el) {
+    el.classList.toggle('hidden', el.getAttribute('data-mgr-panel') !== panel);
+  });
+  setMenuActive(currentMenu);
+}
+/* 打开管理板块：切到「管理」页签、显示管理视图，再进入对应菜单（空间菜单可指定空间） */
+function openManager(projectId, menu) {
   setChannel('manage');
   showView('manager');
-  setMenuActive(DEMO_MENU);
-  if (!projectId || !openProject(projectId)) showList();
+  showPanel(menu || DEFAULT_MENU);
+  if (currentMenu === 'xiaoling') renderAssistant();
+  else if (currentMenu === 'organization-management') renderOrg();
+  else if (!projectId || !openProject(projectId)) showList();
   syncUrl();
 }
 
-/* 侧栏「项目」目录树只保留仍存在的项目，名称随重命名同步（删除项目后同步隐藏） */
-function syncSideFolders() {
-  $$('#mgrNav .mgr-side-folder').forEach(function (folder) {
-    var head = folder.querySelector('[data-mgr-side-project]');
-    var p = head ? mgrProjectById(head.getAttribute('data-mgr-side-project')) : null;
-    folder.hidden = !!head && !p;
-    var nameEl = folder.querySelector('.mgr-side-folder-name');
-    if (p && nameEl) nameEl.textContent = p.name;
-  });
+/* 侧栏「空间」目录树：与空间列表同口径（开发类空间和自己新建的空间），当前空间高亮 */
+function syncSideSpaces() {
+  var box = $('#mgrSideSpaces');
+  if (!box) return;
+  var current = currentMenu === DEFAULT_MENU ? currentProjectId() : null;
+  var list = mgrProjects().filter(function (p) { return p.containsRd || p.custom; });
+  box.innerHTML = list.map(function (p) {
+    var on = p.id === current;
+    return '<div class="mgr-side-folder' + (on ? ' is-current' : '') + '"><button type="button" class="mgr-side-folder-head" data-mgr-side-project="' + mgrEsc(p.id) + '"' + (on ? ' aria-current="page"' : '') + '>' +
+      FOLDER_ICON + '<span class="mgr-side-folder-name">' + mgrEsc(p.name) + '</span></button></div>';
+  }).join('') || '<div class="mgr-side-sub">还没有空间</div>';
 }
 
 /* route.js 在模块初始化前解析启动路由，先把管理板块的查询参数存下来 */
 function setMgrPendingRoute(params) {
-  pendingRoute = { m: params.get('m') || DEMO_MENU, proj: params.get('proj') || '' };
+  pendingRoute = { m: params.get('m') || DEFAULT_MENU, proj: params.get('proj') || '' };
 }
 
 export function initManagerNav() {
@@ -52,39 +69,28 @@ export function initManagerNav() {
     var t = e.target;
     var item = t.closest('[data-mgr-nav]');
     if (item) {
-      var menu = item.getAttribute('data-mgr-nav');
-      if (menu === DEMO_MENU) openManager();
-      else toast('「' + (MENU_LABELS[menu] || '该页面') + '」不在本次演示范围');
+      openManager(null, item.getAttribute('data-mgr-nav'));
       /* view.js 的侧栏导航会按文字高亮被点的菜单，这里统一回到实际打开的菜单 */
-      setMenuActive(DEMO_MENU);
+      setMenuActive(currentMenu);
       return;
     }
-    var child = t.closest('[data-mgr-side-child]');
-    if (child) { openManager(child.getAttribute('data-mgr-side-child')); return; }
-    var folderHead = t.closest('.mgr-side-folder-head');
-    if (folderHead) {
-      var folder = folderHead.closest('.mgr-side-folder');
-      if (folder.querySelector('.mgr-side-children')) {
-        folderHead.setAttribute('aria-expanded', String(folder.classList.toggle('expanded')));
-      } else {
-        openManager(folderHead.getAttribute('data-mgr-side-project'));
-      }
-      return;
-    }
-    if (t.closest('[data-mgr-side-goto]')) toast('该提问不在本次演示范围');
+    var folderHead = t.closest('[data-mgr-side-project]');
+    if (folderHead) { openManager(folderHead.getAttribute('data-mgr-side-project')); return; }
+    var go = t.closest('[data-mgr-side-goto]');
+    if (go) openManager(null, go.getAttribute('data-mgr-side-goto'));
   });
   nav.addEventListener('keydown', function (e) {
     if (e.key !== 'Enter' && e.key !== ' ') return;
-    var target = e.target.closest('[data-mgr-nav],[data-mgr-side-child],[data-mgr-side-goto]');
+    var target = e.target.closest('[data-mgr-nav],[data-mgr-side-goto]');
     if (target) { e.preventDefault(); target.click(); }
   });
   document.addEventListener('lingee:mgr-open', function () { openManager(); });
-  document.addEventListener('lingee:mgr-projects-changed', function () { syncSideFolders(); syncUrl(); });
-  syncSideFolders();
+  document.addEventListener('lingee:mgr-projects-changed', function () { syncSideSpaces(); syncUrl(); });
+  syncSideSpaces();
   if (pendingRoute) {
     var route = pendingRoute;
     pendingRoute = null;
-    openManager(route.proj);
+    openManager(route.proj, route.m);
   }
 }
 

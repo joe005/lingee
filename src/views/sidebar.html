@@ -133,69 +133,30 @@
       </div>
       <!-- 管理板块菜单：由 features/manager/nav.js 接线，切到「管理」页签时显示 -->
       <div id="mgrNav" class="mgr-nav hidden" aria-label="管理板块菜单">
-        <!-- 管理频道菜单（对齐管理原型）：决策中心 / AI组织 / 项目 -->
-        <div class="nav-item mgr-nav-item" data-mgr-nav="ceo-home" tabindex="0" role="button">
-          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 21v-6h6v6"/></svg>
-          决策中心
-        </div>
-        <div class="nav-item mgr-nav-item" data-mgr-nav="organization-management" tabindex="0" role="button">
-          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          AI组织
+        <!-- 管理频道菜单（对齐产品）：小灵 / 空间 / AI 组织 -->
+        <div class="nav-item mgr-nav-item" data-mgr-nav="xiaoling" tabindex="0" role="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M16 12v1.5a2.5 2.5 0 0 0 5 0V12"/></svg>
+          小灵
         </div>
         <div class="nav-item mgr-nav-item" data-mgr-nav="ceo-projects" tabindex="0" role="button">
           <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-          项目
+          空间
+        </div>
+        <div class="nav-item mgr-nav-item" data-mgr-nav="organization-management" tabindex="0" role="button">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0 1 14 0v1"/></svg>
+          AI 组织
         </div>
 
         <div class="mgr-side-section">
-          <div class="mgr-side-label">我的项目</div>
+          <div class="mgr-side-label">我的空间</div>
           <div class="mgr-side-sub">默认</div>
-          <div class="mgr-side-item" data-mgr-side-goto="ceo-home" tabindex="0" role="button">这周有哪些经营异常我要看</div>
-          <div class="mgr-side-item" data-mgr-side-goto="ceo-home" tabindex="0" role="button">上月费用超支主要在哪些科目</div>
-          <div class="mgr-side-item" data-mgr-side-goto="ceo-home" tabindex="0" role="button">把昨天的经营会结论整理成纪要</div>
-          <div class="mgr-side-item" data-mgr-side-goto="ceo-home" tabindex="0" role="button">华东区库存周转现在什么水平</div>
+          <div class="mgr-side-item" data-mgr-side-goto="xiaoling" tabindex="0" role="button">配置全天CEO助理</div>
         </div>
 
         <div class="mgr-side-section">
-          <div class="mgr-side-label">项目</div>
-          <!-- 目录树与管理项目数据（space=manage）对应；点击进入项目详情 -->
-          <div class="mgr-side-folder expanded">
-            <button type="button" class="mgr-side-folder-head" data-mgr-side-project="mgmt-budget" aria-expanded="true">
-              <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-              <span class="mgr-side-folder-name">2027 预算目标制定与编制</span>
-              <svg class="mgr-side-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 6 8 10 12 6"/></svg>
-            </button>
-            <div class="mgr-side-children">
-              <div class="mgr-side-child" data-mgr-side-child="mgmt-budget" tabindex="0" role="button">一上为什么超了 1.2 个点</div>
-              <div class="mgr-side-child" data-mgr-side-child="mgmt-budget" tabindex="0" role="button">分档压降怎么分才不吵架</div>
-              <div class="mgr-side-child" data-mgr-side-child="mgmt-budget" tabindex="0" role="button">人力 +5.2% 的构成拆解</div>
-              <div class="mgr-side-child" data-mgr-side-child="mgmt-budget" tabindex="0" role="button">去年 78 天到底耗在哪</div>
-            </div>
-          </div>
-          <div class="mgr-side-folder">
-            <button type="button" class="mgr-side-folder-head" data-mgr-side-project="mgmt-routine" aria-expanded="false">
-              <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-              <span class="mgr-side-folder-name">例行会议</span>
-            </button>
-          </div>
-          <div class="mgr-side-folder">
-            <button type="button" class="mgr-side-folder-head" data-mgr-side-project="mgmt-adhoc" aria-expanded="false">
-              <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-              <span class="mgr-side-folder-name">非例行会议</span>
-            </button>
-          </div>
-          <div class="mgr-side-folder expanded">
-            <button type="button" class="mgr-side-folder-head" data-mgr-side-project="mgmt-procurement" aria-expanded="true">
-              <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-              <span class="mgr-side-folder-name">重点物料采购降本与保供</span>
-              <svg class="mgr-side-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 6 8 10 12 6"/></svg>
-            </button>
-            <div class="mgr-side-children">
-              <div class="mgr-side-child" data-mgr-side-child="mgmt-procurement" tabindex="0" role="button">铜材涨价对 Q3 目标的影响</div>
-              <div class="mgr-side-child" data-mgr-side-child="mgmt-procurement" tabindex="0" role="button">长协锁价还是分批建仓</div>
-              <div class="mgr-side-child" data-mgr-side-child="mgmt-procurement" tabindex="0" role="button">第三家供应商值不值得引入</div>
-            </div>
-          </div>
+          <div class="mgr-side-sub">空间</div>
+          <!-- 目录树按空间列表渲染（features/manager/nav.js）：点空间名进入空间详情，有会话的空间可展开 -->
+          <div id="mgrSideSpaces"></div>
         </div>
       </div>
     </div>

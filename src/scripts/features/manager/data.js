@@ -25,7 +25,7 @@ var SEED_PROJECTS = [
     mgrRisk: 1, mgrDecide: 1, status: 'in_progress', priority: '高', owner: '赵琳',
     dot: 'blue', start: '2026-09-21', end: '2026-10-16',
     containsRd: true,
-    repo: 'https://gitlab.kingdee.com/helpdesk', baseBranch: 'main', adminIds: ['p04'],
+    repo: 'https://gitlab.kingdee.com/helpdesk', baseBranch: 'main', adminIds: ['p04'], teamIds: ['general-app-dev'],
     projectExperts: ['general-app-development-expert', 'software-qa-engineer'],
     expertPerms: { 'general-app-development-expert': { chat: true, read: true, write: true }, 'software-qa-engineer': { chat: true, read: true, write: false } },
     milestones: [
@@ -134,11 +134,12 @@ var SEED_PROJECTS = [
   {
     id: 'equipment', name: '设备巡检维修系统建设',
     desc: '在金蝶 ERP 上建设备台账、扫码巡检、故障报修与维修记录，并沉淀老师傅的排障经验。',
-    goal: '8 周内上线设备巡检维修系统：巡检、报修、维修全程线上留痕；设备主管把排障经验做成故障诊断助手，新人也能按老师傅的思路排查',
+    goal: '半个月内基于苍穹上线设备巡检维修系统：巡检、报修、维修全程线上留痕；设备主管把排障经验做成故障诊断助手，新人也能按老师傅的思路排查',
     mgrOk: true, mgrProgress: 56, status: 'in_progress', priority: '高', owner: '张工',
-    dot: 'blue', start: '2026-09-14', end: '2026-11-06',
+    dot: 'blue', start: '2026-10-08', end: '2026-10-23',
     containsRd: true,
-    repo: 'https://github.com/kingdee/equipment-ops', baseBranch: 'main',
+    repo: 'https://github.com/kingdee/equipment-ops', baseBranch: 'main', teamIds: ['cosmic-app-dev'],
+    projectExperts: ['cosmic-product-manager', 'cosmic-metadata-expert', 'cosmic-qa-engineer'],
     milestones: [
       { name: '系统上线', date: '2026-10-16' },
       { name: '诊断助手发布', date: '2026-10-23' },
@@ -186,25 +187,28 @@ var SEED_TASKS = [
 var TASK_STATUSES = [
   { id: 'planned', name: '待规划' },
   { id: 'backlog', name: '待开始' },
-  { id: 'in_progress', name: '执行中' },
+  { id: 'in_progress', name: '进行中' },
   { id: 'in_review', name: '待审核' },
   { id: 'blocked', name: '已阻塞' },
   { id: 'done', name: '已完成' },
   { id: 'cancelled', name: '已取消' },
 ];
 
-/* 项目知识库：任务产物上报归档后的条目；管理演示项目暂无归档 */
+/* 空间知识库：任务产物上报归档后的条目 */
 var KNOWLEDGE = [
   { id: 'kb-ticket-1', projectId: 'ticket-mgmt', title: '工单管理系统需求规格说明书', type: '需求文档', summary: '覆盖工单提交、分类、派单、SLA、统计与企业微信集成的验收条件，共 42 条，均可观察。', archivedAt: '2026-09-24 17:20', archivedBy: '赵琳', agent: '通用应用开发', sourceTaskId: 'tk1600', vectorIndexed: true },
   { id: 'kb-ticket-2', projectId: 'ticket-mgmt', title: '工单管理系统架构设计', type: '设计文档', summary: '分层架构、数据模型与规则引擎方案；派单算法依赖调度集群。', archivedAt: '2026-09-25 16:05', archivedBy: '赵琳', agent: '通用应用开发', sourceTaskId: 'tk1602', vectorIndexed: true },
   { id: 'kb-ticket-3', projectId: 'ticket-mgmt', title: '工单管理系统（网站预览）', type: '网站预览', summary: '可运行的工单管理系统：提交、列表、详情、SLA 倒计时与统计报表。', archivedAt: '2026-10-07 18:30', archivedBy: '赵琳', agent: '通用应用开发', sourceTaskId: 'tk1605', vectorIndexed: false },
   { id: 'kb-ticket-4', projectId: 'ticket-mgmt', title: '性能压测与安全扫描报告', type: '测试报告', summary: '并发 500 压测通过，接口鉴权与越权扫描无高危问题。', archivedAt: '2026-10-08 15:40', archivedBy: '陈晨', agent: '通用应用开发', sourceTaskId: 'tk1620', vectorIndexed: true },
+  { id: 'kb-equip-1', projectId: 'equipment', title: '故障报修与维修记录需求规格说明书', type: '需求文档', summary: '扫码报修、按设备类型派工到注塑 / 空压 / 数控维修组、维修记录归入设备履历，每条需求附可观察的验收条件。', archivedAt: '2026-10-15 10:20', archivedBy: '赵琳', agent: '苍穹产品智能体', vectorIndexed: true },
+  { id: 'kb-equip-2', projectId: 'equipment', title: '故障报修与维修记录元数据清单', type: '设计方案', summary: '报修单、维修记录两个实体及其标准表单、列表，派工插件 RepairDispatchPlugin 与只读查询接口。', archivedAt: '2026-10-15 10:32', archivedBy: '张伟', agent: '苍穹元数据智能体', vectorIndexed: true },
+  { id: 'kb-equip-3', projectId: 'equipment', title: '故障报修与维修记录测试报告', type: '测试报告', summary: '42 条用例全部通过，覆盖扫码带出设备、30 秒内派工到组、维修必填原因与零件、弱网不丢单。', archivedAt: '2026-10-15 10:41', archivedBy: '陈晨', agent: '苍穹质量智能体', vectorIndexed: true },
 ];
 
 /* 议题：风险与待决策事项。kind=risk 的议题关联任务（taskKey），CIO 可在议题里批准 / 驳回 */
 var SEED_ISSUES = [
   { id: 'pi-ticket-1', projectId: 'ticket-mgmt', title: '调度集群扩容待审批，自动派单算法无法压测上线', status: '待处理', from: '智能体 通用应用开发 · 风险上报', time: '10/8 14:12', kind: 'risk', taskKey: 'tk1610', impact: '影响里程碑「系统上线」（10 月 16 日），需 CIO 审批集群扩容' },
-  { id: 'pi-ticket-2', projectId: 'ticket-mgmt', title: '历史工单迁移的字段映射口径确认', status: '已批准', from: '项目管理员 赵琳', time: '10/5 10:20', kind: 'decision', decision: { by: '吴宏超', at: '2026-10-05 15:30', text: '同意按「新分类」映射，保留旧编号作追溯字段' } },
+  { id: 'pi-ticket-2', projectId: 'ticket-mgmt', title: '历史工单迁移的字段映射口径确认', status: '已批准', from: '空间管理员 赵琳', time: '10/5 10:20', kind: 'decision', decision: { by: '吴宏超', at: '2026-10-05 15:30', text: '同意按「新分类」映射，保留旧编号作追溯字段' } },
 ];
 
 var PROJECTS = [];
@@ -315,10 +319,10 @@ function mgrSetProjectExperts(project, ids, perms) {
 /* 重命名项目：名称必填、不超过 60 字、不能与其他管理项目重名；返回错误文案，成功返回空串 */
 function mgrRenameError(project, name) {
   var v = String(name || '').trim();
-  if (!v) return '请填写项目名称';
-  if (v.length > 60) return '项目名称不能超过 60 个字';
+  if (!v) return '请填写空间名称';
+  if (v.length > 60) return '空间名称不能超过 60 个字';
   var dup = PROJECTS.some(function (p) { return p.id !== project.id && p.name.trim() === v; });
-  return dup ? '已有同名项目，请换一个名称' : '';
+  return dup ? '已有同名空间，请换一个名称' : '';
 }
 function mgrRenameProject(project, name) {
   var prev = { name: project.name, updatedAt: project.updatedAt };
@@ -377,7 +381,7 @@ function mgrSetProjectText(project, patch) {
   return true;
 }
 
-/* 项目详情的功能页面：内置「计划与任务 / 研发任务 / 动态」加自定义页面，可开关、调序。
+/* 空间首页板块：内置「计划与任务 / 研发任务 / 动态」加添加的 MCP / 知识板块（custom，kind 为 mcp / kb），可开关、调序。
    未配置时开发类项目显示研发任务和动态，其他项目显示计划与任务和动态；研发任务只对开发类项目可用。 */
 var BUILTIN_PAGES = [['plan', '计划与任务'], ['rd', '研发任务'], ['feed', '动态']];
 function mgrProjectPages(project) {
@@ -385,7 +389,7 @@ function mgrProjectPages(project) {
   var avail = BUILTIN_PAGES.filter(function (b) { return b[0] !== 'rd' || rd; });
   var out = [];
   (Array.isArray(project.pages) ? project.pages : []).forEach(function (s) {
-    if (s.custom) { out.push({ id: s.id, name: s.name, enabled: s.enabled !== false, custom: true }); return; }
+    if (s.custom) { out.push({ id: s.id, name: s.name, enabled: s.enabled !== false, custom: true, kind: s.kind || '', source: s.source || '' }); return; }
     var b = avail.find(function (x) { return x[0] === s.id; });
     if (b && !out.some(function (o) { return o.id === b[0]; })) out.push({ id: b[0], name: b[1], enabled: s.enabled !== false });
   });
@@ -399,7 +403,7 @@ function mgrProjectPages(project) {
 function mgrSetProjectPages(project, pages) {
   var prev = { pages: project.pages, updatedAt: project.updatedAt };
   project.pages = pages.map(function (x) {
-    return x.custom ? { id: x.id, name: x.name, custom: true, enabled: x.enabled } : { id: x.id, enabled: x.enabled };
+    return x.custom ? { id: x.id, name: x.name, custom: true, enabled: x.enabled, kind: x.kind || '', source: x.source || '' } : { id: x.id, enabled: x.enabled };
   });
   project.updatedAt = Date.now();
   if (!mgrSaveProjects()) { Object.assign(project, prev); return false; }
@@ -624,6 +628,14 @@ function mgrProjectMembers(project) {
     return p && p.status !== 'disabled' ? { id: id, name: p.name } : null;
   }).filter(Boolean);
 }
+/* 空间的智能体团队：新建空间时添加的团队优先；本地缓存的旧演示空间没有该字段时取种子数据，开发空间兜底用通用应用开发团队 */
+function mgrSpaceTeamId(project) {
+  if (!project) return '';
+  if (project.teamIds && project.teamIds.length) return project.teamIds[0];
+  var seed = SEED_PROJECTS.find(function (x) { return x.id === project.id; });
+  if (seed && seed.teamIds && seed.teamIds.length) return seed.teamIds[0];
+  return project.containsRd ? 'general-app-dev' : '';
+}
 function mgrExpert(id) { return EX[id] || null; }
 function mgrExpertList() { return EXPERTS; }
 function mgrTeams() { return TEAMS; }
@@ -717,7 +729,7 @@ export {
   TASK_STATUSES, mgrAddIssue, mgrAiContribution, mgrDecideIssue, mgrAddProject, mgrCanManageProject, mgrCanDeleteTask, mgrCreateTask, mgrDeleteProject, mgrDeleteTask, mgrCurrentPersonId, mgrExpert, mgrExpertList,
   MEMBER_ROLES, mgrHasSessionPerm, mgrMemberOpenTasks, mgrMemberRole, mgrMemberRoleLabel, mgrPersonName, mgrProjectPeople,
   mgrAddProjectMembers, mgrSetMemberLevel, mgrSetProjectExperts, mgrRenameError, mgrRenameProject, mgrSetProjectMembers, mgrSetProjectPages, mgrSetProjectRepo, mgrSetProjectText, mgrProjectById, mgrProjectIssues, mgrProjectKnowledge, mgrProjectMembers, mgrProjectPages,
-  mgrCreateDevTask, mgrIsDevTask, mgrProjectProgress, mgrProjectTasks, mgrProjects, mgrRelatedTask, mgrSaveProjects, mgrSaveTasks, mgrSetSessionPerm,
+  mgrCreateDevTask, mgrIsDevTask, mgrProjectProgress, mgrSpaceTeamId, mgrProjectTasks, mgrProjects, mgrRelatedTask, mgrSaveProjects, mgrSaveTasks, mgrSetSessionPerm,
   mgrTaskById, mgrTaskKey, mgrTasks,
   mgrTeam, mgrTeams,
 };

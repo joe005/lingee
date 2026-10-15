@@ -1,3 +1,4 @@
+import { initManagerAssistant } from './assistant.js';
 import { initManagerDatePicker } from './datepicker.js';
 import { initManagerDetail } from './detail.js';
 import { initManagerInvite } from './invite.js';
@@ -7,7 +8,8 @@ import { initManagerPlan } from './plan.js';
 import { initManagerProjects } from './projects.js';
 import { initManagerRdTasks } from './rd-tasks.js';
 import { initManagerSettings } from './settings.js';
-/* 管理板块入口（数据已由 main.js 在任务模块前通过 initManagerData 注册）：计划与任务 → 研发任务 → 项目详情 → 项目列表 → 侧栏菜单与启动路由。
+import { initManagerSpacePages } from './space-pages.js';
+/* 管理板块入口（数据已由 main.js 在任务模块前通过 initManagerData 注册）：计划与任务 → 研发任务 → 空间详情 → 成员 → 空间设置与右栏子页面 → 小灵与 AI 组织 → 空间列表 → 侧栏菜单与启动路由。
    需在协作开发与智能体模块初始化之后调用（复用其人员、智能体与智能体团队数据）。 */
 
 export function initManager() {
@@ -19,6 +21,8 @@ export function initManager() {
   initManagerMembers();
   initManagerInvite();
   initManagerSettings();
+  initManagerSpacePages();
+  initManagerAssistant();
   initManagerProjects(syncUrl);
   initManagerNav();
 }
