@@ -5,7 +5,6 @@ import { set_cvPendingProj, set_cvPendingTab } from '../features/collab/view.js'
 import { appendAssistantMessage, appendUserMessage, messagesList, restoreChatSession, simulateAIResponse } from '../features/composer.js';
 import { dsNavEl, renderOverview } from '../features/design/index.js';
 import { stripBase } from '../core/base-path.js';
-import { openChangelog } from '../features/changelog.js';
 import { canAccessRestrictedMenus, getPlatformIdentity } from '../features/login.js';
 import { setMgrPendingRoute } from '../features/manager/nav.js';
 /* 启动路由：从路径 / 旧链接 / localStorage 还原视图
@@ -37,6 +36,8 @@ export function initRoute() {
   }
   /* 专家视图已并入协作开发，兼容旧链接 */
   if(dsViewParam==='experts') dsViewParam='collab';
+  /* 已移除的更新日志页：兼容旧链接与上次停留记录，回到默认页面。 */
+  if(dsViewParam==='changelog') dsViewParam='newtask';
   dsSearch='?'+(dsViewParam?'view='+dsViewParam:'');
   dsTokenParam=new URLSearchParams(location.search).get('token')||new URLSearchParams(dsSearch).get('token');
   if(dsViewParam==='design'){
@@ -63,8 +64,7 @@ export function initRoute() {
       selectChatApp('采购订单管理');
       if(chatAppDd) chatAppDd.classList.add('disabled');
     }
-  }else if(dsViewParam==='changelog'){
-    openChangelog();
+
   }else if(dsViewParam==='work'){
     /* 工作板块的页签与菜单在 initWork 里按视图是否可见还原 */
     showView('work');

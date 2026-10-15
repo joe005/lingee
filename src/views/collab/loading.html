@@ -1,0 +1,29 @@
+    <section class="cv-entry-load hidden" id="cvEntryLoad" aria-label="协作开发加载状态">
+      <div class="cv-entry-load-feedback" role="status" aria-live="polite" aria-atomic="true">
+        <span class="cv-entry-load-spinner" aria-hidden="true"></span>
+        <span id="cvEntryLoadMessage">加载中…</span>
+        <button type="button" class="sync-btn hidden" id="cvEntryLoadRetry">重试</button>
+      </div>
+    </section>
+<script>
+/* 首屏必须在模块下载和业务初始化之前出现，不能等 main.js 执行后才挂载。 */
+(function(){
+  if(document.documentElement.getAttribute('data-initial-view')!=='collab') return;
+  var root=document.getElementById('view-collab');
+  var panel=document.getElementById('cvEntryLoad');
+  var tab=new URLSearchParams(location.search).get('tab')||'tasks';
+  root.classList.add('cv-entry-pending');
+  panel.classList.remove('hidden');
+  panel.setAttribute('aria-busy','true');
+  document.querySelectorAll('#cvTabNav [data-cvview]').forEach(function(button){
+    button.classList.toggle('tab-nav-item--active',button.dataset.cvview===(tab==='market'?'experts':tab));
+    /* 模块未就绪时不调用尚未注册的内联函数；保存用户最后选择，初始化后接续。 */
+    button.addEventListener('click',function(event){
+      if(typeof window.cvSwitchView==='function') return;
+      event.stopImmediatePropagation();
+      root.dataset.entryTab=button.dataset.cvview;
+      document.querySelectorAll('#cvTabNav [data-cvview]').forEach(function(item){item.classList.toggle('tab-nav-item--active',item===button);});
+    },true);
+  });
+})();
+</script>

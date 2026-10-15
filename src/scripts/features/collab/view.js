@@ -1,3 +1,4 @@
+import { deferCollabTab } from './loading.js';
 import { setAssetBrowseMode } from './expert-market.js';
 import { renderTaskBoard } from './task-board.js';
 import { $, $$ } from '../../core/dom.js';
@@ -62,6 +63,7 @@ function cvRenderSubNav(primary,active){
 function cvToast(msg,type){ toast(msg, type==='error'?'error':undefined); }
 function cvShowPanel(name){
   var primary=cvPrimaryOf(name);
+  $('#view-collab').classList.toggle('cv-current-navigation', ['tasks','experts','teams','config','local'].includes(primary));
   $$('#view-collab .cv-panel').forEach(function(p){ p.classList.toggle('active', p.id===(name==='tasks'?'cv-tasks-current':'cv-'+name)); });
   $$('#cvTabNav .tab-nav-item').forEach(function(t){
     t.classList.toggle('tab-nav-item--active', t.getAttribute('data-cvview')===primary);
@@ -72,6 +74,7 @@ function cvSwitchSub(name){
   cvSwitchView(name);
 }
 function cvSwitchView(name){
+  if(deferCollabTab(name)) return;
   if(name==='market'){setAssetBrowseMode('expert','more');name='experts';}
   if(name==='config-proj') name='config';   /* 旧链接兼容：项目设置已并入项目管理 */
   if(name==='config-perm') name='config';   /* 人员已并入设置左导航 */
@@ -93,6 +96,8 @@ function cvSwitchView(name){
   if(name==='teams') renderExpertGrid();
   if(name==='experts') cvRenderExperts();
   if(name==='config' && window.cvRenderPermTable) window.cvRenderPermTable();   /* 人员管理是设置里默认打开的一项 */
+  /* 首次任务初始化早于嵌入：容器与项目模式确定后，再按当前页面重绘卡片。 */
+  if(name==='tasks') document.dispatchEvent(new Event('lingee:tasks-view-enter'));
   cvSyncUrl();
 }
 /* 执行中的任务在侧边栏项目下挂一条会话 */

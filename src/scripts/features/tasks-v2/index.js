@@ -82,6 +82,7 @@ export function initTasksV2() {
   bindEvents();
   initSpaceFilter();
   document.addEventListener('lingee:collab-menu-open', openCollabTaskList);
+  document.addEventListener('lingee:tasks-view-enter', render);
   render();
   document.addEventListener('lingee:auth-changed', render);
   updateCollabReviewBadge();

@@ -27,6 +27,7 @@
     else{var s=localStorage.getItem('lingeeUrlState')||'';
       if(s){var m=s.match(/\/([^\/?]+)/);if(m&&known(m[1]))v=m[1];}}}
   if(v==='experts')v='collab';
+  if(v==='changelog')v='newtask';
   if(!v)v='newtask';
   document.documentElement.setAttribute('data-initial-view',v);
   if(NP.indexOf(v)>=0){var st=document.createElement('style');st.textContent='html[data-initial-view="'+v+'"] #view-'+v+'{display:flex!important}';document.head.appendChild(st);}
@@ -45,7 +46,6 @@
   html[data-initial-view="design"] #view-design,
   html[data-initial-view="analytics"] #view-analytics,
   html[data-initial-view="tasks"] #view-tasks,
-  html[data-initial-view="changelog"] #view-changelog,
   html[data-initial-view="inbox"] #view-inbox{display:flex!important}
   html[data-initial-view="platform"] #view-platform{display:flex!important}
   html[data-initial-view="manager"] #view-manager{display:flex!important}
@@ -74,7 +74,6 @@
 <!--#include "src/views/settings.html" -->
 <!--#include "src/views/design.html" -->
 <!--#include "src/views/analytics.html" -->
-<!--#include "src/views/changelog.html" -->
 <!--#include "src/views/manager.html" -->
 <!--#include "src/views/work.html" -->
   <!--#include "src/views/work-chat.html" -->

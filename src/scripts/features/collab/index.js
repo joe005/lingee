@@ -1,3 +1,4 @@
+import { initCollabLoading, loadCollabEntry, yieldCollabPaint } from './loading.js';
 import { initExpertMarket } from './expert-market.js';
 import { renderExpertGrid } from '../expert/library.js';
 import { handleLayerAction } from '../expert/layers.js';
@@ -30,34 +31,67 @@ import { openExpertModal } from '../expert/library.js';
 
 
 /* ---------- 初始化 ---------- */
-function cvInit(){
-  if(cvInited) return;
-  set_cvInited(true);
-  cvLoadSavedTasks();
-  cvRestoreProjects();
-  cvRestoreSquads();
-  cvRestorePersons();
-  cvEnsureSeedPersons();
-  cvEnsureTeamPersons();
-  cvEnsureProjectRoleDemoData();
-  cvEnsureCurrentUserProjectDemoData();
-  cvEnsureSeedProjects();
-  cvEnsureTeamProjectMembers();
-  cvRemoveZhangAutoProjectMember();
-  cvEnsureSeedWorkspaces();
-  cvPruneDeletedWorkspaceData();
-  cvMigrateProjectSquads();
-  cvRenderTaskStats(); cvRenderTasks();
-  cvRenderReviewStats(); cvRenderReviews();
-  cvRenderProjectList();
-  cvInjectCardActions();
-  cvRenderWsMenu(); cvRenderProjMenu(); cvUpdateCounts();
+var cvInitPromise = null;
+function cvInit(signal){
+  if(cvInited) return Promise.resolve();
+  if(cvInitPromise) return cvInitPromise;
+  cvInitPromise = (async function(){
+    cvLoadSavedTasks();
+    await yieldCollabPaint(signal);
+    cvRestoreProjects();
+    await yieldCollabPaint(signal);
+    cvRestoreSquads();
+    await yieldCollabPaint(signal);
+    cvRestorePersons();
+    await yieldCollabPaint(signal);
+    cvEnsureSeedPersons();
+    await yieldCollabPaint(signal);
+    cvEnsureTeamPersons();
+    await yieldCollabPaint(signal);
+    cvEnsureProjectRoleDemoData();
+    await yieldCollabPaint(signal);
+    cvEnsureCurrentUserProjectDemoData();
+    await yieldCollabPaint(signal);
+    cvEnsureSeedProjects();
+    await yieldCollabPaint(signal);
+    cvEnsureTeamProjectMembers();
+    await yieldCollabPaint(signal);
+    cvRemoveZhangAutoProjectMember();
+    await yieldCollabPaint(signal);
+    cvEnsureSeedWorkspaces();
+    await yieldCollabPaint(signal);
+    cvPruneDeletedWorkspaceData();
+    await yieldCollabPaint(signal);
+    cvMigrateProjectSquads();
+    await yieldCollabPaint(signal);
+    cvRenderTaskStats(); cvRenderTasks();
+    await yieldCollabPaint(signal);
+    cvRenderReviewStats(); cvRenderReviews();
+    await yieldCollabPaint(signal);
+    cvRenderProjectList();
+    await yieldCollabPaint(signal);
+    cvInjectCardActions();
+    await yieldCollabPaint(signal);
+    cvRenderWsMenu(); cvRenderProjMenu(); cvUpdateCounts();
+    await yieldCollabPaint(signal);
+    document.dispatchEvent(new Event('lingee:tasks-changed'));
+    await yieldCollabPaint(signal);
+    set_cvInited(true);
+  })().finally(function(){ cvInitPromise = null; });
+  return cvInitPromise;
+}
+function cvOpenEntry(tab, project){
+  loadCollabEntry(tab, cvInit, function(target){
+    if(project) cvSetProject(project);
+    cvSwitchView(target);
+  });
 }
 
 var cvExpertSearch=$('#cvExpertSearch');
 var cvExpertSections=$('#cvExpertSections');
 
 export function initCollab() {
+  initCollabLoading();
   initLocalDev();
   setConversationOpener(cvOpenConversation);
   initExpertMarket({expert:cvRenderExperts,team:renderExpertGrid});
@@ -88,13 +122,11 @@ export function initCollab() {
 
   /* 其他页面打开协作开发（侧栏菜单、智能体团队入口等）：对方只显示视图并发事件，
      初始化与切页签在这里；detail.tab 缺省为任务页签 */
-  document.addEventListener('lingee:collab-nav',function(e){ cvInit(); cvSwitchView((e.detail&&e.detail.tab)||'tasks'); });
+  document.addEventListener('lingee:collab-nav',function(e){ cvOpenEntry((e.detail&&e.detail.tab)||'tasks'); });
 
   /* URL 直接进入协作开发时，等模块加载完再渲染 */
   if(cvPendingTab){
-    cvInit();
-    if(cvPendingProj) cvSetProject(cvPendingProj);
-    cvSwitchView(cvPendingTab);
+    cvOpenEntry(cvPendingTab, cvPendingProj);
     set_cvPendingTab(null); set_cvPendingProj(null);
   }
 

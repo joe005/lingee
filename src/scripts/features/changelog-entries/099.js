@@ -1,0 +1,1 @@
+export default {"id":"99","date":"2026-10-15","iconBg":"var(--brand-fill)","iconColor":"var(--brand)","type":"功能","module":"协作开发","author":"Joe","body":"功能·协作开发：协作开发新增首屏加载与失败重试，修复导航闪动和看板旧模板显示，默认配齐吴晓锋项目演示环境，精简任务操作与更新日志入口并优化工具栏交互。"};

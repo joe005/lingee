@@ -268,3 +268,5 @@
   color:var(--neutral-700);
   font-weight:400;
 }
+
+#niuCreateOverlay .niu-create-stage-table .niu-stage-required { color:var(--danger); font-weight:500; }

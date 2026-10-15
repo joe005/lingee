@@ -1,7 +1,6 @@
 import { $, $$ } from '../core/dom.js';
 import { toast } from '../core/toast.js';
 import { showView } from '../core/view.js';
-import { openChangelog } from './changelog.js';
 
 import { chatResizer } from './composer.js';
 import { LOGIN_KEY, REMEMBER_KEY, loginError, loginForm, showLogin } from './login.js';
@@ -163,13 +162,6 @@ export function initUserMenu() {
       closeUserMenu();
       showView('settings');
       $$('.nav-item').forEach(function(n){n.classList.remove('active')});
-    });
-  }
-  var userMenuChangelog=$('#userMenuChangelog');
-  if(userMenuChangelog){
-    userMenuChangelog.addEventListener('click',function(){
-      closeUserMenu();
-      openChangelog();
     });
   }
   if(userMenuLogout) userMenuLogout.addEventListener('click',function(){

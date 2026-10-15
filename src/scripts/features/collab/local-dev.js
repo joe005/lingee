@@ -52,13 +52,46 @@ function ldReadAll() {
 /* 某个人上报的本机状态；不传时为当前登录人 */
 function ldStateOf(userId) {
   var row = ldReadAll()[userId || tkCurrentUserId() || 'guest'] || {};
-  return { auths: row.auths || {}, bindings: row.bindings || {}, knownHosts: row.knownHosts || [], checks: row.checks || null, gitMissing: !!row.gitMissing, netDown: !!row.netDown };
+  var mine = Object.assign({}, row, { auths: row.auths || {}, bindings: row.bindings || {}, knownHosts: row.knownHosts || [], checks: row.checks || null, gitMissing: !!row.gitMissing, netDown: !!row.netDown });
+  ldEnsureDemoReady(mine, userId || tkCurrentUserId());
+  return mine;
 }
 function ldMine() { return ldStateOf(); }
 function ldSaveMine(mine) {
   var all = ldReadAll(), me = tkCurrentUserId() || 'guest';
   all[me] = mine;
   try { localStorage.setItem(LD_KEY, JSON.stringify(all)); } catch (e) { /* 存储不可用时仅本次会话有效 */ }
+}
+
+/* 吴晓锋（p23）的演示项目默认已完成认证与目录准备；不涉及真实 Git 凭据或拉取。
+   按项目仓库补种，兼容已有缓存和稍后才恢复的项目；用户主动重绑或清空后不重复覆盖。 */
+function ldEnsureDemoReady(mine, userId) {
+  if (userId !== 'p23' || userId !== tkCurrentUserId() || mine.demoDefaultsDisabled) return;
+  var seeded = mine.demoReadyRepos || {}, changed = false;
+  tkProjectsForCurrentUser().forEach(function(project){
+    var info = ldRepoInfo(project);
+    if (!info || !info.valid || ldRemoteProtocol(info.repo) !== 'https' || seeded[project.id] === info.repo) return;
+    var auth = mine.auths[info.host];
+    if (!auth || (auth.expiresAt && auth.expiresAt < new Date().toISOString().slice(0,10))) {
+      mine.auths[info.host] = { platform:info.platform, username:ldGitUsername(), account:tkGetPerson(userId)?.name || '吴晓锋',
+        source:'local', sourceLabel:'演示预配置', scopes:['read_repository','write_repository'], expiresAt:'', savedAt:ldNow() };
+    }
+    if (!mine.bindings[project.id]) {
+      mine.bindings[project.id] = { path:ldDefaultPath(project), mode:'auto', protocol:'https', writable:true, branch:info.baseBranch, syncedAt:ldNow() };
+    }
+    mine.gitMissing = false;
+    if (!mine.knownHosts.includes(info.host)) mine.knownHosts.push(info.host);
+    if (!mine.checks) mine.checks = { projects:{}, accounts:{} };
+    mine.checks.projects = mine.checks.projects || {}; mine.checks.accounts = mine.checks.accounts || {};
+    mine.checks.projects[project.id] = 'ready'; mine.checks.accounts[info.host] = 'ready';
+    seeded[project.id] = info.repo;
+    changed = true;
+  });
+  if (changed) {
+    mine.demoReadyRepos = seeded;
+    mine.detectedAt = mine.detectedAt || ldNow();
+    ldSaveMine(mine);
+  }
 }
 
 /* ---------- 仓库解析 ---------- */
@@ -1029,7 +1062,7 @@ export function initLocalDev() {
     }
     if (t.closest('[data-ld-reveal]')) { toast('已打开项目目录（演示）'); return; }
     if (t.closest('[data-ld-reset]')) {
-      ldSaveMine({ auths:{}, bindings:{}, checks:null, gitMissing:false, netDown:false });
+      ldSaveMine({ auths:{}, bindings:{}, checks:null, gitMissing:false, netDown:false, demoDefaultsDisabled:true });
       ldRefresh();
       toast('已清空本机配置', 'success');
     }

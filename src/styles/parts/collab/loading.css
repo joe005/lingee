@@ -1,0 +1,34 @@
+/* 设置入口等身份、工作区权限和目标页签均确定后再显示，避免首屏误露出。 */
+#view-collab:not([data-entry-ready]) #cvTabNav [data-cvview="config"],
+#view-collab.cv-entry-pending #cvTabNav [data-cvview="config"] { visibility:hidden; }
+/* 固定居中反馈：主脚本加载与业务初始化共用同一布局，避免占位与实际视图反复切换。 */
+#view-collab.cv-entry-pending { background:var(--canvas-bg); }
+#view-collab.cv-entry-pending > .cv-panel.active,
+#view-collab.cv-entry-pending > .cv-subnav { display:none; }
+#view-collab .cv-entry-load {
+  display:grid; place-items:center; flex:1; min-height:0; width:100%;
+  padding:24px 16px; box-sizing:border-box; overflow:auto;
+}
+#view-collab .cv-entry-load-feedback {
+  position:relative; display:flex; align-items:center; justify-content:center;
+  gap:8px; width:128px; min-height:24px; max-width:100%;
+  color:var(--text-secondary); font-size:13px; line-height:24px;
+}
+#view-collab #cvEntryLoadMessage { width:80px; white-space:nowrap; }
+#view-collab .cv-entry-load-spinner {
+  width:16px; height:16px; flex:none; box-sizing:border-box;
+  border:2px solid var(--border-hover); border-top-color:var(--text-secondary);
+  border-radius:50%; animation:cv-entry-spin .8s linear infinite;
+}
+#view-collab.cv-entry-failed .cv-entry-load-spinner { visibility:hidden; animation:none; }
+#view-collab .cv-entry-load-feedback .sync-btn {
+  position:absolute; top:calc(100% + 12px); left:50%; transform:translateX(-50%);
+  height:28px; padding:0 12px; border:0; border-radius:6px;
+  background:transparent; color:var(--text-secondary); font-size:13px; font-weight:400;
+}
+#view-collab .cv-entry-load-feedback .sync-btn:hover { background:var(--hover); color:var(--text); }
+#view-collab .cv-entry-load-feedback .sync-btn:focus-visible { outline:2px solid var(--focus-ring); outline-offset:2px; }
+@keyframes cv-entry-spin { to { transform:rotate(360deg); } }
+@media (prefers-reduced-motion:reduce) {
+  #view-collab .cv-entry-load-spinner { animation:none; }
+}
