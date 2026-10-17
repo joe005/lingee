@@ -53,6 +53,9 @@ function ldReadAll() {
 function ldStateOf(userId) {
   var row = ldReadAll()[userId || tkCurrentUserId() || 'guest'] || {};
   var mine = Object.assign({}, row, { auths: row.auths || {}, bindings: row.bindings || {}, knownHosts: row.knownHosts || [], checks: row.checks || null, gitMissing: !!row.gitMissing, netDown: !!row.netDown });
+  /* 公司 GitLab 的主机名是 git.kingdee.com：旧缓存里按 gitlab.kingdee.com 保存的账号迁过来（凭据按主机名匹配，名字不同就用不上） */
+  if (mine.auths['gitlab.kingdee.com'] && !mine.auths['git.kingdee.com']) mine.auths['git.kingdee.com'] = mine.auths['gitlab.kingdee.com'];
+  delete mine.auths['gitlab.kingdee.com'];
   ldEnsureDemoReady(mine, userId || tkCurrentUserId());
   return mine;
 }
@@ -141,18 +144,19 @@ function ldNow() {
    需要管理员在「系统集成」里登记应用后才开启，否则使用访问令牌。演示数据：自建平台都未开启。 */
 var LD_OAUTH_HOSTS = ['github.com', 'gitlab.com', 'gitee.com'];
 export function ldOauthSupported(host) { return LD_OAUTH_HOSTS.includes(String(host || '').toLowerCase()); }
-/* 一期只静默检测 HTTPS 凭据，不读取 SSH 密钥。演示：github.com 有本机凭据。 */
+/* 一期只静默检测 HTTPS 凭据，不读取 SSH 密钥。正式实现用 `git credential fill`（protocol=https、host=<主机>）向凭据库查询是否存了凭据，
+   不能以 ls-remote / clone 成功为准：公开仓库匿名就能读，读成功不代表本机有凭据，推送时照样鉴权失败。演示：github.com 有本机凭据。 */
 var LD_LOCAL_CREDS = [
   { host:'github.com', platform:'GitHub', source:'Git 凭据管理器' },
 ];
 /* 静默检测：不让 Git 或凭据管理器（GCM）弹出登录提示或窗口，找不到就直接返回 */
 export var LD_QUIET_ENV = 'GIT_TERMINAL_PROMPT=0 GCM_INTERACTIVE=never ';
 
+/* 平台的令牌创建页：GitHub、GitLab 用地址参数预填令牌名称和权限（GitLab 较新版本才支持预填），Gitee 只打开页面 */
 export function ldTokenPage(platform, host) {
-  if (platform === 'GitHub') return 'https://' + host + '/settings/tokens/new';
+  if (platform === 'GitHub') return 'https://' + host + '/settings/tokens/new?scopes=repo&description=Lingee';
   if (platform === 'Gitee') return 'https://' + host + '/profile/personal_access_tokens';
-  if (platform === 'GitLab') return 'https://' + host + '/-/user_settings/personal_access_tokens';
-  return 'https://' + host + ' 的个人设置 › 访问令牌';
+  return 'https://' + host + '/-/user_settings/personal_access_tokens?name=Lingee&scopes=read_user,read_repository,write_repository';
 }
 /* 演示：真实账号名由平台 /user 接口返回 */
 export function ldGitUsername() {
@@ -169,9 +173,21 @@ export function ldSourceLabel(auth) {
   return '浏览器登录 · 自动续期';
 }
 export function ldFindLocalCred(host) { return LD_LOCAL_CREDS.find(function (cred) { return cred.host === host; }) || null; }
-/* 推送检查：正式实现结合平台权限接口与 git push --dry-run；dry-run 不保证真实推送成功。
-   演示：含 readonly 的令牌没有写权限，其他账号都有 */
-function ldPushCheck(auth) { return !auth?.readOnly; }
+/* 推送检查：以 `GIT_TERMINAL_PROMPT=0 git push --dry-run origin HEAD:refs/heads/_cred-probe` 的结果为准（不会真推送、不建远端分支），
+   不按令牌权限推断。失败分三种，提示和处理不同：
+   - scope：Access denied，令牌无效、过期或没勾写权限 → 重新创建令牌并登录；
+   - role：403 not allowed to push，凭据没问题但账号在仓库里角色不够 → 找项目管理员升到 Developer（GitLab）/ Write（GitHub）及以上；
+   - sso：GitHub 组织开启了 SAML SSO，令牌没授权 → 到令牌页点 Configure SSO › Authorize。
+   演示：令牌含 readonly 为 scope，含 norole 为 role，GitHub 令牌含 sso 为 sso */
+function ldPushIssue(auth) { return auth ? auth.pushIssue || (auth.readOnly ? 'scope' : '') : ''; }
+function ldPushCheck(auth) { return !ldPushIssue(auth); }
+export function ldPushIssueText(auth, platform) {
+  var issue = ldPushIssue(auth), user = auth ? ldAuthUser(auth) : '';
+  if (issue === 'role') return user + ' 在这个仓库没有推送角色，请项目管理员升为 ' + (platform === 'GitHub' ? 'Write' : 'Developer') + ' 及以上';
+  if (issue === 'sso') return '令牌还没有授权组织 SSO：到 GitHub 令牌页点「Configure SSO › Authorize」后重新登录';
+  if (issue === 'scope') return '令牌没有写权限（' + (platform === 'GitHub' ? 'repo' : 'write_repository') + '），请重新创建令牌并登录';
+  return '';
+}
 /* 保存账号；换了账号后：
    - Lingee 管理的默认目录使用 HTTPS；旧原型的默认 SSH 绑定在重新登录后改为 HTTPS，指定目录保持用户自己的远端；
    - 对这个平台上已拉取的项目重新跑一次推送校验，不按账号类型推断。返回重新校验的项目数 */
@@ -188,6 +204,7 @@ function ldSaveAuthEntry(host, entry) {
       delete binding.sshCommand;
     }
     binding.writable = ldPushCheck(auth);
+    binding.pushIssue = ldPushIssue(auth);
     rechecked++;
   });
   ldSaveMine(mine);
@@ -204,7 +221,10 @@ export function ldAdoptLocalCred(host) {
 function ldAuthFor(host, userId) {
   var auth = ldStateOf(userId).auths[host];
   if (!auth) return null;
-  return Object.assign({}, auth, { expired: !!auth.expiresAt && auth.expiresAt < new Date().toISOString().slice(0, 10) });
+  var today = new Date().toISOString().slice(0, 10), soon = new Date(Date.now() + 7 * 864e5).toISOString().slice(0, 10);
+  var expired = !!auth.expiresAt && auth.expiresAt < today;
+  /* 到期前 7 天提醒重新创建令牌，避免任务突然鉴权失败 */
+  return Object.assign({}, auth, { expired:expired, expiring:!expired && !!auth.expiresAt && auth.expiresAt <= soon });
 }
 /* 账号按仓库主机自动匹配；写权限针对具体仓库，保存账号时判断不了，拉取或绑定目录时校验并记在 binding.writable 上 */
 var LD_STATUS_LABELS = { ready:'已就绪', download:'未初始化', login:'未登录', expired:'凭据失效', noaccess:'无权访问', offline:'无法连接', mismatch:'目录不匹配', git:'Git 不可用', invalid:'地址不规范', notfound:'仓库不存在', norepo:'未配置仓库', ssh:'SSH 仓库', unchecked:'待检测' };
@@ -215,7 +235,7 @@ export function ldProjectStatus(projectId, userId) {
   if (!info) return { needed:false, ready:true };
   if (!info.valid) return { needed:true, ready:false, invalid:true, info:info, key:'invalid', label:LD_STATUS_LABELS.invalid, reason:'Git 地址不规范：' + info.problem + '。' + ldRepoFixHint(tkProjectById(projectId)) };
   /* 一期本页只管 HTTPS；SSH 地址按本机已有 SSH 配置使用，不检测、不初始化 */
-  if (ldRemoteProtocol(info.repo) !== 'https') return { needed:false, ready:true, ssh:true, info:info, key:'ssh', label:'SSH 仓库', reason:'SSH 地址按本机已有 SSH 配置使用，本页只管理 HTTPS 账号' };
+  if (ldRemoteProtocol(info.repo) !== 'https') return { needed:false, ready:true, ssh:true, info:info, key:'ssh', label:'SSH 仓库', reason:'一期不支持 SSH 地址：请在 Manage 把代码仓库改成 HTTPS 地址，再在这里登录 Git 账号' };
   if (ldStateOf(userId).gitMissing) return { needed:true, ready:false, info:info, key:'git', label:'Git 不可用', reason:'本机没有安装 Git，安装后点「检测」' };
   var auth = ldAuthFor(info.host, userId);
   var binding = ldStateOf(userId).bindings[projectId] || null;
@@ -231,7 +251,7 @@ export function ldProjectStatus(projectId, userId) {
       : key === 'expired' ? '本机保存的凭据被平台拒绝，可能已过期或被撤销，请重新登录'
       : key === 'download' ? '项目代码尚未初始化到本机'
       : key === 'mismatch' ? '项目目录不是该项目的 HTTPS 仓库，请重新选择或使用默认目录，原目录保持不变'
-      : key === 'noaccess' ? ldAuthUser(auth) + ' 没有该仓库的访问权限，请更换账号或联系项目管理员' : '' };
+      : key === 'noaccess' ? (ldPushIssueText(binding.pushIssue ? { pushIssue:binding.pushIssue, username:ldAuthUser(auth) } : auth, info.platform) || ldAuthUser(auth) + ' 没有该仓库的推送权限') : '' };
 
 }
 /* 谁来改地址：Manage 空间由能管理空间的人（负责人、空间管理员、系统管理员，与 Manage 一致）在「空间设置 › 代码仓库」修改；
@@ -295,7 +315,7 @@ export function ldBindDir(projectId, path, mode) {
   var info = ldRepoInfo(tkProjectById(projectId));
   var mine = ldMine();
   var auth = info ? mine.auths[info.host] : null;
-  mine.bindings[projectId] = { path:path, mode:mode, protocol:ldAuthProtocol(auth), branch:info?.baseBranch || 'main', writable:ldPushCheck(auth), syncedAt:ldNow() };
+  mine.bindings[projectId] = { path:path, mode:mode, protocol:ldAuthProtocol(auth), branch:info?.baseBranch || 'main', writable:ldPushCheck(auth), pushIssue:ldPushIssue(auth), syncedAt:ldNow() };
   ldSaveMine(mine);
   ldRefresh();
 }
@@ -373,6 +393,7 @@ export function ldGateTaskStart(task, options) {
   var me = tkCurrentUserId();
   var handlerId = tkCurrentStageHandlerId(task) || me;
   var status = ldProjectStatus(task.project, handlerId);
+  if (status.ready && status.auth?.expiring && handlerId === me) toast(ldEsc(status.info.host) + ' 的访问令牌将于 ' + ldEsc(status.auth.expiresAt) + ' 到期，到期后任务会鉴权失败，请到「设置」重新登录', 'warning');
   if (status.ready) return true;
   if (options?.automatic || handlerId !== me) {
     var reason = handlerId === me ? status.reason : (tkGetPerson(handlerId)?.name || '处理人') + ' 的电脑上' + status.reason;
@@ -491,19 +512,22 @@ function closeDirModal() {
 /* ---------- 登录 Git 账号弹窗 ----------
    设置页与任务对话共用。一期只用访问令牌（浏览器登录待平台授权应用就绪后接入）。
    从项目或账号行打开时平台已知；host 为空时是「添加账号」：选 GitLab / GitHub / Gitee，GitLab 填写平台地址。 */
-var LD_TOKEN_SCOPES = {
-  GitHub:'需要 repo 权限，令牌保存在系统钥匙串',
-  GitLab:'需要 read_user、read_repository、write_repository 权限，令牌保存在系统钥匙串',
-  Gitee:'需要 user_info、projects 权限，令牌保存在系统钥匙串',
+var LD_KD_GITLAB = 'git.kingdee.com';
+/* 获取访问令牌的步骤，按平台展开显示；权限只在步骤里说明，输入框下只提示保存位置 */
+var LD_TOKEN_GUIDE = {
+  GitHub:['打开 GitHub，进入 Settings › Developer settings › Personal access tokens', '经典令牌（classic）勾选 repo；或用细粒度令牌（Fine-grained），把 Contents 设为 Read and write', '组织开启了 SSO 时，在令牌旁点「Configure SSO › Authorize」，否则推送组织仓库会被拒', '复制令牌（只显示一次），粘贴到上方输入框'],
+  GitLab:['打开 {host}，进入头像菜单 › Edit profile › Access tokens', '点「Add new token」，勾选 read_user、read_repository、write_repository，选一个到期时间（到期前 7 天 Lingee 会提醒）', '创建后复制令牌（只显示一次），粘贴到上方输入框'],
+  Gitee:['打开 Gitee，进入设置 › 安全设置 › 私人令牌', '点「生成新令牌」，勾选 user_info、projects', '提交后复制令牌，粘贴到上方输入框'],
 };
 var LD_HOST_RE = /^[a-z0-9-]+(\.[a-z0-9-]+)+(:\d+)?$/;
 function ldAuthHostValue() {
   if (!authCustom) return authHost;
+  if (authPlatform === 'KDGitLab') return LD_KD_GITLAB;
   if (authPlatform === 'GitHub') return 'github.com';
   if (authPlatform === 'Gitee') return 'gitee.com';
   return $('#ldAuthHost').value.trim().replace(/^https?:\/\//i, '').replace(/\/.*$/, '').toLowerCase();
 }
-function ldAuthPlatformValue() { return authCustom ? authPlatform : ldHostPlatform(authHost); }
+function ldAuthPlatformValue() { return authCustom ? (authPlatform === 'KDGitLab' ? 'GitLab' : authPlatform) : ldHostPlatform(authHost); }
 /* 平台类型：已登录的账号记着，否则取这个平台上项目的类型 */
 function ldHostPlatform(host) {
   var known = ldMine().auths[host], project = ldProjectsOnHost(host)[0];
@@ -512,13 +536,14 @@ function ldHostPlatform(host) {
 export function ldOpenAuth(host, onSaved) {
   authHost = host || '';
   authCustom = !host;
-  authPlatform = 'GitLab';
+  authPlatform = 'KDGitLab';
   authRun++;
   authOnSaved = onSaved || null;
   $('#ldAuthHost').value = '';
   $('#ldAuthToken').value = '';
   $('#ldAuthTitle').textContent = authCustom ? '添加 Git 账号' : '登录 Git 账号';
-  $('#ldAuthSub').textContent = authCustom ? '选择平台并填写访问令牌' : host + ' · ' + ldHostPlatform(host);
+  $('#ldAuthSub').textContent = authCustom ? '' : host + ' · ' + ldHostPlatform(host);
+  $('#ldAuthGuide').open = false;
   renderAuthPlatform();
   setAuthError('');
   setAuthBusy(false);
@@ -533,9 +558,14 @@ function renderAuthPlatform() {
     btn.classList.toggle('is-on', on);
     btn.setAttribute('aria-checked', String(on));
   });
-  var hint = LD_TOKEN_SCOPES[ldAuthPlatformValue()] || LD_TOKEN_SCOPES.GitLab;
-  $('#ldAuthHint').textContent = hint;
-  $('#ldAuthHint').title = hint;
+  var fixedHost = authCustom && authPlatform !== 'GitLab' ? ldAuthHostValue() : '';
+  $('#ldAuthHostShow').hidden = !fixedHost;
+  $('#ldAuthHostShow').textContent = fixedHost ? '地址：' + fixedHost : '';
+  $('#ldAuthHint').textContent = '令牌只保存在本机系统钥匙串';
+  var guideHost = ldAuthHostValue() || '你的 GitLab';
+  $('#ldAuthGuideSteps').innerHTML = (LD_TOKEN_GUIDE[ldAuthPlatformValue()] || LD_TOKEN_GUIDE.GitLab).map(function (step) {
+    return '<li>' + ldEsc(step.replace('{host}', guideHost)) + '</li>';
+  }).join('');
 }
 function setAuthError(text) {
   var el = $('#ldAuthError');
@@ -559,11 +589,13 @@ function submitAuth() {
   setTimeout(function () {
     if (run !== authRun || !ldVisible('#ldAuthOverlay')) return;
     setAuthBusy(false);
-    /* 演示校验：过短视为格式错误；含 expired / bad 视为无效；含 readonly 的令牌能保存，初始化时才发现缺少写权限 */
+    /* 演示校验：过短视为格式错误；含 expired / bad 视为无效；含 readonly / norole / sso（GitHub）的令牌能保存，
+       推送校验（push --dry-run）时才发现问题；含 soon 的令牌 5 天后到期，用来演示到期提醒 */
     if (token.length < 8) { setAuthError('令牌格式不正确'); return; }
     if (/expired|bad/i.test(token)) { setAuthError('令牌无效或已过期，请重新创建'); return; }
     /* 到期日由平台接口返回，演示固定 90 天 */
-    saveAuth(host, { platform:ldAuthPlatformValue(), source:'token', readOnly:/readonly/i.test(token), expiresAt:new Date(Date.now() + 90 * 864e5).toISOString().slice(0, 10) });
+    var pushIssue = /readonly/i.test(token) ? 'scope' : /norole/i.test(token) ? 'role' : /sso/i.test(token) && ldAuthPlatformValue() === 'GitHub' ? 'sso' : '';
+    saveAuth(host, { platform:ldAuthPlatformValue(), source:'token', pushIssue:pushIssue, expiresAt:new Date(Date.now() + (/soon/i.test(token) ? 5 : 90) * 864e5).toISOString().slice(0, 10) });
   }, 700);
 }
 function saveAuth(host, entry) {
@@ -584,8 +616,8 @@ function saveAuth(host, entry) {
    Git 地址粘贴后自动检查（停止输入 0.5 秒、回车或离开输入框时）：
    1. 格式：一期只支持 HTTPS 地址，主机要像域名、要有仓库路径；
    2. 账号：这个平台没登录时先用本机凭据，没有就请用户登录，登录后自动重新检查；
-   3. 连通：正式实现跑 git ls-remote --symref <地址> HEAD（同时拿到默认分支），再用平台接口确认推送权限；
-      区分连不上（网络 / 内网 / VPN）、仓库不存在或无权访问、能访问但不能推送。
+   3. 连通：正式实现用这个账号的凭据跑 git ls-remote --symref <地址> HEAD（同时拿到默认分支）；能读只说明仓库可读，
+      推送权限另用 git push --dry-run 校验（见 ldPushCheck）。区分连不上（网络 / 内网 / VPN）、仓库不存在或无权访问、能读但不能推送。
    基准分支检查前为 main / master / develop / 其他，检查通过后换成仓库里的分支并选中默认分支；名称没填时取仓库名，
    目标还是预填内容时换成仓库描述。创建：
    - 地址已是我的空间：直接使用该空间；
@@ -596,8 +628,8 @@ function saveAuth(host, entry) {
 var LD_DEMO_REPOS = {
   'github.com/kingdee/contract-center':{ desc:'合同起草、审批与履约跟踪', branch:'main', branches:['main', 'develop', 'release/1.0'] },
   'github.com/kingdee/asset-portal':{ desc:'固定资产盘点与折旧查询门户', branch:'develop', branches:['develop', 'main'] },
-  'gitlab.kingdee.com/cosmic/hr-onboarding':{ desc:'新员工入职流程自动化', branch:'master', branches:['master', 'dev', 'test'] },
-  'gitlab.kingdee.com/cosmic/budget-review':{ desc:'年度预算编制与评审', branch:'main', branches:['main', 'develop'] },
+  'git.kingdee.com/cosmic/hr-onboarding':{ desc:'新员工入职流程自动化', branch:'master', branches:['master', 'dev', 'test'] },
+  'git.kingdee.com/cosmic/budget-review':{ desc:'年度预算编制与评审', branch:'main', branches:['main', 'develop'] },
   'gitee.com/kingdee/mini-shop':{ desc:'小程序商城', branch:'master', branches:['master'] },
 };
 export function ldCanCreateProject() { return true; }
@@ -675,8 +707,9 @@ function runRepoCheck() {
     else if (/private|missing/i.test(parsed.url)) repoCheck = Object.assign(parsed, { state:'error', message:'仓库不存在，或 ' + ldAuthUser(auth) + ' 没有访问权限，请确认地址或更换账号' });
     else {
       var branches = demo.branches || ['main', 'develop'];
-      repoCheck = Object.assign(parsed, { state:auth.readOnly ? 'warn' : 'ok', branch:demo.branch || 'main', branches:branches, desc:demo.desc || '', readOnly:!!auth.readOnly,
-        message:(auth.readOnly ? '可以访问，但 ' + ldAuthUser(auth) + ' 没有推送权限，智能体无法推送分支；仍可创建，之后更换账号'
+      var issue = ldPushIssueText(auth, parsed.platform);
+      repoCheck = Object.assign(parsed, { state:issue ? 'warn' : 'ok', branch:demo.branch || 'main', branches:branches, desc:demo.desc || '', readOnly:!!issue,
+        message:(issue ? '可以读取，但推送校验没通过：' + issue + '；仍可创建，智能体暂时无法推送分支'
           : '可以访问 · ' + parsed.platform + ' · 账号 ' + ldAuthUser(auth) + ' · 默认分支 ' + (demo.branch || 'main')) });
       if (!ldRepoNameValue()) $('#ldRepoName').value = parsed.name;
       if (demo.desc && (!ldRepoGoalValue() || ldRepoGoalValue() === LD_DEFAULT_GOAL)) $('#ldRepoGoal').value = demo.desc;
@@ -918,7 +951,7 @@ function ldSettingsHosts() {
   var hosts = ldMyDevProjects().map(function (project) { return ldRepoInfo(project); }).filter(function (info) { return info.valid; }).map(function (info) { return info.host; });
   return [...new Set(hosts.concat(Object.keys(ldMine().auths), LD_PUBLIC_HOSTS))];
 }
-var LD_ACCOUNT_LABELS = { available:'可用', login:'未登录', expired:'凭据失效', git:'Git 不可用' };
+var LD_ACCOUNT_LABELS = { available:'可用', expiring:'即将过期', login:'未登录', expired:'凭据失效', git:'Git 不可用' };
 function ldStateTag(key, labels) {
   if (!key) return '<span class="ld-state is-muted">待检测</span>';
   return '<span class="ld-state ' + (key === 'available' ? 'is-ok' : ldStatusTone(key)) + '">' + ((labels || LD_STATUS_LABELS)[key] || LD_STATUS_LABELS[key]) + '</span>';
@@ -940,7 +973,11 @@ function renderLocalPage() {
   var keyOf = function (project) { return ldProjectView(project).key; };
   var pending = projects.filter(function (project) { var key = keyOf(project); return key && !['ready', 'norepo', 'ssh'].includes(key); }).length;
   var gitMissing = Object.values(checks.accounts).includes('git') || Object.values(checks.projects).includes('git');
-  var banner = gitMissing ? '<div class="ld-set-banner" role="alert"><span>本机没有安装 Git，安装后点「检测」。</span><button type="button" class="ld-set-btn ld-set-btn--primary" data-ld-download-git>下载 Git</button></div>' : '';
+  var hasAccount = Object.keys(mine.auths).some(function (host) { return !ldAuthFor(host)?.expired; });
+  var expiringHost = Object.keys(mine.auths).find(function (host) { return ldAuthFor(host)?.expiring; });
+  var banner = gitMissing ? '<div class="ld-set-banner" role="alert"><span>本机没有安装 Git，安装后点「检测」。</span><button type="button" class="ld-set-btn ld-set-btn--primary" data-ld-download-git>下载 Git</button></div>'
+    : !hasAccount ? '<div class="ld-set-banner" role="alert"><span>未配置 Git 账号，拉取和推送会失败。</span><button type="button" class="ld-set-btn ld-set-btn--primary" data-ld-auth-add>立即配置</button></div>'
+    : expiringHost ? '<div class="ld-set-banner" role="alert"><span>' + ldEsc(expiringHost) + ' 的访问令牌将于 ' + ldEsc(ldAuthFor(expiringHost).expiresAt) + ' 到期，到期后拉取和推送会失败，请重新创建令牌并登录。</span><button type="button" class="ld-set-btn ld-set-btn--primary" data-ld-auth-open="' + ldEsc(expiringHost) + '">重新登录</button></div>' : '';
   var actions = (checks.checkedAt && !detecting ? '<span class="ld-checked-at">上次检测 ' + ldEsc(checks.checkedAt) + '</span>' : '')
     + '<button type="button" class="ld-set-btn" data-ld-detect' + (detecting ? ' disabled aria-busy="true"' : '') + '>' + LD_ICONS.refresh + (detecting ? '检测中…' : '检测') + '</button>'
     + '<button type="button" class="ld-set-btn ld-set-btn--primary" data-ld-auth-add>' + LD_ICONS.plus + '添加账号</button>';
@@ -948,6 +985,7 @@ function renderLocalPage() {
     + '<ul class="ld-list ld-list--auth" aria-label="Git 账号">' + ldListHead(['平台', '账号', '状态', '操作']) + ldSettingsHosts().map(function (host) {
       var auth = ldAuthFor(host);
       var key = checks.accounts[host];
+      if (auth?.expiring && (!key || key === 'available')) key = 'expiring';
       /* 显示用户名，下方为邮箱与来源；演示邮箱取登录人邮箱，真实客户端取平台账号接口（取不到时只显示来源） */
       var detail = [ldAuthEmail(auth), auth ? ldAccountSource(auth) : ''].filter(Boolean).join(' · ');
       var account = auth ? '<strong title="' + ldEsc(ldAuthUser(auth)) + '">' + ldEsc(ldAuthUser(auth)) + '</strong><span title="' + ldEsc(detail) + '">' + ldEsc(detail) + '</span>' : '<span>—</span>';
@@ -984,7 +1022,8 @@ function ldProjectAction(project, view, cls) {
   var key = view.key, host = view.st.info?.host || '';
   if (key === 'invalid') return '<span class="ld-muted">待修改地址</span>';
   if (key === 'norepo') return '<span class="ld-muted">待配置仓库</span>';
-  if (key === 'ssh') return '<span class="ld-muted">—</span>';
+  if (key === 'ssh') return '<span class="ld-muted">待改 HTTPS 地址</span>';
+  if (key === 'noaccess') return view.st.binding?.pushIssue === 'role' ? '<span class="ld-muted">待管理员授权</span>' : '<button type="button" class="' + cls + ' ' + cls + '--primary" data-ld-auth-open="' + ldEsc(host) + '">重新登录</button>';
   if (key === 'offline') return '<button type="button" class="' + cls + '" data-ld-detect' + (detecting ? ' disabled' : '') + '>重新检测</button>';
   if (key === 'notfound') return '<button type="button" class="' + cls + '" data-ld-auth-open="' + ldEsc(host) + '">更换账号</button>';
   if (key === 'download' || !view.st.binding) return '<button type="button" class="' + cls + ' ' + cls + '--primary" data-ld-quick="' + ldEsc(project.id) + '">初始化</button>';
@@ -1019,7 +1058,10 @@ export function initLocalDev() {
     if (t.closest('#ldAuthSubmit')) { submitAuth(); return; }
     if (t.closest('#ldAuthCreate') && !LD_HOST_RE.test(ldAuthHostValue())) { setAuthError('请先填写正确的平台地址，如 git.kingdee.com'); $('#ldAuthHost').focus(); return; }
     if (t.closest('#ldAuthCreate')) {
-      toast('已打开 ' + ldEsc(ldTokenPage(ldAuthPlatformValue(), ldAuthHostValue())) + '，读写仓库权限已预填（演示）');
+      /* 原型在新标签页打开真实的令牌创建页；桌面客户端里用系统浏览器打开 */
+      var tokenPlatform = ldAuthPlatformValue();
+      window.open(ldTokenPage(tokenPlatform, ldAuthHostValue()), '_blank', 'noopener');
+      toast(tokenPlatform === 'Gitee' ? '已打开 Gitee 令牌页，请勾选 user_info、projects 后生成' : '已打开令牌创建页，名称和权限已预填');
       return;
     }
     var platformPick = t.closest('[data-ld-auth-platform]');

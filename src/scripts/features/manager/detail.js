@@ -38,6 +38,25 @@ function syncRailCollapse() {
   }
 }
 function currentProject() { return detailProjectId ? mgrProjectById(detailProjectId) : null; }
+/* 复制完整 Git 地址；剪贴板接口不可用时退回到选中文本复制 */
+function copyText(text) {
+  var done = function () { toast('已复制 Git 地址', 'success'); };
+  if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text).then(done, function () { fallbackCopy(text) && done(); }); return; }
+  if (fallbackCopy(text)) done(); else toast('复制失败，请手动选择地址复制', 'warning');
+}
+function fallbackCopy(text) {
+  var area = document.createElement('textarea');
+  area.value = text;
+  area.setAttribute('readonly', '');
+  area.style.position = 'fixed';
+  area.style.opacity = '0';
+  document.body.appendChild(area);
+  area.select();
+  var ok = false;
+  try { ok = document.execCommand('copy'); } catch (err) { ok = false; }
+  area.remove();
+  return ok;
+}
 
 /* ---------- 右栏 ---------- */
 function railHead(kind, title, meta) {
@@ -51,7 +70,11 @@ function railHtml(p) {
 
     '<div class="mgr-rail-card">' + railHead('overview', '空间概览') +
     '<p class="mgr-rail-goal">' + mgrEsc(p.goal || p.desc || '—') + '</p>' +
-    '<p class="mgr-rail-owner">负责人：' + mgrEsc(p.owner || '未指定') + '</p></div>' +
+    '<p class="mgr-rail-owner">负责人：' + mgrEsc(p.owner || '未指定') + '</p>' +
+    /* 开发空间（配了代码仓库）在概览里带出 Git 地址和基准分支 */
+    (p.repo ? '<p class="mgr-rail-owner mgr-rail-repo"><span class="mgr-rail-repo-label">代码仓库：</span><span class="mgr-rail-repo-url" title="' + mgrEsc(p.repo) + '">' + mgrEsc(p.repo.replace(/^https?:\/\//, '')) + '</span>' +
+      '<button type="button" class="mgr-rail-copy" data-mgr-copy-repo aria-label="复制 Git 地址" data-tooltip="复制 Git 地址"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></p>' +
+      '<p class="mgr-rail-owner mgr-rail-meta">基准分支：' + mgrEsc(p.baseBranch || 'main') + '</p>' : '') + '</div>' +
 
     '<div class="mgr-rail-card mgr-rail-card--kb"><span class="mgr-rail-head mgr-rail-head--split">' +
     '<button type="button" class="mgr-rail-head-main" data-mgr-sub="knowledge"><span class="mgr-rail-title">' + ICONS.knowledge + '知识库</span></button>' +
@@ -136,6 +159,7 @@ export function initManagerDetail() {
     var sub = t.closest('[data-mgr-sub]');
     if (sub) { openSubPage(p.id, sub.getAttribute('data-mgr-sub')); return; }
     if (t.closest('[data-mgr-kb-upload]')) { toast('本地上传（演示）：文件会进入空间知识库的默认文件夹'); return; }
+    if (t.closest('[data-mgr-copy-repo]')) { copyText(p.repo); return; }
     var inviteBtn = t.closest('[data-mgr-invite]');
     if (inviteBtn) { openInvite(p.id, inviteBtn); return; }
     if (t.closest('[data-mgr-members]')) openMembers(p.id);

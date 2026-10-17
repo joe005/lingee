@@ -270,16 +270,25 @@
 .ld-choice-item>span{display:flex;flex-direction:column;gap:2px}
 .ld-choice-path{overflow:hidden;font-size:12px;color:var(--text-secondary);text-overflow:ellipsis;white-space:nowrap}
 /* 登录弹窗：平台选择（添加账号）、令牌说明单行 */
-.ld-segment{display:flex;gap:8px}
-.ld-segment-item{flex:1;height:var(--control-h-sm);border:1px solid var(--border);border-radius:8px;background:var(--bg);font:inherit;font-size:14px;font-weight:500;color:var(--text);cursor:pointer;transition:background .15s,border-color .15s,color .15s}
-.ld-segment-item:hover{background:var(--hover)}
-.ld-segment-item.is-on{border-color:var(--brand);background:var(--brand-fill);color:var(--brand)}
+.ld-segment{display:flex;gap:4px;padding:4px;border-radius:999px;background:var(--segment-track)}
+.ld-segment-item{flex:1;min-width:0;height:var(--control-h-sm);padding:0 12px;border:0;border-radius:999px;background:transparent;font:inherit;font-size:14px;font-weight:500;color:var(--text-secondary);white-space:nowrap;cursor:pointer;transition:background .15s,color .15s,box-shadow .15s}
+.ld-segment-item:hover{color:var(--text)}
+.ld-segment-item.is-on{background:var(--bg);box-shadow:var(--pill-shadow);font-weight:600;color:var(--text)}
 .ld-segment-item:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+/* 如何获取访问令牌：默认收起，展开为按平台的步骤；用线性箭头代替浏览器默认三角 */
+.ld-guide{margin-top:4px}
+.ld-guide summary{display:inline-flex;align-items:center;gap:4px;font-size:14px;color:var(--brand);list-style:none;cursor:pointer}
+.ld-guide summary::-webkit-details-marker{display:none}
+.ld-guide summary::after{content:'';width:6px;height:6px;margin-left:2px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:translateY(-2px) rotate(45deg);transition:transform .15s}
+.ld-guide[open] summary::after{transform:translateY(1px) rotate(-135deg)}
+.ld-guide summary:hover{text-decoration:underline}
+.ld-guide summary:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px;border-radius:4px}
+.ld-guide ol{margin:8px 0 0;padding:12px 16px 12px 32px;border-radius:8px;background:var(--fill-1);font-size:13px;line-height:22px;color:var(--text-secondary)}
 .ld-field--token{margin-bottom:0}
 .ld-auth-token{width:100%}
 .ld-hint--line{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media (prefers-reduced-motion:reduce){
-  .ld-list li,.ld-segment-item{transition:none}
+  .ld-list li,.ld-segment-item,.ld-guide summary::after{transition:none}
 }
 /* 新建空间：与 Manage「新建空间」同一格式（必填星号、目标多行、Git 地址与分支同一行） */
 .cv-scope .ld-modal--repo{width:600px}

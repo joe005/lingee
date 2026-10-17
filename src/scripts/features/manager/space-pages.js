@@ -95,6 +95,9 @@ function overviewHtml(p) {
   return '<section class="mgr-sub-card"><h2 class="mgr-sub-card-title">' +
     '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/></svg>空间目标</h2>' +
     '<p class="mgr-sub-text">' + mgrEsc(p.goal || p.desc || '暂未填写空间目标') + '</p></section>' +
+    (p.repo ? '<section class="mgr-sub-card"><h2 class="mgr-sub-card-title">' +
+      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="8" r="2"/><path d="M6 7v10"/><path d="M18 10c0 4-6 3-12 7"/></svg>代码仓库</h2>' +
+      '<dl class="mgr-sub-kv"><dt>Git 地址</dt><dd>' + mgrEsc(p.repo) + '</dd><dt>基准分支</dt><dd>' + mgrEsc(p.baseBranch || 'main') + '</dd></dl></section>' : '') +
     '<section class="mgr-sub-card"><h2 class="mgr-sub-card-title">' +
     '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V4"/><path d="M5 4h12l-2.5 4L17 12H5"/></svg>里程碑' +
     '<span class="mgr-sub-card-meta">已完成 ' + doneCount + '/' + ms.length + '</span></h2>' +

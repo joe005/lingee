@@ -121,6 +121,66 @@
   color: var(--text);
   font-size: 13px;
 }
+#view-manager .mgr-rail-meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* 代码仓库一行显示，超长省略、悬停看全文；复制按钮固定在行尾 */
+#view-manager .mgr-rail-repo {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+#view-manager .mgr-rail-repo-label {
+  flex: none;
+}
+#view-manager .mgr-rail-repo-url {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#view-manager .mgr-rail-copy {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  flex: none;
+  margin-left: 4px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  vertical-align: middle;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+#view-manager .mgr-rail-copy:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+#view-manager .mgr-rail-copy:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+#view-manager .mgr-sub-kv {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 8px 16px;
+  margin: 0;
+  font-size: 14px;
+}
+#view-manager .mgr-sub-kv dt {
+  color: var(--text-secondary);
+}
+#view-manager .mgr-sub-kv dd {
+  margin: 0;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
 #view-manager .mgr-rail-head--split {
   display: flex;
   align-items: center;

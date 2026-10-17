@@ -1,0 +1,1 @@
+export default {"id":"100","date":"2026-10-17","iconBg":"var(--brand-fill)","iconColor":"var(--brand)","type":"功能","module":"协作开发与管理空间","author":"wuhc2023","body":"功能·协作开发与管理空间：协作开发完善 Git 账号平台选择、令牌获取指引、到期提醒与推送权限异常提示，统一金蝶 GitLab 地址，管理空间概览新增代码仓库、基准分支展示与地址复制。"};
