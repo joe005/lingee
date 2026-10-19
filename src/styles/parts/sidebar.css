@@ -287,6 +287,25 @@
 
 /* Figma 482:47650：页签、菜单与项目会话；状态圆点沿用现有实现。 */
 .sidebar { background:var(--nav-bg); }
+.sidebar .sb-head{justify-content:flex-end;min-height:32px;box-sizing:border-box;padding:4px 8px 0}
+.sidebar>.brand{padding:8px 16px 16px;font-size:18px;font-weight:500;line-height:24px}
+.sidebar .sb-head-icons{align-items:center;gap:4px}
+.sidebar .sb-tool-button,.sidebar .sb-head-icons>.notification-bell{display:flex;align-items:center;justify-content:center;width:28px;height:28px;padding:0;border:0;border-radius:8px;background:transparent;color:var(--text-muted);cursor:pointer}
+.sidebar .sb-tool-button>.ic,.sidebar .sb-head-icons>.notification-bell>.ic{width:18px;height:18px;padding:0;border-radius:0}
+.sidebar .sb-head-icons>#sbCollapseIcon{width:18px;height:18px;padding:5px}
+.sidebar .sb-tool-button:hover,.sidebar .sb-head-icons>.notification-bell:hover{background:var(--nav-active);color:var(--text)}
+.sidebar .sb-head-icons :is(button,[role="button"]):focus-visible,.sidebar .sb-foot button:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+.sidebar .sb-foot{padding:8px;gap:8px;border-top:0;min-height:40px;box-sizing:border-box}
+.sidebar .sb-foot .user{gap:4px;min-width:0;font-size:14px}
+.sidebar .sb-foot .avatar{width:20px;height:20px;font-size:11px}
+.sidebar #userName{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:72px}
+.sidebar .sb-foot .user-role-tag{margin-left:0;padding:2px 4px;font-size:11px;line-height:16px;max-width:56px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sidebar .sb-foot .user>.caret{display:none}
+.sidebar .foot-right{gap:4px;flex:none}
+.sidebar .foot-right .notification-bell{height:28px;padding:4px;color:var(--text-secondary);font:inherit;font-size:14px;gap:4px}
+.sidebar .foot-right .ic{width:16px;height:16px}
+.native-tip.sidebar-tool-tip{background:var(--text-title);color:var(--bg);padding:8px 12px;border-radius:12px;font-size:14px;line-height:20px;box-shadow:none}
+.native-tip.sidebar-tool-tip::before{content:'';position:absolute;top:-4px;left:calc(50% - 4px);width:8px;height:8px;background:inherit;transform:rotate(45deg);border-radius:2px}
 .sidebar .seg { gap:4px; padding:0 8px 12px; }
 .sidebar .seg-item { box-sizing:border-box; height:32px; gap:4px; padding:4px 16px; border-radius:999px; color:var(--neutral-700); font-size:14px; font-weight:400; line-height:22px; }
 .sidebar .seg-item .ic { width:20px; height:20px; flex:none; }

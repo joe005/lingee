@@ -113,34 +113,37 @@ function renderPanel() {
   const panel = $('#inboxPopup');
   if (!panel) return;
   const all = inboxItems().filter((item) => !item.archived).sort((a,b) => b.created_at.localeCompare(a.created_at));
-  const items = panelTab === 'unread' ? all.filter((item) => !item.read) : all;
+  const items = all.filter(item=>panelTab==='all'||(panelTab==='notice'?!item.issue_id:!!item.issue_id));
   panel.querySelector('#inboxPopupList').innerHTML = items.length ? items.map((item) =>
     `<button type="button" class="inbox-popup-item${item.read?'':' unread'}" data-notice-id="${esc(item.id)}">
       <span class="inbox-avatar ${item.actor_type==='agent'?'agent':''}">${esc((item.actor_id || '系').slice(0,1))}</span>
       <span class="inbox-popup-content"><strong>${esc(item.title)}</strong><span>${esc(item.body)}</span><small>${esc(labels[item.type] || '通知')} · ${esc(relative(item.created_at))}</small></span>
       ${item.read?'':'<i class="inbox-popup-dot" aria-label="未读"></i>'}
-    </button>`).join('') : '<div class="inbox-popup-empty">暂无通知</div>';
+    </button>`).join('') : '<div class="inbox-popup-empty"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 9 3-5h10l3 5v10H4V9Z"/><path d="M4 12h5l2 3h2l2-3h5"/></svg><span>暂无通知</span></div>';
   panel.querySelectorAll('[data-popup-tab]').forEach((button) => {
     const active = button.dataset.popupTab === panelTab;
     button.classList.toggle('active',active);
     button.setAttribute('aria-selected',String(active));
   });
 }
-function positionPanel() {
-  const panel = $('#inboxPopup'), rect = $('#notificationBell').getBoundingClientRect();
-  panel.style.left = Math.max(8,Math.min(rect.right + 10,window.innerWidth - panel.offsetWidth - 8)) + 'px';
-  panel.style.bottom = Math.max(8,window.innerHeight - rect.bottom) + 'px';
-}
 function openPanel() {
   const panel = $('#inboxPopup');
   panel.hidden = false;
+  $('#inboxPopupOverlay').classList.add('show');
   $('#notificationBell').setAttribute('aria-expanded','true');
   renderPanel();
-  positionPanel();
+  $('#inboxPopupClose').focus();
 }
 function closePanel() {
   $('#inboxPopup').hidden = true;
+  $('#inboxPopupOverlay').classList.remove('show');
   $('#notificationBell').setAttribute('aria-expanded','false');
+}
+function openNotificationTask(taskId){
+  showView('collab');
+  setNavActive('协作开发');
+  document.dispatchEvent(new CustomEvent('lingee:collab-nav',{detail:{tab:'tasks'}}));
+  openTaskDetail(taskId);
 }
 function renderInbox() { renderFilters(); renderList(); renderPanel(); updateUrl(); }
 function select(key) {
@@ -162,12 +165,11 @@ export function initInbox() {
   bell.insertAdjacentHTML('beforeend','<span class="inbox-bell-badge" id="inboxBellBadge" hidden></span>');
   bell.setAttribute('aria-haspopup','dialog');
   bell.setAttribute('aria-expanded','false');
-  document.body.insertAdjacentHTML('beforeend','<section class="inbox-popup" id="inboxPopup" role="dialog" aria-label="收件箱" hidden><div class="inbox-popup-head"><strong>收件箱</strong><button type="button" id="inboxPopupReadAll">全部已读</button></div><div class="inbox-popup-tabs" role="tablist"><button type="button" data-popup-tab="all" role="tab">全部</button><button type="button" data-popup-tab="unread" role="tab">未读</button></div><div class="inbox-popup-list" id="inboxPopupList"></div></section>');
+  $('#inboxPopupClose').addEventListener('click',()=>{closePanel();bell.focus();});
   bell.addEventListener('click',() => { if ($('#inboxPopup').hidden) openPanel(); else closePanel(); });
   $('#inboxPopup').addEventListener('click',(event) => {
     const tab = event.target.closest('[data-popup-tab]');
     if (tab) { panelTab=tab.dataset.popupTab; renderPanel(); return; }
-    if (event.target.closest('#inboxPopupReadAll')) { inboxItems().forEach((item) => { if (!item.archived) item.read=true; }); inboxPersist(); renderInbox(); return; }
     const row = event.target.closest('[data-notice-id]');
     if (!row) return;
     const item = inboxItems().find((entry) => entry.id === row.dataset.noticeId);
@@ -176,11 +178,17 @@ export function initInbox() {
     inboxPersist();
     closePanel();
     renderInbox();
-    if (item.issue_id && taskOf(item)) { showView('tasks'); setNavActive('任务'); openTaskDetail(item.issue_id); }
+    if (item.issue_id && taskOf(item)) openNotificationTask(item.issue_id);
   });
   document.addEventListener('click',(event) => { if (!event.target.closest('#inboxPopup, #notificationBell') && !$('#inboxPopup').hidden) closePanel(); });
   document.addEventListener('keydown',(event) => { if (event.key==='Escape' && !$('#inboxPopup').hidden) { closePanel(); bell.focus(); } });
-  window.addEventListener('resize',() => { if (!$('#inboxPopup').hidden) positionPanel(); });
+  $('#inboxPopup').addEventListener('keydown',event=>{
+    if(event.key!=='Tab')return;
+    const controls=[...$('#inboxPopup').querySelectorAll('button:not([disabled])')];
+    const first=controls[0],last=controls.at(-1);
+    if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}
+    else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}
+  });
   const params = new URLSearchParams(initialLocation.search);
   if (initialLocation.path.endsWith('/inbox')) {
     archived=params.get('view')==='archived';
@@ -221,7 +229,7 @@ export function initInbox() {
   });
   $('#inboxDetail').addEventListener('click',(event) => {
     const action=event.target.closest('[data-detail-action]')?.dataset.detailAction; if (!action) return;
-    if (action==='open') { const item=visibleGroups().find((row) => row.key===selected)?.item; if (item?.issue_id) { showView('tasks'); setNavActive('任务'); openTaskDetail(item.issue_id); } }
+    if (action==='open') { const item=visibleGroups().find((row) => row.key===selected)?.item; if (item?.issue_id) openNotificationTask(item.issue_id); }
     else act(selected,action);
   });
   [['#inboxUnreadOnly','unread'],['#inboxStatusFilter','status'],['#inboxPriorityFilter','priority'],['#inboxActorFilter','actor']].forEach(([selector,key]) => $(selector).addEventListener('change',(event) => {filters[key]=key==='unread'?event.target.checked:event.target.value; selected='';renderInbox();}));

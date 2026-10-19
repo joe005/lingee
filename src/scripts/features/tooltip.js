@@ -7,11 +7,13 @@ var tipEl=document.createElement('div');
 var tipTimer;
 function positionTip(el,text){
   tipEl.textContent=text;
+  var below=el.dataset.tooltipPlacement==='bottom';
+  tipEl.classList.toggle('sidebar-tool-tip',below);
   tipEl.classList.add('show');
   var r=el.getBoundingClientRect();
   var tw=tipEl.offsetWidth, th=tipEl.offsetHeight;
   var x=r.left+r.width/2-tw/2;
-  var y=r.top-th-4;
+  var y=below?r.bottom+8:r.top-th-4;
   if(y<4) y=r.bottom+4;
   if(x<4) x=4;
   if(x+tw>window.innerWidth-4) x=window.innerWidth-4-tw;
@@ -34,4 +36,10 @@ export function initTooltip() {
     clearTimeout(tipTimer);
     tipEl.classList.remove('show');
   });
+  document.addEventListener('focusin',function(e){
+    var el=e.target.closest('[data-tooltip-placement="bottom"]');
+    if(el)positionTip(el,el.getAttribute('data-tooltip'));
+  });
+  document.addEventListener('focusout',function(){tipEl.classList.remove('show');});
+  document.addEventListener('click',function(){clearTimeout(tipTimer);tipEl.classList.remove('show');});
 }

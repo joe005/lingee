@@ -15,3 +15,22 @@
 .inbox-popup-head{display:flex;align-items:center;justify-content:space-between;padding:16px 17px 10px}.inbox-popup-head strong{font-size:15px}.inbox-popup-head button{border:0;background:transparent;color:var(--brand);font:inherit;font-size:12px;cursor:pointer}
 .inbox-popup-tabs{display:flex;gap:18px;padding:0 17px;border-bottom:1px solid var(--divider)}.inbox-popup-tabs button{padding:8px 2px;border:0;border-bottom:2px solid transparent;background:transparent;color:var(--text-secondary);font:inherit;font-size:12px;cursor:pointer}.inbox-popup-tabs button.active{border-bottom-color:var(--brand);color:var(--brand);font-weight:600}
 .inbox-popup-list{min-height:0;overflow-y:auto}.inbox-popup-item{display:flex;align-items:flex-start;gap:10px;width:100%;padding:12px 16px;border:0;border-bottom:1px solid var(--divider);background:transparent;color:var(--text);font:inherit;text-align:left;cursor:pointer}.inbox-popup-item:last-child{border-bottom:0}.inbox-popup-item:hover,.inbox-popup-item:focus-visible{background:var(--fill-1);outline:none}.inbox-popup-content{display:flex;flex:1;min-width:0;flex-direction:column;gap:4px}.inbox-popup-content strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:600}.inbox-popup-content>span{display:-webkit-box;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2;color:var(--text-secondary);font-size:12px;line-height:1.5}.inbox-popup-content small{color:var(--text-soft);font-size:11px}.inbox-popup-dot{flex:none;width:6px;height:6px;margin-top:6px;border-radius:50%;background:var(--brand)}.inbox-popup-empty{padding:42px 16px;color:var(--text-secondary);font-size:12px;text-align:center}
+
+/* 用户截图：消息通知使用居中弹窗，收件箱独立页面保持原布局。 */
+#inboxPopupOverlay{background:var(--overlay);padding:24px;box-sizing:border-box}
+#inboxPopupOverlay #inboxPopup{position:relative;inset:auto;z-index:auto;display:flex;flex-direction:column;box-sizing:border-box;width:720px;max-width:100%;height:640px;max-height:calc(100dvh - 48px);padding:20px;border:0;border-radius:var(--r-modal);color:var(--text);background:var(--bg)}
+#inboxPopupOverlay #inboxPopup[hidden]{display:none}
+#inboxPopupOverlay .inbox-popup-head{padding:0 0 24px;min-height:28px}
+#inboxPopupOverlay .inbox-popup-head strong{font-size:18px;font-weight:600;line-height:28px;color:var(--text-title)}
+#inboxPopupOverlay #inboxPopupClose{display:flex;align-items:center;justify-content:center;width:28px;height:28px;padding:4px;border-radius:8px;color:var(--text-secondary)}
+#inboxPopupOverlay #inboxPopupClose:hover{background:var(--hover);color:var(--text)}
+#inboxPopupOverlay .inbox-popup-tabs{align-self:flex-start;display:flex;gap:4px;flex:none;height:40px;box-sizing:border-box;padding:4px;border:0;border-radius:999px;background:var(--tag-bg)}
+#inboxPopupOverlay .inbox-popup-tabs button{height:32px;padding:0 16px;border:0;border-radius:999px;font-size:14px;line-height:22px;color:var(--text-secondary)}
+#inboxPopupOverlay .inbox-popup-tabs button.active{background:var(--bg);color:var(--text);font-weight:600;box-shadow:var(--pill-shadow)}
+#inboxPopupOverlay .inbox-popup-tabs button:hover{color:var(--text);background:var(--hover)}
+#inboxPopupOverlay .inbox-popup-list{flex:1;min-height:0;display:flex;flex-direction:column;margin-top:16px}
+#inboxPopupOverlay .inbox-popup-empty{display:flex;flex:1;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:0 16px;font-size:14px;color:var(--text-secondary)}
+#inboxPopupOverlay .inbox-popup-empty svg{color:var(--text-soft)}
+#inboxPopupOverlay .inbox-popup-content strong{font-size:14px}
+#inboxPopupOverlay .inbox-popup-content small{color:var(--text-secondary)}
+#inboxPopupOverlay button:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}

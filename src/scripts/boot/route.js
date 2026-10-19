@@ -36,6 +36,8 @@ export function initRoute() {
   }
   /* 专家视图已并入协作开发，兼容旧链接 */
   if(dsViewParam==='experts') dsViewParam='collab';
+  /* 旧任务链接统一进入协作开发，保留任务、智能体与团队的一级页签。 */
+  if(dsViewParam==='tasks') dsViewParam='collab';
   /* 已移除的更新日志页：兼容旧链接与上次停留记录，回到默认页面。 */
   if(dsViewParam==='changelog') dsViewParam='newtask';
   dsSearch='?'+(dsViewParam?'view='+dsViewParam:'');

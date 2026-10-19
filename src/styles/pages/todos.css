@@ -1,0 +1,21 @@
+#view-todos{background:var(--canvas-bg);overflow:auto;padding:48px 16px 0;box-sizing:border-box}
+#view-todos .todo-page-content{display:flex;flex-direction:column;width:100%;max-width:1160px;min-height:100%;margin:0 auto}
+#view-todos h1{margin:0 0 16px;color:var(--text-title);font-size:18px;font-weight:600;line-height:24px}
+#view-todos .todo-page-toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px}
+#view-todos .todo-page-tabs{display:flex;align-items:center;padding:4px;background:var(--segment-track);border-radius:999px}
+#view-todos .todo-page-tabs button{height:32px;padding:0 16px;border:0;border-radius:999px;background:transparent;color:var(--text-secondary);font:inherit;font-size:14px;cursor:pointer}
+#view-todos .todo-page-tabs button.active{background:var(--bg);color:var(--text);font-weight:600;box-shadow:var(--pill-shadow)}
+#view-todos .todo-page-filters{display:flex;align-items:center;gap:12px}
+#view-todos .todo-page-filters select,#view-todos #todoDateButton{height:32px;box-sizing:border-box;border:1px solid var(--border);border-radius:12px;background:var(--bg);color:var(--text-secondary);padding:0 12px;font:inherit;font-size:14px;cursor:pointer}
+#view-todos #todoDateButton{display:flex;align-items:center;gap:12px}
+#view-todos .todo-page-date-wrap{position:relative}
+#view-todos .todo-page-date-panel{position:absolute;top:40px;right:0;z-index:2;display:grid;gap:12px;padding:16px;border-radius:12px;background:var(--bg);box-shadow:var(--menu-shadow)}
+#view-todos .todo-page-date-panel[hidden]{display:none}
+#view-todos .todo-page-date-panel label{display:grid;gap:4px;color:var(--text-secondary);font-size:12px}
+#view-todos .todo-page-date-panel input{height:32px;padding:0 8px;border:1px solid var(--border);border-radius:8px;color:var(--text);font:inherit}
+#view-todos #todoDateClear{justify-self:end;border:0;background:transparent;color:var(--brand);font:inherit;cursor:pointer}
+#view-todos .todo-page-empty{display:flex;flex-direction:column;align-items:center;gap:16px;margin:auto auto 48px;padding-top:80px;color:var(--text-soft)}
+#view-todos .todo-page-empty p{margin:0;font-size:14px;color:var(--text-secondary)}
+#view-todos button:hover,#view-todos select:hover{background:var(--hover)}
+#view-todos :is(button,select,input):focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+@media(max-width:760px){#view-todos{padding-top:24px}#view-todos .todo-page-toolbar{align-items:flex-start;flex-direction:column}#view-todos .todo-page-filters{flex-wrap:wrap}#view-todos .todo-page-empty{margin-bottom:48px}}

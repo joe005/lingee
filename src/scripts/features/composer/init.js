@@ -414,8 +414,7 @@ function initPlusMenu() {
     });
   });
 
-  /* header + footer small affordances */
-  $$('.sb-head-icons .ic').forEach(function(i,idx){ i.addEventListener('click',function(){ toast(idx===0?'搜索':'折叠侧栏'); }); });
+  /* 顶部工具按钮由各自功能模块绑定，不再对其 SVG 附加占位提示。 */
 }
 
 export { initComposer, initPlusMenu };

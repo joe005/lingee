@@ -187,6 +187,14 @@ export function initUserMenu() {
 }
 
 export function initSidebarIcons() {
+  $('#sbFolderButton')?.addEventListener('click',()=>{
+    const input=document.createElement('input');
+    input.type='file';input.webkitdirectory=true;input.multiple=true;
+    input.addEventListener('change',()=>{
+      if(input.files.length)toast('已选择文件夹：'+input.files[0].webkitRelativePath.split('/')[0]);
+    });
+    input.click();
+  });
   if(sbSearchIcon){
     sbSearchIcon.addEventListener('click',function(){
       sbSearch.classList.toggle('show');
