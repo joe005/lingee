@@ -129,3 +129,56 @@
 
 .platform-dialog .platform-history--rejected strong{color:var(--danger)}.platform-dialog .platform-history--rejected span{min-width:0;overflow-wrap:anywhere}.platform-dialog .platform-history-tag{display:inline-block;margin-right:8px;padding:0 6px;border-radius:4px;background:var(--danger-bg);color:var(--danger);font-size:12px;font-weight:500}.platform-dialog .platform-history--rejected em{display:block;margin-top:2px;color:var(--text-secondary);font-size:12px;font-style:normal}
 .platform-view .platform-card-status.rejected{color:var(--danger)}
+
+/* 用户截图：客户端升级、提交与信息提示。管理平台其它弹窗保留原尺寸。 */
+#platformDialog[data-asset-dialog]:not([data-asset-dialog=""]){background:var(--overlay)}
+#platformDialog[data-asset-dialog]:not([data-asset-dialog=""])>.platform-dialog{width:min(460px,calc(100vw - 32px));max-height:calc(100dvh - 32px);padding:20px;border:0;border-radius:var(--r-modal);box-shadow:var(--menu-shadow);background:var(--bg);color:var(--text)}
+#platformDialog .asset-dialog-header{display:flex;align-items:center;gap:8px;margin-bottom:20px}
+#platformDialog .asset-dialog-header h2{flex:1;margin:0;min-width:0;font-size:18px;font-weight:500;line-height:28px;color:var(--text-title)}
+#platformDialogClose{display:flex;align-items:center;justify-content:center;flex:none;width:28px;height:28px;border:0;border-radius:var(--tb-radius);background:transparent;color:var(--text-secondary);font-size:24px;cursor:pointer}
+#platformDialogClose:hover{background:var(--hover)}
+#platformDialog .asset-dialog-info{display:none}
+#platformDialog[data-asset-dialog="notice"] .asset-dialog-info{display:flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--brand);color:var(--bg);font-size:14px;font-weight:500}
+#platformDialog[data-asset-dialog="notice"] #platformDialogClose{display:none}
+#platformDialog[data-asset-dialog="notice"] .asset-dialog-header{margin-bottom:8px}
+#platformDialog[data-asset-dialog="notice"] #platformDialogBody{margin-left:28px}
+#platformDialog[data-asset-dialog="notice"] #platformDialogBody p{margin:0;color:var(--text-secondary);font-size:14px;line-height:22px}
+#platformDialog[data-asset-dialog]:not([data-asset-dialog=""]) .platform-dialog-actions{margin-top:32px;padding:0;border:0;gap:12px}
+#platformDialog[data-asset-dialog]:not([data-asset-dialog=""]) .platform-btn{height:36px;padding:0 12px;border:0;border-radius:12px;background:transparent;font-size:14px;line-height:22px;color:var(--text)}
+#platformDialog[data-asset-dialog]:not([data-asset-dialog=""]) .platform-btn.primary{background:var(--brand);color:var(--bg)}
+#platformDialog[data-asset-dialog]:not([data-asset-dialog=""]) .platform-btn.primary:hover{background:var(--brand-hover)}
+#platformDialog[data-asset-dialog]:not([data-asset-dialog=""]) .platform-btn:not(.primary):hover{background:var(--hover)}
+#platformDialog[data-asset-dialog="install"] .platform-install-type{display:none}
+#platformDialog[data-asset-dialog="install"] .platform-install-target{margin:0 0 12px}
+#platformDialog[data-asset-dialog="install"] .platform-install-target strong{font-size:14px;line-height:22px;font-weight:500}
+#platformDialog[data-asset-dialog="install"] .platform-install-versions{padding:0;border:0;background:transparent;gap:20px;grid-template-columns:minmax(0,1fr) 32px minmax(0,1fr)}
+#platformDialog[data-asset-dialog="install"] .platform-install-versions>div{padding:12px;gap:4px;border-radius:var(--r-xl);background:var(--tag-bg);text-align:left}
+#platformDialog[data-asset-dialog="install"] .platform-install-versions>div:last-child{background:var(--brand-fill)}
+#platformDialog[data-asset-dialog="install"] .platform-install-versions span{font-size:14px;line-height:22px}
+#platformDialog[data-asset-dialog="install"] .platform-install-versions strong{font-size:16px;line-height:24px;font-weight:500}
+#platformDialog[data-asset-dialog="install"] .platform-install-arrow{text-align:center;font-size:24px;color:var(--brand)}
+#platformDialog[data-asset-dialog="install"] .platform-install-section{margin-top:16px}
+#platformDialog[data-asset-dialog="install"] .platform-install-section p{font-size:12px;line-height:18px}
+#platformDialog[data-asset-dialog="install"] .platform-install-dependency{padding:12px;border-radius:var(--r-xl);font-size:14px;line-height:22px;background:var(--brand-fill)}
+#platformDialog .asset-install-member{display:flex;align-items:center;gap:8px;padding:4px 8px;margin-top:8px;border-radius:var(--asset-pill-radius);background:var(--bg);min-width:0}
+#platformDialog .asset-install-member>img{border-radius:50%;flex:none}
+#platformDialog .asset-install-member>span{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+#platformDialog .asset-install-member>small{margin-left:auto;flex:none;color:var(--text-secondary);font-size:12px}
+#platformDialog[data-asset-dialog="install"] .platform-install-demo{font-size:14px;line-height:22px}
+#platformDialog[data-asset-dialog="install"] .platform-install-demo label{font-size:12px;line-height:18px}
+#platformDialog[data-asset-dialog="install"] .platform-install-demo input{width:16px;height:16px}
+#platformDialog[data-asset-dialog="submit"]>.platform-dialog{width:min(640px,calc(100vw - 32px));min-height:370px}
+#platformDialog[data-asset-dialog="submit"] #platformDialogBody>p{font-size:14px;line-height:22px;color:var(--text-secondary)}
+#platformDialog[data-asset-dialog="submit"] .platform-import-note-label{position:relative;gap:8px;font-size:14px;font-weight:400;color:var(--text)}
+#platformDialog[data-asset-dialog="submit"] .platform-import-note-label>span{color:var(--danger)}
+#platformDialog[data-asset-dialog="submit"] #assetReviewNote{height:80px;min-height:80px;resize:vertical;padding:10px 12px 24px;border:1px solid var(--border);border-radius:12px;background:var(--bg);font-size:14px;line-height:22px}
+#platformDialog[data-asset-dialog="submit"] .asset-review-count{position:absolute;bottom:8px;right:12px;color:var(--text-secondary);font-size:12px;line-height:18px}
+#platformDialog[data-asset-dialog="submit"] .platform-dialog-note{font-size:12px;line-height:18px}
+#platformDialog[data-asset-dialog="submit"] .platform-dialog-actions{margin-top:48px}
+#platformDialog[data-asset-dialog]:not([data-asset-dialog=""]) button:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+.asset-submit-toast{display:flex;flex-direction:column;gap:4px;min-width:0}
+.asset-submit-toast strong{font-size:14px;line-height:22px;font-weight:500}
+.asset-submit-toast>span{font-size:12px;line-height:18px;color:var(--text-secondary)}
+body:has(.asset-submit-toast) #toast{max-width:min(960px,calc(100vw - 32px));border:0;border-radius:var(--r-xl);background:var(--bg);box-shadow:var(--menu-shadow);align-items:flex-start}
+#platformDialog[data-asset-dialog="submit"] .platform-import-note-label>.asset-review-label{color:var(--text)}
+#platformDialog[data-asset-dialog="submit"] .asset-review-label em{font-style:normal;color:var(--danger)}

@@ -123,3 +123,82 @@
   box-sizing:border-box;width:calc(100% - 32px);max-width:1160px;
   margin-left:auto;margin-right:auto;padding-left:0;padding-right:0;
 }
+
+/* Figma 662:118500 / 651:104056：个人开发与已添加资产分组。 */
+#view-collab :is(#cv-experts,#cv-teams){background:var(--canvas-bg)}
+#view-collab :is(#cv-experts,#cv-teams) .expert-assets-toolbar{margin-bottom:16px}
+#view-collab :is(#cv-experts,#cv-teams) .asset-primary-tabs{background:var(--segment-track)}
+#view-collab :is(#cv-experts,#cv-teams) .asset-search{height:var(--control-h-sm);border-radius:var(--tb-radius);background:transparent;width:220px}
+#view-collab :is(#cv-experts,#cv-teams) .asset-search:focus-within{outline:2px solid var(--border-focus);outline-offset:2px}
+#view-collab :is(#cv-experts,#cv-teams) .asset-search svg{color:var(--text-secondary)}
+#view-collab :is(#cv-experts,#cv-teams) .asset-search-icon{display:block;flex:none}
+#view-collab :is(#cv-experts,#cv-teams) .asset-secondary-row{margin:0 0 20px}
+#view-collab :is(#cv-experts,#cv-teams) .asset-source-filters{gap:4px}
+#view-collab :is(#cv-experts,#cv-teams) .asset-source-filters .list-page-tab{height:32px;min-height:32px;padding:4px 16px;font-size:14px;line-height:22px}
+#view-collab :is(#cv-experts,#cv-teams) .asset-source-filters .list-page-tab.active{background:transparent}
+#view-collab :is(#cv-experts,#cv-teams) .expert-section-title{display:flex;align-items:center;min-height:32px;margin:0 0 12px;padding:0;font-size:16px;line-height:24px;font-weight:500}
+#view-collab :is(#cv-experts,#cv-teams) .asset-list-section+.asset-list-section{margin-top:20px}
+#view-collab #expertGrid:not(.asset-cloud-grid){display:block}
+#view-collab :is(#cv-experts,#cv-teams) .apps-grid,
+#view-collab #cv-teams #expertGrid.asset-cloud-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;margin-bottom:0}
+#view-collab :is(#cv-experts,#cv-teams) .apps-grid .app-card.x-card{
+  position:relative;box-sizing:border-box;display:flex;flex-direction:column;
+  height:auto;min-height:152px;padding:16px 16px 14px;border:0;border-radius:var(--r-modal);
+  background:var(--bg);box-shadow:none;overflow:visible;transition:box-shadow .15s;
+}
+#view-collab :is(#cv-experts,#cv-teams) .apps-grid .app-card.x-card:hover{box-shadow:var(--card-shadow)}
+#view-collab :is(#cv-experts,#cv-teams) .apps-grid .x-card .card-top{gap:8px;padding-right:0;align-items:flex-start}
+#view-collab :is(#cv-experts,#cv-teams) .x-av{width:40px;height:40px;border-radius:50%}
+#view-collab :is(#cv-experts,#cv-teams) .x-faces{display:grid;grid-template-columns:repeat(2,20px);width:40px;height:40px;padding:0;align-content:center;flex:none}
+#view-collab :is(#cv-experts,#cv-teams) .x-faces img{width:24px;height:24px;margin:-2px;border:2px solid var(--bg);border-radius:50%}
+#view-collab :is(#cv-experts,#cv-teams) .asset-faces-count{display:flex;align-items:center;justify-content:center;box-sizing:border-box;width:24px;height:24px;margin:-2px;border:2px solid var(--bg);border-radius:50%;background:var(--tag-bg);color:var(--text);font-size:11px}
+#view-collab :is(#cv-experts,#cv-teams) .apps-grid .x-card .card-title-row{display:flex;flex-wrap:nowrap;min-width:0}
+#view-collab :is(#cv-experts,#cv-teams) .apps-grid .x-card .card-title{display:block;font-size:16px;line-height:24px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text-title)}
+#view-collab :is(#cv-experts,#cv-teams) .asset-card-summary{gap:4px;margin-top:2px;flex-wrap:wrap;font-size:12px;line-height:18px;min-height:20px}
+#view-collab :is(#cv-experts,#cv-teams) .asset-card-summary>.asset-source-badge,
+#view-collab :is(#cv-experts,#cv-teams) .asset-card-summary>.platform-client-badge{color:var(--text-secondary);align-self:auto;margin:0;padding:0 4px;border:1px solid var(--border);border-radius:4px;font-size:12px;background:transparent}
+#view-collab :is(#cv-experts,#cv-teams) .asset-card-summary>.asset-source-builtin{color:var(--asset-source-official-text);border-color:var(--border-focus)}
+#view-collab :is(#cv-experts,#cv-teams) .asset-card-summary>.asset-source-shared{color:var(--asset-source-tenant-text);border-color:var(--asset-tenant-outline-border)}
+#view-collab :is(#cv-experts,#cv-teams) .asset-card-summary>.asset-source-personal{color:var(--asset-personal-outline);border-color:var(--asset-personal-outline-border)}
+#view-collab :is(#cv-experts,#cv-teams) .asset-card-summary>span:not([class]){padding:0 4px;border:1px solid var(--border);border-radius:4px}
+#view-collab :is(#cv-experts,#cv-teams) .apps-grid .x-card .card-desc{margin:8px 0 8px 48px;flex:0 0 auto;height:40px;line-height:20px;font-size:14px;color:var(--text-secondary);-webkit-line-clamp:2}
+#view-collab :is(#cv-experts,#cv-teams) .apps-grid .x-card .card-tags{margin:0 0 0 48px;gap:4px;max-height:20px;overflow:hidden;flex-wrap:nowrap}
+#view-collab :is(#cv-experts,#cv-teams) .apps-grid .x-card .ptag{font-size:12px;line-height:20px;padding:0 6px;border:0;border-radius:var(--asset-pill-radius);background:var(--tag-bg);white-space:nowrap}
+#view-collab :is(#cv-experts,#cv-teams) .x-call{top:12px;right:12px;background:var(--bg)}
+#view-collab :is(#cv-experts,#cv-teams) .x-card:focus-within .x-call{opacity:1}
+#view-collab :is(#cv-experts,#cv-teams) .expert-install-plus{top:16px;right:16px;width:24px;height:24px;border:1px solid var(--border-hover);border-radius:var(--tb-radius);background:var(--bg)}
+#view-collab :is(#cv-experts,#cv-teams) .expert-market-uninstalled .card-title{padding-right:24px}
+#view-collab :is(#cv-experts,#cv-teams) .asset-card-upgrade-anchor{position:absolute;right:12px;bottom:12px}
+#view-collab :is(#cv-experts,#cv-teams) .expert-upgrade-badge{display:flex;align-items:center;justify-content:center;width:24px;height:24px;margin:0;padding:0;border:0;border-radius:var(--tb-radius);background:transparent;color:var(--brand);opacity:1;visibility:visible;pointer-events:auto}
+#view-collab :is(#cv-experts,#cv-teams) .expert-upgrade-badge img{display:block;flex:none;width:16px;height:16px}
+#view-collab :is(#cv-experts,#cv-teams) .expert-upgrade-badge:hover{background:var(--brand-fill);box-shadow:none}
+#view-collab :is(#cv-experts,#cv-teams) button:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+#view-collab :is(#cv-experts,#cv-teams) .asset-card-actions{position:absolute;top:12px;right:12px;display:flex;gap:4px;opacity:0;pointer-events:none}
+#view-collab :is(#cv-experts,#cv-teams) .x-card:hover .asset-card-actions,
+#view-collab :is(#cv-experts,#cv-teams) .x-card:focus-within .asset-card-actions{opacity:1;pointer-events:auto}
+#view-collab :is(#cv-experts,#cv-teams) .asset-card-actions .x-call,
+#view-collab :is(#cv-experts,#cv-teams) .asset-card-menu-toggle{position:static;display:flex;align-items:center;justify-content:center;width:24px;height:24px;min-height:0;padding:0;border:0;border-radius:var(--asset-pill-radius);background:var(--bg);color:var(--text-secondary);opacity:1;cursor:pointer}
+#view-collab :is(#cv-experts,#cv-teams) .asset-card-actions .x-call:hover,
+#view-collab :is(#cv-experts,#cv-teams) .asset-card-menu-toggle:hover,
+#view-collab :is(#cv-experts,#cv-teams) .asset-card-menu-toggle[aria-expanded="true"]{background:var(--hover)}
+#view-collab :is(#cv-experts,#cv-teams) .x-card:has(.asset-card-menu-toggle[aria-expanded="true"]){z-index:3}
+#view-collab :is(#cv-experts,#cv-teams) .asset-list-section:has(.asset-card-menu-toggle[aria-expanded="true"]){position:relative;z-index:3}
+#view-collab :is(#cv-experts,#cv-teams) .asset-card-menu{position:absolute;top:28px;right:28px;z-index:4;min-width:100px;padding:4px;border-radius:12px;background:var(--bg);box-shadow:var(--menu-shadow)}
+#view-collab :is(#cv-experts,#cv-teams) .asset-card-menu[hidden]{display:none}
+#view-collab :is(#cv-experts,#cv-teams) .asset-card-menu button{display:flex;align-items:center;width:100%;height:32px;padding:0 12px;border:0;border-radius:var(--tb-radius);background:transparent;color:var(--text);font:inherit;font-size:14px;cursor:pointer}
+#view-collab :is(#cv-experts,#cv-teams) .asset-card-menu button:hover{background:var(--hover)}
+#view-collab :is(#cv-experts,#cv-teams) .asset-card-menu [data-asset-card-view]{gap:8px}
+#view-collab :is(#cv-experts,#cv-teams) .asset-card-menu [data-asset-card-view] svg{flex:none;color:var(--text-secondary)}
+#view-collab :is(#cv-experts,#cv-teams) .asset-card-menu .asset-card-uninstall{color:var(--danger)}
+#view-collab :is(#cv-experts,#cv-teams) .asset-card-menu .asset-card-uninstall:hover{background:var(--danger-bg)}
+@media(hover:none){#view-collab :is(#cv-experts,#cv-teams) .asset-card-actions{opacity:1;pointer-events:auto}}
+@media(max-width:1200px){
+  #view-collab :is(#cv-experts,#cv-teams) .apps-grid,
+  #view-collab #cv-teams #expertGrid.asset-cloud-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:760px){
+  #view-collab :is(#cv-experts,#cv-teams) .apps-grid,
+  #view-collab #cv-teams #expertGrid.asset-cloud-grid{grid-template-columns:minmax(0,1fr)}
+  #view-collab :is(#cv-experts,#cv-teams) .asset-search{width:auto;flex:1}
+}
+#view-collab :is(#cv-experts,#cv-teams) .asset-card-menu .asset-card-uninstall::before{content:'';display:block;width:16px;height:16px;margin-right:8px;flex:none;background:var(--danger);mask:url('../../../assets/figma/task-list/trash.svg') center / 16px 16px no-repeat}

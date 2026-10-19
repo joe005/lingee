@@ -60,6 +60,9 @@
   --asset-source-tenant-bg: var(--success-bg);
   --asset-source-personal-text: var(--warning);
   --asset-source-personal-bg: var(--warning-bg);
+  --asset-personal-outline: #572ff7;
+  --asset-personal-outline-border: rgba(120, 88, 249, 0.28);
+  --asset-tenant-outline-border: rgba(8, 204, 80, 0.28);
 
   /* ---- 中性色（对齐参考工程 neutral 调色板） ---- */
   --neutral-50: rgba(0, 0, 0, 0.03);

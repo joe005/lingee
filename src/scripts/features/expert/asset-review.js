@@ -1,3 +1,4 @@
+import { toast } from '../../core/toast.js';
 import { $ } from '../../core/dom.js';
 import { EX, xesc, xav } from './data.js';
 import { CV_WORKSPACES, cvCanAccessWorkspace, cvWorkspace, cvWorkspaceName, cvCurrentUserName } from '../collab/data.js';
@@ -48,14 +49,17 @@ function submitToTenant(kind,item,tenant){
     delete data.memberRefs;
   }
   bundle.push({kind,data});
-  assetReviewDialog('提交审核',`<p>将「${xesc(item.name)}」提交到租户 ${xesc(tenantName)}，审核通过后可在“更多”中安装。</p>${bundle.length>1?`<p>将同时提交 ${bundle.length-1} 位个人成员智能体，审核通过后随智能体团队自动安装。</p>`:''}<label class="platform-import-note-label">提交说明 <span>*</span><textarea id="assetReviewNote" rows="3" maxlength="500" placeholder="说明用途和本次修改"></textarea></label><div class="platform-dialog-error" id="assetReviewError"></div><p class="platform-dialog-note">原型演示：审核和发布使用当前浏览器持久化数据。</p>`,()=>{
+  assetReviewDialog('提交审核',`<p>将「${xesc(item.name)}」提交到租户 ${xesc(tenantName)}，审核通过后可在“更多”中安装。</p>${bundle.length>1?`<p>将同时提交 ${bundle.length-1} 位个人成员智能体，审核通过后随智能体团队自动安装。</p>`:''}<label class="platform-import-note-label"><span class="asset-review-label">提交说明 <em>*</em></span><textarea id="assetReviewNote" rows="3" maxlength="100" placeholder="说明用途和本次修改"></textarea><small class="asset-review-count" id="assetReviewNoteCount">0/100</small></label><div class="platform-dialog-error" id="assetReviewError"></div><p class="platform-dialog-note">原型演示：审核和发布使用当前浏览器持久化数据。</p>`,()=>{
     if(!reviewTenants().some(workspace=>workspace.id===tenant)||item.ownerId&&item.ownerId!==assetOwnerKey()){$('#assetReviewError').textContent='当前账号已无提交权限，请重新登录后重试';return;}
-    const note=$('#assetReviewNote').value.trim();if(!note){$('#assetReviewError').textContent='请填写提交说明';return;}
+    const note=$('#assetReviewNote').value.trim();if(!note){$('#assetReviewError').textContent='请填写提交说明';return;}if(note.length>100){$('#assetReviewError').textContent='提交说明不能超过 100 字';return;}
     const rows=reviews();if(rows.some(row=>row.kind===kind&&row.sourceId===item.id&&row.tenantId===tenant&&row.status==='pending')){$('#assetReviewError').textContent='该内容已有待审核版本';return;}
     rows.push({id:'review-'+Date.now(),kind,sourceId:item.id,name:item.name,tenantId:tenant,tenantName,author:cvCurrentUserName(),ownerId:assetOwnerKey(),status:'pending',note,bundle,at:new Date().toLocaleString('zh-CN',{hour12:false})});
     if(!store(rows)){$('#assetReviewError').textContent='保存失败，请重试';return;}
-    assetReviewDialog('提交成功',`<p>「${xesc(item.name)}」已提交到 ${xesc(tenantName)}，待企业管理员审核。</p><p class="platform-dialog-note">审核通过前，内容不会出现在“更多”中，个人开发版本仍可继续使用。</p>`,null,'关闭');
-  },'确认提交');
+    assetReviewClose();
+    $('#expertModal')?.classList.remove('show');$('#teamModal')?.classList.remove('show');
+    toast('<span class="asset-submit-toast"><strong>提交成功！</strong><span>「'+xesc(item.name)+'」已提交到 '+xesc(tenantName)+'，待企业管理员审核。审核通过前，内容不会出现在“更多”中，个人开发版本仍可继续使用。</span></span>','success');
+  },'提交',{style:'submit'});
+  $('#assetReviewNote').addEventListener('input',event=>{$('#assetReviewNoteCount').textContent=event.target.value.length+'/100';});
 }
 function matchingReviews({kind='',statuses=[],tenantId='',keyword=''}={}){
   /* 已驳回只在没有更新的提交时展示；重新提交后，旧驳回只留在历史版本里 */

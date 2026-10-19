@@ -1,3 +1,6 @@
+import folderIcon from '../../../assets/icons/chat/ui-folder-16.svg';
+import uploadIcon from '../../../assets/icons/chat/ui-submit-upload.svg';
+import documentIcon from '../../../assets/file-type-icons/doc.png';
 import { $ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
 import { parseComp, xesc } from './data.js';
@@ -55,7 +58,11 @@ var KN_DIRS=[
 var KN_MAP={};
 KN_DIRS.forEach(function(d){ KN_MAP[d.id]=d; });
 
-function knDir(id){ return KN_MAP[id]||null; }
+function knDir(id){
+  if(KN_MAP[id])return KN_MAP[id];
+  function find(dirs){for(var dir of dirs){if(dir.id===id)return dir;var found=find(dir.children||[]);if(found)return found;}return null;}
+  return find(KN_DIRS);
+}
 
 /* ---------- 知识分层：预置知识 / 自己的知识 ----------
    预置知识——只有 Lingee 内置智能体才有，是平台按智能体的能力项预先配好的，
@@ -352,76 +359,51 @@ function presetKnDirsOf(e){
    两块都以「目录」的形式摆在左边，点一个目录就只看这个目录里有什么 */
 function knSecHtmlPreset(e){
   var draft=xkDetailDraftFor(e);
-  if(xkDetailPv){
-    var innerPv=knPreviewHtml(xkDetailPv,'返回知识列表');
-    return '<div class="x-sec" id="xkSec"><div class="x-sec-t">知识</div>'+innerPv+'</div>';
-  }
+  if(xkDetailPv) return '<div class="x-sec" id="xkSec">'+knPreviewHtml(xkDetailPv,'返回知识列表')+'</div>';
   var presetDirs=presetKnDirsOf(e);
   var dirs=(draft.kn||[]).map(knDir).filter(Boolean), ups=draft.knUp||[], offDocs=draft.knDocOff||[];
-  if(xkDetailPick && xkDetailPick!=='__myup'
-    && presetDirs.every(function(d){return d.id!==xkDetailPick;})
-    && dirs.every(function(d){return d.id!==xkDetailPick;})) xkDetailPick='';
-  var bar='<div class="xk-bar"><button type="button" class="xk-btn" id="xkDtlAddBtn">＋ 添加</button>'
-    +'<button type="button" class="xk-btn" id="xkDtlUpBtn">⬆ 上传</button>'
-    +'<div class="xk-bar-sp"></div>'
-    +'<input type="search" class="xk-search" id="xkDtlSearch" placeholder="搜索知识目录、文件名或创建者" autocomplete="off" value="'+xesc(xkDetailKw)+'"></div>';
-  var hint='';
-  function knDirCount(dir){ return (dir.children&&dir.children.length) ? dir.children.reduce(function(s,c){return s+c.docs.length;},0) : dir.docs.length; }
-  function knSubDirs(dir,preset){
-    return (dir.children||[]).map(function(c){
-      var cls='xk-dir xk-dir-sub'+(xkDetailPick===c.id?' on':'');
-      var cnt=preset?c.docs.length:knDirVisibleCount(c,offDocs);
-      var html='<div class="'+cls+'" data-xk-dtl-pick="'+c.id+'"><div class="xk-dir-row1">'
-        +'<span class="xk-dir-ic">'+(preset?'🔒':'📁')+'</span><span class="xk-dir-n">'+xesc(c.name)+'</span>'
-        +'<span class="xk-dir-c">'+cnt+'</span>';
-      if(!preset) html+='<button type="button" class="x-ic x-ic-dg xk-dir-x" data-xk-dtl-unlink="'+c.id+'" title="解除关联">✕</button>';
-      html+='</div></div>';
-      return html;
-    }).join('');
+  function contains(dir,id){return dir.id===id||(dir.children||[]).some(child=>contains(child,id));}
+  var available=presetDirs.concat(dirs);
+  if(xkDetailPick&&xkDetailPick!=='__myup'&&!available.some(dir=>contains(dir,xkDetailPick)))xkDetailPick='';
+  if(!xkDetailPick&&available.length)xkDetailPick=available[0].id;
+  var bar='<div class="xk-bar"><button type="button" class="xk-btn" id="xkDtlAddBtn"><span aria-hidden="true">＋</span>企业知识</button>'
+    +'<button type="button" class="xk-btn" id="xkDtlUpBtn"><img src="'+uploadIcon+'" width="16" height="16" alt="">上传</button>'
+    +'<div class="xk-bar-sp"></div><label class="xk-detail-search"><input type="search" class="xk-search" id="xkDtlSearch" aria-label="搜索知识目录、文件名或创建者" placeholder="搜索知识目录 / 文件名 / 创建者" autocomplete="off" value="'+xesc(xkDetailKw)+'"></label></div>';
+  function directoryHtml(dir,locked,depth){
+    return '<div class="xk-detail-tree'+(depth?' xk-detail-tree-child':'')+'"><button type="button" class="xk-dir'+(xkDetailPick===dir.id?' on':'')+'" data-xk-dtl-pick="'+xesc(dir.id)+'" aria-pressed="'+(xkDetailPick===dir.id)+'" title="'+xesc(dir.name)+(locked?'（预置知识，不可解除关联）':'')+'"><span class="xk-dir-row1"><img src="'+folderIcon+'" width="16" height="16" alt=""><span class="xk-dir-n">'+xesc(dir.name)+'</span></span></button>'
+      +(!locked?'<button type="button" class="x-ic x-ic-dg xk-dir-x" data-xk-dtl-unlink="'+xesc(dir.id)+'" title="解除关联" aria-label="解除关联'+xesc(dir.name)+'">×</button>':'')
+      +(dir.children||[]).map(child=>directoryHtml(child,locked,depth+1)).join('')+'</div>';
   }
   var side='<div class="xk-grp">预置知识</div>'
-    +(presetDirs.length ? presetDirs.map(function(dir){
-        return '<div class="xk-dir'+(xkDetailPick===dir.id?' on':'')+'" data-xk-dtl-pick="'+dir.id+'"><div class="xk-dir-row1">'
-          +'<span class="xk-dir-ic">🔒</span><span class="xk-dir-n">'+xesc(dir.name)+'</span>'
-          +'<span class="xk-dir-c">'+knDirCount(dir)+'</span></div></div>'+knSubDirs(dir,true);
-      }).join('') : '<div class="xk-none">这位智能体没有预置知识</div>')
+    +(presetDirs.map(dir=>directoryHtml(dir,true,0)).join('')||'<div class="xk-none">暂无知识</div>')
     +'<div class="xk-grp">关联企业知识</div>'
-    +(dirs.length ? dirs.map(function(dir){
-        return '<div class="xk-dir'+(xkDetailPick===dir.id?' on':'')+'" data-xk-dtl-pick="'+dir.id+'"><div class="xk-dir-row1">'
-          +'<span class="xk-dir-ic">📁</span><span class="xk-dir-n">'+xesc(dir.name)+'</span>'
-          +'<span class="xk-dir-c">'+knDirVisibleCount(dir,offDocs)+'</span>'
-          +'<button type="button" class="x-ic x-ic-dg xk-dir-x" data-xk-dtl-unlink="'+dir.id+'" title="解除关联">✕</button></div></div>'+knSubDirs(dir,false);
-      }).join('') : '<div class="xk-none">暂无</div>')
+    +(dirs.map(dir=>directoryHtml(dir,false,0)).join('')||'<div class="xk-none">暂无知识</div>')
     +'<div class="xk-grp">上传知识</div>'
-    +(ups.length ? ups.map(function(f){
-        return '<div class="xk-dir"><div class="xk-dir-row1">'
-          +'<span class="xk-dir-ic">📄</span><span class="xk-dir-n">'+xesc(f.n)+'</span></div></div>';
-      }).join('') : '<div class="xk-none">暂无</div>');
-  var rows=[], showAll=!xkDetailPick;
-  function collectDir(dir,locked){
-    (dir.docs||[]).forEach(function(doc,i){
-      if(locked){ rows.push({from:dir.name,dirId:dir.id,locked:true,n:doc.n,t:doc.t,sz:doc.sz,by:doc.by,up:doc.up}); }
-      else{ var key=knDocKey(dir.id,i); rows.push({key:key,from:dir.name,dirId:dir.id,off:offDocs.indexOf(key)>=0,n:doc.n,t:doc.t,sz:doc.sz,by:doc.by,up:doc.up,pg:doc.pg}); }
-    });
-    (dir.children||[]).forEach(function(sub){ collectDir(sub,locked); });
+    +(ups.length?'<button type="button" class="xk-dir'+(xkDetailPick==='__myup'?' on':'')+'" data-xk-dtl-pick="__myup" aria-pressed="'+(xkDetailPick==='__myup')+'"><span class="xk-dir-row1"><img src="'+folderIcon+'" width="16" height="16" alt=""><span class="xk-dir-n">临时目录</span></span></button>':'<div class="xk-none">暂无知识</div>');
+  var rows=[],kw=xkDetailKw.trim().toLowerCase(),selected=knDir(xkDetailPick);
+  function collect(dir,locked){
+    (dir.docs||[]).forEach((doc,i)=>rows.push({...doc,from:dir.name,locked:locked,key:locked?'':knDocKey(dir.id,i)}));
+    (dir.children||[]).forEach(child=>collect(child,locked));
   }
-  if(showAll||presetDirs.some(function(d){return d.id===xkDetailPick;})){
-    presetDirs.filter(function(d){return showAll||d.id===xkDetailPick;}).forEach(function(dir){ collectDir(dir,true); });
+  if(kw)available.forEach(dir=>collect(dir,presetDirs.includes(dir)));
+  else if(selected){
+    (selected.children||[]).forEach(dir=>rows.push({folder:true,n:dir.name,id:dir.id}));
+    var locked=presetDirs.some(dir=>contains(dir,selected.id));
+    (selected.docs||[]).forEach((doc,i)=>rows.push({...doc,from:selected.name,locked:locked,key:locked?'':knDocKey(selected.id,i)}));
   }
-  if(showAll||dirs.some(function(d){return d.id===xkDetailPick;})){
-    dirs.filter(function(d){return showAll||d.id===xkDetailPick;}).forEach(function(dir){ collectDir(dir,false); });
-  }
-  if(showAll){
-    ups.forEach(function(f,i){ rows.push({from:'上传知识',dirId:'__up',idx:i,n:f.n,t:f.t,sz:f.sz,up:f.up,by:f.by||'我'}); });
-  }
-  var kw=xkDetailKw.trim().toLowerCase();
-  if(kw) rows=rows.filter(function(r){
-    return [r.n,r.from,r.by].some(function(v){ return String(v||'').toLowerCase().indexOf(kw)>=0; });
-  });
-  var docs=rows.length ? rows.map(knDocCard).join('')
-    : '<div class="xk-empty">'+(xkDetailKw?'没有匹配「'+xesc(xkDetailKw)+'」的知识':'左边点一个目录，看看里面有什么')+'</div>';
-  var inner=bar+hint+'<div class="xk-cols"><div class="xk-side">'+side+'</div><div class="xk-docs">'+docs+'</div></div>';
-  return '<div class="x-sec" id="xkSec"><div class="x-sec-t">知识</div>'+inner+'</div>';
+  if(kw||xkDetailPick==='__myup')ups.forEach((file,i)=>rows.push({...file,from:'上传知识',upload:true,idx:i}));
+  if(kw)rows=rows.filter(row=>[row.n,row.from,row.by].some(value=>String(value||'').toLowerCase().includes(kw)));
+  var path=[];
+  function findPath(dir,id,parents){if(dir.id===id)return parents.concat(dir);for(var child of dir.children||[]){var found=findPath(child,id,parents.concat(dir));if(found)return found;}return null;}
+  if(selected)for(var root of available){var found=findPath(root,selected.id,[]);if(found){path=found;break;}}
+  var breadcrumb='<div class="xk-detail-breadcrumb" aria-label="当前知识目录">'+(kw?'搜索结果':path.length?path.map(dir=>'<span>'+xesc(dir.name)+'</span>').join('<span aria-hidden="true">/</span>'):xkDetailPick==='__myup'?'上传知识 / 临时目录':'知识目录')+'</div>';
+  var docs=rows.map(row=>{
+    var action=row.folder?' data-xk-dtl-pick="'+xesc(row.id)+'"':row.key?' data-xk-pv="'+xesc(row.key)+'"':'';
+    return '<div class="xk-detail-file-row"><button type="button" class="xk-detail-file"'+action+(row.locked?' title="预置知识由官方维护"':'')+'><img src="'+(row.folder?folderIcon:documentIcon)+'" width="16" height="16" alt=""><span>'+xesc(row.n)+'</span></button>'
+      +(row.key?'<button type="button" class="xk-detail-toggle" data-xk-doc-toggle="'+xesc(row.key)+'" aria-pressed="'+(!offDocs.includes(row.key))+'" title="切换检索范围">'+(offDocs.includes(row.key)?'启用':'停用')+'</button>':'')
+      +(row.upload?'<button type="button" class="x-ic x-ic-dg" data-xk-drmup="'+row.idx+'" aria-label="移除'+xesc(row.n)+'" title="移除">×</button>':'')+'</div>';
+  }).join('')||'<div class="xk-empty">'+(kw?'没有匹配的知识':'此目录暂无文件')+'</div>';
+  return '<div class="x-sec" id="xkSec">'+bar+'<div class="xk-cols"><div class="xk-side">'+side+'</div><div class="xk-docs">'+breadcrumb+docs+'</div></div></div>';
 }
 function knSecHtml(e){
   /* 详情弹窗只有预置专家会打开（自建专家点击直接进编辑器），非预置专家不应该走到这里 */
@@ -438,6 +420,9 @@ function reRenderKnSec(e){
   var html=knSecHtml(e);
   var box=document.createElement('div'); box.innerHTML=html;
   sec.replaceWith(box.firstChild);
+  var saved=knOverlayRec(e.id),draft=xkDetailDraftFor(e);
+  var baseline={kn:saved.kn||[],knDocOff:saved.knDocOff||[],knUp:(saved.knUp||[]).map(f=>({n:f.n,t:f.t,sz:f.sz,up:f.up,by:f.by}))};
+  $('#expertModal')?.classList.toggle('expert-knowledge-dirty',JSON.stringify(draft)!==JSON.stringify(baseline));
   if(wasSearch){
     var ni=$('#xkDtlSearch');
     if(ni){ ni.focus(); try{ ni.setSelectionRange(caret,caret); }catch(err){} }
@@ -679,7 +664,9 @@ export function initExpertKnowledge() {
     }
     var pk=ev.target.closest('[data-xk-dtl-pick]');
     if(pk){
-      /* 暂不支持单选某个目录下的文档，点击不做筛选 */
+      xkDetailPick=pk.getAttribute('data-xk-dtl-pick');
+      xkDetailPv=null;
+      reRenderKnSec(e);
       return;
     }
   });
@@ -710,6 +697,7 @@ function saveKnDetail(e){
   rec.knDocOff=(d.knDocOff||[]).slice();
   rec.knUp=(d.knUp||[]).map(function(f){return {n:f.n,t:f.t,sz:f.sz,up:f.up,by:f.by}});
   saveKnOverlay();
+  $('#expertModal')?.classList.remove('expert-knowledge-dirty');
   toast('知识已保存','success');
 }
 

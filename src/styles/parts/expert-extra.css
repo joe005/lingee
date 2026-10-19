@@ -134,3 +134,116 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
 #xeSkillPicker input[type=checkbox]{width:20px;height:20px;flex:none;accent-color:var(--brand)}
 #xeSkillPickerCount{color:var(--text-secondary)}
 @media(max-width:600px){#xeSkillPicker .modal-header{flex-wrap:wrap}#xeSkillPickerSearch{order:3;flex-basis:100%;max-width:none}#expertEditModal .xe-skills-toolbar{flex-wrap:wrap}}
+
+/* 用户截图：智能体与团队详情。仅居中详情采用此结构，编辑侧栏沿用原表单。 */
+#expertModal,#teamModal.team-detail-view{background:var(--overlay)}
+#expertModal>.expert-detail-modal,#teamModal.team-detail-view>.team-config-modal{width:min(720px,calc(100vw - 32px));height:min(640px,calc(100dvh - 32px));border:0;border-radius:var(--r-modal);background:var(--bg);box-shadow:var(--menu-shadow)}
+#expertModal>.expert-detail-modal>.modal-header,#teamModal.team-detail-view .modal-header{display:flex;align-items:center;flex:none;height:76px;min-height:76px;padding:20px;border:0}
+#expertModal .modal-title,#teamModal.team-detail-view .modal-title{font-size:18px;font-weight:500;line-height:28px;color:var(--text-title)}
+#expertModal>.expert-detail-modal>.modal-body,#teamModal.team-detail-view .modal-body{padding:0 20px 20px;min-height:0;overflow:hidden}
+#expertModal .x-detail-pane{padding-bottom:12px}
+#expertModal #expertModalFoot{display:none}
+#expertModal.expert-show-knowledge.expert-knowledge-dirty #expertModalFoot{display:flex;flex:none;padding:0 20px 20px;border:0;justify-content:flex-end;gap:8px}
+#expertModal .asset-detail-identity,#teamModal.team-detail-view .asset-detail-identity{display:flex;align-items:center;gap:8px;min-width:0;min-height:40px;margin:0 0 12px}
+#expertModal .asset-detail-identity>strong,#teamModal.team-detail-view .asset-detail-identity>strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-title);font-size:16px;line-height:24px;font-weight:500}
+#expertModal .x-av-lg{width:40px;height:40px;border-radius:50%;flex:none}
+#expertModal .asset-source-badge,#teamModal.team-detail-view .asset-source-badge{flex:none;margin:0;padding:0 4px;line-height:18px;border:1px solid currentColor;border-radius:4px;background:transparent;font-size:12px}
+#expertModal .asset-detail-actions,#teamModal.team-detail-view .asset-detail-actions{display:flex;align-items:center;gap:8px;flex:none;margin-left:auto}
+#expertModal .asset-detail-button,#teamModal.team-detail-view .asset-detail-button{height:28px;min-height:28px;display:inline-flex;align-items:center;justify-content:center;padding:0 8px;border:1px solid var(--border-hover);border-radius:var(--tb-radius);background:var(--bg);color:var(--text);font:inherit;font-size:12px;white-space:nowrap;cursor:pointer}
+#expertModal .asset-detail-button.primary,#teamModal.team-detail-view .asset-detail-button.primary{border-color:var(--brand);background:var(--brand);color:var(--bg)}
+#expertModal .asset-detail-button:hover,#teamModal.team-detail-view .asset-detail-button:hover{background:var(--hover)}
+#expertModal .asset-detail-button.primary:hover,#teamModal.team-detail-view .asset-detail-button.primary:hover{background:var(--brand-hover)}
+#expertModal .asset-detail-button:disabled,#teamModal.team-detail-view .asset-detail-button:disabled{opacity:.5;cursor:default}
+#expertModal .x-desc,#teamModal.team-detail-view #teamDescView{margin:0 0 16px;padding:12px 16px;border:0;border-radius:var(--r-card);background:var(--fill-1);font-size:14px;line-height:22px;color:var(--text-secondary);flex:none}
+#expertModal .x-sec-t,#teamModal.team-detail-view .x-sec-t,#teamModal.team-detail-view .env-form-section-title{margin:0 0 12px;font-size:14px;line-height:22px;font-weight:400;color:var(--text)}
+#expertModal .x-chips{display:flex;flex-wrap:wrap;gap:12px}
+#expertModal .x-chips .ptag{padding:8px 12px;border:0;border-radius:12px;background:var(--fill-1);font-size:14px;line-height:20px;color:var(--text)}
+#expertModal .asset-detail-review,#teamModal.team-detail-view .asset-detail-review{display:flex;align-items:center;gap:12px;flex:none;margin:0 0 20px;padding:16px;border-radius:var(--r-card);background:var(--fill-1)}
+#expertModal .asset-detail-review>img,#teamModal.team-detail-view .asset-detail-review>img{flex:none}
+#expertModal .asset-detail-review>div,#teamModal.team-detail-view .asset-detail-review>div{flex:1;min-width:0}
+#expertModal .asset-detail-review strong,#teamModal.team-detail-view .asset-detail-review strong{font-size:14px;line-height:22px;font-weight:500;color:var(--text)}
+#expertModal .asset-detail-review p,#teamModal.team-detail-view .asset-detail-review p{margin:4px 0 0;font-size:12px;line-height:18px;color:var(--text-secondary)}
+#expertModal .asset-detail-commands,#teamModal.team-detail-view .asset-detail-commands{margin:0 0 20px}
+#expertModal .x-cmd,#teamModal.team-detail-view .x-cmd{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;margin:0 0 12px;padding:12px;border:1px solid var(--border);border-radius:var(--r-card);background:var(--bg);color:var(--text);font:inherit;font-size:14px;line-height:22px;text-align:left;cursor:pointer}
+#expertModal .x-cmd:hover,#teamModal.team-detail-view .x-cmd:hover{background:var(--fill-1);border-color:var(--border-hover)}
+#expertModal .x-cmd-b,#teamModal.team-detail-view .x-cmd-b{min-width:0;flex:1}
+#expertModal .asset-command-icon,#teamModal.team-detail-view .asset-command-icon{flex:none;margin-left:auto}
+#expertModal .asset-detail-empty,#teamModal.team-detail-view .asset-detail-empty{color:var(--text-secondary);font-size:14px}
+#expertModal .x-skill-head{padding:0;margin:0 0 12px;border:0;font-size:14px;line-height:22px}
+#expertModal .x-skill-head strong{font-size:14px;font-weight:400}
+#expertModal .x-skill-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;padding:0;align-content:start}
+#expertModal .x-skill-row{display:flex;align-items:flex-start;gap:8px;min-width:0;min-height:100px;margin:0;padding:16px;border:1px solid var(--border);border-radius:var(--r-modal);background:var(--bg)}
+#expertModal .x-skill-icon{width:40px;height:40px;flex:none;border:1px solid var(--border);border-radius:12px;background:var(--bg);color:var(--brand);font-size:20px;line-height:28px;font-weight:500}
+#expertModal .x-skill-icon.tone-green{color:var(--success)}
+#expertModal .x-skill-icon.tone-orange{color:var(--warning)}
+#expertModal .x-skill-icon.tone-purple{color:var(--dot-purple)}
+#expertModal .x-skill-copy{gap:4px;padding:0}
+#expertModal .x-skill-copy strong{font-size:16px;line-height:24px;font-weight:500;color:var(--text-title)}
+#expertModal .x-skill-copy>span{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;font-size:14px;line-height:20px;color:var(--text-secondary)}
+#teamModal.team-detail-view :is(.modal-header-actions,.team-panel-badge,#teamResetBtn,#teamViewFoot){display:none}
+#teamModal.team-detail-view .modal-close{position:static;display:flex;align-items:center;justify-content:center;flex:none;width:36px;height:36px;margin-left:auto;padding:0;border:0;border-radius:var(--tb-radius);background:transparent;color:var(--text-muted);font-size:24px;line-height:1;cursor:pointer}
+#teamModal.team-detail-view .team-panel-tabs-row{display:block;flex:none;padding:0 20px 16px}
+#teamModal.team-detail-view .team-panel-tabs-row .modal-tabs{display:inline-flex;flex:none;width:max-content;max-width:100%;height:40px;margin:0;padding:4px;gap:4px;border:0;border-radius:var(--asset-pill-radius);background:var(--tag-bg)}
+#teamModal.team-detail-view .team-modal-tab{display:flex;align-items:center;justify-content:center;height:32px;min-height:32px;min-width:0;margin:0;padding:0 16px;border:0;border-radius:var(--asset-pill-radius);background:transparent;box-shadow:none;font-size:14px;line-height:22px;font-weight:400;color:var(--text-secondary)}
+#teamModal.team-detail-view .team-modal-tab.hidden{display:none}
+#teamModal.team-detail-view .team-modal-tab.active{background:var(--bg);color:var(--text);font-weight:500}
+#teamModal.team-detail-view .team-modal-tab:after{display:none}
+#teamModal.team-detail-view #teamDescView>.env-form-section-title{display:none}
+#teamModal.team-detail-view .team-desc-text{margin:0;font-size:14px;line-height:22px;color:var(--text-secondary)}
+#teamModal.team-detail-view .team-pane{padding:0;overflow:auto}
+#teamModal.team-detail-view .team-count{display:none}
+#teamModal.team-detail-view .team-members{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#teamModal.team-detail-view .x-member{min-width:0;min-height:78px;padding:16px;border:1px solid var(--border);border-radius:var(--r-modal);background:var(--bg);gap:8px}
+#teamModal.team-detail-view .x-member img{width:40px;height:40px;border-radius:50%}
+#teamModal.team-detail-view .x-member-n{font-size:14px;line-height:22px;font-weight:500;flex-wrap:nowrap;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#teamModal.team-detail-view .asset-member-description{margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;line-height:18px;color:var(--text-secondary)}
+#teamModal.team-detail-view .x-faces{position:relative;display:grid;grid-template-columns:repeat(2,20px);width:40px;height:40px;padding:0;flex:none}
+#teamModal.team-detail-view .x-faces img,#teamModal.team-detail-view .asset-faces-count{display:flex;align-items:center;justify-content:center;width:24px;height:24px;margin:-2px;border:2px solid var(--bg);border-radius:50%;background:var(--tag-bg);font-size:11px}
+#teamModal.team-detail-view .team-stage-scenarios{gap:8px;margin-bottom:20px}
+#teamModal.team-detail-view .team-stage-scenario{height:32px;padding:0 16px;border:1px solid transparent;border-radius:var(--asset-pill-radius);background:transparent;gap:8px}
+#teamModal.team-detail-view .team-stage-scenario.active{border-color:var(--brand);background:transparent}
+#teamModal.team-detail-view .team-stage-scenario strong{font-weight:400}
+#teamModal.team-detail-view .team-stage-timeline{padding:12px 12px 0}
+#teamModal.team-detail-view .team-stage{padding:0 0 32px 32px}
+#teamModal.team-detail-view .team-stage-dot{width:10px;height:10px;top:6px}
+#teamModal.team-detail-view .team-stage:not(:last-child)::before{left:4px;top:16px;bottom:0;width:1px;background:var(--border)}
+#teamModal.team-detail-view .asset-stage-heading{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#teamModal.team-detail-view .team-stage-content strong{font-weight:500;font-size:14px;line-height:22px}
+#teamModal.team-detail-view .team-stage-content p{margin-top:4px;font-size:14px;line-height:22px}
+#teamModal.team-detail-view .team-stage-ai-tag{padding:0 6px;border-radius:var(--asset-pill-radius);font-size:12px;line-height:20px}
+#teamModal.team-detail-view .team-stage-members{margin-top:4px;padding:0;border:0;background:transparent;gap:4px}
+#teamModal.team-detail-view .team-stage-member{padding:4px 8px;border:0;border-radius:var(--asset-pill-radius);background:var(--tag-bg);font-size:14px;line-height:20px}
+#teamModal.team-detail-view .team-stage-member img{width:18px;height:18px;border-radius:50%}
+#expertModal button:focus-visible,#teamModal.team-detail-view button:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+@media(max-width:600px){
+  #expertModal .x-skill-list,#teamModal.team-detail-view .team-members{grid-template-columns:minmax(0,1fr)}
+  #expertModal .asset-detail-identity,#teamModal.team-detail-view .asset-detail-identity{flex-wrap:wrap}
+}
+
+/* 截图中的新会话智能体选择器：窄菜单、32px 行、分隔线。 */
+:is(#ntExpertDropdown,#chatExpertDropdown) .expert-menu{width:220px;min-width:220px;padding:4px;border:0;border-radius:var(--r-card);background:var(--bg);box-shadow:var(--menu-shadow)}
+:is(#ntExpertDropdown,#chatExpertDropdown) .expert-menu .app-search-wrap{padding:0 0 4px;border:0}
+:is(#ntExpertDropdown,#chatExpertDropdown) .expert-menu .app-search{display:flex;align-items:center;height:28px;min-height:28px;padding:0 8px;gap:8px;border:1px solid var(--border);border-radius:var(--asset-pill-radius);background:var(--bg)}
+:is(#ntExpertDropdown,#chatExpertDropdown) .expert-menu .app-search input{order:0;min-width:0;font:inherit;font-size:14px;color:var(--text);flex:1}
+:is(#ntExpertDropdown,#chatExpertDropdown) .expert-menu .app-search>.ic{order:2;flex:none;width:16px;height:16px}
+:is(#ntExpertDropdown,#chatExpertDropdown) .expert-menu .app-list{max-height:264px;padding:0;overflow:auto}
+:is(#ntExpertDropdown,#chatExpertDropdown) .expert-menu .pick-group{height:8px;min-height:8px;margin:4px 0 0;padding:0;border-top:1px solid var(--border);font-size:0}
+:is(#ntExpertDropdown,#chatExpertDropdown) .expert-menu .pick-group:first-child{display:none}
+:is(#ntExpertDropdown,#chatExpertDropdown) .expert-menu .x-opt{display:flex;align-items:center;gap:8px;width:100%;height:32px;padding:0 8px;border:0;border-radius:var(--asset-pill-radius);background:transparent;cursor:pointer;text-align:left;font:inherit}
+:is(#ntExpertDropdown,#chatExpertDropdown) .expert-menu .x-opt:hover,:is(#ntExpertDropdown,#chatExpertDropdown) .expert-menu .x-opt.checked{background:var(--tag-bg)}
+:is(#ntExpertDropdown,#chatExpertDropdown) .expert-menu .x-opt-n{font-size:14px;line-height:22px}
+:is(#ntExpertDropdown,#chatExpertDropdown) .expert-menu .x-opt-av{width:20px;height:20px;border-radius:50%}
+:is(#ntExpertDropdown,#chatExpertDropdown) .expert-menu .x-faces{position:relative;display:block;width:20px;height:20px;padding:0;flex:none}
+:is(#ntExpertDropdown,#chatExpertDropdown) .expert-menu .x-faces img{position:absolute;box-sizing:border-box;width:12px;height:12px;margin:0;border:1px solid var(--bg);border-radius:50%;object-fit:cover}
+:is(#ntExpertDropdown,#chatExpertDropdown) .expert-menu .x-faces img:nth-child(1){top:0;left:4px}
+:is(#ntExpertDropdown,#chatExpertDropdown) .expert-menu .x-faces img:nth-child(2){bottom:0;left:0}
+:is(#ntExpertDropdown,#chatExpertDropdown) .expert-menu .x-faces img:nth-child(3){bottom:0;right:0}
+:is(#ntExpertDropdown,#chatExpertDropdown) .expert-menu .app-foot{margin-top:4px;padding:4px 0 0;border-top:1px solid var(--border)}
+:is(#ntExpertDropdown,#chatExpertDropdown) .expert-menu .app-foot-item{height:32px;padding:0 8px;font-size:14px;border-radius:var(--asset-pill-radius)}
+:is(#ntExpertDropdown,#chatExpertDropdown) .expert-menu:has(input:not(:placeholder-shown)) .app-foot{display:none}
+:is(#ntExpertDropdown,#chatExpertDropdown) .expert-menu button:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}
+#expertModal .asset-source-personal,#teamModal.team-detail-view .asset-source-personal{color:var(--asset-personal-outline);border-color:var(--asset-personal-outline-border)}
+#expertModal .asset-source-shared,#teamModal.team-detail-view .asset-source-shared{color:var(--asset-source-tenant-text);border-color:var(--asset-tenant-outline-border)}
+:is(#ntExpertDropdown,#chatExpertDropdown) .asset-picker-local{padding:0 4px;border:1px solid var(--border);border-radius:var(--asset-pill-radius);font-size:11px;line-height:18px;color:var(--text-secondary);flex:none}
+:is(#ntExpertDropdown,#chatExpertDropdown) .asset-picker-clear{order:1;display:flex;align-items:center;justify-content:center;width:16px;height:16px;border:0;border-radius:50%;background:var(--text-soft);color:var(--bg);font:inherit;line-height:1;cursor:pointer;flex:none}
+:is(#ntExpertDropdown,#chatExpertDropdown) .asset-picker-clear[hidden]{display:none}

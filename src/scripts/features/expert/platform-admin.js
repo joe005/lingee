@@ -2,10 +2,13 @@ import { REVIEW_KEY, countAssetReviews, renderAssetReviewCards, openAssetReview,
 import { cvWorkspace, cvWorkspaceName, cvCanAccessWorkspace, cvCurrentUserName } from '../collab/data.js';
 import { $, $$ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
+import { requestDeleteConfirmation } from '../../core/delete-confirm.js';
+import { renderExpertChips } from './chips.js';
+import upgradeIcon from '../../../assets/figma/expert-assets/upgrade.svg';
 import { showView } from '../../core/view.js';
 import { getPlatformIdentity, getLoginAccount, LOGIN_KEY } from '../login.js';
 import { AV_KEYS, EXPERTS, PRESET_TEAMS, setBuiltinExperts, xav, xesc } from './data.js';
-import { setBuiltinTeams } from './store.js';
+import { TEAMS, activePick, clearPick, setBuiltinTeams } from './store.js';
 import { cvRenderExperts } from '../collab/experts.js';
 import { renderExpertGrid } from './library.js';
 import { bumpVersion, compareVersions, normalizeVersion } from './versioning.js';
@@ -33,6 +36,9 @@ function retiredSeed(item){
     ||(retiredDemoTeams.has(id)&&['平台初始数据','租户示例数据'].includes(item.editor));
 }
 const SEED_DEMO_UPDATES=[
+  ['expert','software-product-manager','演示更新：补充需求优先级排序与验收场景模板。','需求优先级'],
+  ['expert','software-architect','演示更新：增加接口兼容性检查与故障恢复方案。','兼容性检查'],
+  ['expert','general-app-product-expert','演示更新：增加用户旅程梳理与边界场景验收。','用户旅程'],
   ['expert','cosmic-product-manager','演示更新：补充需求边界与验收条件梳理。','验收条件'],
   ['expert','general-app-development-expert','演示更新：增强问题定位与回归验证。','问题定位'],
   ['team','cosmic-app-dev','演示更新：需求智能体升级，并优化交付分工。','交付分工'],
@@ -141,7 +147,15 @@ function refreshAccess(){
   $('#platformImport').classList.toggle('hidden',!editable);
   renderCards();
 }
-export function assetReviewDialog(title,body,onConfirm,confirmText='确认'){$('#assetRejectButton')?.remove();$('#platformDialogTitle').textContent=title;$('#platformDialogBody').innerHTML=body;$('#platformDialogConfirm').textContent=confirmText;$('#platformDialogConfirm').disabled=false;/* 确认按钮本身只是关闭时，不再重复显示取消 */$('#platformDialogCancel').classList.toggle('hidden',!onConfirm);dialogConfirm=onConfirm;$('#platformDialog').classList.remove('hidden');}
+export function assetReviewDialog(title,body,onConfirm,confirmText='确认',options={}){
+  $('#assetRejectButton')?.remove();
+  $('#platformDialog').dataset.assetDialog=options.style||'';
+  $('#platformDialogTitle').textContent=title;$('#platformDialogBody').innerHTML=body;
+  $('#platformDialogConfirm').textContent=confirmText;$('#platformDialogConfirm').disabled=false;
+  $('#platformDialogCancel').classList.toggle('hidden',!onConfirm);
+  dialogConfirm=onConfirm;$('#platformDialog').classList.remove('hidden');
+  (onConfirm?$('#platformDialogCancel'):$('#platformDialogConfirm')).focus();
+}
 export function assetReviewClose(){$('#platformDialog').classList.add('hidden');dialogConfirm=null;}
 function renderCards(){
   decorateClient();
@@ -387,13 +401,13 @@ function openImportDialog(){
   $('#platformImportFileRemove')?.addEventListener('click',resetFile);
 }
 
-function installable(){return Object.entries(meta).filter(([id,m])=>availableToClient(m)&&m.status==='online'&&active(id)&&compareVersions(installed[id],active(id).version)<0).map(([id,m])=>({id,kind:m.kind,old:installed[id]||'',row:active(id)}));}
+function installable(){return Object.entries(meta).filter(([id,m])=>installed[id]&&availableToClient(m)&&m.status==='online'&&active(id)&&compareVersions(installed[id],active(id).version)<0).map(([id,m])=>({id,kind:m.kind,old:installed[id],row:active(id)}));}
 function installedSnapshot(kind,id){const itemKey=key(kind,id);return version(itemKey,installed[itemKey])?.data||null;}
 function applyInstalled(){
-  const experts=originals.expert.map(e=>clone(installedSnapshot('expert',e.id)||e));
+  const experts=originals.expert.filter(e=>installed[key('expert',e.id)]).map(e=>clone(installedSnapshot('expert',e.id)||e));
   for(const [id,m] of Object.entries(meta))if(m.kind==='expert'&&!retiredSeed(m)&&!originals.expert.some(e=>e.id===m.id)&&installed[id]){const data=installedSnapshot('expert',m.id);if(data)experts.push(clone(data));}
   setBuiltinExperts(experts);
-  const teams=originals.team.map(t=>clone(installedSnapshot('team',t.id)||t));
+  const teams=originals.team.filter(t=>installed[key('team',t.id)]).map(t=>clone(installedSnapshot('team',t.id)||t));
   for(const [id,m] of Object.entries(meta))if(m.kind==='team'&&!retiredSeed(m)&&!originals.team.some(t=>t.id===m.id)&&installed[id]){const data=installedSnapshot('team',m.id);if(data)teams.push(clone(data));}
   setBuiltinTeams(teams);cvRenderExperts();renderExpertGrid();decorateClient();
   document.dispatchEvent(new CustomEvent('lingee:cloud-assets-changed'));
@@ -401,7 +415,30 @@ function applyInstalled(){
 export function cloudUpgradeBadge(itemKey){
   const item=meta[itemKey],current=installed[itemKey]||'';
   if(!current||item?.status!=='online'||compareVersions(active(itemKey)?.version,current)<=0)return '';
-  return `<button type="button" class="expert-upgrade-badge" data-cloud-update="${xesc(itemKey)}" aria-label="将${xesc(active(itemKey).data.name)}升级至 V${active(itemKey).version}" title="本地 V${current}，云端 V${active(itemKey).version}"><svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10" cy="10" r="7.5"/><path d="M10 14V6m-3 3 3-3 3 3"/></svg>升级至 V${active(itemKey).version}</button>`;
+  return `<button type="button" class="expert-upgrade-badge" data-cloud-update="${xesc(itemKey)}" aria-label="将${xesc(active(itemKey).data.name)}升级至 V${active(itemKey).version}" title="本地 V${current}，云端 V${active(itemKey).version}"><img src="${upgradeIcon}" width="16" height="16" alt=""></button>`;
+}
+
+function uninstallDependencies(itemKey){
+  const item=meta[itemKey];
+  if(item?.kind!=='expert')return [];
+  return TEAMS.filter(team=>team.members.includes(item.id));
+}
+async function uninstallCloudAsset(itemKey){
+  const item=meta[itemKey];
+  if(!item||!installed[itemKey]||!availableToClient(item))return;
+  const dependencies=uninstallDependencies(itemKey);
+  if(dependencies.length){assetReviewDialog('无法卸载','<p>「'+xesc(label(itemKey))+'」正被以下智能体团队使用：'+dependencies.map(team=>'「'+xesc(team.name)+'」').join('、')+'。请先卸载这些团队或把它移出团队。</p>',null,'知道了',{style:'notice'});return;}
+  const name=installedSnapshot(item.kind,item.id)?.name||label(itemKey);
+  const confirmed=await requestDeleteConfirmation('卸载「'+name+'」？它会从“我的”列表移除，之后可在“更多”中重新安装。云端版本、个人配置和会话历史会保留。',{title:'卸载'+(item.kind==='team'?'智能体团队':'智能体'),confirmLabel:'确认卸载'});
+  if(!confirmed||!installed[itemKey])return;
+  if(!meta[itemKey]||!availableToClient(meta[itemKey])||uninstallDependencies(itemKey).length){toast('资产权限或团队引用已变化，请刷新列表后重试','warning');return;}
+  const next={...installed};delete next[itemKey];
+  if(!write(INSTALL_KEY,next)){toast('卸载失败，原版本保持不变','error');return;}
+  installed=next;
+  if(activePick.kind===item.kind&&activePick.id===item.id)clearPick();
+  applyInstalled();
+  renderExpertChips();
+  toast('已卸载「'+name+'」','success');
 }
 setCloudAssetProviders({catalog:cloudCatalog,upgradeBadge:cloudUpgradeBadge});
 const UPDATE_SETTINGS_KEY='lingee.asset-update-settings.v1';
@@ -447,7 +484,9 @@ function decorateClient(){
     el.querySelector('.expert-upgrade-badge')?.remove();
     const badge=document.createElement('span');badge.className='platform-client-badge';
     badge.textContent=`V${installed[itemKey]}${item.status==='offline'?' · 已下架':''}`;
-    el.querySelector('.card-title-row')?.appendChild(badge);
+    const source=el.querySelector('.asset-card-summary .asset-source-badge');
+    if(source)source.insertAdjacentElement('afterend',badge);
+    else el.querySelector('.card-title-row')?.appendChild(badge);
     const upgrade=cloudUpgradeBadge(itemKey);
     if(upgrade)(el.querySelector('.asset-card-upgrade-anchor')||el.querySelector('.card-title-row'))?.insertAdjacentHTML('beforeend',upgrade);
   }
@@ -496,11 +535,16 @@ export function initPlatformAdmin(){
   $('#platformImport').addEventListener('click',openImportDialog);
   $('#platformList').addEventListener('click',event=>{const review=event.target.closest('[data-asset-review]');if(review){openAssetReview(review.dataset.assetReview,renderCards);return;}const card=event.target.closest('[data-platform-card]');if(card)showCard(card.dataset.platformCard);});
   $('#platformDialogCancel').addEventListener('click',assetReviewClose);
+  $('#platformDialogClose').addEventListener('click',assetReviewClose);
+  $('#platformDialog').addEventListener('click',event=>{if(event.target===$('#platformDialog'))assetReviewClose();});
+  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!$('#platformDialog').classList.contains('hidden')){event.preventDefault();assetReviewClose();}});
   $('#platformDialogConfirm').addEventListener('click',()=>{if(dialogConfirm)dialogConfirm();else assetReviewClose();});
   $('#platformDialogBody').addEventListener('click',event=>{const avatar=event.target.closest('[data-platform-avatar]'),option=event.target.closest('[data-platform-avatar-key]');if(avatar){chooseDraftAvatar(avatar.dataset.platformAvatar);return;}if(option){$('#platformDialogBody').querySelectorAll('[data-platform-avatar-key]').forEach(button=>{button.classList.toggle('on',button===option);button.setAttribute('aria-pressed',String(button===option));});return;}const history=event.target.closest('[data-platform-history]'),toggle=event.target.closest('[data-platform-toggle]'),publish=event.target.closest('[data-platform-publish]'),download=event.target.closest('[data-platform-export]');if(history)showHistory(history.dataset.platformHistory);if(toggle)toggleStatus(toggle.dataset.platformToggle);if(publish)publishPending(publish.dataset.platformPublish);if(download)exportVersion(download.dataset.platformExport,download.dataset.platformVersion);});
   document.addEventListener('click',event=>{
+    const uninstall=event.target.closest('#view-collab [data-cloud-uninstall]');
+    if(uninstall){event.stopPropagation();uninstallCloudAsset(uninstall.dataset.cloudUninstall);return;}
     const button=event.target.closest('#view-collab [data-cloud-update],#view-collab [data-market-install]');if(!button)return;
-    event.stopPropagation();installCloudAsset(button.dataset.cloudUpdate||button.dataset.marketInstall);
+    event.stopPropagation();installCloudAsset(button.dataset.cloudUpdate||button.dataset.marketInstall,{quick:!!button.dataset.marketInstall});
   },true);
   window.addEventListener('storage',event=>{
     if(event.key===UPDATE_SETTINGS_KEY){updateAttempt='';scheduleAutoUpdate();return;}
@@ -538,18 +582,26 @@ function cloudInstallRows(id,reinstall=false){
   }
   collect(id);return [...rows.values()];
 }
-export function installCloudAsset(id){
+export function installCloudAsset(id,options={}){
   let rows;try{rows=cloudInstallRows(id,true);}catch(error){return assetReviewDialog('无法安装',`<p class="platform-dialog-error">${xesc(error.message)}</p>`,null,'关闭');}
   if(!rows.length)return assetReviewDialog('已安装', '<p>当前已是最新版本。</p>',null,'关闭');
   const row=active(id),old=installed[id]||'';
+  if(options.quick&&!old){
+    const error=validateInstall(rows);
+    if(error)return assetReviewDialog('无法安装','<p>'+xesc(error)+'</p>',null,'知道了',{style:'notice'});
+    const next={...installed};for(const item of rows)next[item.id]=item.row.version;
+    if(!write(INSTALL_KEY,next))return assetReviewDialog('安装失败','<p>本地存储不可用，安装状态保持不变。</p>',null,'关闭',{style:'notice'});
+    installed=next;applyInstalled();renderExpertChips();toast('已添加'+(meta[id].kind==='team'?'智能体团队':'智能体'),'success');return;
+  }
   const reinstall=compareVersions(old,row.version)>=0;
   const kind=meta[id].kind==='team'?'智能体团队':'智能体';
   const dependencyCount=rows.length-1;
+  const dependencyRows=rows.filter(item=>item.id!==id).map(item=>'<div class="asset-install-member"><img src="'+xav(item.row.data.k)+'" width="20" height="20" alt=""><span>'+xesc(item.row.data.name)+'</span><small>'+(item.old?'V'+item.old:'未安装')+' → V'+item.row.version+'</small></div>').join('');
   const body=`<div class="platform-install-target"><span class="platform-install-type">${kind}</span><strong>${xesc(row.data.name)}</strong></div>
     <div class="platform-install-versions"><div><span>当前版本</span><strong>${old?'V'+old:'未安装'}</strong></div><span class="platform-install-arrow" aria-hidden="true">→</span><div><span>目标版本</span><strong>V${row.version}</strong></div></div>
     <div class="platform-install-section"><strong>${reinstall?'版本内容':old?'本次更新':'版本内容'}</strong><p>${xesc(row.note||'暂无更新说明')}</p></div>
-    ${dependencyCount?`<div class="platform-install-dependency">将同步更新 ${dependencyCount} 位依赖的智能体，确认后一起生效。</div>`:''}
-    <details class="platform-install-demo"><summary>演示选项</summary><label><input type="checkbox" id="marketFailOnce"> 模拟本次安装失败</label></details>`;
+    ${dependencyCount?`<div class="platform-install-dependency">将同步更新 ${dependencyCount} 位依赖的智能体，确认后一起生效。${dependencyRows}</div>`:''}
+    <details class="platform-install-demo" open><summary>演示选项</summary><label><input type="checkbox" id="marketFailOnce"> 模拟本次安装失败</label></details>`;
   assetReviewDialog(reinstall?`重新安装${kind}`:old?`升级${kind}`:`安装${kind}`,body,()=>{
     const simulateFailure=$('#marketFailOnce')?.checked;
     assetReviewDialog('正在安装','<p>正在校验版本及成员依赖…</p>',null,'关闭');
@@ -559,9 +611,9 @@ export function installCloudAsset(id){
       if(error)return assetReviewDialog('安装失败',`<p class="platform-dialog-error">${xesc(error)}，旧版本和个人配置保持不变。</p>`,()=>installCloudAsset(id),'重试');
       const next={...installed};for(const item of current)next[item.id]=item.row.version;
       if(!write(INSTALL_KEY,next))return assetReviewDialog('安装失败','<p>本地存储不可用，旧版本保持不变。</p>',()=>installCloudAsset(id),'重试');
-      installed=next;applyInstalled();assetReviewDialog('安装完成','<p>内容已安装，可在“我的”中的官方或租户标签查看；智能体团队缺失的成员智能体已一并安装。</p>',null,'关闭');
+      installed=next;applyInstalled();assetReviewDialog('安装完成','<p>内容已安装，可在“我的”中的官方或租户标签查看；智能体团队缺失的成员智能体已一并安装。</p>',null,'关闭',{style:'notice'});
     },350);
-  },reinstall?'确认重新安装':old?'确认升级':'确认安装');
+  },reinstall?'确认重新安装':old?'确认升级':'确认安装',{style:'install'});
 }
 
 export function publishedExpertRef(id){

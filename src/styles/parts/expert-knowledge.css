@@ -180,3 +180,61 @@
 @media (max-width:760px){
   .kn-pick-cols{grid-template-columns:minmax(0,1fr)}
 }
+
+/* 智能体详情：按用户提供的知识页签截图校准，独立于对话编辑器。 */
+#expertModal>.expert-detail-modal>.modal-header{min-height:76px;height:76px;flex:none;align-items:center;padding:20px;gap:12px}
+#expertModal #expertModalTitle{font-size:18px;font-weight:500;line-height:28px}
+#expertModal .modal-close{display:flex;align-items:center;justify-content:center;position:static;flex:none;width:36px;height:36px;margin-left:auto;padding:0;border:0;border-radius:var(--tb-radius);background:transparent;font-size:24px;font-weight:400;line-height:1;color:var(--text-muted)}
+#expertModal .modal-close:hover{background:var(--hover)}
+#expertModal #xdTabs.modal-tabs{display:inline-flex;align-items:center;align-self:flex-start;flex:none;width:max-content;max-width:100%;height:40px;min-height:40px;margin:0 0 16px;padding:4px;gap:4px;border:0;border-radius:var(--asset-pill-radius);background:var(--tag-bg)}
+#expertModal #xdTabs .modal-tab{display:flex;align-items:center;justify-content:center;flex:none;height:32px;min-height:32px;margin:0;padding:0 16px;border:0;border-radius:var(--asset-pill-radius);background:transparent;box-shadow:none;font-size:14px;line-height:22px;font-weight:400;color:var(--text-secondary)}
+#expertModal #xdTabs .modal-tab.active{background:var(--bg);color:var(--text);font-weight:500;box-shadow:none}
+#expertModal #xdTabs .modal-tab:hover{color:var(--text);background:var(--hover)}
+#expertModal #xdTabs .modal-tab.active:hover{background:var(--bg)}
+#expertModal #xdTabs .modal-tab:after{display:none}
+#expertModal .x-detail-summary{margin-bottom:16px;gap:12px;flex-wrap:wrap}
+#expertModal .x-detail-summary strong{font-size:16px;font-weight:500;line-height:24px}
+#expertModal.expert-show-knowledge:not(.expert-knowledge-dirty) #expertModalFoot{display:none}
+#expertModal #xkSec{flex:1;min-height:0;gap:0;margin:0}
+#expertModal #xkSec>.x-sec-t{display:none}
+#expertModal .xk-bar{height:28px;min-height:28px;flex:none;gap:8px;margin:0 0 16px}
+#expertModal .xk-btn{display:inline-flex;align-items:center;justify-content:center;flex:none;height:28px;padding:0 8px;gap:4px;border:1px solid var(--border-hover);border-radius:var(--tb-radius);background:var(--bg);color:var(--text);font-size:14px;line-height:20px}
+#expertModal .xk-btn img{display:block;flex:none}
+#expertModal .xk-detail-search{display:flex;align-items:center;flex:0 1 236px;min-width:0;height:28px;padding:0 28px 0 12px;border:1px solid var(--border);border-radius:var(--asset-pill-radius);background:var(--bg) url('../../assets/figma/expert-assets/search.svg') right 10px center / 16px 16px no-repeat}
+#expertModal .xk-search{width:100%;max-width:none;min-width:0;height:26px;padding:0;border:0;border-radius:0;font-size:12px;line-height:18px;background:transparent}
+#expertModal .xk-detail-search:focus-within{outline:2px solid var(--border-focus);outline-offset:2px}
+#expertModal .xk-cols{display:grid;flex:0 1 368px;height:368px;min-height:160px;grid-template-columns:192px minmax(0,1fr);grid-template-rows:minmax(0,1fr);gap:0;overflow:hidden;border:1px solid var(--border);border-radius:var(--r-card);background:var(--bg)}
+#expertModal .xk-side{display:block;min-height:0;max-height:none;padding:12px 4px 12px 12px;border:0;border-right:1px solid var(--border);border-radius:0;overflow:auto;background:transparent}
+#expertModal .xk-docs{display:block;min-width:0;min-height:0;max-height:none;padding:12px 16px;border:0;border-radius:0;overflow:auto;background:transparent}
+#expertModal .xk-grp{padding:4px 4px 12px;font-size:12px;line-height:18px;color:var(--text-secondary)}
+#expertModal .xk-grp:first-child{padding-top:4px;color:var(--text);font-weight:500}
+#expertModal .xk-none{padding:0 4px 12px;color:var(--text-secondary);font-size:12px;line-height:18px}
+#expertModal .xk-dir{width:100%;height:32px;min-width:0;padding:0 8px;border:0;border-radius:var(--asset-pill-radius);background:transparent;text-align:left;font:inherit;font-size:12px;line-height:18px;color:var(--text)}
+#expertModal .xk-dir.on{background:var(--tag-bg);color:var(--text)}
+#expertModal .xk-dir:hover{background:var(--hover)}
+#expertModal .xk-dir-row1{gap:8px}
+#expertModal .xk-dir-row1 img{display:block;flex:none}
+#expertModal .xk-detail-tree{position:relative}
+#expertModal .xk-detail-tree-child{margin-left:8px;padding-left:8px;border-left:1px solid var(--border)}
+#expertModal .xk-detail-tree>.xk-dir-x{position:absolute;top:5px;right:2px;display:none;opacity:1;background:var(--bg)}
+#expertModal .xk-detail-tree:hover>.xk-dir-x,#expertModal .xk-detail-tree:focus-within>.xk-dir-x{display:block}
+#expertModal .xk-detail-breadcrumb{display:flex;gap:12px;align-items:center;min-height:28px;margin-bottom:8px;color:var(--text-secondary);font-size:12px;line-height:18px;flex-wrap:wrap}
+#expertModal .xk-detail-breadcrumb>span:last-child{color:var(--text)}
+#expertModal .xk-detail-file-row{display:flex;align-items:center;gap:4px;min-width:0}
+#expertModal .xk-detail-file{display:flex;align-items:center;gap:8px;flex:1;min-width:0;min-height:36px;padding:4px 0;border:0;border-radius:var(--tb-radius);background:transparent;color:var(--text);font:inherit;font-size:14px;line-height:22px;text-align:left;cursor:pointer}
+#expertModal .xk-detail-file img{display:block;flex:none;object-fit:contain}
+#expertModal .xk-detail-file span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#expertModal .xk-detail-file:hover{background:var(--hover)}
+#expertModal .xk-empty{padding:40px 12px;font-size:14px;color:var(--text-secondary)}
+@media(max-width:600px){
+  #expertModal .xk-bar{height:auto;flex-wrap:wrap}
+  #expertModal .xk-bar-sp{display:none}
+  #expertModal .xk-detail-search{flex:1 1 100%}
+  #expertModal .xk-cols{grid-template-columns:144px minmax(0,1fr)}
+  #expertModal .xk-docs{padding:12px 8px}
+}
+#expertModal .xk-detail-toggle{flex:none;padding:4px;border:0;border-radius:4px;background:transparent;color:var(--text-secondary);font:inherit;font-size:12px;cursor:pointer;opacity:0}
+#expertModal .xk-detail-file-row:hover .xk-detail-toggle,#expertModal .xk-detail-file-row:focus-within .xk-detail-toggle,#expertModal .xk-detail-toggle[aria-pressed="false"]{opacity:1}
+#expertModal .xk-detail-toggle:hover{background:var(--hover)}
+#expertModal .xk-detail-file-row:has(.xk-detail-toggle[aria-pressed="false"]) .xk-detail-file{color:var(--text-secondary)}
+@media(hover:none){#expertModal .xk-detail-toggle{opacity:1}}

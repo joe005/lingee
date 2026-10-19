@@ -1,5 +1,5 @@
 import { $, $$ } from '../../core/dom.js';
-import { layerVisible } from './layers.js';
+import { layerVisible, layerOf } from './layers.js';
 import { brandEl, navItems, setNavActive, showView } from '../../core/view.js';
 import '../collab/index.js';   /* 不再调用其函数（改发 lingee:collab-nav 事件），保留以维持模块求值顺序 */
 import '../collab/view.js';
@@ -82,19 +82,20 @@ function renderExpertPicker(pfx,kw){
   if(teams.length){
     html+='<div class="pick-group">智能体团队</div>'+teams.map(function(t){
       var on=activePick.kind==='team'&&activePick.id===t.id;
-      return '<div class="app-item x-opt'+(on?' checked':'')+'" data-pick-team="'+t.id+'">'
+      return '<button type="button" class="app-item x-opt'+(on?' checked':'')+'" data-pick-team="'+t.id+'">'
         +facesHtml(t.members,3)
         +'<span class="x-opt-n">'+xesc(t.name)+'</span>'
-        +(on?'<svg class="ic ic-sm menu-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>':'')+'</div>';
+        +(layerOf('team',t)==='personal'?'<span class="asset-picker-local">本地</span>':'')
+        +(on?'<svg class="ic ic-sm menu-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>':'')+'</button>';
     }).join('');
   }
   if(experts.length){
     html+='<div class="pick-group">智能体</div>'+experts.map(function(e){
       var on=activePick.kind==='expert'&&activePick.id===e.id;
-      return '<div class="app-item x-opt'+(on?' checked':'')+'" data-pick-expert="'+e.id+'">'
+      return '<button type="button" class="app-item x-opt'+(on?' checked':'')+'" data-pick-expert="'+e.id+'">'
         +'<img class="x-opt-av" src="'+xav(e.k)+'" alt="">'
         +'<span class="x-opt-n">'+xesc(e.name)+'</span>'
-        +(on?'<svg class="ic ic-sm menu-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>':'')+'</div>';
+        +(on?'<svg class="ic ic-sm menu-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>':'')+'</button>';
     }).join('');
   }
   list.innerHTML = html || '<div class="x-empty-sm">没有匹配的智能体或智能体团队</div>';
@@ -196,6 +197,13 @@ export function initExpertChips() {
   ['nt','chat','tkForm'].forEach(function(pfx){
     var dd=$('#'+pfx+'ExpertDropdown'); if(!dd) return;
     var chipEl=dd.querySelector('[data-chip]'), si=$('#'+pfx+'ExpertSearchInput'), menuEl=dd.querySelector('.menu');
+    if(si&&pfx!=='tkForm'){
+      si.placeholder='搜索智能体 / 智能体团队';
+      const clear=document.createElement('button');clear.type='button';clear.className='asset-picker-clear';clear.textContent='×';clear.setAttribute('aria-label','清空搜索');clear.hidden=!si.value;
+      si.parentNode.appendChild(clear);
+      clear.addEventListener('click',function(ev){ev.stopPropagation();si.value='';clear.hidden=true;renderExpertPicker(pfx,'');si.focus();});
+      si.addEventListener('input',function(){clear.hidden=!si.value;});
+    }
     if(dd.classList.contains('dd-float')){
       var host=dd.closest('.tk-mc-body');
       function onRepos(){ if(dd._floated) refloatMenu(dd); }
