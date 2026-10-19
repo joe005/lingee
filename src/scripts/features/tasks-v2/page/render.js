@@ -1,9 +1,10 @@
+import { renderTaskUpdatedTime } from './card-time.js';
 import { initSelectDropdowns } from '../../../core/select-dropdown.js';
 import needsColumnIcon from '../../../../assets/figma/task-board/needs.svg';
 import runningColumnIcon from '../../../../assets/figma/task-board/running.svg';
 import doneColumnIcon from '../../../../assets/figma/task-board/done.svg';
 import boardMoreIcon from '../../../../assets/figma/task-list/more.svg';
-import { taskExecutionStages } from '../task-execution.js';
+import { taskExecutionStages, taskStageAgentName } from '../task-execution.js';
 import { $$ } from '../../../core/dom.js';
 import { createDeliveryActivity } from '../../collab/delivery-activity.js';
 import { taskConversationNeedsReply } from '../../composer.js';
@@ -59,12 +60,12 @@ export function renderBoard() {
       + '<div class="tk-board-col-head"><div class="tk-board-col-head-left">'
       + (['needs','backlog','in_progress','done'].includes(g.key) ? '<img src="' + (g.key === 'done' ? doneColumnIcon : g.key === 'in_progress' ? runningColumnIcon : needsColumnIcon) + '" width="16" height="16" alt="">' : statusSvg(g.key))
       + '<span class="tk-board-col-name">' + escapeHtml(g.name) + '</span>'
-      + '<span class="tk-board-col-count">' + groupTasks.length + '</span>'
+      + (groupTasks.length ? '<span class="tk-board-col-count">' + groupTasks.length + '</span>' : '')
       + '</div><div class="tk-board-col-head-right">'
       + (g.key === 'done' && state.groupBy === 'status' ? '<select class="tk-board-done-filter" data-board-done-filter aria-label="筛选完成类型">' + [['all','全部'],['stage_done','阶段完成'],['done','全部完成']].map(function (option) { return '<option value="' + option[0] + '"' + (doneFilter === option[0] ? ' selected' : '') + '>' + option[1] + '</option>'; }).join('') + '</select>' : '')
       + '<button class="tk-board-col-toggle" data-toggle-col data-tooltip="' + toggleLabel + '" aria-label="' + toggleLabel + '"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="' + arrow + '"/></svg></button>'
       + '</div></div>'
-      + '<div class="tk-board-col-body' + (collapsed ? ' collapsed' : '') + '">' + (cards || '<div class="tk-board-filter-empty">暂无数据</div>') + '</div>'
+      + '<div class="tk-board-col-body' + (collapsed ? ' collapsed' : '') + '">' + (cards || '<div class="tk-board-filter-empty">暂无任务</div>') + '</div>'
       + '</div>';
   }).join('');
   els.tkBoardScroll.innerHTML = html;
@@ -120,19 +121,25 @@ export function renderCard(t, opts) {
   if (!pageState.projectListMode && document.querySelector('#cv-tasks-current #tkBoardScroll') === els.tkBoardScroll) {
     var plan = taskExecutionStages(t);
     var currentStage = plan.find(function (stage) { return stage.id === t.executionStageId; }) || (t.status === 'done' ? plan.at(-1) : plan[0]);
+    var agentName = taskStageAgentName(t, currentStage?.id);
+    var currentAgent = Object.values(EX).find(function(agent){ return agent.name === agentName; });
+    var boardAvatarHtml = '<img class="tk-card-team-avatar" src="' + xav(currentAgent?.k || AV_KEYS[Math.abs(t.id) % AV_KEYS.length]) + '" alt="' + escapeHtml(agentName) + '" data-tooltip="' + escapeHtml(agentName) + '">';
     var sharedAction = taskCardAction(t);
     var actionLabels = { [sharedAction.action]:sharedAction.label };
     var boardActionName = sharedAction.action;
     var boardAction = actionLabels[boardActionName] ? '<button type="button" class="tk-card-action" data-list-task-action="' + boardActionName + '" data-list-task-id="' + t.id + '">' + actionLabels[boardActionName] + '</button>' : '';
     var displayStatus = taskCardStatus(t);
     var boardStatus = '<span class="tk-card-status" data-kind="' + displayStatus.kind + '">' + escapeHtml(displayStatus.badge) + '</span>';
+    var boardTags = (props.type && t.issueType ? '<span class="tk-card-type">' + escapeHtml(taskTypeLabel(t.issueType)) + '</span>' : '')
+      + (props.priority ? '<span class="tk-card-priority" data-priority="' + escapeHtml(t.priority) + '">' + escapeHtml(pri.name) + '</span>' : '')
+      + (props.startDate && t.startDate ? '<span class="tk-card-due">' + fmtDate(t.startDate) + '</span>' : '');
     return '<div class="tk-card tk-card--figma' + sel + extraCls + (t.status === 'blocked' ? ' tk-card--blocked' : '') + '" draggable="true" data-task-id="' + t.id + '">'
       + '<button type="button" class="tk-card-more" data-card-more="' + t.id + '" aria-label="更多任务操作" aria-haspopup="menu"><img src="' + boardMoreIcon + '" width="16" height="16" alt=""></button>'
       + '<div class="tk-card-top-row">' + toggle + boardStatus + '<div class="tk-card-code">' + escapeHtml(t.code) + (props.project && t.project ? ' · ' + escapeHtml(tkGetProjectName(t.project)) : '') + '</div>' + childBadge + '</div>'
       + '<div class="tk-card-copy"><div class="tk-card-title">' + escapeHtml(t.title) + '</div>'
       + (props.description && t.desc ? '<div class="tk-card-description" title="' + escapeHtml(t.desc) + '">' + escapeHtml(t.desc) + '</div>' : '')
-      + '</div><div class="tk-card-tags">' + (t.issueType ? '<span class="tk-card-type">' + escapeHtml(taskTypeLabel(t.issueType)) + '</span>' : '') + (props.priority ? '<span class="tk-card-priority" data-priority="' + escapeHtml(t.priority) + '">' + escapeHtml(pri.name) + '</span>' : '') + (props.startDate && t.startDate ? '<span class="tk-card-due">' + fmtDate(t.startDate) + '</span>' : '') + '</div>'
-      + '<div class="tk-card-foot"><div class="tk-card-foot-left">' + teamAvatarHtml + '<span class="tk-card-stage">' + escapeHtml(currentStage?.name || '等待安排') + '</span></div><div class="tk-card-foot-actions">' + (boardAction || '<span class="tk-card-running-hint">' + escapeHtml(cardState.hint) + '</span>') + '</div></div></div>';
+      + '</div>' + (boardTags ? '<div class="tk-card-tags">' + boardTags + '</div>' : '')
+      + '<div class="tk-card-foot"><div class="tk-card-foot-left">' + boardAvatarHtml + (props.executionStage ? '<span class="tk-card-stage">' + escapeHtml(currentStage?.name || '等待安排') + '</span>' : '') + (props.updatedAt ? renderTaskUpdatedTime(t) : '') + '</div><div class="tk-card-foot-actions">' + (boardAction || '<span class="tk-card-running-hint">' + escapeHtml(cardState.hint) + '</span>') + '</div></div></div>';
   }
   return '<div class="tk-card' + sel + extraCls + '" draggable="true" data-task-id="' + t.id + '">'
     + '<button class="tk-card-more" data-card-more="' + t.id + '" data-tooltip="更多操作" aria-label="更多操作"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button>'

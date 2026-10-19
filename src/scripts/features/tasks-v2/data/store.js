@@ -9,7 +9,7 @@ import { createDemoCompletedRun } from '../completed-runs.js';
 import { TK_DEMO_PERSON_IDS, TK_VIEWS } from './constants.js';
 import { tkCurrentUserId, tkPeopleInProject } from './people.js';
 import { tkProjectsForCurrentUser } from './permissions.js';
-import { TK_COSMIC_REVIEW_TRIM_CODES, TK_COSMIC_TRIM_CODES, TK_COSMIC_WUXF_TASKS, TK_SURVEY_TASKS, TK_TASKS, tkToGeneralAppPlan } from './seed-tasks.js';
+import { applyDemoAutoReviewDefaults, TK_COSMIC_REVIEW_TRIM_CODES, TK_COSMIC_TRIM_CODES, TK_COSMIC_WUXF_TASKS, TK_SURVEY_TASKS, TK_TASKS, tkToGeneralAppPlan } from './seed-tasks.js';
 /* 任务数据：任务与视图存储、缓存迁移、增删改（拆自 tasks-v2/data.js）。本文件有模块求值期执行的迁移代码。 */
 
 /* ---------- 可变状态（原型用内存数组，支持增删改） ---------- */
@@ -213,6 +213,10 @@ try {
     localStorage.setItem('lingee_delivery_stages_bug_20261010', '1');
   }
 } catch (e) { /* 存储不可用时不影响当前页面 */ }
+/* 已缓存的预制任务同步自动评审样例；只更新未开始阶段的评审配置。 */
+var demoAutoReviewChanged = false;
+_tasks.forEach(function(task){ if (applyDemoAutoReviewDefaults(task)) demoAutoReviewChanged = true; });
+try { if (demoAutoReviewChanged) persistTasks(); } catch(e) { /* 存储不可用时仍使用本次内存配置 */ }
 // 在所有补种与缓存迁移结束后补全类型，避免后加入的模拟任务漏处理。
 var taskIssueTypesChanged = false;
 _tasks.forEach(function (task) {

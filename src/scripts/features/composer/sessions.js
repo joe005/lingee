@@ -161,6 +161,7 @@ function renderChatSessions() {
   section.classList.toggle('searching', !!query);
   list.innerHTML = ungrouped.map(sessionHtml).join('');
   var groups = new Map();
+  var projectActionsHtml = document.querySelector('.sb-proj-head .grp-actions')?.outerHTML || '';
   mySessions.forEach(function (session) {
     var id = projectId(session);
     if (!id || (query && !session.title.toLowerCase().includes(query) && !projectName(id).toLowerCase().includes(query))) return;
@@ -187,7 +188,7 @@ function renderChatSessions() {
           ? '<button type="button" class="chat-project-more" data-chat-project-toggle="' + attrId + '"><span class="txt">展开显示</span></button>'
           : '');
     return '<div class="chat-project-folder' + (collapsed ? ' collapsed' : '') + '" data-chat-project="' + attrId + '">'
-      + '<button type="button" class="chat-project-title" aria-expanded="' + !collapsed + '">' + folderIcon + '<span class="txt">' + escapeHtml(name) + '</span><span class="chat-project-chevron"><svg viewBox="0 0 16 16" fill="none">' + chevronIcon + '</svg></span></button>'
+      + '<div class="chat-project-head"><button type="button" class="chat-project-title" aria-expanded="' + !collapsed + '">' + folderIcon + '<span class="txt">' + escapeHtml(name) + '</span><span class="chat-project-chevron"><svg viewBox="0 0 16 16" fill="none">' + chevronIcon + '</svg></span></button>' + projectActionsHtml + '</div>'
       + '<div class="chat-project-sessions">' + sessionsHtml + '</div></div>';
   }).join('');
 }

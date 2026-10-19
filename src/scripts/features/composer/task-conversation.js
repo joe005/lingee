@@ -235,7 +235,7 @@ function renderChatTaskSide() {
       var handlerName = people.find(function (person) { return person.id === handlerId; })?.name || '待分配';
       var indexContent = state === 'done' ? '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4.5 10 3.5 3.5 7.5-8"/></svg>' : index + 1;
       var autoPass = planStage?.requiresConfirmation === false;
-      var auditBadge = '<span class="chat-stage-audit-mode">' + (autoPass ? '自动审核' : '人工评审') + '</span>';
+      var auditBadge = autoPass ? '<span class="chat-stage-audit-mode" data-audit-mode="auto" data-tooltip="本阶段自动评审，无需人工确认">自动评审</span>' : '';
       var reviewerText = '评审人 ' + escapeHtml(handlerName);
       var horizontalStages = stagePanel.classList.contains('is-horizontal');
       var isNextStage = row.id === task.executionStageId && task.status !== 'done' && state !== 'done';

@@ -15,7 +15,7 @@
   .brand{font-size:19px;font-weight:600;letter-spacing:.2px}
   .sb-head-icons{display:flex;gap:6px;color:var(--text-muted)}
   .sb-head-icons .ic{cursor:pointer;padding:4px;border-radius:8px;box-sizing:content-box;transition:background .15s,color .15s;width:18px;height:18px}
-  .sb-head-icons .ic:hover{background:var(--hover);color:var(--text)}
+  .sb-head-icons .ic:hover{background:var(--neutral-100);color:var(--text)}
   .sb-search{display:none;position:absolute;top:0;left:0;right:0;height:48px;background:var(--sidebar-bg);z-index:10;padding:18px 20px 10px;align-items:center;gap:8px}
   .sb-search.show{display:flex}
   .sb-search-input{flex:1;border:none;outline:none;background:none;font-size:14px;color:var(--text)}
@@ -113,7 +113,7 @@
   }
   .section-label .lbl-icons{display:flex;gap:4px;color:var(--text-muted)}
   .section-label .lbl-icons .ic{cursor:pointer;padding:6px;border-radius:8px;box-sizing:content-box;transition:background .15s,color .15s}
-  .section-label .lbl-icons .ic:hover{background:var(--hover);color:var(--text)}
+  .section-label .lbl-icons .ic:hover{background:var(--neutral-100);color:var(--text)}
 
   .project-group{margin-bottom:2px}
   .group-head{
@@ -329,3 +329,20 @@
 .sidebar #mgrNav .mgr-side-folder-head .ic { width:14px; height:14px; color:inherit; }
 .sidebar #mgrNav :is(.mgr-side-item,.mgr-side-child) { box-sizing:border-box; height:32px; padding:0 10px; border-radius:20px; color:var(--neutral-700); font-size:14px; font-weight:400; line-height:32px; }
 .sidebar #mgrNav .mgr-side-child { padding-left:28px; }
+
+.sidebar .nav-item .nav-beta { flex:none; margin-left:0; height:16px; padding:0 4px; border-radius:4px; background:var(--neutral-100); color:var(--text-secondary); font-size:11px; font-weight:400; line-height:16px; letter-spacing:0; }
+
+/* 两种项目文件夹共用无底色悬停与右侧操作。 */
+.sidebar .sb-proj-head,
+.sidebar .chat-project-head { display:flex; align-items:center; box-sizing:border-box; height:32px; padding:0 4px 0 10px; border-radius:8px; }
+.sidebar .sb-proj-head:hover,
+.sidebar .chat-project-head:hover,
+.sidebar .chat-project-title:hover { background:transparent; }
+.sidebar .chat-project-title { flex:1; width:auto; min-width:0; padding:0; }
+.sidebar .chat-project-title .txt { flex:0 1 auto; }
+.sidebar .sb-proj-head:hover .grp-actions,
+.sidebar .sb-proj-head:focus-within .grp-actions,
+.sidebar .chat-project-head:hover .grp-actions,
+.sidebar .chat-project-head:focus-within .grp-actions { opacity:1; pointer-events:auto; }
+.sidebar .sb-proj-head :is(.group-toggle,.grp-btn):focus-visible,
+.sidebar .chat-project-head :is(.chat-project-title,.grp-btn):focus-visible { outline:2px solid var(--focus-ring); outline-offset:2px; }

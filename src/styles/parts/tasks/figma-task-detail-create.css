@@ -237,10 +237,18 @@
 #niuCreateOverlay .niu-stage-remove:not(:disabled):active { background:var(--danger-bg); }
 
 /* 阶段正文不继承历史粗体，状态标签按对应语义着色。 */
+#tkDrawer.tk-drawer--latest .tk-feed-stage-meta { display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1fr) 72px; align-items:center; width:100%; gap:16px; }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-meta .tk-feed-stage-expert-content { grid-column:1; grid-row:1; flex:1; overflow:hidden; }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-expert-content strong { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-meta .tk-feed-stage-state { grid-column:3; grid-row:1; margin-left:0; justify-self:end; }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-role { grid-column:2; grid-row:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-secondary); }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-review-mode { flex:none; padding:0 6px; border-radius:4px; background:var(--neutral-50); color:var(--text-secondary); font-size:12px; font-weight:400; line-height:22px; }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-review-mode[data-review-mode=human] { box-sizing:border-box; border:1px solid var(--border-hover); background:transparent; line-height:20px; }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-line { flex-wrap:wrap; gap:8px; }
 #tkDrawer.tk-drawer--latest .tk-feed-stage-main { font-weight:400; gap:6px; }
 #tkDrawer.tk-drawer--latest .tk-feed-stage-line .tk-feed-stage-name { font-size:14px; font-weight:400; line-height:22px; }
 #tkDrawer.tk-drawer--latest .tk-feed-stage-row.is-done .tk-feed-stage-state { color:var(--success); background:var(--success-bg); }
-#tkDrawer.tk-drawer--latest .tk-feed-stage-row.is-review .tk-feed-stage-state { color:var(--warning); background:var(--warning-bg); box-shadow:none; }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-row.is-review .tk-feed-stage-state { box-sizing:border-box; min-width:0; height:24px; padding:3px 6px; border:0; border-radius:999px; color:var(--task-review-text); background:var(--task-review-bg); font-size:12px; font-weight:400; line-height:18px; box-shadow:none; }
 #tkDrawer.tk-drawer--latest .tk-feed-stage-row.is-blocked .tk-feed-stage-state { color:var(--danger); background:var(--danger-bg); box-shadow:none; }
 
 #tkDrawer.tk-drawer--latest .tk-feed-stage-detail .tk-artifact-type { display:none; }
@@ -274,3 +282,6 @@
 /* 所属空间标签旁常显添加入口说明，手动与智能创建共用。 */
 #niuCreateOverlay .niu-field>span:has(.niu-space-hint){display:flex;align-items:baseline;flex-wrap:wrap;white-space:normal;column-gap:4px;row-gap:4px}
 #niuCreateOverlay .niu-space-hint{margin-left:4px;font-size:12px;font-weight:400;line-height:18px;color:var(--text-secondary)}
+
+#tkDrawer time,
+#tkDrawer .tk-drawer-changelog-time { font-variant-numeric:tabular-nums; }

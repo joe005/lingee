@@ -43,6 +43,8 @@
   --pending-bg: #fdf5d9;
   --review-bg: #fff7e8;
   --review-border: #e8c88e;
+  --task-review-text: #ff7700;
+  --task-review-bg: rgba(255, 119, 0, 0.08);
   --danger: #e04a3a;
   --danger-bg: #fff1f0;
   --blue-bg: #e8f0fe;            /* 管理板块：信息类标签底色 */

@@ -45,6 +45,31 @@
 #view-collab .cv-card-locked .toggle{pointer-events:none}
 
 /* 任务、智能体、智能体团队与设置共用同一文字导航。 */
+
+/* 任务、智能体、智能体团队共用视觉稿搜索框。 */
+#view-collab #cv-tasks-current #view-tasks .tk-search-wrap,
+#view-collab :is(#cv-experts,#cv-teams) .expert-assets-toolbar .asset-search {
+  display:flex; align-items:center; flex:0 1 240px; box-sizing:border-box;
+  width:240px; max-width:100%; min-width:0; height:36px; padding:0 12px; gap:8px;
+  border:1px solid var(--border-hover); border-radius:10px; background:var(--canvas-bg);
+}
+#view-collab #cv-tasks-current #view-tasks .tk-search-wrap:focus-within,
+#view-collab :is(#cv-experts,#cv-teams) .expert-assets-toolbar .asset-search:focus-within {
+  border-color:var(--text-soft); outline:none; box-shadow:none;
+}
+#view-collab #cv-tasks-current #view-tasks .tk-search-wrap input,
+#view-collab :is(#cv-experts,#cv-teams) .expert-assets-toolbar .asset-search input {
+  order:0; flex:1; width:100%; min-width:0; height:100%; padding:0; border:0; border-radius:0;
+  outline:none; box-shadow:none; background:transparent; color:var(--text); font:inherit; font-size:14px;
+}
+#view-collab #cv-tasks-current #view-tasks .tk-search-wrap input::placeholder,
+#view-collab :is(#cv-experts,#cv-teams) .expert-assets-toolbar .asset-search input::placeholder { color:var(--text-soft); opacity:1; }
+#view-collab #cv-tasks-current #view-tasks .tk-search-wrap svg,
+#view-collab :is(#cv-experts,#cv-teams) .expert-assets-toolbar .asset-search svg {
+  order:1; flex:none; position:static; width:16px; height:16px; margin:0; transform:none; color:var(--text-soft);
+}
+
+/* 首屏直接使用现行导航，不等待下方页面片段解析或 active 状态建立。 */
 #view-collab.cv-current-navigation #cvPageTitle { display:none; }
 #view-collab.cv-current-navigation #cvTabNav {
   position:relative; align-self:center; width:calc(100% - 32px); max-width:1160px;

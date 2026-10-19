@@ -313,6 +313,11 @@ export function handleTaskCardPrimaryAction(taskId, action, trigger) {
   var task = tkGetTasks().find(function (row) { return row.id === Number(taskId); });
   if (!task) return;
   if (['start','review','retry','reply'].includes(action) && tkCurrentStageHandlerId(task) !== tkCurrentUserId()) { toast('仅当前阶段处理人可操作', 'warning'); return; }
+  if (action === 'edit') {
+    if (!['backlog','planned'].includes(task.status)) { toast('任务已开始，无法编辑', 'warning'); return; }
+    openNewIssueEdit(task.id);
+    return;
+  }
   if (action === 'review') { closeDrawer(); openListReviewPreview(task.id, trigger || els.tkDrawerChat); }
   else if (action === 'start') startTaskExecution(task.id);
   else if (action === 'retry') retryBlockedTask(task);

@@ -1,12 +1,18 @@
 /* Figma 284:73937；只调整协作开发当前任务看板。 */
-#cv-tasks-current #tkBoardScroll{box-sizing:border-box;max-width:1192px;margin:0 auto;padding:0 16px 16px;gap:16px;align-items:stretch}
-#cv-tasks-current .tk-board-col{box-sizing:border-box;flex:1 0 300px;min-width:300px;max-height:100%;padding:10px;border:0;border-radius:24px;background:var(--fill-1)}
+#cv-tasks-current .tk-card--figma{touch-action:none;user-select:none}
+#cv-tasks-current .tk-card--figma.dragging{opacity:.25}
+#cv-tasks-current .tk-board-drag-layer{position:fixed;inset:0;z-index:50;pointer-events:none}
+#cv-tasks-current .tk-card--figma.tk-board-drag-ghost{position:absolute;margin:0;opacity:1;pointer-events:none;box-shadow:var(--menu-shadow);border-color:var(--border-hover);will-change:transform}
+#cv-tasks-current .tk-board-drag-ghost .tk-card-more{visibility:hidden}
+#cv-tasks-current .tk-board-col-body.drag-over{border:0;outline:2px dashed var(--border-focus);outline-offset:-2px}
+#cv-tasks-current #tkBoardScroll{box-sizing:border-box;max-width:1192px;margin:0 auto;padding:0 16px 16px;gap:16px;align-items:flex-start}
+#cv-tasks-current .tk-board-col{box-sizing:border-box;flex:1 0 300px;min-width:300px;height:auto;max-height:100%;padding:10px;border:0;border-radius:24px;background:var(--neutral-50)}
 #cv-tasks-current .tk-board-col-head{height:32px;min-height:32px;margin-bottom:10px;padding:0;border:0}
 #cv-tasks-current .tk-board-col-head-left{box-sizing:border-box;height:32px;padding:0 8px;gap:4px;border-radius:999px;background:var(--hover)}
 #cv-tasks-current .tk-board-col-name{font-size:14px;font-weight:500}
 #cv-tasks-current .tk-board-col-count{padding:0;border:0;background:transparent;font-size:14px}
 #cv-tasks-current .tk-board-col-count::before{content:'·';margin-right:4px}
-#cv-tasks-current .tk-board-col-body{padding:0;gap:10px;overscroll-behavior:contain;scrollbar-width:thin}
+#cv-tasks-current .tk-board-col-body{flex:0 1 auto;min-height:0;padding:0;gap:10px;overscroll-behavior:contain;scrollbar-width:thin}
 #cv-tasks-current .tk-card--figma{box-sizing:border-box;flex:none;display:flex;flex-direction:column;gap:8px;min-height:0;margin:0;padding:16px;border:1px solid transparent;border-radius:20px;background:var(--bg);box-shadow:none}
 #cv-tasks-current .tk-card--figma:hover{border-color:var(--border-hover);box-shadow:none}
 #cv-tasks-current .tk-card--figma.selected{border-color:var(--brand);background:var(--brand-fill)}
@@ -74,8 +80,8 @@
 #cv-tasks-current #tkBoardScroll {
   --board-processing-text:#2970ff;
   --board-processing-bg:rgba(77,137,255,.08);
-  --board-review-text:#ff7700;
-  --board-review-bg:rgba(255,119,0,.08);
+  --board-review-text:var(--task-review-text);
+  --board-review-bg:var(--task-review-bg);
   --board-blocked-text:#f12234;
   --board-blocked-bg:rgba(241,34,52,.08);
 }
@@ -87,13 +93,24 @@
 #cv-tasks-current .tk-card--figma .tk-card-status { color:var(--neutral-600); }
 #view-collab #cv-tasks-current .tk-card--figma .tk-card-action { color:var(--neutral-700); }
 #cv-tasks-current .tk-card--figma .tk-card-status:is([data-kind=start],[data-kind=running]) { color:var(--board-processing-text); background:var(--board-processing-bg); }
-#cv-tasks-current .tk-card--figma .tk-card-status:is([data-kind=review],[data-kind=question]) { color:var(--board-review-text); background:var(--board-review-bg); }
+#cv-tasks-current .tk-card--figma .tk-card-status[data-kind=review] { color:var(--board-review-text); background:var(--board-review-bg); }
+#cv-tasks-current .tk-card--figma .tk-card-status[data-kind=question],
+#cv-tasks-current .tk-list-status[data-kind=question] { color:var(--neutral-600); background:var(--neutral-100); }
 #cv-tasks-current .tk-card--figma .tk-card-status[data-kind=blocked] { color:var(--board-blocked-text); background:var(--board-blocked-bg); }
 
 #cv-tasks-current :is(.tk-list-status,.tk-card-status):is([data-kind="stage_done"],[data-kind="done"]) { color:var(--success); background:var(--success-bg); }
 
-#cv-tasks-current .tk-board-done-filter { height:32px; width:128px; max-width:100%; padding:0 12px; border:1px solid var(--border); border-radius:24px; background:transparent; color:var(--neutral-700); font:inherit; font-size:14px; cursor:pointer; }
+#cv-tasks-current .tk-board-done-filter { height:32px; width:128px; max-width:100%; padding:0 12px; border:1px solid var(--border-hover); border-radius:24px; background:transparent; color:var(--text-secondary); font:inherit; font-size:14px; cursor:pointer; }
 #cv-tasks-current .tk-board-done-filter:focus-visible { outline:2px solid var(--focus-ring); outline-offset:2px; }
 #cv-tasks-current .tk-board-filter-empty { display:flex; align-items:center; justify-content:center; flex:1; width:100%; box-sizing:border-box; padding:24px 12px; color:var(--text-secondary); font-size:14px; text-align:center; }
 
-#cv-tasks-current [data-board-done-filter] + .shared-select-trigger { width:128px; height:32px; min-height:32px; padding:0 12px; border:1px solid var(--border); border-radius:24px; background:transparent; color:var(--neutral-700); font-size:14px; }
+#cv-tasks-current [data-board-done-filter] + .shared-select-trigger { width:128px; height:32px; min-height:32px; padding:0 12px; border:1px solid var(--border-hover); border-radius:24px; background:transparent; color:var(--text-secondary); font-size:14px; }
+
+#cv-tasks-current .tk-board-done-filter:hover,
+#cv-tasks-current [data-board-done-filter] + .shared-select-trigger:hover { border-color:var(--text-soft); background:var(--neutral-50); color:var(--text); }
+
+/* 空列保留可辨识的空态与拖拽落区；长列由内容区独立滚动。 */
+#cv-tasks-current .tk-board-col-body:has(> .tk-board-filter-empty) { min-height:128px; }
+
+#cv-tasks-current .tk-card-updated-time { font-variant-numeric:tabular-nums; flex:none; white-space:nowrap; font-size:12px; line-height:20px; color:var(--text-secondary); }
+#cv-tasks-current .tk-card--figma .tk-card-stage { flex:0 1 auto; }

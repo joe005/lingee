@@ -366,9 +366,7 @@ function renderListReviewPreview() {
   var artifacts = listReviewArtifacts(task);
   var active = artifacts.find(function (artifact) { return artifact.id === pageState.listReviewPreviewArtifactId; }) || artifacts[0];
   pageState.listReviewPreviewArtifactId = active?.id || null;
-  var stage = taskExecutionStages(task).find(function (row) { return row.id === task.executionStageId; });
   els.tkListReviewTitle.textContent = task.title;
-  els.tkListReviewMeta.textContent = [task.code, tkGetProjectName(task.project), stage?.name, artifacts.length + ' 个产物'].filter(Boolean).join(' · ');
   els.tkListReviewCount.textContent = artifacts.length;
   els.tkListReviewTabs.innerHTML = artifacts.map(function (artifact) {
     var selected = artifact.id === pageState.listReviewPreviewArtifactId;
@@ -377,9 +375,9 @@ function renderListReviewPreview() {
   els.tkListReviewBody.innerHTML = active ? renderReviewArtifactPreview(active) : '<div class="tk-list-review-empty">当前阶段暂无可预览产物</div>';
   var canReview = !pageState.listReviewPreviewReadOnly && task.status === 'in_review' && tkCurrentStageHandlerId(task) === tkCurrentUserId();
   els.tkListReviewApprove.hidden = !canReview;
-  els.tkListReviewRevise.hidden = true;
+  els.tkListReviewRevise.hidden = !canReview;
   var agentSubmit = isAgentSubmitStep(task);
-  els.tkListReviewApprove.textContent = agentSubmit ? '通过并提交上架' : '通过验收';
+  els.tkListReviewApprove.textContent = agentSubmit ? '通过并提交上架' : '通过评审';
   els.tkListReviewHint.textContent = agentSubmit
     ? '测试通过后直接提交「' + task.deliversAgent + '」上架审核，管理员审核通过后正式生效。'
     : '请核对产物内容。需要调整时可返回任务会话继续修改。';
@@ -419,6 +417,7 @@ export function initListReviewPreviewEvents() {
   });
   els.tkListReviewRevise.addEventListener('click', function () {
     var task = tkGetTasks().find(function (row) { return row.id === pageState.listReviewPreviewTaskId; });
+    if (pageState.listReviewPreviewReadOnly || !task || tkCurrentStageHandlerId(task) !== tkCurrentUserId()) return;
     var reviewed = reviewTaskStage(task, false);
     if (!reviewed.ok) { toast('任务状态已变化，请刷新后重试', 'warning'); closeListReviewPreview(false); return; }
     closeListReviewPreview(false);

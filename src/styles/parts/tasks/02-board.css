@@ -179,11 +179,9 @@
 .tk-list-review-overlay[hidden]{display:none}
 .tk-list-review-overlay{position:fixed;inset:0;z-index:9000;display:flex;justify-content:flex-end;background:var(--tb-backdrop)}
 .tk-list-review-panel{width:min(820px,92vw);height:100%;display:flex;flex-direction:column;min-width:0;background:var(--bg);box-shadow:-12px 0 36px rgba(20,25,40,.14)}
-.tk-list-review-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:20px 24px 16px;border-bottom:1px solid var(--divider)}
-.tk-list-review-heading{min-width:0}
-.tk-list-review-kicker{display:block;margin-bottom:4px;color:var(--warning);font-size:11px;font-weight:600}
+.tk-list-review-head{display:flex;align-items:center;justify-content:space-between;gap:16px;box-sizing:border-box;min-height:64px;padding:16px 24px;border-bottom:1px solid var(--divider)}
+.tk-list-review-heading{min-width:0;flex:1}
 .tk-list-review-heading h2{margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);font-size:18px;font-weight:600;line-height:1.4}
-.tk-list-review-heading p{margin:5px 0 0;color:var(--text-secondary);font-size:12px}
 .tk-list-review-close{display:grid;place-items:center;flex:none;width:32px;height:32px;border:0;border-radius:6px;background:transparent;color:var(--text-secondary);cursor:pointer}
 .tk-list-review-close:hover{background:var(--hover);color:var(--text)}
 .tk-list-review-close:focus-visible{outline:2px solid var(--border-focus);outline-offset:2px}

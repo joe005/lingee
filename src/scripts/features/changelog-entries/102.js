@@ -1,0 +1,1 @@
+export default {id:"102",date:"2026-10-19",iconBg:"var(--brand-fill)",iconColor:"var(--brand)",type:"功能",module:"任务看板与协作开发",author:"Joe wu",body:"功能·任务看板与协作开发：任务看板新增平滑拖拽与卡片更新时间展示，完善显示设置、任务编辑、阶段评审和操作记录交互，并补充协作开发导航提示。"};

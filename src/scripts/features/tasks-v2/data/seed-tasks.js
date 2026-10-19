@@ -289,6 +289,18 @@ const removedWuxfDemoIds = new Set([1201,1203,1204,1205,1208]);
 for (let index = TK_COSMIC_WUXF_TASKS.length - 1; index >= 0; index--) {
   if (removedWuxfDemoIds.has(TK_COSMIC_WUXF_TASKS[index].id)) TK_COSMIC_WUXF_TASKS.splice(index, 1);
 }
+/* 部分吴晓锋预制任务的测试阶段使用自动评审，只补未开始阶段，不改变运行进度。 */
+function applyDemoAutoReviewDefaults(task) {
+  if (task.project !== 'cosmic-app-dev' || ![1210,1212,1213].includes(task.id)
+    || task.code !== 'T100' + task.id || task.demoAutoReviewSeedVersion === 1) return false;
+  var stage = (task.executionPlan || []).find(function(row){
+    return /测试|验证/.test(row.title || row.workType || row.name || '') && (!row.status || row.status === 'pending');
+  });
+  if (stage) stage.requiresConfirmation = false;
+  task.demoAutoReviewSeedVersion = 1;
+  return true;
+}
+TK_COSMIC_WUXF_TASKS.forEach(applyDemoAutoReviewDefaults);
 TK_TASKS.push(...TK_COSMIC_WUXF_TASKS);
 
 /* 问卷调研系统建设：演示汇报的贯穿场景，覆盖已完成、待评审（含一次驳回）、执行中、阻塞、待开始和待规划。 */
@@ -470,4 +482,4 @@ TK_TASKS.push(...TK_SURVEY_TASKS);
 TK_TASKS.push(...TK_EQUIPMENT_TASKS);
 TK_TASKS.push(...TK_TICKET_TASKS);
 
-export { TK_COSMIC_REVIEW_TRIM_CODES, TK_COSMIC_TRIM_CODES, TK_COSMIC_WUXF_TASKS, TK_SURVEY_TASKS, TK_TASKS, tkToGeneralAppPlan };
+export { applyDemoAutoReviewDefaults, TK_COSMIC_REVIEW_TRIM_CODES, TK_COSMIC_TRIM_CODES, TK_COSMIC_WUXF_TASKS, TK_SURVEY_TASKS, TK_TASKS, tkToGeneralAppPlan };

@@ -1,6 +1,7 @@
 import { openTaskStatusConversation } from '../../composer.js';
 import { tkGetTasks, tkPeopleInProject, tkProjectsForCurrentUser } from '../data.js';
-import { openNewIssueCopy } from '../new-issue-ui.js';
+import { openNewIssueCopy, openNewIssueEdit } from '../new-issue-ui.js';
+import { initBoardPointerDrag } from './board-drag.js';
 import { taskViewState } from '../ui-state.js';
 import { closeTaskLabelPicker, openListReviewPreview } from './detail-panel.js';
 import { closeViewMenu } from './events-views.js';
@@ -14,6 +15,7 @@ import { _showOlderActivityIds, closeDrawer, openDrawer, openDrawerArtifacts, to
 import { chooseFirstAssignee, handleTaskCardPrimaryAction, confirmDeleteTask, confirmTaskStageApproval, filterAssigneeOptions, openBoardTaskSession, retryBlockedTask, showCardMenu, startTaskExecution } from './utils.js';
 /* 任务页 · 事件绑定 · 子任务、看板 / 列表点击与拖拽、列折叠、浮层关闭（拆分自 tasks-v2/index.js，逻辑未改） */
 export function bindBoardEvents() {
+  initBoardPointerDrag(els.tkBoardScroll, { start:handleDragStart, end:handleDragEnd, over:handleDragOver, drop:handleDrop });
   els.tkBoardScroll.addEventListener('change', function (e) {
     if (!e.target.matches('[data-board-done-filter]')) return;
     pageState.boardDoneFilter = e.target.value;
@@ -154,7 +156,8 @@ export function bindBoardEvents() {
     if (cardAct) {
       var aid = cardAct.getAttribute('data-card-task');
       var act = cardAct.getAttribute('data-card-action');
-      if (act === 'chat') { startTaskExecution(parseInt(aid, 10)); }
+      if (act === 'edit') { openNewIssueEdit(aid); }
+      else if (act === 'chat') { startTaskExecution(parseInt(aid, 10)); }
       else if (act === 'delete') { confirmDeleteTask(aid); }
       else if (act === 'copy') { openNewIssueCopy(aid); }
       else if (act === 'subtask') { openTaskModal(null, parseInt(aid, 10)); document.querySelectorAll('.tk-card-menu').forEach(function(m){m.remove();}); return; }
@@ -258,7 +261,8 @@ export function bindBoardEvents() {
     if (cardAct2) {
       var aid2 = cardAct2.getAttribute('data-card-task');
       var act2 = cardAct2.getAttribute('data-card-action');
-      if (act2 === 'chat') { startTaskExecution(parseInt(aid2, 10)); }
+      if (act2 === 'edit') { openNewIssueEdit(aid2); }
+      else if (act2 === 'chat') { startTaskExecution(parseInt(aid2, 10)); }
       else if (act2 === 'delete') { confirmDeleteTask(aid2); }
       else if (act2 === 'copy') { openNewIssueCopy(aid2); }
       else if (act2 === 'subtask') { openTaskModal(null, parseInt(aid2, 10)); document.querySelectorAll('.tk-card-menu').forEach(function(m){m.remove();}); return; }

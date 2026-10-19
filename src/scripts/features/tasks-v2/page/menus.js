@@ -8,6 +8,7 @@ import { pageState } from './page-state.js';
 import { els, state } from './state.js';
 import { escapeHtml, statusSvg } from './utils.js';
 import { updateSpaceButton } from './space-filter.js';
+import { captureBoardPositions, animateBoardMove } from './board-motion.js';
 /* 任务页 · 筛选菜单、视图管理、弹出菜单、拖拽（拆分自 tasks-v2/index.js，逻辑未改） */
 /* ---------- 筛选菜单 ---------- */
 pageState.activeFilterSection = '';
@@ -171,10 +172,13 @@ export function hidePopover() {
 
 /* ---------- 拖拽 ---------- */
 var dragTaskId = null;
+var dragPointerOffset = null;
 export function handleDragStart(e) {
   var card = e.target.closest('.tk-card');
   if (card) {
     dragTaskId = parseInt(card.getAttribute('data-task-id'), 10);
+    var rect = card.getBoundingClientRect();
+    dragPointerOffset = { x:e.clientX - rect.left, y:e.clientY - rect.top };
     card.classList.add('dragging');
     e.dataTransfer.effectAllowed = 'move';
   }
@@ -184,17 +188,19 @@ export function handleDragEnd(e) {
   if (card) card.classList.remove('dragging');
   $$('.tk-board-col-body').forEach(function (col) { col.classList.remove('drag-over'); });
   dragTaskId = null;
+  dragPointerOffset = null;
 }
 export function handleDragOver(e) {
   if (dragTaskId !== null) {
     e.preventDefault();
     var col = e.target.closest('.tk-board-col-body');
+    $$('.tk-board-col-body.drag-over').forEach(function (other) { if (other !== col) other.classList.remove('drag-over'); });
     if (col) col.classList.add('drag-over');
   }
 }
 export function handleDragLeave(e) {
   var col = e.target.closest('.tk-board-col-body');
-  if (col) col.classList.remove('drag-over');
+  if (col && !col.contains(e.relatedTarget)) col.classList.remove('drag-over');
 }
 export function handleDrop(e) {
   e.preventDefault();
@@ -210,6 +216,12 @@ export function handleDrop(e) {
   else if (state.groupBy === 'priority') patch.priority = groupKey;
   else if (state.groupBy === 'assignee') patch.assignee = groupKey === 'unassigned' ? '' : groupKey;
   else if (state.groupBy === 'project') patch.project = groupKey === 'none' ? '' : groupKey;
-  tkUpdateTask(dragTaskId, patch);
+  if (!Object.keys(patch).length) return;
+  var movedId = dragTaskId;
+  var positions = captureBoardPositions(els.tkBoardScroll);
+  var dropPoint = dragPointerOffset ? { x:e.clientX - dragPointerOffset.x, y:e.clientY - dragPointerOffset.y } : null;
+  tkUpdateTask(movedId, patch);
   render();
+  animateBoardMove(els.tkBoardScroll, positions, movedId, dropPoint);
+  return true;
 }

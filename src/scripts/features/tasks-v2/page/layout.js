@@ -105,8 +105,8 @@ export function tkOpenProjectTaskCreate(projectId) {
   openTaskModal(null);
 }
 var cardPropertyOptions = [
-  ['priority','优先级'],['description','描述'],['assignee','负责人'],['startDate','开始日期'],
-  ['project','项目'],['childProgress','子任务进度'],
+  ['type','任务类型'],['priority','优先级'],['description','描述'],
+  ['project','项目'],['executionStage','执行阶段'],['updatedAt','更新时间'],
 ];
 var displayGroupOptions = [
   ['status','状态'],['priority','优先级'],['assignee','处理人'],['project','项目'],['none','不分组'],

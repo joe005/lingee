@@ -301,7 +301,7 @@
   .work-step .step-detail p{margin:0 0 4px}
   /* streaming text */
   .streaming-content{font-size:14px;line-height:1.7;color:var(--text);white-space:pre-wrap;overflow-wrap:anywhere}
-  .cursor-blink{display:inline;animation:blink 1s infinite;color:#495dff}
+  #view-chat .cursor-blink{display:none}
   @keyframes blink{0%,50%{opacity:1}51%,100%{opacity:0}}
   /* final result — no card, flowing content */
   .final-result{margin-top:4px}
@@ -704,7 +704,9 @@
 .niu-select-popup--task-create button > span { overflow:visible; text-overflow:clip; white-space:normal; overflow-wrap:anywhere; }
 
 /* 阶段审核方式与执行状态分开表达。 */
-#chatCurrentStage .chat-current-stage-row-main > strong { display:flex; align-items:center; gap:4px; flex-wrap:wrap; }
+#chatCurrentStage .chat-current-stage-row-main > strong { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+#chatCurrentStage:not(.is-horizontal) .chat-current-stage-row-main { grid-template-columns:minmax(0,160px) minmax(0,1fr); gap:24px; }
+@media(max-width:600px){#chatCurrentStage:not(.is-horizontal) .chat-current-stage-row-main { grid-template-columns:minmax(0,1fr); gap:8px; }}
 #chatCurrentStage .chat-stage-audit-mode { flex:none; padding:0 4px; border-radius:4px; background:var(--tag-bg); color:var(--text-secondary); font-size:11px; font-weight:500; line-height:18px; white-space:nowrap; }
 
 /* 横向步骤条审核方式独立排布，不挤占阶段标题。 */
@@ -713,3 +715,23 @@
 #view-chat .is-horizontal .chat-stage-audit-mode { order:2; padding:0; background:transparent; font-size:12px; font-weight:400; line-height:18px; color:var(--text-secondary); }
 #view-chat .is-horizontal .chat-current-stage-status { order:3; }
 #view-chat .is-horizontal .chat-current-stage-row-main small { order:4; }
+
+/* 人工评审标签与任务详情的阶段卡片保持一致。 */
+#chatCurrentStage .chat-stage-audit-mode[data-audit-mode=manual] { box-sizing:border-box; padding:0 6px; border:1px solid var(--border-hover); border-radius:4px; background:transparent; color:var(--text-secondary); font-size:12px; font-weight:400; line-height:20px; }
+
+/* 纵向阶段列表单行三段分布，评审人居中、状态靠右，列宽随面板伸缩。 */
+#chatCurrentStage:not(.is-horizontal) .chat-current-stage-row {
+  display:grid; grid-template-columns:20px minmax(max-content,1fr) max-content minmax(max-content,1fr);
+  align-items:center; gap:12px;
+}
+#chatCurrentStage:not(.is-horizontal) .chat-current-stage-row-main {
+  display:contents;
+}
+#chatCurrentStage:not(.is-horizontal) .chat-current-stage-row-main > strong {
+  display:flex; flex:0 1 auto; flex-wrap:nowrap; gap:8px; min-width:0;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+#chatCurrentStage:not(.is-horizontal) .chat-current-stage-row-main > small {
+  justify-self:center; flex:0 0 auto; white-space:nowrap; overflow:visible; text-overflow:clip;
+}
+#chatCurrentStage:not(.is-horizontal) .chat-current-stage-status { justify-self:end; flex:none; white-space:nowrap; }

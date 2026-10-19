@@ -1,3 +1,4 @@
+import { initTaskCardTimes } from './page/card-time.js';
 import { initDemoOperationHistory } from './demo-operation-history.js';
 import { initTaskConfirm } from './confirm.js';
 import { tkEnsureCompletedDemoTask, tkEnsureWorkspaceDemoTasks, tkPruneOrphanTasks, tkSyncPeople } from './data.js';
@@ -54,6 +55,7 @@ function syncTaskDataView() {
 }
 
 export function initTasksV2() {
+  initTaskCardTimes();
   initTaskConfirm();
   restoreTaskLabelCatalog();
   tkPruneOrphanTasks();

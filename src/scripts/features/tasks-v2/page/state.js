@@ -27,7 +27,7 @@ export var state = {
   search: '', filters: [], selectedIds: new Set(), activeViewId: 'all',
   listStatusTab: 'needs',
   showSubtasks: true,
-  cardProperties: { priority:true, description:false, assignee:true, startDate:false, project:false, childProgress:true },
+  cardProperties: { type:false, priority:false, description:false, assignee:true, startDate:false, project:false, childProgress:true, executionStage:true, updatedAt:false },
   listFieldOrder: DEFAULT_LIST_FIELD_ORDER.slice(), listFieldVisibility: { desc:false },
   editingTaskId: null, drawerTaskId: null, editingParentId: null,
 };
@@ -55,7 +55,7 @@ pageState.drawerCloseTimer = null;
 pageState.drawerOpenFrame = null;
 export var DRAWER_WIDTH_STORAGE_KEY = 'lingee_tasks_drawer_width';
 var VIEW_STATE_STORAGE_KEY = 'lingee_tasks_view_state';
-var CARD_PROP_REV = 2; /* 卡片显示属性默认值版本：升版把存量配置一次性回落新默认 */
+var CARD_PROP_REV = 3; /* 卡片显示属性默认值版本：升版把存量配置一次性回落新默认 */
 export var TASK_START_LEGACY_KEY = 'lingee_tasks_start_action_legacy';
 export var TASK_START_PLAY_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4.7a1 1 0 0 1 1.52-.85l11 7.3a1 1 0 0 1 0 1.7l-11 7.3A1 1 0 0 1 7 19.3V4.7Z"/></svg>';
 export var TASK_START_CHAT_ICON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>';
@@ -168,9 +168,14 @@ export function restoreViewState() {
       if (typeof saved.cardProperties[key] === 'boolean') state.cardProperties[key] = saved.cardProperties[key];
     });
   }
-  if (saved.cardPropRev !== CARD_PROP_REV) {
+  if (!saved.cardPropRev || saved.cardPropRev < 2) {
     /* v2：卡片项目名改默认不显示，旧存量配置一次性回落新默认；此后用户显式开启仍被尊重 */
     state.cardProperties.project = false;
+  }
+  if (saved.cardPropRev !== CARD_PROP_REV) {
+    /* v3：看板任务类型与优先级默认隐藏，迁移后仍可由显示设置开启。 */
+    state.cardProperties.type = false;
+    state.cardProperties.priority = false;
   }
   if (Array.isArray(saved.listFieldOrder)) {
     state.listFieldOrder = Array.from(new Set(saved.listFieldOrder.filter(function(id) { return DEFAULT_LIST_FIELD_ORDER.includes(id); }))).concat(DEFAULT_LIST_FIELD_ORDER.filter(function(id) { return !saved.listFieldOrder.includes(id); }));
@@ -206,7 +211,7 @@ export function cacheEls() {
     'tkSaveViewOverlay','tkSaveViewClose','tkSaveViewCancel','tkSaveViewConfirm','tkSaveViewName','tkSaveViewVisibility','tkSaveViewScope','tkSaveViewLayout','tkSaveViewSummary',
     'tkManageViewsOverlay','tkManageViewsClose','tkManageViewsCancel','tkManageList',
     'tkBulkStatusMenu','tkBulkAssigneeMenu',
-    'tkListReviewOverlay','tkListReviewClose','tkListReviewTitle','tkListReviewMeta','tkListReviewTabs','tkListReviewCount','tkListReviewBody','tkListReviewRevise','tkListReviewApprove','tkListReviewHint',
+    'tkListReviewOverlay','tkListReviewClose','tkListReviewTitle','tkListReviewTabs','tkListReviewCount','tkListReviewBody','tkListReviewRevise','tkListReviewApprove','tkListReviewHint',
     'tkImportOverlay','tkImportClose','tkImportCancel','tkImportConfirm','tkImportProject','tkImportDropZone','tkImportFileInput','tkImportFileBar','tkImportFileName','tkImportFileSize','tkImportFileRemove','tkImportPreview','tkImportPreviewLabel','tkImportPreviewHint','tkImportTableHead','tkImportTableBody','tkImportError','tkImportErrorMsg','tkDownloadTplBtn',
   ];
   ids.forEach(function (id) { els[id] = document.getElementById(id); });

@@ -13,12 +13,11 @@ var input=$('#composerInput');
 var navItems=$$('.sb-scroll .nav-item');
 var navByName={};
 
-/* 导航项文本匹配须排除菜单徽标（如协作开发审核数），否则徽标出现后点击即失灵 */
+/* 导航项文本匹配须排除所有菜单徽标（Beta、审核数等），避免徽标影响导航。 */
 function navText(n){
   if(!n.querySelector('.menu-badge')) return n.textContent.trim();
   var clone=n.cloneNode(true);
-  var badge=clone.querySelector('.menu-badge');
-  if(badge) badge.remove();
+  clone.querySelectorAll('.menu-badge').forEach(function(badge){ badge.remove(); });
   return clone.textContent.trim();
 }
 function setNavActive(name){

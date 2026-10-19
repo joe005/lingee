@@ -362,7 +362,8 @@ export function initSegmentedTabs() {
   $$('.project-group').forEach(function(g){
     var head=$('.group-head',g);
     if(!head) return;
-    head.addEventListener('click',function(){
+    head.addEventListener('click',function(e){
+      if(e.target.closest('.grp-actions')) return;
       g.classList.toggle('collapsed');
       head.classList.toggle('collapsed',g.classList.contains('collapsed'));
       $('.group-chevron',head)?.classList.toggle('collapsed',g.classList.contains('collapsed'));
@@ -384,37 +385,35 @@ export function set__prevWishW(v){ _prevWishW=v; return v; }
 
 /* ---------- 项目操作下拉（打开文件夹 / 重命名 / 删除） ---------- */
 export function initProjectActions(){
-  $$('.project-dd').forEach(function(dd){
-    var trigger=$('[data-chip]',dd);
-    if(!trigger) return;
-    trigger.addEventListener('click',function(e){
+  document.addEventListener('click',function(e){
+    var btn=e.target.closest('[data-action="workspace-new-session"]');
+    if(btn){
+      e.stopPropagation();
+      e.preventDefault();
+      toast('新建会话');
+      return;
+    }
+    var dd=e.target.closest('.project-dd');
+    var trigger=dd?.querySelector('[data-chip]');
+    if(dd && trigger && (e.target===trigger || trigger.contains(e.target))){
       e.stopPropagation();
       e.preventDefault();
       var willOpen=!dd.classList.contains('open');
       $$('.project-dd.open').forEach(function(o){ if(o!==dd) o.classList.remove('open'); });
       dd.classList.toggle('open',willOpen);
-    });
-    $$('.menu-item',dd).forEach(function(item){
-      item.addEventListener('click',function(e){
-        e.stopPropagation();
-        var action=item.getAttribute('data-action');
-        dd.classList.remove('open');
-        if(action==='open-folder') toast('已打开文件夹');
-        else if(action==='rename') toast('进入重命名模式');
-        else if(action==='delete') toast('确认删除项目？','warn');
-      });
-    });
-  });
-  document.addEventListener('click',function(e){
-    if(!e.target.closest('.project-dd'))
-      $$('.project-dd.open').forEach(function(dd){ dd.classList.remove('open'); });
-  });
-  $$('[data-action="workspace-new-session"]').forEach(function(btn){
-    btn.addEventListener('click',function(e){
+      return;
+    }
+    var item=e.target.closest('.project-dd .menu-item');
+    if(item){
       e.stopPropagation();
-      e.preventDefault();
-      toast('新建会话');
-    });
+      var action=item.getAttribute('data-action');
+      item.closest('.project-dd').classList.remove('open');
+      if(action==='open-folder') toast('已打开文件夹');
+      else if(action==='rename') toast('进入重命名模式');
+      else if(action==='delete') toast('确认删除项目？','warn');
+      return;
+    }
+    if(!dd) $$('.project-dd.open').forEach(function(open){ open.classList.remove('open'); });
   });
 }
 

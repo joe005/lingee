@@ -167,6 +167,9 @@ function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml,
       var assignee = tkGetPerson(stage.assigneeId || task.assignee).name;
       var isCurrent = index === currentIndex;
       var expert = entry && EXPERTS.find(function (item) { return item.id === entry.expertId; });
+      var agentName = expert?.name || taskStageAgentName(task, stage.id);
+      var stagePlan = task.executionPlan?.find(function (row) { return row.id === stage.id; });
+      var automaticReview = stagePlan?.requiresConfirmation === false;
       var stageArtifacts = latestLayout && entry && ['done', 'review'].includes(state)
         ? artifacts.filter(function (artifact) { return artifact.stageId === stage.id; }) : [];
       var detailId = 'tkStageDetail' + index;
@@ -177,11 +180,11 @@ function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml,
         + '<td class="tk-stage-cell-mark"><span class="tk-feed-stage-mark" aria-hidden="true"></span></td>'
         + '<th scope="row" class="tk-feed-stage-main" colspan="5"><div class="tk-feed-stage-meta"><span class="tk-feed-stage-expert-content">'
           + (expert ? '<img src="' + escapeHtml(xav(expert.k)) + '" alt="">' : '<span class="tk-figma-person-avatar" aria-hidden="true">' + escapeHtml(assignee.slice(0, 1)) + '</span>')
-          + '<strong>' + escapeHtml(assignee) + '</strong>'
-          + (expert?.role ? '<span class="tk-feed-stage-role">' + escapeHtml(expert.role) + '</span>' : '')
+          + '<strong title="执行智能体：' + escapeHtml(agentName) + '">' + escapeHtml(agentName) + '</strong>'
           + '</span>'
+          + '<span class="tk-feed-stage-role" title="处理人：' + escapeHtml(assignee) + '">' + escapeHtml(assignee) + '</span>'
           + '<span class="tk-feed-stage-state">' + label + '</span></div>'
-        + '<div class="tk-feed-stage-line"><span class="tk-feed-stage-name">' + escapeHtml(stage.name) + '</span></div>' + detailHtml + '</th>'
+        + '<div class="tk-feed-stage-line"><span class="tk-feed-stage-name">' + escapeHtml(stage.name) + '</span>' + (automaticReview ? '<span class="tk-feed-stage-review-mode" data-review-mode="ai" title="本阶段自动审核，无需人工确认">自动评审</span>' : '') + '</div>' + detailHtml + '</th>'
         + '</tr>'
         + '</tbody>';
     }).join('') + (latestLayout ? '</table></div>' : '</ol>')
@@ -222,7 +225,8 @@ function feedLeadIcon(event) {
 }
 
 function activityDisplayTime(value) {
-  return String(value || '').replace(/^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}):\d{2}$/, '$1');
+  var text = String(value || '').replace(/^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}):\d{2}$/, '$1');
+  return text.startsWith(new Date().getFullYear() + '-') ? text.slice(5) : text;
 }
 
 function taskStatusActivityEvents(task, activity) {
@@ -310,24 +314,32 @@ function taskActivityMessage(event) {
 export var _collapsedActivityIds = new Set();
 export var _showOlderActivityIds = new Set();
 var ACTIVITY_COLLAPSED_STORAGE_KEY = 'lingee_tasks_activity_collapsed';
+var ACTIVITY_PREFERENCE_STORAGE_KEY = 'lingee_tasks_activity_collapsed_preference';
+var activityCollapsedPreference = null;
 export function restoreCollapsedActivity() {
   try {
+    var preference = localStorage.getItem(ACTIVITY_PREFERENCE_STORAGE_KEY);
+    activityCollapsedPreference = preference === 'true' ? true : preference === 'false' ? false : null;
     var saved = JSON.parse(localStorage.getItem(ACTIVITY_COLLAPSED_STORAGE_KEY) || '[]');
     if (Array.isArray(saved)) _collapsedActivityIds = new Set(saved.filter(Number.isInteger));
   } catch (e) { /* 本地存储不可用时使用当前页面状态 */ }
 }
 export function toggleCollapsedActivity(taskId) {
-  if (_collapsedActivityIds.has(taskId)) _collapsedActivityIds.delete(taskId);
-  else _collapsedActivityIds.add(taskId);
-  try { localStorage.setItem(ACTIVITY_COLLAPSED_STORAGE_KEY, JSON.stringify(Array.from(_collapsedActivityIds))); }
-  catch (e) { /* 本地存储不可用时仍可折叠 */ }
-  return _collapsedActivityIds.has(taskId);
+  var collapsed = !(activityCollapsedPreference ?? _collapsedActivityIds.has(taskId));
+  activityCollapsedPreference = collapsed;
+  if (collapsed) _collapsedActivityIds.add(taskId);
+  else _collapsedActivityIds.delete(taskId);
+  try {
+    localStorage.setItem(ACTIVITY_PREFERENCE_STORAGE_KEY, String(collapsed));
+    localStorage.setItem(ACTIVITY_COLLAPSED_STORAGE_KEY, JSON.stringify(Array.from(_collapsedActivityIds)));
+  } catch (e) { /* 本地存储不可用时仍保留当前会话选择 */ }
+  return collapsed;
 }
 var ACTIVITY_VISIBLE_LIMIT = 8;
 
 function renderTaskSystemFeedGroup(events, isLatest, taskId) {
   var id = String(taskId);
-  var expanded = !_collapsedActivityIds.has(taskId);
+  var expanded = !(activityCollapsedPreference ?? _collapsedActivityIds.has(taskId));
   var count = events.length;
   var activityTitle = pageState.taskDetailVersion === 'latest' ? '操作记录' : count + ' 条操作记录';
   if (!expanded) {
