@@ -1,1 +1,1 @@
-export default {"id":"102","date":"2026-10-19","iconBg":"var(--brand-fill)","iconColor":"var(--brand)","type":"修复","module":"智能体与团队","author":"wuhc2023","body":"修复·智能体与团队：修复「更多智能体/团队」列表误混入已安装内容导致卡片缺少添加按钮的问题，恢复只列未安装云端资产、安装成功后回到「我的」列表。"};
+export default {"id":"102","date":"2026-10-19","iconBg":"var(--brand-fill)","iconColor":"var(--brand)","type":"修复","module":"首页与协作开发","author":"wuhc2023","body":"修复·首页与协作开发：还原新会话首页与侧栏布局，移除开发侧栏最近会话及任务角标，修复初始化中断和协作开发跳转丢失页签，统一空间筛选数量口径，并修复更多智能体与团队的未安装资产列表。"};

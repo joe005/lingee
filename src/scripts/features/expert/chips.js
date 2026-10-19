@@ -185,6 +185,11 @@ function resetPickForNewSession(){
 }
 
 export function initExpertChips() {
+  document.querySelector('[data-open-home-expert]')?.addEventListener('click',function(event){
+    event.preventDefault();event.stopPropagation();
+    document.getElementById('addDropdown')?.classList.remove('open');
+    openExpertPicker('nt');
+  });
   document.addEventListener('click',function(ev){
     if(ev.target.closest('[data-clear-mode]')){
       ev.stopPropagation();

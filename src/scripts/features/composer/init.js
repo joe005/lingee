@@ -26,26 +26,7 @@ import { initTaskMention, taskPicker } from './task-mention.js';
 import { initLocalEnvChat } from './local-env-chat.js';
 /* 对话：initComposer / initPlusMenu 事件接线（拆自 composer.js），由 main.js 按原顺序调用 */
 
-var RECENT_CHATS_COLLAPSED_KEY = 'lingee-recent-chats-collapsed-v1';
-function initRecentChatsToggle() {
-  var section = document.getElementById('chatSessionSection');
-  var toggle = document.getElementById('chatSessionToggle');
-  if (!section || !toggle) return;
-  var collapsed = false;
-  try { collapsed = localStorage.getItem(RECENT_CHATS_COLLAPSED_KEY) === '1'; } catch (_) {}
-  function apply() {
-    section.classList.toggle('collapsed', collapsed);
-    toggle.setAttribute('aria-expanded', String(!collapsed));
-  }
-  apply();
-  toggle.addEventListener('click', function () {
-    collapsed = !collapsed;
-    try { localStorage.setItem(RECENT_CHATS_COLLAPSED_KEY, collapsed ? '1' : '0'); } catch (_) {}
-    apply();
-  });
-}
 function initComposer() {
-  initRecentChatsToggle();
   initLocalEnvChat();
   $('#chatTaskProjectSelect').addEventListener('change',function(event){
     var session=chatSessions.find(function(row){return row.id===activeSessionId&&row.taskCreate;});
@@ -129,10 +110,6 @@ function initComposer() {
   queueMicrotask(renderChatSessions);
   document.addEventListener('lingee:auth-changed', renderChatSessions);
   document.addEventListener('lingee:sidebar-filter', renderChatSessions);
-  document.getElementById('chatSessionList').addEventListener('click', function (event) {
-    var entry = event.target.closest('[data-chat-session]');
-    if (entry) openChatSession(entry.getAttribute('data-chat-session'));
-  });
   document.getElementById('chatProjectFolders').addEventListener('click', function (event) {
     var entry = event.target.closest('[data-chat-session]');
     if (entry) { openChatSession(entry.getAttribute('data-chat-session')); return; }

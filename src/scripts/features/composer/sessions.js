@@ -137,10 +137,8 @@ function taskConversationQuestion(task) {
 }
 function renderChatSessions() {
   seedCosmicDemoSessions();
-  var list = document.getElementById('chatSessionList');
-  var section = document.getElementById('chatSessionSection');
   var folders = document.getElementById('chatProjectFolders');
-  if (!list || !section || !folders) return;
+  if (!folders) return;
   var query = String(document.getElementById('sbSearchInput')?.value || '').trim().toLowerCase();
   function projectId(session) {
     var task = tkGetTasks().find(function (row) { return row.id === Number(session.taskId); });
@@ -155,11 +153,6 @@ function renderChatSessions() {
     return '<button type="button" class="chat-session-entry' + (session.id === activeSessionId ? ' active' : '') + '" data-chat-session="' + session.id + '">' + (session.viewed ? '' : '<span class="dot ' + state + '"></span>') + '<span class="txt">' + escapeHtml(String(session.title)) + '</span></button>';
   }
   var mySessions = chatSessions.filter(isMyChatSession);
-  var ungrouped = mySessions.filter(function (session) { return !projectId(session) && (!query || session.title.toLowerCase().includes(query)); });
-  section.hidden = !ungrouped.length;
-  /* 搜索时自动展开，保证结果可见 */
-  section.classList.toggle('searching', !!query);
-  list.innerHTML = ungrouped.map(sessionHtml).join('');
   var groups = new Map();
   mySessions.forEach(function (session) {
     var id = projectId(session);

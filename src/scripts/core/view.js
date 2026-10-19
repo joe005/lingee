@@ -22,6 +22,7 @@ function navText(n){
   return clone.textContent.trim();
 }
 function setNavActive(name){
+  if(name==='任务') name='协作开发';
   navItems.forEach(function(n){ n.classList.toggle('active', navText(n)===name); });
 }
 /* 新页面的侧栏项写 data-nav-view="视图名"，按视图名高亮，不依赖菜单文字 */
@@ -57,13 +58,12 @@ function setUrlState(path){
   try{history.replaceState(null,'',withBase(path));localStorage.setItem('lingeeUrlState',path)}catch(e){}
 }
 function showView(which){
+  /* 兼容仍调用 tasks 的旧入口：任务统一留在协作开发容器内。 */
+  var openCollabTasks=which==='tasks';
+  if(openCollabTasks) which='collab';
   if(which!=='chat')document.dispatchEvent(new Event('lingee:chat-leave'));
   if(which!=='collab'&&which!=='tasks'&&window.cvLeaveProjectTasks)window.cvLeaveProjectTasks();
   if(which==='newtask') document.dispatchEvent(new Event('lingee:new-conversation'));
-  if(which==='tasks'){
-    if(window.cvRestoreProjectTaskBoard)window.cvRestoreProjectTaskBoard();
-    setTasksEmbedded(false);
-  }
   allViews.forEach(function(v){
     /* 任务视图可嵌在协作开发的项目详情里，此时随协作开发一起显示 */
     if(v===viewTasks) v.classList.toggle('hidden', which!=='tasks' && !(which==='collab' && viewTasks.classList.contains('pj-embedded-task-view')));
@@ -72,6 +72,10 @@ function showView(which){
   $('.sidebar').classList.toggle('hidden', which==='design');
   closeAll(null);
   if(which!=='design') setUrlState('/'+which);
+  if(openCollabTasks){
+    setNavActive('协作开发');
+    document.dispatchEvent(new CustomEvent('lingee:collab-nav',{detail:{tab:'tasks'}}));
+  }
 }
 function applyModeSilent(mode){
   modeItems.forEach(function(m){ m.classList.toggle('checked', m.getAttribute('data-val')===mode); });
@@ -122,7 +126,7 @@ export function initSidebarNav() {
         showView('platform');
       }else if(name==='新会话'){
         showView('newtask');
-        input.setAttribute('data-placeholder','布置任务');
+        input.setAttribute('data-placeholder','布置开发任务，输入 / 调用技能或命令');
         appDd.classList.add('hidden');
         modeItems.forEach(function(m){m.classList.remove('checked')});
       }
@@ -173,7 +177,7 @@ export function initHomeCards() {
           applyMode(mode,false);
         }else{
           setNavActive('新会话');
-          input.setAttribute('data-placeholder','布置任务');
+          input.setAttribute('data-placeholder','布置开发任务，输入 / 调用技能或命令');
           appDd.classList.add('hidden');
           modeItems.forEach(function(m){m.classList.remove('checked')});
         }
@@ -188,7 +192,7 @@ export function initHomeCards() {
     brandEl.addEventListener('click',function(){
       showView('newtask');
       setNavActive('新会话');
-      input.setAttribute('data-placeholder','布置任务');
+      input.setAttribute('data-placeholder','布置开发任务，输入 / 调用技能或命令');
       appDd.classList.add('hidden');
       modeItems.forEach(function(m){m.classList.remove('checked')});
       input.focus();
