@@ -1,0 +1,1 @@
+export default {"id":"102","date":"2026-10-19","iconBg":"var(--brand-fill)","iconColor":"var(--brand)","type":"修复","module":"智能体与团队","author":"wuhc2023","body":"修复·智能体与团队：修复「更多智能体/团队」列表误混入已安装内容导致卡片缺少添加按钮的问题，恢复只列未安装云端资产、安装成功后回到「我的」列表。"};
