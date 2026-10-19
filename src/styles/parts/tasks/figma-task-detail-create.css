@@ -270,3 +270,7 @@
 }
 
 #niuCreateOverlay .niu-create-stage-table .niu-stage-required { color:var(--danger); font-weight:500; }
+
+/* 所属空间标签旁常显添加入口说明，手动与智能创建共用。 */
+#niuCreateOverlay .niu-field>span:has(.niu-space-hint){display:flex;align-items:baseline;flex-wrap:wrap;white-space:normal;column-gap:4px;row-gap:4px}
+#niuCreateOverlay .niu-space-hint{margin-left:4px;font-size:12px;font-weight:400;line-height:18px;color:var(--text-secondary)}

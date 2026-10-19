@@ -9,7 +9,7 @@
             </div>
             <div class="niu-create-card">
               <div class="niu-create-properties" aria-label="任务属性">
-                <div class="niu-field"><span>所属空间 <b>*</b></span><input type="hidden" id="niuProject"><button type="button" class="niu-person-trigger" id="niuProjectTrigger" aria-haspopup="listbox" aria-expanded="false" aria-label="选择所属空间"><span id="niuProjectName"></span><span class="niu-person-chevron" aria-hidden="true">⌄</span></button></div>
+                <div class="niu-field"><span>所属空间 <b>*</b><small class="niu-space-hint">找不到所属空间？请前往「管理」页签添加</small></span><input type="hidden" id="niuProject"><button type="button" class="niu-person-trigger" id="niuProjectTrigger" aria-haspopup="listbox" aria-expanded="false" aria-label="选择所属空间"><span id="niuProjectName"></span><span class="niu-person-chevron" aria-hidden="true">⌄</span></button></div>
                 <label class="niu-field"><span>智能体团队 <b>*</b></span><select id="niuTeam" required aria-label="选择执行任务的智能体团队"><option value=""></option></select></label>
                 <label class="niu-field"><span>任务类型 <b>*</b></span><select id="niuType" required aria-label="选择任务类型" disabled><option value="">请先选择智能体团队</option></select></label>
                 <label class="niu-field"><span>优先级</span><select id="niuPriority" aria-label="选择优先级"><option value="urgent">紧急</option><option value="high">高</option><option value="medium" selected>中</option><option value="low">低</option></select></label>
@@ -41,7 +41,7 @@
           </section>
           <section class="niu-create-section niu-smart-create" id="niuSmartPane" aria-labelledby="niuCreateHeading" tabindex="-1" hidden>
             <div class="niu-smart-fields">
-              <label class="niu-field"><span>所属空间 <b>*</b></span><select id="niuSmartProject" required aria-label="选择任务所属空间"><option value="">请选择所属空间</option></select></label>
+              <label class="niu-field"><span>所属空间 <b>*</b><small class="niu-space-hint">找不到所属空间？请前往「管理」页签添加</small></span><select id="niuSmartProject" required aria-label="选择任务所属空间"><option value="">请选择所属空间</option></select></label>
               <label class="niu-field"><span>任务描述 <b>*</b></span><textarea id="niuSmartPrompt" rows="7" placeholder="一句话告诉我需要创建什么任务" required></textarea></label>
             </div>
           </section>
