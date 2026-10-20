@@ -4,6 +4,26 @@
    改配色 / 圆角 / 阴影只改这里，勿在组件里写死
    ============================================================ */
 :root {
+  /* ---- 字体：Lingee UI 刻度；40px 为首页截图的局部例外 ---- */
+  --font-size-10: 10px;
+  --font-size-12: 12px;
+  --font-size-14: 14px;
+  --font-size-16: 16px;
+  --font-size-18: 18px;
+  --font-size-20: 20px;
+  --font-size-24: 24px;
+  --font-size-28: 28px;
+  --font-size-32: 32px;
+  --font-size-36: 36px;
+  --font-size-40: 40px;
+  --font-size-48: 48px;
+  --font-size-72: 72px;
+  --line-height-12: 18px;
+  --line-height-14: 22px;
+  --line-height-16: 24px;
+  --line-height-18: 28px;
+
+
   /* ---- 主色 ---- */
   --brand: #495dff;
   --brand-hover: #3a5eff;
@@ -102,10 +122,10 @@
 }
 
 :root {
-  --tb-heading-size: 21px;
-  --tb-body-size: 14px;
-  --tb-small-size: 12px;
-  --tb-caption-size: 11px;
+  --tb-heading-size: var(--font-size-20);
+  --tb-body-size: var(--font-size-14);
+  --tb-small-size: var(--font-size-12);
+  --tb-caption-size: var(--font-size-12);
   --tb-radius: 8px;
   --tb-running-bg: #fcfaef;
   --tb-review-bg: #f2f9f3;
@@ -120,4 +140,4 @@
   --tb-detail-primary-width: 120px;
 }
 
-:root{--asset-expert-card-height:208px;--asset-expert-card-height-compact:176px;--asset-card-title-size:13px;}
+:root{--asset-expert-card-height:208px;--asset-expert-card-height-compact:176px;--asset-card-title-size:var(--font-size-16);}

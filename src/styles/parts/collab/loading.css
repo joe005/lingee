@@ -12,7 +12,7 @@
 #view-collab .cv-entry-load-feedback {
   position:relative; display:flex; align-items:center; justify-content:center;
   gap:8px; width:128px; min-height:24px; max-width:100%;
-  color:var(--text-secondary); font-size:13px; line-height:24px;
+  color:var(--text-secondary); font-size:var(--font-size-14); line-height:24px;
 }
 #view-collab #cvEntryLoadMessage { width:80px; white-space:nowrap; }
 #view-collab .cv-entry-load-spinner {
@@ -24,8 +24,7 @@
 #view-collab .cv-entry-load-feedback .sync-btn {
   position:absolute; top:calc(100% + 12px); left:50%; transform:translateX(-50%);
   height:28px; padding:0 12px; border:0; border-radius:6px;
-  background:transparent; color:var(--text-secondary); font-size:13px; font-weight:400;
-}
+  background:transparent; color:var(--text-secondary); font-size:var(--font-size-14); font-weight:400;line-height:var(--line-height-14);}
 #view-collab .cv-entry-load-feedback .sync-btn:hover { background:var(--hover); color:var(--text); }
 #view-collab .cv-entry-load-feedback .sync-btn:focus-visible { outline:2px solid var(--focus-ring); outline-offset:2px; }
 @keyframes cv-entry-spin { to { transform:rotate(360deg); } }

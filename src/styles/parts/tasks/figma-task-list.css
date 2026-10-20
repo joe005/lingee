@@ -15,7 +15,7 @@
 }
 #cv-tasks-current #view-tasks:not(.tk-project-list-mode).tk-list-mode .tk-view-tabs .list-page-tab {
   height:32px; padding:0 16px; gap:4px; border:0; color:var(--text-muted); background:transparent;
-  font-size:14px; font-weight:400; line-height:22px;
+  font-size:var(--font-size-14); font-weight:400; line-height:22px;
 }
 #cv-tasks-current #view-tasks:not(.tk-project-list-mode).tk-list-mode .tk-view-tabs .list-page-tab.active {
   color:var(--text-title); background:var(--bg); font-weight:500;
@@ -31,7 +31,7 @@
 #cv-tasks-current .tk-layout-shortcuts { position:relative; display:flex; align-items:center; gap:4px; padding:4px; height:36px; box-sizing:border-box; border-radius:12px; background:var(--segment-track); isolation:isolate; }
 #cv-tasks-current .tk-layout-shortcuts::before { content:""; position:absolute; z-index:-1; top:4px; bottom:4px; left:4px; width:calc((100% - 12px)/2); border-radius:8px; background:var(--bg); box-shadow:var(--pill-shadow); transition:transform .18s ease-out; }
 #cv-tasks-current .tk-layout-shortcuts:has([data-layout="list"].active)::before { transform:translateX(calc(100% + 4px)); }
-#cv-tasks-current .tk-layout-shortcuts .tk-layout-btn { display:flex; align-items:center; justify-content:center; gap:4px; width:72px; height:28px; padding:0 8px; border:0; border-radius:8px; background:transparent; color:var(--text-secondary); font:inherit; font-size:14px; font-weight:500; cursor:pointer; transition:color .15s, background-color .15s; }
+#cv-tasks-current .tk-layout-shortcuts .tk-layout-btn { display:flex; align-items:center; justify-content:center; gap:4px; width:72px; height:28px; padding:0 8px; border:0; border-radius:8px; background:transparent; color:var(--text-secondary); font:inherit; font-size:var(--font-size-14); font-weight:400; cursor:pointer; transition:color .15s, background-color .15s;line-height:var(--line-height-14);}
 #cv-tasks-current .tk-layout-shortcuts .tk-layout-btn.active { background:transparent; color:var(--text); font-weight:600; }
 #cv-tasks-current .tk-layout-shortcuts .tk-layout-btn:not(.active):hover { background:var(--neutral-100); color:var(--text); }
 #cv-tasks-current .tk-layout-shortcuts .tk-layout-btn + .tk-layout-btn { border-left:0; }
@@ -40,7 +40,7 @@
 #cv-tasks-current .tk-layout-shortcuts .tk-layout-btn.active img { opacity:1; }
 @media(prefers-reduced-motion:reduce) { #cv-tasks-current .tk-layout-shortcuts::before, #cv-tasks-current .tk-layout-shortcuts .tk-layout-btn, #cv-tasks-current .tk-layout-shortcuts .tk-layout-btn img { transition:none; } }
 #cv-tasks-current .tk-tools-right { gap:12px; }
-#cv-tasks-current #tkToolbarNew { height:32px; min-height:32px; border-radius:8px 0 0 8px; padding:0 12px; font-size:14px; font-weight:400; gap:4px; }
+#cv-tasks-current #tkToolbarNew { height:32px; min-height:32px; border-radius:8px 0 0 8px; padding:0 12px; font-size:var(--font-size-14); font-weight:400; gap:4px; }
 #cv-tasks-current #tkToolbarNewArrow { height:32px; min-height:32px; align-self:center; border-radius:0 8px 8px 0; }
 #cv-tasks-current #view-tasks:not(.tk-project-list-mode) .tk-list .tk-list-scroll {
   padding:0 16px 24px; background:var(--canvas-bg);
@@ -58,13 +58,13 @@
 }
 #cv-tasks-current .tk-list-card-main { gap:8px; }
 #cv-tasks-current .tk-list-card-meta { height:24px; color:var(--text-secondary); }
-#cv-tasks-current .tk-list-status { height:24px; padding:0 6px; font-size:12px; font-weight:400; box-sizing:border-box; }
-#cv-tasks-current .tk-list-card-title-btn { font-size:16px; font-weight:500; line-height:24px; color:var(--text-title); }
-#cv-tasks-current .tk-list-card-desc { font-size:14px; line-height:18px; margin-top:-4px; }
+#cv-tasks-current .tk-list-status { height:24px; padding:0 6px; font-size:var(--font-size-12); font-weight:400; box-sizing:border-box; }
+#cv-tasks-current .tk-list-card-title-btn { font-size:var(--font-size-14); font-weight:400; line-height:var(--line-height-14); color:var(--text-title); }
+#cv-tasks-current .tk-list-card-desc { font-size:var(--font-size-14); line-height:18px; margin-top:-4px; }
 #cv-tasks-current .tk-list-card-foot { margin:0; gap:8px; }
 #cv-tasks-current .tk-list-card-label {
   height:24px; padding:0 6px; border:1px solid var(--border-hover); border-radius:6px; background:transparent;
-  font-size:12px; font-weight:400; line-height:18px;
+  font-size:var(--font-size-12); font-weight:400; line-height:18px;
 }
 #cv-tasks-current .tk-list-card-type { border-color:var(--border-focus); color:var(--brand); background:transparent; }
 #cv-tasks-current .tk-list-priority[data-priority="low"] { background:transparent; color:var(--text-secondary); }
@@ -72,7 +72,7 @@
 #cv-tasks-current .tk-list-priority[data-priority="high"] { background:transparent; color:var(--warning); border-color:var(--warning-bg); }
 #cv-tasks-current .tk-list-priority[data-priority="urgent"] { background:transparent; color:var(--danger); border-color:var(--danger-bg); }
 #cv-tasks-current .tk-list-card-actions { gap:12px; }
-#cv-tasks-current .tk-list-action-btn { box-sizing:border-box; min-width:calc(4em + 18px); justify-content:center; height:28px; padding:0 8px; border-radius:8px; font-size:14px; font-weight:400; }
+#cv-tasks-current .tk-list-action-btn { box-sizing:border-box; min-width:calc(4em + 18px); justify-content:center; height:28px; padding:0 8px; border-radius:8px; font-size:var(--font-size-14); font-weight:400;line-height:var(--line-height-14);}
 #cv-tasks-current .tk-list-action-btn.is-primary { color:var(--text); border-color:var(--border-hover); }
 #cv-tasks-current .tk-list-card-more { position:static; opacity:1; display:grid; place-items:center; flex:none; width:28px; height:28px; padding:0; border:1px solid var(--border-hover); border-radius:8px; background:var(--bg); cursor:pointer; }
 #cv-tasks-current .tk-list-card-more:hover { background:var(--hover); }
@@ -81,14 +81,14 @@
 .tk-list-stage-step.is-current .tk-list-stage-link { left:14px; }
 .tk-list-stage-count { display:none; }
 #cv-tasks-current .tk-list-stage-progress { gap:8px; }
-#cv-tasks-current .tk-list-stage-summary { font-size:12px; line-height:18px; }
+#cv-tasks-current .tk-list-stage-summary { font-size:var(--font-size-12); line-height:18px; }
 #cv-tasks-current .tk-list-stage-summary > span { font-weight:400; }
 #cv-tasks-current .tk-list-stage-summary > b { display:none; }
 #cv-tasks-current .tk-list-stage-track { position:relative; align-items:center; height:14px; padding-left:24px; }
 #cv-tasks-current .tk-list-stage-step { flex:0 0 60px; height:14px; }
 #cv-tasks-current .tk-list-stage-step:last-of-type { flex:0 0 14px; }
 #cv-tasks-current .tk-list-stage-step::after { display:none; }
-#cv-tasks-current .tk-list-stage-count { display:block; margin-left:8px; color:var(--text-secondary); font-size:12px; line-height:18px; font-weight:400; }
+#cv-tasks-current .tk-list-stage-count { display:block; margin-left:8px; color:var(--text-secondary); font-size:var(--font-size-12); line-height:18px; font-weight:400; }
 #cv-tasks-current .tk-list-stage { overflow-x:auto; overflow-y:hidden; padding:4px 0; scrollbar-width:thin; }
 @media(max-width:900px) {
   #cv-tasks-current .tk-list-card { grid-template-columns:minmax(0,1fr) auto; }
@@ -107,7 +107,7 @@
 
 #cv-tasks-current .tk-list-stage-summary { position:relative; height:18px; overflow:visible; }
 #cv-tasks-current .tk-list-stage-summary > span { max-width:120px; text-align:center; position:absolute; left:calc(31px + var(--tk-stage-index, 0) * 60px); transform:translateX(-50%); }
-#cv-tasks-current .tk-list-stage-empty { color:var(--text-secondary); font-size:12px; }
+#cv-tasks-current .tk-list-stage-empty { color:var(--text-secondary); font-size:var(--font-size-12); }
 #cv-tasks-current :is(.tk-layout-btn,.tk-list-card-more,#tkToolbarNew,#tkToolbarNewArrow):focus-visible { outline:2px solid var(--focus-ring); outline-offset:2px; }
 #cv-tasks-current .tk-body.is-split .tk-list-card { display:flex; min-height:0; }
 #cv-tasks-current .tk-body.is-split :is(.tk-list-stage,.tk-list-card-actions) { display:none; }

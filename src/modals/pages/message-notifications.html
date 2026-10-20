@@ -1,7 +1,8 @@
 <div class="modal-overlay" id="inboxPopupOverlay">
   <section class="modal-box inbox-popup" id="inboxPopup" role="dialog" aria-modal="true" aria-labelledby="messageNotificationsTitle" hidden>
     <div class="inbox-popup-head"><strong id="messageNotificationsTitle">消息通知</strong><button type="button" id="inboxPopupClose" aria-label="关闭消息通知"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
-    <div class="inbox-popup-tabs" role="tablist" aria-label="消息分类"><button type="button" data-popup-tab="all" role="tab">全部</button><button type="button" data-popup-tab="notice" role="tab">通知</button><button type="button" data-popup-tab="other" role="tab">其他</button></div>
+    <div class="inbox-popup-toolbar"><div class="inbox-popup-tabs" role="tablist" aria-label="消息分类"><button type="button" data-popup-tab="all" role="tab">全部</button><button type="button" data-popup-tab="notice" role="tab">通知</button><button type="button" data-popup-tab="other" role="tab">其他</button></div>
+    <button type="button" class="inbox-popup-mark-all" id="inboxPopupMarkAll">全部标记已读</button></div>
     <div class="inbox-popup-list" id="inboxPopupList"></div>
   </section>
 </div>

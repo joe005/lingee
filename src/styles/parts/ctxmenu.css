@@ -9,7 +9,7 @@
   .ctx-item{
     display:flex;align-items:center;gap:4px;
     height:32px;padding:0 4px;border-radius:var(--r-xl);cursor:pointer;
-    color:var(--neutral-700);font-size:14px;font-weight:400;
+    color:var(--neutral-700);font-size:var(--font-size-14);font-weight:400;
   }
   .ctx-item:hover{background:var(--neutral-50);color:var(--neutral-900)}
   .ctx-item .ic{width:16px;height:16px;color:var(--neutral-600);flex:none}
@@ -19,7 +19,7 @@
   .ctx-sep{height:1px;background:var(--border);margin:4px 6px}
 
   .main-foot{
-    text-align:center;padding:16px;color:var(--text-soft);font-size:12px;
+    text-align:center;padding:16px;color:var(--text-soft);font-size:var(--font-size-12);
   }
 
   /* ---- interactive states ---- */
@@ -42,12 +42,12 @@
   .caret.rot{transform:rotate(-90deg)}
   .hidden{display:none !important}
   /* custom tooltip */
-.native-tip{position:fixed;background:#2d2d2d;color:#fff;padding:4px 8px;border-radius:6px;font-size:12px;line-height:1.4;white-space:nowrap;pointer-events:none;z-index:9999;opacity:0;transition:opacity .08s ease;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.native-tip{position:fixed;background:#2d2d2d;color:#fff;padding:4px 8px;border-radius:6px;font-size:var(--font-size-12);line-height:1.4;white-space:nowrap;pointer-events:none;z-index:9999;opacity:0;transition:opacity .08s ease;box-shadow:0 2px 8px rgba(0,0,0,.15)}
 .native-tip.show{opacity:1}
   /* toast 组件 */
 .toast{
     position:fixed;left:50%;top:16px;bottom:auto;transform:translateX(-50%) translateY(-120%);
-    background:var(--bg);color:var(--text);padding:10px 16px;border-radius:10px;font-size:14px;
+    background:var(--bg);color:var(--text);padding:10px 16px;border-radius:10px;font-size:var(--font-size-14);
     border:1px solid var(--border);
     box-shadow:var(--menu-shadow);
     opacity:0;transition:opacity .25s,transform .25s;

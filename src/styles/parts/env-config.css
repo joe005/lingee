@@ -8,23 +8,23 @@
   .env-config-body{padding:16px 22px 6px;overflow-y:auto}
   .env-form-section{margin-bottom:16px}
   .env-create-notice{
-    margin:2px 0 10px;color:var(--danger);font-size:12px;line-height:1.5;
+    margin:2px 0 10px;color:var(--danger);font-size:var(--font-size-12);line-height:1.5;
   }
   .env-form-section-title{
-    margin-bottom:10px;color:var(--text);font-size:14px;font-weight:600;
+    margin-bottom:10px;color:var(--text);font-size:var(--font-size-14);font-weight:600;
   }
   .env-legacy-auth-card{
     display:flex;align-items:center;justify-content:space-between;gap:18px;padding:12px 14px;
     border:1px solid #f0d5b3;border-radius:10px;background:#fffaf4;
   }
   .env-legacy-auth-main{min-width:0}
-  .env-legacy-auth-title{display:flex;align-items:center;gap:8px;color:var(--text);font-size:14px;font-weight:600}
+  .env-legacy-auth-title{display:flex;align-items:center;gap:8px;color:var(--text);font-size:var(--font-size-14);font-weight:600}
   .env-auth-state{
     display:inline-flex;align-items:center;height:20px;padding:0 7px;border-radius:5px;
-    background:var(--warning-bg);color:var(--warning);font-size:11px;font-weight:500;
+    background:var(--warning-bg);color:var(--warning);font-size:var(--font-size-12);font-weight:500;
   }
   .env-auth-state.enabled{background:var(--brand-fill);color:var(--brand)}
-  .env-legacy-auth-desc{margin-top:4px;color:var(--text-secondary);font-size:12px;line-height:1.5}
+  .env-legacy-auth-desc{margin-top:4px;color:var(--text-secondary);font-size:var(--font-size-12);line-height:1.5}
   .env-auth-switch{
     position:relative;width:42px;height:24px;flex:none;padding:0;border:0;border-radius:999px;
     background:#c8c8cc;cursor:pointer;transition:background .15s;
@@ -39,7 +39,7 @@
   .env-auth-switch:disabled{cursor:not-allowed;opacity:.58}
   #envProxyUserField{margin-top:12px}
   .env-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 16px}
-  .env-field{display:block;width:100%;min-width:0;max-width:100%;color:var(--text);font-size:13px}
+  .env-field{display:block;width:100%;min-width:0;max-width:100%;color:var(--text);font-size:var(--font-size-14)}
   .env-field.full{grid-column:1/-1}
   .env-field>span:first-child{display:flex;align-items:baseline;min-height:20px;margin-bottom:5px}
   .env-required{margin-left:3px;color:var(--danger)}
@@ -62,13 +62,12 @@
     box-shadow:none;
   }
   .env-field input[readonly]:hover,.env-field select:disabled:hover{border-color:var(--border)}
-  .env-field small{display:block;margin-top:5px;color:var(--text-secondary);font-size:12px;line-height:1.45}
+  .env-field small{display:block;margin-top:5px;color:var(--text-secondary);font-size:var(--font-size-12);line-height:1.45}
   .env-label-with-action{justify-content:space-between;gap:10px}
   .env-label-with-action>a,
   .env-label-with-action>button{
     flex:none;padding:0;border:none;background:none;color:var(--brand);
-    font-size:12px;line-height:18px;text-decoration:none;cursor:pointer;
-  }
+    font-size:var(--font-size-14);line-height:var(--line-height-14);text-decoration:none;cursor:pointer;font-weight:400;}
   .env-label-with-action>a:hover,
   .env-label-with-action>button:hover{text-decoration:underline}
   .env-label-with-action>button:disabled{opacity:.6;cursor:not-allowed;text-decoration:none}
@@ -76,10 +75,10 @@
   .env-footer-lead{display:flex;align-items:center;gap:16px;min-width:0}
   .env-link-danger{
     flex:none;padding:0;border:0;background:none;color:var(--danger);
-    font:inherit;font-size:13px;cursor:pointer;
+    font:inherit;font-size:var(--font-size-14);cursor:pointer;
   }
   .env-link-danger:hover{text-decoration:underline}
-  .env-default{display:flex;align-items:center;gap:8px;color:var(--text);font-size:13px;cursor:pointer}
+  .env-default{display:flex;align-items:center;gap:8px;color:var(--text);font-size:var(--font-size-14);cursor:pointer}
   .env-default input{width:15px;height:15px;accent-color:var(--brand);cursor:pointer}
   .env-footer-actions{display:flex;align-items:center;gap:8px}
   .modal-btn.test{border:1px solid var(--border-hover);background:var(--bg);color:var(--text)}
@@ -99,9 +98,9 @@
 
 /* 启用普通 AccessToken 认证的不可逆二次确认 */
 .env-auth-confirm-card{width:440px;max-width:calc(100vw - 32px)}
-.env-auth-confirm-lead{margin:0 0 10px;color:var(--text);font-size:13px;line-height:1.6}
+.env-auth-confirm-lead{margin:0 0 10px;color:var(--text);font-size:var(--font-size-14);line-height:1.6}
 .env-auth-confirm-lead b{color:var(--danger);font-weight:600}
-.env-auth-confirm-list{margin:0;padding-left:18px;color:var(--text-secondary);font-size:12px;line-height:1.7}
+.env-auth-confirm-list{margin:0;padding-left:18px;color:var(--text-secondary);font-size:var(--font-size-12);line-height:1.7}
 .env-auth-confirm-list b{color:var(--text);font-weight:600}
 
 /* ── 与实现对齐：锁定态灰底无边框 ──
@@ -125,7 +124,7 @@
 }
 
 /* 校验错误：一次性标出全部未通过的必填项，不做「补完一个再报下一个」的挤牙膏式提示 */
-.env-field .env-err{display:none;margin-top:4px;color:var(--danger);font-size:12px;line-height:1.4}
+.env-field .env-err{display:none;margin-top:4px;color:var(--danger);font-size:var(--font-size-12);line-height:1.4}
 .env-field.invalid .env-err{display:block}
 .env-field.invalid input,
 .env-field.invalid select,

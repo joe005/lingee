@@ -57,7 +57,7 @@ function cvBuildTaskCard(t,i){
     +'</div><span class="badge '+execCls+'">'+t.exec+'</span></div>'
     +'<div class="card-title">'+t.title+'</div>'
     +'<div class="card-desc">'+t.desc+'</div>'
-    +'<div class="card-footer"><div class="assignee"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'+t.assignee+'</div><span style="font-size:11px;color:var(--text-soft)">'+t.source+' '+t.sourceId+'</span></div>'
+    +'<div class="card-footer"><div class="assignee"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'+t.assignee+'</div><span style="font-size:var(--font-size-12, 12px);color:var(--text-soft)">'+t.source+' '+t.sourceId+'</span></div>'
     +'</div>';
 }
 function cvRenderReviewStats(){

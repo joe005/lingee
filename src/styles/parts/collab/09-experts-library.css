@@ -1,6 +1,6 @@
 #view-collab .expert-card{position:relative;cursor:pointer;text-align:left}
 #view-collab .expert-section-title{justify-content:flex-start}
-#view-collab .expert-section-desc{font-size:12px;font-weight:400;color:var(--text-secondary)}
+#view-collab .expert-section-desc{font-size:var(--font-size-12);font-weight:400;color:var(--text-secondary)}
 #view-collab #cv-experts .apps-grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr));gap:16px;margin-bottom:24px;align-items:start}
 #view-collab #cv-experts .apps-grid:not(.asset-cloud-grid){align-items:stretch}
 #view-collab #cv-experts .x-card{display:flex;flex-direction:column;padding:20px 22px;border-radius:14px}
@@ -9,20 +9,20 @@
 #view-collab #cv-experts .x-card .card-desc{margin:12px 0 10px;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;line-height:1.6}
 #view-collab #cv-experts .apps-grid:not(.asset-cloud-grid) .x-card .card-desc{flex-grow:0}
 #view-collab #cv-experts .x-card .card-tags{flex-wrap:wrap;gap:6px;margin-top:0}
-#view-collab #cv-experts .x-card .ptag{font-size:11px;padding:4px 8px}
+#view-collab #cv-experts .x-card .ptag{font-size:var(--font-size-12);padding:4px 8px}
 #view-collab .expert-av{width:32px;height:32px;border-radius:50%;flex-shrink:0}
-#view-collab .expert-flag{margin-left:6px;font-size:10px;font-weight:500;color:var(--text-secondary);
+#view-collab .expert-flag{margin-left:6px;font-size:var(--font-size-10);font-weight:500;color:var(--text-secondary);
   background:var(--fill-1);border-radius:4px;padding:1px 5px;vertical-align:middle}
 #view-collab .expert-new{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
   min-height:132px;text-align:center;border:1px dashed var(--border-hover);background:var(--fill-2);font-family:inherit}
 #view-collab .expert-new:hover{border-color:var(--brand);background:var(--brand-fill)}
-#view-collab .expert-new-ic{font-size:18px;color:var(--brand);line-height:1}
-#view-collab .expert-new-t{font-size:13px;font-weight:600;color:var(--text)}
-#view-collab .expert-new-s{font-size:11.5px;color:var(--text-secondary)}
-#view-collab .x-empty{padding:40px;text-align:center;color:var(--text-secondary);font-size:13px}
+#view-collab .expert-new-ic{font-size:var(--font-size-18);color:var(--brand);line-height:1}
+#view-collab .expert-new-t{font-size:var(--font-size-14);font-weight:600;color:var(--text)}
+#view-collab .expert-new-s{font-size:var(--font-size-12);color:var(--text-secondary)}
+#view-collab .x-empty{padding:40px;text-align:center;color:var(--text-secondary);font-size:var(--font-size-14)}
 
 #view-collab .expert-layer-tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px}
-#view-collab .asset-create-btn{flex:none;min-height:34px;padding:0 12px;border:1px solid var(--brand);border-radius:7px;background:var(--brand);color:var(--bg);font:inherit;font-size:12px;font-weight:600;cursor:pointer}
+#view-collab .asset-create-btn{flex:none;min-height:34px;padding:0 12px;border:1px solid var(--brand);border-radius:7px;background:var(--brand);color:var(--bg);font:inherit;font-size:var(--font-size-14);font-weight:400;cursor:pointer;line-height:var(--line-height-14);}
 #view-collab .asset-create-btn:hover{background:var(--brand-hover);border-color:var(--brand-hover)}
 #view-collab .asset-create-btn:focus-visible{outline:2px solid var(--border-focus);outline-offset:2px}
 #view-collab .expert-layer-tabs span{color:var(--text-secondary);font-weight:400}
@@ -134,9 +134,9 @@
 #view-collab :is(#cv-experts,#cv-teams) .asset-search-icon{display:block;flex:none}
 #view-collab :is(#cv-experts,#cv-teams) .asset-secondary-row{margin:0 0 20px}
 #view-collab :is(#cv-experts,#cv-teams) .asset-source-filters{gap:4px}
-#view-collab :is(#cv-experts,#cv-teams) .asset-source-filters .list-page-tab{height:32px;min-height:32px;padding:4px 16px;font-size:14px;line-height:22px}
+#view-collab :is(#cv-experts,#cv-teams) .asset-source-filters .list-page-tab{height:32px;min-height:32px;padding:4px 16px;font-size:var(--font-size-14);line-height:22px}
 #view-collab :is(#cv-experts,#cv-teams) .asset-source-filters .list-page-tab.active{background:transparent}
-#view-collab :is(#cv-experts,#cv-teams) .expert-section-title{display:flex;align-items:center;min-height:32px;margin:0 0 12px;padding:0;font-size:16px;line-height:24px;font-weight:500}
+#view-collab :is(#cv-experts,#cv-teams) .expert-section-title{display:flex;align-items:center;min-height:32px;margin:0 0 12px;padding:0;font-size:var(--font-size-16);line-height:24px;font-weight:500}
 #view-collab :is(#cv-experts,#cv-teams) .asset-list-section+.asset-list-section{margin-top:20px}
 #view-collab #expertGrid:not(.asset-cloud-grid){display:block}
 #view-collab :is(#cv-experts,#cv-teams) .apps-grid,
@@ -151,19 +151,19 @@
 #view-collab :is(#cv-experts,#cv-teams) .x-av{width:40px;height:40px;border-radius:50%}
 #view-collab :is(#cv-experts,#cv-teams) .x-faces{display:grid;grid-template-columns:repeat(2,20px);width:40px;height:40px;padding:0;align-content:center;flex:none}
 #view-collab :is(#cv-experts,#cv-teams) .x-faces img{width:24px;height:24px;margin:-2px;border:2px solid var(--bg);border-radius:50%}
-#view-collab :is(#cv-experts,#cv-teams) .asset-faces-count{display:flex;align-items:center;justify-content:center;box-sizing:border-box;width:24px;height:24px;margin:-2px;border:2px solid var(--bg);border-radius:50%;background:var(--tag-bg);color:var(--text);font-size:11px}
+#view-collab :is(#cv-experts,#cv-teams) .asset-faces-count{display:flex;align-items:center;justify-content:center;box-sizing:border-box;width:24px;height:24px;margin:-2px;border:2px solid var(--bg);border-radius:50%;background:var(--tag-bg);color:var(--text);font-size:var(--font-size-12)}
 #view-collab :is(#cv-experts,#cv-teams) .apps-grid .x-card .card-title-row{display:flex;flex-wrap:nowrap;min-width:0}
-#view-collab :is(#cv-experts,#cv-teams) .apps-grid .x-card .card-title{display:block;font-size:16px;line-height:24px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text-title)}
-#view-collab :is(#cv-experts,#cv-teams) .asset-card-summary{gap:4px;margin-top:2px;flex-wrap:wrap;font-size:12px;line-height:18px;min-height:20px}
+#view-collab :is(#cv-experts,#cv-teams) .apps-grid .x-card .card-title{display:block;font-size:var(--font-size-16);line-height:24px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text-title)}
+#view-collab :is(#cv-experts,#cv-teams) .asset-card-summary{gap:4px;margin-top:2px;flex-wrap:wrap;font-size:var(--font-size-12);line-height:18px;min-height:20px}
 #view-collab :is(#cv-experts,#cv-teams) .asset-card-summary>.asset-source-badge,
-#view-collab :is(#cv-experts,#cv-teams) .asset-card-summary>.platform-client-badge{color:var(--text-secondary);align-self:auto;margin:0;padding:0 4px;border:1px solid var(--border);border-radius:4px;font-size:12px;background:transparent}
+#view-collab :is(#cv-experts,#cv-teams) .asset-card-summary>.platform-client-badge{color:var(--text-secondary);align-self:auto;margin:0;padding:0 4px;border:1px solid var(--border);border-radius:4px;font-size:var(--font-size-12);background:transparent}
 #view-collab :is(#cv-experts,#cv-teams) .asset-card-summary>.asset-source-builtin{color:var(--asset-source-official-text);border-color:var(--border-focus)}
 #view-collab :is(#cv-experts,#cv-teams) .asset-card-summary>.asset-source-shared{color:var(--asset-source-tenant-text);border-color:var(--asset-tenant-outline-border)}
 #view-collab :is(#cv-experts,#cv-teams) .asset-card-summary>.asset-source-personal{color:var(--asset-personal-outline);border-color:var(--asset-personal-outline-border)}
 #view-collab :is(#cv-experts,#cv-teams) .asset-card-summary>span:not([class]){padding:0 4px;border:1px solid var(--border);border-radius:4px}
-#view-collab :is(#cv-experts,#cv-teams) .apps-grid .x-card .card-desc{margin:8px 0 8px 48px;flex:0 0 auto;height:40px;line-height:20px;font-size:14px;color:var(--text-secondary);-webkit-line-clamp:2}
+#view-collab :is(#cv-experts,#cv-teams) .apps-grid .x-card .card-desc{margin:8px 0 8px 48px;flex:0 0 auto;height:40px;line-height:20px;font-size:var(--font-size-14);color:var(--text-secondary);-webkit-line-clamp:2}
 #view-collab :is(#cv-experts,#cv-teams) .apps-grid .x-card .card-tags{margin:0 0 0 48px;gap:4px;max-height:20px;overflow:hidden;flex-wrap:nowrap}
-#view-collab :is(#cv-experts,#cv-teams) .apps-grid .x-card .ptag{font-size:12px;line-height:20px;padding:0 6px;border:0;border-radius:var(--asset-pill-radius);background:var(--tag-bg);white-space:nowrap}
+#view-collab :is(#cv-experts,#cv-teams) .apps-grid .x-card .ptag{font-size:var(--font-size-12);line-height:20px;padding:0 6px;border:0;border-radius:var(--asset-pill-radius);background:var(--tag-bg);white-space:nowrap}
 #view-collab :is(#cv-experts,#cv-teams) .x-call{top:12px;right:12px;background:var(--bg)}
 #view-collab :is(#cv-experts,#cv-teams) .x-card:focus-within .x-call{opacity:1}
 #view-collab :is(#cv-experts,#cv-teams) .expert-install-plus{top:16px;right:16px;width:24px;height:24px;border:1px solid var(--border-hover);border-radius:var(--tb-radius);background:var(--bg)}
@@ -185,7 +185,7 @@
 #view-collab :is(#cv-experts,#cv-teams) .asset-list-section:has(.asset-card-menu-toggle[aria-expanded="true"]){position:relative;z-index:3}
 #view-collab :is(#cv-experts,#cv-teams) .asset-card-menu{position:absolute;top:28px;right:28px;z-index:4;min-width:100px;padding:4px;border-radius:12px;background:var(--bg);box-shadow:var(--menu-shadow)}
 #view-collab :is(#cv-experts,#cv-teams) .asset-card-menu[hidden]{display:none}
-#view-collab :is(#cv-experts,#cv-teams) .asset-card-menu button{display:flex;align-items:center;width:100%;height:32px;padding:0 12px;border:0;border-radius:var(--tb-radius);background:transparent;color:var(--text);font:inherit;font-size:14px;cursor:pointer}
+#view-collab :is(#cv-experts,#cv-teams) .asset-card-menu button{display:flex;align-items:center;width:100%;height:32px;padding:0 12px;border:0;border-radius:var(--tb-radius);background:transparent;color:var(--text);font:inherit;font-size:var(--font-size-14);cursor:pointer;font-weight:400;line-height:var(--line-height-14);}
 #view-collab :is(#cv-experts,#cv-teams) .asset-card-menu button:hover{background:var(--hover)}
 #view-collab :is(#cv-experts,#cv-teams) .asset-card-menu [data-asset-card-view]{gap:8px}
 #view-collab :is(#cv-experts,#cv-teams) .asset-card-menu [data-asset-card-view] svg{flex:none;color:var(--text-secondary)}

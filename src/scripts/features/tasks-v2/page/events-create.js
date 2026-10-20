@@ -16,7 +16,7 @@ export function bindCreateEvents() {
   els.tkToolbarNew.dataset.tooltip = '新建（' + (isMac ? '⌘N' : 'Ctrl+N') + '）';
   els.tkToolbarNew.setAttribute('aria-keyshortcuts', isMac ? 'Meta+N' : 'Control+N');
   document.addEventListener('keydown', function (e) {
-    if (e.defaultPrevented || e.isComposing || e.key.toLowerCase() !== 'n' || e.altKey || e.shiftKey) return;
+    if (e.defaultPrevented || e.isComposing || typeof e.key !== 'string' || e.key.toLowerCase() !== 'n' || e.altKey || e.shiftKey) return;
     if (!(isMac ? e.metaKey && !e.ctrlKey : e.ctrlKey && !e.metaKey)) return;
     if (!els.tkToolbarNew.getClientRects().length) return;
     e.preventDefault();

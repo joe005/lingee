@@ -74,7 +74,7 @@ function renderPie(){
       var tip=document.createElement('div');
       tip.className='pie-tooltip';
       tip.textContent=name+'：'+count+' 次';
-      tip.style.cssText='position:fixed;background:#2d2d2d;color:#fff;padding:4px 10px;border-radius:6px;font-size:12px;pointer-events:none;z-index:9999;white-space:nowrap;';
+      tip.style.cssText='position:fixed;background:#2d2d2d;color:#fff;padding:4px 10px;border-radius:6px;font-size:var(--font-size-12, 12px);pointer-events:none;z-index:9999;white-space:nowrap;';
       document.body.appendChild(tip);
       s._tip=tip;
       document.addEventListener('mousemove',function mv(e){
@@ -146,7 +146,7 @@ function renderTrend(data){
     xLabels+='<text x="'+xp+'" y="'+(h-5)+'" text-anchor="middle" font-size="13" fill="#b8b8b8">'+lbl+'</text>';
   });
   /* 图例 - 使用 HTML 而非 SVG text，避免字号异常 */
-  var legendHtml='<div style="position:absolute;top:-36px;right:0;display:flex;gap:12px;font-size:13px;color:#767676">'+
+  var legendHtml='<div style="position:absolute;top:-36px;right:0;display:flex;gap:12px;font-size:var(--font-size-14, 14px);color:#767676">'+
     '<span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;background:#495dff;border-radius:1px;display:inline-block"></span>用户数</span>'+
     '<span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;background:#08a040;border-radius:1px;display:inline-block"></span>客户数</span>'+
     '</div>';
@@ -171,7 +171,7 @@ function renderHeatmap(){
   var html='';
   /* 表头 */
   html+='<div class="heatmap-label"></div>';
-  for(var h2=0;h2<24;h2++){html+='<div class="heatmap-label" style="text-align:center;font-size:10px">'+h2+'</div>'}
+  for(var h2=0;h2<24;h2++){html+='<div class="heatmap-label" style="text-align:center;font-size:var(--font-size-10, 10px)">'+h2+'</div>'}
   /* 数据行 */
   days.forEach(function(d,di){
     html+='<div class="heatmap-label">'+d+'</div>';

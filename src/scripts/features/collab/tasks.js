@@ -157,17 +157,17 @@ function cvRenderWorkflow(){
     return '<div class="workflow-step '+cls+'"><div class="workflow-step-num">'+num+'</div><div class="workflow-step-name">'+step+'</div><div class="workflow-step-status">'+status+'</div></div>';
   }).join('');
   var nextIdx=Math.min(currentIdx+1,CV_WORKFLOW.length-1);
-  el.innerHTML+='<div style="padding:8px 12px;font-size:12px;color:#7858f9;font-weight:600">下一步：'+CV_WORKFLOW[nextIdx]+' → '+CV_WORKFLOW_ROLES[CV_WORKFLOW[nextIdx]]+'</div>';
+  el.innerHTML+='<div style="padding:8px 12px;font-size:var(--font-size-12, 12px);color:#7858f9;font-weight:600">下一步：'+CV_WORKFLOW[nextIdx]+' → '+CV_WORKFLOW_ROLES[CV_WORKFLOW[nextIdx]]+'</div>';
 }
 function cvRenderTwistArtifacts(){
   var el=document.getElementById('cv-twist-artifacts');if(!el)return;
   var arts=[['code','</>','源代码','ExpensePlugin.java'],['test','T','单元测试','ExpenseTest.java'],['spec','S','需求规格','PRD.md'],['doc','D','技术方案','TechSpec.md']];
-  el.innerHTML=arts.map(function(a){return '<div class="artifact-row"><div class="artifact-icon artifact-icon--'+a[0]+'">'+a[1]+'</div><span>'+a[2]+'</span><span style="margin-left:auto;font-size:11px;color:var(--text-soft)">'+a[3]+'</span></div>';}).join('');
+  el.innerHTML=arts.map(function(a){return '<div class="artifact-row"><div class="artifact-icon artifact-icon--'+a[0]+'">'+a[1]+'</div><span>'+a[2]+'</span><span style="margin-left:auto;font-size:var(--font-size-12, 12px);color:var(--text-soft)">'+a[3]+'</span></div>';}).join('');
 }
 function cvRenderReviewArtifacts(){
   var el=document.getElementById('cv-review-artifacts');if(!el)return;
   var arts=[['code','</>','源代码','ExpensePlugin.java'],['test','T','单元测试','ExpenseTest.java'],['spec','S','需求规格','PRD.md'],['doc','D','技术方案','TechSpec.md']];
-  el.innerHTML=arts.map(function(a){return '<div class="artifact-row"><div class="artifact-icon artifact-icon--'+a[0]+'">'+a[1]+'</div><span>'+a[2]+'</span><span style="margin-left:auto;font-size:11px;color:var(--text-soft)">'+a[3]+'</span></div>';}).join('');
+  el.innerHTML=arts.map(function(a){return '<div class="artifact-row"><div class="artifact-icon artifact-icon--'+a[0]+'">'+a[1]+'</div><span>'+a[2]+'</span><span style="margin-left:auto;font-size:var(--font-size-12, 12px);color:var(--text-soft)">'+a[3]+'</span></div>';}).join('');
 }
 
 /* ============ CONFIRM ACTIONS ============ */

@@ -27,7 +27,7 @@
   background: var(--bg);
   color: var(--text);
   font: inherit;
-  font-size: 14px;
+  font-size: var(--font-size-14);
   transition: border-color 0.15s;
 }
 .mgr-scope .mgr-inv-search input:hover {
@@ -84,7 +84,7 @@
   border-radius: 50%;
   background: var(--brand-fill);
   color: var(--brand);
-  font-size: 13px;
+  font-size: var(--font-size-14);
   font-weight: 600;
 }
 .mgr-scope .mgr-inv-avatar--1 {
@@ -103,7 +103,7 @@
   min-width: 0;
   overflow: hidden;
   color: var(--text);
-  font-size: 14px;
+  font-size: var(--font-size-14);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -111,12 +111,12 @@
   margin-left: auto;
   flex: none;
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: var(--font-size-12);
 }
 .mgr-scope .mgr-inv-empty {
   padding: 32px 0;
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: var(--font-size-14);
   text-align: center;
 }
 .mgr-scope .mgr-inv-roles {
@@ -127,7 +127,7 @@
 .mgr-scope .mgr-inv-roles-label {
   margin-bottom: 8px;
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: var(--font-size-12);
 }
 .mgr-scope .mgr-inv-role-cards {
   display: grid;
@@ -173,12 +173,12 @@
 }
 .mgr-scope .mgr-inv-role-main b {
   color: var(--text);
-  font-size: 14px;
+  font-size: var(--font-size-14);
   font-weight: 600;
 }
 .mgr-scope .mgr-inv-role-main small {
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: var(--font-size-12);
   line-height: 1.5;
 }
 .mgr-scope .mgr-inv-footer .sync-modal__btn--ghost {
@@ -234,13 +234,13 @@
 .mgr-scope .mgr-mp-panel-head h2 {
   margin: 0;
   color: var(--text-title);
-  font-size: 16px;
+  font-size: var(--font-size-16);
   font-weight: 600;
 }
 .mgr-scope .mgr-mp-panel-head h2 span {
   margin-left: 4px;
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: var(--font-size-14);
   font-weight: 400;
 }
 .mgr-scope .mgr-mp-add {
@@ -254,7 +254,7 @@
   background: var(--bg);
   color: var(--text);
   font: inherit;
-  font-size: 13px;
+  font-size: var(--font-size-14);
   font-weight: 500;
   cursor: pointer;
   transition:
@@ -296,7 +296,7 @@
   background: var(--bg);
   color: var(--text);
   font: inherit;
-  font-size: 14px;
+  font-size: var(--font-size-14);
   transition: border-color 0.15s;
 }
 .mgr-scope .mgr-mp-search input:hover,
@@ -336,12 +336,12 @@
   background: none;
   color: var(--text-secondary);
   font: inherit;
-  font-size: 13px;
+  font-size: var(--font-size-14);
   cursor: pointer;
 }
 .mgr-scope .mgr-mp-tab small {
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: var(--font-size-12);
 }
 .mgr-scope .mgr-mp-tab.active {
   border-bottom-color: var(--text);
@@ -371,7 +371,7 @@
   border-radius: 50%;
   background: var(--brand-fill);
   color: var(--brand);
-  font-size: 15px;
+  font-size: var(--font-size-16);
   font-weight: 600;
 }
 .mgr-scope .mgr-mp-avatar--1 {
@@ -392,7 +392,7 @@
   min-width: 0;
   overflow: hidden;
   color: var(--text);
-  font-size: 14px;
+  font-size: var(--font-size-14);
   font-weight: 500;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -403,7 +403,7 @@
   border-radius: 4px;
   background: var(--tag-bg);
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: var(--font-size-12);
   font-weight: 500;
   line-height: 20px;
 }
@@ -440,7 +440,7 @@
 .mgr-scope .mgr-mp-empty {
   padding: 32px 0;
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: var(--font-size-14);
   text-align: center;
 }
 .mgr-scope .mgr-mp-pager {
@@ -450,7 +450,7 @@
   gap: 12px;
   flex: none;
   color: var(--text);
-  font-size: 13px;
+  font-size: var(--font-size-14);
   font-variant-numeric: tabular-nums;
 }
 .mgr-scope .mgr-mp-pager:empty {
@@ -464,7 +464,7 @@
   background: none;
   color: var(--text);
   font: inherit;
-  font-size: 16px;
+  font-size: var(--font-size-16);
   cursor: pointer;
 }
 .mgr-scope .mgr-mp-page:hover:not(:disabled) {
@@ -487,7 +487,7 @@
 .mgr-scope .mgr-mp-menu-title {
   padding: 6px 10px 2px;
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: var(--font-size-12);
 }
 .mgr-scope .mgr-mp-menu-sep {
   height: 1px;
@@ -507,7 +507,7 @@
   background: none;
   color: var(--text);
   font: inherit;
-  font-size: 14px;
+  font-size: var(--font-size-14);
   text-align: left;
   cursor: pointer;
 }
@@ -524,7 +524,7 @@
   flex: none;
   margin: 0;
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: var(--font-size-14);
 }
 .mgr-scope .mgr-mp-agents {
   display: flex;
@@ -541,11 +541,11 @@
   gap: 4px;
   flex: 1;
   color: var(--text);
-  font-size: 14px;
+  font-size: var(--font-size-14);
 }
 .mgr-scope .mgr-mp-agents-empty small {
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: var(--font-size-12);
 }
 .mgr-scope .mgr-mp-agent {
   border-radius: 12px;
@@ -576,7 +576,7 @@
   max-width: 120px;
   overflow: hidden;
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: var(--font-size-12);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -617,12 +617,12 @@
 }
 .mgr-scope .mgr-mp-perm b {
   color: var(--text);
-  font-size: 14px;
+  font-size: var(--font-size-14);
   font-weight: 500;
 }
 .mgr-scope .mgr-mp-perm small {
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: var(--font-size-12);
 }
 .mgr-scope .mgr-mp-agent-remove {
   align-self: flex-start;
@@ -631,7 +631,7 @@
   background: none;
   color: var(--danger);
   font: inherit;
-  font-size: 13px;
+  font-size: var(--font-size-14);
   cursor: pointer;
 }
 .mgr-scope .mgr-mp-add-wrap {
@@ -655,7 +655,7 @@
 .mgr-scope .mgr-mp-pop input[type="search"] {
   height: var(--control-h-sm);
   margin-bottom: 6px;
-  font-size: 13px;
+  font-size: var(--font-size-14);
 }
 .mgr-scope .mgr-mp-pop-options {
   max-height: 240px;
@@ -672,13 +672,13 @@
   background: none;
   color: var(--text);
   font: inherit;
-  font-size: 14px;
+  font-size: var(--font-size-14);
   text-align: left;
   cursor: pointer;
 }
 .mgr-scope .mgr-mp-pop-option small {
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: var(--font-size-12);
 }
 .mgr-scope .mgr-mp-pop-option:hover {
   background: var(--hover);

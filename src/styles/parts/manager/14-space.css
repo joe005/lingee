@@ -39,7 +39,7 @@
   background: var(--bg);
   color: var(--text-secondary);
   font: inherit;
-  font-size: 13px;
+  font-size: var(--font-size-14);
   cursor: pointer;
   transition:
     background 0.15s,
@@ -92,7 +92,7 @@
   background: none;
   color: var(--text);
   font: inherit;
-  font-size: 14px;
+  font-size: var(--font-size-14);
   text-align: left;
   cursor: pointer;
 }
@@ -106,20 +106,20 @@
 #view-manager .mgr-ask-space-empty {
   padding: 12px;
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: var(--font-size-14);
 }
 
 /* 空间详情：返回「空间详情」、右栏四张卡 */
 #view-manager .mgr-rail-count {
   margin-left: 8px;
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: var(--font-size-12);
   font-weight: 400;
 }
 #view-manager .mgr-rail-owner {
   margin: 4px 0 0;
   color: var(--text);
-  font-size: 13px;
+  font-size: var(--font-size-14);
 }
 #view-manager .mgr-rail-meta {
   overflow: hidden;
@@ -171,7 +171,7 @@
   grid-template-columns: 72px minmax(0, 1fr);
   gap: 8px 16px;
   margin: 0;
-  font-size: 14px;
+  font-size: var(--font-size-14);
 }
 #view-manager .mgr-sub-kv dt {
   color: var(--text-secondary);
@@ -227,7 +227,7 @@
   align-items: baseline;
   gap: 8px;
   padding: 2px 0;
-  font-size: 12px;
+  font-size: var(--font-size-12);
 }
 #view-manager .mgr-rail-jobs li::before {
   content: '·';
@@ -279,7 +279,7 @@
   background: var(--bg);
   color: var(--text);
   font: inherit;
-  font-size: 13px;
+  font-size: var(--font-size-14);
 }
 #view-manager .mgr-sub-tabs {
   display: inline-flex;
@@ -297,7 +297,7 @@
   background: none;
   color: var(--text-secondary);
   font: inherit;
-  font-size: 14px;
+  font-size: var(--font-size-14);
   cursor: pointer;
 }
 #view-manager .mgr-sub-tab.active {
@@ -338,7 +338,7 @@
   gap: 8px;
   margin: 0 0 8px;
   color: var(--text-title);
-  font-size: 16px;
+  font-size: var(--font-size-16);
   font-weight: 600;
 }
 #view-manager .mgr-sub-card-head .mgr-sub-card-title {
@@ -347,7 +347,7 @@
 #view-manager .mgr-sub-card-meta {
   margin-left: auto;
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: var(--font-size-12);
   font-weight: 400;
 }
 #view-manager .mgr-sub-tools {
@@ -358,7 +358,7 @@
 #view-manager .mgr-sub-text {
   margin: 0;
   color: var(--text);
-  font-size: 14px;
+  font-size: var(--font-size-14);
   line-height: 1.7;
   white-space: pre-wrap;
 }
@@ -374,7 +374,7 @@
   border-radius: 12px;
   background: var(--brand-fill);
   color: var(--text);
-  font-size: 13px;
+  font-size: var(--font-size-14);
   line-height: 1.6;
 }
 #view-manager .mgr-sub-note svg {
@@ -393,7 +393,7 @@
   gap: 12px;
   padding: 10px 0;
   border-bottom: 1px solid var(--divider);
-  font-size: 14px;
+  font-size: var(--font-size-14);
 }
 #view-manager .mgr-sub-milestones li:last-child {
   border-bottom: none;
@@ -433,7 +433,7 @@
   background: var(--bg);
   color: var(--text);
   font: inherit;
-  font-size: 13px;
+  font-size: var(--font-size-14);
 }
 #view-manager .mgr-sub-table-wrap {
   overflow-x: auto;
@@ -441,13 +441,13 @@
 #view-manager .mgr-sub-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 13px;
+  font-size: var(--font-size-14);
 }
 #view-manager .mgr-sub-table th {
   padding: 10px 12px;
   background: var(--fill-1);
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: var(--font-size-12);
   font-weight: 500;
   text-align: left;
   white-space: nowrap;
@@ -472,7 +472,7 @@
 #view-manager .mgr-sub-mono {
   color: var(--text-secondary);
   font-family: Monaco, Menlo, monospace;
-  font-size: 12px;
+  font-size: var(--font-size-12);
 }
 #view-manager .mgr-sub-ops {
   display: flex;
@@ -484,7 +484,7 @@
 #view-manager .mgr-sub-pager {
   padding-top: 12px;
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: var(--font-size-12);
   text-align: right;
 }
 #view-manager .mgr-sub-empty {
@@ -494,7 +494,7 @@
   gap: 8px;
   padding: 56px 16px;
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: var(--font-size-14);
   text-align: center;
 }
 #view-manager .mgr-sub-empty svg {
@@ -521,7 +521,7 @@
   background: var(--bg);
   color: var(--text);
   font: inherit;
-  font-size: 14px;
+  font-size: var(--font-size-14);
 }
 #view-manager .mgr-sub-half {
   max-width: calc(50% - 8px);
@@ -543,7 +543,7 @@
   background: var(--tag-bg);
   color: var(--text);
   font: inherit;
-  font-size: 13px;
+  font-size: var(--font-size-14);
   cursor: pointer;
   transition:
     background 0.15s,
@@ -592,7 +592,7 @@
   border-radius: 12px;
   background: var(--bg);
   color: var(--text);
-  font-size: 14px;
+  font-size: var(--font-size-14);
 }
 #view-manager .mgr-blk-row .mgr-pg-name {
   flex: 0 1 auto;
@@ -616,7 +616,7 @@
   border: 1px solid var(--border-hover);
   border-radius: 50%;
   color: var(--text-secondary);
-  font-size: 11px;
+  font-size: var(--font-size-12);
   font-variant-numeric: tabular-nums;
 }
 #view-manager .mgr-pg-tag {
@@ -653,12 +653,12 @@
 }
 #view-manager .mgr-blk-presets-label {
   color: var(--text);
-  font-size: 14px;
+  font-size: var(--font-size-14);
   font-weight: 500;
 }
 #view-manager .mgr-blk-presets-hint {
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: var(--font-size-12);
 }
 #view-manager .mgr-blk-preset-chips {
   flex-basis: 100%;
@@ -687,7 +687,7 @@
 #view-manager .mgr-blk-menu-title {
   padding: 6px 10px;
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: var(--font-size-12);
 }
 #view-manager .mgr-blk-menu-item {
   display: flex;
@@ -701,7 +701,7 @@
   background: none;
   color: var(--text);
   font: inherit;
-  font-size: 14px;
+  font-size: var(--font-size-14);
   text-align: left;
   cursor: pointer;
 }
@@ -722,13 +722,13 @@
 }
 #view-manager .mgr-blk-menu-item small {
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: var(--font-size-12);
 }
 #view-manager .mgr-blk-menu-empty {
   margin: 0;
   padding: 8px 10px;
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: var(--font-size-14);
 }
 
 /* 新建空间 · 智能体团队 */
@@ -751,7 +751,7 @@
   background: none;
   color: var(--brand);
   font: inherit;
-  font-size: 13px;
+  font-size: var(--font-size-14);
   cursor: pointer;
 }
 .mgr-scope .mgr-pe-team-add:hover {
@@ -776,7 +776,7 @@
   background: none;
   color: var(--text);
   font: inherit;
-  font-size: 14px;
+  font-size: var(--font-size-14);
   text-align: left;
   cursor: pointer;
 }
@@ -800,7 +800,7 @@
 .mgr-scope .mgr-mp-agent-hint {
   margin: 0;
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: var(--font-size-12);
 }
 .mgr-scope img.mgr-mp-avatar {
   object-fit: cover;
@@ -811,7 +811,7 @@
 .mgr-scope .mgr-agent-pick-source {
   margin: 12px 0 4px;
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: var(--font-size-12);
 }
 .mgr-scope .mgr-agent-pick-row {
   align-items: flex-start;
@@ -828,7 +828,7 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 1;
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: var(--font-size-12);
 }
 
 /* 小灵 */
@@ -865,7 +865,7 @@
   background: var(--bg);
   box-shadow: var(--pill-shadow);
   color: var(--text-title);
-  font-size: 14px;
+  font-size: var(--font-size-14);
   font-weight: 500;
 }
 #view-manager .mgr-xl-avatar {
@@ -876,7 +876,7 @@
   border-radius: 50%;
   background: var(--brand-fill);
   color: var(--brand);
-  font-size: 13px;
+  font-size: var(--font-size-14);
   font-weight: 600;
 }
 #view-manager .mgr-xl-thread {
@@ -892,7 +892,7 @@
   padding: 10px 16px;
   border-radius: 12px;
   color: var(--text);
-  font-size: 14px;
+  font-size: var(--font-size-14);
   line-height: 1.7;
 }
 #view-manager .mgr-xl-msg p {
@@ -935,7 +935,7 @@
   gap: 8px;
   margin-top: 8px;
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: var(--font-size-14);
 }
 
 /* AI 组织 */
@@ -958,22 +958,22 @@
 }
 #view-manager .mgr-org-stat-label {
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: var(--font-size-14);
 }
 #view-manager .mgr-org-stat strong {
   color: var(--text-title);
-  font-size: 20px;
+  font-size: var(--font-size-20);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 #view-manager .mgr-org-stat small {
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: var(--font-size-12);
 }
 #view-manager .mgr-org-title {
   margin: 0;
   color: var(--text-title);
-  font-size: 16px;
+  font-size: var(--font-size-16);
   font-weight: 600;
 }
 #view-manager .mgr-org-create {
@@ -986,7 +986,7 @@
   background: none;
   color: var(--brand);
   font: inherit;
-  font-size: 14px;
+  font-size: var(--font-size-14);
   cursor: pointer;
 }
 #view-manager .mgr-org-create:hover {
@@ -1032,7 +1032,7 @@
   border-radius: 50%;
   background: var(--brand-fill);
   color: var(--brand);
-  font-size: 16px;
+  font-size: var(--font-size-16);
   font-weight: 600;
 }
 #view-manager .mgr-org-card-title {
@@ -1041,7 +1041,7 @@
 }
 #view-manager .mgr-org-card-title span {
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: var(--font-size-12);
 }
 #view-manager .mgr-org-card-stats {
   display: grid;
@@ -1055,11 +1055,11 @@
 }
 #view-manager .mgr-org-card-stats strong {
   color: var(--text-title);
-  font-size: 20px;
+  font-size: var(--font-size-20);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 #view-manager .mgr-org-card-stats span {
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: var(--font-size-12);
 }

@@ -28,7 +28,7 @@
   flex-shrink: 0;
 }
 #view-manager .mgr-taskpanel-title {
-  font-size: 15px;
+  font-size: var(--font-size-16);
   font-weight: 600;
   color: var(--text);
 }
@@ -40,13 +40,13 @@
 }
 #view-manager .mgr-tp-code {
   color: var(--text-label);
-  font-size: 12px;
+  font-size: var(--font-size-12);
   font-variant-numeric: tabular-nums;
 }
 #view-manager .mgr-tp-title {
   margin: 0 0 14px;
   color: var(--text);
-  font-size: 16px;
+  font-size: var(--font-size-16);
   font-weight: 650;
   line-height: 24px;
 }
@@ -56,7 +56,7 @@
   gap: 8px;
   margin: 16px 0 10px;
   color: var(--text);
-  font-size: 13.5px;
+  font-size: var(--font-size-14);
   font-weight: 600;
 }
 #view-manager .mgr-sec-title i {
@@ -67,7 +67,7 @@
 }
 #view-manager .mgr-sec-count {
   color: var(--text-label);
-  font-size: 11.5px;
+  font-size: var(--font-size-12);
   font-weight: 400;
   font-variant-numeric: tabular-nums;
 }
@@ -87,7 +87,7 @@
 }
 #view-manager .mgr-tp-kv-item .mgr-detail-value {
   color: var(--text-secondary);
-  font-size: 12.5px;
+  font-size: var(--font-size-14);
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -96,7 +96,7 @@
 #view-manager .mgr-tp-desc {
   margin: 0;
   color: var(--text-secondary);
-  font-size: 12.5px;
+  font-size: var(--font-size-14);
   line-height: 1.8;
   white-space: pre-wrap;
 }
@@ -111,7 +111,7 @@
   gap: 10px;
   padding: 6px 0;
   border-bottom: 1px dashed var(--divider);
-  font-size: 12.5px;
+  font-size: var(--font-size-14);
 }
 #view-manager .mgr-tp-event:last-child {
   border-bottom: none;
@@ -124,7 +124,7 @@
 #view-manager .mgr-tp-event-time {
   flex: none;
   color: var(--text-label);
-  font-size: 11.5px;
+  font-size: var(--font-size-12);
   font-variant-numeric: tabular-nums;
 }
 #view-manager .mgr-tp-foot {
@@ -153,7 +153,7 @@
   background: var(--bg);
   color: var(--text);
   font: inherit;
-  font-size: 13px;
+  font-size: var(--font-size-14);
   cursor: pointer;
   text-align: left;
   transition:
@@ -195,10 +195,9 @@
   background: var(--bg);
   color: var(--text-secondary);
   font: inherit;
-  font-size: 14px;
+  font-size:var(--font-size-14);
   letter-spacing: 1px;
-  cursor: pointer;
-}
+  cursor: pointer;font-weight:400;line-height:var(--line-height-14);}
 #view-manager .mgr-tp-more-btn:hover {
   background: var(--hover);
   color: var(--text);
@@ -227,11 +226,10 @@
   background: none;
   text-align: left;
   font: inherit;
-  font-size: 12.5px;
+  font-size:var(--font-size-14);
   color: var(--text);
   cursor: pointer;
-  border-radius: 7px;
-}
+  border-radius: 7px;font-weight:400;line-height:var(--line-height-14);}
 #view-manager .mgr-tp-more-menu button:hover {
   background: var(--hover);
 }
@@ -250,7 +248,7 @@
 }
 #view-manager .mgr-task-stage-sessions .mgr-tp-session {
   padding: 8px 12px;
-  font-size: 12.5px;
+  font-size: var(--font-size-14);
   border-radius: 10px;
 }
 .mgr-scope .mgr-projedit-modal {
@@ -272,7 +270,7 @@
   flex-shrink: 0;
 }
 .mgr-scope .mgr-projedit-title {
-  font-size: 15px;
+  font-size: var(--font-size-16);
   font-weight: 600;
   color: var(--text);
 }
@@ -327,7 +325,7 @@
   display: block;
   margin-bottom: 6px;
   color: var(--text);
-  font-size: 12.5px;
+  font-size: var(--font-size-14);
   font-weight: 600;
 }
 .mgr-scope .mgr-pe-field > label b {
@@ -339,7 +337,7 @@
   color: var(--text-soft);
   font-weight: 400;
   margin-left: 6px;
-  font-size: 11.5px;
+  font-size: var(--font-size-12);
 }
 .mgr-scope .mgr-pe-field input[type="text"],
 .mgr-scope .mgr-pe-field input[type="date"],
@@ -355,7 +353,7 @@
   background: var(--bg);
   color: var(--text);
   font: inherit;
-  font-size: 12.5px;
+  font-size: var(--font-size-14);
 }
 .mgr-scope .mgr-pe-field textarea {
   height: auto;
@@ -372,12 +370,12 @@
 .mgr-scope .mgr-pe-error {
   margin: 6px 0 0;
   color: var(--danger);
-  font-size: 11.5px;
+  font-size: var(--font-size-12);
 }
 .mgr-scope .mgr-pe-owner-empty {
   padding: 10px;
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: var(--font-size-12);
   text-align: center;
 }
 .mgr-scope .mgr-pe-tpl-chips {
@@ -392,7 +390,7 @@
   background: var(--bg);
   color: var(--text);
   font: inherit;
-  font-size: 13px;
+  font-size: var(--font-size-14);
   cursor: pointer;
 }
 .mgr-scope .mgr-pe-tpl:hover {
@@ -438,7 +436,7 @@
   padding: 0 2px 8px;
   color: var(--text-secondary);
   font: inherit;
-  font-size: 13px;
+  font-size: var(--font-size-14);
   cursor: pointer;
   border-bottom: 2px solid transparent;
   margin-bottom: -1px;
@@ -457,7 +455,7 @@
 }
 .mgr-scope .mgr-pe-field > label {
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: var(--font-size-14);
   font-weight: 500;
 }
 .mgr-scope .mgr-pe-field input[type="text"]:focus-visible,

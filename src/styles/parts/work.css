@@ -34,7 +34,7 @@
   background: none;
   color: var(--text-secondary);
   font: inherit;
-  font-size: 12px;
+  font-size: var(--font-size-12);
   cursor: pointer;
 }
 #workNav .work-hist-tab:hover {
@@ -96,7 +96,7 @@
   background: var(--bg);
   color: var(--text);
   font: inherit;
-  font-size: 12.5px;
+  font-size: var(--font-size-14);
 }
 #workNav .work-hist-searchrow input:focus {
   outline: none;
@@ -105,7 +105,7 @@
 #workNav .work-hist-group {
   margin: 6px 0 2px 12px;
   color: var(--text-soft);
-  font-size: 11px;
+  font-size: var(--font-size-12);
 }
 #workNav .work-hist-item {
   display: block;
@@ -117,7 +117,7 @@
   background: none;
   color: var(--text);
   font: inherit;
-  font-size: 13px;
+  font-size: var(--font-size-14);
   text-align: left;
   white-space: nowrap;
   overflow: hidden;
@@ -130,7 +130,7 @@
 #workNav .work-hist-empty {
   padding: 18px 12px;
   color: var(--text-soft);
-  font-size: 12px;
+  font-size: var(--font-size-12);
   text-align: center;
 }
 
@@ -161,7 +161,7 @@
   margin: 0 0 28px;
   color: var(--text);
   font-family: "Songti SC", "Noto Serif SC", "Source Han Serif SC", STSong, serif;
-  font-size: 44px;
+  font-size: var(--font-size-48);
   font-weight: 600;
   letter-spacing: 1px;
   text-align: center;
@@ -186,7 +186,7 @@
   background: none;
   color: var(--text-secondary);
   font: inherit;
-  font-size: 14px;
+  font-size: var(--font-size-14);
   cursor: pointer;
   white-space: nowrap;
   transition: background 0.15s, color 0.15s;
@@ -236,7 +236,7 @@
   background: none;
   color: var(--text);
   font: inherit;
-  font-size: 15px;
+  font-size: var(--font-size-16);
   line-height: 1.6;
   resize: none;
 }
@@ -315,10 +315,9 @@
   background: none;
   color: var(--text);
   font: inherit;
-  font-size: 13px;
+  font-size:var(--font-size-14);
   cursor: pointer;
-  white-space: nowrap;
-}
+  white-space: nowrap;font-weight:400;line-height:var(--line-height-14);}
 #view-work .work-dd-btn:hover,
 #view-work .work-dd-btn[aria-expanded="true"] {
   background: var(--hover);
@@ -367,13 +366,13 @@
   background: none;
   color: var(--text);
   font: inherit;
-  font-size: 13px;
+  font-size: var(--font-size-14);
   text-align: left;
   cursor: pointer;
 }
 #view-work .work-dd-opt small {
   color: var(--text-soft);
-  font-size: 11.5px;
+  font-size: var(--font-size-12);
 }
 #view-work .work-dd-opt:hover {
   background: var(--hover);
@@ -407,7 +406,7 @@
   background: var(--bg);
   color: var(--text);
   font: inherit;
-  font-size: 13px;
+  font-size: var(--font-size-14);
   cursor: pointer;
   box-shadow: var(--pill-shadow);
 }
@@ -417,7 +416,7 @@
 }
 @media (max-width: 720px) {
   #view-work .work-hero {
-    font-size: 32px;
+    font-size: var(--font-size-32);
   }
   #view-work .work-stage {
     padding: 32px 16px 48px;

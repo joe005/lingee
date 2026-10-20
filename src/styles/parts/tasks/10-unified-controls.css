@@ -23,11 +23,11 @@
 .niu-create .niu-custom-select-source{display:none}
 .niu-create .niu-select-trigger>span:first-child{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .niu-person-popup{box-sizing:border-box;border:1px solid var(--border);border-radius:12px;background:var(--bg);box-shadow:var(--menu-shadow);padding:4px;color:var(--text)}
-.niu-person-popup input{height:36px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:14px}
+.niu-person-popup input{height:36px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:var(--font-size-14)}
 .niu-person-popup input::placeholder{color:var(--text-soft);opacity:1}
 .niu-person-popup input:hover{border-color:var(--border-hover)}
 .niu-person-popup input:focus{border-color:var(--border-focus);outline:none;box-shadow:none}
-.niu-person-popup button{min-height:32px;padding:8px 12px;gap:8px;border-radius:8px;color:var(--text);font-size:14px;font-weight:400}
+.niu-person-popup button{min-height:32px;padding:8px 12px;gap:8px;border-radius:8px;color:var(--text);font-size:var(--font-size-14);font-weight:400;line-height:var(--line-height-14);}
 .niu-person-popup button:hover{background:var(--hover);color:var(--text)}
 .niu-person-popup button[aria-selected=true]{background:var(--brand-fill)}
 .niu-person-popup button:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}
@@ -48,16 +48,16 @@
 /* 任务表单与属性菜单的统一规格。 */
 .niu-plan .niu-select-caret,.niu-stage-owner .niu-select-caret{width:14px;height:14px;flex:none;color:var(--text-secondary)}
 .niu-create-stage-table select.niu-custom-select-source,.niu-plan select.niu-custom-select-source{display:none}
-.niu-create-stage-table .niu-select-trigger,.niu-create-stage-table .niu-stage-owner{display:flex;align-items:center;justify-content:space-between;box-sizing:border-box;width:100%;min-width:0;height:32px;min-height:32px;padding:4px 8px;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--text);font-size:13px;font-weight:400}
+.niu-create-stage-table .niu-select-trigger,.niu-create-stage-table .niu-stage-owner{display:flex;align-items:center;justify-content:space-between;box-sizing:border-box;width:100%;min-width:0;height:32px;min-height:32px;padding:4px 8px;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--text);font-size:var(--font-size-14);font-weight:400}
 .niu-create-stage-table .niu-select-trigger:hover,.niu-create-stage-table .niu-stage-owner:hover{border-color:var(--border-hover);background:var(--hover)}
 .niu-plan .niu-select-trigger>span:first-child{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.niu-plan .niu-select-trigger{font-size:13px}
+.niu-plan .niu-select-trigger{font-size:var(--font-size-14)}
 .niu-select-trigger:disabled,.niu-stage-owner:disabled{opacity:.5;cursor:not-allowed}
 .niu-create-stage-table .niu-select-trigger:focus-visible,.niu-create-stage-table .niu-stage-owner:focus-visible,.niu-plan .niu-select-trigger:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 td.niu-plan-empty{color:var(--text-secondary)}
-.niu-stage-inline-field>span,.niu-stage-fields label>span,.niu-stage-label,.niu-stage-choice button,.niu-stage-continuous{font-size:12px}
+.niu-stage-inline-field>span,.niu-stage-fields label>span,.niu-stage-label,.niu-stage-choice button,.niu-stage-continuous{font-size:var(--font-size-14);font-weight:400;line-height:var(--line-height-14);}
 .tk-prop-menu{border-radius:12px}
-.tk-prop-menu-item{box-sizing:border-box;min-height:32px;padding:8px 12px;border-radius:8px;font-size:14px;line-height:1.4}
+.tk-prop-menu-item{box-sizing:border-box;min-height:32px;padding:8px 12px;border-radius:8px;font-size:var(--font-size-14);line-height:1.4}
 .niu-create .niu-create-writing .niu-field :is(input,textarea):focus,.niu-create .niu-create-properties .niu-field :is(select,.niu-person-trigger):focus,.niu-smart-fields .niu-field :is(select,textarea):focus{border-color:var(--border-focus);box-shadow:none}
 .niu-create .niu-create-writing .niu-field :is(input,textarea):focus-visible,.niu-create .niu-create-properties .niu-person-trigger:focus-visible,.niu-person-popup input:focus-visible,.niu-plan .niu-person-trigger:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 .niu-create .niu-create-writing .niu-field .niu-invalid:focus,.niu-create .niu-create-properties .niu-field .niu-invalid:focus{border-color:var(--danger);box-shadow:0 0 0 2px var(--danger-bg)}
@@ -76,7 +76,7 @@ td.niu-plan-empty{color:var(--text-secondary)}
 .niu-create .niu-create-properties .niu-field .niu-invalid:focus,
 .niu-create .niu-create-properties .niu-field .niu-invalid:focus-visible{border-color:var(--danger);outline:none;box-shadow:none}
 
-.tk-card-status{display:inline-flex;align-items:center;flex:none;padding:2px 8px;border-radius:4px;background:var(--fill-1);color:var(--text-secondary);font-size:12px;line-height:1.4}
+.tk-card-status{display:inline-flex;align-items:center;flex:none;padding:2px 8px;border-radius:4px;background:var(--fill-1);color:var(--text-secondary);font-size:var(--font-size-12);line-height:1.4}
 .tk-card-status[data-kind=review]{background:var(--warning-bg);color:var(--warning)}
 .tk-card-status[data-kind=question]{background:var(--brand-fill);color:var(--brand)}
 .tk-card-status[data-kind=blocked]{background:var(--danger-bg);color:var(--danger)}
@@ -114,5 +114,11 @@ td.niu-plan-empty{color:var(--text-secondary)}
 .tk-space-popup:not([hidden]){display:flex;flex-direction:column;width:280px;max-height:360px;overflow:hidden}
 .tk-space-popup>input{flex:none;margin-bottom:4px}
 #tkSpaceOptions{flex:1;min-height:0;overflow-y:auto}
-.tk-space-popup button small{flex:none;font-size:12px;color:var(--text-secondary)}
+.tk-space-popup button small{flex:none;font-size:var(--font-size-14);color:var(--text-secondary);font-weight:400;line-height:var(--line-height-14);}
 .tk-space-popup button b{width:14px;text-align:center}
+
+/* 协作开发窄窗口：状态页签随工具栏换行，不裁掉已完成入口。 */
+@media(max-width:960px){
+  #cv-tasks-current #view-tasks:not(.tk-project-list-mode) .tk-toolbar .tk-view-tabs{max-width:100%;height:auto;flex-wrap:wrap;box-sizing:border-box}
+  #cv-tasks-current #view-tasks:not(.tk-project-list-mode) .tk-view-tabs .list-page-tab{flex:none;white-space:nowrap}
+}

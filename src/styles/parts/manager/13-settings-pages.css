@@ -13,7 +13,7 @@
   min-height: 56px;
   border-bottom: 1px solid var(--divider);
   color: var(--text);
-  font-size: 14px;
+  font-size: var(--font-size-14);
 }
 #view-manager .mgr-pg-name {
   display: flex;
@@ -30,7 +30,7 @@
   border-radius: 4px;
   background: var(--tag-bg);
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: var(--font-size-12);
   line-height: 20px;
 }
 #view-manager .mgr-pg-btn {
@@ -99,7 +99,7 @@
   background: var(--bg);
   color: var(--text);
   font: inherit;
-  font-size: 14px;
+  font-size: var(--font-size-14);
   transition: border-color 0.15s;
 }
 #view-manager .mgr-pg-input::placeholder {
@@ -119,8 +119,7 @@
   height: var(--control-h);
   padding: 0 16px;
   border-radius: 10px;
-  font-size: 14px;
-}
+  font-size:var(--font-size-14);font-weight:400;line-height:var(--line-height-14);}
 #view-manager .mgr-pg-hint {
   margin-top: 12px;
 }
