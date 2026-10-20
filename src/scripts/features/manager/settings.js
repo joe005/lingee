@@ -20,7 +20,7 @@ var BLOCK_PRESETS = [
   { id: 'exec', name: '高管会议', pages: ['plan', 'feed'], extra: [{ kind: 'kb', name: '会议纪要', source: '会议纪要' }] },
   { id: 'budget', name: '预算目标', pages: ['plan', 'feed'] },
   { id: 'talent', name: '人才布局', pages: ['plan', 'feed'] },
-  { id: 'devtest', name: '测试研发项目模版', pages: ['rd', 'feed'] },
+  { id: 'devtest', name: '协作开发', pages: ['rd', 'feed'] },
 ];
 var MCP_APPS = ['金蝶云苍穹 MCP', '设备巡检维修 MCP', '企业微信 MCP'];
 

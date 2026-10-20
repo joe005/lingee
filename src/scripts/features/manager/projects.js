@@ -18,13 +18,13 @@ import { mgrEsc } from './utils.js';
 var openProjectId = null;
 var onRouteChange = function () {};
 
-/* 新建空间模板：通用模板填目标 / 空间指令和智能体团队；「测试研发项目模版」是开发空间，填空间目标（预填）与 Git 地址 */
+/* 新建空间模板：通用模板填目标 / 空间指令和智能体团队；「协作开发」是开发空间，填空间目标（预填）与 Git 地址 */
 var TEMPLATES = [
   { id: 'blank', name: '空白', goal: '' },
   { id: 'exec', name: '高管会议', goal: '围绕高管会议组织议题收集、材料准备与决议跟进' },
   { id: 'budget', name: '预算目标', goal: '围绕年度预算目标拆解编制任务，按里程碑推进并沉淀编制产物' },
   { id: 'talent', name: '人才布局', goal: '盘点关键岗位与人才梯队，形成招聘与培养计划' },
-  { id: 'devtest', name: '测试研发项目模版', goal: '完成研发项目的需求交付与上线', dev: true },
+  { id: 'devtest', name: '协作开发', goal: '完成研发项目的需求交付与上线', dev: true },
 ];
 var pickedTemplate = 'blank';
 var pickedTeams = [];         /* 新建空间时添加的智能体团队 ID */
