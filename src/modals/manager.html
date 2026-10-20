@@ -1,6 +1,6 @@
 <!-- 管理板块弹窗容器（.mgr-scope 提供弹窗内的按钮与标签样式） -->
 <div class="mgr-scope" id="mgrModals">
-<!-- 管理 · 新建空间弹窗（对齐产品）：模板为空白、高管会议、预算目标、人才布局、协作开发。
+<!-- 管理 · 新建空间弹窗（对齐产品）：模板为空白、管理例会、预算目标、人才布局、协作开发。
      通用模板填空间名称、目标 / 空间指令和智能体团队；协作开发改为空间目标（预填）与 Git 地址 + 基准分支。
      负责人默认当前登录用户；成员在空间详情「邀请成员」里添加。
      顶层沿用 .sync-overlay（display:none→flex），ESC 关闭命中 main.js 既有选择器。 -->
@@ -27,8 +27,8 @@
             <button type="button" class="mgr-pe-subtab active" data-mgr-pe-subtab="goal" role="tab" aria-selected="true">目标</button>
             <button type="button" class="mgr-pe-subtab" data-mgr-pe-subtab="instruction" role="tab" aria-selected="false">空间指令</button>
           </div>
-          <textarea id="mgrPeGoal" rows="3" maxlength="300"></textarea>
-          <textarea id="mgrPeInstruction" rows="3" maxlength="300" placeholder="空间内所有对话共同遵循的全局指令" hidden></textarea>
+          <textarea id="mgrPeGoal" aria-label="空间目标" rows="3" maxlength="300"></textarea>
+          <textarea id="mgrPeInstruction" aria-label="空间指令" rows="3" maxlength="300" placeholder="空间内所有对话共同遵循的全局指令" hidden></textarea>
         </div>
         <div class="mgr-pe-field" id="mgrPeTeamField">
           <div class="mgr-pe-team-head">
@@ -161,9 +161,9 @@
 <!-- 管理 · 空间设置：代码仓库与基准分支 -->
 <div class="sync-overlay mgr-modal" id="mgrProjRepoOverlay" style="display:none" aria-hidden="true">
   <div class="sync-modal mgr-pm-remove-modal mgr-rename-modal mgr-repo-modal" role="dialog" aria-modal="true" aria-labelledby="mgrProjRepoTitle" tabindex="-1">
-    <div class="sync-modal__header"><div class="sync-modal__title" id="mgrProjRepoTitle">代码仓库</div></div>
+    <div class="sync-modal__header"><div class="sync-modal__title" id="mgrProjRepoTitle">研发协作设置</div><button type="button" class="sync-modal__close" data-mgr-repo-cancel aria-label="关闭研发协作设置"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
     <div class="sync-modal__body">
-      <label class="mgr-rename-label" for="mgrRepoUrl">Git 地址与基准分支 <b aria-hidden="true" id="mgrRepoUrlRequired">*</b></label>
+      <label class="mgr-rename-label" for="mgrRepoUrl">Git 地址 <b aria-hidden="true" id="mgrRepoUrlRequired">*</b></label>
       <div class="mgr-repo-row">
         <input type="text" id="mgrRepoUrl" class="mgr-rename-input" inputmode="url" placeholder="https://github.com/org/repo" autocomplete="off">
         <label class="mgr-repo-branch"><svg class="mgr-repo-branch-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="8" r="2"/><path d="M6 7v10"/><path d="M18 10c0 4-6 3-12 7"/></svg><select id="mgrRepoBase" aria-label="基准分支">
@@ -174,10 +174,10 @@
           </select></label>
         <input type="text" id="mgrRepoBaseCustom" class="mgr-rename-input mgr-repo-branch-custom" placeholder="分支名，如 release/2026" aria-label="自定义基准分支" autocomplete="off" hidden>
       </div>
-      <p class="mgr-repo-hint">任务从基准分支拉取开发分支，审核通过后合并回基准分支；修改后，尚未合并的任务分支按新的基准分支合并。</p>
+
       <p class="mgr-rename-error" id="mgrRepoError" hidden></p>
     </div>
-    <div class="sync-modal__footer"><button type="button" class="sync-modal__btn sync-modal__btn--ghost" data-mgr-repo-cancel>取消</button><button type="button" class="sync-modal__btn sync-modal__btn--primary" data-mgr-repo-confirm>保存</button></div>
+    <div class="sync-modal__footer"><button type="button" class="sync-modal__btn sync-modal__btn--ghost" data-mgr-repo-cancel>取消</button><button type="button" class="sync-modal__btn sync-modal__btn--primary" data-mgr-repo-confirm>确定</button></div>
   </div>
 </div>
 <!-- 管理 · 邀请成员：勾选灵基人员并指定本次加入的空间内角色（空间管理员 / 成员）；人员数据与开发板块共用 -->

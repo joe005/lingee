@@ -21,6 +21,7 @@ var INTRO = [
 ];
 var thread = INTRO.slice();
 var sideOpen = false;
+var assistantEnabled = false;
 
 var DEPARTMENTS = [
   { name: 'AI 财务部', owner: '吴宏超', desc: '费用审核、银企对账、回款催收与资金监控的日常自动化运营', agents: 10 },
@@ -50,6 +51,8 @@ function sideHtml() {
     '<div class="mgr-rail-card"><button type="button" class="mgr-rail-head" data-mgr-xl-card="态势"><span class="mgr-rail-title">态势</span>' + chevron + '</button></div>';
 }
 function renderAssistant() {
+  $('#mgrXlWelcome').hidden = assistantEnabled;
+  $('#mgrXlConversation').hidden = !assistantEnabled;
   $('#mgrXlThread').innerHTML = thread.map(messageHtml).join('');
   var side = $('#mgrXlSide');
   side.hidden = !sideOpen;
@@ -95,6 +98,7 @@ export function initManagerAssistant() {
   if (xl) {
     xl.addEventListener('click', function (e) {
       var t = e.target;
+      if (t.closest('#mgrXlEnable')) { assistantEnabled = true; renderAssistant(); $('#mgrXlInput').focus(); return; }
       if (t.closest('#mgrXlPanelToggle')) { sideOpen = !sideOpen; renderAssistant(); return; }
       if (t.closest('#mgrXlSend')) { send(); return; }
       if (t.closest('[data-mgr-xl-attach]')) { toast('添加附件（演示）'); return; }

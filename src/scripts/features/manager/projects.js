@@ -21,7 +21,7 @@ var onRouteChange = function () {};
 /* 新建空间模板：通用模板填目标 / 空间指令和智能体团队；「协作开发」是开发空间，填空间目标（预填）与 Git 地址 */
 var TEMPLATES = [
   { id: 'blank', name: '空白', goal: '' },
-  { id: 'exec', name: '高管会议', goal: '围绕高管会议组织议题收集、材料准备与决议跟进' },
+  { id: 'exec', name: '管理例会', goal: '围绕高管会议组织议题收集、材料准备与决议跟进' },
   { id: 'budget', name: '预算目标', goal: '围绕年度预算目标拆解编制任务，按里程碑推进并沉淀编制产物' },
   { id: 'talent', name: '人才布局', goal: '盘点关键岗位与人才梯队，形成招聘与培养计划' },
   { id: 'devtest', name: '协作开发', goal: '完成研发项目的需求交付与上线', dev: true },
@@ -38,7 +38,7 @@ function ownerAvatar(name) {
 function cardHtml(p) {
   return '<div class="mgr-mcard" data-mgr-project="' + mgrEsc(p.id) + '" role="button" tabindex="0" aria-label="进入空间：' + mgrEsc(p.name) + '">' +
     '<h3 class="mgr-mcard-title">' + mgrEsc(p.name) + '</h3>' +
-    '<p class="mgr-mcard-desc">' + mgrEsc(p.goal || p.desc || '') + '</p>' +
+    '<p class="mgr-mcard-desc">' + mgrEsc((p.goal || p.desc || '').replace(/\*\*([^*]+)\*\*/g, '$1').replace(/^#{1,6}\s+/gm, '').trim()) + '</p>' +
     '<div class="mgr-mcard-foot"><span class="mgr-mcard-owner">' + ownerAvatar(p.owner) + '<span>' + mgrEsc(p.owner || '未指定') + '</span></span></div></div>';
 }
 /* 空间首页暂时只展示开发类空间（含研发任务）；非开发类的预置演示空间不出现，但用户自己新建的空间（含空白类）都要显示，否则创建后看不到 */
@@ -141,7 +141,7 @@ function syncKind(showGoal) {
   tabs.classList.toggle('mgr-pe-subtabs--plain', dev);
   tabs.setAttribute('role', dev ? 'group' : 'tablist');
   $('#mgrPeGoal').hidden = !showGoal;
-  $('#mgrPeGoal').placeholder = dev ? '' : '为什么建立这个空间，需要达成什么经营结果';
+  $('#mgrPeGoal').placeholder = '为什么建立这个空间，需要达成什么经营结果';
   $('#mgrPeInstruction').hidden = showGoal;
   document.querySelectorAll('[data-mgr-pe-subtab]').forEach(function (b) {
     var isGoal = b.getAttribute('data-mgr-pe-subtab') === 'goal';
@@ -462,6 +462,7 @@ function openRepoSettings(trigger) {
   var overlay = $('#mgrProjRepoOverlay');
   overlay.style.display = 'flex';
   overlay.setAttribute('aria-hidden', 'false');
+  initSelectDropdowns([$('#mgrRepoBase')]);
   $('#mgrRepoUrl').focus();
 }
 function closeRepoSettings(restoreFocus) {
@@ -552,6 +553,7 @@ export function initManagerProjects(routeChanged) {
       return;
     }
     if (!t.closest('.mgr-ask-space')) toggleAskSpaces(false);
+    if (t.closest('[data-mgr-ask-voice]')) { toast('语音输入暂未接入，请输入任务描述'); return; }
     if (t.closest('[data-mgr-ask-expert]')) { toast('选择专家（演示）：默认由灵基按任务内容匹配'); return; }
     if (t.closest('#mgrListAskSend')) {
       var picked = askSpaceId ? mgrProjectById(askSpaceId) : null;

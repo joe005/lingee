@@ -1,1 +1,1 @@
-export default {"id":"103","date":"2026-10-20","iconBg":"var(--brand-fill)","iconColor":"var(--brand)","type":"优化","module":"界面与通知","author":"wuhc2023","body":"优化·界面与通知：统一全站字体刻度与弹窗排版，恢复工作及待办页面，落实开发首页样式，完善消息通知卡片与已读、忽略操作，并修复窄窗口页签截断。"};
+export default {"id":"103","date":"2026-10-20","iconBg":"var(--brand-fill)","iconColor":"var(--brand)","type":"优化","module":"界面与通知","author":"wuhc2023","body":"优化·界面与通知：统一全站字体与弹窗排版，恢复工作及待办页面，完善消息通知与窄窗口布局，并对齐管理首页、空间列表及详情、新建空间和研发协作设置。"};
