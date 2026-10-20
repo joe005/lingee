@@ -419,10 +419,37 @@
 }
 #view-manager .mgr-sub-filter {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 12px;
+}
+#view-manager .mgr-sub-filter .mgr-pd-search input[type="search"] {
+  appearance: none;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  height: var(--control-h);
+  padding: 0 40px 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--font-size-14);
+  transition: border-color 0.15s;
+}
+#view-manager .mgr-sub-filter .mgr-pd-search input::placeholder {
+  color: var(--text-soft);
+}
+#view-manager .mgr-sub-filter .mgr-pd-search input:hover {
+  border-color: var(--border-hover);
+}
+#view-manager .mgr-sub-filter .mgr-pd-search input:focus-visible {
+  border-color: var(--border-focus);
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
 }
 #view-manager .mgr-sub-filter select {
   height: var(--control-h-sm);
@@ -1178,7 +1205,7 @@
 #mgrProjDetail .mgr-rd-toolbar { padding-top:28px; }
 #mgrProjDetail .mgr-rd-toolbar select { width:120px; }
 #mgrProjDetail .mgr-rd-toolbar .mgr-pd-search { width:280px; }
-#mgrProjDetail>.mgr-pd-ask { position:absolute; bottom:16px; left:50%; transform:translateX(-50%); width:min(560px,calc(100% - 32px)); margin:0; padding:16px; border-radius:24px; box-shadow:var(--menu-shadow); z-index:2; }
+#mgrProjDetail>.mgr-pd-ask { position:static; flex:none; width:min(560px,calc(100% - 32px)); margin:16px auto; padding:16px; border-radius:24px; box-shadow:var(--menu-shadow); z-index:2; }
 #mgrProjDetail>.mgr-pd-ask textarea { min-height:32px; font-size:var(--font-size-14); line-height:var(--line-height-14); }
 #mgrProjDetail>.mgr-pd-ask .mgr-pd-ask-bar { justify-content:flex-end; margin-top:4px; gap:12px; }
 #mgrProjDetail .mgr-pd-ask-send { width:36px; height:36px; border-radius:50%; background:var(--tag-bg); color:var(--text-secondary); }
@@ -1189,8 +1216,138 @@
 #sbFolderButton .sb-library-icon { display:none; }
 .sidebar:has(.sb-scroll.is-manage) #sbFolderButton .sb-folder-icon { display:none; }
 .sidebar:has(.sb-scroll.is-manage) #sbFolderButton .sb-library-icon { display:block; }
-@media(min-width:1101px) { #view-manager #mgrProjDetail .mgr-wrap { padding-bottom:0; } #mgrProjDetail #mgrRdArea { padding-bottom:140px; } }
-@media(max-width:1100px) { #mgrProjDetail>.mgr-pd-ask { position:static; transform:none; margin:16px auto; } }
+@media(min-width:1101px) { #view-manager #mgrProjDetail .mgr-wrap { padding-bottom:0; } }
 #mgrProjDetail .mgr-rd-toolbar>.shared-select-trigger { width:120px; min-width:120px; }
 #mgrProjDetail .mgr-rd-table .mgr-tk-title-text { max-width:100%; }
 #mgrProjDetail .mgr-rd-table .mgr-bar--sm { width:calc(100% - 40px); min-width:32px; max-width:96px; }
+
+/* 知识库：按真实页面截图校准，局部保留描边卡片与描边页签。 */
+#view-manager .mgr-knowledge-page .mgr-sub-tabs {
+  gap: 8px;
+  padding: 0;
+  background: transparent;
+}
+#view-manager .mgr-knowledge-page .mgr-sub-tab {
+  height: var(--control-h);
+  padding: 0 16px;
+  border: 1px solid transparent;
+}
+#view-manager .mgr-knowledge-page .mgr-sub-tab.active {
+  border-color: var(--brand);
+  background: transparent;
+  box-shadow: none;
+  color: var(--brand);
+  font-weight: 500;
+}
+#view-manager .mgr-knowledge-page .mgr-sub-tab:hover {
+  background: var(--brand-fill);
+}
+#view-manager .mgr-knowledge-page .mgr-sub-note {
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border-focus);
+  border-radius: 16px;
+}
+#view-manager .mgr-knowledge-page .mgr-sub-note svg {
+  width: 16px;
+  height: 16px;
+  margin-top: 0;
+  fill: var(--brand);
+  stroke: var(--bg);
+  background: var(--brand);
+  border-radius: 50%;
+}
+#view-manager .mgr-knowledge-page .mgr-sub-card {
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--r-modal);
+  box-shadow: none;
+}
+#view-manager .mgr-knowledge-page .mgr-sub-card-head {
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 16px;
+  border-bottom: 1px solid var(--divider);
+}
+#view-manager .mgr-knowledge-page .mgr-sub-tools .mgr-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: var(--control-h);
+  padding: 0 12px;
+  border: 1px solid var(--border-hover);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: var(--font-size-14);
+}
+#view-manager .mgr-knowledge-page .mgr-sub-tools svg {
+  flex: none;
+  color: var(--text-secondary);
+}
+#view-manager .mgr-knowledge-page .mgr-sub-filter {
+  margin: 0;
+  padding: 12px 16px;
+}
+#view-manager .mgr-knowledge-page .mgr-kb-folder {
+  position: relative;
+  flex: 0 1 280px;
+  min-width: 160px;
+  max-width: 100%;
+}
+#view-manager .mgr-knowledge-page .mgr-kb-folder > svg {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  z-index: 1;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--text-secondary);
+}
+#view-manager .mgr-knowledge-page .mgr-kb-folder select,
+#view-manager .mgr-knowledge-page .mgr-kb-folder .shared-select-trigger {
+  width: 100%;
+  height: var(--control-h);
+  padding-left: 36px;
+  border-radius: 10px;
+}
+#view-manager .mgr-knowledge-page .mgr-pd-search {
+  flex: 0 1 280px;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  margin-left: auto;
+}
+#view-manager .mgr-knowledge-page .mgr-pd-search svg {
+  color: var(--text-secondary);
+}
+#view-manager .mgr-knowledge-page .mgr-sub-table-wrap {
+  border: 1px solid var(--border);
+  border-radius: 16px 16px 0 0;
+}
+#view-manager .mgr-knowledge-page .mgr-sub-table {
+  min-width: 900px;
+}
+#view-manager .mgr-knowledge-page .mgr-sub-table th {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: var(--font-size-14);
+  font-weight: 400;
+}
+#view-manager .mgr-knowledge-page .mgr-sub-table td[colspan] {
+  padding: 0;
+  white-space: normal;
+}
+#view-manager .mgr-knowledge-page .mgr-sub-empty {
+  min-height: 180px;
+  padding: 48px 16px;
+  color: var(--text-secondary);
+  text-align: center;
+}
+@media (prefers-reduced-motion: reduce) {
+  #view-manager .mgr-knowledge-page .mgr-sub-tab,
+  #view-manager .mgr-knowledge-page .mgr-pd-search input {
+    transition: none;
+  }
+}
