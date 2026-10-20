@@ -1,6 +1,14 @@
-<!-- 设置 · 本地环境：我的项目优先，Git 账号用于维护；设置页与任务对话共用登录及准备项目弹窗，内容由 features/collab/local-dev.js 渲染 -->
+<!-- 设置：沿用早期左侧纵向菜单、右侧配置内容；与任务对话共用登录及准备空间弹窗。 -->
 <div class="cv-panel" id="cv-local">
   <div class="scroll">
-    <div class="ld-page" id="ldPage"></div>
+    <div class="ld-settings config-layout">
+      <aside class="config-nav ld-settings-nav" role="tablist" aria-orientation="vertical" aria-label="设置分类">
+        <button type="button" class="config-nav-item on" id="ldSpacesTab" data-ld-settings-tab="spaces" role="tab" aria-selected="true" aria-controls="ldDevelopmentPanel">我的空间</button>
+        <button type="button" class="config-nav-item" id="ldGitTab" data-ld-settings-tab="git" role="tab" aria-selected="false" aria-controls="ldDevelopmentPanel" tabindex="-1">Git 账号</button>
+      </aside>
+      <section class="config-main" id="ldDevelopmentPanel" role="tabpanel" aria-labelledby="ldSpacesTab" tabindex="0">
+        <div class="ld-page" id="ldPage"></div>
+      </section>
+    </div>
   </div>
 </div>

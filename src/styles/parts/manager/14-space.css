@@ -1214,8 +1214,6 @@
 #mgrProjDetail .mgr-ask-voice:hover { background:var(--hover); }
 #mgrProjDetail .mgr-ask-voice:focus-visible { outline:2px solid var(--focus-ring); outline-offset:2px; }
 #sbFolderButton .sb-library-icon { display:none; }
-.sidebar:has(.sb-scroll.is-manage) #sbFolderButton .sb-folder-icon { display:none; }
-.sidebar:has(.sb-scroll.is-manage) #sbFolderButton .sb-library-icon { display:block; }
 @media(min-width:1101px) { #view-manager #mgrProjDetail .mgr-wrap { padding-bottom:0; } }
 #mgrProjDetail .mgr-rd-toolbar>.shared-select-trigger { width:120px; min-width:120px; }
 #mgrProjDetail .mgr-rd-table .mgr-tk-title-text { max-width:100%; }

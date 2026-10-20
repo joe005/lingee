@@ -59,9 +59,12 @@
 .ld-field{margin-bottom:16px}
 .ld-field>label{display:block;margin-bottom:6px;font-size:var(--font-size-14);font-weight:500;color:var(--text)}
 .ld-field>label b{color:var(--danger);font-weight:500}
-.ld-input{box-sizing:border-box;height:36px;padding:0 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);font:inherit;font-size:var(--font-size-14);color:var(--text);outline:none;transition:border-color .15s}
+.ld-input{box-sizing:border-box;height:36px;padding:0 12px;border:1px solid var(--border);border-radius:10px;background:var(--bg);font:inherit;font-size:var(--font-size-14);color:var(--text);outline:none;transition:border-color .15s}
 .ld-input:hover{border-color:var(--border-hover)}
-.ld-input:focus{border-color:var(--border-focus)}
+/* 输入框使用单层主题色边框表示焦点，不再叠加外轮廓或阴影。 */
+.cv-scope .ld-modal .ld-input:is(:focus,:focus-visible){border-color:var(--brand);outline:none;box-shadow:none}
+.cv-scope .ld-modal .ld-input[aria-invalid="true"]{border-color:var(--danger)}
+.ld-input:disabled{background:var(--fill-1);color:var(--text-secondary);cursor:not-allowed}
 .ld-input[aria-invalid="true"]{border-color:var(--danger)}
 .ld-input::placeholder{color:var(--text-soft)}
 .ld-auth-row{display:flex;gap:8px}
@@ -108,40 +111,66 @@
 
 /* 协作开发「设置」页签：与任务、智能体同宽，灰画布上的白卡 */
 #view-collab:has(#cv-local.active){background:var(--canvas-bg)}
-#view-collab #cv-local>.scroll{padding-top:8px;background:transparent}
-.ld-page{display:flex;flex-direction:column;gap:20px;width:calc(100% - 32px);max-width:1160px;margin:0 auto;padding-bottom:24px}
-.ld-page{gap:16px}
-/* 与管理「项目设置」同一套卡片：标题带图标，右上角操作，灰底值框 */
-.ld-set-card{padding:20px 24px;border-radius:var(--r-card);background:var(--bg);box-shadow:var(--card-shadow)}
-.ld-set-head{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:var(--control-h-sm);margin-bottom:12px}
-.ld-set-head h2{display:flex;align-items:center;gap:8px;margin:0;font-size:var(--font-size-16);font-weight:600;color:var(--text-title)}
-.ld-set-head h2 svg{flex:none;color:var(--text)}
-.ld-set-head h2 small{font-size:var(--font-size-12);font-weight:400;color:var(--text-secondary)}
-.ld-set-btn{display:inline-flex;align-items:center;gap:6px;height:var(--control-h-sm);padding:0 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);font:inherit;font-size:var(--font-size-14);font-weight:400;color:var(--text);white-space:nowrap;cursor:pointer;transition:background .15s,border-color .15s;line-height:var(--line-height-14);}
-.ld-set-btn:hover{border-color:var(--border-hover);background:var(--hover)}
+#view-collab #cv-local>.scroll{display:flex;flex-direction:column;min-height:0;padding-top:8px;overflow:hidden;background:transparent}
+/* 沿用早期设置页的左侧纵向菜单与右侧独立滚动结构。 */
+#view-collab #cv-local .ld-settings{display:grid;grid-template-columns:200px minmax(0,1fr);align-items:stretch;flex:1;gap:24px;width:calc(100% - 32px);max-width:1160px;min-height:0;margin:0 auto}
+#cv-local .ld-settings-nav{gap:4px;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--bg)}
+#cv-local .ld-settings-nav .config-nav-item{min-height:var(--control-h);padding:8px 12px;border-radius:8px;font-size:var(--font-size-14);line-height:var(--line-height-14)}
+#cv-local .ld-settings-nav .config-nav-item:hover{background:var(--hover);color:var(--text)}
+#cv-local .ld-settings-nav .config-nav-item.on{background:var(--brand-fill);color:var(--brand);font-weight:500}
+#cv-local .ld-settings-nav .config-nav-item:focus-visible,#ldDevelopmentPanel:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+#cv-local #ldDevelopmentPanel{min-width:0;min-height:0;overflow-y:auto}
+#cv-local .ld-settings .ld-page{width:100%;margin:0}
+@media(max-width:760px){
+  #view-collab #cv-local>.scroll{overflow-y:auto}
+  #view-collab #cv-local .ld-settings{flex:none;grid-template-columns:minmax(0,1fr);gap:12px}
+  #cv-local .ld-settings-nav{padding:8px}
+  #cv-local #ldDevelopmentPanel{overflow:visible}
+  #cv-local .ld-set-head{flex-wrap:wrap}
+  #cv-local .ld-set-head h2{flex-wrap:wrap}
+  #cv-local .ld-set-card{padding:16px}
+  #cv-local .ld-set-head .ld-row-actions{margin-left:auto}
+}
+/* 开发环境沿用灰画布、白卡和轻表格，避免逐行卡片造成重复层级。 */
+.ld-page{display:flex;flex-direction:column;gap:16px;width:calc(100% - 32px);max-width:1160px;margin:0 auto;padding-bottom:24px}
+.ld-set-card{min-width:0;padding:24px;border:0;border-radius:var(--r-card);background:var(--bg);box-shadow:var(--card-shadow)}
+.ld-set-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;min-height:var(--control-h);margin-bottom:16px}
+.ld-set-head h2{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:0;font-size:var(--font-size-16);font-weight:500;line-height:24px;color:var(--text-title)}
+.ld-set-head h2 svg{flex:none;width:20px;height:20px;color:var(--text-secondary)}
+.ld-set-head h2 small{font-size:var(--font-size-12);font-weight:400;line-height:20px;color:var(--text-secondary)}
+.ld-set-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;box-sizing:border-box;height:var(--control-h);padding:0 16px;border:1px solid var(--border);border-radius:10px;background:var(--bg);font:inherit;font-size:var(--font-size-14);font-weight:500;line-height:var(--line-height-14);color:var(--text);white-space:nowrap;cursor:pointer;transition:background .15s,border-color .15s,color .15s}
+.ld-set-btn:hover:not(:disabled){border-color:var(--border-hover);background:var(--hover)}
 .ld-set-btn--primary{border-color:var(--brand);background:var(--brand);color:var(--bg)}
-.ld-set-btn--primary:hover{border-color:var(--brand-hover);background:var(--brand-hover)}
+.ld-set-btn--primary:hover:not(:disabled){border-color:var(--brand-hover);background:var(--brand-hover)}
+.ld-set-btn--primary:active:not(:disabled){border-color:var(--brand-active);background:var(--brand-active)}
+.ld-set-btn svg{flex:none;width:16px;height:16px}
 .ld-set-btn:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
-.ld-set-empty{font-size:var(--font-size-14);color:var(--text-secondary)}
-.ld-list{display:flex;flex-direction:column;gap:8px;margin:0;padding:0;list-style:none}
-/* 与管理「空间设置」一致：白卡里每一行是独立的描边圆角条目 */
-.ld-list li{display:flex;align-items:center;gap:16px;min-height:60px;padding:8px 16px;border:1px solid var(--border);border-radius:12px;transition:background .15s}
+.ld-set-empty{padding:24px 16px;border-radius:12px;background:var(--fill-1);font-size:var(--font-size-14);line-height:24px;color:var(--text-secondary);text-align:center}
+.ld-list{display:flex;flex-direction:column;gap:0;min-width:0;margin:0;padding:0;overflow-x:auto;list-style:none}
+.ld-list li{display:grid;grid-template-columns:minmax(160px,1fr) minmax(200px,1.3fr) 96px 160px;align-items:center;gap:16px;box-sizing:border-box;min-width:704px;min-height:64px;padding:12px 16px;border:0;border-bottom:1px solid var(--divider);border-radius:0;transition:background .15s}
+.ld-list li:last-child{border-bottom:0}
 .ld-list li:not(.ld-list-head):hover{background:var(--fill-1)}
-.ld-list-main{display:flex;flex:1;flex-direction:column;gap:2px;min-width:0}
-.ld-list-main strong{overflow:hidden;font-size:var(--font-size-14);font-weight:500;color:var(--text);text-overflow:ellipsis;white-space:nowrap}
-.ld-list-main span{font-size:var(--font-size-12);color:var(--text-secondary)}
-.ld-list-main .ld-row-problem{overflow:hidden;color:var(--danger);text-overflow:ellipsis;white-space:nowrap}
+.ld-list-main{display:flex;flex:1;flex-direction:column;gap:4px;min-width:0}
+.ld-list-main strong{overflow:hidden;font-size:var(--font-size-14);font-weight:500;line-height:22px;color:var(--text);text-overflow:ellipsis;white-space:nowrap}
+.ld-list-main span{overflow:hidden;font-size:var(--font-size-12);line-height:20px;color:var(--text-secondary);text-overflow:ellipsis;white-space:nowrap}
+.ld-list-main .ld-row-problem{color:var(--danger)}
 .ld-list-main .ld-row-problem.is-muted{color:var(--text-secondary)}
-.ld-list-col{flex:1.4;min-width:0;overflow:hidden;font-size:var(--font-size-14);color:var(--text-secondary);text-overflow:ellipsis;white-space:nowrap}
-.ld-list .ld-list-head{min-height:32px;padding-top:0;padding-bottom:0;border-color:transparent;font-size:var(--font-size-12);font-weight:500;color:var(--text-secondary)}
+.ld-list-col{min-width:0;overflow:hidden;font-size:var(--font-size-14);line-height:22px;color:var(--text-secondary);text-overflow:ellipsis;white-space:nowrap}
+.ld-list .ld-list-head{min-height:40px;padding:8px 16px;border:0;border-radius:8px;background:var(--fill-1);font-size:var(--font-size-12);font-weight:500;line-height:20px;color:var(--text-secondary)}
 .ld-list .ld-list-head .ld-list-main{flex-direction:row}
-.ld-col-state{flex:none;width:72px}
-.ld-col-act{display:flex;flex:none;justify-content:flex-end;width:96px}
-.ld-col-act{gap:8px}
-.ld-list--auth .ld-col-act{width:184px}
-.ld-list-user{display:flex;flex-direction:column;gap:2px}
+.ld-col-state{min-width:0}
+.ld-col-act{display:flex;align-items:center;justify-content:flex-end;gap:8px;min-width:0}
+.ld-list .ld-col-act,.ld-list--auth .ld-col-act,.ld-list:not(.ld-list--auth) .ld-col-act{width:auto}
+/* 行内操作沿用列表的紧凑规格，主色只强调需要处理的动作。 */
+.ld-list .ld-set-btn{flex:none;width:96px;min-width:96px;height:var(--control-h-sm);padding:0 12px;border-radius:8px;font-weight:500}
+.ld-list .ld-set-btn--primary{border-color:var(--brand);background:var(--brand);color:var(--bg)}
+.ld-list .ld-set-btn--primary:hover:not(:disabled){border-color:var(--brand-hover);background:var(--brand-hover)}
+.ld-list .ld-set-btn--primary:active:not(:disabled){border-color:var(--brand-active);background:var(--brand-active)}
+.ld-list .ld-state{display:inline-flex;align-items:center;min-height:24px;box-sizing:border-box;padding:2px 8px;border-radius:6px;line-height:20px}
+.ld-list .ld-state.is-muted{background:var(--tag-bg);font-weight:500;color:var(--text-secondary)}
+.ld-list-user{display:flex;flex-direction:column;gap:4px}
 .ld-list-user strong{overflow:hidden;font-size:var(--font-size-14);font-weight:400;color:var(--text);text-overflow:ellipsis}
-.ld-list-user span{font-size:var(--font-size-12);color:var(--text-secondary)}
+.ld-list-user span{overflow:hidden;font-size:var(--font-size-12);line-height:20px;color:var(--text-secondary);text-overflow:ellipsis}
 .ld-auth-modes{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-top:16px;font-size:var(--font-size-14)}
 .ld-hint{margin:8px 0 0;font-size:var(--font-size-12);line-height:20px;color:var(--text-secondary)}
 .ld-label-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
@@ -152,7 +181,7 @@
 .ld-dir-account>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ld-dir-account .ld-link{flex:none;font-size:var(--font-size-14)}
 .ld-dir-repo{min-width:0;margin:4px 0 16px;font-size:var(--font-size-14);line-height:20px;color:var(--text-title)}
-.ld-dir-repo code{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ld-dir-repo code{display:block;white-space:normal;overflow-wrap:anywhere;user-select:text}
 .ld-field-label{margin-bottom:8px;font-size:var(--font-size-14);font-weight:500;color:var(--text)}
 .ld-auth-lead{margin:0 0 16px;font-size:var(--font-size-14);line-height:22px;color:var(--text-secondary)}
 .ld-auth-modes span{color:var(--text-secondary)}
@@ -180,7 +209,6 @@
 .ld-pop-actions{display:flex;flex:none;gap:8px}
 .ld-pop-actions .ld-btn{height:28px;padding:0 8px;font-size:var(--font-size-14);font-weight:400;line-height:var(--line-height-14);}
 .ld-pop-more{margin:4px 4px 0;font-size:var(--font-size-12)}
-.ld-list:not(.ld-list--auth) .ld-col-act{width:184px}
 
 /* 「设置」页签：有未就绪项目时的顶部提示，首次配置走对话 */
 .ld-set-banner{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 16px 12px 24px;border-radius:var(--r-card);background:var(--warning-bg);font-size:var(--font-size-14);line-height:22px;color:var(--text)}
@@ -246,8 +274,6 @@
   .ld-auth-row{flex-direction:column}
   .ld-step{flex-wrap:wrap}
   .ld-step>.ld-btn,.ld-step>.ld-step-actions{margin-left:36px}
-  .ld-list-col,.ld-list-head{display:none}
-  .ld-list li{gap:8px}
 }
 @media (prefers-reduced-motion:reduce){
   #view-chat .ld-thinking.is-shimmer{animation:none;color:var(--text-secondary);background:none}
@@ -262,7 +288,9 @@
 .ld-checked-at{font-size:var(--font-size-12);color:var(--text-secondary);white-space:nowrap}
 .ld-set-head h2 small.ld-set-count{color:var(--warning)}
 .ld-set-head .ld-row-actions{align-items:center}
-.ld-demo-links{display:flex;flex-wrap:wrap;gap:16px}
+.ld-demo-links{display:flex;flex-wrap:wrap;gap:16px;padding:0 4px}
+#cv-local .ld-demo-links .ld-link{font-size:var(--font-size-12);line-height:20px;color:var(--text-secondary)}
+#cv-local .ld-demo-links .ld-link:hover{color:var(--text)}
 /* 初始化弹窗：代码保存位置与选项 */
 .ld-dir-target{display:flex;align-items:center;gap:8px;min-width:0;margin-bottom:12px}
 .ld-dir-target code{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -320,3 +348,72 @@
   .ld-repo-url{flex-basis:100%}
   .ld-repo-branch-box,.ld-repo-branch-custom{flex:1;width:auto}
 }
+
+/* 从任务开始执行进入的环境准备弹窗。 */
+.cv-scope .ld-task-preparation .ld-modal{width:640px;max-height:calc(100dvh - 32px)}
+.ld-task-preparation .sync-modal__body{overflow-y:auto}
+.ld-task-preparation .ld-modal-sub{white-space:normal;overflow-wrap:anywhere}
+.ld-prep-intro{padding:16px;border-radius:12px;background:var(--brand-fill)}
+.ld-prep-intro strong{display:block;font-size:var(--font-size-16);line-height:var(--line-height-16);font-weight:500;color:var(--text-title);overflow-wrap:anywhere}
+.ld-prep-intro p{margin-top:8px;font-size:var(--font-size-14);line-height:var(--line-height-14);color:var(--text-secondary)}
+.ld-prep-repo{display:flex;flex-direction:column;gap:4px;margin:16px 0;font-size:var(--font-size-12);line-height:var(--line-height-12);color:var(--text-secondary)}
+.ld-prep-repo code,.ld-task-preparation .ld-prep-path{display:block;white-space:normal;overflow-wrap:anywhere;word-break:normal;user-select:text}
+.ld-prep-step{display:flex;align-items:flex-start;gap:12px;padding:16px 0;border-bottom:1px solid var(--divider)}
+.ld-prep-step:last-child{border-bottom:0}
+.ld-prep-step>.ld-btn{flex:none}
+.ld-prep-state{margin-left:auto;font-size:var(--font-size-12);line-height:var(--line-height-12);font-weight:500;color:var(--text-secondary)}
+.ld-prep-state.is-done{color:var(--success)}
+.ld-task-preparation .ld-prep-path{margin-top:4px;line-height:var(--line-height-12)}
+@media(max-width:600px){
+  .ld-prep-step{flex-wrap:wrap}
+  .ld-prep-step .ld-step-main{flex-basis:calc(100% - 36px)}
+  .ld-prep-step>.ld-btn,.ld-prep-step>.ld-row-actions{margin-left:36px}
+  .ld-task-preparation .sync-modal__footer{flex-wrap:wrap}
+}
+@media(prefers-reduced-motion:reduce){
+  .ld-task-preparation .ld-progress span{transition:none}
+}
+
+.ld-init-progress{margin-top:16px;padding:16px;border:1px solid var(--border);border-radius:12px;background:var(--fill-1)}
+.ld-init-progress-head{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:var(--font-size-14);line-height:var(--line-height-14);color:var(--text)}
+.ld-init-progress-head strong{font-weight:500}
+.ld-init-progress-head>span{font-variant-numeric:tabular-nums;color:var(--text-secondary)}
+.ld-init-stages{display:flex;flex-direction:column;gap:8px;margin:12px 0 0;padding:0;list-style:none;font-size:var(--font-size-12);line-height:var(--line-height-12);color:var(--text-secondary)}
+.ld-init-stages li{display:flex;align-items:flex-start;gap:8px;overflow-wrap:anywhere}
+.ld-init-stages li>span{flex:none;min-width:16px;text-align:center}
+.ld-init-stages .is-current{color:var(--brand);font-weight:500}
+.ld-init-stages .is-done>span{color:var(--success)}
+@media(prefers-reduced-motion:reduce){.ld-init-progress .ld-progress span{transition:none}}
+
+/* Manage 的仓库地址 + 分支组合在本机配置中采用只读展示。 */
+.ld-repo-readonly{display:flex;align-items:stretch;gap:8px;min-width:0;margin:8px 0 16px}
+.ld-repo-readonly-url,.ld-repo-readonly-branch{display:flex;align-items:center;box-sizing:border-box;min-width:0;min-height:40px;padding:8px 12px;border:1px solid var(--border);border-radius:12px;background:var(--bg);color:var(--text);user-select:text}
+.ld-repo-readonly-url{flex:1;white-space:normal;overflow-wrap:anywhere}
+.ld-repo-readonly-branch{flex:0 1 160px;gap:8px}
+.ld-repo-readonly-branch svg{flex:none;color:var(--text-secondary)}
+.ld-repo-readonly-branch code{min-width:0;white-space:normal;overflow-wrap:anywhere}
+@media(max-width:600px){.ld-repo-readonly{flex-wrap:wrap}.ld-repo-readonly-url,.ld-repo-readonly-branch{flex-basis:100%}}
+
+/* 初始化与空间设置参考客户端：左标签、右内容与目录选择卡片。 */
+.cv-scope #ldDirOverlay:not(.ld-task-preparation) .ld-modal{width:640px;max-height:calc(100dvh - 32px)}
+#ldDirOverlay:not(.ld-task-preparation) .sync-modal__body{overflow-y:auto}
+.ld-config-row{display:grid;grid-template-columns:88px minmax(0,1fr);align-items:center;gap:16px;padding:16px 0;border-bottom:1px solid var(--divider)}
+.ld-config-row--directory{border-bottom:0}
+.ld-config-label{font-size:var(--font-size-14);line-height:var(--line-height-14);color:var(--text-secondary)}
+.ld-config-value{min-width:0}
+.ld-config-account{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:var(--font-size-14);line-height:var(--line-height-14)}
+.ld-config-account>span{min-width:0;overflow-wrap:anywhere}
+.ld-config-account>.ld-btn{flex:none}
+.ld-config-value .ld-repo-readonly{margin:0}
+.ld-config-value .ld-repo-readonly-branch{flex-basis:120px}
+.ld-directory-cards{margin-top:0}
+.ld-directory-cards .ld-choice-item{position:relative;display:flex;padding:12px;border:1px solid var(--border);border-radius:10px;background:var(--bg)}
+.ld-directory-cards .ld-choice-item:has(input:checked){border-color:var(--brand);background:var(--brand-fill)}
+.ld-directory-cards .ld-choice-item:has(input:focus-visible){outline:2px solid var(--focus-ring);outline-offset:2px}
+.ld-directory-cards .ld-choice-item:has(input:disabled){cursor:default}
+.ld-directory-cards input{position:absolute;width:1px;height:1px;opacity:0}
+.ld-directory-cards .ld-choice-item>span{display:flex;flex-direction:column;gap:4px;width:100%}
+.ld-directory-cards strong{font-size:var(--font-size-14);line-height:var(--line-height-14);font-weight:500}
+.ld-directory-cards small{font-size:var(--font-size-12);line-height:var(--line-height-12);color:var(--text-secondary)}
+.ld-directory-cards .ld-choice-path{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:var(--line-height-12)}
+@media(max-width:600px){.ld-config-row{grid-template-columns:minmax(0,1fr);gap:8px}}

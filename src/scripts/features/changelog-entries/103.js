@@ -1,1 +1,1 @@
-export default {"id":"103","date":"2026-10-20","iconBg":"var(--brand-fill)","iconColor":"var(--brand)","type":"优化","module":"界面与通知","author":"wuhc2023","body":"优化·界面与通知：统一全站字体与弹窗排版，恢复工作及待办页面，完善消息通知与窄窗口布局，并对齐管理首页、空间列表及详情、新建空间和研发协作设置。"};
+export default {"id":"103","date":"2026-10-20","iconBg":"var(--brand-fill)","iconColor":"var(--brand)","type":"功能","module":"界面与协作","author":"wuhc2023","body":"功能·界面与协作：统一全站字体与弹窗排版，恢复工作及待办页面，完善消息通知与窄窗口布局，对齐管理空间与研发协作设置，将开发设置拆为我的空间和 Git 账号纵向菜单，并新增任务首次执行的环境准备、仓库分支只读展示及初始化进度引导。"};
