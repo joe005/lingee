@@ -33,8 +33,8 @@
 #niuCreateOverlay .niu-col-review{width:100px}
 #niuCreateOverlay .niu-col-action{width:56px}
 #niuCreateOverlay .niu-create-stage-table .niu-stage-owner{height:32px;border:1px solid var(--border);border-radius:12px;background:var(--bg);font-size:var(--font-size-14)}
-#tkDrawer.tk-drawer--latest .tk-drawer-head{min-height:52px;padding:12px 20px;border-bottom:1px solid var(--divider)}
-#tkDrawer.tk-drawer--latest .tk-drawer-title{font-size:var(--font-size-18);font-weight:500;line-height:26px}
+#tkDrawer.tk-drawer--latest .tk-drawer-head{min-height:52px;padding:12px 20px;border-bottom:0}
+#tkDrawer.tk-drawer--latest .tk-drawer-title{font-size:var(--font-size-20);font-weight:500;line-height:var(--line-height-18)}
 #tkDrawer.tk-drawer--latest .tk-drawer-code{font-size:var(--font-size-12)}
 #tkDrawer.tk-drawer--latest .tk-drawer-main{padding:0 20px 24px;min-width:0}
 #tkDrawer.tk-drawer--latest .tk-drawer-sidebar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;padding:20px 0;margin:0;border:0}
@@ -212,12 +212,25 @@
 #tkDrawer.tk-drawer--latest .tk-feed-stage-row .tk-stage-cell-mark { left:calc(19px - 36px - 1px); top:22px; }
 #tkDrawer.tk-drawer--latest .tk-feed-stage-main { gap:4px; }
 #tkDrawer.tk-drawer--latest .tk-feed-stage-expert-content { gap:6px; }
-#tkDrawer.tk-drawer--latest .tk-feed-stage-expert-content strong { font-size:var(--font-size-16); line-height:24px; color:var(--text-title); }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-expert-content strong { font-size:var(--font-size-14); font-weight:400; line-height:var(--line-height-14); color:var(--text-title); }
 #tkDrawer.tk-drawer--latest .tk-feed-stage-role { font-size:var(--font-size-14); line-height:22px; }
 #tkDrawer.tk-drawer--latest .tk-feed-stage-row .tk-feed-stage-mark { box-sizing:border-box; width:10px; height:10px; border:2px solid var(--border-hover); background:var(--bg); }
 #tkDrawer.tk-drawer--latest .tk-feed-stage-row.is-current .tk-feed-stage-mark { border-color:var(--brand); background:var(--bg); }
 #tkDrawer.tk-drawer--latest .tk-feed-stage-row.is-done .tk-feed-stage-mark { border-color:var(--success); background:var(--bg); }
 #tkDrawer.tk-drawer--latest .tk-feed-stage-row.is-blocked .tk-feed-stage-mark { border-color:var(--danger); background:var(--bg); }
+
+/* 用户截图：两列概览，动态卡片内展示执行计划与阶段评审人。 */
+#tkDrawer.tk-drawer--latest .tk-drawer-sidebar { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:start; gap:12px 24px; margin:0; border:0; }
+#tkDrawer.tk-drawer--latest .tk-drawer-sidebar .tk-prop-row { width:100%; gap:12px; font-size:var(--font-size-14); white-space:normal; }
+#tkDrawer.tk-drawer--latest .tk-drawer-sidebar .tk-prop-row>span:first-child { width:64px; font-size:var(--font-size-14); }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-meta .tk-feed-stage-reviewer { margin-left:auto; color:var(--text-secondary); font-size:var(--font-size-14); font-weight:400; white-space:normal; }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-meta .tk-feed-stage-expert-content { flex:0 1 auto; min-width:0; }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-expert-content strong { overflow-wrap:anywhere; white-space:normal; }
+#tkDrawer.tk-drawer--latest .tk-feed-stage-table tbody:last-child::before { display:none; }
+@media(max-width:600px) {
+  #tkDrawer.tk-drawer--latest .tk-drawer-sidebar { grid-template-columns:1fr; }
+  #tkDrawer.tk-drawer--latest .tk-feed-stage-meta .tk-feed-stage-reviewer { flex-basis:100%; margin-left:0; }
+}
 
 /* 新建任务控件交互：沿用现行共享选择器和按钮状态。 */
 #niuCreateOverlay .niu-field :is(input:not([type=hidden]),textarea,select,.niu-person-trigger,.niu-select-trigger):not(:disabled):hover,

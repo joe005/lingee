@@ -59,7 +59,7 @@
 #cv-tasks-current .tk-list-card-main { gap:8px; }
 #cv-tasks-current .tk-list-card-meta { height:24px; color:var(--text-secondary); }
 #cv-tasks-current .tk-list-status { height:24px; padding:0 6px; font-size:var(--font-size-12); font-weight:400; box-sizing:border-box; }
-#cv-tasks-current .tk-list-card-title-btn { font-size:var(--font-size-14); font-weight:400; line-height:var(--line-height-14); color:var(--text-title); }
+#cv-tasks-current .tk-list-card-title-btn { font-size:var(--font-size-16); font-weight:500; line-height:var(--line-height-16); color:var(--text-title); }
 #cv-tasks-current .tk-list-card-desc { font-size:var(--font-size-14); line-height:18px; margin-top:-4px; }
 #cv-tasks-current .tk-list-card-foot { margin:0; gap:8px; }
 #cv-tasks-current .tk-list-card-label {
