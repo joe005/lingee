@@ -1,0 +1,1 @@
+export default {"id":"104","date":"2026-10-21","iconBg":"var(--brand-fill)","iconColor":"var(--brand)","type":"功能","module":"任务退回","author":"wuhc2023","body":"功能·任务退回：任务详情新增上游节点退回，当前处理人可在待开始、待评审或已阻塞时选择已完成节点并填写原因，退回后从目标节点重新顺序执行并保留历史产物及操作记录。"};

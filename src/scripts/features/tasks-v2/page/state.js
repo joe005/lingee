@@ -1,3 +1,4 @@
+import { returnableStages } from '../stage-return.js';
 import { TK_PEOPLE, tkCanViewTask, tkCurrentStageHandlerId, tkCurrentUserId, tkGetTasks, tkGetViews, tkIsMyStageDone, tkProjectsForCurrentUser } from '../data.js';
 import { taskListKind, taskNeedsMyAction } from '../list-kind.js';
 import { taskViewState } from '../ui-state.js';
@@ -101,7 +102,17 @@ export function renderTaskStartAction() {
     if (viewOnly) action = action && drawerIsMine(task) ? {label:'在开发页签处理', action:'jump-dev'} : null;
     placeTaskActionButton(button, !!task);
     els.tkDrawerFoot.querySelectorAll('[data-detail-footer-delete],[data-detail-footer-edit]').forEach(function (item) { item.remove(); });
-    els.tkDrawerFoot.hidden = !action;
+    els.tkDrawerFoot.querySelectorAll('[data-task-stage-return]').forEach(item => item.remove());
+    var canReturn = !viewOnly && returnableStages(task).length > 0;
+    if (canReturn) {
+      var returnButton = document.createElement('button');
+      returnButton.type = 'button';
+      returnButton.className = 'tk-stage-return-trigger';
+      returnButton.dataset.taskStageReturn = task.id;
+      returnButton.textContent = '退回';
+      els.tkDrawerFoot.insertBefore(returnButton, button);
+    }
+    els.tkDrawerFoot.hidden = !action && !canReturn;
     els.tkDrawer.classList.toggle('tk-drawer--viewonly', viewOnly);
     button.hidden = !action;
     if (!action) return;
