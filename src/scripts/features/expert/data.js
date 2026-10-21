@@ -367,24 +367,24 @@ function stageExperts(stageId,memberIds,explicit){
   return out.slice(0,STAGE_EXPERT_MAX);
 }
 var PRESET_TEAMS=[
-  {id:'cosmic-app-dev',preset:true,name:'苍穹应用开发智能体团队',by:'Lingee 内置',
+  {id:'cosmic-app-dev',preset:true,name:'苍穹应用开发',by:'Lingee 内置',
    desc:'面向金蝶苍穹企业应用开发的交付智能体团队，覆盖元数据建模、BOS/PDM 扩展与 API 定制。',
-   domains:['苍穹应用','表单','工作流','报表','集成'],
+   domains:['苍穹应用','星空','BOS','PDM','企业应用'],
    leadId:'cosmic-team-lead',
    stages:COSMIC_APP_STAGES,
    members:['cosmic-product-manager','cosmic-app-development-expert','cosmic-metadata-expert','cosmic-plugin-developer','cosmic-api-engineer','kwc-frontend-engineer','cosmic-qa-engineer','cosmic-ui-designer','cosmic-architect','cosmic-team-lead'],
-   cmds:[['帮我在苍穹上做一套请假申请，从单据到审批','表单、流程、报表、接口一体化交付'],
-         ['这个业务要在苍穹落地，帮我出方案并实现','先出需求规格，再按依赖拆分实现与验证'],
-         ['苍穹单据、流程和报表都要改，帮我排一下','按依赖顺序编排配置、二开与验证任务']]},
-  {id:'general-app-dev',preset:true,name:'通用应用开发智能体团队',by:'Lingee 内置',
+   cmds:[['创建一张采购订单单据，含单头分录结构并配置审批流','创建一张采购订单单据，含单头分录结构并配置审批流'],
+         ['扩展标准销售订单，新增自定义字段并开发业务插件','扩展标准销售订单，新增自定义字段并开发业务插件'],
+         ['开发自定义 API，查询多仓库库存余量','开发自定义 API，查询多仓库库存余量']]},
+  {id:'general-app-dev',preset:true,name:'通用应用开发',by:'Lingee 内置',
    desc:'面向通用 Web、后端、前端、API 与数据库开发的全栈软件交付智能体团队。',
-   domains:['通用应用','Web','前端','产品设计'],
+   domains:['Web','后端','前端','API','数据库'],
    leadId:'general-app-team-lead',
    stages:GENERAL_APP_STAGES,
    members:['general-app-team-lead','general-app-product-expert','general-app-architecture-expert','general-app-development-expert','general-app-qa-expert','general-app-deployment-expert'],
-   cmds:[['帮我把购物车支持优惠券做成能上线的功能','从需求、设计、实现到验收走完整闭环'],
-         ['做一个业务管理 Web 应用','产品、架构、体验与工程协同交付'],
-         ['按这份设计稿把页面实现出来并走查一遍','实现页面并完成设计与质量验证']]}
+   cmds:[['构建一个任务管理 Web 应用，包含 REST API 和 React 前端','构建一个任务管理 Web 应用，包含 REST API 和 React 前端'],
+         ['为我的应用添加 JWT 认证与基于角色的权限控制','为我的应用添加 JWT 认证与基于角色的权限控制'],
+         ['创建一个带 PostgreSQL 数据库和 REST API 的增删改查应用','创建一个带 PostgreSQL 数据库和 REST API 的增删改查应用']]}
 ];
 
 export function initExpertData() {
