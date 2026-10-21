@@ -8,7 +8,7 @@ export function initStageReturn() {
   const dialog = document.createElement('dialog');
   dialog.className = 'tk-stage-return';
   dialog.setAttribute('aria-labelledby', 'tkStageReturnTitle');
-  dialog.innerHTML = '<form><h2 id="tkStageReturnTitle">退回上游节点</h2><p>从所选节点按原流程重新执行，历史产物和记录保留。</p><label for="tkStageReturnTarget">退回节点</label><select id="tkStageReturnTarget" required><option value="">请选择节点</option></select><label for="tkStageReturnReason">退回原因</label><textarea id="tkStageReturnReason" rows="4" maxlength="1000" placeholder="说明上游产物的问题及需要调整的内容" required></textarea><p class="tk-stage-return-error" role="alert" hidden></p><div class="tk-stage-return-actions"><button type="button" data-return-cancel>取消</button><button type="submit">确认退回</button></div></form>';
+  dialog.innerHTML = '<form><h2 id="tkStageReturnTitle">退回上游节点</h2><p>从所选节点按原流程重新执行，历史产物和记录保留。</p><label for="tkStageReturnTarget">退回节点 <span class="tk-stage-return-required" aria-hidden="true">*</span></label><select id="tkStageReturnTarget" required><option value="">请选择节点</option></select><label for="tkStageReturnReason">退回原因 <span class="tk-stage-return-required" aria-hidden="true">*</span></label><textarea id="tkStageReturnReason" rows="4" maxlength="1000" placeholder="说明上游产物的问题及需要调整的内容" required></textarea><p class="tk-stage-return-error" role="alert" hidden></p><div class="tk-stage-return-actions"><button type="button" data-return-cancel>取消</button><button type="submit">确认退回</button></div></form>';
   document.body.appendChild(dialog);
   let taskId = null, trigger = null;
   const select = dialog.querySelector('select');

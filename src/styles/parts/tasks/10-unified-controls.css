@@ -138,3 +138,5 @@ td.niu-plan-empty{color:var(--text-secondary)}
 .tk-stage-return-actions button[type=submit]:hover{background:var(--brand-hover)}
 .tk-stage-return :is(button,select,textarea):focus-visible,.tk-stage-return-trigger:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 .tk-stage-return .tk-stage-return-error{color:var(--danger)}
+
+.tk-stage-return .tk-stage-return-required{color:var(--danger)}
