@@ -1,4 +1,5 @@
 import stageReturnTemplate from '../../../../modals/tasks/stage-return.html?raw';
+import { initSelectDropdowns } from '../../../core/select-dropdown.js';
 import { toast } from '../../../core/toast.js';
 import { tkGetTasks } from '../data.js';
 import { returnableStages, returnTaskStage } from '../stage-return.js';
@@ -8,6 +9,7 @@ import { openDrawer } from './subtasks.js';
 export function initStageReturn() {
   const dialog = document.createElement('dialog');
   dialog.className = 'tk-stage-return';
+  dialog.setAttribute('role', 'dialog');
   dialog.setAttribute('aria-labelledby', 'tkStageReturnTitle');
   dialog.innerHTML = stageReturnTemplate;
   document.body.appendChild(dialog);
@@ -16,9 +18,23 @@ export function initStageReturn() {
   const reason = dialog.querySelector('textarea');
   const error = dialog.querySelector('[role="alert"]');
   const counter = dialog.querySelector('#tkStageReturnCount');
+  initSelectDropdowns([select]);
+  select.style.display = 'none';
+  select.parentElement.classList.add('shared-select-host');
+  const selectTrigger = select.nextElementSibling;
+  selectTrigger.classList.add('shared-select-trigger');
+  select.addEventListener('invalid', event => {
+    event.preventDefault();
+    error.textContent = '请选择退回节点'; error.hidden = false;
+    selectTrigger.focus();
+  });
   reason.addEventListener('input', () => { counter.textContent = reason.value.length + '/' + reason.maxLength; });
   dialog.querySelectorAll('[data-return-cancel]').forEach(button => button.addEventListener('click', () => dialog.close()));
-  dialog.addEventListener('close', () => { if (trigger?.isConnected) trigger.focus(); });
+  dialog.addEventListener('close', () => {
+    dialog.querySelector('.niu-select-popup').hidden = true;
+    selectTrigger.setAttribute('aria-expanded', 'false');
+    if (trigger?.isConnected) trigger.focus();
+  });
   document.addEventListener('click', event => {
     const button = event.target.closest('[data-task-stage-return]');
     if (!button) return;
@@ -28,7 +44,9 @@ export function initStageReturn() {
     if (!stages.length) { toast('当前没有可退回的上游节点', 'warning'); return; }
     trigger = button;
     select.replaceChildren(new Option('请选择节点', ''));
+    select.options[0].disabled = true;
     stages.forEach(stage => select.add(new Option(stage.title || stage.workType, stage.id)));
+    select.selectedIndex = 0;
     reason.value = ''; counter.textContent = '0/' + reason.maxLength; error.hidden = true;
     dialog.showModal(); select.focus();
   });

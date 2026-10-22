@@ -150,8 +150,9 @@ td.niu-plan-empty{color:var(--text-secondary)}
 .tk-stage-return label{display:block;margin-bottom:8px;font-size:var(--font-size-14);line-height:var(--line-height-14);color:var(--text-secondary)}
 .tk-stage-return select,.tk-stage-return textarea{box-sizing:border-box;width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:12px;background:var(--bg);font:inherit;font-size:var(--font-size-14);line-height:var(--line-height-14);color:var(--text)}
 .tk-stage-return-select{position:relative}
-.tk-stage-return select{height:40px;padding-right:40px;appearance:none;cursor:pointer}
-.tk-stage-return-select>svg{position:absolute;right:12px;top:12px;pointer-events:none;color:var(--text-secondary)}
+.tk-stage-return .tk-stage-return-select>.shared-select-trigger{height:40px;min-height:40px;border-radius:12px}
+.tk-stage-return .tk-stage-return-select>.shared-select-trigger:focus-visible{border-color:var(--border-hover);outline:none;box-shadow:none}
+.tk-stage-return .tk-stage-return-select>.shared-select-trigger[aria-expanded=true]{border-color:var(--brand)}
 .tk-stage-return-reason{position:relative}
 .tk-stage-return textarea{display:block;resize:vertical;min-height:96px;padding-bottom:32px}
 .tk-stage-return textarea::placeholder{color:var(--text-soft)}
@@ -163,6 +164,7 @@ td.niu-plan-empty{color:var(--text-secondary)}
 .tk-stage-return-actions button[type=submit]{background:var(--brand);border-color:var(--brand);color:var(--bg)}
 .tk-stage-return-actions button:hover,.tk-stage-return-trigger:hover{background:var(--hover)}
 .tk-stage-return-actions button[type=submit]:hover{background:var(--brand-hover)}
-.tk-stage-return :is(button,select,textarea):focus-visible,.tk-stage-return-trigger:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+.tk-stage-return :is(select,textarea):focus,.tk-stage-return :is(select,textarea):focus-visible{border-color:var(--border-hover);outline:none;box-shadow:none}
+.tk-stage-return button:focus-visible,.tk-stage-return-trigger:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 .tk-stage-return .tk-stage-return-error{margin:12px 0 0;font-size:var(--font-size-14);line-height:var(--line-height-14);color:var(--danger)}
 .tk-stage-return .tk-stage-return-required{margin-left:4px;color:var(--danger)}
