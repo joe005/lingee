@@ -128,7 +128,7 @@ export function renderCard(t, opts) {
     var boardStatus = '<span class="tk-card-status" data-kind="' + displayStatus.kind + '">' + escapeHtml(displayStatus.badge) + '</span>';
     return '<div class="tk-card tk-card--figma' + sel + extraCls + (t.status === 'blocked' ? ' tk-card--blocked' : '') + '" draggable="true" data-task-id="' + t.id + '">'
       + '<button type="button" class="tk-card-more" data-card-more="' + t.id + '" aria-label="更多任务操作" aria-haspopup="menu"><img src="' + boardMoreIcon + '" width="16" height="16" alt=""></button>'
-      + '<div class="tk-card-top-row">' + toggle + boardStatus + '<div class="tk-card-code">' + escapeHtml(t.code) + (props.project && t.project ? ' · ' + escapeHtml(tkGetProjectName(t.project)) : '') + '</div>' + childBadge + '</div>'
+      + '<div class="tk-card-top-row">' + toggle + boardStatus + '<div class="tk-card-code">' + escapeHtml(t.code) + (t.project ? ' · ' + escapeHtml(tkGetProjectName(t.project)) : '') + '</div>' + childBadge + '</div>'
       + '<div class="tk-card-copy"><div class="tk-card-title">' + escapeHtml(t.title) + '</div>'
       + (props.description && t.desc ? '<div class="tk-card-description" title="' + escapeHtml(t.desc) + '">' + escapeHtml(t.desc) + '</div>' : '')
       + '</div><div class="tk-card-tags">' + (t.issueType ? '<span class="tk-card-type">' + escapeHtml(taskTypeLabel(t.issueType)) + '</span>' : '') + (props.priority ? '<span class="tk-card-priority" data-priority="' + escapeHtml(t.priority) + '">' + escapeHtml(pri.name) + '</span>' : '') + (props.startDate && t.startDate ? '<span class="tk-card-due">' + fmtDate(t.startDate) + '</span>' : '') + '</div>'
@@ -293,9 +293,11 @@ function updateSortArrows() {
 
 /* ---------- 渲染：筛选 Chip ---------- */
 export function renderFilterChips() {
-  if (state.filters.length === 0) { els.tkFilterChips.classList.add('hidden'); els.tkFilterChips.innerHTML = ''; return; }
+  // 空间已由工具栏按钮展示，不重复生成标签；保留原索引供移除其他筛选使用。
+  if (!state.filters.some(function (f) { return f.field !== 'project'; })) { els.tkFilterChips.classList.add('hidden'); els.tkFilterChips.innerHTML = ''; return; }
   els.tkFilterChips.classList.remove('hidden');
   var html = state.filters.map(function (f, i) {
+    if (f.field === 'project') return '';
     var fieldDef = TK_FILTER_FIELDS.find(function (fd) { return fd.id === f.field; });
     var sectionDef = filterSections.find(function (section) { return section[0] === f.field; });
     var fieldName = sectionDef ? sectionDef[1] : fieldDef ? fieldDef.name : f.field;

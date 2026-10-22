@@ -1,3 +1,4 @@
+import stageReturnTemplate from '../../../../modals/tasks/stage-return.html?raw';
 import { toast } from '../../../core/toast.js';
 import { tkGetTasks } from '../data.js';
 import { returnableStages, returnTaskStage } from '../stage-return.js';
@@ -8,13 +9,15 @@ export function initStageReturn() {
   const dialog = document.createElement('dialog');
   dialog.className = 'tk-stage-return';
   dialog.setAttribute('aria-labelledby', 'tkStageReturnTitle');
-  dialog.innerHTML = '<form><h2 id="tkStageReturnTitle">退回上游节点</h2><p>从所选节点按原流程重新执行，历史产物和记录保留。</p><label for="tkStageReturnTarget">退回节点 <span class="tk-stage-return-required" aria-hidden="true">*</span></label><select id="tkStageReturnTarget" required><option value="">请选择节点</option></select><label for="tkStageReturnReason">退回原因 <span class="tk-stage-return-required" aria-hidden="true">*</span></label><textarea id="tkStageReturnReason" rows="4" maxlength="1000" placeholder="说明上游产物的问题及需要调整的内容" required></textarea><p class="tk-stage-return-error" role="alert" hidden></p><div class="tk-stage-return-actions"><button type="button" data-return-cancel>取消</button><button type="submit">确认退回</button></div></form>';
+  dialog.innerHTML = stageReturnTemplate;
   document.body.appendChild(dialog);
   let taskId = null, trigger = null;
   const select = dialog.querySelector('select');
   const reason = dialog.querySelector('textarea');
   const error = dialog.querySelector('[role="alert"]');
-  dialog.querySelector('[data-return-cancel]').addEventListener('click', () => dialog.close());
+  const counter = dialog.querySelector('#tkStageReturnCount');
+  reason.addEventListener('input', () => { counter.textContent = reason.value.length + '/' + reason.maxLength; });
+  dialog.querySelectorAll('[data-return-cancel]').forEach(button => button.addEventListener('click', () => dialog.close()));
   dialog.addEventListener('close', () => { if (trigger?.isConnected) trigger.focus(); });
   document.addEventListener('click', event => {
     const button = event.target.closest('[data-task-stage-return]');
@@ -26,7 +29,7 @@ export function initStageReturn() {
     trigger = button;
     select.replaceChildren(new Option('请选择节点', ''));
     stages.forEach(stage => select.add(new Option(stage.title || stage.workType, stage.id)));
-    reason.value = ''; error.hidden = true;
+    reason.value = ''; counter.textContent = '0/' + reason.maxLength; error.hidden = true;
     dialog.showModal(); select.focus();
   });
   dialog.querySelector('form').addEventListener('submit', event => {

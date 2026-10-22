@@ -9,6 +9,8 @@ import { escapeHtml } from './utils.js';
    与「筛选」里的「空间」是同一份条件（state.filters 里 field 为 project 的项），这里选一个空间即替换为单选；
    在筛选里多选时按钮显示「N 个空间」。下拉数量与当前列表页签一致，看板统计全部可见状态。 */
 
+var CHECK = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4 10-11"/></svg>';
+
 var CARET = '<svg class="tk-space-caret" width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 7.5 5 5 5-5"/></svg>';
 
 function selectedSpaces() { return state.filters.filter(function (f) { return f.field === 'project'; }).map(function (f) { return f.value; }); }
@@ -45,10 +47,10 @@ function renderOptions() {
   var q = document.getElementById('tkSpaceSearch').value.trim().toLocaleLowerCase();
   var picked = selectedSpaces();
   var rows = spaceOptions().filter(function (row) { return !q || row.name.toLocaleLowerCase().includes(q); });
-  var all = '<button type="button" role="option" aria-selected="' + !picked.length + '" data-tk-space=""><span>全部空间</span><small>' + spaceCountTasks().length + '</small><b>' + (picked.length ? '' : '✓') + '</b></button>';
+  var all = '<button type="button" role="option" aria-selected="' + !picked.length + '" data-tk-space=""><span class="tk-space-option-label"><span class="tk-space-option-name">全部空间</span><small>（' + spaceCountTasks().length + '）</small></span><b>' + (picked.length ? '' : CHECK) + '</b></button>';
   document.getElementById('tkSpaceOptions').innerHTML = (q ? '' : all) + (rows.length ? rows.map(function (row) {
     var on = picked.length === 1 && picked[0] === row.id;
-    return '<button type="button" role="option" aria-selected="' + on + '" data-tk-space="' + escapeHtml(row.id) + '"><span title="' + escapeHtml(row.name) + '">' + escapeHtml(row.name) + '</span><small>' + row.count + '</small><b>' + (on ? '✓' : '') + '</b></button>';
+    return '<button type="button" role="option" aria-selected="' + on + '" data-tk-space="' + escapeHtml(row.id) + '"><span class="tk-space-option-label" title="' + escapeHtml(row.name) + '"><span class="tk-space-option-name">' + escapeHtml(row.name) + '</span><small>（' + row.count + '）</small></span><b>' + (on ? CHECK : '') + '</b></button>';
   }).join('') : '<p>没有匹配的空间</p>');
 }
 
