@@ -1,6 +1,6 @@
 import { $, $$ } from '../../core/dom.js';
 import { layerVisible, layerOf } from './layers.js';
-import { brandEl, navItems, setNavActive, showView } from '../../core/view.js';
+import { applyMode, brandEl, navItems, setNavActive, showView } from '../../core/view.js';
 import '../collab/index.js';   /* 不再调用其函数（改发 lingee:collab-nav 事件），保留以维持模块求值顺序 */
 import '../collab/view.js';
 import { closeAll } from '../dropdown.js';
@@ -58,6 +58,7 @@ function renderExpertChips(){
       if(label) label.textContent=lockedTeam?.name || '未配置智能体团队';
       if(faces) faces.innerHTML=lockedTeam ? lockedTeam.members.slice(0,3).map(function(i){ return EX[i] ? '<img src="'+xav(EX[i].k)+'" alt="">' : ''; }).join('') : '';
       dd.querySelector('[data-chip]')?.classList.toggle('muted', !lockedTeam);
+      var lockedClear=dd.querySelector('[data-clear-expert-chip]'); if(lockedClear) lockedClear.hidden=true;
       return;
     }
     if(label) label.textContent = has ? pickName() : (pfx==='tkForm' ? '选择智能体团队' : '选择智能体');
@@ -69,7 +70,11 @@ function renderExpertChips(){
             : '<img src="'+xav(EX[activePick.id].k)+'" alt="">')
         : '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 20v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 4 18.5V20"/><circle cx="10" cy="8" r="3.2"/><path d="M20 20v-1.5a3.5 3.5 0 0 0-2.6-3.4"/><path d="M15.4 5.2a3.2 3.2 0 0 1 0 5.6"/></svg>';
     }
-    if(dd){ var c=dd.querySelector('[data-chip]'); if(c) c.classList.toggle('muted', !has); }
+    if(dd){
+      var chipClear=dd.querySelector('[data-clear-expert-chip]'); if(chipClear) chipClear.hidden=!has;
+      var c=dd.querySelector('[data-chip]');
+      if(c){ c.classList.toggle('muted', !has); c.title=has ? '当前执行对象：'+pickName()+'，点击更换' : '选择智能体'; }
+    }
   });
 }
 function renderExpertPicker(pfx,kw){
@@ -166,38 +171,112 @@ function refloatTkFormMenu(){
   if(menu.offsetHeight>maxH){ menu.style.maxHeight=maxH+'px'; if(list) list.style.maxHeight=(maxH-56)+'px'; }
   refloatMenu(dd);
 }
-export function openExpertPicker(pfx){
+/* 首次选择共用同一个列表，以二级菜单展开；已选标签仍直接展开列表。 */
+function restoreComposerSubmenu(dd){
+  var state=dd._composerSubmenu; if(!state) return;
+  dd.appendChild(state.menu);
+  state.menu.setAttribute('style',state.style);
+  state.trigger.setAttribute('aria-expanded','false');
+  state.host.classList.remove('open');
+  dd._composerSubmenu=null;
+}
+function positionComposerSubmenu(dd){
+  var state=dd._composerSubmenu; if(!state) return;
+  var menu=state.menu, rect=state.trigger.getBoundingClientRect();
+  var maxH=Math.min(400,window.innerHeight-16);
+  menu.style.maxHeight=maxH+'px';
+  var width=menu.offsetWidth||220;
+  var left=rect.right;
+  if(left+width>window.innerWidth-8) left=rect.left-width;
+  menu.style.left=Math.max(8,Math.min(left,window.innerWidth-width-8))+'px';
+  menu.style.top=Math.max(8,Math.min(rect.top,window.innerHeight-menu.offsetHeight-8))+'px';
+  var list=menu.querySelector('.app-list');
+  if(list){
+    list.style.maxHeight='';
+    var reserved=menu.scrollHeight-list.offsetHeight;
+    list.style.maxHeight=Math.max(32,maxH-reserved)+'px';
+  }
+}
+export function openExpertPicker(pfx,trigger,focusSearch=true){
   var dd=$('#'+pfx+'ExpertDropdown'); if(!dd) return;
   if(dd.classList.contains('task-team-locked')) return;
+  restoreComposerSubmenu(dd);
   var si=$('#'+pfx+'ExpertSearchInput');
-  closeAll(null);
+  if(si&&pfx!=='tkForm'){ si.value=''; var clear=dd.querySelector('.asset-picker-clear'); if(clear) clear.hidden=true; }
+  var parent=trigger?.closest('.add-dropdown');
+  closeAll(parent||null);
   renderExpertPicker(pfx, si?si.value:'');
-  dd.classList.add('open');
-  if(dd.classList.contains('dd-float')) requestAnimationFrame(function(){ floatMenu(dd); });
-  if(si) setTimeout(function(){ si.focus() },40);
+  if(parent){
+    var menu=dd.querySelector('.expert-menu'), host=trigger.nextElementSibling;
+    dd._composerSubmenu={menu:menu,host:host,trigger:trigger,style:menu.getAttribute('style')||''};
+    parent.classList.add('open');
+    dd.classList.remove('open');
+    host.appendChild(menu); host.classList.add('open');
+    trigger.setAttribute('aria-expanded','true');
+    menu.style.position='fixed'; menu.style.display='flex'; menu.style.right='auto'; menu.style.bottom='auto';
+    positionComposerSubmenu(dd);
+  }else{
+    dd.classList.add('open');
+    if(dd.classList.contains('dd-float')) requestAnimationFrame(function(){ floatMenu(dd); });
+  }
+  if(si&&focusSearch) setTimeout(function(){ si.focus() },40);
+}
+
+/* 仅通过标签左侧叉号清除，不打开列表，不更改草稿内容。 */
+function clearComposerPick(pfx){
+  var dd=$('#'+pfx+'ExpertDropdown');
+  if(!dd||dd.classList.contains('task-team-locked')) return;
+  clearPick(); restoreComposerSubmenu(dd); closeAll(null); renderExpertChips();
+  document.dispatchEvent(new CustomEvent('lingee:execution-pick-change',{detail:{scope:pfx,pick:{...activePick}}}));
+  $(pfx==='nt'?'#composerInput':'#chatInput')?.focus();
 }
 
 /* 新会话不继承上一次的专家/智能体团队选择 */
 function resetPickForNewSession(){
-  if(forcedBuilder){ set_forcedBuilder(null); renderModeTag(); }
-  if(!activePick.kind) return;
-  clearPick(); renderExpertChips();
+  set_forcedBuilder(null);
+  clearPick(); renderExpertChips(); renderModeTag();
+  closeAll(null);
 }
 
 export function initExpertChips() {
-  document.querySelector('[data-open-home-expert]')?.addEventListener('click',function(event){
-    event.preventDefault();event.stopPropagation();
-    document.getElementById('addDropdown')?.classList.remove('open');
-    openExpertPicker('nt');
+  [['[data-open-home-expert]','nt'],['[data-open-chat-expert]','chat']].forEach(function(entry){
+    var trigger=document.querySelector(entry[0]); if(!trigger) return;
+    var dd=$('#'+entry[1]+'ExpertDropdown'), parent=trigger.closest('.add-dropdown');
+    trigger.addEventListener('click',function(event){
+      event.preventDefault();event.stopPropagation();
+      if(dd._composerSubmenu) $('#'+entry[1]+'ExpertSearchInput')?.focus();
+      else openExpertPicker(entry[1],trigger);
+    });
+    trigger.addEventListener('mouseenter',function(){
+      if(parent.classList.contains('open')&&!dd._composerSubmenu) openExpertPicker(entry[1],trigger,false);
+    });
+    trigger.addEventListener('keydown',function(event){
+      if(event.key==='ArrowRight'){ event.preventDefault();openExpertPicker(entry[1],trigger); }
+    });
+    trigger.parentNode.addEventListener('mouseleave',function(){
+      if(dd._composerSubmenu&&!dd._composerSubmenu.menu.contains(document.activeElement)) restoreComposerSubmenu(dd);
+    });
+    parent.querySelector('.add-menu').addEventListener('mouseover',function(event){
+      var item=event.target.closest('.menu-item');
+      if(item&&item.parentNode===parent.querySelector('.add-menu')&&!item.contains(trigger)) restoreComposerSubmenu(dd);
+    });
+    new MutationObserver(function(){
+      if(!parent.classList.contains('open')) restoreComposerSubmenu(dd);
+    }).observe(parent,{attributes:true,attributeFilter:['class']});
+    window.addEventListener('resize',function(){ positionComposerSubmenu(dd); });
+    document.addEventListener('scroll',function(){ positionComposerSubmenu(dd); },true);
   });
   document.addEventListener('click',function(ev){
     if(ev.target.closest('[data-clear-mode]')){
       ev.stopPropagation();
-      $$('.mode-item').forEach(function(m){ m.classList.remove('checked') });
+      applyMode('',false);
       set_forcedBuilder(null);
       renderModeTag(); return;
     }
-    if(ev.target.closest('.mode-item')){ set_forcedBuilder(null); setTimeout(renderModeTag,0); }
+    if(ev.target.closest('.mode-item')){
+      clearPick(); set_forcedBuilder(null);
+      renderExpertChips(); renderModeTag();
+    }
   });
   ['nt','chat','tkForm'].forEach(function(pfx){
     var dd=$('#'+pfx+'ExpertDropdown'); if(!dd) return;
@@ -219,6 +298,28 @@ export function initExpertChips() {
       if(host) host.addEventListener('scroll',onRepos);
       window.addEventListener('resize',onRepos);
     }
+    if(pfx!=='tkForm'){
+      new MutationObserver(function(){ chipEl.setAttribute('aria-expanded',dd.classList.contains('open')?'true':'false'); }).observe(dd,{attributes:true,attributeFilter:['class']});
+      function pickerKeydown(ev){
+        if(ev.key==='Escape'||(ev.key==='ArrowLeft'&&dd._composerSubmenu&&ev.target.tagName!=='INPUT')){
+          ev.preventDefault();ev.stopPropagation();
+          var trigger=dd._composerSubmenu?.trigger;
+          restoreComposerSubmenu(dd);dd.classList.remove('open');(trigger||chipEl).focus();return;
+        }
+        if((ev.key==='ArrowDown'||ev.key==='ArrowUp')&&(dd.classList.contains('open')||dd._composerSubmenu)){
+          ev.stopPropagation();
+          ev.preventDefault();
+          var items=Array.from((dd._composerSubmenu?.menu||dd).querySelectorAll('[data-pick-team],[data-pick-expert]'));
+          var index=items.indexOf(document.activeElement), step=ev.key==='ArrowDown'?1:-1;
+          if(items.length) items[(index+step+items.length)%items.length].focus();
+        }
+      }
+      dd.addEventListener('keydown',pickerKeydown);
+      menuEl.addEventListener('keydown',pickerKeydown);
+    }
+    dd.querySelector('[data-clear-expert-chip]')?.addEventListener('click',function(ev){
+      ev.preventDefault();ev.stopPropagation();clearComposerPick(pfx);
+    });
     chipEl.addEventListener('click',function(ev){
       ev.stopPropagation();
       if(dd.classList.contains('task-team-locked')) return;
@@ -228,18 +329,31 @@ export function initExpertChips() {
     if(si) si.addEventListener('input',function(){ renderExpertPicker(pfx,this.value) });
     (menuEl||dd).addEventListener('click',function(ev){
       if(pfx==='tkForm' && tkFormHooks && tkFormHooks.onMenuClick && tkFormHooks.onMenuClick(ev)) return;
+      if(dd.classList.contains('task-team-locked')) return;
       var n;
       if(n=ev.target.closest('[data-pick-team]')){
         var tid=n.getAttribute('data-pick-team');
-        if(activePick.kind==='team'&&activePick.id===tid) clearPick();   /* 再点一次取消 */
+        if(pfx==='tkForm'&&activePick.kind==='team'&&activePick.id===tid) clearPick();
         else set_activePick({kind:'team',id:tid,auto:false});
-        saveTeams(); renderExpertChips(); dd.classList.remove('open'); return;
+        if(pfx!=='tkForm'){
+          applyMode('',false); set_forcedBuilder(null); renderModeTag();
+          document.dispatchEvent(new CustomEvent('lingee:execution-pick-change',{detail:{scope:pfx,pick:{...activePick}}}));
+        }
+        saveTeams(); renderExpertChips(); dd.classList.remove('open'); closeAll(null);
+        if(pfx!=='tkForm') chipEl.focus();
+        return;
       }
       if(n=ev.target.closest('[data-pick-expert]')){
         var eid=n.getAttribute('data-pick-expert');
-        if(activePick.kind==='expert'&&activePick.id===eid) clearPick();
+        if(pfx==='tkForm'&&activePick.kind==='expert'&&activePick.id===eid) clearPick();
         else set_activePick({kind:'expert',id:eid,auto:false});
-        saveTeams(); renderExpertChips(); dd.classList.remove('open'); return;
+        if(pfx!=='tkForm'){
+          applyMode('',false); set_forcedBuilder(null); renderModeTag();
+          document.dispatchEvent(new CustomEvent('lingee:execution-pick-change',{detail:{scope:pfx,pick:{...activePick}}}));
+        }
+        saveTeams(); renderExpertChips(); dd.classList.remove('open'); closeAll(null);
+        if(pfx!=='tkForm') chipEl.focus();
+        return;
       }
       if(ev.target.closest('[data-goto-experts]')){
         dd.classList.remove('open');

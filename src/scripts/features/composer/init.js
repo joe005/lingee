@@ -28,6 +28,14 @@ import { initLocalEnvChat } from './local-env-chat.js';
 
 function initComposer() {
   initLocalEnvChat();
+  document.addEventListener('lingee:execution-pick-change',function(event){
+    if(event.detail.scope!=='chat') return;
+    var session=chatSessions.find(function(row){return row.id===activeSessionId;});
+    if(!session||session.taskId||session.assetCreate||session.assetEdit) return;
+    session.executionPick=event.detail.pick;
+    session.teamId=event.detail.pick.kind==='team'?event.detail.pick.id:'';
+    saveChatSessions();
+  });
   $('#chatTaskProjectSelect').addEventListener('change',function(event){
     var session=chatSessions.find(function(row){return row.id===activeSessionId&&row.taskCreate;});
     var projectId=event.target.value;

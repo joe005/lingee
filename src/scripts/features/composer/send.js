@@ -36,7 +36,8 @@ function doSend(automatic){
     return;
   }
   var autoPicked=false;
-  if(!pickValid()){
+  /* 已选开发快捷卡片由对应 builder 承接，不再叠加关键词匹配的专家团。 */
+  if(!pickValid()&&!currentMode){
     var am=autoMatch(t);
     if(am){ set_activePick(am); renderExpertChips(); autoPicked=true; }
   }

@@ -104,7 +104,11 @@ function resolveChatTeam(session, task){
   /* 管理板块立项的项目（如设备巡检维修系统建设）不在 CV_PROJECTS 里，按任务项目统一查找 */
   var project = tkProjectById(task?.project || session?.projectId);
   if (task?.expertId) return taskExecutorTeam(task, project);
-  return teamById(task?.teamId || '') || teamById(session?.teamId || '');
+  if(task) return teamById(task.teamId || '');
+  var pick=session?.executionPick;
+  if(pick?.kind==='expert'&&EX[pick.id]) return {id:'expert:'+pick.id,name:EX[pick.id].name,members:[pick.id]};
+  if(pick) return pick.kind==='team' ? teamById(pick.id) : null;
+  return teamById(session?.teamId || '');
 }
 function teamAvatarHtml(team){
   var members = (team.members || []).map(function (id) { return EX[id]; }).filter(Boolean).slice(0, 3);

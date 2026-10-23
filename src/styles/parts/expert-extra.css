@@ -221,29 +221,63 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
 }
 
 /* 截图中的新会话智能体选择器：窄菜单、32px 行、分隔线。 */
-:is(#ntExpertDropdown,#chatExpertDropdown) .expert-menu{width:220px;min-width:220px;padding:4px;border:0;border-radius:var(--r-card);background:var(--bg);box-shadow:var(--menu-shadow)}
-:is(#ntExpertDropdown,#chatExpertDropdown) .expert-menu .app-search-wrap{padding:0 0 4px;border:0}
-:is(#ntExpertDropdown,#chatExpertDropdown) .expert-menu .app-search{display:flex;align-items:center;height:28px;min-height:28px;padding:0 8px;gap:8px;border:1px solid var(--border);border-radius:var(--asset-pill-radius);background:var(--bg)}
-:is(#ntExpertDropdown,#chatExpertDropdown) .expert-menu .app-search input{order:0;min-width:0;font:inherit;font-size:var(--font-size-14);color:var(--text);flex:1}
-:is(#ntExpertDropdown,#chatExpertDropdown) .expert-menu .app-search>.ic{order:2;flex:none;width:16px;height:16px}
-:is(#ntExpertDropdown,#chatExpertDropdown) .expert-menu .app-list{max-height:264px;padding:0;overflow:auto}
-:is(#ntExpertDropdown,#chatExpertDropdown) .expert-menu .pick-group{height:8px;min-height:8px;margin:4px 0 0;padding:0;border-top:1px solid var(--border);font-size:0}
-:is(#ntExpertDropdown,#chatExpertDropdown) .expert-menu .pick-group:first-child{display:none}
-:is(#ntExpertDropdown,#chatExpertDropdown) .expert-menu .x-opt{display:flex;align-items:center;gap:8px;width:100%;height:32px;padding:0 8px;border:0;border-radius:var(--asset-pill-radius);background:transparent;cursor:pointer;text-align:left;font:inherit}
-:is(#ntExpertDropdown,#chatExpertDropdown) .expert-menu .x-opt:hover,:is(#ntExpertDropdown,#chatExpertDropdown) .expert-menu .x-opt.checked{background:var(--tag-bg)}
-:is(#ntExpertDropdown,#chatExpertDropdown) .expert-menu .x-opt-n{font-size:var(--font-size-14);line-height:22px}
-:is(#ntExpertDropdown,#chatExpertDropdown) .expert-menu .x-opt-av{width:20px;height:20px;border-radius:50%}
-:is(#ntExpertDropdown,#chatExpertDropdown) .expert-menu .x-faces{position:relative;display:block;width:20px;height:20px;padding:0;flex:none}
-:is(#ntExpertDropdown,#chatExpertDropdown) .expert-menu .x-faces img{position:absolute;box-sizing:border-box;width:12px;height:12px;margin:0;border:1px solid var(--bg);border-radius:50%;object-fit:cover}
-:is(#ntExpertDropdown,#chatExpertDropdown) .expert-menu .x-faces img:nth-child(1){top:0;left:4px}
-:is(#ntExpertDropdown,#chatExpertDropdown) .expert-menu .x-faces img:nth-child(2){bottom:0;left:0}
-:is(#ntExpertDropdown,#chatExpertDropdown) .expert-menu .x-faces img:nth-child(3){bottom:0;right:0}
-:is(#ntExpertDropdown,#chatExpertDropdown) .expert-menu .app-foot{margin-top:4px;padding:4px 0 0;border-top:1px solid var(--border)}
-:is(#ntExpertDropdown,#chatExpertDropdown) .expert-menu .app-foot-item{height:32px;padding:0 8px;font-size:var(--font-size-14);border-radius:var(--asset-pill-radius)}
-:is(#ntExpertDropdown,#chatExpertDropdown) .expert-menu:has(input:not(:placeholder-shown)) .app-foot{display:none}
-:is(#ntExpertDropdown,#chatExpertDropdown) .expert-menu button:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}
+:is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu) .expert-menu{width:220px;min-width:220px;padding:4px;border:0;border-radius:var(--r-card);background:var(--bg);box-shadow:var(--menu-shadow)}
+:is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu) .expert-menu .app-search-wrap{padding:0 0 4px;border:0}
+:is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu) .expert-menu .app-search{display:flex;align-items:center;height:28px;min-height:28px;padding:0 8px;gap:8px;border:1px solid var(--border);border-radius:var(--asset-pill-radius);background:var(--bg)}
+:is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu) .expert-menu .app-search input{order:0;min-width:0;font:inherit;font-size:var(--font-size-14);color:var(--text);flex:1}
+:is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu) .expert-menu .app-search>.ic{order:2;flex:none;width:16px;height:16px}
+:is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu) .expert-menu .app-list{max-height:264px;padding:0;overflow:auto}
+:is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu) .expert-menu .pick-group{height:8px;min-height:8px;margin:4px 0 0;padding:0;border-top:1px solid var(--border);font-size:0}
+:is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu) .expert-menu .pick-group:first-child{display:none}
+:is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu) .expert-menu .x-opt{display:flex;align-items:center;gap:8px;width:100%;height:32px;padding:0 8px;border:0;border-radius:var(--asset-pill-radius);background:transparent;cursor:pointer;text-align:left;font:inherit}
+:is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu) .expert-menu .x-opt:hover,:is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu) .expert-menu .x-opt.checked{background:var(--tag-bg)}
+:is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu) .expert-menu .x-opt-n{font-size:var(--font-size-14);line-height:22px}
+:is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu) .expert-menu .x-opt-av{width:20px;height:20px;border-radius:50%}
+:is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu) .expert-menu .x-faces{position:relative;display:block;width:20px;height:20px;padding:0;flex:none}
+:is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu) .expert-menu .x-faces img{position:absolute;box-sizing:border-box;width:12px;height:12px;margin:0;border:1px solid var(--bg);border-radius:50%;object-fit:cover}
+:is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu) .expert-menu .x-faces img:nth-child(1){top:0;left:4px}
+:is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu) .expert-menu .x-faces img:nth-child(2){bottom:0;left:0}
+:is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu) .expert-menu .x-faces img:nth-child(3){bottom:0;right:0}
+:is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu) .expert-menu .app-foot{margin-top:4px;padding:4px 0 0;border-top:1px solid var(--border)}
+:is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu) .expert-menu .app-foot-item{height:32px;padding:0 8px;font-size:var(--font-size-14);border-radius:var(--asset-pill-radius)}
+:is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu) .expert-menu:has(input:not(:placeholder-shown)) .app-foot{display:none}
+:is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu) .expert-menu button:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}
 #expertModal .asset-source-personal,#teamModal.team-detail-view .asset-source-personal{color:var(--asset-personal-outline);border-color:var(--asset-personal-outline-border)}
 #expertModal .asset-source-shared,#teamModal.team-detail-view .asset-source-shared{color:var(--asset-source-tenant-text);border-color:var(--asset-tenant-outline-border)}
-:is(#ntExpertDropdown,#chatExpertDropdown) .asset-picker-local{padding:0 4px;border:1px solid var(--border);border-radius:var(--asset-pill-radius);font-size:var(--font-size-12);line-height:18px;color:var(--text-secondary);flex:none}
-:is(#ntExpertDropdown,#chatExpertDropdown) .asset-picker-clear{order:1;display:flex;align-items:center;justify-content:center;width:16px;height:16px;border:0;border-radius:50%;background:var(--text-soft);color:var(--bg);font:inherit;line-height:1;cursor:pointer;flex:none}
-:is(#ntExpertDropdown,#chatExpertDropdown) .asset-picker-clear[hidden]{display:none}
+:is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu) .asset-picker-local{padding:0 4px;border:1px solid var(--border);border-radius:var(--asset-pill-radius);font-size:var(--font-size-12);line-height:18px;color:var(--text-secondary);flex:none}
+:is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu) .asset-picker-clear{order:1;display:flex;align-items:center;justify-content:center;width:16px;height:16px;border:0;border-radius:50%;background:var(--text-soft);color:var(--bg);font:inherit;line-height:1;cursor:pointer;flex:none}
+:is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu) .asset-picker-clear[hidden]{display:none}
+
+/* 输入区：首次从＋选择，选中后直接点击更换。 */
+:is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu){min-width:0;max-width:50%}
+:is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu)>button.chip{min-width:0;max-width:100%;font-family:inherit;background:var(--brand-fill);color:var(--brand);font-weight:400}
+:is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu)>button.chip:hover{background:var(--hover)}
+:is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu)>button.chip:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+:is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu)>.chip .chip-label{min-width:0;overflow:hidden;text-overflow:ellipsis}
+:is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu)>.chip .caret{flex:none}
+#chatExpertDropdown:not(.task-team-locked)>.chip.muted{display:none}
+#chatExpertDropdown:has(>.chip.muted):not(.task-team-locked):not(.open){width:0}
+:is(#addDropdown,#chatAddDropdown) [data-open-home-expert],#chatAddDropdown [data-open-chat-expert]{width:100%;border:0;background:transparent;font:inherit;color:var(--text);text-align:left;cursor:pointer}
+:is(#addDropdown,#chatAddDropdown) [data-open-home-expert]:hover,#chatAddDropdown [data-open-chat-expert]:hover{background:var(--hover)}
+#chatAddDropdown [data-open-chat-expert]:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}
+#view-chat:has(.task-team-locked) [data-open-chat-expert]{display:none}
+:is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu) .expert-menu .x-empty-sm{color:var(--text-secondary)}
+
+/* ＋菜单的智能体二级展开，复用已选标签的同一份搜索列表。 */
+:is(#addDropdown,#chatAddDropdown) .asset-picker-parent{padding:0}
+:is(#addDropdown,#chatAddDropdown) .asset-picker-entry{display:flex;align-items:center;justify-content:space-between;gap:12px;box-sizing:border-box;width:100%;padding:8px 10px;border:0;border-radius:8px;background:transparent;color:var(--text);font:inherit;font-size:var(--font-size-14);text-align:left;cursor:pointer}
+:is(#addDropdown,#chatAddDropdown) .asset-picker-entry:hover,:is(#addDropdown,#chatAddDropdown) .asset-picker-entry[aria-expanded="true"]{background:var(--hover)}
+:is(#addDropdown,#chatAddDropdown) .asset-picker-entry:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}
+:is(#addDropdown,#chatAddDropdown) .asset-picker-submenu>.expert-menu{box-sizing:content-box;width:220px;min-width:220px;padding:4px;border:0;border-radius:var(--r-card);background:var(--bg);box-shadow:var(--menu-shadow)}
+
+/* 已选标签保留下拉切换，并提供独立清除按钮，避免嵌套按钮。 */
+:is(#ntExpertDropdown,#chatExpertDropdown)>.asset-chip-clear{display:flex;flex:none;box-sizing:border-box;margin-left:4px;align-items:center;justify-content:center;width:24px;height:24px;padding:4px;border:0;border-radius:50%;background:transparent;color:var(--brand);cursor:pointer}
+:is(#ntExpertDropdown,#chatExpertDropdown)>.asset-chip-clear svg{width:16px;height:16px}
+:is(#ntExpertDropdown,#chatExpertDropdown)>.asset-chip-clear:hover{background:var(--active)}
+:is(#ntExpertDropdown,#chatExpertDropdown)>.asset-chip-clear:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+:is(#ntExpertDropdown,#chatExpertDropdown)>.asset-chip-clear[hidden],#chatExpertDropdown.task-team-locked>.asset-chip-clear{display:none}
+
+/* 清除按钮与选择按钮并排占位，避免绝对定位被后绘制的标签覆盖。 */
+:is(#ntExpertDropdown,#chatExpertDropdown){display:inline-flex;align-items:center}
+:is(#ntExpertDropdown,#chatExpertDropdown):has(>[data-clear-expert-chip]:not([hidden])){background:var(--brand-fill);border-radius:var(--asset-pill-radius)}
+:is(#ntExpertDropdown,#chatExpertDropdown)>button.chip{flex:1;min-width:0}

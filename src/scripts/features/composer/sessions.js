@@ -188,7 +188,7 @@ function createChatSession(title, taskId) {
   var task = tkGetTasks().find(function (row) { return row.id === taskId; });
   var projectId = task?.project || '';
   var teamId = task?.teamId || (activePick.kind === 'team' ? activePick.id : '');
-  var session = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), title: title, taskId: taskId, stageId: task?.executionStageId || '', projectId: projectId, teamId: teamId, ownerId: tkCurrentUserId(), exchanges: [] };
+  var session = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), title: title, taskId: taskId, stageId: task?.executionStageId || '', projectId: projectId, teamId: teamId, ownerId: tkCurrentUserId(), executionPick: {...activePick}, exchanges: [] };
   if (projectId) collapsedChatProjects.delete(projectId);
   chatSessions.unshift(session);
   var regularCount = 0;

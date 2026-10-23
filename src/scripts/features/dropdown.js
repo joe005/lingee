@@ -40,7 +40,10 @@ function adjustMenuHeight(dd){
   }
   menu.style.maxHeight=maxH+'px';
   var list=menu.querySelector('.app-list');
-  if(list) list.style.maxHeight=(maxH-60)+'px';
+  if(list){
+    var reserved=(dd.id==='ntExpertDropdown'||dd.id==='chatExpertDropdown') ? menu.scrollHeight-list.offsetHeight : 60;
+    list.style.maxHeight=Math.max(32,maxH-reserved)+'px';
+  }
 }
 
 /* generic single-select menus (model / workspace) */
@@ -97,6 +100,7 @@ export function initHoverDropdowns() {
     /* 用 id 判断而非变量引用：appDd / chatAppDd 在本行之后才赋值，
        用变量会因 var 提升恒为 undefined，导致专用下拉被重复绑定 */
     if(dd.id==='appDropdown' || dd.id==='chatAppDropdown') return;
+    if(dd.id==='ntExpertDropdown' || dd.id==='chatExpertDropdown') return; // 智能体选择仅点击打开
     if(dd.classList.contains('field-dd')) return; // 表单内下拉改为点击展开
     if(dd.classList.contains('project-dd')) return; // 项目操作同为点击展开，与会话操作一致
     if(dd.classList.contains('dd-float')) return; // 弹窗内浮层下拉改为点击展开，避免 hover 先打开与 click 切换冲突

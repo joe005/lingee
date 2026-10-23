@@ -32,7 +32,7 @@ function setNavActiveByView(view){
 function applyMode(mode,fromChip){
   modeItems.forEach(function(m){ m.classList.toggle('checked', m.getAttribute('data-val')===mode); });
   appDd.classList.remove('error');
-  input.setAttribute('data-placeholder','布置'+mode+'任务');
+  input.setAttribute('data-placeholder',mode?'布置'+mode+'任务':'布置开发任务，输入 / 调用技能或命令');
   appDd.classList.toggle('hidden', mode!=='苍穹应用');
   if(mode!=='苍穹应用'){ appDd.classList.remove('open'); }
   input.focus();

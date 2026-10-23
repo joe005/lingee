@@ -1,0 +1,1 @@
+export default {"id":"105","date":"2026-10-23","iconBg":"var(--brand-fill)","iconColor":"var(--brand)","type":"优化","module":"智能体选择","author":"wuhc2023","body":"优化·智能体选择：智能体选择入口改为加号菜单二级展开，支持点击已选名称切换和左侧叉号清除，完善开发入口互斥、新会话重置与历史会话选择恢复。"};

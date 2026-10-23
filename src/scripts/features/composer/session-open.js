@@ -40,6 +40,7 @@ function openChatSession(sessionId) {
   hideAssetEditorPanel();
   set_chatViewerTabs([]);
   set_chatViewerActiveKey(null);
+  if(!session.taskId&&!session.assetCreate&&!session.assetEdit&&!session.taskCreate&&!session.localEnv) set_activePick(session.executionPick || (session.teamId ? {kind:'team',id:session.teamId,auto:false} : {kind:null,id:'',auto:false}));
   if(session.assetEdit)set_activePick({kind:session.assetEdit.kind,id:session.assetEdit.id,auto:false});
   renderChatTaskSide();
   setComposerTaskReference(activeSessionTaskId);
