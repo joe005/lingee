@@ -6,7 +6,8 @@ export function initSelectDropdowns(selects, onOpen = () => {}) {
   selects.forEach(select => {
     if (niuSelectCleanups.has(select)) return;
     const controller = new AbortController();
-    const overlay = select.closest('.sync-overlay, #niuCreateOverlay, #niuPlanOverlay') || select.closest('[role=dialog]') || document.body;
+    // 固定定位使用视口坐标，浮层须挂在遮罩上，避开 modal-card 的 transform 坐标系。
+    const overlay = select.closest('.sync-overlay, .modal-overlay, #niuCreateOverlay, #niuPlanOverlay') || select.closest('[role=dialog]') || document.body;
     const trigger = document.createElement('button');
     trigger.type = 'button';
     trigger.className = 'niu-person-trigger niu-select-trigger';

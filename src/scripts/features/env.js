@@ -99,6 +99,12 @@ var demoGatewayByName={
   'hr-sit':'acgw-hr-sit',
   'legacy-v79':'acgw-legacy-v79'
 };
+/* 授权成功时记录本地完整时间，展示精确到秒。 */
+function formatEnvGrantTime(date){
+  var pad=function(value){ return String(value).padStart(2,'0'); };
+  return date.getFullYear()+'-'+pad(date.getMonth()+1)+'-'+pad(date.getDate())
+    +' '+pad(date.getHours())+':'+pad(date.getMinutes())+':'+pad(date.getSeconds());
+}
 function hydrateEnvItem(item,index){
   var sourceTag=item.querySelector('.env-tag.local,.env-tag.cloud');
   /* 列表行不展示具体版本，适用版本在页面标题区统一说明 */
@@ -129,7 +135,7 @@ function hydrateEnvItem(item,index){
   }
   if(item.dataset.envConn==='auth'&&!item.dataset.grantedBy){
     item.dataset.grantedBy='吴**超';
-    item.dataset.grantedAt=name==='fi-uat'?'08-27':'09-01';
+    item.dataset.grantedAt=name==='fi-uat'?'2026-08-27 10:20:00':'2026-09-01 09:30:00';
     item.dataset.lastUsed=name==='fi-uat'?'08-28 16:40':'今天 14:32';
     if(name==='fi-uat') item.dataset.grantState='expired';
   }
@@ -229,7 +235,6 @@ function setConnNote(text,warn,spin){
 
 /* 说明这一行只讲一件事，优先级从高到低：不可选原因 > 已建环境不能改 > 当前选择的前提 */
 function syncConnNote(){
-  var isAuth=envConnMode==='auth';
   if(envMode!=='create'){
     setConnNote(envEditItem&&envEditItem.dataset.envSource==='cloud'
       ? '该环境由企业管理中心下发，授权类型随下发配置，本机不能改。'
@@ -237,8 +242,7 @@ function syncConnNote(){
     return;
   }
   if(envConnBlocked){ setConnNote(envConnBlocked,false,false); return; }
-  /* OAuth 下方已有三条说明，这里再补一句是重复 */
-  setConnNote(isAuth?'':'需要先在 ERP 的「OpenAPI 第三方应用」里创建应用，拿到 ID 和密钥。',false,false);
+  setConnNote('',false,false);
 }
 
 function applyConnMode(mode){
@@ -300,24 +304,13 @@ function syncAuthGrant(){
     &&!!envEditItem.dataset.grantedBy;
   grant.classList.toggle('hidden',!saved);
   points.classList.toggle('hidden',!!saved);
-  if(!saved){
-    var hidden=$('#envAuthScopeList');
-    if(hidden) hidden.classList.add('hidden');
-    return;
-  }
+  if(!saved) return;
   $('#envAuthGrantBy').textContent=envEditItem.dataset.grantedBy||'—';
   $('#envAuthGrantDc').textContent=dataCenterLabel(envEditItem.dataset.envDataCenter);
   var st=envEditItem.dataset.grantState;
   $('#envAuthGrantAt').textContent=(envEditItem.dataset.grantedAt||'—')
     +(st==='expired'?'（已失效）':(st==='revoked'?'（已断开）':''));
 
-  var toggle=$('#envAuthScopeToggle');
-  if(toggle){
-    toggle.textContent=ERP_API_SCOPES.length+' 项 API 权限';
-    toggle.setAttribute('aria-expanded','false');
-  }
-  var list=$('#envAuthScopeList');
-  if(list){ list.classList.add('hidden'); renderScopeList(list,ERP_API_SCOPES); }
 }
 
 /* 底部按钮随模式与场景切换：授权模式没有「测试连接」，
@@ -383,7 +376,10 @@ function syncDcRefresh(){
   btn.classList.toggle('hidden',envMode!=='create');
   var url=$('#envUrl');
   btn.disabled=envDcLoading||!((url&&url.value||'').trim());
-  btn.textContent=envDcLoading?'拉取中...':'重新拉取数据中心';
+  var label=envDcLoading?'拉取中…':'重新拉取数据中心';
+  btn.setAttribute('aria-label',label);
+  btn.title=label;
+  btn.setAttribute('aria-busy',envDcLoading?'true':'false');
 }
 function loadDataCenters(){
   if(envDcLoading) return;
@@ -577,7 +573,7 @@ function finishAuthorize(granted){
     if(granted){
       t.dataset.grantState='';
       t.dataset.grantedBy='吴**超';
-      t.dataset.grantedAt='今天';
+      t.dataset.grantedAt=formatEnvGrantTime(new Date());
       t.dataset.lastUsed='刚刚';
       t.dataset.envDataCenter=envAuthorizeDc;
     }else{
@@ -805,7 +801,6 @@ function openEnvModal(mode,item){
 function closeEnvModal(){ if(envModal) envModal.classList.remove('show'); resetConnSection(); }
 /* 地址变了就丢弃已选数据中心：旧数据中心不属于新地址 */
 var envUrlInput=$('#envUrl');
-var envAuthScopeToggle=$('#envAuthScopeToggle');
 
 var envDcRefreshBtn=$('#envDcRefresh');
 
@@ -831,7 +826,7 @@ function addAuthEnvRow(name,dataCenterId,granted){
   item.dataset.normalAccessToken='true';
   if(granted){
     item.dataset.grantedBy='吴**超';
-    item.dataset.grantedAt='今天';
+    item.dataset.grantedAt=formatEnvGrantTime(new Date());
     item.dataset.lastUsed='刚刚';
   }else{
     item.dataset.grantState='none';
@@ -959,12 +954,6 @@ export function initEnvDisconnect() {
       if(envMode==='create'&&dc&&dc.options.length<2) loadDataCenters();
     });
   }
-  if(envAuthScopeToggle) envAuthScopeToggle.addEventListener('click',function(){
-    var list=$('#envAuthScopeList'); if(!list) return;
-    var open=list.classList.contains('hidden');
-    list.classList.toggle('hidden',!open);
-    envAuthScopeToggle.setAttribute('aria-expanded',open?'true':'false');
-  });
   if(envDcRefreshBtn) envDcRefreshBtn.addEventListener('click',function(){
     var url=$('#envUrl');
     if(!((url&&url.value||'').trim())){ setEnvFieldError(url,'请输入环境地址'); return; }
