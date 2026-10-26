@@ -156,22 +156,22 @@ function syncConnTag(item){
   var isAuth=item.dataset.envConn==='auth';
   var state=item.dataset.grantState||'';
   var pending=state==='expired'||state==='revoked'||state==='none';
-  var tag=document.createElement('span');
-  /* 一行只挂一枚连接方式标签：同一环境同时只启用一种 */
-  tag.className='env-tag conn '+(isAuth?(pending?'reauth':'auth'):'cred');
-  tag.textContent=isAuth?(pending?(state==='expired'?'授权已失效':'未授权'):'OAuth 授权'):'第三方应用';
-  head.appendChild(tag);
-  item.classList.toggle('needs-reauth',isAuth&&pending);
+  /* 仅 OAuth 环境显示授权状态，第三方应用环境不再挂连接方式标签。 */
   if(isAuth){
+    var tag=document.createElement('span');
+    tag.className='env-tag conn '+(pending?'reauth':'auth');
+    tag.textContent=pending?(state==='expired'?'OAuth授权已失效':'未授权'):'OAuth 授权';
+    head.appendChild(tag);
+  }
+  item.classList.toggle('needs-reauth',isAuth&&pending);
+  if(isAuth&&state!=='expired'){
     var sub=document.createElement('div');
     sub.className='env-sub'+(pending?' warn':'');
     sub.textContent=state==='none'
       ? '配置已保存，还没有完成授权'
       : (state==='revoked'
           ? '已断开连接，重新授权后可以继续使用'
-          : (state==='expired'
-              ? '授权已失效，可能是被撤销或长期未使用'
-              : '授权人 '+(item.dataset.grantedBy||'')+' · '+(item.dataset.grantedAt||'')+' 授权 · '+(item.dataset.lastUsed||'')+' 使用'));
+          : '授权人 '+(item.dataset.grantedBy||'')+' · '+(item.dataset.grantedAt||'')+' 授权 · '+(item.dataset.lastUsed||'')+' 使用');
     main.appendChild(sub);
   }
   if(isAuth&&pending){
