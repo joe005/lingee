@@ -204,6 +204,7 @@ function addSessionExchange(prompt) {
   if (!session) return null;
   session.exchanges.forEach(function (exchange) { exchange.done = true; });
   session.exchanges.push({ prompt: prompt, done: false });
+  session.executionLocked = true;
   saveChatSessions();
   renderChatSessions();
   return session.exchanges.length - 1;

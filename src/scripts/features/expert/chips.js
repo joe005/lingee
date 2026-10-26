@@ -1,4 +1,6 @@
 import { $, $$ } from '../../core/dom.js';
+import { activeSessionId, chatSessions } from '../composer/sessions.js';
+import { sessionHasConversation } from '../composer/session-policy.js';
 import { layerVisible, layerOf } from './layers.js';
 import { applyMode, brandEl, navItems, setNavActive, showView } from '../../core/view.js';
 import '../collab/index.js';   /* 不再调用其函数（改发 lingee:collab-nav 事件），保留以维持模块求值顺序 */
@@ -46,35 +48,57 @@ function renderModeTag(){
   });
 }
 
+/* 新会话输入区与已发起的会话分开判断，不能因旧会话仍活跃而锁住新会话。 */
+function composerPickLocked(pfx){
+  var dd=$('#'+pfx+'ExpertDropdown');
+  return !!dd && (dd.classList.contains('task-team-locked') || (pfx==='chat' && sessionHasConversation(chatSessions.find(function(row){return row.id===activeSessionId;}))));
+}
 function renderExpertChips(){
-  var has=pickValid();
   ['nt','chat','tkForm'].forEach(function(pfx){
     var label=$('#'+pfx+'ExpertLabel'), faces=$('#'+pfx+'ExpertFaces');
-    var dd=$('#'+pfx+'ExpertDropdown');
-    if(pfx==='chat' && dd?.classList.contains('task-team-locked')){
-      /* 单智能体执行的任务锁定为「expert:<id>」，按该智能体显示 */
+    var dd=$('#'+pfx+'ExpertDropdown'); if(!dd) return;
+    var session=pfx==='chat' ? chatSessions.find(function(row){return row.id===activeSessionId;}) : null;
+    var started=sessionHasConversation(session), locked=composerPickLocked(pfx);
+    var pick=started ? (session.executionPick || (session.teamId ? {kind:'team',id:session.teamId} : {kind:null,id:''})) : activePick;
+    var team=pick.kind==='team'?teamById(pick.id):null;
+    var expert=pick.kind==='expert'?EX[pick.id]:null;
+    var has=!!(team||expert), name=team?.name||expert?.name||'';
+    var reason=started?'已开始会话，不能更换或清除智能体及团队；如需更换，请新建会话。':'此会话的执行对象已锁定';
+    dd.classList.toggle('conversation-pick-locked',started);
+    if(pfx==='chat' && dd.classList.contains('task-team-locked')){
       var lockedId=dd.dataset.lockedTeamId||'', soloId=lockedId.indexOf('expert:')===0 ? lockedId.slice(7) : '';
       var lockedTeam=soloId ? (EX[soloId] ? {name:EX[soloId].name,members:[soloId]} : null) : teamById(lockedId);
       if(label) label.textContent=lockedTeam?.name || '未配置智能体团队';
       if(faces) faces.innerHTML=lockedTeam ? lockedTeam.members.slice(0,3).map(function(i){ return EX[i] ? '<img src="'+xav(EX[i].k)+'" alt="">' : ''; }).join('') : '';
-      dd.querySelector('[data-chip]')?.classList.toggle('muted', !lockedTeam);
-      var lockedClear=dd.querySelector('[data-clear-expert-chip]'); if(lockedClear) lockedClear.hidden=true;
-      return;
+      has=!!lockedTeam;
+    }else{
+      if(label) label.textContent=has?name:(started?'默认执行':(pfx==='tkForm'?'选择智能体团队':'选择智能体'));
+      if(faces) faces.innerHTML=team ? team.members.slice(0,3).filter(function(id){return !!EX[id];}).map(function(id){return '<img src="'+xav(EX[id].k)+'" alt="">';}).join('')
+        : (expert?'<img src="'+xav(expert.k)+'" alt="">':'<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 20v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 4 18.5V20"/><circle cx="10" cy="8" r="3.2"/><path d="M20 20v-1.5a3.5 3.5 0 0 0-2.6-3.4"/><path d="M15.4 5.2a3.2 3.2 0 0 1 0 5.6"/></svg>');
     }
-    if(label) label.textContent = has ? pickName() : (pfx==='tkForm' ? '选择智能体团队' : '选择智能体');
-    if(faces){
-      faces.innerHTML = has
-        ? (activePick.kind==='team'
-            ? teamById(activePick.id).members.slice(0,3).map(function(i){
-                return '<img src="'+xav(EX[i].k)+'" alt="">'; }).join('')
-            : '<img src="'+xav(EX[activePick.id].k)+'" alt="">')
-        : '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 20v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 4 18.5V20"/><circle cx="10" cy="8" r="3.2"/><path d="M20 20v-1.5a3.5 3.5 0 0 0-2.6-3.4"/><path d="M15.4 5.2a3.2 3.2 0 0 1 0 5.6"/></svg>';
+    var chipClear=dd.querySelector('[data-clear-expert-chip]'); if(chipClear) chipClear.hidden=!has||locked;
+    var chip=dd.querySelector('[data-chip]');
+    if(chip){
+      chip.classList.toggle('muted',!has&&!started);
+      if(pfx!=='tkForm'){
+        chip.disabled=locked;
+        chip.setAttribute('aria-disabled',locked?'true':'false');
+        chip.setAttribute('aria-haspopup',locked?'false':'true');
+      }
+      chip.title=locked?reason:(has?'当前执行对象：'+name+'，点击更换':'选择智能体');
     }
-    if(dd){
-      var chipClear=dd.querySelector('[data-clear-expert-chip]'); if(chipClear) chipClear.hidden=!has;
-      var c=dd.querySelector('[data-chip]');
-      if(c){ c.classList.toggle('muted', !has); c.title=has ? '当前执行对象：'+pickName()+'，点击更换' : '选择智能体'; }
+    if(pfx==='chat'){
+      dd.title=locked?reason:'';
+      var entry=document.querySelector('[data-open-chat-expert]');
+      if(entry){
+        entry.setAttribute('aria-disabled',locked?'true':'false');
+        entry.setAttribute('aria-haspopup',locked?'false':'true');
+        entry.setAttribute('aria-label',locked?'智能体，'+reason:'智能体');
+        entry.title=locked?reason:'';
+        var parent=entry.closest('.asset-picker-parent'); if(parent) parent.title=locked?reason:'';
+      }
     }
+    if(locked){restoreComposerSubmenu(dd);dd.classList.remove('open');}
   });
 }
 function renderExpertPicker(pfx,kw){
@@ -199,7 +223,7 @@ function positionComposerSubmenu(dd){
 }
 export function openExpertPicker(pfx,trigger,focusSearch=true){
   var dd=$('#'+pfx+'ExpertDropdown'); if(!dd) return;
-  if(dd.classList.contains('task-team-locked')) return;
+  if(composerPickLocked(pfx)) return;
   restoreComposerSubmenu(dd);
   var si=$('#'+pfx+'ExpertSearchInput');
   if(si&&pfx!=='tkForm'){ si.value=''; var clear=dd.querySelector('.asset-picker-clear'); if(clear) clear.hidden=true; }
@@ -225,7 +249,7 @@ export function openExpertPicker(pfx,trigger,focusSearch=true){
 /* 仅通过标签左侧叉号清除，不打开列表，不更改草稿内容。 */
 function clearComposerPick(pfx){
   var dd=$('#'+pfx+'ExpertDropdown');
-  if(!dd||dd.classList.contains('task-team-locked')) return;
+  if(!dd||composerPickLocked(pfx)) return;
   clearPick(); restoreComposerSubmenu(dd); closeAll(null); renderExpertChips();
   document.dispatchEvent(new CustomEvent('lingee:execution-pick-change',{detail:{scope:pfx,pick:{...activePick}}}));
   $(pfx==='nt'?'#composerInput':'#chatInput')?.focus();
@@ -244,6 +268,7 @@ export function initExpertChips() {
     var dd=$('#'+entry[1]+'ExpertDropdown'), parent=trigger.closest('.add-dropdown');
     trigger.addEventListener('click',function(event){
       event.preventDefault();event.stopPropagation();
+      if(composerPickLocked(entry[1])) return;
       if(dd._composerSubmenu) $('#'+entry[1]+'ExpertSearchInput')?.focus();
       else openExpertPicker(entry[1],trigger);
     });
@@ -269,6 +294,7 @@ export function initExpertChips() {
   document.addEventListener('click',function(ev){
     if(ev.target.closest('[data-clear-mode]')){
       ev.stopPropagation();
+      if(ev.target.closest('#view-chat')&&composerPickLocked('chat')) return;
       applyMode('',false);
       set_forcedBuilder(null);
       renderModeTag(); return;
@@ -322,14 +348,14 @@ export function initExpertChips() {
     });
     chipEl.addEventListener('click',function(ev){
       ev.stopPropagation();
-      if(dd.classList.contains('task-team-locked')) return;
+      if(composerPickLocked(pfx)) return;
       if(dd.classList.contains('open')) dd.classList.remove('open');
       else openExpertPicker(pfx);
     });
     if(si) si.addEventListener('input',function(){ renderExpertPicker(pfx,this.value) });
     (menuEl||dd).addEventListener('click',function(ev){
       if(pfx==='tkForm' && tkFormHooks && tkFormHooks.onMenuClick && tkFormHooks.onMenuClick(ev)) return;
-      if(dd.classList.contains('task-team-locked')) return;
+      if(composerPickLocked(pfx)) return;
       var n;
       if(n=ev.target.closest('[data-pick-team]')){
         var tid=n.getAttribute('data-pick-team');

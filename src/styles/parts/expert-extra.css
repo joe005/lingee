@@ -260,7 +260,6 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
 :is(#addDropdown,#chatAddDropdown) [data-open-home-expert],#chatAddDropdown [data-open-chat-expert]{width:100%;border:0;background:transparent;font:inherit;color:var(--text);text-align:left;cursor:pointer}
 :is(#addDropdown,#chatAddDropdown) [data-open-home-expert]:hover,#chatAddDropdown [data-open-chat-expert]:hover{background:var(--hover)}
 #chatAddDropdown [data-open-chat-expert]:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}
-#view-chat:has(.task-team-locked) [data-open-chat-expert]{display:none}
 :is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu) .expert-menu .x-empty-sm{color:var(--text-secondary)}
 
 /* ＋菜单的智能体二级展开，复用已选标签的同一份搜索列表。 */
@@ -281,3 +280,16 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
 :is(#ntExpertDropdown,#chatExpertDropdown){display:inline-flex;align-items:center}
 :is(#ntExpertDropdown,#chatExpertDropdown):has(>[data-clear-expert-chip]:not([hidden])){background:var(--brand-fill);border-radius:var(--asset-pill-radius)}
 :is(#ntExpertDropdown,#chatExpertDropdown)>button.chip{flex:1;min-width:0}
+
+/* 首次发送后保留当前执行对象，移除切换及清除入口。 */
+#chatExpertDropdown.conversation-pick-locked .caret,#chatExpertDropdown.conversation-pick-locked>.asset-chip-clear{display:none}
+#chatExpertDropdown.conversation-pick-locked>button.chip{cursor:default;color:var(--text-secondary);background:var(--tag-bg);opacity:1}
+#view-chat:has(#chatExpertDropdown.conversation-pick-locked) #chatTags [data-clear-mode]{display:none}
+
+/* 会话开始后保留智能体菜单项，置灰且不展开。 */
+#chatAddDropdown .asset-picker-state{display:none;font-size:var(--font-size-12);color:var(--text-secondary)}
+#chatAddDropdown [data-open-chat-expert][aria-disabled="true"]{color:var(--text-secondary);cursor:not-allowed;background:transparent}
+#chatAddDropdown [data-open-chat-expert][aria-disabled="true"] .ic{color:inherit}
+#chatAddDropdown [data-open-chat-expert][aria-disabled="true"] .submenu-arrow{display:none}
+#chatAddDropdown [data-open-chat-expert][aria-disabled="true"] .asset-picker-state{display:inline}
+#chatAddDropdown .asset-picker-parent:has(>[aria-disabled="true"]):hover{background:transparent}
