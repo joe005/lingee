@@ -132,7 +132,7 @@
 .env-field.invalid select:hover{border-color:var(--danger)}
 
 
-/* ERP 环境表单：基本信息、授权类型、连接凭证依次展示。 */
+/* ERP 环境表单：基本信息、授权类型、连接配置依次展示。 */
 .env-config-modal .env-section-heading{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 12px}
 .env-config-modal .env-section-heading>span:first-child{flex:none}
 .env-config-modal .env-section-heading .env-conn-note{
