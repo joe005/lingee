@@ -367,7 +367,7 @@ function stageExperts(stageId,memberIds,explicit){
   return out.slice(0,STAGE_EXPERT_MAX);
 }
 var PRESET_TEAMS=[
-  {id:'cosmic-app-dev',preset:true,name:'苍穹应用开发',by:'Lingee 内置',
+  {id:'cosmic-app-dev',preset:true,name:'苍穹应用开发团队',by:'Lingee 内置',
    desc:'面向金蝶苍穹企业应用开发的交付智能体团队，覆盖元数据建模、BOS/PDM 扩展与 API 定制。',
    domains:['苍穹应用','星空','BOS','PDM','企业应用'],
    leadId:'cosmic-team-lead',
@@ -376,7 +376,7 @@ var PRESET_TEAMS=[
    cmds:[['创建一张采购订单单据，含单头分录结构并配置审批流','创建一张采购订单单据，含单头分录结构并配置审批流'],
          ['扩展标准销售订单，新增自定义字段并开发业务插件','扩展标准销售订单，新增自定义字段并开发业务插件'],
          ['开发自定义 API，查询多仓库库存余量','开发自定义 API，查询多仓库库存余量']]},
-  {id:'general-app-dev',preset:true,name:'通用应用开发',by:'Lingee 内置',
+  {id:'general-app-dev',preset:true,name:'通用应用开发团队',by:'Lingee 内置',
    desc:'面向通用 Web、后端、前端、API 与数据库开发的全栈软件交付智能体团队。',
    domains:['Web','后端','前端','API','数据库'],
    leadId:'general-app-team-lead',

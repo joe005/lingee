@@ -230,7 +230,9 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
 :is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu) .expert-menu .pick-group{height:8px;min-height:8px;margin:4px 0 0;padding:0;border-top:1px solid var(--border);font-size:0}
 :is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu) .expert-menu .pick-group:first-child{display:none}
 :is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu) .expert-menu .x-opt{display:flex;align-items:center;gap:8px;width:100%;height:32px;padding:0 8px;border:0;border-radius:var(--asset-pill-radius);background:transparent;cursor:pointer;text-align:left;font:inherit}
-:is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu) .expert-menu .x-opt:hover,:is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu) .expert-menu .x-opt.checked{background:var(--tag-bg)}
+:is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu) .expert-menu .x-opt:hover{background:var(--hover)}
+:is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu) .expert-menu .x-opt.checked{background:var(--brand-fill);color:var(--brand)}
+:is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu) .expert-menu .x-opt.checked :is(.x-opt-n,.menu-check){color:var(--brand)}
 :is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu) .expert-menu .x-opt-n{font-size:var(--font-size-14);line-height:22px}
 :is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu) .expert-menu .x-opt-av{width:20px;height:20px;border-radius:50%}
 :is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu) .expert-menu .x-faces{position:relative;display:block;width:20px;height:20px;padding:0;flex:none}
@@ -251,7 +253,7 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
 /* 输入区：首次从＋选择，选中后直接点击更换。 */
 :is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu){min-width:0;max-width:50%}
 :is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu)>button.chip{min-width:0;max-width:100%;font-family:inherit;background:var(--brand-fill);color:var(--brand);font-weight:400}
-:is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu)>button.chip:hover{background:var(--hover)}
+:is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu)>button.chip:hover{background:var(--brand-fill)}
 :is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu)>button.chip:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 :is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu)>.chip .chip-label{min-width:0;overflow:hidden;text-overflow:ellipsis}
 :is(#ntExpertDropdown,#chatExpertDropdown,#addDropdown .asset-picker-submenu,#chatAddDropdown .asset-picker-submenu)>.chip .caret{flex:none}
@@ -269,14 +271,19 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
 :is(#addDropdown,#chatAddDropdown) .asset-picker-entry:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}
 :is(#addDropdown,#chatAddDropdown) .asset-picker-submenu>.expert-menu{box-sizing:content-box;width:220px;min-width:220px;padding:4px;border:0;border-radius:var(--r-card);background:var(--bg);box-shadow:var(--menu-shadow)}
 
-/* 已选标签保留下拉切换，并提供独立清除按钮，避免嵌套按钮。 */
-:is(#ntExpertDropdown,#chatExpertDropdown)>.asset-chip-clear{display:flex;flex:none;box-sizing:border-box;margin-left:4px;align-items:center;justify-content:center;width:24px;height:24px;padding:4px;border:0;border-radius:50%;background:transparent;color:var(--brand);cursor:pointer}
+/* 箭头与清除共用右侧位置：默认箭头，悬停或键盘聚焦时显示清除。 */
+:is(#ntExpertDropdown,#chatExpertDropdown)>.asset-chip-clear{position:absolute;right:4px;top:50%;transform:translateY(-50%);display:flex;box-sizing:border-box;margin:0;align-items:center;justify-content:center;width:24px;height:24px;padding:4px;border:0;border-radius:50%;background:transparent;color:var(--brand);cursor:pointer;opacity:0;pointer-events:none}
 :is(#ntExpertDropdown,#chatExpertDropdown)>.asset-chip-clear svg{width:16px;height:16px}
 :is(#ntExpertDropdown,#chatExpertDropdown)>.asset-chip-clear:hover{background:var(--active)}
 :is(#ntExpertDropdown,#chatExpertDropdown)>.asset-chip-clear:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 :is(#ntExpertDropdown,#chatExpertDropdown)>.asset-chip-clear[hidden],#chatExpertDropdown.task-team-locked>.asset-chip-clear{display:none}
 
-/* 清除按钮与选择按钮并排占位，避免绝对定位被后绘制的标签覆盖。 */
+/* 清除按钮排在选择按钮之后绘制，覆盖箭头且不额外占宽。 */
+:is(#ntExpertDropdown,#chatExpertDropdown):not(.open):is(:hover,:focus-within)>.asset-chip-clear{opacity:1;pointer-events:auto}
+:is(#ntExpertDropdown,#chatExpertDropdown):not(.open):has(>.asset-chip-clear:not([hidden])):is(:hover,:focus-within)>.chip .caret{opacity:0}
+:is(#ntExpertDropdown,#chatExpertDropdown).open>.asset-chip-clear{visibility:hidden}
+:is(#ntExpertDropdown,#chatExpertDropdown)>.chip .caret{width:16px;height:16px}
+:is(#ntExpertDropdown,#chatExpertDropdown).open>.chip .caret{transform:rotate(180deg)}
 :is(#ntExpertDropdown,#chatExpertDropdown){display:inline-flex;align-items:center}
 :is(#ntExpertDropdown,#chatExpertDropdown):has(>[data-clear-expert-chip]:not([hidden])){background:var(--brand-fill);border-radius:var(--asset-pill-radius)}
 :is(#ntExpertDropdown,#chatExpertDropdown)>button.chip{flex:1;min-width:0}
@@ -293,3 +300,9 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
 #chatAddDropdown [data-open-chat-expert][aria-disabled="true"] .submenu-arrow{display:none}
 #chatAddDropdown [data-open-chat-expert][aria-disabled="true"] .asset-picker-state{display:inline}
 #chatAddDropdown .asset-picker-parent:has(>[aria-disabled="true"]):hover{background:transparent}
+
+/* 执行对象头像固定占位，团队成员组合图案与选择列表一致。 */
+:is(#ntExpertDropdown,#chatExpertDropdown) .chip-faces{display:inline-flex;align-items:center;flex:none;min-width:20px;margin-right:4px}
+:is(#ntExpertDropdown,#chatExpertDropdown) .chip-faces img{box-sizing:border-box;width:20px;height:20px;object-fit:cover;border:1px solid var(--bg);border-radius:50%;margin:0}
+:is(#ntExpertDropdown,#chatExpertDropdown) .chip-faces img+img{margin-left:-8px}
+:is(#ntExpertDropdown,#chatExpertDropdown) .chip-faces:empty{display:none}

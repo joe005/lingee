@@ -313,8 +313,7 @@ function syncAuthGrant(){
 
 }
 
-/* 底部按钮随模式与场景切换：授权模式没有「测试连接」，
-   连接动作本身就是一次真实验证 */
+/* 仅已有且可用的连接提供测试；OAuth 失效、断开及未授权时先完成授权。 */
 function syncEnvFooter(){
   var isAuth=envConnMode==='auth';
   var viewing=envMode==='view';
@@ -324,7 +323,7 @@ function syncEnvFooter(){
   var gs=(envEditItem&&envEditItem.dataset.grantState)||'';
   var pending=gs==='expired'||gs==='revoked'||gs==='none';
   var connected=isAuth&&savedAuth&&!creating&&!viewing;
-  if(t) t.classList.toggle('hidden',isAuth||viewing);
+  if(t) t.classList.toggle('hidden',creating||(isAuth&&(!savedAuth||pending||!envEditItem.dataset.grantedBy)));
   if(d) d.classList.toggle('hidden',!(connected&&!pending));
   /* 授权还有效时不摆「重新授权」：那是失效后的补救动作，平时出现只会让人以为出了问题 */
   if(r){
@@ -727,6 +726,7 @@ function openEnvModal(mode,item){
   envMode=mode==='view'?'view':(mode==='edit'?'edit':'create');
   envEditItem=envMode==='create'?null:item;
   envOriginalProduct=envEditItem?(envEditItem.dataset.envProduct||''):'';
+  resetEnvTest();
   if(envConfigForm) envConfigForm.reset();
   clearEnvErrors();
   var editing=envMode==='edit'&&envEditItem;
@@ -798,7 +798,11 @@ function openEnvModal(mode,item){
   /* 只在新增时聚焦环境名：编辑/查看态它是只读的，聚焦只会画出一圈没有意义的焦点环 */
   setTimeout(function(){ if(nameInput && !existing) nameInput.focus(); },60);
 }
-function closeEnvModal(){ if(envModal) envModal.classList.remove('show'); resetConnSection(); }
+function resetEnvTest(){
+  if(envTestTimer){ clearTimeout(envTestTimer); envTestTimer=null; }
+  if(envTest){ envTest.disabled=false; envTest.textContent='测试连接'; envTest.removeAttribute('aria-busy'); }
+}
+function closeEnvModal(){ resetEnvTest(); if(envModal) envModal.classList.remove('show'); resetConnSection(); }
 /* 地址变了就丢弃已选数据中心：旧数据中心不属于新地址 */
 var envUrlInput=$('#envUrl');
 
@@ -808,6 +812,7 @@ var envDisconnectBtn=$('#envDisconnect');
 var envReauthBtn=$('#envReauth');
 var envAdd=$('#envAdd');
 var envTest=$('#envTest');
+var envTestTimer=null;
 
 /* 授权成功后建行。地址和数据中心由授权结果决定，不再从表单取 */
 function addAuthEnvRow(name,dataCenterId,granted){
@@ -978,13 +983,16 @@ export function initEnvDisconnect() {
   });
   if(envTest){
     envTest.addEventListener('click',function(){
-      if(!envConfigForm||!validateEnvForm()) return;
+      if(!envConfigForm||envTest.disabled||envTest.classList.contains('hidden')) return;
+      /* 查看态测试已保存配置；OAuth 不要求填写隐藏的第三方应用凭据。 */
+      if(envMode!=='view'&&envConnMode!=='auth'&&!validateEnvForm()) return;
       envTest.disabled=true;
+      envTest.setAttribute('aria-busy','true');
       envTest.textContent='测试中…';
-      setTimeout(function(){
-        envTest.disabled=false;
-        envTest.textContent='测试连接';
-        toast('连接测试通过');
+      /* 与列表连通性测试一致，仅模拟测试，不发送真实 ERP 请求。 */
+      envTestTimer=setTimeout(function(){
+        resetEnvTest();
+        toast('连接测试通过','success');
       },700);
     });
   }

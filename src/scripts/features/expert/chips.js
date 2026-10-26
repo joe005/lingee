@@ -53,6 +53,9 @@ function composerPickLocked(pfx){
   var dd=$('#'+pfx+'ExpertDropdown');
   return !!dd && (dd.classList.contains('task-team-locked') || (pfx==='chat' && sessionHasConversation(chatSessions.find(function(row){return row.id===activeSessionId;}))));
 }
+function composerTeamName(team){
+  return /^(苍穹|通用)应用开发(智能体)?$/.test(team.name) ? team.name+'团队' : team.name;
+}
 function renderExpertChips(){
   ['nt','chat','tkForm'].forEach(function(pfx){
     var label=$('#'+pfx+'ExpertLabel'), faces=$('#'+pfx+'ExpertFaces');
@@ -62,13 +65,13 @@ function renderExpertChips(){
     var pick=started ? (session.executionPick || (session.teamId ? {kind:'team',id:session.teamId} : {kind:null,id:''})) : activePick;
     var team=pick.kind==='team'?teamById(pick.id):null;
     var expert=pick.kind==='expert'?EX[pick.id]:null;
-    var has=!!(team||expert), name=team?.name||expert?.name||'';
+    var has=!!(team||expert), name=team?composerTeamName(team):(expert?.name||'');
     var reason=started?'已开始会话，不能更换或清除智能体及团队；如需更换，请新建会话。':'此会话的执行对象已锁定';
     dd.classList.toggle('conversation-pick-locked',started);
     if(pfx==='chat' && dd.classList.contains('task-team-locked')){
       var lockedId=dd.dataset.lockedTeamId||'', soloId=lockedId.indexOf('expert:')===0 ? lockedId.slice(7) : '';
       var lockedTeam=soloId ? (EX[soloId] ? {name:EX[soloId].name,members:[soloId]} : null) : teamById(lockedId);
-      if(label) label.textContent=lockedTeam?.name || '未配置智能体团队';
+      if(label) label.textContent=lockedTeam ? (soloId?lockedTeam.name:composerTeamName(lockedTeam)) : '未配置智能体团队';
       if(faces) faces.innerHTML=lockedTeam ? lockedTeam.members.slice(0,3).map(function(i){ return EX[i] ? '<img src="'+xav(EX[i].k)+'" alt="">' : ''; }).join('') : '';
       has=!!lockedTeam;
     }else{
@@ -93,7 +96,7 @@ function renderExpertChips(){
       if(entry){
         entry.setAttribute('aria-disabled',locked?'true':'false');
         entry.setAttribute('aria-haspopup',locked?'false':'true');
-        entry.setAttribute('aria-label',locked?'智能体，'+reason:'智能体');
+        entry.setAttribute('aria-label',locked?'智能体团队，'+reason:'选择智能体或智能体团队');
         entry.title=locked?reason:'';
         var parent=entry.closest('.asset-picker-parent'); if(parent) parent.title=locked?reason:'';
       }
@@ -105,15 +108,15 @@ function renderExpertPicker(pfx,kw){
   var list=$('#'+pfx+'ExpertList'); if(!list) return;
   if(pfx==='tkForm' && tkFormHooks && tkFormHooks.render){ tkFormHooks.render(list,kw); return; }
   kw=(kw||'').trim();
-  var teams=TEAMS.filter(function(t){ return layerVisible('team',t)&&(!kw || (t.name+t.desc).indexOf(kw)>=0); });
+  var teams=TEAMS.filter(function(t){ return layerVisible('team',t)&&(!kw || (composerTeamName(t)+t.desc).indexOf(kw)>=0); });
   var experts=EXPERTS.filter(function(e){ return layerVisible('expert',e)&&(!kw || (e.name+e.role+e.desc+e.tags.join()).indexOf(kw)>=0); });
   var html='';
   if(teams.length){
     html+='<div class="pick-group">智能体团队</div>'+teams.map(function(t){
       var on=activePick.kind==='team'&&activePick.id===t.id;
-      return '<button type="button" class="app-item x-opt'+(on?' checked':'')+'" data-pick-team="'+t.id+'">'
+      return '<button type="button" class="app-item x-opt'+(on?' checked':'')+'" aria-pressed="'+on+'" data-pick-team="'+t.id+'">'
         +facesHtml(t.members,3)
-        +'<span class="x-opt-n">'+xesc(t.name)+'</span>'
+        +'<span class="x-opt-n">'+xesc(composerTeamName(t))+'</span>'
         +(layerOf('team',t)==='personal'?'<span class="asset-picker-local">本地</span>':'')
         +(on?'<svg class="ic ic-sm menu-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>':'')+'</button>';
     }).join('');
@@ -121,7 +124,7 @@ function renderExpertPicker(pfx,kw){
   if(experts.length){
     html+='<div class="pick-group">智能体</div>'+experts.map(function(e){
       var on=activePick.kind==='expert'&&activePick.id===e.id;
-      return '<button type="button" class="app-item x-opt'+(on?' checked':'')+'" data-pick-expert="'+e.id+'">'
+      return '<button type="button" class="app-item x-opt'+(on?' checked':'')+'" aria-pressed="'+on+'" data-pick-expert="'+e.id+'">'
         +'<img class="x-opt-av" src="'+xav(e.k)+'" alt="">'
         +'<span class="x-opt-n">'+xesc(e.name)+'</span>'
         +(on?'<svg class="ic ic-sm menu-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>':'')+'</button>';
@@ -246,7 +249,7 @@ export function openExpertPicker(pfx,trigger,focusSearch=true){
   if(si&&focusSearch) setTimeout(function(){ si.focus() },40);
 }
 
-/* 仅通过标签左侧叉号清除，不打开列表，不更改草稿内容。 */
+/* 仅通过标签右侧叉号清除，不打开列表，不更改草稿内容。 */
 function clearComposerPick(pfx){
   var dd=$('#'+pfx+'ExpertDropdown');
   if(!dd||composerPickLocked(pfx)) return;
