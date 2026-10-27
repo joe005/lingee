@@ -181,6 +181,14 @@
 /* composer 顶部：选中的专家 / 智能体团队标签 */
 .composer-tags { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 4px 10px; }
 .composer-tags.hidden { display: none; }
+/* 技能标签 + 关联应用同一行（对齐真实版 cosmic-app-builder ｜ 应用 ▾） */
+.composer-tag-row { display: flex; align-items: center; min-width: 0; padding: 0 4px 10px; }
+.composer-tag-row:has(> .composer-tags.hidden) { display: none; }
+.composer-tag-row > .composer-tags { padding: 0; }
+.composer-tag-row:has(> .composer-tag-app:not(.hidden)) .ctag { border-radius: 8px 0 0 8px; }
+.composer-tag-app > .chip { height: 32px; box-sizing: border-box; padding: 0 10px; border-radius: 0 8px 8px 0; background: var(--brand-fill); }
+.composer-tag-app > .chip::before { content: ""; width: 1px; height: 14px; margin-right: 6px; background: var(--border-focus); }
+.composer-tag-app > .chip:hover { background: var(--brand-fill); color: var(--text); }
 .ctag {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 5px 6px 5px 10px; border-radius: 8px;

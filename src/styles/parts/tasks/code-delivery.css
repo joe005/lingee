@@ -1,0 +1,29 @@
+#tkCodeDeliveryDialog .tk-btn-primary,#tkCodeDeliveryDialog .tk-btn-ghost{min-height:36px;border-radius:10px;padding:6px 16px;font-size:var(--font-size-14)}
+#tkCodeDeliveryDialog{box-sizing:border-box;width:720px;max-width:calc(100vw - 32px);max-height:calc(100vh - 32px);padding:0;border:0;border-radius:var(--r-modal);background:var(--bg);color:var(--text);box-shadow:var(--menu-shadow);font-size:var(--font-size-14);line-height:var(--line-height-14);overflow:hidden}
+#tkCodeDeliveryDialog[open]{display:flex;flex-direction:column}
+#tkCodeDeliveryDialog::backdrop{background:var(--overlay)}
+#tkCodeDeliveryDialog .tk-cd-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:24px;border-bottom:1px solid var(--divider);flex-shrink:0}
+#tkCodeDeliveryDialog h2{margin:0;font-size:var(--font-size-18);font-weight:500}
+#tkCodeDeliveryDialog .tk-cd-head p{margin:8px 0 0;color:var(--text-secondary);font-size:var(--font-size-12)}
+#tkCodeDeliveryDialog .tk-cd-close{width:32px;height:32px;background:transparent;border:0;border-radius:8px;color:var(--text-secondary);font-size:var(--font-size-24);cursor:pointer}
+#tkCodeDeliveryDialog .tk-cd-close:hover{background:var(--hover)}
+#tkCodeDeliveryDialog .tk-cd-body{padding:24px;overflow:auto;min-height:0;display:grid;gap:16px}
+#tkCodeDeliveryDialog .tk-cd-foot{display:flex;justify-content:flex-end;align-items:center;gap:16px;padding:16px 24px;border-top:1px solid var(--divider);flex-shrink:0;flex-wrap:wrap}
+#tkCodeDeliveryDialog .tk-cd-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:16px;background:var(--fill-1);border-radius:12px;overflow-wrap:anywhere}
+#tkCodeDeliveryDialog .tk-cd-grid span{display:block;color:var(--text-secondary);font-size:var(--font-size-12);margin-bottom:4px}
+#tkCodeDeliveryDialog code{font-family:Monaco,Menlo,monospace;font-size:var(--font-size-12)}
+#tkCodeDeliveryDialog .tk-cd-note{margin:0;color:var(--text-secondary);font-size:var(--font-size-12);white-space:pre-wrap}
+#tkCodeDeliveryDialog .tk-cd-callout{padding:12px 16px;border-radius:8px;background:var(--brand-fill);font-size:var(--font-size-12)}
+#tkCodeDeliveryDialog .tk-cd-callout.warning{background:var(--warning-bg)}
+#tkCodeDeliveryDialog .tk-cd-field{display:grid;gap:8px}
+#tkCodeDeliveryDialog textarea{box-sizing:border-box;width:100%;min-height:120px;padding:12px;border:1px solid var(--border-hover);border-radius:8px;font:inherit;line-height:var(--line-height-14);color:var(--text);background:var(--bg);resize:vertical}
+#tkCodeDeliveryDialog .tk-cd-radio-row{display:flex;gap:24px}
+#tkCodeDeliveryDialog .tk-cd-check{display:flex;align-items:flex-start;gap:8px;font-size:var(--font-size-12)}
+#tkCodeDeliveryDialog input{accent-color:var(--brand)}
+#tkCodeDeliveryDialog .tk-cd-error{margin:0;color:var(--danger);font-size:var(--font-size-12);min-height:18px}
+#tkCodeDeliveryDialog .tk-cd-scenario{font-size:var(--font-size-12);color:var(--text-secondary)}
+#tkCodeDeliveryDialog .tk-cd-scenario summary{cursor:pointer}
+#tkCodeDeliveryDialog .tk-cd-scenario>div{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+#tkCodeDeliveryDialog button:focus-visible,#tkCodeDeliveryDialog textarea:focus-visible,#tkCodeDeliveryDialog input:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+#tkCodeDeliveryDialog button:disabled{opacity:.5;cursor:not-allowed}
+@media(max-width:600px){#tkCodeDeliveryDialog .tk-cd-grid{grid-template-columns:1fr}#tkCodeDeliveryDialog .tk-cd-head,#tkCodeDeliveryDialog .tk-cd-body,#tkCodeDeliveryDialog .tk-cd-foot{padding:16px}}

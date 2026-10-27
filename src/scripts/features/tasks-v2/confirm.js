@@ -1,3 +1,4 @@
+import { taskCodeDeliveryContext } from './code-delivery-context.js';
 import { tkGetPerson, tkPeopleInProject } from './data.js';
 import { taskExecutionStages } from './task-execution.js';
 
@@ -39,7 +40,9 @@ export function showTaskStageConfirm(task, action) {
   const assigneeId = next && (task.flowAssignee || next.assigneeId || (!task.executionPlan?.length ? task.assignee : ''));
   const assigneeName = assigneeId ? tkPeopleInProject(task.project).find(person => person.id === assigneeId)?.name || tkGetPerson(assigneeId).name : '未指定';
   const message = next ? '通过后进入「' + next.name + '」，处理人：' + assigneeName + '。' : '通过后任务完成。';
-  showTaskConfirm(message, action, '确认产物', '确认', 'primary');
+  const codeContext = taskCodeDeliveryContext(task);
+  const mergeHint = codeContext?.isDevelopment ? '系统会先检查并合并代码，合并成功后才完成审核和流转；失败则保留在本阶段。' : codeContext?.isTesting && codeContext.last ? '本轮测试报告将自动关联审核记录，请确认实际环境的验证结果。' : '';
+  showTaskConfirm(message + mergeHint, action, '确认产物', '确认', 'primary');
 }
 
 export function initTaskConfirm() {

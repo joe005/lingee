@@ -81,7 +81,7 @@ export function initRoute() {
     else if(dsViewParam==='apps') setNavActive('应用开发');
     else if(dsViewParam==='tasks') setNavActive('任务');
     else if(PAGE_ROUTES.indexOf(dsViewParam)>=0) setNavActiveByView(dsViewParam);
-    else if(dsViewParam==='platform') setNavActive(getPlatformIdentity()?.role==='tenant'?'租户管理（云端）':'原厂管理（云端）');
+    else if(dsViewParam==='platform') setNavActive(getPlatformIdentity()?.role==='tenant'?'企业资产':'原厂资产');
     else if(dsViewParam==='collab'){
       setNavActive('协作开发');
       /* 协作开发模块最后才初始化，这里只记下要打开的页签。

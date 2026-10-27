@@ -224,6 +224,29 @@
   .chat-stage-confirm-label{line-height:1}
   @media(max-width:560px){.chat-stage-guide{flex-wrap:wrap}.chat-stage-confirm{margin-left:auto}}
   #historyBtn{margin-right:4px}
+  /* 顶栏真实版操作：打开方式（主按钮 + 下拉）、审查、文件树、Wiki */
+  .chat-header .chat-panel-btn{margin-right:4px}
+  .chat-header .chat-panel-btn:focus-visible,.chat-open-in-main:focus-visible,.chat-open-in-caret:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+  .chat-open-in{display:flex;align-items:center;height:var(--control-h-sm);margin-right:4px;flex:none}
+  .chat-open-in-main,.chat-open-in-caret{height:var(--control-h-sm);padding:0;border:0;background:transparent;color:var(--text-muted);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s,color .15s}
+  .chat-open-in-main{width:32px;border-radius:8px 0 0 8px}
+  .chat-open-in-caret{width:20px;border-radius:0 8px 8px 0}
+  .chat-open-in:hover .chat-open-in-main,.chat-open-in:hover .chat-open-in-caret,.chat-open-in-dd.open .chat-open-in-caret{background:var(--hover);color:var(--text)}
+  .chat-open-in-icon{display:inline-flex}
+  .chat-open-in-main .ic{width:18px;height:18px}
+  .chat-open-in-caret .ic{width:14px;height:14px}
+  .chat-open-in-menu{top:calc(100% + 4px);left:auto;right:0;min-width:160px}
+  .chat-open-in-menu .menu-item:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}
+  .chat-open-in-menu .ic-sm{width:16px;height:16px}
+  /* 回复尾：操作按钮 + 智能体 · 模型 · 耗时 + 点数消耗 */
+  .chat-turn-footer{display:flex;align-items:center;flex-wrap:wrap;gap:4px 12px;margin-top:-8px;font-size:var(--font-size-12);line-height:18px;color:var(--text-secondary)}
+  .chat-turn-actions{display:flex;align-items:center;gap:4px;margin-left:-6px}
+  .chat-turn-action{width:28px;height:28px;padding:0;border:0;border-radius:6px;background:transparent;color:var(--text-secondary);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s,color .15s}
+  .chat-turn-action:hover{background:var(--hover);color:var(--text)}
+  .chat-turn-action:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+  .chat-turn-action .ic{width:16px;height:16px}
+  .chat-turn-credits{display:inline-flex;align-items:center;gap:4px}
+  .chat-turn-credits .ic{width:12px;height:12px}
   .header-btn .ic{width:18px;height:18px}
   /* 历史版本面板 */
   .history-overlay{position:absolute;top:40px;left:0;right:0;bottom:0;background:rgba(0,0,0,.12);z-index:199;opacity:0;pointer-events:none;transition:opacity .25s}

@@ -70,7 +70,7 @@ function openChatSession(sessionId) {
     return;
   }
   chatInput.contentEditable = 'true';
-  chatInput.setAttribute('data-placeholder', '输入消息…');
+  chatInput.setAttribute('data-placeholder', '布置开发任务，输入 / 调用技能或命令');
   var task = tkGetTasks().find(function (row) { return row.id === activeSessionTaskId; });
   $('#chatTitle').textContent = task ? task.title : session.title;
   if (session.demoState && session.demoState !== 'running') {

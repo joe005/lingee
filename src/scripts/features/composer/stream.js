@@ -4,6 +4,7 @@ import { submitTaskStage, taskExecutionStages } from '../tasks-v2/task-execution
 import { appendTaskArtifact, createArtifactCard, createFinalResult, escapeHtml, scrollChatBottom, stageSemantic } from './messages.js';
 import { activeResponseRun, activeSessionId, chatSessions, renderChatSessions, saveChatSessions } from './sessions.js';
 import { switchPreviewTab } from './preview.js';
+import { appendTurnFooter } from './turn-footer.js';
 /* 对话：Markdown 渲染、流式输出、模拟 AI 回复（拆自 composer.js） */
 
 var mockReplies=[
@@ -149,6 +150,20 @@ function simulateAIResponse(responseEl,instant,task,prompt,onDone){
   var completed=false;
   var cancelStream=null;
   var watchdog=null;
+  var startedAt=Date.now();
+  /* 回复尾：已完成的历史回复没有真实耗时，按正文长度估算 */
+  function appendFooter(text){
+    var identity=responseEl.parentElement && responseEl.parentElement.querySelector('.chat-agent-identity strong');
+    appendTurnFooter(responseEl,{
+      text:text,
+      durationMs:instant ? Math.max(3000,text.length*40) : Date.now()-startedAt,
+      agentName:identity ? identity.textContent : '',
+      onRegenerate:task ? null : function(){
+        responseEl.replaceChildren();
+        simulateAIResponse(responseEl,false,null,prompt);
+      }
+    });
+  }
   function finishRun(){
     if(completed)return;
     completed=true;
@@ -173,8 +188,10 @@ function simulateAIResponse(responseEl,instant,task,prompt,onDone){
     var result=createFinalResult(!task);
     timeline.appendChild(result);
     var artifact=task ? null : createArtifactCard();
-    result.querySelector('.markdown-content').innerHTML=renderMarkdown(task ? taskResultText : mockReplies[Math.floor(Math.random()*mockReplies.length)]);
+    var finalText=task ? taskResultText : mockReplies[Math.floor(Math.random()*mockReplies.length)];
+    result.querySelector('.markdown-content').innerHTML=renderMarkdown(finalText);
     if(task)appendTaskArtifact(result,task,true);else { result.appendChild(artifact); artifact._openPreview(); }
+    appendFooter(finalText);
     scrollChatBottom();
     finishRun();
   }
@@ -197,6 +214,7 @@ function simulateAIResponse(responseEl,instant,task,prompt,onDone){
       if (completed || run !== activeResponseRun || !responseEl.isConnected) return;
       if (task) appendTaskArtifact(result,task,true);
       else { var completedArtifact=createArtifactCard(); result.appendChild(completedArtifact); completedArtifact._openPreview(); }
+      appendFooter(text);
       scrollChatBottom();
       finishRun();
     }, task ? TASK_STREAM_PACE : null);

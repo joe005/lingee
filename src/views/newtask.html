@@ -4,7 +4,33 @@
 
 
       <div class="composer">
-        <div class="composer-tags hidden" id="ntTags"></div>
+        <div class="composer-tag-row">
+          <div class="composer-tags hidden" id="ntTags"></div>
+          <!-- 关联应用：与真实版一致，接在技能标签右侧（仅苍穹应用模式显示） -->
+          <div class="dropdown hidden composer-tag-app" data-dd="app" id="appDropdown">
+            <div class="chip muted" data-chip>
+              <span class="app-dot"></span>
+              <span class="chip-label">关联应用</span>
+              <svg class="caret" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 7.5 5 5 5-5"/></svg>
+            </div>
+            <div class="menu app-menu">
+              <div class="app-search-wrap">
+                <div class="app-search">
+                  <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                  <input type="text" id="appSearchInput" placeholder="搜索" autocomplete="off">
+                </div>
+              </div>
+              <div class="app-list" id="appList"></div>
+              <div class="app-foot">
+                <div class="app-foot-item" id="expandAppBtn">
+                  <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                  新建
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
         <div class="composer-input" id="composerInput" contenteditable="true" data-placeholder="布置开发任务，输入 / 调用技能或命令"></div>
         <div class="composer-bar">
           <div class="dropdown add-dropdown" id="addDropdown">
@@ -96,30 +122,6 @@
           </div>
 
           <!-- model -->
-
-          <!-- app binding (shown in 应用开发 mode) -->
-          <div class="dropdown hidden" data-dd="app" id="appDropdown">
-            <div class="chip muted" data-chip>
-              <span class="app-dot"></span>
-              <span class="chip-label">关联应用</span>
-              <svg class="caret" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 7.5 5 5 5-5"/></svg>
-            </div>
-            <div class="menu app-menu">
-              <div class="app-search-wrap">
-                <div class="app-search">
-                  <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-                  <input type="text" id="appSearchInput" placeholder="搜索" autocomplete="off">
-                </div>
-              </div>
-              <div class="app-list" id="appList"></div>
-              <div class="app-foot">
-                <div class="app-foot-item" id="expandAppBtn">
-                  <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-                  新建
-                </div>
-              </div>
-            </div>
-          </div>
 
           <div class="dropdown" data-dd="expert" id="ntExpertDropdown">
             <button type="button" class="chip muted" data-chip aria-haspopup="true" aria-expanded="false">

@@ -65,6 +65,11 @@
 .platform-view .platform-status-tabs{min-width:0}
 .platform-view .platform-toolbar{flex:none;margin-left:auto}
 .platform-view .platform-toolbar .primary{margin-left:0}
+.platform-view .platform-search{position:relative;display:flex;align-items:center;min-width:0;width:min(310px,45vw)}
+.platform-view .platform-toolbar .platform-search input{box-sizing:border-box;width:100%;min-width:0;padding-right:40px;border-color:var(--border);background:var(--bg);color:var(--text)}
+.platform-view .platform-search>svg{position:absolute;right:12px;pointer-events:none;color:var(--text-secondary);flex:none}
+.platform-view .platform-search input:focus-visible{outline:none;border-color:var(--border-focus);box-shadow:none}
+@media(max-width:760px){.platform-view .platform-search{flex:1;min-width:0;width:auto}}
 @media(max-width:1200px){
   .platform-view .platform-controls{flex-wrap:wrap}
   .platform-view .platform-status-tabs{flex:1 1 100%}

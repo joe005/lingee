@@ -1,3 +1,4 @@
+import { taskCodeDeliveryContext } from '../code-delivery-context.js';
 import { openTaskStatusConversation } from '../../composer.js';
 import { toast } from '../../../core/toast.js';
 import { mountAgentConfig, unmountAgentConfig } from '../../agent-config.js';
@@ -383,6 +384,9 @@ function renderListReviewPreview() {
   els.tkListReviewHint.textContent = agentSubmit
     ? '测试通过后直接提交「' + task.deliversAgent + '」上架审核，管理员审核通过后正式生效。'
     : '请核对产物内容。需要调整时可返回任务会话继续修改。';
+  const codeContext = taskCodeDeliveryContext(task);
+  if (canReview && codeContext?.isDevelopment) els.tkListReviewHint.textContent = '先核对开发产物；通过验收后自动检查并合并代码，成功才流转。';
+  if (canReview && codeContext?.isTesting && codeContext.last) els.tkListReviewHint.textContent = '请核对本轮测试报告与实际环境验证结果；通过验收后自动关联本轮提测。';
   els.tkListReviewBody.scrollTop = 0;
 }
 export function openListReviewPreview(taskId, trigger, options = {}) {
@@ -397,6 +401,9 @@ export function openListReviewPreview(taskId, trigger, options = {}) {
   els.tkListReviewClose.focus({ preventScroll:true });
 }
 export function initListReviewPreviewEvents() {
+  document.addEventListener('lingee:task-stage-completed', function (event) {
+    if (pageState.listReviewPreviewTaskId === event.detail.taskId) renderListReviewPreview();
+  });
   /* 智能体在配置面板或验收页提交后，交付它的任务一并完成测试验证与提交上架 */
   document.addEventListener('lingee:agent-submitted', function (e) {
     var name = e.detail?.name;
