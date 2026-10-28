@@ -1,4 +1,7 @@
 import { initTaskCardTimes } from './page/card-time.js';
+
+import { initBranchMergeDemo } from './branch-merge-demo.js';
+import { initTaskCodeDelivery } from './code-delivery.js';
 import { initDemoOperationHistory } from './demo-operation-history.js';
 import { initTaskConfirm } from './confirm.js';
 import { tkEnsureCompletedDemoTask, tkEnsureWorkspaceDemoTasks, tkPruneOrphanTasks, tkSyncPeople } from './data.js';
@@ -64,6 +67,7 @@ export function initTasksV2() {
   initDemoOperationHistory();
   cacheEls();
   initListReviewPreviewEvents();
+  initTaskCodeDelivery();
   /* 任务详情抽屉移至 body 顶层，使其在任意视图上都能叠加显示（原在 #view-tasks 内，父级 hidden 时 fixed 也不可见） */
   if (els.tkDrawer && els.tkDrawer.parentNode !== document.body) document.body.appendChild(els.tkDrawer);
   if (els.tkDrawerClickaway && els.tkDrawerClickaway.parentNode !== document.body) document.body.appendChild(els.tkDrawerClickaway);
@@ -109,5 +113,8 @@ export function initTasksV2() {
   initNewIssueUI(render, function (taskId) { if (state.drawerTaskId === taskId) openDrawer(taskId); });
   /* 协作开发的工作台骨架改由 collab/workbench.js 初始化（main.js 紧接本函数调用） */
   initIssueNavigation({ issue: openIssueDetail });
+  initBranchMergeDemo(function (task) {
+    openDrawer(task.id);
+  });
 }
 /* propFieldKeys 见 page/detail-panel.js */

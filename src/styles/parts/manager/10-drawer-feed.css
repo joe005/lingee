@@ -9,7 +9,7 @@
   padding: 20px 24px 16px;
 }
 #view-manager .mgr-taskpanel-title {
-  font-size: 18px;
+  font-size: var(--font-size-18);
 }
 #view-manager .mgr-taskpanel-body {
   padding: 8px 24px 24px;
@@ -46,13 +46,13 @@
   border-radius: 999px;
   background: var(--tag-bg);
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: var(--font-size-12);
   font-weight: 500;
   line-height: 20px;
 }
 #view-manager .mgr-taskpanel .mgr-sec-title {
   margin: 24px 0 12px;
-  font-size: 14px;
+  font-size: var(--font-size-14);
 }
 #view-manager .mgr-taskpanel .mgr-sec-title i {
   background: var(--brand);
@@ -63,7 +63,7 @@
   border-radius: 999px;
   background: var(--tag-bg);
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: var(--font-size-12);
   line-height: 20px;
   text-align: center;
 }
@@ -74,26 +74,26 @@
   flex: none;
   width: 104px;
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: var(--font-size-14);
 }
 #view-manager .mgr-taskpanel .mgr-tp-kv-item .mgr-detail-value,
 #view-manager .mgr-taskpanel .mgr-tp-desc {
   color: var(--text);
-  font-size: 14px;
+  font-size: var(--font-size-14);
   line-height: 1.7;
 }
 #view-manager .mgr-taskpanel .mgr-tp-event {
   gap: 24px;
   padding: 8px 0;
   border-bottom: none;
-  font-size: 14px;
+  font-size: var(--font-size-14);
 }
 #view-manager .mgr-taskpanel .mgr-tp-event-time {
   flex: none;
   width: 112px;
   order: -1;
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: var(--font-size-14);
 }
 #view-manager .mgr-taskpanel .mgr-tp-event-text {
   color: var(--text);
@@ -128,14 +128,14 @@
   gap: 8px;
   margin: 0;
   color: var(--text-title);
-  font-size: 16px;
+  font-size: var(--font-size-16);
   font-weight: 600;
 }
 #view-manager .mgr-fd-sub {
   flex: 1;
   min-width: 0;
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: var(--font-size-12);
 }
 #view-manager .mgr-fd-search {
   position: relative;
@@ -154,7 +154,7 @@
   background: var(--bg);
   color: var(--text);
   font: inherit;
-  font-size: 13px;
+  font-size: var(--font-size-14);
   transition: border-color 0.15s;
 }
 #view-manager .mgr-fd-search input:hover {
@@ -186,7 +186,7 @@
   background: var(--bg);
   color: var(--text);
   font: inherit;
-  font-size: 13px;
+  font-size: var(--font-size-14);
   font-weight: 500;
   cursor: pointer;
   transition:
@@ -218,14 +218,14 @@
   background: none;
   color: var(--text-secondary);
   font: inherit;
-  font-size: 14px;
+  font-size: var(--font-size-14);
   cursor: pointer;
   transition:
     background 0.15s,
     color 0.15s;
 }
 #view-manager .mgr-fd-pill small {
-  font-size: 14px;
+  font-size: var(--font-size-14);
 }
 #view-manager .mgr-fd-pill:hover {
   background: var(--hover);
@@ -244,7 +244,7 @@
   background: var(--bg);
   color: var(--text);
   font: inherit;
-  font-size: 13px;
+  font-size: var(--font-size-14);
   cursor: pointer;
 }
 #view-manager .mgr-fd-select:hover {
@@ -275,7 +275,7 @@
   background: none;
   color: var(--text-secondary);
   font: inherit;
-  font-size: 12px;
+  font-size: var(--font-size-12);
   text-overflow: ellipsis;
   white-space: nowrap;
   cursor: pointer;
@@ -314,7 +314,7 @@
   flex: none;
   width: 88px;
   color: var(--text);
-  font-size: 14px;
+  font-size: var(--font-size-14);
   font-variant-numeric: tabular-nums;
   line-height: 24px;
   text-align: right;
@@ -356,7 +356,7 @@
   border-radius: 4px;
   background: var(--tag-bg);
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: var(--font-size-12);
   font-weight: 500;
   line-height: 20px;
 }
@@ -374,7 +374,7 @@
 }
 #view-manager .mgr-fd-actor {
   color: var(--text);
-  font-size: 13px;
+  font-size: var(--font-size-14);
 }
 #view-manager .mgr-fd-task {
   max-width: 260px;
@@ -383,7 +383,7 @@
   border-radius: 4px;
   background: var(--tag-bg);
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: var(--font-size-12);
   line-height: 20px;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -391,7 +391,7 @@
 #view-manager .mgr-fd-text {
   margin-top: 8px;
   color: var(--text);
-  font-size: 14px;
+  font-size: var(--font-size-14);
   font-weight: 500;
   line-height: 1.6;
   overflow-wrap: anywhere;

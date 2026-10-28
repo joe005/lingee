@@ -78,6 +78,7 @@ function appendTaskArtifact(result, task, autoOpen) {
 }
 /* 任务会话结果产物卡片：视觉与采购订单会话的 artifact-card 保持一致，点击打开产物预览。 */
 function createChatResultArtifactCard(task, artifact) {
+  if (artifact.format === 'html') return createArtifactCard({ title:artifact.type, onOpen:function () { openChatDocViewer(task, artifact); } });
   var card = document.createElement('div');
   card.className = 'artifact-card';
   card.innerHTML = '<div class="artifact-preview"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div>'
@@ -101,10 +102,15 @@ function appendUserMessage(text){
 }
 
 function resolveChatTeam(session, task){
+  if (session?.previewRepair) return null;
   /* 管理板块立项的项目（如设备巡检维修系统建设）不在 CV_PROJECTS 里，按任务项目统一查找 */
   var project = tkProjectById(task?.project || session?.projectId);
   if (task?.expertId) return taskExecutorTeam(task, project);
-  return teamById(task?.teamId || '') || teamById(session?.teamId || '');
+  if(task) return teamById(task.teamId || '');
+  var pick=session?.executionPick;
+  if(pick?.kind==='expert'&&EX[pick.id]) return {id:'expert:'+pick.id,name:EX[pick.id].name,members:[pick.id]};
+  if(pick) return pick.kind==='team' ? teamById(pick.id) : null;
+  return teamById(session?.teamId || '');
 }
 function teamAvatarHtml(team){
   var members = (team.members || []).map(function (id) { return EX[id]; }).filter(Boolean).slice(0, 3);
@@ -133,13 +139,14 @@ function createFinalResult(withHeader){
   return result;
 }
 
-function createArtifactCard(){
+function createArtifactCard(options){
   var card=document.createElement('div');
   card.className='artifact-card';
   card.innerHTML='<div class="artifact-preview"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></div>'
-    +'<div class="artifact-info"><div class="artifact-title">采购订单</div></div>'
+    +'<div class="artifact-info"><div class="artifact-title">'+escapeHtml(options?.title || '采购订单')+'</div></div>'
     +'<div class="artifact-action"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg></div>';
   function openPreview(){
+    if (options?.onOpen) { options.onOpen(); return; }
     var view=document.getElementById('view-chat');
     var frame=document.getElementById('chatPreviewFrame');
     var side=document.getElementById('chatPreviewSide');

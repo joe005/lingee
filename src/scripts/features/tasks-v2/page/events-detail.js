@@ -1,3 +1,4 @@
+import { initStageReturn } from './stage-return.js';
 import { toast } from '../../../core/toast.js';
 import { openTaskStatusConversation } from '../../composer.js';
 import { TK_STATUSES, tkCurrentUserId, tkGetTaskArtifacts, tkGetTasks, tkPeopleInProject, tkUpdateTask } from '../data.js';
@@ -14,6 +15,7 @@ import { closeDrawer, jumpFloatingDrawerToDev, openDrawer, taskCommentTimestamp 
 import { chooseFirstAssignee, confirmDeleteTask, escapeHtml, filterAssigneeOptions, handleTaskHeaderAction, openMyTaskSession, openTaskConversationWithTask, retryBlockedTask, showCardMenu, startTaskExecution, viewBlockedTaskSession } from './utils.js';
 /* 任务页 · 事件绑定 · 详情面板、评论 @ 提及、属性区（拆分自 tasks-v2/index.js，逻辑未改） */
 export function bindDetailEvents() {
+  initStageReturn();
   /* 详情面板 */
   els.tkDrawerFoot.addEventListener('click', function (e) {
     if (e.target.closest('[data-detail-footer-delete]')) confirmDeleteTask(state.drawerTaskId);

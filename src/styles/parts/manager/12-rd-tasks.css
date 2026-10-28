@@ -2,7 +2,7 @@
 #view-manager .mgr-pd-tab-count {
   margin-left: 6px;
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: var(--font-size-12);
   font-weight: 500;
   font-variant-numeric: tabular-nums;
 }
@@ -12,7 +12,7 @@
   margin-top: 2px;
   overflow: hidden;
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: var(--font-size-12);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -65,7 +65,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 14px;
+  font-size: var(--font-size-14);
 }
 #view-manager .mgr-row-menu .mgr-row-act:disabled {
   color: var(--text-soft);

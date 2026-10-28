@@ -5,7 +5,7 @@ import { appendAskCard } from '../expert/automatch.js';
 import { renderExpertChips } from '../expert/chips.js';
 import { pendingInputs } from '../expert/data.js';
 import { hideAssetEditorPanel } from '../expert/editor-panel.js';
-import { set_activePick } from '../expert/store.js';
+import { clearPick, set_activePick } from '../expert/store.js';
 import { tkGetTasks } from '../tasks-v2/data.js';
 import { appendAssistantMessage, appendUserMessage, createChatResultArtifactCard, createFinalResult, demoExchangeText, escapeHtml, messagesList, resolveChatTeam, scrollChatBottom, setComposerTaskReference, taskStageArtifact } from './messages.js';
 import { activeResponseRun, activeSessionId, activeSessionTaskId, chatSessions, finishSessionExchange, isMyChatSession, rememberActiveChatSession, renderChatSessions, renderChatStageEndMarkers, saveChatSessions, set_activeResponseRun, set_activeSessionId, set_activeSessionTaskId } from './sessions.js';
@@ -17,6 +17,7 @@ import { chatViewerActiveKey, chatViewerTabs, closeChatDocViewer, openChatDocVie
 import { appendTaskReadingSummary, renderMarkdown, simulateAIResponse } from './stream.js';
 import { chatInput } from './send.js';
 import { openLocalEnvSession } from './local-env-chat.js';
+import { renderPreviewRepairConversation } from './preview-repair.js';
 /* 对话：打开历史会话（拆自 composer.js） */
 
 function openChatSession(sessionId) {
@@ -33,6 +34,11 @@ function openChatSession(sessionId) {
   set_activeSessionTaskId(session.taskId == null ? null : Number(session.taskId));
   document.getElementById('chatCurrentStageToggle').setAttribute('aria-expanded', 'false');
   document.getElementById('chatCurrentStageDetails').hidden = !document.getElementById('chatCurrentStage').classList.contains('is-horizontal');
+  if (session.previewRepair) {
+    session.teamId = '';
+    session.executionPick = {kind:null,id:'',auto:false};
+    clearPick();
+  }
   showView('chat');
   messagesList.innerHTML = '';
   hideTaskQuestionPanel();
@@ -40,6 +46,7 @@ function openChatSession(sessionId) {
   hideAssetEditorPanel();
   set_chatViewerTabs([]);
   set_chatViewerActiveKey(null);
+  if(!session.taskId&&!session.assetCreate&&!session.assetEdit&&!session.taskCreate&&!session.localEnv) set_activePick(session.executionPick || (session.teamId ? {kind:'team',id:session.teamId,auto:false} : {kind:null,id:'',auto:false}));
   if(session.assetEdit)set_activePick({kind:session.assetEdit.kind,id:session.assetEdit.id,auto:false});
   renderChatTaskSide();
   setComposerTaskReference(activeSessionTaskId);
@@ -68,8 +75,15 @@ function openChatSession(sessionId) {
     renderChatSessions();
     return;
   }
+  if (session.previewRepair) {
+    chatInput.contentEditable = 'true';
+    chatInput.setAttribute('data-placeholder', '输入消息…');
+    renderPreviewRepairConversation(session);
+    renderChatSessions();
+    return;
+  }
   chatInput.contentEditable = 'true';
-  chatInput.setAttribute('data-placeholder', '输入消息…');
+  chatInput.setAttribute('data-placeholder', '布置开发任务，输入 / 调用技能或命令');
   var task = tkGetTasks().find(function (row) { return row.id === activeSessionTaskId; });
   $('#chatTitle').textContent = task ? task.title : session.title;
   if (session.demoState && session.demoState !== 'running') {

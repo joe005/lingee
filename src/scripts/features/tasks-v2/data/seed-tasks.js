@@ -210,7 +210,7 @@ const TK_COSMIC_WUXF_TASKS = [
       { id:'s5', workType:'测试验证', title:'测试验证', description:'验证差异清单与闭环结果', assigneeId:'p33', status:'done' },
       { id:'s6', workType:'部署交付', title:'部署交付', description:'集成差异清单到 app-build 契约', assigneeId:'p40', status:'done' },
     ] },
-  { id:1207, code:'T1001207', title:'属性继承链取值域合并验证', status:'in_review', priority:'high', assignee:'p23', createdBy:'p23', project:'cosmic-app-dev', labels:['需求'], createDate:'2026-09-25', dueDate:'2026-10-14',
+  { id:1207, code:'T1001207', title:'应用预览失败示例', status:'in_review', priority:'high', assignee:'p23', createdBy:'p23', project:'cosmic-app-dev', labels:['需求'], createDate:'2026-09-25', dueDate:'2026-10-14',
     desc:'验证 37 个取值域随模型类型变化的属性按 DomainModelTypeDefiners 继承链的覆盖合并结果，与 property-by-model-type.json 及 element-property-map.json 交叉核对，确认局部覆盖优先于全局定义、34 个模型类型的继承链无断链。测试验证产物已生成，等待评审。',
     executionStageId:'s5',
     statusHistory:[

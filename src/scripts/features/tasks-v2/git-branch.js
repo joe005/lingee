@@ -1,6 +1,6 @@
 /* 任务代码分支：项目配置了 Git 仓库和基准分支时，项目下的开发任务按分支开发——
-   开始执行时从基准分支拉取任务分支，审核通过（任务完成）后合并回基准分支。
-   原型不接真实 Git，分支状态按任务状态推导，开发板块与管理板块共用这一口径。 */
+   开始执行时从基准分支拉取任务分支；开发交付时由负责人确认模拟合并。
+   合并以代码交付记录为准，任务完成本身不构成合并证据。 */
 import { tkProjectById } from './data.js';
 
 var DEFAULT_BASE_BRANCHES = ['main', 'master', 'develop'];
@@ -21,17 +21,20 @@ function tkTaskBranchName(task) {
 function tkTaskBranch(task) {
   if (!task) return null;
   var project = tkProjectById(task.project);
-  if (!project || !project.repo || !project.baseBranch) return null;
-  var base = project.baseBranch;
+  var delivery = task.codeDeliveries?.at(-1);
+  if (!project || !project.repo || !(delivery?.target || project.baseBranch)) return null;
+  var base = delivery?.target || project.baseBranch;
   var branch = tkTaskBranchName(task);
   var started = !['planned', 'backlog'].includes(task.status) || !!task.executionStageId
     || (task.statusHistory || []).some(function (h) { return h && h.to === 'in_progress'; });
-  var state = task.status === 'done'
-    ? { key: 'merged', label: '已合并到 ' + base, hint: '审核通过后已合并回基准分支' }
+  var state = delivery
+    ? { key: 'merged', label: '已交付到 ' + base, hint: '原型模拟交付记录：' + delivery.id }
+    : task.status === 'done'
+      ? { key: 'unverified', label: '合并未核实', hint: '历史任务已完成，但无核实过的合并记录' }
     : task.status === 'cancelled'
       ? { key: 'closed', label: '已关闭', hint: '任务已取消，分支不合并' }
       : started
-        ? { key: 'developing', label: '开发中', hint: '已从 ' + base + ' 拉取，审核通过后合并回 ' + base }
+        ? { key: 'developing', label: '开发中', hint: '已从 ' + base + ' 拉取，开发交付时合并回 ' + base }
         : { key: 'pending', label: '待拉取', hint: '开始执行时从 ' + base + ' 拉取' };
   return { repo: project.repo, base: base, branch: branch, state: state };
 }

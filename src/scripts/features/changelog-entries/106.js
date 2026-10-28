@@ -1,0 +1,1 @@
+export default {"id":"106","date":"2026-10-26","iconBg":"var(--brand-fill)","iconColor":"var(--brand)","type":"优化","module":"智能体选择","author":"wuhc2023","body":"优化·智能体选择：首条消息发出后固定智能体或团队，已选标签仅展示头像和名称，加号菜单保留置灰的智能体入口并显示“已选择”，更换对象需新建会话。"};

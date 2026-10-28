@@ -1,1 +1,1 @@
-export default {id:"102",date:"2026-10-19",iconBg:"var(--brand-fill)",iconColor:"var(--brand)",type:"功能",module:"任务看板与协作开发",author:"Joe wu",body:"功能·任务看板与协作开发：任务看板新增平滑拖拽与卡片更新时间展示，完善显示设置、任务编辑、阶段评审和操作记录交互，并补充协作开发导航提示。"};
+export default {"id":"102","date":"2026-10-19","iconBg":"var(--brand-fill)","iconColor":"var(--brand)","type":"修复","module":"首页与协作开发","author":"wuhc2023","body":"修复·首页与协作开发：还原新会话首页与侧栏布局，移除开发侧栏最近会话及任务角标，修复初始化中断和协作开发跳转丢失页签，统一空间筛选数量口径，并修复更多智能体与团队的未安装资产列表。"};

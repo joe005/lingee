@@ -26,10 +26,9 @@
   background: none;
   text-align: left;
   font: inherit;
-  font-size: 12.5px;
+  font-size:var(--font-size-14);
   color: var(--text);
-  cursor: pointer;
-}
+  cursor: pointer;font-weight:400;line-height:var(--line-height-14);}
 #view-manager .mgr-proj-more-menu button:hover {
   background: var(--hover);
 }
@@ -73,11 +72,11 @@
   border-radius: 50%;
   background: var(--warning);
   color: #fff;
-  font-size: 12px;
+  font-size: var(--font-size-12);
   font-weight: 700;
 }
 .mgr-scope .mgr-delete-title {
-  font-size: 16px;
+  font-size: var(--font-size-16);
   font-weight: 600;
   color: var(--text);
 }
@@ -88,7 +87,7 @@
   margin: 0;
   padding-left: 29px;
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: var(--font-size-14);
   line-height: 1.6;
   overflow-wrap: anywhere;
 }
@@ -139,7 +138,7 @@
 }
 .mgr-scope .mgr-pm-modal .sync-modal__title,
 .mgr-scope .mgr-pm-remove-modal .sync-modal__title {
-  font-size: 18px;
+  font-size: var(--font-size-18);
   font-weight: 600;
   color: var(--text);
   display: flex;
@@ -180,11 +179,10 @@
 .mgr-scope .mgr-pm-remove-modal .sync-modal__btn {
   padding: 9px 20px;
   border-radius: 9px;
-  font-size: 13px;
-  font-weight: 500;
+  font-size:var(--font-size-14);
+  font-weight:400;
   cursor: pointer;
-  transition: all 0.15s;
-}
+  transition: all 0.15s;line-height:var(--line-height-14);}
 .mgr-scope .mgr-pm-modal .sync-modal__btn--ghost,
 .mgr-scope .mgr-pm-remove-modal .sync-modal__btn--ghost {
   border: 1px solid var(--border-hover);
@@ -222,7 +220,7 @@
   padding: 20px 22px 0;
 }
 .mgr-scope .mgr-pm-member-remove-modal .sync-modal__title {
-  font-size: 16px;
+  font-size: var(--font-size-16);
 }
 .mgr-scope .mgr-pm-member-remove-modal .sync-modal__body {
   padding: 10px 22px 20px;
@@ -230,13 +228,13 @@
 .mgr-scope .mgr-pm-member-remove-modal p {
   margin: 0;
   color: var(--text);
-  font-size: 13px;
+  font-size: var(--font-size-14);
   line-height: 1.6;
 }
 .mgr-scope .mgr-pm-member-remove-modal .mgr-pm-member-remove-note {
   margin-top: 8px;
   color: var(--text-soft);
-  font-size: 12px;
+  font-size: var(--font-size-12);
 }
 .mgr-scope .mgr-pm-member-remove-confirm {
   border: 1px solid var(--danger);
@@ -256,7 +254,7 @@
   width: 100%;
   border-collapse: collapse;
   table-layout: fixed;
-  font-size: 12px;
+  font-size: var(--font-size-12);
 }
 #view-manager .mgr-tn-col-index { width: 40px; }
 #view-manager .mgr-tn-col-expert { width: 170px; }
@@ -268,7 +266,7 @@
   padding: 0 6px;
   border-bottom: 1px solid var(--divider);
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: var(--font-size-12);
   font-weight: 500;
   text-align: left;
   white-space: nowrap;
@@ -315,7 +313,7 @@
   border-radius: 999px;
   background: var(--brand-fill);
   color: var(--brand);
-  font-size: 11px;
+  font-size: var(--font-size-12);
   line-height: 1;
   white-space: nowrap;
 }
@@ -335,7 +333,7 @@
   background: transparent;
   color: var(--text);
   font: inherit;
-  font-size: 12px;
+  font-size: var(--font-size-12);
   cursor: pointer;
 }
 #view-manager .mgr-tn-plan-table select:hover {
@@ -355,7 +353,7 @@
   background: var(--bg);
   color: var(--text);
   font: inherit;
-  font-size: 12px;
+  font-size: var(--font-size-12);
   white-space: nowrap;
   cursor: pointer;
 }
@@ -373,7 +371,7 @@
 #view-manager .mgr-tn-plan-empty {
   padding: 18px 0;
   color: var(--text-soft);
-  font-size: 13px;
+  font-size: var(--font-size-14);
   text-align: center;
 }
 /* 人工审核开关 */
@@ -430,7 +428,7 @@
   display: block;
   margin-bottom: 6px;
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: var(--font-size-14);
   font-weight: 500;
 }
 .mgr-scope .mgr-rename-label b {
@@ -447,7 +445,7 @@
   background: var(--bg);
   color: var(--text);
   font: inherit;
-  font-size: 13px;
+  font-size: var(--font-size-14);
 }
 .mgr-scope .mgr-rename-input:focus {
   outline: none;
@@ -460,7 +458,7 @@
 .mgr-scope .mgr-rename-error {
   margin: 6px 0 0;
   color: var(--danger);
-  font-size: 12px;
+  font-size: var(--font-size-12);
 }
 
 /* ---------- Git 地址 + 基准分支（同一行） ---------- */
@@ -501,7 +499,7 @@
   background-color: var(--bg);
   color: var(--text);
   font: inherit;
-  font-size: 13px;
+  font-size: var(--font-size-14);
   cursor: pointer;
 }
 .mgr-scope .mgr-repo-row .mgr-repo-branch select:focus-visible {
@@ -545,17 +543,17 @@
   flex-wrap: wrap;
   gap: 6px;
   min-width: 0;
-  font-size: 12.5px;
+  font-size: var(--font-size-14);
   color: var(--text);
 }
 #view-manager .mgr-tp-branch-name {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 12px;
+  font-size: var(--font-size-12);
   overflow-wrap: anywhere;
 }
 #view-manager .mgr-tp-branch-hint {
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: var(--font-size-12);
 }
 
 /* ---------- 项目设置 · 代码仓库 ---------- */
@@ -565,7 +563,7 @@
 .mgr-scope .mgr-repo-hint {
   margin: 8px 0 0;
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: var(--font-size-12);
   line-height: 1.6;
 }
 
@@ -591,7 +589,7 @@
 }
 #view-manager .mgr-rail-card .mgr-rail-progress-text small {
   color: var(--text-soft);
-  font-size: 11px;
+  font-size: var(--font-size-12);
   font-weight: 400;
 }
 
@@ -607,7 +605,7 @@
   background: var(--bg);
   box-shadow: var(--menu-shadow);
   color: var(--text);
-  font-size: 13px;
+  font-size: var(--font-size-14);
 }
 .mgr-datepop-head {
   display: flex;
@@ -646,7 +644,7 @@
   height: 26px;
   line-height: 26px;
   color: var(--text-soft);
-  font-size: 12px;
+  font-size: var(--font-size-12);
   text-align: center;
 }
 .mgr-datepop-day {
@@ -657,7 +655,7 @@
   background: none;
   color: var(--text);
   font: inherit;
-  font-size: 13px;
+  font-size: var(--font-size-14);
   font-variant-numeric: tabular-nums;
   cursor: pointer;
 }
@@ -696,9 +694,8 @@
   background: none;
   color: var(--brand);
   font: inherit;
-  font-size: 12.5px;
-  cursor: pointer;
-}
+  font-size:var(--font-size-14);
+  cursor: pointer;font-weight:400;line-height:var(--line-height-14);}
 .mgr-datepop-foot button:hover {
   background: var(--brand-fill);
 }

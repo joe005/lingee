@@ -1,0 +1,24 @@
+<form>
+  <div class="tk-stage-return-head">
+    <h2 id="tkStageReturnTitle">退回上游节点</h2>
+    <button type="button" class="tk-stage-return-close" data-return-cancel aria-label="关闭">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+    </button>
+  </div>
+  <p class="tk-stage-return-notice"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="currentColor"/><path d="M12 11v6m0-10v1" stroke="var(--bg)" stroke-width="2" stroke-linecap="round"/></svg><span>从所选节点按原流程重新执行，历史产物和记录保留。</span></p>
+  <div class="tk-stage-return-field">
+    <label for="tkStageReturnTarget">退回节点<span class="tk-stage-return-required" aria-hidden="true">*</span></label>
+    <div class="tk-stage-return-select">
+      <select id="tkStageReturnTarget" required><option value="" disabled selected>请选择节点</option></select>
+    </div>
+  </div>
+  <div class="tk-stage-return-field">
+    <label for="tkStageReturnReason">退回原因<span class="tk-stage-return-required" aria-hidden="true">*</span></label>
+    <div class="tk-stage-return-reason">
+      <textarea id="tkStageReturnReason" rows="4" maxlength="100" placeholder="说明上游产物的问题及需要调整的内容" aria-describedby="tkStageReturnCount" required></textarea>
+      <span id="tkStageReturnCount">0/100</span>
+    </div>
+  </div>
+  <p class="tk-stage-return-error" role="alert" hidden></p>
+  <div class="tk-stage-return-actions"><button type="button" data-return-cancel>取消</button><button type="submit">确定</button></div>
+</form>

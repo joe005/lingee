@@ -159,17 +159,17 @@ function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml,
   return '<section class="tk-feed-stage-overview tk-exec-card is-' + currentState + '" aria-label="执行概览">'
     + '<div class="tk-exec-card-head tk-agent-report-head">' + (pageState.taskDetailVersion === 'latest' ? renderTaskTeamAvatarGroup(team) : '<span class="tk-exec-card-mark tk-agent-report-mark" aria-hidden="true">✦</span>') + '<div class="tk-exec-card-identity tk-agent-report-heading"><strong>' + escapeHtml(team?.name || '任务智能体团队') + '</strong>'
      + (pageState.taskDetailVersion === 'v1' ? '<span>当前阶段 · ' + escapeHtml(currentDetail) + '</span>' : '') + '</div></div>'
-     + (latestLayout ? '' : '<div class="tk-feed-stage-overview-head"><strong>执行计划</strong></div>')
+     + '<div class="tk-feed-stage-overview-head"><strong>执行计划</strong></div>'
     + (latestLayout ? '<div class="tk-feed-stage-table-wrap"><table class="tk-feed-stage-table"><caption class="sr-only">执行计划</caption><colgroup><col class="tk-stage-col-mark"><col class="tk-stage-col-name"><col class="tk-stage-col-expert"><col class="tk-stage-col-assignee"><col class="tk-stage-col-state"><col class="tk-stage-col-actions"></colgroup><thead class="sr-only"><tr><th>标记</th><th>阶段</th><th>执行智能体</th><th>处理人</th><th>状态</th><th>操作</th></tr></thead>' : '<ol class="tk-feed-stage-list">') + plannedStages.map(function (stage, index) {
       var entry = byId.get(stage.id);
       var state = entry?.state || 'pending';
       var label = index === currentIndex && state === 'running' && kindInfo.kind === 'question' ? '待回答' : state === 'done' ? '已完成' : state === 'running' ? '执行中' : state === 'review' ? '待评审' : state === 'blocked' ? '已阻塞' : index === currentIndex && task.status === 'backlog' && task.executionStageId ? '待开始' : '未开始';
       var assignee = tkGetPerson(stage.assigneeId || task.assignee).name;
       var isCurrent = index === currentIndex;
-      var expert = entry && EXPERTS.find(function (item) { return item.id === entry.expertId; });
-      var agentName = expert?.name || taskStageAgentName(task, stage.id);
-      var stagePlan = task.executionPlan?.find(function (row) { return row.id === stage.id; });
-      var automaticReview = stagePlan?.requiresConfirmation === false;
+      var agentName = taskStageAgentName(task, stage.id);
+      var expert = (entry && EXPERTS.find(function (item) { return item.id === entry.expertId; }))
+        || Object.values(EX).find(function (item) { return item.name === agentName; });
+      var plan = task.executionPlan?.find(function (item) { return item.id === stage.id; });
       var stageArtifacts = latestLayout && entry && ['done', 'review'].includes(state)
         ? artifacts.filter(function (artifact) { return artifact.stageId === stage.id; }) : [];
       var detailId = 'tkStageDetail' + index;
@@ -179,12 +179,12 @@ function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml,
       return '<tbody><tr class="tk-feed-stage-row is-' + state + (isCurrent ? ' is-current' : '') + '"' + (isCurrent ? ' aria-current="step"' : '') + '>'
         + '<td class="tk-stage-cell-mark"><span class="tk-feed-stage-mark" aria-hidden="true"></span></td>'
         + '<th scope="row" class="tk-feed-stage-main" colspan="5"><div class="tk-feed-stage-meta"><span class="tk-feed-stage-expert-content">'
-          + (expert ? '<img src="' + escapeHtml(xav(expert.k)) + '" alt="">' : '<span class="tk-figma-person-avatar" aria-hidden="true">' + escapeHtml(assignee.slice(0, 1)) + '</span>')
-          + '<strong title="执行智能体：' + escapeHtml(agentName) + '">' + escapeHtml(agentName) + '</strong>'
+          + (expert ? '<img src="' + escapeHtml(xav(expert.k)) + '" alt="">' : '<span class="tk-figma-person-avatar" aria-hidden="true">' + escapeHtml(agentName.slice(0, 1)) + '</span>')
+          + '<strong>' + escapeHtml(expert?.name || agentName) + '</strong>'
           + '</span>'
-          + '<span class="tk-feed-stage-role" title="处理人：' + escapeHtml(assignee) + '">' + escapeHtml(assignee) + '</span>'
-          + '<span class="tk-feed-stage-state">' + label + '</span></div>'
-        + '<div class="tk-feed-stage-line"><span class="tk-feed-stage-name">' + escapeHtml(stage.name) + '</span>' + (automaticReview ? '<span class="tk-feed-stage-review-mode" data-review-mode="ai" title="本阶段自动审核，无需人工确认">自动评审</span>' : '') + '</div>' + detailHtml + '</th>'
+          + '<span class="tk-feed-stage-state">' + label + '</span>'
+          + '<span class="tk-feed-stage-reviewer">' + (plan?.requiresConfirmation === false ? '自动流转' : '评审人：' + escapeHtml(assignee)) + '</span></div>'
+        + '<div class="tk-feed-stage-line"><span class="tk-feed-stage-name">' + escapeHtml(stage.name) + '</span></div>' + detailHtml + '</th>'
         + '</tr>'
         + '</tbody>';
     }).join('') + (latestLayout ? '</table></div>' : '</ol>')
@@ -585,19 +585,30 @@ export function openDrawer(taskId) {
     mainInner.prepend(sidebar);
     var overviewHeading = document.createElement('h4');
     overviewHeading.className = 'tk-figma-overview-heading';
-    overviewHeading.textContent = '任务概况';
+    overviewHeading.textContent = '任务概览';
+    mainInner.querySelector('.tk-drawer-comments-title').textContent = '动态';
+    var propList = sidebar.querySelector('#tkDrawerPropList');
+    var rows = Array.from(propList.querySelectorAll('.tk-prop-row'));
+    ['项目', '状态', '优先级', '任务类型'].forEach(function (label) {
+      var row = rows.find(function (item) { return item.querySelector('span')?.textContent?.trim() === label; });
+      if (row) {
+        propList.append(row);
+        if (label === '项目') row.querySelector('span').textContent = '所属空间';
+        if (label === '任务类型') row.querySelector('span').textContent = '标签';
+      }
+    });
     sidebar.prepend(overviewHeading);
     var description = mainInner.querySelector('.tk-drawer-desc');
     var descriptionRow = document.createElement('div');
     descriptionRow.className = 'tk-figma-description-row';
-    descriptionRow.innerHTML = '<span>任务描述</span>';
+    descriptionRow.innerHTML = '<span>描述</span>';
     descriptionRow.append(description);
     sidebar.append(descriptionRow);
   }
   var _newDetails = els.tkDrawerBody.querySelectorAll('details');
   _savedDetailsOpen.forEach(function (open, i) { if (open && _newDetails[i]) _newDetails[i].open = true; });
-  /* 抽屉重渲染会清掉预览面板 DOM；页签状态仍留在内存，重挂面板即可恢复已打开的产物。 */
-  if (pageState.docPreviewTabs.length) renderDocPreviewPanel();
+  /* 抽屉重渲染会清掉预览面板 DOM，重挂面板恢复当前产物。 */
+  if (pageState.docPreviewArtifact) renderDocPreviewPanel();
   /* 附件上传初始化 */
   (function(){
     var dz = els.tkDrawerBody.querySelector('#tkAttachDropzone');

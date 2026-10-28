@@ -15,9 +15,7 @@ export function renderIssueArtifacts(task) {
         '</summary>' +
         '<div class="tk-artifact-preview">' +
           '<p class="tk-artifact-subtitle">' + escapeHtml(artifact.summary) + '</p><div class="tk-artifact-meta">' + escapeHtml(artifact.author) + ' · ' + escapeHtml(artifact.date) + '</div>' +
-          artifact.sections.map(function (section) {
-            return '<div class="tk-artifact-section"><strong>' + escapeHtml(section.heading) + '</strong>' + renderArtifactBlocks(section) + '</div>';
-          }).join('') +
+          renderArtifactPreview(artifact) +
         '</div></details>';
     }).join('') + '</div></section>';
 }
@@ -26,7 +24,53 @@ export function renderIssueArtifacts(task) {
 export function isWebsiteArtifact(artifact) {
   return !!artifact && artifact.format === 'html' && typeof artifact.content === 'string';
 }
+/* 启动失败演示只在本次页面内恢复；刷新后可再次演示，不改任务状态或其他预览。 */
+var recoveredPreviews = new Set();
+var restartingPreviews = new Set();
+var startupFailureArtifacts = new Map();
+function renderPreviewStartupFailure(artifact) {
+  var taskId = String(artifact.sourceTaskId);
+  startupFailureArtifacts.set(taskId, artifact);
+  var restarting = restartingPreviews.has(taskId);
+  return '<div class="tk-site-preview tk-site-startup-failure" data-site-preview-task="' + escapeHtml(taskId) + '">'
+    + '<div class="tk-site-failure-art" aria-hidden="true"><div class="tk-site-failure-dots"><i></i><i></i><i></i></div><span>!</span></div>'
+    + '<p role="status">' + (restarting ? '正在重启服务…' : '应用启动失败') + '</p>'
+    + '<div class="tk-site-failure-actions"><button type="button" data-site-restart' + (restarting ? ' disabled' : '') + '><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5M6.1 6.1A8 8 0 0 1 20 12M4 12a8 8 0 0 0 13.9 5.9"/></svg>重启服务</button>'
+    + '<button type="button" class="tk-site-repair" data-site-repair' + (restarting ? ' disabled' : '') + '><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M20 11.5a8 8 0 0 1-8 8H5l-3 2v-7A8 8 0 1 1 20 11.5Z"/></svg>告诉灵基修复</button></div></div>';
+}
+export function initWebsitePreviewEvents(beforeRepair) {
+  function refreshPreview(taskId) {
+    var artifact = startupFailureArtifacts.get(taskId);
+    document.querySelectorAll('[data-site-preview-task]').forEach(function (node) {
+      if (node.dataset.sitePreviewTask === taskId) node.outerHTML = renderWebsitePreview(artifact);
+    });
+  }
+  document.addEventListener('lingee:preview-service-restored', function (event) {
+    var taskId = String(event.detail?.taskId);
+    recoveredPreviews.add(taskId);
+    if (startupFailureArtifacts.has(taskId)) refreshPreview(taskId);
+  });
+  document.addEventListener('click', function (event) {
+    var button = event.target.closest('[data-site-restart], [data-site-repair]');
+    var preview = button?.closest('[data-site-preview-task]');
+    if (!preview || button.disabled) return;
+    var taskId = preview.dataset.sitePreviewTask;
+    if (button.hasAttribute('data-site-restart')) {
+      restartingPreviews.add(taskId);
+      refreshPreview(taskId);
+      setTimeout(function () {
+        restartingPreviews.delete(taskId);
+        recoveredPreviews.add(taskId);
+        refreshPreview(taskId);
+      }, 600);
+    } else {
+      if (beforeRepair) beforeRepair();
+      document.dispatchEvent(new CustomEvent('lingee:preview-repair', { detail:{ taskId:Number(taskId) } }));
+    }
+  });
+}
 export function renderWebsitePreview(artifact) {
+  if (artifact.previewStartupFailure && !recoveredPreviews.has(String(artifact.sourceTaskId))) return renderPreviewStartupFailure(artifact);
   var title = artifact.docTitle || '网站预览';
   var frame = '<iframe class="tk-site-frame" sandbox="allow-scripts" title="' + escapeHtml(title) + '" srcdoc="' + escapeHtml(artifact.content) + '"></iframe>';
   if (!artifact.url) return '<div class="tk-site-preview">' + frame + '</div>';

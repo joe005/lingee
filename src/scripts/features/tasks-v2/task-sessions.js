@@ -129,7 +129,7 @@ export function tkGetMySessions(task) {
   var ownerId = tkCurrentUserId();
   if (!task || !ownerId) return [];
   seedDemoSessions(task, ownerId);
-  /* 已保存旧版演示会话时也补齐待回复场景，避免只在首次打开时出现。 */
+  /* 已保存旧版演示会话时也补齐待回答场景，避免只在首次打开时出现。 */
   if (task.id === 1205 && task.status === 'in_progress' && tkCurrentStageHandlerId(task) === ownerId) {
     var currentDemoSession = _sessions.find(function (session) {
       return session.taskId === task.id && session.ownerId === ownerId && session.stageId === task.executionStageId && session.status === 'active';

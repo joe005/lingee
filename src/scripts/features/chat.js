@@ -1,5 +1,6 @@
 import { $, $$ } from '../core/dom.js';
 import { toast } from '../core/toast.js';
+import { initChatHeaderActions } from './chat-header-actions.js';
 /* 会话页：产物预览、预览展开、历史版本面板
    拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
    由 main.js 按拆分前的原始顺序调用。 */
@@ -166,6 +167,7 @@ export function initHistoryPanel() {
       });
     });
   }
+  initChatHeaderActions();
 }
 
 export { closeHistory, historyBtn, historyPanel, syncTogglePreviewBtn };

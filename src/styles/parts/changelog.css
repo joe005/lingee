@@ -4,7 +4,7 @@
     .changelog-page-head {
       display:flex;align-items:center;margin-bottom:20px;
     }
-    .changelog-page-title { font-size:22px;font-weight:600; }
+    .changelog-page-title { font-size:var(--font-size-24);font-weight:600; }
     /* 筛选区 */
     .changelog-filter-bar {
       display:flex;flex-direction:column;gap:8px;margin-bottom:16px;
@@ -13,14 +13,14 @@
       display:flex;align-items:center;gap:12px;
     }
     .changelog-filter-label {
-      font-size:13px;font-weight:500;color:var(--text-secondary);flex-shrink:0;width:48px;
+      font-size:var(--font-size-14);font-weight:500;color:var(--text-secondary);flex-shrink:0;width:48px;
     }
     .changelog-filter-options {
       display:flex;flex-wrap:wrap;gap:6px;
     }
     .changelog-filter-chip {
       height:28px;padding:0 12px;border:1px solid var(--border);border-radius:6px;
-      background:#fff;color:var(--text);font-size:13px;cursor:pointer;
+      background:#fff;color:var(--text);font-size:var(--font-size-14);cursor:pointer;
       transition:all .15s;white-space:nowrap;
     }
     .changelog-filter-chip:hover { border-color:var(--border-hover);color:var(--text); }
@@ -32,12 +32,12 @@
     /* 表格 */
     .changelog-table { width:100%;border-collapse:collapse; }
     .changelog-table th {
-      padding:10px 16px;text-align:left;font-size:12px;font-weight:500;
+      padding:10px 16px;text-align:left;font-size:var(--font-size-12);font-weight:500;
       color:var(--text-secondary);border-bottom:1px solid var(--border);
       background:var(--fill-1);white-space:nowrap;
     }
     .changelog-table td {
-      padding:12px 16px;font-size:13px;color:var(--text);
+      padding:12px 16px;font-size:var(--font-size-14);color:var(--text);
       border-bottom:1px solid var(--border);vertical-align:top;
     }
     .changelog-table tr:last-child td { border-bottom:none; }
@@ -50,18 +50,18 @@
     /* 模块标签 */
     .changelog-module-tag {
       display:inline-flex;align-items:center;height:22px;padding:0 8px;
-      border-radius:4px;font-size:12px;font-weight:500;white-space:nowrap;
+      border-radius:4px;font-size:var(--font-size-12);font-weight:500;white-space:nowrap;
     }
     /* 类型标签 */
     .changelog-type-tag {
       display:inline-flex;align-items:center;height:22px;padding:0 8px;
-      border-radius:4px;font-size:12px;font-weight:500;white-space:nowrap;
+      border-radius:4px;font-size:var(--font-size-12);font-weight:500;white-space:nowrap;
     }
     /* 更新内容 */
     .changelog-link { color:var(--brand);text-decoration:none; }
     .changelog-link:hover { text-decoration:underline; }
     /* 空态 */
-    .changelog-empty { display:flex;align-items:center;justify-content:center;padding:60px 20px;color:var(--text-muted);font-size:14px; }
+    .changelog-empty { display:flex;align-items:center;justify-content:center;padding:60px 20px;color:var(--text-muted);font-size:var(--font-size-14); }
     /* 帮助中心按钮（复用 notification-bell 基础样式） */
     .notification-bell { position:relative;background:none;border:none;cursor:pointer;padding:6px;color:var(--text-muted);display:flex;align-items:center;justify-content:center;border-radius:8px;transition:color .15s,background .15s; }
     .notification-bell:hover { color:#2d2d2d;background:var(--hover); }
@@ -76,6 +76,6 @@
     /* 用户菜单中的未读徽标 */
     .menu-badge {
       height:18px;padding:0 6px;
-      border-radius:4px;background:var(--brand);color:#fff;font-size:10px;font-weight:600;
+      border-radius:4px;background:var(--brand);color:#fff;font-size:var(--font-size-10);font-weight:600;
       line-height:18px;text-align:center;flex-shrink:0;letter-spacing:.5px;
     }

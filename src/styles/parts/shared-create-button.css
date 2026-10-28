@@ -15,7 +15,7 @@
   background: var(--brand);
   color: var(--bg);
   font: inherit;
-  font-size: 14px;
+  font-size: var(--font-size-14);
   font-weight: 500;
   line-height: 20px;
   white-space: nowrap;

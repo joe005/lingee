@@ -39,7 +39,7 @@
 #view-manager .mgr-home-head h1 {
   margin: 0;
   color: var(--text-title);
-  font-size: 18px;
+  font-size: var(--font-size-18);
   font-weight: 600;
   line-height: 28px;
 }
@@ -56,7 +56,7 @@
   gap: 8px;
   margin: 0;
   color: var(--text-title);
-  font-size: 16px;
+  font-size: var(--font-size-16);
   font-weight: 600;
 }
 #view-manager .mgr-home-sec-head h2 svg {
@@ -74,7 +74,7 @@
   background: var(--brand);
   color: #fff;
   font: inherit;
-  font-size: 14px;
+  font-size: var(--font-size-14);
   font-weight: 500;
   cursor: pointer;
   transition: background 0.15s;
@@ -104,7 +104,7 @@
   background: none;
   color: var(--text);
   font: inherit;
-  font-size: 14px;
+  font-size: var(--font-size-14);
   cursor: pointer;
   transition: background 0.15s;
 }
@@ -131,7 +131,7 @@
   background: var(--bg);
   color: var(--text);
   font: inherit;
-  font-size: 14px;
+  font-size: var(--font-size-14);
   transition: border-color 0.15s;
 }
 #view-manager .mgr-home-search input:hover {
@@ -169,7 +169,7 @@
   background: none;
   color: var(--text);
   font: inherit;
-  font-size: 14px;
+  font-size: var(--font-size-14);
   text-align: left;
   cursor: pointer;
   transition: background 0.15s;
@@ -189,7 +189,7 @@
   border-radius: 4px;
   background: var(--tag-bg);
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: var(--font-size-12);
   font-weight: 500;
   line-height: 20px;
 }
@@ -206,7 +206,7 @@
   max-width: 220px;
   overflow: hidden;
   color: var(--text-secondary);
-  font-size: 12px;
+  font-size: var(--font-size-12);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -220,7 +220,7 @@
   gap: 8px;
   padding: 28px 20px;
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: var(--font-size-14);
 }
 #view-manager .mgr-todo-empty svg {
   color: var(--text-soft);
@@ -244,13 +244,13 @@
 }
 #view-manager .mgr-mcard-title {
   color: var(--text-title);
-  font-size: 16px;
+  font-size: var(--font-size-16);
   font-weight: 600;
   line-height: 24px;
 }
 #view-manager .mgr-mcard-desc {
   min-height: 3.2em;
-  font-size: 14px;
+  font-size: var(--font-size-14);
   line-height: 1.6;
 }
 #view-manager .mgr-mcard-foot {
@@ -263,7 +263,7 @@
   gap: 8px;
   min-width: 0;
   color: var(--text);
-  font-size: 14px;
+  font-size: var(--font-size-14);
 }
 #view-manager .mgr-mcard-owner > span:last-child {
   overflow: hidden;
@@ -280,11 +280,11 @@
   border-radius: 50%;
   background: var(--brand-fill);
   color: var(--brand);
-  font-size: 12px;
+  font-size: var(--font-size-12);
   font-weight: 600;
 }
 #view-manager .mgr-mcard .mgr-tag {
-  font-size: 12px;
+  font-size: var(--font-size-12);
 }
 #view-manager .mgr-set-head {
   display: flex;
@@ -296,7 +296,7 @@
 #view-manager .mgr-set-head h1 {
   margin: 0;
   color: var(--text-title);
-  font-size: 18px;
+  font-size: var(--font-size-18);
   font-weight: 600;
   line-height: 28px;
 }
@@ -304,7 +304,7 @@
   min-width: 0;
   overflow: hidden;
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: var(--font-size-14);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -346,7 +346,7 @@
   gap: 8px;
   margin: 0;
   color: var(--text-title);
-  font-size: 16px;
+  font-size: var(--font-size-16);
   font-weight: 600;
 }
 #view-manager .mgr-set-card-head h2 svg {
@@ -364,7 +364,7 @@
   background: var(--bg);
   color: var(--text);
   font: inherit;
-  font-size: 13px;
+  font-size: var(--font-size-14);
   font-weight: 500;
   cursor: pointer;
   transition:
@@ -378,11 +378,11 @@
 #view-manager .mgr-set-label {
   margin-bottom: 8px;
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: var(--font-size-14);
 }
 #view-manager .mgr-set-text {
   color: var(--text);
-  font-size: 14px;
+  font-size: var(--font-size-14);
   line-height: 1.7;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
@@ -408,7 +408,7 @@
   background: none;
   color: var(--brand);
   font: inherit;
-  font-size: 14px;
+  font-size: var(--font-size-14);
   cursor: pointer;
 }
 #view-manager .mgr-set-more[aria-expanded="true"] svg {
@@ -416,7 +416,7 @@
 }
 #view-manager .mgr-set-empty {
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: var(--font-size-14);
 }
 #view-manager .mgr-set-textarea {
   display: block;
@@ -429,7 +429,7 @@
   background: var(--bg);
   color: var(--text);
   font: inherit;
-  font-size: 14px;
+  font-size: var(--font-size-14);
   line-height: 1.6;
   resize: vertical;
   transition: border-color 0.15s;
@@ -452,7 +452,7 @@
   grid-template-columns: 96px minmax(0, 1fr);
   gap: 8px 16px;
   margin: 0;
-  font-size: 14px;
+  font-size: var(--font-size-14);
 }
 #view-manager .mgr-set-kv dt {
   color: var(--text-secondary);
@@ -465,7 +465,7 @@
 #view-manager .mgr-set-note {
   margin: 0;
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: var(--font-size-14);
 }
 @media (max-width: 600px) {
   #view-manager .mgr-home-sec-head {

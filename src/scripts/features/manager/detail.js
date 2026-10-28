@@ -71,10 +71,7 @@ function railHtml(p) {
     '<div class="mgr-rail-card">' + railHead('overview', '空间概览') +
     '<p class="mgr-rail-goal">' + mgrEsc(p.goal || p.desc || '—') + '</p>' +
     '<p class="mgr-rail-owner">负责人：' + mgrEsc(p.owner || '未指定') + '</p>' +
-    /* 开发空间（配了代码仓库）在概览里带出 Git 地址和基准分支 */
-    (p.repo ? '<p class="mgr-rail-owner mgr-rail-repo"><span class="mgr-rail-repo-label">代码仓库：</span><span class="mgr-rail-repo-url" title="' + mgrEsc(p.repo) + '">' + mgrEsc(p.repo.replace(/^https?:\/\//, '')) + '</span>' +
-      '<button type="button" class="mgr-rail-copy" data-mgr-copy-repo aria-label="复制 Git 地址" data-tooltip="复制 Git 地址"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg></button></p>' +
-      '<p class="mgr-rail-owner mgr-rail-meta">基准分支：' + mgrEsc(p.baseBranch || 'main') + '</p>' : '') + '</div>' +
+    '</div>' +
 
     '<div class="mgr-rail-card mgr-rail-card--kb"><span class="mgr-rail-head mgr-rail-head--split">' +
     '<button type="button" class="mgr-rail-head-main" data-mgr-sub="knowledge"><span class="mgr-rail-title">' + ICONS.knowledge + '知识库</span></button>' +

@@ -10,7 +10,7 @@
 #tkSaveViewOverlay .tk-form-row>label{width:80px;flex:none;margin:0}
 #tkSaveViewOverlay .tk-form-row input,#tkSaveViewOverlay .tk-form-row select{width:256px;box-sizing:border-box}
 .tk-modal-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--divider);flex-shrink:0}
-.tk-modal-head h3{font-size:15px;font-weight:600;color:var(--text);margin:0}
+.tk-modal-head h3{font-size:var(--font-size-16);font-weight:600;color:var(--text);margin:0}
 .tk-modal-close{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border:none;background:transparent;color:var(--text-secondary);cursor:pointer;border-radius:6px}
 .tk-modal-close:hover{background:var(--hover)}
 .tk-modal-body{padding:18px;overflow-y:auto;flex:1}
@@ -18,25 +18,25 @@
 
 /* 表单 */
 .tk-form-row{margin-bottom:14px}
-.tk-form-row>label{display:block;font-size:13px;color:var(--text-secondary);margin-bottom:5px}
-.tk-form-row input[type=text],.tk-form-row input[type=date],.tk-form-row textarea,.tk-form-row select{width:100%;border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:13px;outline:none;background:var(--bg);color:var(--text);font-family:inherit}
+.tk-form-row>label{display:block;font-size:var(--font-size-14);color:var(--text-secondary);margin-bottom:5px}
+.tk-form-row input[type=text],.tk-form-row input[type=date],.tk-form-row textarea,.tk-form-row select{width:100%;border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:var(--font-size-14);outline:none;background:var(--bg);color:var(--text);font-family:inherit}
 .tk-form-row input:focus,.tk-form-row textarea:focus,.tk-form-row select:focus{border-color:var(--border-focus)}
-.tk-save-view-hint,.tk-save-view-summary{font-size:12px;color:var(--text-secondary);margin:0 0 14px}
+.tk-save-view-hint,.tk-save-view-summary{font-size:var(--font-size-12);color:var(--text-secondary);margin:0 0 14px}
 .tk-save-view-summary{margin:0}
 .tk-form-row textarea{resize:vertical}
 .tk-req{color:var(--danger)}
 .tk-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.tk-form-field label{display:block;font-size:13px;color:var(--text-secondary);margin-bottom:5px}
-.tk-form-field input,.tk-form-field select{width:100%;border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:13px;outline:none;background:var(--bg);color:var(--text)}
+.tk-form-field label{display:block;font-size:var(--font-size-14);color:var(--text-secondary);margin-bottom:5px}
+.tk-form-field input,.tk-form-field select{width:100%;border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:var(--font-size-14);outline:none;background:var(--bg);color:var(--text)}
 .tk-form-field input:focus,.tk-form-field select:focus{border-color:var(--border-focus)}
-.tk-check-label{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text);cursor:pointer}
+.tk-check-label{display:flex;align-items:center;gap:6px;font-size:var(--font-size-14);color:var(--text);cursor:pointer}
 .tk-check-label input{width:auto}
 
 /* ---------- 管理视图列表 ---------- */
 .tk-manage-list{display:flex;flex-direction:column;gap:4px}
 .tk-manage-item{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border:1px solid var(--border);border-radius:6px;background:var(--fill-1)}
-.tk-manage-item-name{font-size:13px;color:var(--text);font-weight:500}
-.tk-manage-item-builtin{font-size:11px;color:var(--text-soft);margin-left:6px}
+.tk-manage-item-name{font-size:var(--font-size-14);color:var(--text);font-weight:500}
+.tk-manage-item-builtin{font-size:var(--font-size-12);color:var(--text-soft);margin-left:6px}
 .tk-manage-item-actions{display:flex;align-items:center;gap:4px}
 .tk-manage-item-actions button{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border:none;background:transparent;color:var(--text-secondary);cursor:pointer;border-radius:5px}
 .tk-manage-item-actions button:hover{background:var(--hover);color:var(--text)}
@@ -45,14 +45,14 @@
 /* ---------- 弹出菜单 ---------- */
 .tk-popover{position:absolute;background:var(--bg);border:1px solid var(--border);border-radius:8px;box-shadow:var(--menu-shadow);padding:4px;z-index:50;min-width:140px;display:none}
 .tk-popover.show{display:block}
-.tk-popover-item{padding:6px 10px;border-radius:4px;font-size:13px;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:space-between}
+.tk-popover-item{padding:6px 10px;border-radius:4px;font-size:var(--font-size-14);cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:space-between}
 .tk-popover-item:hover{background:var(--hover)}
 .tk-popover-item.active{color:var(--brand);background:var(--brand-fill)}
 .tk-popover-item .tk-popover-check{opacity:0}
 .tk-popover-item.active .tk-popover-check{opacity:1}
 
 /* ---------- 头像 ---------- */
-.tk-avatar{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;color:#fff;font-weight:600;flex-shrink:0}
+.tk-avatar{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:var(--font-size-10);color:#fff;font-weight:600;flex-shrink:0}
 
 /* ---------- 看板卡片父子嵌套（参考 Multica table-view 按深度缩进） ---------- */
 .tk-card-top-row{display:flex;align-items:center;gap:6px;margin-bottom:4px}
@@ -61,7 +61,7 @@
 .tk-card-toggle svg{transition:transform .15s}
 .tk-card-toggle.is-collapsed svg{transform:rotate(-90deg)}
 .tk-card-spacer{display:none}
-.tk-card-child-count{flex:none;display:inline-flex;align-items:center;justify-content:center;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--brand-fill);color:var(--brand);font-size:10px;font-weight:600;font-variant-numeric:tabular-nums}
+.tk-card-child-count{flex:none;display:inline-flex;align-items:center;justify-content:center;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--brand-fill);color:var(--brand);font-size:var(--font-size-10);font-weight:600;font-variant-numeric:tabular-nums}
 .tk-card--child{border-left:2px solid var(--border)}
 .tk-card--child:hover{border-left-color:var(--border-hover)}
 .tk-card--parent{background:var(--fill-1)}
@@ -73,6 +73,6 @@
 .tk-row-toggle svg{transition:transform .15s}
 .tk-row-toggle.is-collapsed svg{transform:rotate(-90deg)}
 .tk-row-spacer{flex:none;width:18px;height:18px}
-.tk-row-child-count{flex:none;display:inline-flex;align-items:center;justify-content:center;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--brand-fill);color:var(--brand);font-size:10px;font-weight:600}
+.tk-row-child-count{flex:none;display:inline-flex;align-items:center;justify-content:center;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--brand-fill);color:var(--brand);font-size:var(--font-size-10);font-weight:600}
 .tk-row--child{background:var(--fill-1)}
 .tk-row--child:hover{background:var(--hover)}

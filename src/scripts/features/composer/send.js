@@ -16,6 +16,7 @@ import { answerTaskQuestion, getConversationTask, renderChatTaskSide, renderConv
 import { chatViewerActiveKey, chatViewerTabs, closeChatDocViewer, set_chatViewerActiveKey, set_chatViewerTabs } from './doc-viewer.js';
 import { simulateAIResponse } from './stream.js';
 import { handleLocalEnvSend } from './local-env-chat.js';
+import { renderPreviewRepairConversation } from './preview-repair.js';
 /* 对话：新会话与对话页的发送、发送拦截器（拆自 composer.js） */
 
 /* 演示流程（如新会话里用智能体开发创建设备故障诊断助手）可接管首页发送；返回 true 表示已处理 */
@@ -36,7 +37,8 @@ function doSend(automatic){
     return;
   }
   var autoPicked=false;
-  if(!pickValid()){
+  /* 已选开发快捷卡片由对应 builder 承接，不再叠加关键词匹配的专家团。 */
+  if(!pickValid()&&!currentMode){
     var am=autoMatch(t);
     if(am){ set_activePick(am); renderExpertChips(); autoPicked=true; }
   }
@@ -113,6 +115,14 @@ function chatDoSend(){
   if(!t){ chatInput.focus(); return; }
   if(chatSendInterceptor&&chatSendInterceptor(t)){ chatInput.innerHTML=''; refreshChatSend(); return; }
   if(handleLocalEnvSend(t)){ chatInput.innerHTML=''; refreshChatSend(); chatInput.focus(); return; }
+  var repairSession = chatSessions.find(function (row) { return row.id === activeSessionId && row.previewRepair; });
+  if (repairSession) {
+    repairSession.exchanges.push({ prompt:t, done:true, response:repairSession.previewRepair.status === 'resolved'
+      ? '应用预览已恢复：残留进程已清理，devserver 重启成功，页面返回 HTTP 200。可以点击“打开应用预览”查看运行成果。'
+      : '正在按启动日志排查并恢复服务，完成后会展示验证结果和应用预览入口。' });
+    saveChatSessions(); chatInput.innerHTML = ''; refreshChatSend();
+    renderPreviewRepairConversation(repairSession); chatInput.focus(); return;
+  }
   var assetEditing=chatSessions.find(function(row){return row.id===activeSessionId&&row.assetEdit;});
   if(assetEditing){
     var edit=assetEditing.assetEdit;

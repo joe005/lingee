@@ -1,21 +1,29 @@
 import { ldIsDevProject } from '../../collab/local-dev.js';
 import { tkProjectsForCurrentUser } from '../data.js';
-import { getFilteredTasks } from './filters.js';
+import { filterListStatus, getFilteredTasks } from './filters.js';
 import { render } from './layout.js';
 import { updateFilterButton } from './menus.js';
 import { state } from './state.js';
 import { escapeHtml } from './utils.js';
 /* 任务页 · 空间切换：工具栏左侧「全部空间 ▾」，列表和看板共用。
    与「筛选」里的「空间」是同一份条件（state.filters 里 field 为 project 的项），这里选一个空间即替换为单选；
-   在筛选里多选时按钮显示「N 个空间」。页签计数、协作开发徽标按同一口径随之变化，视图状态随 render 一起保存。 */
+   在筛选里多选时按钮显示「N 个空间」。下拉数量与当前列表页签一致，看板统计全部可见状态。 */
+
+var CHECK = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4 10-11"/></svg>';
 
 var CARET = '<svg class="tk-space-caret" width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 7.5 5 5 5-5"/></svg>';
 
 function selectedSpaces() { return state.filters.filter(function (f) { return f.field === 'project'; }).map(function (f) { return f.value; }); }
 
+/* 仅放开空间条件，保留权限、关键词及其他过滤；列表还需应用当前状态页签。 */
+function spaceCountTasks(){
+  var tasks=getFilteredTasks('project');
+  return state.layout==='list'?filterListStatus(tasks):tasks.filter(function(task){return task.status!=='cancelled';});
+}
+
 /* 可选空间：开发空间，以及当前条件下有任务的空间；按任务数从多到少，选中的排前面 */
 function spaceOptions() {
-  var tasks = getFilteredTasks('project');
+  var tasks = spaceCountTasks();
   var picked = selectedSpaces();
   return tkProjectsForCurrentUser().map(function (project) {
     return { id:project.id, name:project.name, count:tasks.filter(function (task) { return task.project === project.id; }).length, dev:ldIsDevProject(project) };
@@ -31,16 +39,18 @@ export function updateSpaceButton() {
   label.textContent = !picked.length ? '全部空间' : picked.length === 1 ? name : picked.length + ' 个空间';
   btn.title = label.textContent;
   btn.classList.toggle('has-filters', picked.length > 0);
+  var popup=document.getElementById('tkSpacePopup');
+  if(popup&&!popup.hidden)renderOptions();
 }
 
 function renderOptions() {
   var q = document.getElementById('tkSpaceSearch').value.trim().toLocaleLowerCase();
   var picked = selectedSpaces();
   var rows = spaceOptions().filter(function (row) { return !q || row.name.toLocaleLowerCase().includes(q); });
-  var all = '<button type="button" role="option" aria-selected="' + !picked.length + '" data-tk-space=""><span>全部空间</span><small>' + getFilteredTasks('project').length + '</small><b>' + (picked.length ? '' : '✓') + '</b></button>';
+  var all = '<button type="button" role="option" aria-selected="' + !picked.length + '" data-tk-space=""><span class="tk-space-option-label"><span class="tk-space-option-name">全部空间</span><small>（' + spaceCountTasks().length + '）</small></span><b>' + (picked.length ? '' : CHECK) + '</b></button>';
   document.getElementById('tkSpaceOptions').innerHTML = (q ? '' : all) + (rows.length ? rows.map(function (row) {
     var on = picked.length === 1 && picked[0] === row.id;
-    return '<button type="button" role="option" aria-selected="' + on + '" data-tk-space="' + escapeHtml(row.id) + '"><span title="' + escapeHtml(row.name) + '">' + escapeHtml(row.name) + '</span><small>' + row.count + '</small><b>' + (on ? '✓' : '') + '</b></button>';
+    return '<button type="button" role="option" aria-selected="' + on + '" data-tk-space="' + escapeHtml(row.id) + '"><span class="tk-space-option-label" title="' + escapeHtml(row.name) + '"><span class="tk-space-option-name">' + escapeHtml(row.name) + '</span><small>（' + row.count + '）</small></span><b>' + (on ? CHECK : '') + '</b></button>';
   }).join('') : '<p>没有匹配的空间</p>');
 }
 

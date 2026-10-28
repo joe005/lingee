@@ -1,8 +1,8 @@
 import { renderTaskUpdatedTime } from './card-time.js';
 import { initSelectDropdowns } from '../../../core/select-dropdown.js';
-import needsColumnIcon from '../../../../assets/figma/task-board/needs.svg';
-import runningColumnIcon from '../../../../assets/figma/task-board/running.svg';
-import doneColumnIcon from '../../../../assets/figma/task-board/done.svg';
+import needsColumnIcon from '../../../../assets/figma/task-board/needs-dot.svg';
+import runningColumnIcon from '../../../../assets/figma/task-board/running-dot.svg';
+import doneColumnIcon from '../../../../assets/figma/task-board/done-dot.svg';
 import boardMoreIcon from '../../../../assets/figma/task-list/more.svg';
 import { taskExecutionStages, taskStageAgentName } from '../task-execution.js';
 import { $$ } from '../../../core/dom.js';
@@ -58,7 +58,7 @@ export function renderBoard() {
     var arrow = collapsed ? '18 15 12 9 6 15' : '6 9 12 15 18 9';
     return '<div class="tk-board-col' + (collapsed ? ' is-collapsed' : '') + '" data-group-key="' + g.key + '">'
       + '<div class="tk-board-col-head"><div class="tk-board-col-head-left">'
-      + (['needs','backlog','in_progress','done'].includes(g.key) ? '<img src="' + (g.key === 'done' ? doneColumnIcon : g.key === 'in_progress' ? runningColumnIcon : needsColumnIcon) + '" width="16" height="16" alt="">' : statusSvg(g.key))
+      + (['needs','backlog','in_progress','done'].includes(g.key) ? '<img class="tk-board-status-dot" src="' + (g.key === 'done' ? doneColumnIcon : g.key === 'in_progress' ? runningColumnIcon : needsColumnIcon) + '" width="16" height="16" alt="">' : statusSvg(g.key))
       + '<span class="tk-board-col-name">' + escapeHtml(g.name) + '</span>'
       + (groupTasks.length ? '<span class="tk-board-col-count">' + groupTasks.length + '</span>' : '')
       + '</div><div class="tk-board-col-head-right">'
@@ -135,7 +135,7 @@ export function renderCard(t, opts) {
       + (props.startDate && t.startDate ? '<span class="tk-card-due">' + fmtDate(t.startDate) + '</span>' : '');
     return '<div class="tk-card tk-card--figma' + sel + extraCls + (t.status === 'blocked' ? ' tk-card--blocked' : '') + '" draggable="true" data-task-id="' + t.id + '">'
       + '<button type="button" class="tk-card-more" data-card-more="' + t.id + '" aria-label="更多任务操作" aria-haspopup="menu"><img src="' + boardMoreIcon + '" width="16" height="16" alt=""></button>'
-      + '<div class="tk-card-top-row">' + toggle + boardStatus + '<div class="tk-card-code">' + escapeHtml(t.code) + (props.project && t.project ? ' · ' + escapeHtml(tkGetProjectName(t.project)) : '') + '</div>' + childBadge + '</div>'
+      + '<div class="tk-card-top-row">' + toggle + boardStatus + '<div class="tk-card-code">' + escapeHtml(t.code) + (t.project ? ' · ' + escapeHtml(tkGetProjectName(t.project)) : '') + '</div>' + childBadge + '</div>'
       + '<div class="tk-card-copy"><div class="tk-card-title">' + escapeHtml(t.title) + '</div>'
       + (props.description && t.desc ? '<div class="tk-card-description" title="' + escapeHtml(t.desc) + '">' + escapeHtml(t.desc) + '</div>' : '')
       + '</div>' + (boardTags ? '<div class="tk-card-tags">' + boardTags + '</div>' : '')
@@ -300,9 +300,11 @@ function updateSortArrows() {
 
 /* ---------- 渲染：筛选 Chip ---------- */
 export function renderFilterChips() {
-  if (state.filters.length === 0) { els.tkFilterChips.classList.add('hidden'); els.tkFilterChips.innerHTML = ''; return; }
+  // 空间已由工具栏按钮展示，不重复生成标签；保留原索引供移除其他筛选使用。
+  if (!state.filters.some(function (f) { return f.field !== 'project'; })) { els.tkFilterChips.classList.add('hidden'); els.tkFilterChips.innerHTML = ''; return; }
   els.tkFilterChips.classList.remove('hidden');
   var html = state.filters.map(function (f, i) {
+    if (f.field === 'project') return '';
     var fieldDef = TK_FILTER_FIELDS.find(function (fd) { return fd.id === f.field; });
     var sectionDef = filterSections.find(function (section) { return section[0] === f.field; });
     var fieldName = sectionDef ? sectionDef[1] : fieldDef ? fieldDef.name : f.field;

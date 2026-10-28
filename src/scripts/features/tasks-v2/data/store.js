@@ -217,6 +217,12 @@ try {
 var demoAutoReviewChanged = false;
 _tasks.forEach(function(task){ if (applyDemoAutoReviewDefaults(task)) demoAutoReviewChanged = true; });
 try { if (demoAutoReviewChanged) persistTasks(); } catch(e) { /* 存储不可用时仍使用本次内存配置 */ }
+/* 已缓存的预览失败样例同步标题，仅匹配原始标题，保留用户其他改名。 */
+var previewFailureDemoTask = _tasks.find(function (task) { return task.id === 1207 && task.code === 'T1001207' && ['属性继承链取值域合并验证', '属性继承链取值域合并验证（预览启动失败示例）'].includes(task.title); });
+if (previewFailureDemoTask) {
+  previewFailureDemoTask.title = TK_COSMIC_WUXF_TASKS.find(function (task) { return task.id === 1207; }).title;
+  try { persistTasks(); } catch (e) { /* 缓存不可写时仍显示本次内存中的标题 */ }
+}
 // 在所有补种与缓存迁移结束后补全类型，避免后加入的模拟任务漏处理。
 var taskIssueTypesChanged = false;
 _tasks.forEach(function (task) {

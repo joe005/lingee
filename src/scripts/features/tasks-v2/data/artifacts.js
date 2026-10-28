@@ -24,18 +24,21 @@ function tkArtifactStageId(task, phaseId) {
   if (team === 'general-app-dev' && ['planning','agent'].includes(phaseId)) return 'implementation';
   return phaseId;
 }
-/* 应用开发（通用应用开发智能体团队）的「开发实现」产物是部署后的网站，可直接预览和操作。
+/* 应用开发的「开发实现」保留实现报告，并在阶段末尾追加可操作的 HTML 应用预览。
    问卷类项目用问卷调研演示应用，工单类项目用工单管理系统演示应用；其他项目按业务主题（工单、采购、报销、库存…）生成演示网站，
    没有命中主题时用任务产物里的演示列表数据。 */
 function tkWebsiteArtifact(task, doc) {
   if (doc.id !== 'implementation') return null;
   var project = tkProjectById(task.project);
   var teamId = cvStampTaskTeam(task);
-  if (teamId !== 'general-app-dev' && teamId !== 'kingdee-secondary-dev') return null;
+  if (!['general-app-dev', 'cosmic-app-dev', 'kingdee-secondary-dev'].includes(teamId)) return null;
   var name = (project && project.name) || '应用';
   var base = {
-    id: 'implementation', stageId: doc.stageId, type: '网站预览', format: 'html', fileName: String(task.code || 'task').toLowerCase() + '-site.html',
-    docTitle: name + ' · 网站预览', summary: '开发完成后部署的可访问网站，可直接操作页面',
+    id: 'implementation-preview', stageId: doc.stageId, type: '应用预览', format: 'html', fileName: String(task.code || 'task').toLowerCase() + '-preview.html',
+    docTitle: '应用预览', summary: '开发运行成果，可直接操作 HTML 应用页面',
+    author: doc.author, date: doc.date, version: doc.version, status: doc.status,
+    previewStartupFailure: Number(task.id) === 1207,
+    sourceTaskId: task.id,
   };
   if (/问卷|调研|调查/.test(name + ' ' + (task.title || ''))) {
     return Object.assign(base, { url: 'https://apps.lingee.com/survey', content: surveyAppHtml });
@@ -64,13 +67,23 @@ function tkGetTaskArtifacts(task) {
     test: nameAt(3, task.assignee),
     owner: tkGetPerson(task.createdBy || task.assignee).name,
   };
-  var docs = buildTaskArtifactDocs({ task: task, projectName: tkGetProjectName(task.project), people: people })
-    .map(function (doc) { return tkWebsiteArtifact(task, doc) || doc; });
+  var docs = buildTaskArtifactDocs({ task: task, projectName: tkGetProjectName(task.project), people: people });
   /* 演示任务的定制产物按 id 覆盖通用产物 */
   var custom = equipmentArtifactDocs(task, people);
   if (custom) docs = docs.filter(function (doc) { return !custom.some(function (row) { return row.id === doc.id; }); }).concat(custom);
-  return docs.map(function (doc) { return Object.assign({}, doc, { stageId: tkArtifactStageId(task, doc.stageId) }); })
+  var implementation = docs.find(function (doc) { return doc.id === 'implementation'; });
+  var preview = implementation && tkWebsiteArtifact(task, implementation);
+  if (preview) docs = docs.map(function (doc) {
+    return doc === implementation ? Object.assign({}, doc, {
+      type: '实现报告', docTitle: task.title + ' 实现报告', format: 'md',
+      fileName: String(task.code || 'task').toLowerCase() + '-implementation.md',
+    }) : doc;
+  });
+  var artifacts = docs.map(function (doc) { return Object.assign({}, doc, { stageId: tkArtifactStageId(task, doc.stageId) }); })
     .concat(task.executionArtifacts || []);
+  /* 放在已有产物之后，按 stageId 筛选时始终是开发实现阶段的最后一项。 */
+  if (preview) artifacts.push(Object.assign({}, preview, { stageId: tkArtifactStageId(task, preview.stageId) }));
+  return artifacts;
 }
 
 export { tkGetTaskArtifacts };

@@ -34,7 +34,7 @@ export function taskListKind(task) {
   if (status === 'in_progress' && taskConversationNeedsReply(task, true)) {
     var question = taskConversationQuestion(task);
     var canReply = mine;
-    return { kind:'question', badge:'待回答', hint:'AI 正在等你回答' + (question ? '：' + question : ''), action:canReply ? 'reply' : 'detail', label:canReply ? '回复问题' : '查看会话', primary:canReply, needsMe:canReply };
+    return { kind:'question', badge:'待回答', hint:'AI 正在等你回答' + (question ? '：' + question : ''), action:canReply ? 'reply' : 'detail', label:canReply ? '回答问题' : '查看会话', primary:canReply, needsMe:canReply };
   }
   if (status === 'blocked') {
     var blockedHint = (quoted ? quoted + '执行受阻' : '执行受阻') + (reason ? '：' + reason : '');
@@ -59,7 +59,7 @@ export function taskCardAction(task) {
   if (task.status !== 'done' && tkIsMyStageDone(task)) return {action:'artifacts',label:'查看产物',primary:false};
   var info = taskListKind(task);
   var action = info.action;
-  var labels = {start:'AI 执行',review:'评审产物',retry:task.blockedRun?.kind === 'local-env' ? '去配置' : '重试',reply:'回复问题',artifacts:'查看产物',detail:'查看会话'};
+  var labels = {start:'AI 执行',review:'评审产物',retry:task.blockedRun?.kind === 'local-env' ? '去配置' : '重试',reply:'回答问题',artifacts:'查看产物',detail:'查看会话'};
   return {action:action,label:['question', 'running'].includes(info.kind) ? info.label : labels[action] || info.label,primary:info.primary};
 }
 

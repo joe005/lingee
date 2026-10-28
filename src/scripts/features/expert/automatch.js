@@ -1,8 +1,9 @@
 import { $ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
-import { input, setNavActive, showView } from '../../core/view.js';
+import { applyMode, input, setNavActive, showView } from '../../core/view.js';
 import { messagesList, refreshSend, scrollChatBottom } from '../composer.js';
-import { renderExpertChips } from './chips.js';
+import { renderExpertChips, renderModeTag } from './chips.js';
+import { set_forcedBuilder } from './editor.js';
 import { EX, askFor, xav, xesc } from './data.js';
 import { activePick, pickName, pickValid, set_activePick, teamById } from './store.js';
 /* 没选专家时的自动匹配
@@ -59,6 +60,7 @@ function autoMatch(text){
 function summon(kind,id,phrase){
   var o = kind==='team' ? teamById(id) : EX[id];
   if(!o) return;
+  applyMode('',false); set_forcedBuilder(null); renderModeTag();
   set_activePick({kind:kind,id:id,auto:false});
   renderExpertChips();
   showView('newtask'); setNavActive('新会话');

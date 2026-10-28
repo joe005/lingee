@@ -23,11 +23,11 @@
 .niu-create .niu-custom-select-source{display:none}
 .niu-create .niu-select-trigger>span:first-child{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .niu-person-popup{box-sizing:border-box;border:1px solid var(--border);border-radius:12px;background:var(--bg);box-shadow:var(--menu-shadow);padding:4px;color:var(--text)}
-.niu-person-popup input{height:36px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:14px}
+.niu-person-popup input{height:36px;padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:var(--font-size-14)}
 .niu-person-popup input::placeholder{color:var(--text-soft);opacity:1}
 .niu-person-popup input:hover{border-color:var(--border-hover)}
 .niu-person-popup input:focus{border-color:var(--border-focus);outline:none;box-shadow:none}
-.niu-person-popup button{min-height:32px;padding:8px 12px;gap:8px;border-radius:8px;color:var(--text);font-size:14px;font-weight:400}
+.niu-person-popup button{min-height:32px;padding:8px 12px;gap:8px;border-radius:8px;color:var(--text);font-size:var(--font-size-14);font-weight:400;line-height:var(--line-height-14);}
 .niu-person-popup button:hover{background:var(--hover);color:var(--text)}
 .niu-person-popup button[aria-selected=true]{background:var(--brand-fill)}
 .niu-person-popup button:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}
@@ -48,16 +48,16 @@
 /* 任务表单与属性菜单的统一规格。 */
 .niu-plan .niu-select-caret,.niu-stage-owner .niu-select-caret{width:14px;height:14px;flex:none;color:var(--text-secondary)}
 .niu-create-stage-table select.niu-custom-select-source,.niu-plan select.niu-custom-select-source{display:none}
-.niu-create-stage-table .niu-select-trigger,.niu-create-stage-table .niu-stage-owner{display:flex;align-items:center;justify-content:space-between;box-sizing:border-box;width:100%;min-width:0;height:32px;min-height:32px;padding:4px 8px;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--text);font-size:13px;font-weight:400}
+.niu-create-stage-table .niu-select-trigger,.niu-create-stage-table .niu-stage-owner{display:flex;align-items:center;justify-content:space-between;box-sizing:border-box;width:100%;min-width:0;height:32px;min-height:32px;padding:4px 8px;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--text);font-size:var(--font-size-14);font-weight:400}
 .niu-create-stage-table .niu-select-trigger:hover,.niu-create-stage-table .niu-stage-owner:hover{border-color:var(--border-hover);background:var(--hover)}
 .niu-plan .niu-select-trigger>span:first-child{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.niu-plan .niu-select-trigger{font-size:13px}
+.niu-plan .niu-select-trigger{font-size:var(--font-size-14)}
 .niu-select-trigger:disabled,.niu-stage-owner:disabled{opacity:.5;cursor:not-allowed}
 .niu-create-stage-table .niu-select-trigger:focus-visible,.niu-create-stage-table .niu-stage-owner:focus-visible,.niu-plan .niu-select-trigger:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 td.niu-plan-empty{color:var(--text-secondary)}
-.niu-stage-inline-field>span,.niu-stage-fields label>span,.niu-stage-label,.niu-stage-choice button,.niu-stage-continuous{font-size:12px}
+.niu-stage-inline-field>span,.niu-stage-fields label>span,.niu-stage-label,.niu-stage-choice button,.niu-stage-continuous{font-size:var(--font-size-14);font-weight:400;line-height:var(--line-height-14);}
 .tk-prop-menu{border-radius:12px}
-.tk-prop-menu-item{box-sizing:border-box;min-height:32px;padding:8px 12px;border-radius:8px;font-size:14px;line-height:1.4}
+.tk-prop-menu-item{box-sizing:border-box;min-height:32px;padding:8px 12px;border-radius:8px;font-size:var(--font-size-14);line-height:1.4}
 .niu-create .niu-create-writing .niu-field :is(input,textarea):focus,.niu-create .niu-create-properties .niu-field :is(select,.niu-person-trigger):focus,.niu-smart-fields .niu-field :is(select,textarea):focus{border-color:var(--border-focus);box-shadow:none}
 .niu-create .niu-create-writing .niu-field :is(input,textarea):focus-visible,.niu-create .niu-create-properties .niu-person-trigger:focus-visible,.niu-person-popup input:focus-visible,.niu-plan .niu-person-trigger:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 .niu-create .niu-create-writing .niu-field .niu-invalid:focus,.niu-create .niu-create-properties .niu-field .niu-invalid:focus{border-color:var(--danger);box-shadow:0 0 0 2px var(--danger-bg)}
@@ -76,7 +76,7 @@ td.niu-plan-empty{color:var(--text-secondary)}
 .niu-create .niu-create-properties .niu-field .niu-invalid:focus,
 .niu-create .niu-create-properties .niu-field .niu-invalid:focus-visible{border-color:var(--danger);outline:none;box-shadow:none}
 
-.tk-card-status{display:inline-flex;align-items:center;flex:none;padding:2px 8px;border-radius:4px;background:var(--fill-1);color:var(--text-secondary);font-size:12px;line-height:1.4}
+.tk-card-status{display:inline-flex;align-items:center;flex:none;padding:2px 8px;border-radius:4px;background:var(--fill-1);color:var(--text-secondary);font-size:var(--font-size-12);line-height:1.4}
 .tk-card-status[data-kind=review]{background:var(--warning-bg);color:var(--warning)}
 .tk-card-status[data-kind=question]{background:var(--brand-fill);color:var(--brand)}
 .tk-card-status[data-kind=blocked]{background:var(--danger-bg);color:var(--danger)}
@@ -107,12 +107,64 @@ td.niu-plan-empty{color:var(--text-secondary)}
 /* 当前任务列表与看板隐藏通用筛选入口。 */
 #cv-tasks-current #view-tasks:not(.tk-project-list-mode) #tkFilterBtn { display:none; }
 /* 空间切换：工具栏左侧「全部空间 ▾」，列表和看板共用；项目任务清单里空间已固定，不显示 */
-.tk-space-btn{gap:6px;max-width:220px}
+.tk-space-btn{gap:8px;width:168px;max-width:100%;justify-content:space-between}
+.tk-filter-btn.tk-space-btn.has-filters,.tk-filter-btn.tk-space-btn.has-filters:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-fill)}
+.tk-filter-btn.tk-space-btn:hover{border-color:var(--border-hover);background:var(--bg)}
+.tk-filter-btn.tk-space-btn:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+.tk-space-btn[aria-expanded=true] .tk-space-caret{transform:rotate(180deg)}
 .tk-space-btn #tkSpaceLabel{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tk-space-btn .tk-space-caret{flex:none;color:var(--text-secondary)}
 #view-tasks.tk-project-list-mode .tk-space-btn{display:none}
-.tk-space-popup:not([hidden]){display:flex;flex-direction:column;width:280px;max-height:360px;overflow:hidden}
-.tk-space-popup>input{flex:none;margin-bottom:4px}
+.tk-space-popup:not([hidden]){display:flex;flex-direction:column;width:208px;max-width:calc(100vw - 16px);max-height:360px;overflow:hidden;padding:4px;border-radius:var(--r-card)}
+.tk-space-search{position:relative;flex:none;margin-bottom:4px}
+.tk-space-search input{box-sizing:border-box;width:100%;height:28px;padding:0 32px 0 12px;border-radius:var(--asset-pill-radius)}
+.tk-space-search>svg{position:absolute;right:12px;top:6px;color:var(--text-soft);pointer-events:none}
+.tk-space-search input:focus,.tk-space-search input:focus-visible{border-color:var(--border-hover);outline:none;box-shadow:none}
 #tkSpaceOptions{flex:1;min-height:0;overflow-y:auto}
-.tk-space-popup button small{flex:none;font-size:12px;color:var(--text-secondary)}
-.tk-space-popup button b{width:14px;text-align:center}
+.tk-space-popup button{width:100%;min-height:36px;display:flex;align-items:center;padding:8px;border:0;background:transparent;text-align:left;cursor:pointer}
+.tk-space-popup button[aria-selected=true]{background:transparent}
+.tk-space-popup button:hover{background:var(--hover)}
+.tk-space-popup button>.tk-space-option-label{display:flex;align-items:baseline;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:clip}
+.tk-space-option-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tk-space-popup button small{flex:none;font-size:inherit;color:inherit;font-weight:400}
+.tk-space-popup button b{display:flex;width:16px;flex:none;align-items:center;justify-content:center}
+.tk-space-popup button b svg{color:var(--text-secondary)}
+
+/* 协作开发窄窗口：状态页签随工具栏换行，不裁掉已完成入口。 */
+@media(max-width:960px){
+  #cv-tasks-current #view-tasks:not(.tk-project-list-mode) .tk-toolbar .tk-view-tabs{max-width:100%;height:auto;flex-wrap:wrap;box-sizing:border-box}
+  #cv-tasks-current #view-tasks:not(.tk-project-list-mode) .tk-view-tabs .list-page-tab{flex:none;white-space:nowrap}
+}
+
+/* 上游节点退回：独立弹窗，沿用任务控件尺寸与设计令牌。 */
+/* 截图弹窗：460px 含内边距，窄屏与短屏随视口收缩。 */
+.tk-stage-return{position:fixed;inset:0;margin:auto;box-sizing:border-box;width:min(460px,calc(100vw - 32px));max-height:calc(100dvh - 32px);overflow-y:auto;padding:20px;border:0;border-radius:var(--r-modal);background:var(--bg);color:var(--text);box-shadow:var(--menu-shadow)}
+.tk-stage-return::backdrop{background:var(--overlay)}
+.tk-stage-return-head{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:24px}
+.tk-stage-return h2{margin:0;font-size:var(--font-size-18);line-height:var(--line-height-18);font-weight:500}
+.tk-stage-return-close{display:flex;align-items:center;justify-content:center;flex:none;width:28px;height:28px;padding:4px;border:0;border-radius:6px;background:transparent;color:var(--text-secondary);cursor:pointer}
+.tk-stage-return-close:hover{background:var(--hover);color:var(--text)}
+.tk-stage-return .tk-stage-return-notice{display:flex;align-items:center;gap:8px;margin:0 0 16px;padding:12px;border:1px solid var(--brand-fill);border-radius:16px;background:var(--fill-1);font-size:var(--font-size-14);line-height:var(--line-height-14);color:var(--text-secondary)}
+.tk-stage-return-notice>svg{flex:none;color:var(--brand)}
+.tk-stage-return-field+.tk-stage-return-field{margin-top:32px}
+.tk-stage-return label{display:block;margin-bottom:8px;font-size:var(--font-size-14);line-height:var(--line-height-14);color:var(--text-secondary)}
+.tk-stage-return select,.tk-stage-return textarea{box-sizing:border-box;width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:12px;background:var(--bg);font:inherit;font-size:var(--font-size-14);line-height:var(--line-height-14);color:var(--text)}
+.tk-stage-return-select{position:relative}
+.tk-stage-return .tk-stage-return-select>.shared-select-trigger{height:40px;min-height:40px;border-radius:12px}
+.tk-stage-return .tk-stage-return-select>.shared-select-trigger:focus-visible{border-color:var(--border-hover);outline:none;box-shadow:none}
+.tk-stage-return .tk-stage-return-select>.shared-select-trigger[aria-expanded=true]{border-color:var(--brand)}
+.tk-stage-return-reason{position:relative}
+.tk-stage-return textarea{display:block;resize:vertical;min-height:96px;padding-bottom:32px}
+.tk-stage-return textarea::placeholder{color:var(--text-soft)}
+#tkStageReturnCount{position:absolute;right:12px;bottom:8px;font-size:var(--font-size-12);line-height:var(--line-height-12);color:var(--text-secondary);pointer-events:none}
+.tk-stage-return :is(select,textarea):hover{border-color:var(--border-hover)}
+.tk-stage-return-actions{display:flex;justify-content:flex-end;gap:16px;margin-top:40px}
+.tk-stage-return-actions button,.tk-stage-return-trigger{height:var(--control-h);padding:0 12px;border:1px solid var(--border);border-radius:12px;background:var(--bg);font:inherit;font-size:var(--font-size-14);color:var(--text);cursor:pointer}
+.tk-stage-return-actions button[data-return-cancel]{border-color:transparent;background:transparent}
+.tk-stage-return-actions button[type=submit]{background:var(--brand);border-color:var(--brand);color:var(--bg)}
+.tk-stage-return-actions button:hover,.tk-stage-return-trigger:hover{background:var(--hover)}
+.tk-stage-return-actions button[type=submit]:hover{background:var(--brand-hover)}
+.tk-stage-return :is(select,textarea):focus,.tk-stage-return :is(select,textarea):focus-visible{border-color:var(--border-hover);outline:none;box-shadow:none}
+.tk-stage-return button:focus-visible,.tk-stage-return-trigger:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+.tk-stage-return .tk-stage-return-error{margin:12px 0 0;font-size:var(--font-size-14);line-height:var(--line-height-14);color:var(--danger)}
+.tk-stage-return .tk-stage-return-required{margin-left:4px;color:var(--danger)}

@@ -115,11 +115,17 @@ function renderPanel() {
   const all = inboxItems().filter((item) => !item.archived).sort((a,b) => b.created_at.localeCompare(a.created_at));
   const items = all.filter(item=>panelTab==='all'||(panelTab==='notice'?!item.issue_id:!!item.issue_id));
   panel.querySelector('#inboxPopupList').innerHTML = items.length ? items.map((item) =>
-    `<button type="button" class="inbox-popup-item${item.read?'':' unread'}" data-notice-id="${esc(item.id)}">
-      <span class="inbox-avatar ${item.actor_type==='agent'?'agent':''}">${esc((item.actor_id || '系').slice(0,1))}</span>
-      <span class="inbox-popup-content"><strong>${esc(item.title)}</strong><span>${esc(item.body)}</span><small>${esc(labels[item.type] || '通知')} · ${esc(relative(item.created_at))}</small></span>
-      ${item.read?'':'<i class="inbox-popup-dot" aria-label="未读"></i>'}
-    </button>`).join('') : '<div class="inbox-popup-empty"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 9 3-5h10l3 5v10H4V9Z"/><path d="M4 12h5l2 3h2l2-3h5"/></svg><span>暂无通知</span></div>';
+    `<article class="inbox-popup-card${item.read?'':' unread'}">
+      <div class="inbox-popup-card-head"><span class="inbox-avatar ${item.actor_type==='agent'?'agent':''}">${esc((item.actor_id || '系').slice(0,1))}</span>
+        <span>${esc(labels[item.type] || '通知')}</span><span class="inbox-popup-kind">${item.issue_id?'其他':'通知'}</span>
+        <div class="inbox-popup-actions"><button type="button" data-notice-ignore="${esc(item.id)}" aria-label="忽略：${esc(item.title)}">忽略</button><button type="button" data-notice-id="${esc(item.id)}" aria-label="处理：${esc(item.title)}">处理 ›</button></div>
+      </div>
+      <button type="button" class="inbox-popup-item" data-notice-id="${esc(item.id)}">
+        <span class="inbox-popup-content"><span class="inbox-popup-summary"><strong>${esc(item.title)}</strong><time>${esc(relative(item.created_at))}</time></span><span>${esc(item.body)}</span></span>
+        ${item.read?'':'<i class="inbox-popup-dot" aria-label="未读"></i>'}
+      </button>
+    </article>`).join('')+'<p class="inbox-popup-end">没有更多了</p>'  : '<div class="inbox-popup-empty"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 9 3-5h10l3 5v10H4V9Z"/><path d="M4 12h5l2 3h2l2-3h5"/></svg><span>暂无通知</span></div>';
+  $('#inboxPopupMarkAll').disabled = !all.some(item=>!item.read);
   panel.querySelectorAll('[data-popup-tab]').forEach((button) => {
     const active = button.dataset.popupTab === panelTab;
     button.classList.toggle('active',active);
@@ -170,6 +176,16 @@ export function initInbox() {
   $('#inboxPopup').addEventListener('click',(event) => {
     const tab = event.target.closest('[data-popup-tab]');
     if (tab) { panelTab=tab.dataset.popupTab; renderPanel(); return; }
+    if (event.target.closest('#inboxPopupMarkAll')) {
+      inboxItems().filter(item=>!item.archived).forEach(item=>{item.read=true;});
+      inboxPersist();renderInbox();return;
+    }
+    const ignore = event.target.closest('[data-notice-ignore]');
+    if (ignore) {
+      const item=inboxItems().find(entry=>entry.id===ignore.dataset.noticeIgnore);
+      if(item){item.archived=true;inboxPersist();renderInbox();}
+      return;
+    }
     const row = event.target.closest('[data-notice-id]');
     if (!row) return;
     const item = inboxItems().find((entry) => entry.id === row.dataset.noticeId);

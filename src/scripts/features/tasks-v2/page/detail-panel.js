@@ -1,15 +1,16 @@
+import { taskCodeDeliveryContext } from '../code-delivery-context.js';
 import { openTaskStatusConversation } from '../../composer.js';
 import { toast } from '../../../core/toast.js';
 import { mountAgentConfig, unmountAgentConfig } from '../../agent-config.js';
 import { agentCardByName, openAgentSubmit } from '../../agent-submit.js';
-import { isWebsiteArtifact, renderArtifactBlocks, renderWebsitePreview } from '../../collab/run-artifacts.js';
+import { initWebsitePreviewEvents, isWebsiteArtifact, renderArtifactBlocks, renderWebsitePreview } from '../../collab/run-artifacts.js';
 import { TK_LABELS, tkCanViewTask, tkCurrentStageHandlerId, tkCurrentUserId, tkGetProjectName, tkGetTaskArtifacts, tkGetTasks, tkUpdateTask } from '../data.js';
 import { approveAndSubmitAgent, isAgentSubmitStep, reviewTaskStage, taskExecutionStages } from '../task-execution.js';
 import { artifactFileName, artifactFormat, artifactFormatLabel, artifactIcon } from './artifacts.js';
 import { render } from './layout.js';
 import { pageState } from './page-state.js';
 import { DRAWER_WIDTH_STORAGE_KEY, els, state } from './state.js';
-import { openDrawer } from './subtasks.js';
+import { closeDrawer, openDrawer } from './subtasks.js';
 import { confirmTaskStageApproval, escapeHtml } from './utils.js';
 /* 任务页 · 任务详情面板（拆分自 tasks-v2/index.js，逻辑未改） */
 /* ---------- 任务详情面板 ---------- */
@@ -239,25 +240,9 @@ export function renderTaskArtifact(artifact) {
         '</div>' +
       '</div>';
 }
-function renderDocPreviewTabsBar() {
-  if (pageState.docPreviewTabs.length < 2) return '';
-  return '<div class="tk-doc-preview-tabs" role="tablist" aria-label="已打开的产物页签">' + pageState.docPreviewTabs.map(function (tab) {
-    var active = tab.id === pageState.docPreviewActiveId;
-    return '<button type="button" class="tk-doc-preview-tab' + (active ? ' is-active' : '') + '" role="tab" aria-selected="' + active + '" data-doc-tab="' + escapeHtml(tab.id) + '" title="' + escapeHtml(tab.docTitle || tab.type) + '">'
-      + '<span class="tk-doc-preview-tab-icon"><img src="' + artifactIcon(tab) + '" alt=""></span>'
-      + '<span class="tk-doc-preview-tab-name">' + escapeHtml(tab.docTitle || tab.type) + '</span>'
-      + '<span class="tk-doc-preview-tab-close" data-doc-tab-close="' + escapeHtml(tab.id) + '" role="button" aria-label="关闭「' + escapeHtml(tab.type) + '」页签" title="关闭页签"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span>'
-      + '</button>';
-  }).join('') + '</div>';
-}
 function renderDocPreviewContent(artifact) {
   return '<div class="tk-doc-preview-resize" id="tkDocPreviewResize" role="separator" aria-orientation="vertical" aria-label="调整文档预览宽度" tabindex="0"></div>' +
-    renderDocPreviewTabsBar() +
     '<div class="tk-doc-preview-head">' +
-      '<div class="tk-doc-preview-title">' +
-        '<span class="tk-doc-preview-icon"><img src="' + artifactIcon(artifact) + '" alt=""></span>' +
-        '<div><strong>' + escapeHtml(artifact.docTitle || artifact.type) + '</strong><span>' + escapeHtml(artifact.summary) + '</span></div>' +
-      '</div>' +
       '<button type="button" class="tk-doc-preview-close" id="tkDocPreviewClose" aria-label="关闭文档预览" data-tooltip="关闭">' +
         '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
       '</button>' +
@@ -311,6 +296,7 @@ function renderReviewArtifactPreview(artifact) {
   var format = artifactFormat(artifact);
   var fileName = artifact.fileName || artifact.name || artifact.docTitle || artifact.type;
   if (format === 'html' && typeof artifact.content === 'string') {
+    if (artifact.previewStartupFailure) return renderWebsitePreview(artifact);
     return '<article class="tk-list-review-file-preview"><div class="tk-list-review-file-head"><strong>' + escapeHtml(fileName) + '</strong><span>HTML 预览</span></div><div class="tk-list-review-html-frame"><iframe sandbox' + (artifact.url ? '="allow-scripts"' : '') + ' title="' + escapeHtml(fileName) + '" srcdoc="' + escapeHtml(artifact.content) + '"></iframe></div></article>';
   }
   if (format === 'code') {
@@ -338,7 +324,7 @@ function reviewArtifactSamples(task, artifacts) {
   });
   if (!formats.has('html')) normalized.push({
     id:'review-html-' + task.id, stageId:task.executionStageId, format:'html', fileName:stem + '-preview.html', type:'HTML 文件',
-    content:'<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><style>body{margin:0;padding:32px;font:14px/1.7 system-ui;color:#2d2d2d;background:#f7f8fb}.card{max-width:640px;margin:auto;padding:28px;background:#fff;border:1px solid #e8eaf0;border-radius:12px;box-shadow:0 8px 24px rgba(30,40,70,.08)}h1{margin:0 0 8px;font-size:22px}.tag{display:inline-block;padding:3px 9px;border-radius:5px;background:#eef3ff;color:#495dff;font-size:12px}.row{margin-top:20px;padding:14px;background:#fafafa;border-radius:8px}</style></head><body><main class="card"><span class="tag">验收预览</span><h1>' + escapeHtml(task.title) + '</h1><p>' + escapeHtml(task.desc || '本阶段产物已生成。') + '</p><div class="row"><strong>交付状态</strong><br>产物已生成，等待验收确认。</div></main></body></html>',
+    content:'<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><style>body{margin:0;padding:32px;font:14px/1.7 system-ui;color:#2d2d2d;background:#f7f8fb}.card{max-width:640px;margin:auto;padding:28px;background:#fff;border:1px solid #e8eaf0;border-radius:12px;box-shadow:0 8px 24px rgba(30,40,70,.08)}h1{margin:0 0 8px;font-size:var(--font-size-24, 24px)}.tag{display:inline-block;padding:3px 9px;border-radius:5px;background:#eef3ff;color:#495dff;font-size:var(--font-size-12, 12px)}.row{margin-top:20px;padding:14px;background:#fafafa;border-radius:8px}</style></head><body><main class="card"><span class="tag">验收预览</span><h1>' + escapeHtml(task.title) + '</h1><p>' + escapeHtml(task.desc || '本阶段产物已生成。') + '</p><div class="row"><strong>交付状态</strong><br>产物已生成，等待验收确认。</div></main></body></html>',
   });
   return normalized;
 }
@@ -381,6 +367,9 @@ function renderListReviewPreview() {
   els.tkListReviewHint.textContent = agentSubmit
     ? '测试通过后直接提交「' + task.deliversAgent + '」上架审核，管理员审核通过后正式生效。'
     : '请核对产物内容。需要调整时可返回任务会话继续修改。';
+  const codeContext = taskCodeDeliveryContext(task);
+  if (canReview && codeContext?.isDevelopment) els.tkListReviewHint.textContent = '先核对开发产物；通过验收后自动检查并合并代码，成功才流转。';
+  if (canReview && codeContext?.isTesting && codeContext.last) els.tkListReviewHint.textContent = '请核对本轮测试报告与实际环境验证结果；通过验收后自动关联本轮提测。';
   els.tkListReviewBody.scrollTop = 0;
 }
 export function openListReviewPreview(taskId, trigger, options = {}) {
@@ -395,6 +384,10 @@ export function openListReviewPreview(taskId, trigger, options = {}) {
   els.tkListReviewClose.focus({ preventScroll:true });
 }
 export function initListReviewPreviewEvents() {
+  document.addEventListener('lingee:task-stage-completed', function (event) {
+    if (pageState.listReviewPreviewTaskId === event.detail.taskId) renderListReviewPreview();
+  });
+  initWebsitePreviewEvents(function () { closeListReviewPreview(false); closeDrawer(); });
   /* 智能体在配置面板或验收页提交后，交付它的任务一并完成测试验证与提交上架 */
   document.addEventListener('lingee:agent-submitted', function (e) {
     var name = e.detail?.name;
@@ -462,29 +455,11 @@ function docPreviewPanel() {
   return panel;
 }
 export function openDocPreview(artifact) {
-  if (!pageState.docPreviewTabs.some(function (tab) { return tab.id === artifact.id; })) pageState.docPreviewTabs.push(artifact);
-  pageState.docPreviewActiveId = artifact.id;
-  renderDocPreviewPanel();
-}
-function switchDocPreviewTab(id) {
-  if (pageState.docPreviewActiveId === id) return;
-  if (!pageState.docPreviewTabs.some(function (tab) { return tab.id === id; })) return;
-  pageState.docPreviewActiveId = id;
-  renderDocPreviewPanel();
-}
-function closeDocPreviewTab(id) {
-  var index = pageState.docPreviewTabs.findIndex(function (tab) { return tab.id === id; });
-  if (index < 0) return;
-  pageState.docPreviewTabs.splice(index, 1);
-  if (!pageState.docPreviewTabs.length) { closeDocPreview(); return; }
-  if (pageState.docPreviewActiveId === id) {
-    var next = pageState.docPreviewTabs[Math.min(index, pageState.docPreviewTabs.length - 1)];
-    pageState.docPreviewActiveId = next.id;
-  }
+  pageState.docPreviewArtifact = artifact;
   renderDocPreviewPanel();
 }
 export function renderDocPreviewPanel() {
-  var artifact = pageState.docPreviewTabs.find(function (tab) { return tab.id === pageState.docPreviewActiveId; });
+  var artifact = pageState.docPreviewArtifact;
   if (!artifact) { closeDocPreview(); return; }
   var panel = docPreviewPanel();
   clearTimeout(pageState.docPreviewCloseTimer);
@@ -507,18 +482,7 @@ export function renderDocPreviewPanel() {
   if (closeBtn) closeBtn.addEventListener('click', closeDocPreview);
   var resize = panel.querySelector('#tkDocPreviewResize');
   if (resize) initDocPreviewResize(resize, panel);
-  panel.querySelectorAll('[data-doc-tab]').forEach(function (tab) {
-    tab.addEventListener('click', function (e) {
-      if (e.target.closest('[data-doc-tab-close]')) return;
-      switchDocPreviewTab(tab.getAttribute('data-doc-tab'));
-    });
-  });
-  panel.querySelectorAll('[data-doc-tab-close]').forEach(function (btn) {
-    btn.addEventListener('click', function (e) {
-      e.stopPropagation();
-      closeDocPreviewTab(btn.getAttribute('data-doc-tab-close'));
-    });
-  });
+
 }
 function expandDrawerForDocPreview(panel) {
   var drawerWidth = els.tkDrawer.getBoundingClientRect().width;
@@ -535,15 +499,14 @@ function expandDrawerForDocPreview(panel) {
       panel.style.width = docWidth + 'px';
       needed = minMain + sidebarWidth + docWidth;
     }
-    /* 只记录首次拓宽前的宽度；切换页签会重进此函数，不能让拓宽后的宽度覆盖原值。 */
+    /* 只记录首次拓宽前的宽度；切换产物会重进此函数，不能让拓宽后的宽度覆盖原值。 */
     if (pageState.docPreviewSavedDrawerWidth == null) pageState.docPreviewSavedDrawerWidth = drawerWidth;
     els.tkDrawer.style.setProperty('--tk-drawer-width', Math.min(needed, viewportWidth) + 'px');
   }
 }
 export function closeDocPreview() {
   unmountAgentConfig();
-  pageState.docPreviewTabs = [];
-  pageState.docPreviewActiveId = null;
+  pageState.docPreviewArtifact = null;
   var panel = els.tkDrawerBody.querySelector(':scope > #tkDocPreview');
   if (!panel) return;
   panel.classList.remove('show');

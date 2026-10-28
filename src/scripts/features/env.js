@@ -99,6 +99,12 @@ var demoGatewayByName={
   'hr-sit':'acgw-hr-sit',
   'legacy-v79':'acgw-legacy-v79'
 };
+/* 授权成功时记录本地完整时间，展示精确到秒。 */
+function formatEnvGrantTime(date){
+  var pad=function(value){ return String(value).padStart(2,'0'); };
+  return date.getFullYear()+'-'+pad(date.getMonth()+1)+'-'+pad(date.getDate())
+    +' '+pad(date.getHours())+':'+pad(date.getMinutes())+':'+pad(date.getSeconds());
+}
 function hydrateEnvItem(item,index){
   var sourceTag=item.querySelector('.env-tag.local,.env-tag.cloud');
   /* 列表行不展示具体版本，适用版本在页面标题区统一说明 */
@@ -129,7 +135,7 @@ function hydrateEnvItem(item,index){
   }
   if(item.dataset.envConn==='auth'&&!item.dataset.grantedBy){
     item.dataset.grantedBy='吴**超';
-    item.dataset.grantedAt=name==='fi-uat'?'08-27':'09-01';
+    item.dataset.grantedAt=name==='fi-uat'?'2026-08-27 10:20:00':'2026-09-01 09:30:00';
     item.dataset.lastUsed=name==='fi-uat'?'08-28 16:40':'今天 14:32';
     if(name==='fi-uat') item.dataset.grantState='expired';
   }
@@ -150,22 +156,22 @@ function syncConnTag(item){
   var isAuth=item.dataset.envConn==='auth';
   var state=item.dataset.grantState||'';
   var pending=state==='expired'||state==='revoked'||state==='none';
-  var tag=document.createElement('span');
-  /* 一行只挂一枚连接方式标签：同一环境同时只启用一种 */
-  tag.className='env-tag conn '+(isAuth?(pending?'reauth':'auth'):'cred');
-  tag.textContent=isAuth?(pending?(state==='expired'?'授权已失效':'未授权'):'OAuth 授权'):'第三方应用';
-  head.appendChild(tag);
-  item.classList.toggle('needs-reauth',isAuth&&pending);
+  /* 仅 OAuth 环境显示授权状态，第三方应用环境不再挂连接方式标签。 */
   if(isAuth){
+    var tag=document.createElement('span');
+    tag.className='env-tag conn '+(pending?'reauth':'auth');
+    tag.textContent=pending?(state==='expired'?'OAuth授权已失效':'未授权'):'OAuth 授权';
+    head.appendChild(tag);
+  }
+  item.classList.toggle('needs-reauth',isAuth&&pending);
+  if(isAuth&&state!=='expired'){
     var sub=document.createElement('div');
     sub.className='env-sub'+(pending?' warn':'');
     sub.textContent=state==='none'
       ? '配置已保存，还没有完成授权'
       : (state==='revoked'
           ? '已断开连接，重新授权后可以继续使用'
-          : (state==='expired'
-              ? '授权已失效，可能是被撤销或长期未使用'
-              : '授权人 '+(item.dataset.grantedBy||'')+' · '+(item.dataset.grantedAt||'')+' 授权 · '+(item.dataset.lastUsed||'')+' 使用'));
+          : '授权人 '+(item.dataset.grantedBy||'')+' · '+(item.dataset.grantedAt||'')+' 授权 · '+(item.dataset.lastUsed||'')+' 使用');
     main.appendChild(sub);
   }
   if(isAuth&&pending){
@@ -229,7 +235,6 @@ function setConnNote(text,warn,spin){
 
 /* 说明这一行只讲一件事，优先级从高到低：不可选原因 > 已建环境不能改 > 当前选择的前提 */
 function syncConnNote(){
-  var isAuth=envConnMode==='auth';
   if(envMode!=='create'){
     setConnNote(envEditItem&&envEditItem.dataset.envSource==='cloud'
       ? '该环境由企业管理中心下发，授权类型随下发配置，本机不能改。'
@@ -237,8 +242,7 @@ function syncConnNote(){
     return;
   }
   if(envConnBlocked){ setConnNote(envConnBlocked,false,false); return; }
-  /* OAuth 下方已有三条说明，这里再补一句是重复 */
-  setConnNote(isAuth?'':'需要先在 ERP 的「OpenAPI 第三方应用」里创建应用，拿到 ID 和密钥。',false,false);
+  setConnNote('',false,false);
 }
 
 function applyConnMode(mode){
@@ -300,28 +304,16 @@ function syncAuthGrant(){
     &&!!envEditItem.dataset.grantedBy;
   grant.classList.toggle('hidden',!saved);
   points.classList.toggle('hidden',!!saved);
-  if(!saved){
-    var hidden=$('#envAuthScopeList');
-    if(hidden) hidden.classList.add('hidden');
-    return;
-  }
+  if(!saved) return;
   $('#envAuthGrantBy').textContent=envEditItem.dataset.grantedBy||'—';
   $('#envAuthGrantDc').textContent=dataCenterLabel(envEditItem.dataset.envDataCenter);
   var st=envEditItem.dataset.grantState;
   $('#envAuthGrantAt').textContent=(envEditItem.dataset.grantedAt||'—')
     +(st==='expired'?'（已失效）':(st==='revoked'?'（已断开）':''));
 
-  var toggle=$('#envAuthScopeToggle');
-  if(toggle){
-    toggle.textContent=ERP_API_SCOPES.length+' 项 API 权限';
-    toggle.setAttribute('aria-expanded','false');
-  }
-  var list=$('#envAuthScopeList');
-  if(list){ list.classList.add('hidden'); renderScopeList(list,ERP_API_SCOPES); }
 }
 
-/* 底部按钮随模式与场景切换：授权模式没有「测试连接」，
-   连接动作本身就是一次真实验证 */
+/* 仅已有且可用的连接提供测试；OAuth 失效、断开及未授权时先完成授权。 */
 function syncEnvFooter(){
   var isAuth=envConnMode==='auth';
   var viewing=envMode==='view';
@@ -331,7 +323,7 @@ function syncEnvFooter(){
   var gs=(envEditItem&&envEditItem.dataset.grantState)||'';
   var pending=gs==='expired'||gs==='revoked'||gs==='none';
   var connected=isAuth&&savedAuth&&!creating&&!viewing;
-  if(t) t.classList.toggle('hidden',isAuth||viewing);
+  if(t) t.classList.toggle('hidden',creating||(isAuth&&(!savedAuth||pending||!envEditItem.dataset.grantedBy)));
   if(d) d.classList.toggle('hidden',!(connected&&!pending));
   /* 授权还有效时不摆「重新授权」：那是失效后的补救动作，平时出现只会让人以为出了问题 */
   if(r){
@@ -383,7 +375,10 @@ function syncDcRefresh(){
   btn.classList.toggle('hidden',envMode!=='create');
   var url=$('#envUrl');
   btn.disabled=envDcLoading||!((url&&url.value||'').trim());
-  btn.textContent=envDcLoading?'拉取中...':'重新拉取数据中心';
+  var label=envDcLoading?'拉取中…':'重新拉取数据中心';
+  btn.setAttribute('aria-label',label);
+  btn.title=label;
+  btn.setAttribute('aria-busy',envDcLoading?'true':'false');
 }
 function loadDataCenters(){
   if(envDcLoading) return;
@@ -577,7 +572,7 @@ function finishAuthorize(granted){
     if(granted){
       t.dataset.grantState='';
       t.dataset.grantedBy='吴**超';
-      t.dataset.grantedAt='今天';
+      t.dataset.grantedAt=formatEnvGrantTime(new Date());
       t.dataset.lastUsed='刚刚';
       t.dataset.envDataCenter=envAuthorizeDc;
     }else{
@@ -731,6 +726,7 @@ function openEnvModal(mode,item){
   envMode=mode==='view'?'view':(mode==='edit'?'edit':'create');
   envEditItem=envMode==='create'?null:item;
   envOriginalProduct=envEditItem?(envEditItem.dataset.envProduct||''):'';
+  resetEnvTest();
   if(envConfigForm) envConfigForm.reset();
   clearEnvErrors();
   var editing=envMode==='edit'&&envEditItem;
@@ -802,10 +798,13 @@ function openEnvModal(mode,item){
   /* 只在新增时聚焦环境名：编辑/查看态它是只读的，聚焦只会画出一圈没有意义的焦点环 */
   setTimeout(function(){ if(nameInput && !existing) nameInput.focus(); },60);
 }
-function closeEnvModal(){ if(envModal) envModal.classList.remove('show'); resetConnSection(); }
+function resetEnvTest(){
+  if(envTestTimer){ clearTimeout(envTestTimer); envTestTimer=null; }
+  if(envTest){ envTest.disabled=false; envTest.textContent='测试连接'; envTest.removeAttribute('aria-busy'); }
+}
+function closeEnvModal(){ resetEnvTest(); if(envModal) envModal.classList.remove('show'); resetConnSection(); }
 /* 地址变了就丢弃已选数据中心：旧数据中心不属于新地址 */
 var envUrlInput=$('#envUrl');
-var envAuthScopeToggle=$('#envAuthScopeToggle');
 
 var envDcRefreshBtn=$('#envDcRefresh');
 
@@ -813,6 +812,7 @@ var envDisconnectBtn=$('#envDisconnect');
 var envReauthBtn=$('#envReauth');
 var envAdd=$('#envAdd');
 var envTest=$('#envTest');
+var envTestTimer=null;
 
 /* 授权成功后建行。地址和数据中心由授权结果决定，不再从表单取 */
 function addAuthEnvRow(name,dataCenterId,granted){
@@ -831,7 +831,7 @@ function addAuthEnvRow(name,dataCenterId,granted){
   item.dataset.normalAccessToken='true';
   if(granted){
     item.dataset.grantedBy='吴**超';
-    item.dataset.grantedAt='今天';
+    item.dataset.grantedAt=formatEnvGrantTime(new Date());
     item.dataset.lastUsed='刚刚';
   }else{
     item.dataset.grantState='none';
@@ -959,12 +959,6 @@ export function initEnvDisconnect() {
       if(envMode==='create'&&dc&&dc.options.length<2) loadDataCenters();
     });
   }
-  if(envAuthScopeToggle) envAuthScopeToggle.addEventListener('click',function(){
-    var list=$('#envAuthScopeList'); if(!list) return;
-    var open=list.classList.contains('hidden');
-    list.classList.toggle('hidden',!open);
-    envAuthScopeToggle.setAttribute('aria-expanded',open?'true':'false');
-  });
   if(envDcRefreshBtn) envDcRefreshBtn.addEventListener('click',function(){
     var url=$('#envUrl');
     if(!((url&&url.value||'').trim())){ setEnvFieldError(url,'请输入环境地址'); return; }
@@ -989,13 +983,16 @@ export function initEnvDisconnect() {
   });
   if(envTest){
     envTest.addEventListener('click',function(){
-      if(!envConfigForm||!validateEnvForm()) return;
+      if(!envConfigForm||envTest.disabled||envTest.classList.contains('hidden')) return;
+      /* 查看态测试已保存配置；OAuth 不要求填写隐藏的第三方应用凭据。 */
+      if(envMode!=='view'&&envConnMode!=='auth'&&!validateEnvForm()) return;
       envTest.disabled=true;
+      envTest.setAttribute('aria-busy','true');
       envTest.textContent='测试中…';
-      setTimeout(function(){
-        envTest.disabled=false;
-        envTest.textContent='测试连接';
-        toast('连接测试通过');
+      /* 与列表连通性测试一致，仅模拟测试，不发送真实 ERP 请求。 */
+      envTestTimer=setTimeout(function(){
+        resetEnvTest();
+        toast('连接测试通过','success');
       },700);
     });
   }

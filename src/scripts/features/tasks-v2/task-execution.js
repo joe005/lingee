@@ -1,3 +1,4 @@
+import { taskCodeDeliveryApprovalError, taskCodeDeliveryContext, taskCodeTestArtifacts } from './code-delivery-context.js';
 import { builtinDeliveryStages, deliveryStagesFor } from '../expert/delivery-stages.js';
 import { EX, STAGES } from '../expert/data.js';
 import { toast } from '../../core/toast.js';
@@ -105,6 +106,11 @@ export function submitTaskStage(task) {
         {heading:'提交说明',blocks:[{p:'本阶段产物已生成，等待项目负责人确认；确认后提交并流转。'}]}],
     });
   }
+  const deliveryContext = taskCodeDeliveryContext(task);
+  if (deliveryContext?.isTesting && deliveryContext.last && !taskCodeTestArtifacts(task).length) {
+    const template = tkGetTaskArtifacts(task).find(artifact => artifact.stageId === stage.id && /测试报告/.test([artifact.type,artifact.docTitle,artifact.fileName].join(' ')));
+    if (template) artifacts = artifacts.concat({...template,id:'test-'+deliveryContext.last.id,stageId:stage.id,deliveryId:deliveryContext.last.id,mergeCommit:deliveryContext.last.mergeCommit,status:'待评审',date:flowTimestamp()});
+  }
   const agentName = taskStageAgentName(task, stage.id);
   const time = flowTimestamp();
   tkUpdateTask(task.id, {status:'in_review', executionStageId:stage.id, executionPlan:stagePlan(task,stage.id,'review'), executionArtifacts:artifacts,
@@ -176,6 +182,10 @@ export function reviewTaskStage(task, approved, options) {
   if (index < 0 && task.executionPlan?.length) index = stages.findIndex(function (stage) { return task.executionPlan.find(function (row) { return row.id === stage.id; })?.status !== 'done'; });
   if (index < 0) return {ok:false};
   var stage = stages[index], next = stages[index + 1];
+  if (approved) {
+    const deliveryError = taskCodeDeliveryApprovalError(task);
+    if (deliveryError) return {ok:false, message:deliveryError};
+  }
   var plan = stagePlan(task, stage.id, approved ? 'done' : 'running');
   var nextAssignee = approved && next ? task.flowAssignee || next.assigneeId || (!task.executionPlan?.length ? task.assignee : '') : '';
   if (approved && next && !nextAssignee) return {ok:false, message:'请先指定下一阶段处理人'};
@@ -196,9 +206,18 @@ export function reviewTaskStage(task, approved, options) {
       patch.comments = (task.comments || []).concat([{kind:'flow', authorId:reviewerId, createdAt:flowTimestamp(), fromStatus:'in_review', fromAssignee:task.assignee, status:'backlog', assignee:nextAssignee, text:''}]);
     }
     var artifacts = (task.executionArtifacts || []).map(function (artifact) {
+      const context = taskCodeDeliveryContext(task);
+      if (context?.isTesting && artifact.deliveryId && artifact.deliveryId !== context.last?.id) return artifact;
       return artifact.stageId === stage.id ? {...artifact, status:'已通过'} : artifact;
     });
     if (artifacts.length) patch.executionArtifacts = artifacts;
+    const codeContext = taskCodeDeliveryContext(task);
+    if (codeContext?.isTesting && codeContext.last) {
+      const reports = task.testDeliveryReports || [];
+      const currentReports = taskCodeTestArtifacts(task);
+      patch.testDeliveryReports = reports.concat(currentReports.filter(artifact => !reports.some(report => report.artifactId === artifact.id && report.result === 'passed')).map(artifact => ({artifactId:artifact.id,fileName:artifact.fileName || artifact.docTitle,deliveryId:codeContext.last.id,mergeCommit:codeContext.last.mergeCommit,result:'passed',summary:artifact.summary || ''})));
+    }
+
   }
   if (options?.automatic && approved) {
     var automaticHistory = (task.statusHistory || []).slice();

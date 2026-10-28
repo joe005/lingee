@@ -112,10 +112,19 @@ function overviewHtml(p) {
 
 /* ---------- 知识库 ---------- */
 function kbFolderOf(k) { return KB_FOLDERS.indexOf(k.type) >= 0 ? k.type : k.type === '会议' ? '会议纪要' : '需求文档'; }
+function kbIcon(kind) {
+  var paths = {
+    folder: '<path d="M3 7V5a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/><path d="M3 8h18"/>',
+    'new-folder': '<path d="M12 20H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v4M3 8h18M18 15v6m-3-3h6"/>',
+    upload: '<path d="M12 16V3m-4 4 4-4 4 4M4 14v5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/>',
+    quote: '<path d="M10 5H6a3 3 0 0 0-3 3v3h6v7H3v-7M21 5h-4a3 3 0 0 0-3 3v3h6v7h-6v-7"/>'
+  };
+  return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + paths[kind] + '</svg>';
+}
 function knowledgeHtml(p) {
   var docs = mgrProjectKnowledge(p.id);
   var tabs = '<div class="mgr-sub-tabs" role="tablist" aria-label="知识范围">' +
-    [['space', '空间知识', docs.length], ['personal', '个人知识', 0]].map(function (t) {
+    [['space', '空间知识', docs.length], ['personal', '我的空间资料', 0]].map(function (t) {
       var on = kbTab === t[0];
       return '<button type="button" class="mgr-sub-tab' + (on ? ' active' : '') + '" role="tab" aria-selected="' + on + '" data-mgr-kb-tab="' + t[0] + '">' + t[1] + ' ' + t[2] + '</button>';
     }).join('') + '</div>';
@@ -127,25 +136,23 @@ function knowledgeHtml(p) {
     if (kbFolder && kbFolderOf(k) !== kbFolder) return false;
     return !q || [k.title, k.type, k.summary].some(function (v) { return v && String(v).toLocaleLowerCase().includes(q); });
   });
-  var table = rows.length
-    ? '<div class="mgr-sub-table-wrap"><table class="mgr-sub-table"><thead><tr><th>#</th><th>文件ID</th><th>名称</th><th>所属文件夹</th><th>类型</th><th>标签</th><th>是否向量化</th><th>可见范围</th><th>操作</th></tr></thead><tbody>' +
+  var table = '<div class="mgr-sub-table-wrap"><table class="mgr-sub-table"><thead><tr><th>#</th><th>文件ID</th><th>名称</th><th>所属文件夹</th><th>类型</th><th>标签</th><th>是否向量化</th><th>可见范围</th><th>操作</th></tr></thead><tbody>' +
       rows.map(function (k, i) {
         return '<tr><td>' + (i + 1) + '</td><td class="mgr-sub-mono">' + mgrEsc(k.id.toUpperCase()) + '</td><td class="mgr-sub-name" title="' + mgrEsc(k.summary || k.title) + '">' + mgrEsc(k.title) + '</td>' +
           '<td>' + mgrEsc(kbFolderOf(k)) + '</td><td>' + mgrEsc(k.type || '文档') + '</td><td>' + (k.agent ? mgrTag(k.agent, 'neutral') : '—') + '</td>' +
           '<td>' + (k.vectorIndexed ? mgrTag('已向量化', 'done') : mgrTag('未向量化', 'neutral')) + '</td><td>空间成员</td>' +
           '<td><button type="button" class="mgr-link-btn" data-mgr-kb-view="' + mgrEsc(k.id) + '">查看</button></td></tr>';
-      }).join('') + '</tbody></table></div>'
-    : '<div class="mgr-sub-empty">' + EMPTY_ICON + (pool.length ? '没有符合条件的文档' : '这里还没有文档。用右上角的「本地上传」或「引用企业知识」添加。') + '</div>';
-  return tabs + note + '<section class="mgr-sub-card mgr-sub-card--flush"><div class="mgr-sub-card-head"><h2 class="mgr-sub-card-title">' + (kbTab === 'space' ? '空间知识库' : '个人知识库') + '</h2>' +
-    '<div class="mgr-sub-tools"><button type="button" class="mgr-btn mgr-btn--ghost" data-mgr-kb-act="新建文件夹">新建文件夹</button>' +
-    '<button type="button" class="mgr-btn mgr-btn--ghost" data-mgr-kb-act="本地上传">本地上传</button>' +
-    '<button type="button" class="mgr-btn mgr-btn--ghost" data-mgr-kb-act="引用企业知识">引用企业知识</button></div></div>' +
-    '<div class="mgr-sub-filter"><select id="mgrKbFolder" aria-label="按文件夹筛选"><option value="">全部文档</option>' + KB_FOLDERS.map(function (f) {
+      }).join('') + (rows.length ? '' : '<tr><td colspan="9"><div class="mgr-sub-empty">' + EMPTY_ICON + (pool.length ? '没有符合条件的文档' : '这里还没有文档。用右上角的「本地上传」或「引用企业知识」添加。') + '</div></td></tr>') + '</tbody></table></div>';
+  return '<div class="mgr-knowledge-page">' + tabs + note + '<section class="mgr-sub-card mgr-sub-card--flush"><div class="mgr-sub-card-head"><h2 class="mgr-sub-card-title">' + (kbTab === 'space' ? '空间知识库' : '我的空间资料') + '</h2>' +
+    '<div class="mgr-sub-tools"><button type="button" class="mgr-btn mgr-btn--ghost" data-mgr-kb-act="新建文件夹">' + kbIcon('new-folder') + '新建文件夹</button>' +
+    '<button type="button" class="mgr-btn mgr-btn--ghost" data-mgr-kb-act="本地上传">' + kbIcon('upload') + '本地上传</button>' +
+    '<button type="button" class="mgr-btn mgr-btn--ghost" data-mgr-kb-act="引用企业知识">' + kbIcon('quote') + '引用企业知识</button></div></div>' +
+    '<div class="mgr-sub-filter"><div class="mgr-kb-folder">' + kbIcon('folder') + '<select id="mgrKbFolder" aria-label="按文件夹筛选"><option value="">全部文档</option>' + KB_FOLDERS.map(function (f) {
       return '<option value="' + mgrEsc(f) + '"' + (kbFolder === f ? ' selected' : '') + '>' + mgrEsc(f) + '</option>';
-    }).join('') + '</select>' +
+    }).join('') + '</select></div>' +
     '<label class="mgr-pd-search" for="mgrKbSearch"><input type="search" id="mgrKbSearch" value="' + mgrEsc(kbQuery) + '" placeholder="按名称 / 标签 / 目录检索" autocomplete="off">' +
     '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg></label></div>' +
-    table + '</section>';
+    table + '</section></div>';
 }
 
 /* ---------- 定时任务 ---------- */

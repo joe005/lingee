@@ -1,3 +1,4 @@
+import { taskCodeDeliveryContext } from '../code-delivery-context.js';
 import { toast } from '../../../core/toast.js';
 import { input, setNavActive, showView } from '../../../core/view.js';
 import { cvSwitchView } from '../../collab/view.js';
@@ -214,6 +215,10 @@ export function confirmTaskStageApproval(task, reopenDrawer, onApproved) {
   if (!task || task.status !== 'in_review') return;
   showTaskStageConfirm(task, function () {
     var currentTask = tkGetTasks().find(function (row) { return row.id === task.id; });
+    if (taskCodeDeliveryContext(currentTask)?.isDevelopment) {
+      document.dispatchEvent(new CustomEvent('lingee:code-delivery-approve',{detail:{taskId:task.id}}));
+      return;
+    }
     var reviewed = reviewTaskStage(currentTask, true);
     if (!reviewed.ok) { toast(reviewed.message || '任务状态已变化，请刷新后重试', 'warning'); return; }
     render();

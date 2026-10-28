@@ -1,8 +1,6 @@
 import { $ } from '../../core/dom.js';
-import { compareVersions } from '../expert/versioning.js';
 import { EX, xav, xesc } from '../expert/data.js';
 import { assetSourceBadge, layerVisible } from '../expert/layers.js';
-import { assetCardActionsHtml } from '../expert/card-actions.js';
 const modes={expert:'mine',team:'mine'};
 let cloudCatalogProvider=()=>[];
 let cloudUpgradeBadgeProvider=()=>'';
@@ -33,17 +31,17 @@ export function teamWorkModes(team,lookup=id=>EX[id]){
 export function cloudCardsHtml(kind,keyword){
   const kw=keyword.trim().toLowerCase();
   const catalog=cloudCatalogProvider(),experts=new Map(catalog.filter(item=>item.kind==='expert').map(item=>[item.data.id,item.data]));
-  const rows=catalog.filter(item=>item.kind===kind&&(!kw||`${item.data.name} ${item.data.desc} ${(item.data.tags||item.data.domains||[]).join(' ')}`.toLowerCase().includes(kw)));
+  /* 「更多」只列未安装的云端内容：卡片右上角的 + 即添加入口，安装成功后回到「我的」列表。 */
+  const rows=catalog.filter(item=>item.kind===kind&&!item.installed&&(!kw||`${item.data.name} ${item.data.desc} ${(item.data.tags||item.data.domains||[]).join(' ')}`.toLowerCase().includes(kw)));
   return rows.map(item=>{
-    const {data,version,installed}=item,update=installed&&compareVersions(version,installed)>0;
-    const action=update?'更新':installed?'重新安装':'安装';
-    const installButton=installed?assetCardActionsHtml(kind,data,false,kind==='team'?'data-call-team':'data-cv-call'):`<button type="button" class="expert-install-plus" data-market-install="${xesc(item.key)}" aria-label="${action}${xesc(data.name)}" title="${action}${xesc(data.name)}"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg></button>`;
+    const {data,version}=item;
+    const installButton=`<button type="button" class="expert-install-plus" data-market-install="${xesc(item.key)}" aria-label="安装${xesc(data.name)}" title="安装${xesc(data.name)}"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg></button>`;
     const members=data.members||[],showMemberCount=members.length>4;
     const face=kind==='team'?`<span class="x-faces">${members.slice(0,showMemberCount?3:4).map(id=>`<img src="${xav((experts.get(id)||EX[id])?.k||'lead')}" alt="">`).join('')}${showMemberCount?`<span class="asset-faces-count">+${members.length-3}</span>`:''}</span>`:`<img class="x-av" src="${xav(data.k||'lead')}" alt="">`;
     const tags=assetTagsHtml(kind==='team'?data.domains:data.tags);
     const responsibilities=assetModesHtml(kind==='team'?teamWorkModes(data,id=>experts.get(id)||EX[id]):data.modes);
     const summary=kind==='team'?`${(data.members||[]).length} 个智能体`:`${(data.skills||[]).length} 个技能`;
-    return `<div class="app-card x-card${installed?'':' expert-market-uninstalled'}"${installed?` ${kind==='team'?'data-team':'data-cv-expert'}="${xesc(data.id)}"`:''}>${installButton}<div class="card-top">${face}<div class="card-titles"><div class="card-title-row"><span class="card-title">${xesc(data.name)}</span></div><div class="x-sub asset-card-summary">${assetSourceBadge(kind,data)}<span class="platform-client-badge">V${installed||version}</span><span>${summary}</span><span class="asset-card-upgrade-anchor">${update?cloudUpgradeBadgeProvider(item.key):''}</span></div></div></div><div class="card-desc">${xesc(data.desc||'暂无描述')}</div>${tags}${responsibilities}</div>`;
+    return `<div class="app-card x-card expert-market-uninstalled">${installButton}<div class="card-top">${face}<div class="card-titles"><div class="card-title-row"><span class="card-title">${xesc(data.name)}</span></div><div class="x-sub asset-card-summary">${assetSourceBadge(kind,data)}<span class="platform-client-badge">V${version}</span><span>${summary}</span><span class="asset-card-upgrade-anchor"></span></div></div></div><div class="card-desc">${xesc(data.desc||'暂无描述')}</div>${tags}${responsibilities}</div>`;
 
   }).join('')||'<div class="x-empty">没有匹配的云端内容</div>';
 }

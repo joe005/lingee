@@ -1,0 +1,1 @@
+export default {"id":"104","date":"2026-10-21","iconBg":"var(--brand-fill)","iconColor":"var(--brand)","type":"功能","module":"任务与智能体","author":"wuhc2023","body":"功能·任务与智能体：任务详情支持选择上游节点退回并保留历史产物及操作记录，同步 Lingee Build 的 8 个独立智能体和 2 支团队及中文技能说明。"};

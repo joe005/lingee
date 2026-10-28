@@ -275,7 +275,7 @@ function cvDownloadProjectArtifact(index){
   if(!content)return;
   var name=a.name||row.task.title+' · '+(a.type||'产物'),plain=typeof a.content==='string';
   var base=name.replace(/\.[^.]+$/,'').replace(/[\\/:*?"<>|\x00-\x1f]/g,'_').trim()||'项目产物';
-  var body=plain?a.content:'<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>'+xesc(name)+'</title><style>body{max-width:900px;margin:40px auto;padding:0 24px;font:14px/1.7 sans-serif;color:#222}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ddd;padding:6px 10px;text-align:left}pre{overflow:auto;padding:12px;background:#f5f5f7}h1{font-size:22px}</style></head><body><h1>'+xesc(name)+'</h1>'+content+'</body></html>';
+  var body=plain?a.content:'<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><title>'+xesc(name)+'</title><style>body{max-width:900px;margin:40px auto;padding:0 24px;font:14px/1.7 sans-serif;color:#222}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ddd;padding:6px 10px;text-align:left}pre{overflow:auto;padding:12px;background:#f5f5f7}h1{font-size:var(--font-size-24, 24px)}</style></head><body><h1>'+xesc(name)+'</h1>'+content+'</body></html>';
   var url=URL.createObjectURL(new Blob([body],{type:plain?'text/plain;charset=utf-8':'text/html;charset=utf-8'}));
   var link=document.createElement('a');link.href=url;link.download=base+(plain?'.txt':'.html');document.body.appendChild(link);link.click();link.remove();
   setTimeout(function(){URL.revokeObjectURL(url);},1000);

@@ -6,26 +6,26 @@
   .login-card{position:relative;width:380px;background:#fff;border-radius:16px;padding:40px 36px;box-shadow:0 8px 32px rgba(0,0,0,.08),0 2px 8px rgba(0,0,0,.04)}
   .login-brand{display:flex;align-items:center;gap:10px;margin-bottom:6px}
   .login-logo{width:32px;height:32px;color:var(--brand)}
-  .login-title{font-size:22px;font-weight:700;color:var(--text)}
-  .login-subtitle{font-size:13px;color:var(--text-secondary);margin-bottom:28px}
+  .login-title{font-size:var(--font-size-24);font-weight:700;color:var(--text)}
+  .login-subtitle{font-size:var(--font-size-14);color:var(--text-secondary);margin-bottom:28px}
   .login-form{display:flex;flex-direction:column;gap:16px}
   .login-field{position:relative;display:flex;align-items:center}
   .login-field-icon{position:absolute;left:12px;width:18px;height:18px;color:var(--text-soft);flex:none;pointer-events:none;transition:color .15s}
-  .login-input{width:100%;height:42px;padding:0 12px 0 40px;border:1px solid var(--border);border-radius:8px;font-size:14px;color:var(--text);background:var(--fill-1);outline:none;transition:border-color .15s,background .15s}
+  .login-input{width:100%;height:42px;padding:0 12px 0 40px;border:1px solid var(--border);border-radius:8px;font-size:var(--font-size-14);color:var(--text);background:var(--fill-1);outline:none;transition:border-color .15s,background .15s}
   .login-input:focus{border-color:var(--brand);background:#fff}
   /* 密码框初始为 type="text"（避免 Chrome 把整页判为登录页、往其他输入框推荐账号），用掩码防止明文闪现 */
   .login-input[data-pw]{-webkit-text-security:disc}
   .login-input:focus + .login-field-icon,.login-field:focus-within .login-field-icon{color:var(--brand)}
-  .login-error{font-size:12px;color:var(--danger);min-height:16px;line-height:1.4}
-  .login-remember{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-secondary);cursor:pointer;user-select:none}
+  .login-error{font-size:var(--font-size-12);color:var(--danger);min-height:16px;line-height:1.4}
+  .login-remember{display:flex;align-items:center;gap:6px;font-size:var(--font-size-14);color:var(--text-secondary);cursor:pointer;user-select:none}
   .login-remember input{width:15px;height:15px;cursor:pointer}
-  .login-btn{height:42px;border:none;border-radius:8px;background:var(--brand);color:#fff;font-size:15px;font-weight:600;cursor:pointer;transition:background .15s,transform .08s;display:flex;align-items:center;justify-content:center;gap:8px}
+  .login-btn{height:42px;border:none;border-radius:8px;background:var(--brand);color:#fff;font-size:var(--font-size-14);font-weight:400;cursor:pointer;transition:background .15s,transform .08s;display:flex;align-items:center;justify-content:center;gap:8px;line-height:var(--line-height-14);}
   .login-btn:hover{background:var(--brand-hover)}
   .login-btn:active{background:var(--brand-active);transform:scale(.99)}
   .login-btn:disabled{opacity:.7;cursor:default}
   .login-btn.loading::before{content:'';width:18px;height:18px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:login-spin .6s linear infinite}
   @keyframes login-spin{to{transform:rotate(360deg)}}
-  .login-hint{font-size:12px;color:var(--text-soft);text-align:center;margin-top:2px}
+  .login-hint{font-size:var(--font-size-12);color:var(--text-soft);text-align:center;margin-top:2px}
 
   /* 滚动条：滚动时才显示，不占位不抖动 */
   ::-webkit-scrollbar{width:4px;height:4px;background:transparent}
@@ -42,7 +42,7 @@
     display:flex;
     height:100vh;
     overflow:hidden;
-    font-size:14px;
+    font-size:var(--font-size-14);
   }
   /* Icons —— 仅布局；绘制属性(fill/stroke)由每个 svg 自带，避免填充图标被继承的 stroke 描粗 */
   .ic{width:18px;height:18px;flex:none}
@@ -51,18 +51,18 @@
 
 /* ============ 登录页：演示角色 ============ */
 .login-roles{margin-top:22px;padding-top:18px;border-top:1px solid var(--border)}
-.login-roles-title{font-size:12px;color:var(--text-soft);margin-bottom:10px;text-align:center}
+.login-roles-title{font-size:var(--font-size-12);color:var(--text-soft);margin-bottom:10px;text-align:center}
 .login-roles-list{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .login-role{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:#fff;cursor:pointer;text-align:left;transition:all .15s;font-family:inherit}
 .login-role:hover{border-color:var(--brand);background:var(--brand-fill)}
 .login-role:last-child{grid-column:1/-1}
-.login-role-av{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#7c5cfc,#5b8def);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex:none}
+.login-role-av{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#7c5cfc,#5b8def);color:#fff;display:flex;align-items:center;justify-content:center;font-size:var(--font-size-12);font-weight:600;flex:none}
 .login-role-body{display:flex;flex-direction:column;min-width:0}
-.login-role-body b{font-size:12.5px;color:var(--text)}
-.login-role-body em{font-style:normal;font-size:10.5px;color:var(--text-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.login-role-body b{font-size:var(--font-size-14);color:var(--text)}
+.login-role-body em{font-style:normal;font-size:var(--font-size-12);color:var(--text-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* 顶栏角色标签 */
-.user-role-tag{font-size:10px;line-height:1;color:var(--brand);background:var(--brand-fill);border-radius:4px;padding:3px 6px;margin-left:6px;flex:none}
+.user-role-tag{font-size:var(--font-size-10);line-height:1;color:var(--brand);background:var(--brand-fill);border-radius:4px;padding:3px 6px;margin-left:6px;flex:none}
 
 /* 工作区管理员入口由项目模块按人员角色同步；下方保留演示任务角色限制。 */
 body[data-role="pm"] [data-perm="dev"],

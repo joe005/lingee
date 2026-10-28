@@ -15,7 +15,7 @@
     display:flex;align-items:center;justify-content:space-between;
     padding:18px 22px;border-bottom:1px solid var(--border);
   }
-  .modal-title{font-size:16px;font-weight:600;color:var(--text)}
+  .modal-title{font-size: var(--font-size-18);font-weight: 500;color:var(--text); line-height: var(--line-height-18);}
   .modal-close{cursor:pointer;color:var(--text-muted);width:20px;height:20px}
   .modal-close:hover{color:var(--text)}
   .modal-body{padding:8px}
@@ -31,16 +31,16 @@
   }
   .attach-icon .ic{width:20px;height:20px}
   .attach-info{flex:1;min-width:0}
-  .attach-name{font-size:14px;font-weight:500;color:var(--text);margin-bottom:2px}
-  .attach-desc{font-size:12px;color:var(--text-muted)}
+  .attach-name{font-size:var(--font-size-14);font-weight:500;color:var(--text);margin-bottom:2px}
+  .attach-desc{font-size:var(--font-size-12);color:var(--text-muted)}
 
 /* 全局删除确认 */
 .app-delete-confirm{position:fixed;inset:0;z-index:10001;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(15,23,42,.42)}
 .app-delete-confirm-card{box-sizing:border-box;width:min(100%,400px);padding:24px;border:1px solid var(--border);border-radius:12px;background:var(--bg);box-shadow:var(--menu-shadow)}
-.app-delete-confirm-card h3{margin:0 0 12px;color:var(--text);font-size:16px;font-weight:600}
-.app-delete-confirm-card p{margin:0;color:var(--text-secondary);font-size:14px;line-height:1.6;white-space:pre-line;overflow-wrap:anywhere}
+.app-delete-confirm-card h3{margin:0 0 12px;color:var(--text);font-size:var(--font-size-16);font-weight:600}
+.app-delete-confirm-card p{margin:0;color:var(--text-secondary);font-size:var(--font-size-14);line-height:1.6;white-space:pre-line;overflow-wrap:anywhere}
 .app-delete-confirm-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:24px}
-.app-delete-confirm-actions button{min-width:76px;padding:8px 14px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font:inherit;font-size:13px;cursor:pointer}
+.app-delete-confirm-actions button{min-width:76px;padding:8px 14px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font:inherit;font-size:var(--font-size-14);cursor:pointer;font-weight:400;line-height:var(--line-height-14);}
 .app-delete-confirm-actions button:hover{background:var(--hover)}
 .app-delete-confirm-actions [data-delete-confirm]{border-color:var(--danger);background:var(--danger);color:#fff}
 .app-delete-confirm-actions [data-delete-confirm]:hover{background:var(--danger);filter:brightness(.92)}

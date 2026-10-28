@@ -24,7 +24,7 @@ function rowHtml(r) {
   var done = plan.length ? plan.filter(function (st) { return st.status === 'done'; }).length : t.status === 'done' ? 1 : 0;
   var percent = Math.round((done / total) * 100);
   var key = mgrTaskKey(t);
-  return '<tr class="mgr-tk-row" data-mgr-task="' + mgrEsc(key) + '">' +
+  return '<tr class="mgr-tk-row" data-task-status="' + mgrEsc(t.status) + '" data-mgr-task="' + mgrEsc(key) + '">' +
     '<td class="mgr-tk-code">' + mgrEsc(t.code || '') + '</td>' +
     '<td class="mgr-tk-title"><span class="mgr-tk-title-text">' + mgrEsc(t.title) + '</span>' +
     (t.desc ? '<div class="mgr-rd-hint" title="' + mgrEsc(t.desc) + '">' + mgrEsc(t.desc) + '</div>' : '') + '</td>' +
@@ -50,7 +50,7 @@ function rdWorkspaceHtml(project) {
   if (!all.length) body = '<div class="mgr-empty mgr-rd-empty">暂无任务。在下方输入框描述你想创建的任务，灵基会帮你拆解规划。</div>';
   else if (!rows.length) body = '<div class="mgr-empty">没有符合条件的研发任务。<button type="button" class="mgr-link-btn" data-mgr-rd-reset>清除筛选</button></div>';
   else {
-    body = '<table class="mgr-task-table mgr-rd-table"><thead><tr><th>编号</th><th>任务名</th><th>处理人</th><th>进度</th><th>优先级</th><th>状态</th></tr></thead><tbody>' +
+    body = '<table class="mgr-task-table mgr-rd-table"><colgroup><col class="mgr-rd-col-code"><col class="mgr-rd-col-title"><col class="mgr-rd-col-handler"><col class="mgr-rd-col-progress"><col class="mgr-rd-col-priority"><col class="mgr-rd-col-status"></colgroup><thead><tr><th>编号</th><th>任务名</th><th>处理人</th><th>进度</th><th>优先级</th><th>状态</th></tr></thead><tbody>' +
       rows.map(function (r) { return rowHtml(r); }).join('') + '</tbody></table>';
   }
   return '<div class="mgr-pd-filter-row mgr-rd-toolbar">' +

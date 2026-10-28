@@ -14,7 +14,7 @@ import { openChatSession } from './session-open.js';
 import { refreshChatStageConfirm } from './task-stage-confirm.js';
 import { openChatDocViewer } from './doc-viewer.js';
 import { appendTaskReadingSummary, simulateAIResponse } from './stream.js';
-/* 任务对话：任务状态对话、阻塞继续、待回复问题、对话页任务侧栏（拆自 composer.js） */
+/* 任务对话：任务状态对话、阻塞继续、待回答问题、对话页任务侧栏（拆自 composer.js） */
 
 /* 任务状态卡片回到对应的聊天；旧数据没有聊天记录时只补建一次。 */
 function openTaskStatusConversation(task, options = {}) {

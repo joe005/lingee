@@ -4,11 +4,24 @@ var root, panel, message, retryButton;
 var loading = false, failed = false, finishEntry, controller;
 
 export function yieldCollabPaint(signal) {
+  /* 页面不可见时无需让出绘制：后台标签页的定时器会被降频，逐步让出会拖慢数十秒 */
+  if(document.hidden){
+    return signal?.aborted ? Promise.reject(new DOMException('已重新加载','AbortError')) : Promise.resolve();
+  }
   return new Promise(function(resolve,reject){
     setTimeout(function(){
       if(signal?.aborted) reject(new DOMException('已重新加载','AbortError'));
       else resolve();
     },0);
+  });
+}
+/* 等一帧让浏览器先绘制；页面不绘制时 rAF 会被暂停，用定时器兜底避免一直卡在加载中 */
+function waitCollabFrame() {
+  return new Promise(function(resolve){
+    var done = false;
+    function finish(){ if(done) return; done = true; setTimeout(resolve,0); }
+    requestAnimationFrame(finish);
+    setTimeout(finish,50);
   });
 }
 function updateLoadingTab() {
@@ -55,7 +68,7 @@ export function loadCollabEntry(tab, prepare, complete) {
   updateLoadingTab();
   var long = setTimeout(function(){ message.textContent = '加载较慢…'; retryButton.classList.remove('hidden'); },10000);
   /* 两帧之间让浏览器先绘制框架；无需人为添加最短等待时长。 */
-  pending = new Promise(function(resolve){ requestAnimationFrame(function(){ setTimeout(resolve,0); }); })
+  pending = waitCollabFrame()
     .then(function(){ return prepare(signal); })
     .then(function(){
       loading = false;
