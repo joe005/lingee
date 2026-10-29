@@ -234,6 +234,8 @@ Lingee 是面向企业工作与 AI 开发协作的工作台：人和智能体在
 | 右键菜单与下拉 | 全站 | `.ctxmenu` / `.dropdown` / `.ctx-item` | `parts/ctxmenu.css` | 菜单项高 32px，14px，图标 16px |
 | 下拉选择 | 现行页面普通单选字段 | `initSelectDropdowns` / `initPageSelectDropdowns`、`.niu-select-trigger` / `.niu-person-popup` | `core/select-dropdown.js`、`parts/tasks/10-unified-controls.css`、`parts/tasks/figma-task-detail-create.css`；通用触发器在 `parts/shared-select.css`，项目分支触发器在 `parts/manager/11-detail-target.css` | 复用原生 select 数据与 change 事件；统一箭头、选中标记和键盘操作 |
 | Toast 提示 | 全站 | `.toast` | `parts/ctxmenu.css` | — |
+| 设置页卡片与分段页签 | 协作开发「设置」 | `.ld-settings-tabs` / `.ld-settings-tab`、`.ld-space-card`、`.ld-git-card`、`.ld-space-btn` | `parts/collab/local-dev/settings-page.css` | 页签按目标规格；卡片圆角 12px、`--card-shadow`；行内按钮高 28px，主操作为 `--brand` 描边 |
+| 本地开发弹窗表单 | 初始化空间、准备执行环境 | `.ld-form-field`、`.ld-select`、`.ld-dir-card`、`.ld-info-banner` | `parts/collab/local-dev/space-dialog.css` | 标签在上；只读字段 `--fill-1` 底；目录单选卡片选中为 `--brand` 边框 |
 | 表格 | 协作空间设置与项目 | `.cfg-table-*` / `.cv-proj-*` | `parts/collab/15-shared-tables.css` | 作用域限定在 `#view-collab` |
 | 输入框与表单字段 | 各页自有 | `.niu-field`、`.env-field`、`.tk-form-field`、`.mgr-pe-field` 等 | 各页面 CSS | 待统一，暂按作用域复用 |
 | 状态与标签 | 各页自有 | `.chip`、`.tk-chip`、`.env-tag` 等 | 各页面 CSS | 待统一，颜色必须用反馈色或业务语义色令牌 |

@@ -17,6 +17,7 @@ import { chatViewerActiveKey, chatViewerTabs, closeChatDocViewer, openChatDocVie
 import { appendTaskReadingSummary, renderMarkdown, simulateAIResponse } from './stream.js';
 import { chatInput } from './send.js';
 import { openLocalEnvSession } from './local-env-chat.js';
+import { openGitInstallSession } from './git-install-chat.js';
 import { renderPreviewRepairConversation } from './preview-repair.js';
 /* 对话：打开历史会话（拆自 composer.js） */
 
@@ -46,7 +47,7 @@ function openChatSession(sessionId) {
   hideAssetEditorPanel();
   set_chatViewerTabs([]);
   set_chatViewerActiveKey(null);
-  if(!session.taskId&&!session.assetCreate&&!session.assetEdit&&!session.taskCreate&&!session.localEnv) set_activePick(session.executionPick || (session.teamId ? {kind:'team',id:session.teamId,auto:false} : {kind:null,id:'',auto:false}));
+  if(!session.taskId&&!session.assetCreate&&!session.assetEdit&&!session.taskCreate&&!session.localEnv&&!session.gitInstall) set_activePick(session.executionPick || (session.teamId ? {kind:'team',id:session.teamId,auto:false} : {kind:null,id:'',auto:false}));
   if(session.assetEdit)set_activePick({kind:session.assetEdit.kind,id:session.assetEdit.id,auto:false});
   renderChatTaskSide();
   setComposerTaskReference(activeSessionTaskId);
@@ -67,6 +68,7 @@ function openChatSession(sessionId) {
     return;
   }
   if (session.localEnv) { openLocalEnvSession(session); return; }
+  if (session.gitInstall) { openGitInstallSession(session); return; }
   if (session.taskCreate) {
     set_activePick({kind:'expert', id:'software-product-manager', auto:false});
     renderExpertChips();

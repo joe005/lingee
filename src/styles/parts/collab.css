@@ -25,4 +25,7 @@
 @import './collab/settings-audit.css';
 @import './collab/workspace-settings.css';
 @import './collab/local-dev.css';
+@import './collab/local-dev/settings-page.css';
+@import './collab/local-dev/space-dialog.css';
+@import './collab/local-dev/git-install.css';
 @import './collab/loading.css';

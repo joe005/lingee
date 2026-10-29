@@ -1,0 +1,54 @@
+/* 初始化空间 / 空间设置、准备执行环境（features/collab/local-dev/space-dialog.js、prep-dialog.js、space-form.js）：
+   上方标签、下方字段；代码仓库与分支只读灰底，Git 账号下拉，空间目录两张单选卡片。 */
+#ldSpaceOverlay,#ldPrepOverlay{z-index:261}
+.cv-scope .ld-modal--space{width:640px;max-height:calc(100dvh - 32px)}
+.ld-modal--space .sync-modal__body{display:flex;flex-direction:column;gap:20px;overflow-y:auto}
+.ld-modal--space .ld-warn,.ld-modal--space .ld-init-progress{margin:0}
+.ld-form-field{display:flex;flex-direction:column;gap:8px;min-width:0}
+.ld-form-label{font-size:var(--font-size-14);line-height:22px;color:var(--text-secondary)}
+.ld-form-label .ld-req{margin-left:2px}
+
+/* 代码仓库：地址 + 分支，只读 */
+.ld-modal--space .ld-repo-readonly{margin:0}
+.ld-modal--space .ld-repo-readonly-url,.ld-modal--space .ld-repo-readonly-branch{min-height:var(--control-h-sm);padding:0 12px;border:0;border-radius:8px;background:var(--fill-1);font-family:inherit;font-size:var(--font-size-14);color:var(--text-secondary)}
+.ld-modal--space .ld-repo-readonly-url{display:block;overflow:hidden;line-height:var(--control-h-sm);text-overflow:ellipsis;white-space:nowrap}
+.ld-modal--space .ld-repo-readonly-branch{flex:0 0 120px;gap:6px}
+.ld-modal--space .ld-repo-readonly-branch code{overflow:hidden;font-family:inherit;font-size:var(--font-size-14);color:var(--text-secondary);text-overflow:ellipsis;white-space:nowrap}
+
+/* Git 账号下拉 */
+.ld-select-wrap{position:relative}
+.ld-select{display:flex;align-items:center;justify-content:space-between;gap:8px;box-sizing:border-box;width:100%;height:var(--control-h-sm);padding:0 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);font:inherit;font-size:var(--font-size-14);color:var(--text);text-align:left;cursor:pointer;transition:border-color .15s}
+.ld-select>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ld-select svg{flex:none;color:var(--text-secondary);transition:transform .15s}
+.ld-select[aria-expanded="true"] svg{transform:rotate(180deg)}
+.ld-select:hover:not(:disabled){border-color:var(--border-hover)}
+.ld-select:focus-visible{border-color:var(--brand);outline:none}
+.ld-select:disabled{background:var(--fill-1);cursor:not-allowed}
+.ld-select-placeholder{color:var(--text-secondary)}
+.ld-select-menu{position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:2;padding:4px;border-radius:12px;background:var(--bg);box-shadow:var(--menu-shadow)}
+.ld-select-option{display:flex;align-items:center;justify-content:space-between;gap:8px;height:36px;padding:0 8px;border-radius:8px;font-size:var(--font-size-14);color:var(--text)}
+.ld-select-option.is-on svg{color:var(--text)}
+.ld-select-divider{height:1px;margin:4px 8px;background:var(--divider)}
+.ld-select-add{display:flex;align-items:center;gap:6px;width:100%;height:36px;padding:0 8px;border:0;border-radius:8px;background:transparent;font:inherit;font-size:var(--font-size-14);color:var(--text);cursor:pointer}
+.ld-select-add:hover{background:var(--hover)}
+.ld-select-add:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}
+
+/* 空间目录：单选卡片 */
+.ld-dir-cards{display:flex;flex-direction:column;gap:12px}
+.ld-dir-card{position:relative;display:flex;align-items:flex-start;gap:8px;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--bg);cursor:pointer;transition:border-color .15s}
+.ld-dir-card:hover{border-color:var(--border-hover)}
+.ld-dir-card:has(input:checked){border-color:var(--brand)}
+.ld-dir-card:has(input:focus-visible){outline:2px solid var(--focus-ring);outline-offset:2px}
+.ld-dir-card:has(input:disabled){cursor:default}
+.ld-dir-card input{position:absolute;width:1px;height:1px;opacity:0}
+.ld-dir-card-radio{flex:none;box-sizing:border-box;width:16px;height:16px;margin-top:3px;border:1px solid var(--border-hover);border-radius:50%;background:var(--bg)}
+.ld-dir-card:has(input:checked) .ld-dir-card-radio{border:5px solid var(--brand)}
+.ld-dir-card-body{display:flex;flex:1;flex-direction:column;gap:4px;min-width:0}
+.ld-dir-card-body strong{font-size:var(--font-size-14);font-weight:500;line-height:22px;color:var(--text)}
+.ld-dir-card-desc{overflow:hidden;font-size:var(--font-size-12);line-height:20px;color:var(--text-secondary);text-overflow:ellipsis;white-space:nowrap}
+.ld-dir-card-pick{align-self:flex-start;height:28px;margin-top:4px;font-size:var(--font-size-12)}
+
+/* 准备执行环境：顶部说明 */
+.ld-info-banner{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;background:var(--brand-fill);font-size:var(--font-size-14);line-height:22px;color:var(--text)}
+.ld-info-banner svg{flex:none;color:var(--brand)}
+@media(prefers-reduced-motion:reduce){.ld-select,.ld-select svg,.ld-dir-card{transition:none}}

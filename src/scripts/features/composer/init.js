@@ -24,12 +24,14 @@ import { chatDoSend, chatInput, chatSendBtn, doSend, refreshChatSend } from './s
 import { bindAddDropdown } from './plus-menu.js';
 import { initTaskMention, taskPicker } from './task-mention.js';
 import { initLocalEnvChat } from './local-env-chat.js';
+import { initGitInstallChat } from './git-install-chat.js';
 import { sessionHasConversation } from './session-policy.js';
 import { initPreviewRepairChat } from './preview-repair.js';
 /* 对话：initComposer / initPlusMenu 事件接线（拆自 composer.js），由 main.js 按原顺序调用 */
 
 function initComposer() {
   initLocalEnvChat();
+  initGitInstallChat();
   document.addEventListener('lingee:execution-pick-change',function(event){
     if(event.detail.scope!=='chat') return;
     var session=chatSessions.find(function(row){return row.id===activeSessionId;});

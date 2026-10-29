@@ -16,6 +16,7 @@ import { answerTaskQuestion, getConversationTask, renderChatTaskSide, renderConv
 import { chatViewerActiveKey, chatViewerTabs, closeChatDocViewer, set_chatViewerActiveKey, set_chatViewerTabs } from './doc-viewer.js';
 import { simulateAIResponse } from './stream.js';
 import { handleLocalEnvSend } from './local-env-chat.js';
+import { handleGitInstallSend } from './git-install-chat.js';
 import { renderPreviewRepairConversation } from './preview-repair.js';
 /* 对话：新会话与对话页的发送、发送拦截器（拆自 composer.js） */
 
@@ -115,6 +116,7 @@ function chatDoSend(){
   if(!t){ chatInput.focus(); return; }
   if(chatSendInterceptor&&chatSendInterceptor(t)){ chatInput.innerHTML=''; refreshChatSend(); return; }
   if(handleLocalEnvSend(t)){ chatInput.innerHTML=''; refreshChatSend(); chatInput.focus(); return; }
+  if(handleGitInstallSend(t)){ chatInput.innerHTML=''; refreshChatSend(); chatInput.focus(); return; }
   var repairSession = chatSessions.find(function (row) { return row.id === activeSessionId && row.previewRepair; });
   if (repairSession) {
     repairSession.exchanges.push({ prompt:t, done:true, response:repairSession.previewRepair.status === 'resolved'

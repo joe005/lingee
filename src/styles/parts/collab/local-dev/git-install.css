@@ -1,0 +1,10 @@
+/* Git 未安装提示条（features/collab/local-dev/git-install.js）：设置页与准备执行环境共用，随安装进度变化。 */
+.ld-git-banner{display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:12px;background:var(--warning-bg);font-size:var(--font-size-14);line-height:22px;color:var(--text)}
+.ld-git-banner.is-busy{background:var(--brand-fill)}
+.ld-git-banner-text{flex:1;min-width:0}
+.ld-git-banner .ld-row-actions{flex:none}
+.ld-git-banner--prep{padding:8px 12px;border-radius:8px}
+@media(max-width:600px){.ld-git-banner{flex-wrap:wrap}.ld-git-banner .ld-row-actions{width:100%}}
+/* 「安装 Git」对话（composer/git-install-chat.js）：预置提示词保留换行 */
+#view-chat .message.user.gi-user .message-content p{white-space:pre-wrap;text-align:left}
+#view-chat .ld-tool.is-open>.ld-tool-sum{cursor:default}

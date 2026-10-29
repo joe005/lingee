@@ -1,14 +1,18 @@
-<!-- 设置：沿用早期左侧纵向菜单、右侧配置内容；与任务对话共用登录及准备空间弹窗。 -->
+<!-- 设置：顶部分段页签「我的空间 / Git 账号」，右侧上次检测与「检测」；两个面板各自一个片段和模块
+     （features/collab/local-dev/settings-page.js 外壳、spaces-page.js、git-accounts-page.js）。 -->
 <div class="cv-panel" id="cv-local">
   <div class="scroll">
-    <div class="ld-settings config-layout">
-      <aside class="config-nav ld-settings-nav" role="tablist" aria-orientation="vertical" aria-label="设置分类">
-        <button type="button" class="config-nav-item on" id="ldSpacesTab" data-ld-settings-tab="spaces" role="tab" aria-selected="true" aria-controls="ldDevelopmentPanel">我的空间</button>
-        <button type="button" class="config-nav-item" id="ldGitTab" data-ld-settings-tab="git" role="tab" aria-selected="false" aria-controls="ldDevelopmentPanel" tabindex="-1">Git 账号</button>
-      </aside>
-      <section class="config-main" id="ldDevelopmentPanel" role="tabpanel" aria-labelledby="ldSpacesTab" tabindex="0">
-        <div class="ld-page" id="ldPage"></div>
-      </section>
+    <div class="ld-settings">
+      <div class="ld-settings-bar">
+        <div class="ld-settings-tabs" role="tablist" aria-label="设置分类">
+          <button type="button" class="ld-settings-tab is-on" id="ldSpacesTab" data-ld-settings-tab="spaces" role="tab" aria-selected="true" aria-controls="ldSpacesPanel">我的空间</button>
+          <button type="button" class="ld-settings-tab" id="ldGitTab" data-ld-settings-tab="git" role="tab" aria-selected="false" aria-controls="ldGitPanel" tabindex="-1">Git 账号</button>
+        </div>
+        <div class="ld-settings-tools" id="ldSettingsTools"></div>
+      </div>
+      <!--#include "src/views/collab/local-settings/spaces.html" -->
+      <!--#include "src/views/collab/local-settings/git-accounts.html" -->
+      <div class="ld-demo-links" id="ldDemoLinks"></div>
     </div>
   </div>
 </div>

@@ -1,0 +1,17 @@
+<!-- 初始化空间 / 空间设置（features/collab/local-dev/space-dialog.js）：代码仓库只读、Git 账号、空间目录，内容由脚本渲染。 -->
+<div class="sync-overlay ld-overlay" id="ldSpaceOverlay" style="display:none" aria-hidden="true">
+  <div class="sync-modal ld-modal ld-modal--space" role="dialog" aria-modal="true" aria-labelledby="ldSpaceTitle">
+    <div class="sync-modal__header">
+      <div class="ld-modal-head">
+        <span class="sync-modal__title" id="ldSpaceTitle">初始化空间</span>
+        <span class="ld-modal-sub" id="ldSpaceSub"></span>
+      </div>
+      <button type="button" class="sync-modal__close" data-ld-space-close aria-label="关闭"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="sync-modal__body ld-space-form" id="ldSpaceBody"></div>
+    <div class="sync-modal__footer">
+      <button type="button" class="sync-modal__btn sync-modal__btn--ghost" data-ld-space-close>取消</button>
+      <button type="button" class="sync-modal__btn sync-modal__btn--primary" id="ldSpaceDone" disabled>初始化</button>
+    </div>
+  </div>
+</div>

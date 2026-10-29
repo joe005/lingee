@@ -1,0 +1,44 @@
+<!-- 登录 / 添加 Git 账号（features/collab/local-dev/auth-dialog.js）。设置页、空间表单与任务对话共用。 -->
+<div class="sync-overlay ld-overlay ld-overlay--top" id="ldAuthOverlay" style="display:none" aria-hidden="true">
+  <div class="sync-modal ld-modal ld-modal--auth" role="dialog" aria-modal="true" aria-labelledby="ldAuthTitle">
+    <div class="sync-modal__header">
+      <div class="ld-modal-head">
+        <span class="sync-modal__title" id="ldAuthTitle">登录 Git 账号</span>
+        <span class="ld-modal-sub" id="ldAuthSub"></span>
+      </div>
+      <button type="button" class="sync-modal__close" data-ld-auth-close aria-label="关闭"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="sync-modal__body">
+      <!-- 平台通常已知（标题下注明主机和类型）；「添加账号」时单选平台：金蝶 GitLab、GitHub、Gitee 自动带出地址，
+           「其他 GitLab」才填写地址。一期只用访问令牌，获取步骤在下方可展开 -->
+      <div class="ld-field" id="ldAuthPlatformBox" hidden>
+        <span class="ld-field-label" id="ldAuthPlatformLabel">平台</span>
+        <div class="ld-segment" role="radiogroup" aria-labelledby="ldAuthPlatformLabel">
+          <button type="button" class="ld-segment-item" role="radio" data-ld-auth-platform="KDGitLab" title="git.kingdee.com">金蝶 GitLab</button>
+          <button type="button" class="ld-segment-item" role="radio" data-ld-auth-platform="GitHub">GitHub</button>
+          <button type="button" class="ld-segment-item" role="radio" data-ld-auth-platform="Gitee">Gitee</button>
+          <button type="button" class="ld-segment-item" role="radio" data-ld-auth-platform="GitLab">其他 GitLab</button>
+        </div>
+        <p class="ld-hint" id="ldAuthHostShow"></p>
+      </div>
+      <div class="ld-field" id="ldAuthHostBox" hidden>
+        <label for="ldAuthHost">平台地址</label>
+        <input type="text" id="ldAuthHost" class="ld-input ld-auth-host" autocomplete="off" spellcheck="false" placeholder="如 git.kingdee.com" aria-describedby="ldAuthError">
+      </div>
+      <div class="ld-field ld-field--token">
+        <div class="ld-label-row"><label for="ldAuthToken">访问令牌</label><button type="button" class="ld-link" id="ldAuthCreate">去平台创建</button></div>
+        <input type="password" id="ldAuthToken" class="ld-input ld-auth-token" autocomplete="off" spellcheck="false" aria-describedby="ldAuthHint ldAuthError">
+        <p class="ld-hint ld-hint--line" id="ldAuthHint"></p>
+      </div>
+      <details class="ld-guide" id="ldAuthGuide">
+        <summary>如何获取访问令牌？</summary>
+        <ol id="ldAuthGuideSteps"></ol>
+      </details>
+      <p class="ld-error" id="ldAuthError" role="alert" hidden></p>
+    </div>
+    <div class="sync-modal__footer">
+      <button type="button" class="sync-modal__btn sync-modal__btn--ghost" data-ld-auth-close>取消</button>
+      <button type="button" class="sync-modal__btn sync-modal__btn--primary" id="ldAuthSubmit">验证并登录</button>
+    </div>
+  </div>
+</div>
