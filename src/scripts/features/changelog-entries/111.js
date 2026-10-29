@@ -1,0 +1,1 @@
+export default {"id":"111","date":"2026-10-29","iconBg":"var(--brand-fill)","iconColor":"var(--brand)","type":"优化","module":"本地开发环境","author":"wuhc2023","body":"优化·本地开发环境：Git 账号页只显示已登录的账号，没有账号时显示空状态，金蝶 GitLab、GitHub、Gitee、GitLab 各用独立平台标识，添加账号的平台下拉同步带上标识。"};
