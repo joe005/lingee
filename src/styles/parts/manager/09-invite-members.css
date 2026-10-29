@@ -113,6 +113,29 @@
   color: var(--text-secondary);
   font-size: var(--font-size-12);
 }
+.mgr-scope .mgr-inv-pending {
+  margin-left: auto;
+  flex: none;
+  padding: 0 8px;
+  border-radius: 4px;
+  background: var(--pending-bg);
+  color: var(--pending);
+  font-size: var(--font-size-12);
+  font-weight: 500;
+  line-height: 20px;
+}
+.mgr-scope .mgr-inv-row.is-pending {
+  cursor: default;
+}
+.mgr-scope .mgr-inv-row.is-pending:hover {
+  background: transparent;
+}
+.mgr-scope .mgr-inv-row.is-pending input {
+  cursor: not-allowed;
+}
+.mgr-scope .mgr-inv-row.is-pending .mgr-inv-name {
+  color: var(--text-secondary);
+}
 .mgr-scope .mgr-inv-empty {
   padding: 32px 0;
   color: var(--text-secondary);

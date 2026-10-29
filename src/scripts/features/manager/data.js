@@ -370,6 +370,69 @@ function mgrAddProjectMembers(project, personIds, asAdmin) {
   Object.assign(project, prev);
   return false;
 }
+
+/* ---------- 空间邀请 ----------
+   邀请制：邀请写入空间的 invites（待接受 / 已接受 / 已拒绝），被邀请人在自己的待办里接受后才成为空间成员。 */
+function mgrProjectInvites(project) { return (project && project.invites) || []; }
+function mgrPendingInviteIds(project) {
+  return mgrProjectInvites(project).filter(function (i) { return i.status === 'pending'; }).map(function (i) { return i.personId; });
+}
+function notifyProjectChange(project, key) {
+  var detail = {};
+  detail[key] = project.id;
+  document.dispatchEvent(new CustomEvent('lingee:mgr-projects-changed', { detail: detail }));
+}
+/* 返回发出的邀请数；0 表示没有可邀请的人，-1 表示保存失败（已回滚） */
+function mgrInviteProjectMembers(project, personIds, asAdmin) {
+  var prev = { invites: project.invites, updatedAt: project.updatedAt };
+  var invites = mgrProjectInvites(project).slice();
+  var me = mgrCurrentPersonId();
+  var at = nowStamp();
+  var count = 0;
+  personIds.forEach(function (id) {
+    var person = cvPersonById(id);
+    if (!person || (project.members || []).includes(person.id)) return;
+    invites = invites.filter(function (i) { return !(i.personId === person.id && i.status === 'pending'); });
+    invites.push({ id: 'inv-' + Date.now().toString(36) + '-' + person.id, personId: person.id, asAdmin: !!asAdmin, invitedBy: me, invitedAt: at, status: 'pending' });
+    count++;
+  });
+  if (!count) return 0;
+  project.invites = invites;
+  project.updatedAt = Date.now();
+  if (mgrSaveProjects()) { notifyProjectChange(project, 'invites'); return count; }
+  Object.assign(project, prev);
+  return -1;
+}
+/* 当前用户收到的空间邀请，最新的在前 */
+function mgrMyInvites() {
+  var me = mgrCurrentPersonId();
+  if (!me) return [];
+  var rows = [];
+  PROJECTS.forEach(function (p) {
+    mgrProjectInvites(p).forEach(function (i) {
+      if (i.personId === me) rows.push({ projectId: p.id, projectName: p.name, invite: i });
+    });
+  });
+  return rows.sort(function (a, b) { return String(b.invite.invitedAt).localeCompare(String(a.invite.invitedAt)); });
+}
+/* 接受即加入空间（按邀请时的角色），拒绝只记录结果；只能处理发给自己的待接受邀请 */
+function mgrRespondInvite(projectId, inviteId, accept) {
+  var p = mgrProjectById(projectId);
+  var inv = mgrProjectInvites(p).find(function (i) { return i.id === inviteId; });
+  if (!p || !inv || inv.status !== 'pending' || inv.personId !== mgrCurrentPersonId()) return false;
+  var prev = { invites: p.invites, updatedAt: p.updatedAt };
+  p.invites = mgrProjectInvites(p).map(function (i) {
+    return i.id === inviteId ? Object.assign({}, i, { status: accept ? 'accepted' : 'declined', handledAt: nowStamp() }) : i;
+  });
+  if (accept) {
+    if (mgrAddProjectMembers(p, [inv.personId], inv.asAdmin)) return true;
+  } else {
+    p.updatedAt = Date.now();
+    if (mgrSaveProjects()) { notifyProjectChange(p, 'invites'); return true; }
+  }
+  Object.assign(p, prev);
+  return false;
+}
 /* 项目目标与项目指令；目标同步到项目卡片描述，保存失败时回滚 */
 function mgrSetProjectText(project, patch) {
   var prev = { goal: project.goal, desc: project.desc, instruction: project.instruction, updatedAt: project.updatedAt };
@@ -728,7 +791,7 @@ export function initManagerData() {
 export {
   TASK_STATUSES, mgrAddIssue, mgrAiContribution, mgrDecideIssue, mgrAddProject, mgrCanManageProject, mgrCanDeleteTask, mgrCreateTask, mgrDeleteProject, mgrDeleteTask, mgrCurrentPersonId, mgrExpert, mgrExpertList,
   MEMBER_ROLES, mgrHasSessionPerm, mgrMemberOpenTasks, mgrMemberRole, mgrMemberRoleLabel, mgrPersonName, mgrProjectPeople,
-  mgrAddProjectMembers, mgrSetMemberLevel, mgrSetProjectExperts, mgrRenameError, mgrRenameProject, mgrSetProjectMembers, mgrSetProjectPages, mgrSetProjectRepo, mgrSetProjectText, mgrProjectById, mgrProjectIssues, mgrProjectKnowledge, mgrProjectMembers, mgrProjectPages,
+  mgrAddProjectMembers, mgrInviteProjectMembers, mgrMyInvites, mgrPendingInviteIds, mgrRespondInvite, mgrSetMemberLevel, mgrSetProjectExperts, mgrRenameError, mgrRenameProject, mgrSetProjectMembers, mgrSetProjectPages, mgrSetProjectRepo, mgrSetProjectText, mgrProjectById, mgrProjectIssues, mgrProjectKnowledge, mgrProjectMembers, mgrProjectPages,
   mgrCreateDevTask, mgrIsDevTask, mgrProjectProgress, mgrSpaceTeamId, mgrProjectTasks, mgrProjects, mgrRelatedTask, mgrSaveProjects, mgrSaveTasks, mgrSetSessionPerm,
   mgrTaskById, mgrTaskKey, mgrTasks,
   mgrTeam, mgrTeams,

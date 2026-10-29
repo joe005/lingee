@@ -1,6 +1,7 @@
 import { toast } from '../../core/toast.js';
 import { viewChat } from '../../core/view.js';
 import { tkGetTasks } from '../tasks-v2/data.js';
+import { taskCodeDeliveryContext } from '../tasks-v2/code-delivery-context.js';
 import { reviewTaskStage, taskExecutionStages } from '../tasks-v2/task-execution.js';
 import { showTaskStageConfirm } from '../tasks-v2/confirm.js';
 import { scrollChatBottom } from './messages.js';
@@ -52,36 +53,51 @@ function refreshChatStageConfirm() {
   btn.setAttribute('aria-label', chatStageConfirmTooltip(info.task, info.nextStage));
   btn.setAttribute('data-tooltip', chatStageConfirmTooltip(info.task, info.nextStage));
 }
+/* 会话里记下阶段结束分隔线 */
+function markChatStageEnd(stage, done) {
+  var session = chatSessions.find(function (row) { return row.id === activeSessionId; });
+  if (!session || !stage) return;
+  session.demoState = done ? 'confirmed' : 'ended';
+  if (!Array.isArray(session.stageEndMarkers)) session.stageEndMarkers = [];
+  if (!session.stageEndMarkers.some(function (marker) { return marker.stageId === stage.id; })) {
+    var marker = {
+      stageId: stage.id,
+      stageName: stage.name,
+      afterExchangeIndex: session.exchanges.length - 1,
+      afterQuestion: !!session.demoQuestion,
+    };
+    session.stageEndMarkers.push(marker);
+    saveChatSessions();
+    appendChatStageEndMarker(marker);
+    renderChatTaskSide();
+    scrollChatBottom();
+  }
+  renderChatSessions();
+}
 function confirmChatStage() {
   var info = chatStageConfirmInfo();
   if (!info?.ready) return;
   showTaskStageConfirm(info.task, function () {
     var currentInfo = chatStageConfirmInfo();
     if (!currentInfo?.ready || currentInfo.task.id !== info.task.id) return;
+    /* 开发阶段与任务详情「通过审核」一致：先模拟检查并合并本轮分支，合并成功才流转（提示由合并流程给出） */
+    if (taskCodeDeliveryContext(currentInfo.task)?.isDevelopment) {
+      var taskId = currentInfo.task.id;
+      var devStage = taskExecutionStages(currentInfo.task).find(function (stage) { return stage.id === currentInfo.task.executionStageId; });
+      document.addEventListener('lingee:task-stage-completed', function onMerged(event) {
+        if (event.detail?.taskId !== taskId) return;
+        document.removeEventListener('lingee:task-stage-completed', onMerged);
+        if (activeSessionTaskId === taskId) markChatStageEnd(devStage, false);
+      });
+      document.dispatchEvent(new CustomEvent('lingee:code-delivery-approve', { detail: { taskId: taskId } }));
+      return;
+    }
     var reviewed = reviewTaskStage(currentInfo.task, true);
     if (!reviewed.ok) {
       toast(reviewed.message || '任务状态已变化，请刷新后重试', 'warning');
       return;
     }
-    var session = chatSessions.find(function (row) { return row.id === activeSessionId; });
-    if (session && reviewed.stage) {
-      session.demoState = reviewed.done ? 'confirmed' : 'ended';
-      if (!Array.isArray(session.stageEndMarkers)) session.stageEndMarkers = [];
-      if (!session.stageEndMarkers.some(function (marker) { return marker.stageId === reviewed.stage.id; })) {
-        var marker = {
-          stageId: reviewed.stage.id,
-          stageName: reviewed.stage.name,
-          afterExchangeIndex: session.exchanges.length - 1,
-          afterQuestion: !!session.demoQuestion,
-        };
-        session.stageEndMarkers.push(marker);
-        saveChatSessions();
-        appendChatStageEndMarker(marker);
-        renderChatTaskSide();
-        scrollChatBottom();
-      }
-      renderChatSessions();
-    }
+    markChatStageEnd(reviewed.stage, reviewed.done);
     /* 流转后任务状态已变，lingee:task-updated 会触发 renderChatTaskSide 收起按钮 */
     toast(reviewed.done ? '任务完成' : '流转成功', 'success');
   });

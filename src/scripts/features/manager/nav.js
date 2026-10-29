@@ -84,7 +84,8 @@ export function initManagerNav() {
     var target = e.target.closest('[data-mgr-nav],[data-mgr-side-goto]');
     if (target) { e.preventDefault(); target.click(); }
   });
-  document.addEventListener('lingee:mgr-open', function () { openManager(); });
+  /* detail.proj 可指定打开的空间（如待办里接受邀请后进入空间） */
+  document.addEventListener('lingee:mgr-open', function (e) { openManager(e.detail && e.detail.proj); });
   document.addEventListener('lingee:mgr-projects-changed', function () { syncSideSpaces(); syncUrl(); });
   syncSideSpaces();
   if (pendingRoute) {

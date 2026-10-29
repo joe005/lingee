@@ -19,3 +19,22 @@
 #view-todos button:hover,#view-todos select:hover{background:var(--hover)}
 #view-todos :is(button,select,input):focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 @media(max-width:760px){#view-todos{padding-top:24px}#view-todos .todo-page-toolbar{align-items:flex-start;flex-direction:column}#view-todos .todo-page-filters{flex-wrap:wrap}#view-todos .todo-page-empty{margin-bottom:48px}}
+#view-todos .todo-page-list{display:flex;flex-direction:column;gap:12px;margin-top:16px;padding-bottom:48px}
+#view-todos .todo-page-list[hidden],#view-todos .todo-page-empty[hidden]{display:none}
+#view-todos .todo-item{display:flex;align-items:center;gap:24px;padding:16px 24px;border-radius:12px;background:var(--bg);box-shadow:var(--card-shadow)}
+#view-todos .todo-item-main{flex:1;min-width:0}
+#view-todos .todo-item-meta{display:flex;align-items:center;gap:8px;color:var(--text-secondary);font-size:var(--font-size-12);line-height:18px}
+#view-todos .todo-item-tag{padding:0 8px;border-radius:4px;background:var(--brand-fill);color:var(--brand);font-weight:500;line-height:20px}
+#view-todos .todo-item-title{margin:8px 0 4px;overflow:hidden;color:var(--text);font-size:var(--font-size-14);font-weight:500;line-height:var(--line-height-14);text-overflow:ellipsis;white-space:nowrap}
+#view-todos .todo-item-desc{margin:0;color:var(--text-secondary);font-size:var(--font-size-12);line-height:18px}
+#view-todos .todo-item-actions{display:flex;flex:none;align-items:center;gap:8px}
+#view-todos .todo-item-btn{height:32px;padding:0 16px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font:inherit;font-size:var(--font-size-14);cursor:pointer}
+#view-todos .todo-item-btn--primary{border-color:var(--brand);background:var(--brand);color:var(--bg)}
+#view-todos .todo-item-btn--primary:hover{border-color:var(--brand-hover);background:var(--brand-hover)}
+#view-todos .todo-item-btn--primary:active{background:var(--brand-active)}
+#view-todos .todo-item-status{padding:0 8px;border-radius:4px;font-size:var(--font-size-12);font-weight:500;line-height:20px}
+#view-todos .todo-item-status--accepted{background:var(--success-bg);color:var(--success)}
+#view-todos .todo-item-status--declined{background:var(--hover);color:var(--text-secondary)}
+#sbTodoButton{position:relative}
+#sbTodoButton .todo-count-badge{position:absolute;top:-2px;right:-4px;min-width:16px;height:16px;padding:0 4px;box-sizing:border-box;border-radius:999px;background:var(--danger);color:var(--bg);font-size:var(--font-size-10);font-weight:500;line-height:16px;text-align:center}
+@media(max-width:760px){#view-todos .todo-item{flex-direction:column;align-items:stretch;gap:12px;padding:16px}#view-todos .todo-item-title{white-space:normal}#view-todos .todo-item-actions{justify-content:flex-end}}

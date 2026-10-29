@@ -1,9 +1,10 @@
 import { $ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
 import { CV_MEMBERS } from '../collab/data.js';
-import { mgrAddProjectMembers, mgrCanManageProject, mgrProjectById } from './data.js';
+import { mgrCanManageProject, mgrInviteProjectMembers, mgrPendingInviteIds, mgrProjectById } from './data.js';
 import { mgrEsc } from './utils.js';
-/* 管理 · 邀请成员：勾选尚未加入的灵基人员，指定本次加入的空间内角色（空间管理员 / 成员）后一次添加。
+/* 管理 · 邀请成员：勾选尚未加入的灵基人员，指定接受后的空间内角色（空间管理员 / 成员）后一次发出邀请；
+   被邀请人在自己的待办里接受后才加入空间，待接受的人在列表里置灰。
    人员取协作开发的人员数据（CV_MEMBERS），与「空间成员」弹窗共用；岗位角色在空间成员里再调整。 */
 
 var projectId = null;
@@ -13,31 +14,35 @@ var picked = new Set();
 var query = '';
 
 function candidates() {
-  var taken;
+  var taken, pending = [];
   if (draft) taken = draft.taken();
   else {
     var p = projectId ? mgrProjectById(projectId) : null;
     if (!p) return [];
     taken = p.members || [];
+    pending = mgrPendingInviteIds(p);
   }
   var q = query.trim().toLocaleLowerCase();
   return CV_MEMBERS.filter(function (m) {
     return m.status !== 'disabled' && !taken.includes(m.id) && (!q || m.name.toLocaleLowerCase().includes(q));
-  });
+  }).map(function (m) { return { person: m, pending: pending.includes(m.id) }; });
 }
 function syncConfirm() {
   var btn = $('#mgrInviteConfirm');
   btn.disabled = !picked.size;
-  btn.textContent = picked.size ? '确定（' + picked.size + '）' : '确定';
+  var label = draft ? '确定' : '发送邀请';
+  btn.textContent = picked.size ? label + '（' + picked.size + '）' : label;
 }
 function renderList() {
   var rows = candidates();
   $('#mgrInviteList').innerHTML = rows.length
-    ? rows.map(function (m, i) {
-      return '<label class="mgr-inv-row"><input type="checkbox" value="' + mgrEsc(m.id) + '"' + (picked.has(m.id) ? ' checked' : '') + '>' +
+    ? rows.map(function (row, i) {
+      var m = row.person;
+      var meta = row.pending ? '<small class="mgr-inv-pending">待接受</small>' : (m.dept ? '<small class="mgr-inv-dept">' + mgrEsc(m.dept) + '</small>' : '');
+      return '<label class="mgr-inv-row' + (row.pending ? ' is-pending' : '') + '"' + (row.pending ? ' title="已发出邀请，等待对方在待办中接受"' : '') + '>' +
+        '<input type="checkbox" value="' + mgrEsc(m.id) + '"' + (row.pending ? ' disabled' : (picked.has(m.id) ? ' checked' : '')) + '>' +
         '<span class="mgr-inv-avatar mgr-inv-avatar--' + (i % 4) + '" aria-hidden="true">' + mgrEsc(m.name[0] || '?') + '</span>' +
-        '<span class="mgr-inv-name">' + mgrEsc(m.name) + '</span>' +
-        (m.dept ? '<small class="mgr-inv-dept">' + mgrEsc(m.dept) + '</small>' : '') + '</label>';
+        '<span class="mgr-inv-name">' + mgrEsc(m.name) + '</span>' + meta + '</label>';
     }).join('')
     : '<div class="mgr-inv-empty">' + (query.trim() ? '没有匹配的人员' : '所有人员都已在空间中') + '</div>';
 }
@@ -85,10 +90,10 @@ function confirmInvite() {
   if (!p || !picked.size) return;
   if (!mgrCanManageProject(p)) { toast('空间权限已变化，无法邀请成员', 'warning'); return; }
   var asAdmin = $('#mgrInviteOverlay input[name="mgrInviteRole"]:checked').value === 'admin';
-  var count = picked.size;
-  if (!mgrAddProjectMembers(p, Array.from(picked), asAdmin)) { toast('添加失败，请重试', 'error'); return; }
+  var count = mgrInviteProjectMembers(p, Array.from(picked), asAdmin);
+  if (count < 0) { toast('邀请发送失败，请重试', 'error'); return; }
   closeInvite();
-  toast('已添加 ' + count + ' 名' + (asAdmin ? '空间管理员' : '成员'), 'success');
+  if (count) toast('已向 ' + count + ' 人发送邀请，对方在待办中接受后加入空间', 'success');
 }
 
 export function initManagerInvite() {
