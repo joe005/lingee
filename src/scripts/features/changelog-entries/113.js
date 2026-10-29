@@ -1,0 +1,1 @@
+export default {"id":"113","date":"2026-10-29","iconBg":"var(--brand-fill)","iconColor":"var(--brand)","type":"优化","module":"本地开发环境","author":"wuhc2023","body":"优化·本地开发环境：令牌登录后写入系统 Git 凭据库并在会覆盖已有凭据时提示，本机未安装 Git 时不放行登录，本机凭据来源的账号不再提供移除，删除令牌账号的确认说明终端也会失效。"};
