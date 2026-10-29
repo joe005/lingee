@@ -1,7 +1,7 @@
 import { $ } from '../../../core/dom.js';
 import { toast } from '../../../core/toast.js';
 import { ldPlatformLogo } from './ui.js';
-import { ldEsc, ldHide, ldHostPlatform, ldRecordChecks, ldRefresh, ldSaveAuthEntry, ldShow, ldTokenPage, ldVisible } from './core.js';
+import { ldAuthFor, ldAuthUser, ldEsc, ldFindLocalCred, ldHide, ldHostPlatform, ldMine, ldRecordChecks, ldRefresh, ldSaveAuthEntry, ldShow, ldTokenPage, ldVisible } from './core.js';
 
 /* 本地开发 · 登录 / 添加 Git 账号弹窗（#ldAuthOverlay）。设置页、空间表单与任务对话共用。
    一期只用访问令牌（浏览器登录待平台授权应用就绪后接入）。
@@ -60,8 +60,18 @@ function renderAuthPlatform() {
   if (!editable) host.value = ldAuthHostValue() + ' · ' + ldAuthPlatformValue();
   else if (/ · /.test(host.value)) host.value = '';
   host.placeholder = editable ? '填写平台地址，如 git.example.com' : '';
-  $('#ldAuthHint').textContent = '令牌只保存在本机系统钥匙串';
+  renderAuthHint();
   renderAuthGuide();
+}
+/* 令牌登录后写入系统 Git 凭据库（git credential approve），终端和智能体里的 Git 操作都能用；
+   系统里这个主机已有凭据（本机原有的或之前登录的）会被新令牌覆盖，提前说明 */
+function renderAuthHint() {
+  var host = ldAuthHostValue();
+  var known = LD_HOST_RE.test(host) ? ldAuthFor(host) : null;
+  var local = LD_HOST_RE.test(host) ? ldFindLocalCred(host) : null;
+  var text = '登录后令牌会写入系统 Git 凭据库，终端和智能体里的 Git 操作都能使用';
+  if (known || local) text += '；系统里已有 ' + host + ' 的凭据' + (known ? '（' + ldAuthUser(known) + '）' : '') + '，登录后会被这个令牌覆盖';
+  $('#ldAuthHint').textContent = text;
 }
 /* 平台下拉：与空间表单里的 Git 账号下拉同一套样式，当前项打勾 */
 function toggleAuthPlatformMenu(open) {
@@ -99,6 +109,7 @@ function submitAuth() {
   var token = $('#ldAuthToken').value.trim();
   if (authCustom && !LD_HOST_RE.test(host)) { setAuthError('请填写正确的平台地址，如 git.kingdee.com'); $('#ldAuthHost').focus(); return; }
   if (!token) { setAuthError('请填写访问令牌'); $('#ldAuthToken').focus(); return; }
+  if (ldMine().gitMissing) { setAuthError('本机没有安装 Git，无法把令牌写入系统凭据库，请先安装 Git 后再登录'); return; }
   setAuthError('');
   setAuthBusy(true);
   var run = ++authRun;
@@ -160,7 +171,7 @@ export function initAuthDialog() {
   });
   document.addEventListener('input', function (e) {
     if (e.target instanceof HTMLElement && (e.target.id === 'ldAuthHost' || e.target.id === 'ldAuthToken')) setAuthError('');
-    if (e.target instanceof HTMLElement && e.target.id === 'ldAuthHost') renderAuthGuide();
+    if (e.target instanceof HTMLElement && e.target.id === 'ldAuthHost') { renderAuthHint(); renderAuthGuide(); }
   });
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Enter' && e.target instanceof HTMLElement && e.target.id === 'ldAuthHost') { e.preventDefault(); $('#ldAuthToken').focus(); return; }

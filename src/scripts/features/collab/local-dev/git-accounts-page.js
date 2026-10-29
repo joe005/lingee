@@ -10,7 +10,8 @@ import { LD_ICONS, ldPlatformKey, ldPlatformLogo, ldStateTag } from './ui.js';
 /* 本地开发 · 设置 ›「Git 账号」（#ldGitPanel）：只列已登录的账号，不分组，两列平铺；平台用各自的图标区分（金蝶 GitLab / GitHub / Gitee / 其他 GitLab），
    排序按平台固定顺序再按主机。卡片：平台标识、账号名 + 状态标签（可用显示绿色「可用」）、「主机 · 来源 · 到期日」（平台读得到到期日才显示）；悬停出现「···」。
    菜单：重新登录、检测（只检测这一个账号）、删除；无法连接时「检测」排第一（重新登录解决不了网络问题）；
-   来源为本机凭据的账号是系统里原有的，不能真删，菜单写「移除」，确认后只让 Lingee 不再使用。
+   来源为本机凭据的账号是检测系统里原有的，Lingee 不管理它，菜单没有删除 / 移除，只有重新登录和检测；
+   令牌登录的账号，令牌写在系统 Git 凭据库里（Lingee 自己只记用户名、主机、到期日），删除只清除这一条并在确认里说明终端也会失效。
    未登录的平台不占位，从右上角「＋ 添加」登录；空间用到但还没登录的平台，在「我的空间」里提示并从那里登录。
    空间按仓库主机自动匹配账号，同一平台登录一次即可复用。顶部提示条：Git 未安装优先，其次令牌即将到期。 */
 var menuHost = '';
@@ -41,8 +42,9 @@ function descOf(auth) {
 function menuItems(host, auth, key) {
   var login = { attr:'data-ld-auth-open="' + ldEsc(host) + '"', icon:ICONS.key, text:'重新登录' };
   var detect = { attr:'data-ld-acct-detect="' + ldEsc(host) + '"', icon:ICONS.detect, text:'检测' };
-  var remove = { attr:'data-ld-acct-delete="' + ldEsc(host) + '"', icon:DELETE_ICON, text:auth.source === 'local' ? '移除' : '删除', danger:true };
-  return key === 'offline' ? [detect, login, remove] : [login, detect, remove];
+  var remove = { attr:'data-ld-acct-delete="' + ldEsc(host) + '"', icon:DELETE_ICON, text:'删除', danger:true };
+  var items = key === 'offline' ? [detect, login] : [login, detect];
+  return auth.source === 'local' ? items : items.concat(remove);
 }
 function cardHtml(host, checks) {
   var auth = ldAuthFor(host), key = stateKey(host, checks), detecting = ldIsDetectingHost(host);
@@ -89,15 +91,15 @@ function detectAccount(host) {
 async function deleteAccount(host) {
   var auth = ldAuthFor(host);
   if (!auth) return;
-  var user = ldAuthUser(auth), local = auth.source === 'local';
-  var ok = await requestDeleteConfirmation(local
-    ? '移除后 Lingee 不再使用 ' + host + ' 上的账号 ' + user + '，系统里保存的凭据不会被清除，终端和其他 Git 工具不受影响。'
-    : '删除后将清除 ' + host + ' 上账号 ' + user + ' 保存的访问令牌，用到该平台的空间需要重新登录才能拉取和推送。',
-  { title: local ? '移除本机凭据' : '删除 Git 账号', confirmLabel: local ? '确认移除' : '确认删除' });
+  /* 本机凭据不是 Lingee 保存的，菜单里不提供删除 */
+  if (!auth || auth.source === 'local') return;
+  var user = ldAuthUser(auth);
+  var ok = await requestDeleteConfirmation('删除后将从系统 Git 凭据库清除 ' + host + ' 上账号 ' + user + ' 的令牌，终端和其他 Git 工具访问该主机也会失效；用到该平台的空间需要重新登录才能拉取和推送。',
+    { title: '删除 Git 账号', confirmLabel: '确认删除' });
   if (!ok) return;
   ldRemoveAuth(host);
   ldRefresh();
-  toast((local ? '已移除 ' : '已删除 ') + ldEsc(host) + ' 上的账号 ' + ldEsc(user), 'success');
+  toast('已删除 ' + ldEsc(host) + ' 上的账号 ' + ldEsc(user), 'success');
 }
 
 export function initGitAccountsPage() {
