@@ -4,10 +4,10 @@
 #cv-local .ld-acct-group h3{margin:4px 0 0;font-size:var(--font-size-14);font-weight:500;line-height:22px;color:var(--text)}
 #cv-local .ld-acct-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
 #cv-local .ld-acct-card{display:flex;align-items:center;gap:12px;box-sizing:border-box;min-height:80px;padding:16px;border-radius:20px;background:var(--bg);box-shadow:var(--card-shadow)}
-#cv-local .ld-acct-avatar{display:inline-grid;flex:none;place-items:center;width:40px;height:40px;border-radius:50%;color:var(--text-title)}
-#cv-local .ld-acct-avatar.is-gitlab{background:var(--warning-bg)}
-#cv-local .ld-acct-avatar.is-gitee{color:var(--danger)}
-#cv-local .ld-acct-avatar.is-empty{background:var(--tag-bg);color:var(--text-secondary)}
+#cv-local .ld-acct-avatar{display:inline-grid;flex:none;place-items:center;width:40px;height:40px;border-radius:50%}
+#cv-local .ld-acct-empty{display:flex;flex-direction:column;align-items:center;gap:4px;padding:48px 16px;border-radius:20px;background:var(--bg);box-shadow:var(--card-shadow);text-align:center}
+#cv-local .ld-acct-empty strong{font-size:var(--font-size-16);font-weight:500;line-height:24px;color:var(--text-title)}
+#cv-local .ld-acct-empty span{font-size:var(--font-size-12);line-height:20px;color:var(--text-secondary)}
 #cv-local .ld-acct-main{display:flex;flex:1;flex-direction:column;gap:4px;min-width:0}
 #cv-local .ld-acct-title{display:flex;align-items:center;gap:8px;min-width:0}
 #cv-local .ld-acct-title strong{min-width:0;overflow:hidden;font-size:var(--font-size-16);font-weight:500;line-height:24px;color:var(--text-title);text-overflow:ellipsis;white-space:nowrap}
@@ -41,6 +41,10 @@
 .ld-auth-form .ld-select:disabled{opacity:1;color:var(--text-secondary)}
 .ld-select-menu[hidden]{display:none}
 .ld-select-item{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;height:36px;padding:0 8px;border:0;border-radius:8px;background:transparent;font:inherit;font-size:var(--font-size-14);color:var(--text);text-align:left;cursor:pointer}
+.ld-select-opt{display:inline-flex;align-items:center;gap:8px;min-width:0}
+.ld-select-opt>span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#ldAuthPlatformLogo{display:inline-flex}
+.ld-select .ld-plat-logo,.ld-select-item .ld-plat-logo{flex:none;color:inherit;transform:none!important;transition:none}
 .ld-select-item:hover{background:var(--hover)}
 .ld-select-item:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}
 .ld-guide-steps{margin:0;padding:12px 16px 12px 32px;border-radius:8px;background:var(--fill-1);font-size:var(--font-size-12);line-height:20px;color:var(--text-secondary)}

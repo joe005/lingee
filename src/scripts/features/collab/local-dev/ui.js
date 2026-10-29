@@ -1,4 +1,4 @@
-import { LD_STATUS_LABELS, ldEsc, ldIsDetecting, ldStatusTone } from './core.js';
+import { LD_STATUS_LABELS, ldEsc, ldHostPlatform, ldIsDetecting, ldStatusTone } from './core.js';
 
 /* 本地开发 · 跨界面共用的小片段：状态标签、只读代码仓库、初始化进度、空间操作按钮、图标。
    只返回 HTML 字符串，不读写 DOM、不绑定事件。 */
@@ -11,6 +11,26 @@ export var LD_ICONS = {
   check: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>',
   close: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
 };
+
+/* 平台标识：金蝶 GitLab / GitHub / Gitee / 其他 GitLab 各一个，账号卡片与平台下拉共用。
+   金蝶为简化蝶形示意，上线时换官方素材；均为自带底色的圆形图标，不随文字色变化。 */
+var LD_KD_GITLAB_HOST = 'git.kingdee.com';
+var LD_PLATFORM_LOGOS = {
+  KDGitLab:'<circle cx="12" cy="12" r="12" fill="#2a6df4"/><path fill="#fff" d="M12 11.2C10.6 7 7.4 5.6 6 6.6c-1.1.9-.2 3.6 1.9 4.9 1.3.8 2.9.9 4.1-.3Zm0 0c1.4-4.2 4.6-5.6 6-4.6 1.1.9.2 3.6-1.9 4.9-1.3.8-2.9.9-4.1-.3Z"/><path fill="#fff" fill-opacity=".8" d="M12 12.6c-1.3.2-3 .9-3.7 2.7-.6 1.7.5 3 1.7 2.5 1.2-.5 1.9-2.6 2-5.2Zm0 0c1.3.2 3 .9 3.7 2.7.6 1.7-.5 3-1.7 2.5-1.2-.5-1.9-2.6-2-5.2Z"/>',
+  GitHub:'<circle cx="12" cy="12" r="12" fill="#1f2328"/><path fill="#fff" transform="translate(3.6 3.6) scale(.7)" d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.56-.29-5.25-1.28-5.25-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.7 5.39-5.27 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5Z"/>',
+  Gitee:'<circle cx="12" cy="12" r="12" fill="#c71d23"/><path fill="#fff" transform="translate(-4.8 -4.8) scale(1.4)" d="M16.05 7.56v1.5a.3.3 0 0 1-.3.3h-4.6a1.5 1.5 0 0 0-1.5 1.5v4.6c0 .17.13.3.3.3h3.8a.3.3 0 0 0 .3-.3v-1.2a.3.3 0 0 0-.3-.3h-2.4a.3.3 0 0 1-.3-.3v-1.5a.3.3 0 0 1 .3-.3h4.2a.3.3 0 0 1 .3.3v3.9a2.1 2.1 0 0 1-2.1 2.1H8.7a.3.3 0 0 1-.3-.3v-6.6a3.3 3.3 0 0 1 3.3-3.3h4.05a.3.3 0 0 1 .3.3Z"/>',
+  GitLab:'<circle cx="12" cy="12" r="12" fill="#fff4e5"/><g transform="translate(3.6 3.6) scale(.7)"><path fill="#e24329" d="m12 21.4 3.7-11.3H8.3z"/><path fill="#fc6d26" d="m12 21.4-3.7-11.3H3.1z"/><path fill="#fca326" d="M3.1 10.1 2 13.5a.75.75 0 0 0 .27.84L12 21.4z"/><path fill="#e24329" d="M3.1 10.1h5.2L6.06 3.2a.38.38 0 0 0-.72 0z"/><path fill="#fc6d26" d="m12 21.4 3.7-11.3h5.2z"/><path fill="#fca326" d="m20.9 10.1 1.1 3.4a.75.75 0 0 1-.27.84L12 21.4z"/><path fill="#e24329" d="M20.9 10.1h-5.2l2.24-6.9a.38.38 0 0 1 .72 0z"/></g>',
+};
+/* 主机 → 平台下拉用的键：KDGitLab / GitHub / Gitee / GitLab（其他） */
+export function ldPlatformKey(host) {
+  if (host === LD_KD_GITLAB_HOST) return 'KDGitLab';
+  var platform = ldHostPlatform(host);
+  return platform === 'GitHub' || platform === 'Gitee' ? platform : 'GitLab';
+}
+export function ldPlatformLogo(key, size) {
+  var px = size || 40;
+  return '<svg class="ld-plat-logo" viewBox="0 0 24 24" width="' + px + '" height="' + px + '" aria-hidden="true">' + (LD_PLATFORM_LOGOS[key] || LD_PLATFORM_LOGOS.GitLab) + '</svg>';
+}
 
 export function ldStateTag(key, labels) {
   if (!key) return '<span class="ld-state is-muted">待检测</span>';

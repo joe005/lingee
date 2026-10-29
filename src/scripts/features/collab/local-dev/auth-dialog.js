@@ -1,5 +1,6 @@
 import { $ } from '../../../core/dom.js';
 import { toast } from '../../../core/toast.js';
+import { ldPlatformLogo } from './ui.js';
 import { ldEsc, ldHide, ldHostPlatform, ldRecordChecks, ldRefresh, ldSaveAuthEntry, ldShow, ldTokenPage, ldVisible } from './core.js';
 
 /* 本地开发 · 登录 / 添加 Git 账号弹窗（#ldAuthOverlay）。设置页、空间表单与任务对话共用。
@@ -53,6 +54,7 @@ export function ldOpenAuth(host, onSaved) {
 function renderAuthPlatform() {
   var editable = authCustom && authPlatform === 'GitLab';
   $('#ldAuthPlatformText').textContent = LD_PLATFORM_LABELS[authPlatform];
+  $('#ldAuthPlatformLogo').innerHTML = ldPlatformLogo(authPlatform, 20);
   var host = $('#ldAuthHost');
   host.readOnly = !editable;
   if (!editable) host.value = ldAuthHostValue() + ' · ' + ldAuthPlatformValue();
@@ -68,7 +70,7 @@ function toggleAuthPlatformMenu(open) {
   if (open) {
     menu.innerHTML = Object.keys(LD_PLATFORM_LABELS).map(function (key) {
       var on = key === authPlatform;
-      return '<button type="button" class="ld-select-item' + (on ? ' is-on' : '') + '" role="option" aria-selected="' + on + '" data-ld-auth-platform="' + key + '"><span>' + LD_PLATFORM_LABELS[key] + '</span>'
+      return '<button type="button" class="ld-select-item' + (on ? ' is-on' : '') + '" role="option" aria-selected="' + on + '" data-ld-auth-platform="' + key + '"><span class="ld-select-opt">' + ldPlatformLogo(key, 20) + '<span>' + LD_PLATFORM_LABELS[key] + '</span></span>'
         + (on ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"/></svg>' : '') + '</button>';
     }).join('');
   }
