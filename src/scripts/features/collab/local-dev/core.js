@@ -311,11 +311,14 @@ export function ldPickDir(info) { return LD_WORKSPACE_ROOT + '/' + info.name; }
    设置页打开时不检测，展示上次结果；点「检测」或登录、初始化成功后更新（只更新相关平台）。
    结果按登录人保存（真实客户端存本机配置目录，只有状态，不含凭据）。 */
 var LD_PUBLIC_HOSTS = ['github.com', 'gitee.com'];
-export var LD_ACCOUNT_LABELS = { available:'可用', expiring:'即将过期', login:'未登录', expired:'凭据失效', git:'Git 不可用' };
+export var LD_ACCOUNT_LABELS = { available:'可用', expiring:'即将过期', login:'未登录', expired:'凭据失效', offline:'无法连接', git:'Git 不可用' };
+/* 凭据失效按本地已知的到期日判断（正式实现以平台接口 401 为准）；失效以外，网络不通时连平台验证不了，记为无法连接 */
 export function ldAccountKey(host) {
   if (ldMine().gitMissing) return 'git';
   var auth = ldAuthFor(host);
-  return !auth ? 'login' : auth.expired || auth.source === 'ssh' ? 'expired' : 'available';
+  if (!auth) return 'login';
+  if (auth.expired || auth.source === 'ssh') return 'expired';
+  return ldMine().netDown ? 'offline' : 'available';
 }
 /* 只列空间用到的平台、已登录的平台，以及 GitHub、Gitee 公有平台 */
 export function ldSettingsHosts() {
@@ -343,6 +346,20 @@ export function ldRecordChecks(host) {
 /* 「检测」：演示里 0.9 秒后写入结果；真实客户端读取本机凭据并用 git ls-remote / 平台接口验证一次 */
 var detecting = false;
 export function ldIsDetecting() { return detecting; }
+/* 账号卡片菜单里的「检测」：只检测这个平台的账号，卡片上显示「检测中…」，完成后回调给出结果提示 */
+var detectingHosts = new Set();
+export function ldIsDetectingHost(host) { return detectingHosts.has(host); }
+export function ldDetectHost(host, done) {
+  if (detecting || detectingHosts.has(host)) return;
+  detectingHosts.add(host);
+  ldRefresh();
+  setTimeout(function () {
+    detectingHosts.delete(host);
+    ldRecordChecks(host);
+    ldRefresh();
+    if (done) done();
+  }, 900);
+}
 export function ldDetect() {
   if (detecting) return;
   detecting = true;

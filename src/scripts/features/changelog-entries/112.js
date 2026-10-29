@@ -1,0 +1,1 @@
+export default {"id":"112","date":"2026-10-29","iconBg":"var(--brand-fill)","iconColor":"var(--brand)","type":"功能","module":"本地开发环境","author":"wuhc2023","body":"功能·本地开发环境：Git 账号页改为不分组的卡片平铺，账号卡片显示可用、即将过期、凭据失效、无法连接状态，菜单新增单账号检测，本机凭据改为移除并加确认，金蝶 GitLab 换用官网 logo。"};
