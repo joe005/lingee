@@ -1,8 +1,10 @@
 import { $ } from '../../../core/dom.js';
+import { toast } from '../../../core/toast.js';
 import { tkProjectById } from '../../tasks-v2/data.js';
+import { ldJobOf } from './init-jobs.js';
 import { ldEsc, ldHide, ldMine, ldProjectStatus, ldShow, ldVisible } from './core.js';
 import { ldGitInstallHtml } from './git-install.js';
-import { ldCancelSpaceInit, ldNewSpaceForm, ldRunSpaceInit, ldSpaceFormChange, ldSpaceFormClick, ldSpaceFormHtml, ldSpaceFormTarget } from './space-form.js';
+import { ldBackgroundSpaceInit, ldCancelSpaceInit, ldNewSpaceForm, ldRunSpaceInit, ldSpaceFormChange, ldSpaceFormClick, ldSpaceFormHtml, ldSpaceFormTarget } from './space-form.js';
 import { LD_ICONS } from './ui.js';
 
 /* 本地开发 · 准备执行环境弹窗（#ldPrepOverlay）。
@@ -14,6 +16,7 @@ var taskTitle = '';
 var returnFocus = null;
 
 export function ldOpenPrepDialog(projectId, task, readyCallback) {
+  if (ldJobOf(projectId)) { toast('该空间正在后台初始化，完成后再开始执行', 'warning'); return; }
   returnFocus = document.activeElement;
   form = ldNewSpaceForm(projectId);
   onReady = readyCallback || null;
@@ -38,9 +41,11 @@ function render() {
     return;
   }
   var gitOk = !ldMine().gitMissing;
-  body.innerHTML = intro + (gitOk ? '' : ldGitInstallHtml('prep', form.projectId)) + ldSpaceFormHtml(form);
-  done.disabled = !gitOk || !status.authOk || !!form.pulling || !ldSpaceFormTarget(form);
-  done.textContent = form.pulling ? '正在初始化…' : status.ready ? '开始执行' : '完成并执行';
+  var running = !!form.pulling;
+  body.innerHTML = (running ? '' : intro + (gitOk ? '' : ldGitInstallHtml('prep', form.projectId))) + ldSpaceFormHtml(form);
+  done.disabled = !gitOk || !status.authOk || !ldSpaceFormTarget(form);
+  done.textContent = status.ready ? '开始执行' : '完成并执行';
+  [['#ldPrepCancel', running], ['#ldPrepDone', running], ['#ldPrepStop', !running], ['#ldPrepBg', !running]].forEach(function (row) { $(row[0]).hidden = row[1]; });
 }
 function close() {
   ldCancelSpaceInit(form);
@@ -51,10 +56,19 @@ function close() {
   returnFocus = null;
 }
 function submit() {
-  var callback = onReady;
-  if (ldProjectStatus(form.projectId).ready) { close(); if (callback) callback(); return; }
-  ldRunSpaceInit(form, { render:render, done:function () { close(); if (callback) callback(); } });
+  var current = form, callback = onReady;
+  if (ldProjectStatus(current.projectId).ready) { close(); if (callback) callback(); return; }
+  /* 后台初始化完成后同样继续执行任务 */
+  ldRunSpaceInit(current, { render:function () { if (form === current) render(); }, done:function () { if (form === current) close(); if (callback) callback(); } });
 }
+function detach() {
+  ldBackgroundSpaceInit(form);
+  form = null;
+  onReady = null;
+  ldHide('#ldPrepOverlay');
+  returnFocus = null;
+}
+function dismiss() { if (form?.pulling && form.pulling < 100) detach(); else close(); }
 
 export function initPrepDialog() {
   var overlay = $('#ldPrepOverlay');
@@ -62,7 +76,9 @@ export function initPrepDialog() {
   overlay.addEventListener('click', function (e) {
     var t = e.target;
     if (!(t instanceof Element) || !form) return;
-    if (t === overlay || t.closest('[data-ld-prep-close]')) { close(); return; }
+    if (t.closest('#ldPrepStop')) { ldCancelSpaceInit(form); render(); return; }
+    if (t.closest('#ldPrepBg')) { detach(); return; }
+    if (t === overlay || t.closest('[data-ld-prep-close]')) { dismiss(); return; }
     if (t.closest('#ldPrepDone')) { submit(); return; }
     if (ldSpaceFormClick(form, t)) render();
   });
@@ -71,7 +87,7 @@ export function initPrepDialog() {
     if (e.key !== 'Escape' || !ldVisible('#ldPrepOverlay') || ldVisible('#ldAuthOverlay')) return;
     e.stopPropagation();
     if (form?.menu) { form.menu = false; render(); return; }
-    close();
+    dismiss();
   }, true);
   /* 去对话安装 Git 时关闭弹窗，任务保持未开始；装好后重新开始任务即可 */
   document.addEventListener('lingee:git-install-chat', function () { if (ldVisible('#ldPrepOverlay')) close(); });

@@ -22,8 +22,8 @@ function renderShell() {
   $('#ldGitPanel').hidden = tab !== 'git';
   var checks = ldMine().checks || {}, detecting = ldIsDetecting();
   $('#ldSettingsTools').innerHTML = (checks.checkedAt && !detecting ? '<span class="ld-checked-at">上次检测：' + ldEsc(checks.checkedAt) + '</span>' : '')
-    + (tab === 'git' ? '<button type="button" class="ld-set-btn" data-ld-auth-add>' + LD_ICONS.plus + '添加</button>' : '')
-    + '<button type="button" class="ld-set-btn ld-set-btn--primary" data-ld-detect' + (detecting ? ' disabled aria-busy="true"' : '') + '>' + LD_ICONS.refresh + (detecting ? '检测中…' : '检测') + '</button>';
+    + '<button type="button" class="ld-set-btn' + (tab === 'git' ? '' : ' ld-set-btn--primary') + '" data-ld-detect' + (detecting ? ' disabled aria-busy="true"' : '') + '>' + LD_ICONS.refresh + (detecting ? '检测中…' : '检测') + '</button>'
+    + (tab === 'git' ? '<button type="button" class="ld-set-btn ld-set-btn--primary" data-ld-auth-add>' + LD_ICONS.plus + '添加</button>' : '');
   var mine = ldMine();
   $('#ldDemoLinks').innerHTML = '<button type="button" class="ld-link" data-ld-reset>演示：清空本机配置</button>'
     + '<button type="button" class="ld-link" data-ld-toggle-git>' + (mine.gitMissing ? '演示：恢复已安装 Git' : '演示：模拟未安装 Git') + '</button>'

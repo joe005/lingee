@@ -1,6 +1,7 @@
 import { toast } from '../../../core/toast.js';
 import { tkProjectById } from '../../tasks-v2/data.js';
 import { ldAuthUser, ldBindDir, ldCheckDir, ldDefaultPath, ldEsc, ldMarkInitialized, ldMine, ldNetCheck, ldPickDir, ldProjectStatus, ldRecordChecks, ldRefresh } from './core.js';
+import { ldJobOf, ldJobRemove, ldJobSet } from './init-jobs.js';
 import { LD_ICONS, ldInitProgressHtml, ldReadonlyRepoHtml } from './ui.js';
 
 /* 本地开发 · 空间表单：代码仓库（只读）、Git 账号、空间目录三段，以及初始化执行。
@@ -49,8 +50,9 @@ export function ldSpaceFormHtml(form) {
   var status = ldProjectStatus(form.projectId);
   var info = status.info;
   if (!info) return '';
-  return (form.pulling ? ldInitProgressHtml(info, form.pulling) : '')
-    + '<div class="ld-form-field"><span class="ld-form-label">代码仓库</span>' + ldReadonlyRepoHtml(info) + '</div>'
+  /* 初始化进行中只显示进度，表单收起（UE） */
+  if (form.pulling) return ldInitProgressHtml(info, form.pulling, ldSpaceFormTarget(form));
+  return '<div class="ld-form-field"><span class="ld-form-label">代码仓库</span>' + ldReadonlyRepoHtml(info) + '</div>'
     + accountHtml(form, status)
     + directoryHtml(form)
     + (form.error ? '<div class="ld-warn" role="alert"><span>' + ldEsc(form.error) + '</span>' + (/找不到|不存在/.test(form.error) ? '<button type="button" class="ld-btn" data-ld-auth-open="' + ldEsc(info.host) + '">更换账号</button>' : '') + '</div>' : '')
@@ -77,7 +79,8 @@ export function ldSpaceFormChange(form, target) {
 }
 
 /* 初始化：先校验目录与连通性（失败时原目录和原绑定不变），再按进度获取基准分支代码并写入本机绑定。
-   hooks.render 每步重绘；hooks.done(first, path) 成功后调用。返回是否已开始。 */
+   hooks.render 每步重绘；hooks.done(first, path) 成功后调用，弹窗关了（后台初始化）也会调用。返回是否已开始。
+   进度记在 init-jobs.js，导航气泡据此展示后台任务。 */
 export function ldRunSpaceInit(form, hooks) {
   var status = ldProjectStatus(form.projectId);
   if (!status.authOk || form.pulling) return false;
@@ -89,29 +92,41 @@ export function ldRunSpaceInit(form, hooks) {
   form.error = net ? net.reason : '';
   if (net) { ldRecordChecks(status.info.host); ldRefresh(); hooks.render(); return false; }
   var projectId = form.projectId, mode = form.mode, first = !status.binding;
+  var name = tkProjectById(projectId)?.name || '';
   form.menu = false;
   form.pulling = 8;
+  ldJobSet(projectId, { name:name, branch:status.info.baseBranch, pulling:8, background:false });
   hooks.render();
   var run = ++form.run;
   var timer = setInterval(function () {
     if (run !== form.run) { clearInterval(timer); return; }
     form.pulling = Math.min(100, form.pulling + 8);
+    ldJobSet(projectId, { pulling:form.pulling });
     if (form.pulling < 100) { hooks.render(); return; }
     clearInterval(timer);
     ldBindDir(projectId, path, mode);
     var after = ldProjectStatus(projectId);
-    if (!after.ready) { form.pulling = 0; form.error = after.reason; hooks.render(); return; }
+    if (!after.ready) { form.pulling = 0; form.error = after.reason; ldJobRemove(projectId); hooks.render(); return; }
     ldMarkInitialized(projectId);
     ldRecordChecks(after.info.host);
     ldRefresh();
     hooks.render();
     setTimeout(function () {
       if (run !== form.run) return;
-      toast(first ? '「' + ldEsc(tkProjectById(projectId)?.name || '') + '」已就绪，已获取 ' + ldEsc(status.info.baseBranch) + ' 最新代码，目录：' + ldEsc(path) : '空间目录已更改为 ' + ldEsc(path), 'success');
+      ldJobRemove(projectId);
+      toast(first ? '「' + ldEsc(name) + '」已就绪，已获取 ' + ldEsc(status.info.baseBranch) + ' 最新代码，目录：' + ldEsc(path) : '空间目录已更改为 ' + ldEsc(path), 'success');
       hooks.done(first, path);
     }, 600);
   }, 900);
   return true;
 }
-/* 关闭弹窗时作废进行中的初始化 */
-export function ldCancelSpaceInit(form) { if (form) form.run++; }
+/* 「停止」：作废进行中的初始化，回到表单（目录和绑定保持原样） */
+export function ldCancelSpaceInit(form) {
+  if (!form) return;
+  form.run++;
+  form.pulling = 0;
+  ldJobRemove(form.projectId);
+}
+/* 「后台初始化」：弹窗关闭后继续跑，进度显示在导航气泡里 */
+export function ldBackgroundSpaceInit(form) { if (form?.pulling) ldJobSet(form.projectId, { background:true }); }
+export function ldSpaceInitRunning(projectId) { return !!ldJobOf(projectId); }

@@ -402,3 +402,10 @@ export function ldSetGitMissing(missing) {
   if (!missing) mine.gitInstall = { status:'idle' };
   ldSaveMine(mine);
 }
+/* 删除本机保存的某个平台账号（只删本机凭据记录，不动空间目录）；之后这个平台上的空间显示未登录 */
+export function ldRemoveAuth(host) {
+  var mine = ldMine();
+  delete mine.auths[host];
+  ldSaveMine(mine);
+  ldRecordChecks(host);
+}

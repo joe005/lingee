@@ -8,3 +8,14 @@
 /* 「安装 Git」对话（composer/git-install-chat.js）：预置提示词保留换行 */
 #view-chat .message.user.gi-user .message-content p{white-space:pre-wrap;text-align:left}
 #view-chat .ld-tool.is-open>.ld-tool-sum{cursor:default}
+
+/* UE：浅橙底提示条，左侧图标，右侧蓝色文字链接（设置页顶部）；准备执行环境内沿用同一结构 */
+.ld-git-banner{background:var(--warning-bg)}
+.ld-git-banner.is-busy{background:var(--brand-fill)}
+.ld-git-banner{padding:10px 16px;border-radius:12px;font-size:var(--font-size-14)}
+.ld-git-banner-icon{flex:none;color:var(--warning)}
+.ld-git-banner-links{display:flex;flex:none;align-items:center;gap:16px}
+.ld-git-link{padding:0;border:0;background:none;font:inherit;font-size:var(--font-size-14);color:var(--brand);white-space:nowrap;cursor:pointer}
+.ld-git-link:hover{text-decoration:underline}
+.ld-git-link:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px;border-radius:4px}
+@media(max-width:600px){.ld-git-banner-links{width:100%}}

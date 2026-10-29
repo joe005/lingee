@@ -52,3 +52,29 @@
 .ld-info-banner{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;background:var(--brand-fill);font-size:var(--font-size-14);line-height:22px;color:var(--text)}
 .ld-info-banner svg{flex:none;color:var(--brand)}
 @media(prefers-reduced-motion:reduce){.ld-select,.ld-select svg,.ld-dir-card{transition:none}}
+
+/* 初始化进度（UE）：标题、进度条、步骤表、代码仓库与空间目录；底部「停止 / 后台初始化」 */
+.sync-modal__btn[hidden]{display:none}
+.sync-modal__btn--outline{border:1px solid var(--border-hover);background:var(--bg);color:var(--text)}
+.sync-modal__btn--outline:hover:not(:disabled){background:var(--hover)}
+.ld-prog{display:flex;flex-direction:column;gap:12px;min-width:0}
+.ld-prog-title{font-size:var(--font-size-14);font-weight:500;line-height:22px;color:var(--text)}
+.ld-prog-sub{margin:0;font-size:var(--font-size-12);line-height:20px;color:var(--text-secondary)}
+.ld-prog-sub code{font-family:inherit;color:var(--text)}
+.ld-prog-bar{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.ld-prog-bar .ld-progress{width:100%;margin-top:0}
+.ld-prog-pct{font-size:var(--font-size-12);line-height:18px;font-variant-numeric:tabular-nums;color:var(--text-secondary)}
+.ld-prog-table-wrap{overflow:hidden;border:1px solid var(--border);border-radius:8px}
+.ld-prog-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:var(--font-size-12);line-height:20px}
+.ld-prog-table th{height:36px;padding:0 12px;background:var(--fill-1);font-weight:500;text-align:left;color:var(--text-secondary)}
+.ld-prog-table td{height:40px;padding:0 12px;border-top:1px solid var(--divider);color:var(--text)}
+.ld-prog-table th:first-child,.ld-prog-table td:first-child{width:48px}
+.ld-prog-table th:last-child,.ld-prog-table td:last-child{width:128px}
+.ld-prog-table tr.is-wait td{color:var(--text-secondary)}
+.ld-prog-branch{margin-left:8px;color:var(--text-secondary)}
+.ld-prog-result{display:inline-flex;align-items:center;gap:6px}
+.ld-prog-table tr.is-done .ld-prog-result svg{color:var(--success)}
+.ld-prog-table tr.is-wait .ld-prog-result svg{color:var(--text-secondary)}
+.ld-prog-meta{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px 16px;margin:0;font-size:var(--font-size-12);line-height:20px}
+.ld-prog-meta dt{color:var(--text-secondary)}
+.ld-prog-meta dd{margin:0;overflow:hidden;color:var(--text);text-overflow:ellipsis;white-space:nowrap}

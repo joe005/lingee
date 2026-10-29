@@ -24,19 +24,25 @@ export function ldReadonlyRepoHtml(info) {
     '<span class="ld-repo-readonly-branch" aria-label="基准分支：' + ldEsc(info.baseBranch) + '">' + LD_ICONS.branch + '<code>' + ldEsc(info.baseBranch) + '</code></span></div>';
 }
 
-/* 初始化进度：pulling 为 0–100 */
-export function ldInitProgressHtml(info, pulling) {
-  var stages = ['校验仓库访问权限', '获取基准分支最新代码', '准备本机代码目录', '校验分支与推送权限'];
+/* 初始化进度（UE）：标题 + 进度条 + 步骤表（执行内容 / 执行结果）+ 代码仓库与空间目录。pulling 为 0–100 */
+var LD_INIT_STEPS = [['校验仓库访问权限', '已通过'], ['获取基准分支最新代码', '已完成'], ['准备本机代码目录', '已完成'], ['校验分支与推送权限', '已通过']];
+var LD_RESULT_ICONS = {
+  done:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>',
+  wait:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+};
+export function ldInitProgressHtml(info, pulling, path) {
   var current = pulling === 0 ? -1 : pulling < 24 ? 0 : pulling < 56 ? 1 : pulling < 80 ? 2 : pulling < 100 ? 3 : 4;
-  var label = current < 0 ? '等待开始' : current === 4 ? '准备完成' : stages[current];
-  return '<section class="ld-init-progress" aria-label="初始化进度"><div class="ld-init-progress-head"><strong role="status">' + (pulling === 100 ? '初始化完成' : pulling ? '正在初始化，请稍候' : '等待初始化') + '</strong><span>' + pulling + '%</span></div>' +
-    (pulling && pulling < 100 ? '<p class="ld-hint">正在从 <code>origin/' + ldEsc(info.baseBranch) + '</code> 获取最新代码。大型仓库可能需要较长时间，请保持网络连接。</p>' : '') +
-    '<p class="ld-hint">' + label + '</p>' +
-    '<div class="ld-progress" role="progressbar" aria-label="初始化基准分支 ' + ldEsc(info.baseBranch) + '" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pulling + '"><span style="width:' + pulling + '%"></span></div>' +
-    '<ol class="ld-init-stages">' + stages.map(function (stage, index) {
-      var done = current > index;
-      return '<li class="' + (done ? 'is-done' : current === index ? 'is-current' : '') + '"><span aria-hidden="true">' + (done ? '✓' : index + 1) + '</span>' + stage + (index === 1 ? ' · ' + ldEsc(info.baseBranch) : '') + '</li>';
-    }).join('') + '</ol></section>';
+  var rows = LD_INIT_STEPS.map(function (step, index) {
+    var state = current > index ? 'done' : current === index ? 'run' : 'wait';
+    var icon = state === 'run' ? '<span class="ld-spin" aria-hidden="true"></span>' : LD_RESULT_ICONS[state];
+    return '<tr class="is-' + state + '"><td>' + (index + 1) + '</td><td>' + step[0] + (index === 1 ? '<span class="ld-prog-branch">' + ldEsc(info.baseBranch) + '</span>' : '') + '</td>'
+      + '<td><span class="ld-prog-result">' + icon + (state === 'done' ? step[1] : state === 'run' ? '进行中' : '等待中') + '</span></td></tr>';
+  }).join('');
+  return '<section class="ld-prog" aria-label="初始化进度"><strong class="ld-prog-title" role="status">' + (pulling === 100 ? '初始化完成' : '正在初始化，请稍等') + '</strong>'
+    + '<p class="ld-prog-sub">正在从 <code>origin/' + ldEsc(info.baseBranch) + '</code> 获取最新代码</p>'
+    + '<div class="ld-prog-bar"><div class="ld-progress" role="progressbar" aria-label="初始化基准分支 ' + ldEsc(info.baseBranch) + '" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pulling + '"><span style="width:' + pulling + '%"></span></div><span class="ld-prog-pct">' + pulling + '%</span></div>'
+    + '<div class="ld-prog-table-wrap"><table class="ld-prog-table"><thead><tr><th>#</th><th>执行内容</th><th>执行结果</th></tr></thead><tbody>' + rows + '</tbody></table></div>'
+    + '<dl class="ld-prog-meta"><dt>代码仓库</dt><dd title="' + ldEsc(info.repo) + '">' + ldEsc(info.repo) + '</dd><dt>空间目录</dt><dd title="' + ldEsc(path || '') + '">' + ldEsc(path || '') + '</dd></dl></section>';
 }
 
 /* 每个空间的操作：地址问题要找管理员改，只给文字；连不上可重新检测，找不到仓库可更换账号。

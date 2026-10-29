@@ -1,0 +1,46 @@
+/* 设置 ›「Git 账号」与登录 / 添加账号弹窗（features/collab/local-dev/git-accounts-page.js、auth-dialog.js）。
+   按平台分组，每组两列白色账号卡片；登录弹窗上下排版：平台下拉、Git 账号、访问令牌、常显获取步骤。 */
+#cv-local .ld-acct-group{display:flex;flex-direction:column;gap:12px}
+#cv-local .ld-acct-group h3{margin:4px 0 0;font-size:var(--font-size-14);font-weight:500;line-height:22px;color:var(--text)}
+#cv-local .ld-acct-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+#cv-local .ld-acct-card{display:flex;align-items:center;gap:12px;box-sizing:border-box;min-height:80px;padding:16px;border-radius:20px;background:var(--bg);box-shadow:var(--card-shadow)}
+#cv-local .ld-acct-avatar{display:inline-grid;flex:none;place-items:center;width:40px;height:40px;border-radius:50%;color:var(--text-title)}
+#cv-local .ld-acct-avatar.is-gitlab{background:var(--warning-bg)}
+#cv-local .ld-acct-avatar.is-gitee{color:var(--danger)}
+#cv-local .ld-acct-avatar.is-empty{background:var(--tag-bg);color:var(--text-secondary)}
+#cv-local .ld-acct-main{display:flex;flex:1;flex-direction:column;gap:4px;min-width:0}
+#cv-local .ld-acct-title{display:flex;align-items:center;gap:8px;min-width:0}
+#cv-local .ld-acct-title strong{min-width:0;overflow:hidden;font-size:var(--font-size-16);font-weight:500;line-height:24px;color:var(--text-title);text-overflow:ellipsis;white-space:nowrap}
+#cv-local .ld-acct-title .ld-state{display:inline-flex;align-items:center;height:20px;padding:0 8px;border-radius:999px;line-height:20px}
+#cv-local .ld-acct-desc{overflow:hidden;font-size:var(--font-size-12);line-height:20px;color:var(--text-secondary);text-overflow:ellipsis;white-space:nowrap}
+#cv-local .ld-acct-act{display:flex;flex:none;align-items:center}
+/* 「···」悬停或展开时出现；未登录的「登录」为浅色描边按钮 */
+#cv-local .ld-acct-more{position:relative}
+#cv-local .ld-acct-more-btn{display:inline-grid;place-items:center;width:28px;height:28px;border:0;border-radius:8px;background:var(--hover);color:var(--text-secondary);cursor:pointer;opacity:0;transition:opacity .15s,background .15s}
+#cv-local .ld-acct-card:hover .ld-acct-more-btn,#cv-local .ld-acct-card.is-menu-open .ld-acct-more-btn,#cv-local .ld-acct-more-btn:focus-visible{opacity:1}
+#cv-local .ld-acct-more-btn:hover{background:var(--active)}
+#cv-local .ld-acct-more-btn:focus-visible,#cv-local .ld-acct-login:focus-visible,#cv-local .ld-acct-menu button:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+#cv-local .ld-acct-menu{position:absolute;top:calc(100% + 4px);right:0;z-index:5;min-width:112px;padding:4px;border-radius:12px;background:var(--bg);box-shadow:var(--menu-shadow)}
+#cv-local .ld-acct-menu button{display:block;width:100%;height:32px;padding:0 12px;border:0;border-radius:8px;background:transparent;font:inherit;font-size:var(--font-size-14);color:var(--text);text-align:left;cursor:pointer}
+#cv-local .ld-acct-menu button:hover{background:var(--hover)}
+#cv-local .ld-acct-menu .is-danger{color:var(--danger)}
+#cv-local .ld-acct-login{height:28px;padding:0 12px;border:1px solid var(--border-focus);border-radius:8px;background:var(--bg);font:inherit;font-size:var(--font-size-12);color:var(--brand);cursor:pointer;transition:background .15s}
+#cv-local .ld-acct-login:hover{background:var(--brand-fill)}
+@media(max-width:900px){#cv-local .ld-acct-grid{grid-template-columns:minmax(0,1fr)}}
+@media(hover:none){#cv-local .ld-acct-more-btn{opacity:1}}
+@media(prefers-reduced-motion:reduce){#cv-local .ld-acct-more-btn,#cv-local .ld-acct-login{transition:none}}
+
+/* 登录 / 添加账号弹窗 */
+.cv-scope .ld-modal--auth{width:520px}
+.ld-auth-form{display:flex;flex-direction:column;gap:20px}
+.ld-auth-form .ld-label-row{margin-bottom:0}
+.ld-auth-form .ld-input{width:100%}
+.ld-auth-form .ld-input[readonly]{border-color:transparent;background:var(--fill-1);color:var(--text-secondary);cursor:default}
+.ld-auth-form .ld-input:disabled{opacity:1;color:var(--text-secondary)}
+.ld-auth-form .ld-select{height:var(--control-h-sm)}
+.ld-auth-form .ld-select:disabled{opacity:1;color:var(--text-secondary)}
+.ld-select-menu[hidden]{display:none}
+.ld-select-item{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;height:36px;padding:0 8px;border:0;border-radius:8px;background:transparent;font:inherit;font-size:var(--font-size-14);color:var(--text);text-align:left;cursor:pointer}
+.ld-select-item:hover{background:var(--hover)}
+.ld-select-item:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}
+.ld-guide-steps{margin:0;padding:12px 16px 12px 32px;border-radius:8px;background:var(--fill-1);font-size:var(--font-size-12);line-height:20px;color:var(--text-secondary)}

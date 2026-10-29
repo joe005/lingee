@@ -4,6 +4,7 @@ import { ldRefresh } from './core.js';
 import { initAuthDialog } from './auth-dialog.js';
 import { initGitAccountsPage } from './git-accounts-page.js';
 import { initGitInstall } from './git-install.js';
+import { initJobsBubble } from './jobs-bubble.js';
 import { initNavStatus } from './nav-status.js';
 import { initPrepDialog } from './prep-dialog.js';
 import { initRepoNewDialog } from './repo-new-dialog.js';
@@ -21,6 +22,7 @@ export function initLocalDev() {
   initRepoNewDialog();
   initGitInstall();
   initNavStatus();
+  initJobsBubble();
   initSpacesPage();
   initGitAccountsPage();
   initSettingsPage();

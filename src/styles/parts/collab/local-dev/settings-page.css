@@ -1,18 +1,19 @@
 /* 协作开发「设置」：顶部分段页签 + 检测，「我的空间」空间卡片与「Git 账号」账号卡片（features/collab/local-dev/settings-page.js 等）。
    灰画布上的白色卡片，与任务、智能体页同宽。 */
-#view-collab #cv-local>.scroll{display:flex;flex-direction:column;min-height:0;overflow-y:auto;background:transparent}
-#cv-local .ld-settings{display:flex;flex-direction:column;gap:16px;box-sizing:border-box;width:calc(100% - 32px);max-width:1160px;margin:0 auto;padding:8px 0 24px}
+/* 与智能体、智能体团队页、顶部导航同一内容宽度（calc(100% - 32px)、最大 1160px、水平居中），顶部 8px，第二排分段页签 40px 高、下方间距 20px（见 11-shared-navigation.css） */
+#view-collab #cv-local>.scroll{display:flex;flex-direction:column;box-sizing:border-box;min-height:0;width:calc(100% - 32px);max-width:1160px;margin-left:auto;margin-right:auto;padding:8px 0 20px;overflow-y:auto;background:transparent}
+#cv-local .ld-settings{display:flex;flex-direction:column;gap:16px;box-sizing:border-box;width:100%;min-width:0;margin:0;padding:0}
 
 /* 顶部：左分段页签，右上次检测与操作 */
-#cv-local .ld-settings-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
-#cv-local .ld-settings-tabs{display:inline-flex;gap:4px;padding:4px;border-radius:999px;background:var(--segment-track)}
-#cv-local .ld-settings-tab{height:var(--control-h-sm);padding:0 16px;border:0;border-radius:999px;background:transparent;font:inherit;font-size:var(--font-size-14);font-weight:400;color:var(--text-secondary);white-space:nowrap;cursor:pointer;transition:background .15s,color .15s,box-shadow .15s}
-#cv-local .ld-settings-tab:hover{color:var(--text)}
-#cv-local .ld-settings-tab.is-on{background:var(--bg);box-shadow:var(--pill-shadow);font-weight:600;color:var(--text)}
+#cv-local .ld-settings-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;min-height:40px;margin-bottom:4px}
+#cv-local .ld-settings-tabs{display:inline-flex;box-sizing:border-box;height:40px;padding:4px;gap:4px;border-radius:999px;background:var(--segment-track)}
+#cv-local .ld-settings-tab{height:32px;padding:0 16px;border:0;border-radius:999px;background:transparent;font:inherit;font-size:var(--font-size-14);font-weight:400;line-height:22px;color:var(--text-muted);white-space:nowrap;cursor:pointer;transition:background .15s,color .15s}
+#cv-local .ld-settings-tab:hover:not(.is-on){background:var(--hover);color:var(--text)}
+#cv-local .ld-settings-tab.is-on{background:var(--bg);font-weight:500;color:var(--text-title)}
 #cv-local .ld-settings-tab:focus-visible,#cv-local .ld-settings-panel:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 #cv-local .ld-settings-tools{display:flex;align-items:center;gap:12px}
 #cv-local .ld-settings-tools .ld-checked-at{font-size:var(--font-size-12);color:var(--text-secondary)}
-#cv-local .ld-settings-tools .ld-set-btn{height:var(--control-h-sm);min-width:0;padding:0 12px;border-radius:8px;gap:4px}
+#cv-local .ld-settings-tools .ld-set-btn{height:32px;min-width:0;padding:0 12px;border-radius:8px;gap:4px;font-weight:400}
 #cv-local .ld-settings-panel{display:flex;flex-direction:column;gap:12px;min-width:0}
 #cv-local .ld-settings-panel[hidden]{display:none}
 #cv-local .ld-demo-links{display:flex;flex-wrap:wrap;gap:16px;padding:0 4px}
@@ -21,13 +22,13 @@
 
 /* 我的空间：每个空间一张卡片 —— 名称 + 状态 / 仓库地址 | GIT 账号 | 空间目录 | 操作 */
 #cv-local .ld-space-list{display:flex;flex-direction:column;gap:12px}
-#cv-local .ld-space-card,#cv-local .ld-git-card{display:grid;grid-template-columns:minmax(200px,1.6fr) minmax(96px,.6fr) minmax(160px,1.4fr) auto;align-items:center;gap:24px;box-sizing:border-box;min-height:72px;padding:16px 16px 16px 16px;border-radius:12px;background:var(--bg);box-shadow:var(--card-shadow)}
-#cv-local .ld-space-main,#cv-local .ld-git-card-main{display:flex;flex-direction:column;gap:4px;min-width:0}
+#cv-local .ld-space-card{display:grid;grid-template-columns:minmax(200px,1.6fr) minmax(96px,.6fr) minmax(160px,1.4fr) auto;align-items:center;gap:24px;box-sizing:border-box;min-height:72px;padding:16px 16px 16px 16px;border-radius:12px;background:var(--bg);box-shadow:var(--card-shadow)}
+#cv-local .ld-space-main{display:flex;flex-direction:column;gap:4px;min-width:0}
 #cv-local .ld-space-title{display:flex;align-items:center;gap:8px;min-width:0}
 #cv-local .ld-space-title strong{min-width:0;overflow:hidden;font-size:var(--font-size-14);font-weight:500;line-height:22px;color:var(--text-title);text-overflow:ellipsis;white-space:nowrap}
 #cv-local .ld-space-title .ld-state{display:inline-flex;align-items:center;height:20px;padding:0 6px;border-radius:4px;line-height:20px}
 #cv-local .ld-space-title .ld-state.is-muted{padding:0 6px;background:var(--tag-bg);font-weight:500}
-#cv-local .ld-space-repo,#cv-local .ld-space-problem,#cv-local .ld-git-card-detail{overflow:hidden;font-size:var(--font-size-12);line-height:20px;color:var(--text-secondary);text-overflow:ellipsis;white-space:nowrap}
+#cv-local .ld-space-repo,#cv-local .ld-space-problem{overflow:hidden;font-size:var(--font-size-12);line-height:20px;color:var(--text-secondary);text-overflow:ellipsis;white-space:nowrap}
 #cv-local .ld-space-problem{color:var(--danger)}
 #cv-local .ld-space-field{display:flex;flex-direction:column;gap:4px;min-width:0}
 #cv-local .ld-space-label{font-size:var(--font-size-12);line-height:20px;color:var(--text-secondary)}
@@ -42,14 +43,9 @@
 #cv-local .ld-space-btn:disabled{opacity:.5;cursor:not-allowed}
 #cv-local .ld-space-btn:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 
-/* Git 账号：两列账号卡片 */
-#cv-local .ld-git-hint{margin:0;font-size:var(--font-size-12);line-height:20px;color:var(--text-secondary)}
-#cv-local .ld-git-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-#cv-local .ld-git-card{grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:16px}
 @media(max-width:900px){
   #cv-local .ld-space-card{grid-template-columns:minmax(0,1fr) auto;gap:8px 16px}
   #cv-local .ld-space-main{grid-column:1/-1}
   #cv-local .ld-space-field--dir:empty{display:none}
-  #cv-local .ld-git-grid{grid-template-columns:minmax(0,1fr)}
 }
 @media(prefers-reduced-motion:reduce){#cv-local .ld-settings-tab,#cv-local .ld-space-btn{transition:none}}

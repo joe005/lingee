@@ -1,0 +1,15 @@
+/* 后台初始化：顶部「空间初始化中」与悬停进度气泡（features/collab/local-dev/jobs-bubble.js） */
+#view-collab #cvTabNav .ld-job-status{display:inline-flex;align-items:center;gap:6px;height:var(--control-h-sm);margin-left:auto;padding:0 12px;border:0;border-radius:999px;background:var(--brand-fill);font:inherit;font-size:var(--font-size-14);font-weight:500;color:var(--brand);white-space:nowrap;cursor:default}
+#view-collab #cvTabNav .ld-job-status[hidden]{display:none}
+#view-collab #cvTabNav .ld-job-status:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+#view-collab #cvTabNav .ld-job-status:not([hidden])+.ld-nav-status{margin-left:8px}
+.ld-job-bubble{position:fixed;z-index:150;box-sizing:border-box;width:340px;max-width:calc(100vw - 32px);padding:12px;border-radius:12px;background:var(--bg);box-shadow:var(--menu-shadow)}
+.ld-job-bubble[hidden]{display:none}
+.ld-job-head{padding:0 4px 8px;border-bottom:1px solid var(--divider);font-size:var(--font-size-14);font-weight:600;color:var(--text)}
+.ld-job-list{margin:4px 0 0;padding:0;overflow-y:auto;list-style:none}
+.ld-job-list li{display:flex;flex-direction:column;gap:6px;box-sizing:border-box;min-height:62px;padding:8px 4px}
+.ld-job-row{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:var(--font-size-14);line-height:22px;color:var(--text)}
+.ld-job-row strong{min-width:0;overflow:hidden;font-weight:500;text-overflow:ellipsis;white-space:nowrap}
+.ld-job-row span{flex:none;font-size:var(--font-size-12);font-variant-numeric:tabular-nums;color:var(--text-secondary)}
+.ld-job-list .ld-progress{height:4px;margin-top:0}
+.ld-job-list small{font-size:var(--font-size-12);line-height:18px;color:var(--text-secondary)}

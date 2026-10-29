@@ -12,17 +12,20 @@ var LD_GIT_DOWNLOAD = /Windows/i.test(navigator.userAgent) ? 'https://git-scm.co
 export function ldGitInstallHtml(where, projectId) {
   var attr = 'data-ld-git-install="' + ldEsc(projectId || '') + '"';
   var state = ldGitInstallState();
-  var view = '<button type="button" class="ld-btn" data-ld-git-install-view>查看对话</button>';
+  var link = function (data, text) { return '<button type="button" class="ld-git-link" ' + data + '>' + text + '</button>'; };
+  var view = link('data-ld-git-install-view', '查看对话');
   var text, actions;
   if (state.status === 'running') { text = '正在新对话中安装 Git，完成后会自动检测。'; actions = view; }
   else if (state.status === 'waiting') { text = '安装需要你在对话中确认（如输入管理员密码、同意系统安装弹窗）。'; actions = view; }
   else if (state.status === 'failed') {
     text = 'Git 安装未完成：' + ldEsc(state.reason || '安装过程被中断') + '。可在对话中继续，或手动下载安装后点「检测」。';
-    actions = view + '<button type="button" class="ld-btn" data-ld-git-download>手动下载</button><button type="button" class="ld-btn ld-btn--primary" ' + attr + '>重试</button>';
-  } else { text = '本机没有安装 Git，点「安装 Git」由智能体帮你完成安装。'; actions = '<button type="button" class="ld-btn ld-btn--primary" ' + attr + '>安装 Git</button>'; }
+    actions = view + link('data-ld-git-download', '手动下载') + link(attr, '重试');
+  } else { text = '本机没有安装 Git，安装后即可使用代码仓库。'; actions = link(attr, '安装Git'); }
   var busy = state.status === 'running' || state.status === 'waiting';
-  return '<div class="ld-git-banner ld-git-banner--' + where + (busy ? ' is-busy' : '') + '" role="status">' + (busy ? '<span class="ld-spin" aria-hidden="true"></span>' : '')
-    + '<span class="ld-git-banner-text">' + text + '</span><span class="ld-row-actions">' + actions + '</span></div>';
+  var icon = busy ? '<span class="ld-spin" aria-hidden="true"></span>'
+    : '<svg class="ld-git-banner-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5"/><path d="M12 16.5h.01"/></svg>';
+  return '<div class="ld-git-banner ld-git-banner--' + where + (busy ? ' is-busy' : '') + '" role="status">' + icon
+    + '<span class="ld-git-banner-text">' + text + '</span><span class="ld-git-banner-links">' + actions + '</span></div>';
 }
 
 export function ldStartGitInstall(projectId) {

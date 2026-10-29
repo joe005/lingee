@@ -10,7 +10,9 @@
     </div>
     <div class="sync-modal__body ld-space-form" id="ldPrepBody"></div>
     <div class="sync-modal__footer">
-      <button type="button" class="sync-modal__btn sync-modal__btn--ghost" data-ld-prep-close>取消</button>
+      <button type="button" class="sync-modal__btn sync-modal__btn--ghost" id="ldPrepStop" hidden>停止</button>
+      <button type="button" class="sync-modal__btn sync-modal__btn--outline" id="ldPrepBg" hidden>后台初始化</button>
+      <button type="button" class="sync-modal__btn sync-modal__btn--ghost" id="ldPrepCancel" data-ld-prep-close>取消</button>
       <button type="button" class="sync-modal__btn sync-modal__btn--primary" id="ldPrepDone" disabled>完成并执行</button>
     </div>
   </div>

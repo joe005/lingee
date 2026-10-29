@@ -28,4 +28,6 @@
 @import './collab/local-dev/settings-page.css';
 @import './collab/local-dev/space-dialog.css';
 @import './collab/local-dev/git-install.css';
+@import './collab/local-dev/git-accounts.css';
+@import './collab/local-dev/jobs.css';
 @import './collab/loading.css';
