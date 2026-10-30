@@ -43,14 +43,13 @@
 #view-skill-center .sc-tags{display:flex;flex-wrap:nowrap;gap:4px;max-height:20px;margin:auto 0 0 48px;overflow:hidden}
 #view-skill-center .sc-tag{padding:0 6px;border-radius:var(--asset-pill-radius);background:var(--tag-bg);color:var(--text);font-size:var(--font-size-12);line-height:20px;white-space:nowrap}
 /* 个人开发技能的「⋯」菜单入口：与「技能开发」页卡片的「···」同款（常显、浅灰），点开是下拉菜单 */
-#view-skill-center .sc-more{position:absolute;top:16px;right:16px;display:flex;align-items:center;justify-content:center;min-width:24px;height:24px;padding:0 4px;border:0;border-radius:var(--asset-pill-radius);background:transparent;color:var(--text-secondary);font:inherit;font-size:var(--font-size-16);letter-spacing:1px;line-height:1;cursor:pointer}
+#view-skill-center .sc-more{position:absolute;top:16px;right:48px;display:flex;align-items:center;justify-content:center;min-width:24px;height:24px;padding:0 4px;border:0;border-radius:var(--asset-pill-radius);background:transparent;color:var(--text-secondary);font:inherit;font-size:var(--font-size-16);letter-spacing:1px;line-height:1;cursor:pointer}
 #view-skill-center .sc-more:hover,#view-skill-center .sc-more[aria-expanded="true"]{background:var(--hover);color:var(--text)}
 #view-skill-center .sc-more:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
-/* 右上角的对话图标：点击去开发板块的对话框试用，个人开发与已添加的技能都有；个人开发的排在「···」左边 */
+/* 右上角的对话图标：点击去开发板块的对话框试用，个人开发与已添加的技能都有；个人开发的排在「···」右边 */
 #view-skill-center .sc-chat{position:absolute;top:16px;right:16px;display:flex;align-items:center;justify-content:center;width:24px;height:24px;padding:0;border:0;border-radius:var(--asset-pill-radius);background:transparent;color:var(--text-secondary);cursor:pointer}
 #view-skill-center .sc-chat img{width:16px;height:16px}
 #view-skill-center .sc-chat:hover{background:var(--hover)}
-#view-skill-center .sc-card--personal .sc-chat{right:48px}
 #view-skill-center .sc-chat:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 #view-skill-center .sc-install{position:absolute;top:16px;right:16px;display:flex;align-items:center;justify-content:center;width:24px;height:24px;border:1px solid var(--border-hover);border-radius:var(--tb-radius);background:var(--bg);color:var(--text-secondary);cursor:pointer}
 #view-skill-center .sc-install:hover{border-color:var(--brand);background:var(--brand-fill);color:var(--brand)}
