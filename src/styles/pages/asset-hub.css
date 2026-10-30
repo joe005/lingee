@@ -1,0 +1,13 @@
+/* 技能 / 智能体菜单的三页签导航：悬挂在技能开发页与协作开发容器顶部，样式沿用协作开发的文字导航 */
+.asset-hub-nav{position:relative;z-index:2;display:flex;flex:none;align-items:center;gap:12px;box-sizing:border-box;height:52px;min-height:52px}
+.asset-hub-nav button{height:28px;padding:0;border:0;border-radius:0;background:transparent;color:var(--text-secondary);font:inherit;font-size:var(--font-size-18);font-weight:500;line-height:28px;white-space:nowrap;cursor:pointer;transition:color .15s}
+.asset-hub-nav button:hover,.asset-hub-nav button.active{color:var(--text-title)}
+.asset-hub-nav button:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+
+#view-collab>.asset-hub-nav{align-self:center;width:calc(100% - 32px);max-width:1160px}
+/* 挂载时隐藏原页自带的标题与顶部导航，避免出现两排导航 */
+#view-collab.asset-hub-mode>:is(.cv-wsbar,#cvTabNav,#cvPageTitle){display:none}
+#view-skills.asset-hub-mode>.apps-head{display:none}
+
+@media (prefers-reduced-motion:reduce){.asset-hub-nav button{transition:none}}
+@media(max-width:760px){#view-collab>.asset-hub-nav{height:auto;min-height:52px;flex-wrap:wrap;row-gap:8px;padding:12px 0}}
