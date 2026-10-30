@@ -14,16 +14,9 @@
 #view-skill-center .sc-search .ic{flex:none;width:16px;height:16px;color:var(--text-soft)}
 #view-skill-center .sc-create{display:inline-flex;align-items:center;gap:4px;height:32px;padding:0 12px;border:1px solid var(--brand);border-radius:8px;background:var(--brand);color:var(--bg);font:inherit;font-size:var(--font-size-14);line-height:var(--line-height-14);white-space:nowrap;cursor:pointer}
 #view-skill-center .sc-create:hover{background:var(--brand-hover);border-color:var(--brand-hover)}
-#view-skill-center :is(.sc-tab,.sc-create,.sc-filter,.sc-install,.sc-uninstall):focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 
-/* 来源筛选：与智能体页的来源筛选一致（32px 胶囊，选中为品牌色描边） */
-#view-skill-center .sc-filters{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 20px}
-#view-skill-center .sc-filters[hidden]{display:none}
-#view-skill-center .sc-filter{height:32px;min-height:32px;box-sizing:border-box;padding:4px 16px;border:1px solid transparent;border-radius:var(--asset-pill-radius);background:transparent;color:var(--text-secondary);font:inherit;font-size:var(--font-size-14);line-height:22px;cursor:pointer}
-#view-skill-center .sc-filter span{color:var(--text-secondary);font-weight:400}
-#view-skill-center .sc-filter:hover{background:var(--brand-fill)}
-#view-skill-center .sc-filter.active{border-color:var(--brand);background:transparent;color:var(--brand);font-weight:500}
-#view-skill-center .sc-filter.active span{color:inherit}
+
+#view-skill-center :is(.sc-tab,.sc-create,.sc-install,.sc-uninstall):focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 
 #view-skill-center .sc-section+.sc-section{margin-top:20px}
 #view-skill-center .sc-section-title{display:flex;align-items:center;min-height:32px;margin:0 0 12px;color:var(--text);font-size:var(--font-size-16);font-weight:500;line-height:24px}

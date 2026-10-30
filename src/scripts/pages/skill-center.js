@@ -32,11 +32,11 @@ const SKILLS=[
 ];
 function esc(value){return String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
 export function init(){
-  const list=$('#scList'),filters=$('#scFilters'),search=$('#scSearch');
-  let mode='mine',source='all';
+  const list=$('#scList'),search=$('#scSearch');
+  let mode='mine';
   const match=s=>{const kw=search.value.trim().toLowerCase();return !kw||(s.name+s.desc).toLowerCase().includes(kw);};
   function card(s){
-    const badge=`<span class="sc-badge ${s.source}">${SOURCE_LABEL[s.source]}</span><span class="sc-chip">${s.v||'V1.0.0'}</span>${s.source==='personal'?routeTagHtml(s.route||''):''}`;
+    const badge=`${s.source==='personal'?'':`<span class="sc-badge ${s.source}">${SOURCE_LABEL[s.source]}</span>`}<span class="sc-chip">${s.v||'V1.0.0'}</span>${s.source==='personal'?routeTagHtml(s.route||''):''}`;
     /* 个人开发和已添加的技能都有对话图标，点击去开发板块的对话框试用 */
     const chat=(s.source==='personal'||s.installed)?`<button type="button" class="sc-chat" data-sc-run aria-label="试用${esc(s.name)}" title="试一试"><img src="${dialogIcon}" alt=""></button>`:'';
     let action='';
@@ -52,14 +52,10 @@ export function init(){
   const section=(title,rows)=>rows.length?`<section class="sc-section"><h2 class="sc-section-title">${title}</h2><div class="sc-grid">${rows.map(card).join('')}</div></section>`:'';
   function paint(){
     $$('[data-sc-mode]').forEach(b=>{const on=b.dataset.scMode===mode;b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on));});
-    /* 与「我的智能体」一致：来源筛选只在「我的」里出现 */
-    filters.hidden=mode!=='mine';
     let html;
     if(mode==='mine'){
       const mineAll=SKILLS.filter(s=>(s.source==='personal'||s.installed)&&match(s));
-      $$('[data-sc-count]').forEach(el=>{el.textContent=el.dataset.scCount==='all'?mineAll.length:mineAll.filter(s=>s.source===el.dataset.scCount).length;});
-      $$('[data-sc-source]').forEach(b=>{const on=b.dataset.scSource===source;b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on));});
-      const rows=mineAll.filter(s=>source==='all'||s.source===source);
+      const rows=mineAll;
       html=section('个人开发',rows.filter(s=>s.source==='personal'))+section('我添加的',rows.filter(s=>s.source!=='personal'));
     }else{
       const rows=SKILLS.filter(s=>s.source!=='personal'&&!s.installed&&match(s));
@@ -68,7 +64,6 @@ export function init(){
     list.innerHTML=html||`<p class="sc-empty">${search.value.trim()?'没有匹配的技能':mode==='more'?'没有可添加的技能':'还没有技能，去「更多技能」添加或点「新建」开发'}</p>`;
   }
   $('#scModes').addEventListener('click',e=>{const b=e.target.closest('[data-sc-mode]');if(b){mode=b.dataset.scMode;paint();}});
-  filters.addEventListener('click',e=>{const b=e.target.closest('[data-sc-source]');if(b){source=b.dataset.scSource;paint();}});
   search.addEventListener('input',paint);
   $('#scCreate').addEventListener('click',()=>toast('新建技能：原型演示，将进入对话创建'));
   list.addEventListener('click',async e=>{
