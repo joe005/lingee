@@ -1,13 +1,19 @@
 /* 「技能·智能体·连接器」菜单的三页签导航：悬挂在技能页、协作开发容器与连接器页顶部，样式沿用协作开发的文字导航 */
 .asset-hub-nav{position:relative;z-index:2;display:flex;flex:none;align-items:center;gap:12px;box-sizing:border-box;height:52px;min-height:52px}
-.asset-hub-nav button{height:28px;padding:0;border:0;border-radius:0;background:transparent;color:var(--text-secondary);font:inherit;font-size:var(--font-size-18);font-weight:500;line-height:28px;white-space:nowrap;cursor:pointer;transition:color .15s}
-.asset-hub-nav button:hover,.asset-hub-nav button.active{color:var(--text-title)}
+.asset-hub-nav>button{height:28px;padding:0;border:0;border-radius:0;background:transparent;color:var(--text-secondary);font:inherit;font-size:var(--font-size-18);font-weight:500;line-height:28px;white-space:nowrap;cursor:pointer;transition:color .15s}
+.asset-hub-nav>button:hover,.asset-hub-nav>button.active{color:var(--text-title)}
 .asset-hub-nav button:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+/* 智能体页签右侧的「智能体 / 智能体团队」分段开关 */
+.asset-hub-kind{display:flex;align-items:center;gap:4px;height:32px;box-sizing:border-box;margin-left:auto;padding:4px;border-radius:var(--asset-pill-radius);background:var(--segment-track)}
+.asset-hub-kind[hidden]{display:none}
+.asset-hub-kind button{height:24px;padding:0 12px;border:0;border-radius:var(--asset-pill-radius);background:transparent;color:var(--text-muted);font:inherit;font-size:var(--font-size-14);font-weight:400;line-height:22px;white-space:nowrap;cursor:pointer}
+.asset-hub-kind button:not(.active):hover{background:var(--hover);color:var(--text)}
+.asset-hub-kind button.active{background:var(--bg);color:var(--text-title);font-weight:500}
 
 #view-collab>.asset-hub-nav{align-self:center;width:calc(100% - 32px);max-width:1160px}
 #view-connectors>.asset-hub-nav,#view-skill-center>.asset-hub-nav{align-self:center;width:100%;max-width:1160px}
 /* 挂载时隐藏原页自带的标题与顶部导航，避免出现两排导航 */
 #view-collab.asset-hub-mode>:is(.cv-wsbar,#cvTabNav,#cvPageTitle){display:none}
 
-@media (prefers-reduced-motion:reduce){.asset-hub-nav button{transition:none}}
+@media (prefers-reduced-motion:reduce){.asset-hub-nav>button{transition:none}}
 @media(max-width:760px){#view-collab>.asset-hub-nav{height:auto;min-height:52px;flex-wrap:wrap;row-gap:8px;padding:12px 0}}
