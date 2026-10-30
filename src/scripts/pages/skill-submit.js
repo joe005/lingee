@@ -2,19 +2,22 @@ import '../../styles/pages/skill-submit.css';
 import { $, $$ } from '../core/dom.js';
 import { toast } from '../core/toast.js';
 import { requestDeleteConfirmation } from '../core/delete-confirm.js';
-/* 技能开发页：卡片「⋯」菜单（编辑、本地测试、云端测试、检查、提交、删除）与提交技能的路径选择。
-   对照 Lingee Build：两条路径都指向工作板块——「企业分发」需管理员审核后生效，「个人自用」安全检测通过后即时安装到 Work。
-   状态只在页面里演示（改卡片上的状态文字与 data-status），刷新恢复初始。开发板块的发布路径见「技能·智能体·连接器」菜单。 */
-const HINTS={
-  enterprise:'企业分发将对团队成员或市场开放，需管理员审核后生效。',
-  personal:'个人自用仅本人可用，安全检测通过后即时安装到 Work，无需审核。'
-};
+import { chooseRoute } from '../features/expert/asset-routes.js';
+/* 技能开发页：卡片「⋯」菜单（编辑、本地测试、云端测试、检查、提交、删除）。
+   「提交」先做一次分发路由，与「技能·智能体·连接器」菜单共用同一个弹窗：面向开发板块（需审核），或面向工作板块的
+   「企业分发」（需管理员审核）/「个人自用」（安全检测通过后即时安装到 Work）；开发与工作互斥，提交后「提交」置灰。
+   状态只在页面里演示（改卡片上的状态文字与 data-status），刷新恢复初始。 */
 export function init(){
-  const view=$('#view-skills'),menu=$('#skillCardMenu'),overlay=$('#skillSubmitOverlay');
-  if(!view||!menu||!overlay)return;
-  let menuCard=null,trigger=null,submitCard=null;
+  const view=$('#view-skills'),menu=$('#skillCardMenu');
+  if(!view||!menu)return;
+  let menuCard=null,trigger=null;
   const nameOf=card=>($('.card-title',card)?.textContent||'').trim();
   const rowsOf=card=>$$('.card-meta-row',card);
+  /* 已提交审核、已发布或已个人自用安装的技能不能再次提交（开发与工作互斥） */
+  function submitBlocked(card){
+    const rows=rowsOf(card),personalInstalled=rows[0]?.querySelector('b')?.textContent==='个人'&&rows[0]?.lastElementChild?.textContent==='已安装';
+    return ['审核中','已发布'].includes(card.dataset.status||'')||personalInstalled;
+  }
   function closeMenu(restoreFocus){
     if(menu.hidden)return;
     menu.hidden=true;
@@ -25,10 +28,9 @@ export function init(){
   function openMenu(card,button){
     closeMenu(false);
     menuCard=card;trigger=button;
-    /* 所有技能都有「提交」；审核中的不能重复提交，已发布的可提交新版本 */
-    const submit=menu.querySelector('[data-skill-action="submit"]'),reviewing=card.dataset.status==='审核中';
-    submit.disabled=reviewing;
-    submit.title=reviewing?'已提交审核，请等待管理员审核':'';
+    const submit=menu.querySelector('[data-skill-action="submit"]'),blocked=submitBlocked(card);
+    submit.disabled=blocked;
+    submit.title=blocked?'已提交或已发布，如需调整请联系管理员':'';
     menu.hidden=false;
     const rect=button.getBoundingClientRect();
     menu.style.top=Math.min(rect.bottom+4,window.innerHeight-menu.offsetHeight-8)+'px';
@@ -36,25 +38,11 @@ export function init(){
     button.setAttribute('aria-expanded','true');
     menu.querySelector('.agent-card-menu-item:not(:disabled)')?.focus();
   }
-  function openSubmit(card){
-    submitCard=card;
-    overlay.querySelector('input[value="enterprise"]').checked=true;
-    $('#skillSubmitHint').textContent=HINTS.enterprise;
-    overlay.hidden=false;
-    $('#skillSubmitOk').focus();
-  }
-  function closeSubmit(){
-    if(overlay.hidden)return;
-    overlay.hidden=true;
-    const card=submitCard;submitCard=null;
-    card?.querySelector('.card-more')?.focus();
-  }
-  function confirmSubmit(){
-    const card=submitCard,path=overlay.querySelector('input:checked')?.value;
-    closeSubmit();
-    if(!card)return;
+  async function submit(card){
     const name=nameOf(card),rows=rowsOf(card);
-    if(path==='personal'){
+    const choice=await chooseRoute(name);
+    if(!choice||!card.isConnected)return;
+    if(choice==='work-personal'){
       toast('「'+name+'」正在进行安全检测…');
       setTimeout(()=>{
         if(!card.isConnected)return;
@@ -64,18 +52,21 @@ export function init(){
       },1200);
       return;
     }
+    /* 开发板块与企业分发都进入审核中；第二行的标签标明面向哪个板块 */
     card.dataset.status='审核中';
+    const label=rows[1]?.querySelector('b');
+    if(label)label.textContent=choice==='dev'?'开发板块':'企业分发';
     const status=rows[1]?.querySelector('.card-status-text');
     if(status)status.textContent='审核中';
     $('.tab.active',view)?.click();   /* 按当前页签重新筛选 */
-    toast('已提交企业分发，请等待管理员审核','success');
+    toast(choice==='dev'?'已提交开发板块审核，通过后可在开发板块运行':'已提交企业分发，请等待管理员审核','success');
   }
   async function run(action){
     const card=menuCard;
     closeMenu(false);
     if(!card)return;
     const name=nameOf(card);
-    if(action==='submit')openSubmit(card);
+    if(action==='submit')submit(card);
     else if(action==='edit')toast('打开技能开发会话：'+name);
     else if(action==='local-test')toast('已进入本地测试：'+name);
     else if(action==='cloud-test')toast('已推送到云端测试环境：'+name);
@@ -104,19 +95,13 @@ export function init(){
     if(more&&(event.key==='Enter'||event.key===' ')){event.preventDefault();toggle(more);}
   });
   menu.addEventListener('click',event=>{
-    const item=event.target.closest('[data-skill-action]');
+    const item=event.target.closest('[data-skill-action]:not(:disabled)');
     if(!item)return;
     event.stopPropagation();run(item.dataset.skillAction);
   });
-  overlay.addEventListener('click',event=>{
-    if(event.target===overlay||event.target.closest('[data-skill-submit-close]'))closeSubmit();
-  });
-  overlay.addEventListener('change',event=>{$('#skillSubmitHint').textContent=HINTS[event.target.value]||'';});
-  $('#skillSubmitOk').addEventListener('click',confirmSubmit);
   document.addEventListener('click',event=>{if(!event.target.closest('#skillCardMenu'))closeMenu(false);});
   document.addEventListener('keydown',event=>{
-    if(event.key!=='Escape')return;
-    if(!overlay.hidden)closeSubmit();else closeMenu(true);
+    if(event.key==='Escape')closeMenu(true);
   });
   window.addEventListener('resize',()=>closeMenu(false));
   view.addEventListener('scroll',()=>closeMenu(false));

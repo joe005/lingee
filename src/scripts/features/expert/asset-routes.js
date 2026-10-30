@@ -105,32 +105,38 @@ export function showMoreMenu(anchor,items){
     menu.querySelector('button:not(:disabled)')?.focus();
   });
 }
-/* 发布时的去向选择弹窗：开发板块，或工作板块的「企业分发 / 个人自用」（沿用原有提交路径），三选一，开发与工作互斥。
+/* 提交时的分发路由弹窗，「技能开发」页与「技能·智能体·连接器」菜单共用：
+   先决定面向开发板块还是工作板块；工作板块再选「企业分发 / 个人自用」（沿用原有提交路径）。三选一，开发与工作互斥。
    返回 'dev' / 'work-enterprise' / 'work-personal'，取消返回 null */
 const ROUTE_HINTS={
-  dev:'发布到开发板块需管理员审核后生效，仅在开发板块使用，不会出现在 Work。',
+  dev:'面向开发板块：需管理员审核，通过后仅在开发板块使用，不会出现在 Work。',
   'work-enterprise':'企业分发将对团队成员或市场开放，需管理员审核后生效。',
-  'work-personal':'个人自用无需审核，安全检测通过后即时安装到 Work。'
+  'work-personal':'个人自用仅本人可用，安全检测通过后即时安装到 Work，无需审核。'
 };
+const ICON_DEV=SVG+'<path d="m8 7-5 5 5 5M16 7l5 5-5 5M14 4l-4 16"/></svg>';
+const ICON_ENTERPRISE=SVG+'<path d="M4 21V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v16M14 10h5a1 1 0 0 1 1 1v10M3 21h18M8 8h2M8 12h2M8 16h2"/></svg>';
+const ICON_PERSONAL=SVG+'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>';
 let activeDialog=null;
 export function chooseRoute(name){
   if(activeDialog)return Promise.resolve(null);
   return new Promise(resolve=>{
     const previous=document.activeElement;
     const overlay=document.createElement('div');
-    overlay.className='app-delete-confirm asset-route-dialog';
-    const option=(value,title,desc)=>'<label class="asset-route-option"><input type="radio" name="assetRoute" value="'+value+'"><span><strong>'+title+'</strong><small>'+desc+'</small></span></label>';
-    overlay.innerHTML='<div class="app-delete-confirm-card" role="dialog" aria-modal="true" aria-labelledby="assetRouteTitle">'
-      +'<h3 id="assetRouteTitle">发布「'+xesc(name)+'」· 选择路径</h3>'
-      +'<div class="asset-route-options" role="radiogroup" aria-label="发布去向">'
-      +'<div class="asset-route-group">开发板块</div>'
-      +option('dev','发布到开发','适合在开发板块使用，需管理员审核，通过后可直接运行')
-      +'<div class="asset-route-group">工作板块</div>'
-      +option('work-enterprise','企业分发','适合团队协作与知识沉淀，可共享给他人或发布至企业市场，需管理员审核')
-      +option('work-personal','个人自用','适合本人独立使用，安全检测通过后即时安装到 Work，无需审核')
+    overlay.className='asset-route-dialog';
+    const option=(value,icon,tone,title,desc)=>'<label class="asset-route-option"><input type="radio" name="assetRoute" value="'+value+'">'
+      +'<span class="asset-route-option-title"><span class="asset-route-icon is-'+tone+'" aria-hidden="true">'+icon+'</span>'+title+'</span><small>'+desc+'</small></label>';
+    overlay.innerHTML='<div class="asset-route-card" role="dialog" aria-modal="true" aria-labelledby="assetRouteTitle">'
+      +'<div class="asset-route-head"><h3 id="assetRouteTitle">提交「'+xesc(name)+'」· 选择路径</h3>'
+      +'<button type="button" class="asset-route-close" data-route-cancel aria-label="关闭">'+SVG+'<path d="M18 6 6 18M6 6l12 12"/></svg></button></div>'
+      +'<div class="asset-route-options" role="radiogroup" aria-label="分发路由">'
+      +'<div class="asset-route-group">面向开发板块</div>'
+      +option('dev',ICON_DEV,'dev','开发板块','适合在开发板块使用，需管理员审核，通过后可直接运行')
+      +'<div class="asset-route-group">面向工作板块</div>'
+      +option('work-enterprise',ICON_ENTERPRISE,'enterprise','企业分发','适合团队协作与知识沉淀，技能可共享给他人或发布至企业市场')
+      +option('work-personal',ICON_PERSONAL,'personal','个人自用','适合本人独立使用，安全检测通过后即时安装到 Work，无需审核')
       +'</div><p class="asset-route-hint" hidden></p>'
-      +'<p class="asset-route-exclusive">开发板块与工作板块互斥，同一时间只能发布到一处。</p>'
-      +'<div class="app-delete-confirm-actions"><button type="button" data-route-cancel>取消</button><button type="button" class="asset-route-confirm" data-route-confirm disabled>发布</button></div></div>';
+      +'<p class="asset-route-exclusive">开发板块与工作板块互斥，同一时间只能提交到一处。</p>'
+      +'<div class="asset-route-foot"><button type="button" class="asset-route-cancel" data-route-cancel>取消</button><button type="button" class="asset-route-confirm" data-route-confirm disabled>提交</button></div></div>';
     const confirm=overlay.querySelector('[data-route-confirm]'),hint=overlay.querySelector('.asset-route-hint');
     const close=value=>{
       if(activeDialog!==overlay)return;

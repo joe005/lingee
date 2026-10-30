@@ -1,35 +1,6 @@
 .skill-card-menu .agent-card-menu-item:disabled{color:var(--text-soft);cursor:default}
 .skill-card-menu .agent-card-menu-item:disabled:hover{background:transparent}
-/* 技能开发页：卡片更多按钮与提交技能的路径选择弹窗（对照 Lingee Build 技能开发页） */
+/* 技能开发页：卡片更多按钮与菜单（对照 Lingee Build 技能开发页）；提交弹窗样式见 asset-hub.css */
 #view-skills .card-more{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;border-radius:var(--asset-pill-radius);cursor:pointer}
 #view-skills .card-more:hover{background:var(--hover)}
 #view-skills .card-more:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
-
-.skill-submit-overlay{position:fixed;inset:0;z-index:10001;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(15,23,42,.42)}
-.skill-submit-overlay[hidden]{display:none}
-.skill-submit-card{box-sizing:border-box;width:min(100%,540px);padding:24px;border-radius:24px;background:var(--bg);box-shadow:var(--menu-shadow)}
-.skill-submit-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px}
-.skill-submit-head h3{margin:0;color:var(--text-title);font-size:var(--font-size-18);font-weight:500;line-height:var(--line-height-18)}
-.skill-submit-close{display:flex;align-items:center;justify-content:center;width:32px;height:32px;padding:0;border:0;border-radius:8px;background:transparent;color:var(--text-secondary);cursor:pointer}
-.skill-submit-close:hover{background:var(--hover);color:var(--text)}
-.skill-submit-close .ic{width:20px;height:20px}
-.skill-submit-options{display:flex;flex-direction:column;gap:12px}
-.skill-submit-option{position:relative;display:flex;flex-direction:column;gap:6px;padding:16px;border:1px solid var(--border);border-radius:16px;cursor:pointer}
-.skill-submit-option:hover{background:var(--fill-1)}
-.skill-submit-option:has(input:checked){border-color:var(--brand);box-shadow:0 0 0 1px var(--brand)}
-.skill-submit-option:has(input:focus-visible){outline:2px solid var(--focus-ring);outline-offset:2px}
-.skill-submit-option input{position:absolute;opacity:0;pointer-events:none}
-.skill-submit-title{display:flex;align-items:center;gap:8px;color:var(--text-title);font-size:var(--font-size-16);font-weight:500;line-height:var(--line-height-16)}
-.skill-submit-icon{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px}
-.skill-submit-icon .ic{width:16px;height:16px}
-.skill-submit-icon.is-enterprise{background:var(--brand-fill);color:var(--brand)}
-.skill-submit-icon.is-personal{background:var(--warning-bg);color:var(--warning)}
-.skill-submit-option small{color:var(--text-secondary);font-size:var(--font-size-14);line-height:var(--line-height-14)}
-.skill-submit-hint{display:flex;align-items:center;gap:8px;margin:16px 0 0;padding:12px 16px;border:1px solid var(--border-focus);border-radius:12px;background:var(--brand-fill);color:var(--text);font-size:var(--font-size-14);line-height:var(--line-height-14)}
-.skill-submit-hint svg{flex:none;width:18px;height:18px;color:var(--brand)}
-.skill-submit-foot{display:flex;justify-content:flex-end;align-items:center;gap:16px;margin-top:28px}
-.skill-submit-cancel{height:36px;padding:0 12px;border:0;border-radius:12px;background:transparent;color:var(--text-secondary);font:inherit;font-size:var(--font-size-16);cursor:pointer}
-.skill-submit-cancel:hover{color:var(--text)}
-.skill-submit-ok{height:36px;padding:0 20px;border:0;border-radius:12px;background:var(--brand);color:var(--bg);font:inherit;font-size:var(--font-size-16);cursor:pointer}
-.skill-submit-ok:hover{background:var(--brand-hover)}
-.skill-submit-overlay :is(.skill-submit-close,.skill-submit-cancel,.skill-submit-ok):focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}

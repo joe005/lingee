@@ -23,23 +23,38 @@
 .asset-route-tag{padding:0 6px;border-radius:4px;background:var(--brand-fill);color:var(--brand);font-size:var(--font-size-12);line-height:18px;white-space:nowrap}
 .asset-route-tag--work-pending{background:var(--warning-bg);color:var(--warning)}
 #view-collab:not(.asset-hub-mode) .asset-route-tag{display:none}
-/* 发布去向选择弹窗 */
-.asset-route-dialog .asset-route-options{display:flex;flex-direction:column;gap:8px;margin-top:16px}
-.asset-route-group{margin-top:4px;color:var(--text-secondary);font-size:var(--font-size-12);line-height:18px}
-.asset-route-group:first-child{margin-top:0}
-.asset-route-dialog .asset-route-hint{box-sizing:border-box;margin:12px 0 0;padding:10px 12px;border:1px solid var(--border-focus);border-radius:12px;background:var(--brand-fill);color:var(--text);font-size:var(--font-size-14);line-height:22px}
-.asset-route-dialog .asset-route-hint[hidden]{display:none}
-.asset-route-dialog .asset-route-exclusive{margin-top:12px;font-size:var(--font-size-12);line-height:18px}
-.asset-route-option{display:flex;align-items:flex-start;gap:12px;padding:12px;border:1px solid var(--border-hover);border-radius:12px;cursor:pointer}
+/* 提交 · 选择路径弹窗（分发路由）：与「技能开发」页共用 */
+.asset-route-dialog{position:fixed;inset:0;z-index:10001;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(15,23,42,.42)}
+.asset-route-card{box-sizing:border-box;width:min(100%,540px);max-height:100%;overflow:auto;padding:24px;border-radius:24px;background:var(--bg);box-shadow:var(--menu-shadow)}
+.asset-route-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px}
+.asset-route-head h3{margin:0;color:var(--text-title);font-size:var(--font-size-18);font-weight:500;line-height:var(--line-height-18);overflow-wrap:anywhere}
+.asset-route-close{display:flex;flex:none;align-items:center;justify-content:center;width:32px;height:32px;padding:0;border:0;border-radius:8px;background:transparent;color:var(--text-secondary);cursor:pointer}
+.asset-route-close:hover{background:var(--hover);color:var(--text)}
+.asset-route-close .ic{width:20px;height:20px}
+.asset-route-options{display:flex;flex-direction:column;gap:12px}
+.asset-route-group{color:var(--text-secondary);font-size:var(--font-size-12);line-height:18px}
+.asset-route-option{position:relative;display:flex;flex-direction:column;gap:6px;padding:16px;border:1px solid var(--border);border-radius:16px;cursor:pointer}
 .asset-route-option:hover{background:var(--fill-1)}
-.asset-route-option:has(input:checked){border-color:var(--brand);background:var(--brand-fill)}
+.asset-route-option:has(input:checked){border-color:var(--brand);box-shadow:0 0 0 1px var(--brand)}
 .asset-route-option:has(input:focus-visible){outline:2px solid var(--focus-ring);outline-offset:2px}
-.asset-route-option input{margin:4px 0 0;accent-color:var(--brand)}
-.asset-route-option strong{display:block;color:var(--text);font-size:var(--font-size-14);font-weight:500;line-height:22px}
-.asset-route-option small{display:block;color:var(--text-secondary);font-size:var(--font-size-12);line-height:18px}
-.asset-route-dialog .asset-route-confirm{border-color:var(--brand);background:var(--brand);color:var(--bg)}
-.asset-route-dialog .asset-route-confirm:hover{background:var(--brand-hover)}
-.asset-route-dialog .asset-route-confirm:disabled{border-color:var(--border);background:var(--fill-1);color:var(--text-secondary);cursor:default}
+.asset-route-option input{position:absolute;opacity:0;pointer-events:none}
+.asset-route-option-title{display:flex;align-items:center;gap:8px;color:var(--text-title);font-size:var(--font-size-16);font-weight:500;line-height:var(--line-height-16)}
+.asset-route-icon{display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px}
+.asset-route-icon .ic{width:16px;height:16px}
+.asset-route-icon.is-dev{background:var(--success-bg);color:var(--success)}
+.asset-route-icon.is-enterprise{background:var(--brand-fill);color:var(--brand)}
+.asset-route-icon.is-personal{background:var(--warning-bg);color:var(--warning)}
+.asset-route-option small{color:var(--text-secondary);font-size:var(--font-size-14);line-height:var(--line-height-14)}
+.asset-route-hint{box-sizing:border-box;margin:16px 0 0;padding:12px 16px;border:1px solid var(--border-focus);border-radius:12px;background:var(--brand-fill);color:var(--text);font-size:var(--font-size-14);line-height:var(--line-height-14)}
+.asset-route-hint[hidden]{display:none}
+.asset-route-exclusive{margin:12px 0 0;color:var(--text-secondary);font-size:var(--font-size-12);line-height:18px}
+.asset-route-foot{display:flex;justify-content:flex-end;align-items:center;gap:16px;margin-top:24px}
+.asset-route-cancel{height:36px;padding:0 12px;border:0;border-radius:12px;background:transparent;color:var(--text-secondary);font:inherit;font-size:var(--font-size-16);cursor:pointer}
+.asset-route-cancel:hover{color:var(--text)}
+.asset-route-confirm{height:36px;padding:0 20px;border:0;border-radius:12px;background:var(--brand);color:var(--bg);font:inherit;font-size:var(--font-size-16);cursor:pointer}
+.asset-route-confirm:hover{background:var(--brand-hover)}
+.asset-route-confirm:disabled{background:var(--fill-1);color:var(--text-secondary);cursor:default}
+.asset-route-dialog :is(.asset-route-close,.asset-route-cancel,.asset-route-confirm):focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 /* 个人开发卡片菜单里新增的编辑、测试、检查、发布项，只在本菜单里显示 */
 #view-collab:not(.asset-hub-mode) [data-asset-hub-only]{display:none}
 #view-collab .asset-card-menu [data-asset-hub-only]:disabled{color:var(--text-soft);cursor:default}
