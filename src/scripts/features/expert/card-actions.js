@@ -15,6 +15,16 @@ export function assetCardActionsHtml(kind, item, personal, callAttribute) {
     +'</div></div>';
 }
 
+/* 「技能·智能体·连接器」菜单里卡片的两条运行路线：在开发板块运行，或（个人开发）发布到 Work；
+   在协作开发自己的页签里由样式隐藏，见 styles/pages/asset-hub.css */
+export function assetRoutesHtml(kind, item, personal, callAttribute) {
+  const noun=kind==='team'?'智能体团队':'智能体';
+  return '<div class="asset-card-routes">'
+    +'<button type="button" class="asset-card-route" '+callAttribute+'="'+xesc(item.id)+'" title="在开发板块新建会话并带上该'+noun+'">在开发中运行</button>'
+    +(personal?'<button type="button" class="asset-card-route asset-card-route--work" data-asset-route-publish="'+kind+':'+xesc(item.id)+'" title="提交审核，通过后在 Work 中使用">发布到 Work</button>':'')
+    +'</div>';
+}
+
 function closeMenus(except, returnFocus=false) {
   document.querySelectorAll('#view-collab .asset-card-menu-toggle[aria-expanded="true"]').forEach(button=>{
     if(button===except)return;

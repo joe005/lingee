@@ -1,6 +1,9 @@
 import '../../styles/pages/asset-hub.css';
 import { $, $$ } from '../core/dom.js';
 import { setNavActive, showView } from '../core/view.js';
+import { EX } from '../features/expert/data.js';
+import { TEAMS } from '../features/expert/store.js';
+import { submitAssetForReview } from '../features/expert/asset-review.js';
 /* 侧栏「技能·智能体·连接器」菜单：挂技能 / 智能体 / 智能体团队 / 连接器四个页签。
    页签只是导航条，内容仍是原有页面（技能页、协作开发里的智能体与智能体团队、连接器页），
    原菜单与页面保持不变；导航条按当前页签挂到对应页面顶部，离开菜单时移除。 */
@@ -51,6 +54,15 @@ function openHub(menu,tab){
   mount(tab);
 }
 export function init(){
+  /* 卡片上的「发布到 Work」：走原有的提交审核流程；捕获阶段拦截，避免同时打开卡片详情 */
+  document.addEventListener('click',event=>{
+    const button=event.target.closest('[data-asset-route-publish]');
+    if(!button)return;
+    event.stopPropagation();
+    const [kind,id]=button.dataset.assetRoutePublish.split(':');
+    const item=kind==='team'?TEAMS.find(team=>team.id===id):EX[id];
+    if(item)submitAssetForReview(kind,item);
+  },true);
   const items=$$('.sb-scroll [data-hub-menu]');
   items.forEach(item=>{
     const open=()=>openHub(item.dataset.hubMenu,MENUS[item.dataset.hubMenu].tab);

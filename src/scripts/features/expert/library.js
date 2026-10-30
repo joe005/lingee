@@ -10,7 +10,7 @@ import { deleteMyExpert, openExpertEditor } from './editor.js';
 import { knSecHtml, resetKnDetail, saveKnDetail } from './knowledge.js';
 import { TEAMS, teamDomains } from './store.js';
 import { openTeamModal } from './team-modal.js';
-import { assetCardActionsHtml } from './card-actions.js';
+import { assetCardActionsHtml, assetRoutesHtml } from './card-actions.js';
 /* 专家库视图与专家详情弹窗
    拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
    由 main.js 按拆分前的原始顺序调用。 */
@@ -49,7 +49,7 @@ function renderExpertGrid(){
         +'</div>'
         +'<div class="x-sub asset-card-summary">'+assetSourceBadge('team',t)+'<span>'+t.members.length+' 个智能体</span><span class="asset-card-upgrade-anchor">'+assetUpgradeHtml('team',t.id)+'</span></div></div></div>'
         +'<div class="card-desc">'+xesc(t.desc)+'</div>'
-        +assetTagsHtml(teamDomains(t))+assetModesHtml(teamWorkModes(t))+layerActions('team',t)+'</div>';
+        +assetTagsHtml(teamDomains(t))+assetModesHtml(teamWorkModes(t))+assetRoutesHtml('team',t,layerOf('team',t)==='personal','data-call-team')+layerActions('team',t)+'</div>';
     }
     html=[{title:'个人开发',rows:rows.filter(t=>layerOf('team',t)==='personal')},{title:'我添加的',rows:rows.filter(t=>layerOf('team',t)!=='personal')}].filter(section=>section.rows.length).map(section=>'<section class="asset-list-section"><h2 class="expert-section-title">'+section.title+'</h2><div class="apps-grid">'+section.rows.map(teamCard).join('')+'</div></section>').join('');
   }else{
