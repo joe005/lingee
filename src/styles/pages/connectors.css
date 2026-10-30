@@ -1,0 +1,32 @@
+/* 连接器页：灰画布上的白卡网格，连接状态只在页面内演示 */
+#view-connectors{background:var(--canvas-bg);overflow:auto;padding:0 16px 48px;box-sizing:border-box}
+#view-connectors .conn-page{display:flex;flex-direction:column;width:100%;max-width:1160px;margin:0 auto}
+#view-connectors .conn-toolbar{display:flex;justify-content:flex-end;margin-bottom:20px}
+#view-connectors .conn-search{display:flex;align-items:center;gap:8px;width:280px;max-width:100%;height:var(--control-h);box-sizing:border-box;padding:0 12px;border:1px solid var(--border-hover);border-radius:12px;background:var(--bg)}
+#view-connectors .conn-search:focus-within{border-color:var(--border-focus)}
+#view-connectors .conn-search input{flex:1;min-width:0;height:100%;padding:0;border:0;outline:none;background:transparent;color:var(--text);font:inherit;font-size:var(--font-size-14)}
+#view-connectors .conn-search input::placeholder{color:var(--text-soft);opacity:1}
+#view-connectors .conn-search .ic{flex:none;width:16px;height:16px;color:var(--text-soft)}
+#view-connectors .conn-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr));gap:20px}
+#view-connectors .conn-card{display:flex;flex-direction:column;gap:12px;min-width:0;padding:16px;border-radius:24px;background:var(--bg);box-shadow:var(--card-shadow)}
+#view-connectors .conn-card-top{display:flex;align-items:center;gap:12px;min-width:0}
+#view-connectors .conn-icon{display:flex;flex:none;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;background:var(--brand-fill);color:var(--brand);font-size:var(--font-size-16);font-weight:600}
+#view-connectors .conn-titles{min-width:0}
+#view-connectors .conn-name{overflow:hidden;color:var(--text-title);font-size:var(--font-size-16);font-weight:500;line-height:var(--line-height-16);text-overflow:ellipsis;white-space:nowrap}
+#view-connectors .conn-type{color:var(--text-secondary);font-size:var(--font-size-12);line-height:var(--line-height-12)}
+#view-connectors .conn-desc{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;flex:1;margin:0;overflow:hidden;color:var(--text-secondary);font-size:var(--font-size-14);line-height:var(--line-height-14)}
+#view-connectors .conn-foot{display:flex;align-items:center;justify-content:space-between;gap:12px}
+#view-connectors .conn-status{display:inline-flex;align-items:center;gap:6px;color:var(--text-secondary);font-size:var(--font-size-12);line-height:var(--line-height-12)}
+#view-connectors .conn-status::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--text-soft)}
+#view-connectors .conn-card[data-state="on"] .conn-status{color:var(--success)}
+#view-connectors .conn-card[data-state="on"] .conn-status::before{background:var(--success)}
+#view-connectors .conn-card[data-state="busy"] .conn-status{color:var(--warning)}
+#view-connectors .conn-card[data-state="busy"] .conn-status::before{background:var(--warning)}
+#view-connectors .conn-btn{height:var(--control-h-sm);padding:0 14px;border:1px solid var(--brand);border-radius:8px;background:var(--brand);color:var(--bg);font:inherit;font-size:var(--font-size-14);cursor:pointer}
+#view-connectors .conn-btn:hover{background:var(--brand-hover);border-color:var(--brand-hover)}
+#view-connectors .conn-card[data-state="on"] .conn-btn{border-color:var(--border-hover);background:var(--bg);color:var(--text)}
+#view-connectors .conn-card[data-state="on"] .conn-btn:hover{background:var(--hover)}
+#view-connectors .conn-btn:disabled{border-color:var(--border-hover);background:var(--fill-1);color:var(--text-secondary);cursor:default}
+#view-connectors .conn-btn:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+#view-connectors .conn-empty{margin:80px 0 0;color:var(--text-secondary);font-size:var(--font-size-14);text-align:center}
+#view-connectors .conn-empty[hidden]{display:none}
