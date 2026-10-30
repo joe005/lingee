@@ -52,3 +52,20 @@
 #view-skill-center .sc-uninstall:hover{background:var(--hover);color:var(--text)}
 #view-skill-center .sc-empty{margin:80px 0 0;color:var(--text-secondary);font-size:var(--font-size-14);text-align:center}
 @media(max-width:760px){#view-skill-center .sc-toolbar{flex-direction:column;align-items:stretch}#view-skill-center .sc-actions{flex-wrap:wrap}#view-skill-center .sc-search{flex:1 1 180px;width:auto}}
+
+/* 个人开发的技能卡片：沿用「技能开发」页卡片样式（方形图标配色、一行简介、两行状态），颜色按该页原值 */
+#view-skill-center .sc-card--dev{min-height:168px;padding:20px}
+#view-skill-center .sc-dev-top{display:flex;align-items:flex-start;gap:12px;min-width:0}
+#view-skill-center .sc-dev-icon{display:flex;flex:none;align-items:center;justify-content:center;width:44px;height:44px;border-radius:12px;font-size:var(--font-size-24);font-weight:600;line-height:1}
+#view-skill-center .sc-dev-icon.tone-green{background:#e3f8ec;color:#1fb86b}
+#view-skill-center .sc-dev-icon.tone-blue{background:#e9f0ff;color:#3a7bff}
+#view-skill-center .sc-dev-icon.tone-amber{background:#fff1d6;color:#f59a0c}
+#view-skill-center .sc-dev-title{display:flex;align-items:center;gap:8px;min-width:0;padding:2px 76px 0 0}
+#view-skill-center .sc-dev-name{overflow:hidden;color:var(--text-title);font-size:var(--font-size-16);font-weight:600;text-overflow:ellipsis;white-space:nowrap}
+#view-skill-center .sc-dev-desc{margin:14px 0 0;overflow:hidden;color:var(--text-secondary);font-size:var(--font-size-14);line-height:var(--line-height-14);text-overflow:ellipsis;white-space:nowrap}
+#view-skill-center .sc-dev-meta{display:flex;flex-direction:column;gap:12px;margin-top:auto;padding-top:16px;font-size:var(--font-size-14)}
+#view-skill-center .sc-dev-row{display:flex;align-items:center;gap:6px;color:var(--text-secondary)}
+#view-skill-center .sc-dev-row .ic{width:15px;height:15px;color:var(--text)}
+#view-skill-center .sc-dev-row b{color:var(--text);font-weight:400}
+#view-skill-center .sc-dev-row .is-done{color:var(--success)}
+#view-skill-center .sc-card--dev :is(.sc-more,.sc-chat){top:22px}

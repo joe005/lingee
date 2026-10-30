@@ -12,13 +12,13 @@ import { chooseRoute, demoActionToast, moreMenuItems, routeTagHtml, showMoreMenu
 const SOURCE_LABEL={official:'金蝶官方',tenant:'企业自建',personal:'个人开发'};
 const SOURCES=['official','tenant','personal'];
 const SKILLS=[
-  {id:'p1',tags:'环境准备,本地部署',name:'本地环境配置',mark:'环',source:'personal',route:'work',desc:'为协作开发项目准备本地环境：复用已有账号或在登录窗口授权，默认保存代码，需要时选择已有目录。'},
-  {id:'p2',tags:'设备运维,档案查询',name:'查询设备档案',mark:'档',source:'personal',route:'work',desc:'按设备编号或名称读取设备巡检维修系统中的型号、位置、责任人和当前状态。'},
-  {id:'p3',tags:'设备运维,维修记录',name:'查询维修记录',mark:'修',source:'personal',route:'work',desc:'按设备读取近 12 个月的报修、维修原因、更换零件和维修人，只读不改。'},
-  {id:'p4',tags:'问卷调研,模板',name:'问卷设计',mark:'问',source:'personal',route:'work',desc:'按调研目标生成问卷：推荐题型、设置逻辑跳转与必答校验，可套用满意度、培训评估等模板。'},
-  {id:'p5',tags:'问卷调研,数据分析',name:'问卷结果分析',mark:'析',source:'personal',route:'work',desc:'汇总答卷数据，输出回收率、满意度分布、部门交叉分析和开放题关键词，生成改进建议。'},
-  {id:'p6',tags:'销售,订单查询',name:'销售订单查询',mark:'销',source:'personal',route:'',desc:'查询销售订单列表及详情，支持按单据编号、客户、日期、状态等多条件筛选和结果汇总。'},
-  {id:'p7',tags:'天气,查询',name:'天气预报',mark:'天',source:'personal',route:'',desc:'查询指定城市的当前天气和未来天气预报，用户询问天气、温度、降雨等信息时使用。'},
+  {id:'p1',tone:'green',tags:'环境准备,本地部署',name:'本地环境配置',mark:'环',source:'personal',route:'work',desc:'为协作开发项目准备本地环境：复用已有账号或在登录窗口授权，默认保存代码，需要时选择已有目录。'},
+  {id:'p2',tone:'blue',tags:'设备运维,档案查询',name:'查询设备档案',mark:'档',source:'personal',route:'work',desc:'按设备编号或名称读取设备巡检维修系统中的型号、位置、责任人和当前状态。'},
+  {id:'p3',tone:'amber',tags:'设备运维,维修记录',name:'查询维修记录',mark:'修',source:'personal',route:'work',desc:'按设备读取近 12 个月的报修、维修原因、更换零件和维修人，只读不改。'},
+  {id:'p4',tone:'blue',tags:'问卷调研,模板',name:'问卷设计',mark:'问',source:'personal',route:'work',desc:'按调研目标生成问卷：推荐题型、设置逻辑跳转与必答校验，可套用满意度、培训评估等模板。'},
+  {id:'p5',tone:'green',tags:'问卷调研,数据分析',name:'问卷结果分析',mark:'析',source:'personal',route:'work',desc:'汇总答卷数据，输出回收率、满意度分布、部门交叉分析和开放题关键词，生成改进建议。'},
+  {id:'p6',tone:'green',tags:'销售,订单查询',name:'销售订单查询',mark:'销',source:'personal',route:'',desc:'查询销售订单列表及详情，支持按单据编号、客户、日期、状态等多条件筛选和结果汇总。'},
+  {id:'p7',tone:'blue',tags:'天气,查询',name:'天气预报',mark:'天',source:'personal',route:'',desc:'查询指定城市的当前天气和未来天气预报，用户询问天气、温度、降雨等信息时使用。'},
   {id:'o1',v:'V1.1.0',tags:'需求分析,验收设计',name:'苍穹需求分析',mark:'需',source:'official',installed:true,desc:'将苍穹应用目标转化为理解元数据边界且可验证的需求规格。'},
   {id:'o2',tags:'质量保障,端到端测试',name:'苍穹端到端测试',mark:'测',source:'official',installed:true,desc:'优先通过浏览器验收苍穹表单、业务流程及持久化，覆盖负向用例与交付风险。'},
   {id:'t1',tags:'设备运维,只读查询',name:'设备巡检维修查询',mark:'巡',source:'tenant',installed:true,desc:'统一查询设备档案、巡检计划和维修记录，供设备运维智能体调用。'},
@@ -35,16 +35,29 @@ export function init(){
   const list=$('#scList'),search=$('#scSearch');
   let mode='mine';
   const match=s=>{const kw=search.value.trim().toLowerCase();return !kw||(s.name+s.desc).toLowerCase().includes(kw);};
+  /* 个人开发的技能沿用「技能开发」页的卡片样式（方形图标、一行简介、安装与分发两行状态），
+     再叠加分发渠道标签、「···」菜单和对话图标 */
+  const PERSON_ICON='<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>';
+  const BUILDING_ICON='<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v16M14 10h5a1 1 0 0 1 1 1v10M3 21h18M8 8h2M8 12h2M8 16h2"/></svg>';
+  const CHANNEL={'':['企业分发','待提交'],'work-personal':['企业分发','待提交'],work:['企业分发','已发布'],'work-pending':['企业分发','审核中'],'dev-pending':['开发板块','审核中'],dev:['开发板块','已发布']};
+  const MORE=s=>`<button type="button" class="sc-more" data-sc-more aria-haspopup="menu" aria-expanded="false" aria-label="${esc(s.name)}的更多操作" title="更多操作">···</button>`;
+  const CHAT=s=>`<button type="button" class="sc-chat" data-sc-run aria-label="试用${esc(s.name)}" title="试一试"><img src="${dialogIcon}" alt=""></button>`;
+  function devCard(s){
+    const [channel,status]=CHANNEL[s.route||''];
+    return `<article class="sc-card sc-card--personal sc-card--dev" data-sc="${s.id}">${MORE(s)}${CHAT(s)}
+      <div class="sc-dev-top"><span class="sc-dev-icon tone-${s.tone||'blue'}" aria-hidden="true">${esc(s.mark)}</span><div class="sc-dev-title"><span class="sc-dev-name" title="${esc(s.name)}">${esc(s.name)}</span>${routeTagHtml(s.route||'')}</div></div>
+      <p class="sc-dev-desc" title="${esc(s.desc)}">${esc(s.desc)}</p>
+      <div class="sc-dev-meta"><span class="sc-dev-row">${PERSON_ICON}<b>个人</b><span>${s.route==='work-personal'?'已安装':'未安装'}</span></span><span class="sc-dev-row">${BUILDING_ICON}<b>${channel}</b><span class="${status==='已发布'?'is-done':''}">${status}</span></span></div></article>`;
+  }
   function card(s){
-    const badge=`${s.source==='personal'?'':`<span class="sc-badge ${s.source}">${SOURCE_LABEL[s.source]}</span>`}<span class="sc-chip">${s.v||'V1.0.0'}</span>${s.source==='personal'?routeTagHtml(s.route||''):''}`;
-    /* 个人开发和已添加的技能都有对话图标，点击去开发板块的对话框试用 */
-    const chat=(s.source==='personal'||s.installed)?`<button type="button" class="sc-chat" data-sc-run aria-label="试用${esc(s.name)}" title="试一试"><img src="${dialogIcon}" alt=""></button>`:'';
-    let action='';
-    if(s.source==='personal')action=`<button type="button" class="sc-more" data-sc-more aria-haspopup="menu" aria-expanded="false" aria-label="${esc(s.name)}的更多操作" title="更多操作">···</button>`;
-    else action=s.installed
+    if(s.source==='personal')return devCard(s);
+    const badge=`<span class="sc-badge ${s.source}">${SOURCE_LABEL[s.source]}</span><span class="sc-chip">${s.v||'V1.0.0'}</span>`;
+    /* 已添加的技能：对话图标常显，卸载悬停出现；未添加的先安装 */
+    const chat=s.installed?CHAT(s):'';
+    const action=s.installed
       ?`<button type="button" class="sc-uninstall" data-sc-uninstall>卸载</button>`
       :`<button type="button" class="sc-install" data-sc-install aria-label="安装${esc(s.name)}" title="安装${esc(s.name)}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>`;
-    return `<article class="sc-card${s.source==='personal'?' sc-card--personal':''}" data-sc="${s.id}">${action}${chat}
+    return `<article class="sc-card" data-sc="${s.id}">${action}${chat}
       <div class="sc-card-top"><span class="sc-icon" aria-hidden="true">${esc(s.mark)}</span><div class="sc-titles"><div class="sc-name" title="${esc(s.name)}">${esc(s.name)}</div><div class="sc-sub">${badge}</div></div></div>
       <p class="sc-desc" title="${esc(s.desc)}">${esc(s.desc)}</p>
       <div class="sc-tags">${s.tags.split(',').map(t=>`<span class="sc-tag">${esc(t)}</span>`).join('')}</div></article>`;
