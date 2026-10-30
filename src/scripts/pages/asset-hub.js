@@ -1,12 +1,12 @@
 import '../../styles/pages/asset-hub.css';
 import { $, $$ } from '../core/dom.js';
 import { setNavActive, showView } from '../core/view.js';
-/* 侧栏「能力中心」菜单：挂技能 / 智能体 / 智能体团队 / 连接器四个页签。
-   页签只是导航条，内容仍是原有页面（技能开发页、协作开发里的智能体与团队、连接器页），
+/* 侧栏「能力中心」菜单：挂技能 / 智能体 / 连接器三个页签。
+   页签只是导航条，内容仍是原有页面（技能页、协作开发里的智能体、连接器页），
    原菜单与页面保持不变；导航条按当前页签挂到对应页面顶部，离开菜单时移除。 */
 const MENUS={center:{label:'能力中心',tab:'skills'}};
-const TABS=[['skills','技能'],['experts','智能体'],['teams','智能体团队'],['connectors','连接器']];
-/* 技能与连接器是独立页面，智能体、智能体团队挂在协作开发容器里 */
+const TABS=[['skills','技能'],['experts','智能体'],['connectors','连接器']];
+/* 技能与连接器是独立页面，智能体挂在协作开发容器里 */
 const VIEWS={skills:'skill-center',connectors:'connectors'};
 let state=null,nav=null;
 

@@ -1,4 +1,4 @@
-/* 能力中心的四页签导航：悬挂在技能页、协作开发容器与连接器页顶部，样式沿用协作开发的文字导航 */
+/* 能力中心的三页签导航：悬挂在技能页、协作开发容器与连接器页顶部，样式沿用协作开发的文字导航 */
 .asset-hub-nav{position:relative;z-index:2;display:flex;flex:none;align-items:center;gap:12px;box-sizing:border-box;height:52px;min-height:52px}
 .asset-hub-nav button{height:28px;padding:0;border:0;border-radius:0;background:transparent;color:var(--text-secondary);font:inherit;font-size:var(--font-size-18);font-weight:500;line-height:28px;white-space:nowrap;cursor:pointer;transition:color .15s}
 .asset-hub-nav button:hover,.asset-hub-nav button.active{color:var(--text-title)}
