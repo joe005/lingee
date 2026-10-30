@@ -4,7 +4,7 @@ import { setNavActive, showView } from '../core/view.js';
 import { EX } from '../features/expert/data.js';
 import { TEAMS } from '../features/expert/store.js';
 import { submitAssetForReview } from '../features/expert/asset-review.js';
-import { chooseRoute, routeOf, setDevRoute, withdrawPendingReview } from '../features/expert/asset-routes.js';
+import { chooseRoute, routeOf, setRoute, withdrawPendingReview } from '../features/expert/asset-routes.js';
 import { toast } from '../core/toast.js';
 /* 侧栏「技能·智能体·连接器」菜单：挂技能 / 智能体 / 智能体团队 / 连接器四个页签。
    页签只是导航条，内容仍是原有页面（技能页、协作开发里的智能体与智能体团队、连接器页），
@@ -56,7 +56,7 @@ function openHub(menu,tab){
   mount(tab);
 }
 export function init(){
-  /* 卡片上的发布：点「发布」弹窗二选一（开发 / 工作，互斥）；发布到工作走原有的提交审核流程。
+  /* 卡片上的发布：点「发布」弹窗选择路径（开发板块，或工作板块的企业分发 / 个人自用；开发与工作互斥）；企业分发走原有的提交审核流程。
      捕获阶段拦截，避免同时打开卡片详情 */
   document.addEventListener('click',async event=>{
     const button=event.target.closest('#view-collab [data-route-act]');
@@ -69,12 +69,13 @@ export function init(){
     if(act==='publish'){
       if(route)return;
       const choice=await chooseRoute(item.name);
-      if(choice==='work'){submitAssetForReview(kind,item);return;}
-      if(choice!=='dev')return;
-      setDevRoute(kind,id,true);toast('已发布到开发，可在开发板块运行','success');
-    }else if(route==='dev')setDevRoute(kind,id,false);
+      if(choice==='work-enterprise'){submitAssetForReview(kind,item);return;}   /* 企业分发：原有提交审核流程 */
+      if(choice==='dev'){setRoute(kind,id,'dev');toast('已发布到开发板块，可直接运行','success');}
+      else if(choice==='work-personal'){setRoute(kind,id,'work-personal');toast('已发布到工作板块（个人自用），安全检测通过后安装到 Work','success');}
+      else return;
+    }else if(route==='dev'||route==='work-personal')setRoute(kind,id,'');
     else if(route==='work-pending'){withdrawPendingReview(kind,id);toast('已撤回提交');}
-    else{toast('已发布到工作的内容需由企业管理员下架','warning');return;}
+    else{toast('已通过企业分发的内容需由企业管理员下架','warning');return;}
     document.dispatchEvent(new Event('lingee:cloud-assets-changed'));
   },true);
   const items=$$('.sb-scroll [data-hub-menu]');
