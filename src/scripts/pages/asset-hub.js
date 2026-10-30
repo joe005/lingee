@@ -4,6 +4,8 @@ import { setNavActive, showView } from '../core/view.js';
 import { EX } from '../features/expert/data.js';
 import { TEAMS } from '../features/expert/store.js';
 import { submitAssetForReview } from '../features/expert/asset-review.js';
+import { routeOf, setDevRoute, withdrawPendingReview } from '../features/expert/asset-routes.js';
+import { toast } from '../core/toast.js';
 /* 侧栏「技能·智能体·连接器」菜单：挂技能 / 智能体 / 智能体团队 / 连接器四个页签。
    页签只是导航条，内容仍是原有页面（技能页、协作开发里的智能体与智能体团队、连接器页），
    原菜单与页面保持不变；导航条按当前页签挂到对应页面顶部，离开菜单时移除。 */
@@ -54,14 +56,26 @@ function openHub(menu,tab){
   mount(tab);
 }
 export function init(){
-  /* 卡片上的「发布到 Work」：走原有的提交审核流程；捕获阶段拦截，避免同时打开卡片详情 */
+  /* 卡片上的发布去向：发布到开发、发布到工作二选一（互斥）；发布到工作走原有的提交审核流程。
+     捕获阶段拦截，避免同时打开卡片详情 */
   document.addEventListener('click',event=>{
-    const button=event.target.closest('[data-asset-route-publish]');
+    const button=event.target.closest('#view-collab [data-route-act]');
     if(!button)return;
     event.stopPropagation();
-    const [kind,id]=button.dataset.assetRoutePublish.split(':');
+    const {routeKind:kind,routeId:id,routeAct:act}=button.dataset;
     const item=kind==='team'?TEAMS.find(team=>team.id===id):EX[id];
-    if(item)submitAssetForReview(kind,item);
+    if(!item)return;
+    const route=routeOf(kind,id),inWork=route.startsWith('work');
+    if(act==='dev'){
+      if(inWork){toast('已发布到工作，与发布到开发互斥','warning');return;}
+      setDevRoute(kind,id,true);toast('已发布到开发，可在开发板块运行','success');
+    }else if(act==='work'){
+      if(route==='dev'){toast('已发布到开发，与发布到工作互斥，请先撤回','warning');return;}
+      submitAssetForReview(kind,item);return;
+    }else if(route==='dev')setDevRoute(kind,id,false);
+    else if(route==='work-pending'){withdrawPendingReview(kind,id);toast('已撤回提交');}
+    else{toast('已发布到工作的内容需由企业管理员下架','warning');return;}
+    document.dispatchEvent(new Event('lingee:cloud-assets-changed'));
   },true);
   const items=$$('.sb-scroll [data-hub-menu]');
   items.forEach(item=>{

@@ -3,20 +3,21 @@ import { $, $$ } from '../core/dom.js';
 import { toast } from '../core/toast.js';
 import { requestDeleteConfirmation } from '../core/delete-confirm.js';
 import { setNavActive, showView } from '../core/view.js';
+import { routeControlsHtml } from '../features/expert/asset-routes.js';
 /* 能力中心 · 技能：与智能体页同一维度。「我的技能」分「个人开发」和「我添加的」两组，
    「更多技能」是还没安装的金蝶官方、企业自建技能，点 + 安装后进入「我添加的」。
-   每张已添加的技能有两条运行路线：「在开发中运行」留在开发板块新建会话；「发布到 Work」（仅个人开发）提交审核，通过后到 Work 中使用，与原「技能开发」页的提交路线一致。
+   个人开发的技能可发布到开发或发布到工作，二者互斥（发布到工作需提交审核，与原「技能开发」页的提交路线一致）；已添加的技能可在开发中运行。
    技能数据为原型演示数据，状态只保存在本页内存里。 */
 const SOURCE_LABEL={official:'金蝶官方',tenant:'企业自建',personal:'个人开发'};
 const SOURCES=['official','tenant','personal'];
 const SKILLS=[
-  {id:'p1',tags:'环境准备,本地部署',name:'本地环境配置',mark:'环',source:'personal',status:'已发布',desc:'为协作开发项目准备本地环境：复用已有账号或在登录窗口授权，默认保存代码，需要时选择已有目录。'},
-  {id:'p2',tags:'设备运维,档案查询',name:'查询设备档案',mark:'档',source:'personal',status:'已发布',desc:'按设备编号或名称读取设备巡检维修系统中的型号、位置、责任人和当前状态。'},
-  {id:'p3',tags:'设备运维,维修记录',name:'查询维修记录',mark:'修',source:'personal',status:'已发布',desc:'按设备读取近 12 个月的报修、维修原因、更换零件和维修人，只读不改。'},
-  {id:'p4',tags:'问卷调研,模板',name:'问卷设计',mark:'问',source:'personal',status:'已发布',desc:'按调研目标生成问卷：推荐题型、设置逻辑跳转与必答校验，可套用满意度、培训评估等模板。'},
-  {id:'p5',tags:'问卷调研,数据分析',name:'问卷结果分析',mark:'析',source:'personal',status:'已发布',desc:'汇总答卷数据，输出回收率、满意度分布、部门交叉分析和开放题关键词，生成改进建议。'},
-  {id:'p6',tags:'销售,订单查询',name:'销售订单查询',mark:'销',source:'personal',status:'待提交',desc:'查询销售订单列表及详情，支持按单据编号、客户、日期、状态等多条件筛选和结果汇总。'},
-  {id:'p7',tags:'天气,查询',name:'天气预报',mark:'天',source:'personal',status:'待提交',desc:'查询指定城市的当前天气和未来天气预报，用户询问天气、温度、降雨等信息时使用。'},
+  {id:'p1',tags:'环境准备,本地部署',name:'本地环境配置',mark:'环',source:'personal',route:'work',desc:'为协作开发项目准备本地环境：复用已有账号或在登录窗口授权，默认保存代码，需要时选择已有目录。'},
+  {id:'p2',tags:'设备运维,档案查询',name:'查询设备档案',mark:'档',source:'personal',route:'work',desc:'按设备编号或名称读取设备巡检维修系统中的型号、位置、责任人和当前状态。'},
+  {id:'p3',tags:'设备运维,维修记录',name:'查询维修记录',mark:'修',source:'personal',route:'work',desc:'按设备读取近 12 个月的报修、维修原因、更换零件和维修人，只读不改。'},
+  {id:'p4',tags:'问卷调研,模板',name:'问卷设计',mark:'问',source:'personal',route:'work',desc:'按调研目标生成问卷：推荐题型、设置逻辑跳转与必答校验，可套用满意度、培训评估等模板。'},
+  {id:'p5',tags:'问卷调研,数据分析',name:'问卷结果分析',mark:'析',source:'personal',route:'work',desc:'汇总答卷数据，输出回收率、满意度分布、部门交叉分析和开放题关键词，生成改进建议。'},
+  {id:'p6',tags:'销售,订单查询',name:'销售订单查询',mark:'销',source:'personal',route:'',desc:'查询销售订单列表及详情，支持按单据编号、客户、日期、状态等多条件筛选和结果汇总。'},
+  {id:'p7',tags:'天气,查询',name:'天气预报',mark:'天',source:'personal',route:'',desc:'查询指定城市的当前天气和未来天气预报，用户询问天气、温度、降雨等信息时使用。'},
   {id:'o1',v:'V1.1.0',tags:'需求分析,验收设计',name:'苍穹需求分析',mark:'需',source:'official',installed:true,desc:'将苍穹应用目标转化为理解元数据边界且可验证的需求规格。'},
   {id:'o2',tags:'质量保障,端到端测试',name:'苍穹端到端测试',mark:'测',source:'official',installed:true,desc:'优先通过浏览器验收苍穹表单、业务流程及持久化，覆盖负向用例与交付风险。'},
   {id:'t1',tags:'设备运维,只读查询',name:'设备巡检维修查询',mark:'巡',source:'tenant',installed:true,desc:'统一查询设备档案、巡检计划和维修记录，供设备运维智能体调用。'},
@@ -33,17 +34,14 @@ export function init(){
   const list=$('#scList'),filters=$('#scFilters'),search=$('#scSearch');
   let mode='mine',source='all';
   const match=s=>{const kw=search.value.trim().toLowerCase();return !kw||(s.name+s.desc).toLowerCase().includes(kw);};
-  /* 两条路线：在开发板块运行，或发布到 Work 运行；未添加的技能先安装，不显示路线 */
+  /* 发布去向与运行入口：个人开发的技能二选一（发布到开发 / 发布到工作，互斥），已添加的技能可在开发中运行；未添加的先安装 */
   function routes(s){
-    if(s.source==='personal'){
-      const label={'已发布':'已发布到 Work','审核中':'审核中'}[s.status]||'发布到 Work';
-      const done=s.status==='已发布'||s.status==='审核中';
-      return `<div class="sc-routes"><button type="button" class="sc-route" data-sc-run title="在开发板块新建会话并带上该技能">在开发中运行</button><button type="button" class="sc-route sc-route--work" data-sc-publish${done?' disabled':''} title="提交审核，通过后在 Work 中使用">${label}</button></div>`;
-    }
-    return s.installed?`<div class="sc-routes"><button type="button" class="sc-route" data-sc-run title="在开发板块新建会话并带上该技能">在开发中运行</button></div>`:'';
+    if(s.source!=='personal'&&!s.installed)return '';
+    const html=routeControlsHtml(s.route||'',{kind:'skill',id:s.id,personal:s.source==='personal',runAttribute:'data-sc-run'});
+    return html?`<div class="asset-card-routes">${html}</div>`:'';
   }
   function card(s){
-    const badge=`<span class="sc-badge ${s.source}">${SOURCE_LABEL[s.source]}</span><span class="sc-chip">${s.v||'V1.0.0'}</span>${s.status?`<span class="sc-chip">${s.status}</span>`:''}`;
+    const badge=`<span class="sc-badge ${s.source}">${SOURCE_LABEL[s.source]}</span><span class="sc-chip">${s.v||'V1.0.0'}</span>`;
     let action='';
     if(s.source!=='personal')action=s.installed
       ?`<button type="button" class="sc-uninstall" data-sc-uninstall>卸载</button>`
@@ -83,8 +81,17 @@ export function init(){
       const input=$('#composerInput');
       if(input){input.textContent='使用「'+s.name+'」技能：';input.dispatchEvent(new Event('input',{bubbles:true}));input.focus();}
       toast('已在开发板块带上「'+s.name+'」技能发起对话','success');
-    }else if(e.target.closest('[data-sc-publish]')){
-      s.status='审核中';paint();toast('「'+s.name+'」已提交审核，通过后发布到 Work','success');
+    }else if(e.target.closest('[data-route-act]')){
+      const act=e.target.closest('[data-route-act]').dataset.routeAct,inWork=(s.route||'').startsWith('work');
+      if(act==='dev'){
+        if(inWork){toast('已发布到工作，与发布到开发互斥','warning');return;}
+        s.route='dev';toast('已发布到开发，可在开发板块运行','success');
+      }else if(act==='work'){
+        if(s.route==='dev'){toast('已发布到开发，与发布到工作互斥，请先撤回','warning');return;}
+        s.route='work-pending';toast('「'+s.name+'」已提交审核，通过后发布到工作','success');
+      }else if(s.route==='work'){toast('已发布到工作的内容需由企业管理员下架','warning');return;}
+      else{s.route='';toast('已撤回');}
+      paint();
     }else if(e.target.closest('[data-sc-install]')){s.installed=true;paint();toast('已添加技能「'+s.name+'」','success');}
     else if(e.target.closest('[data-sc-uninstall]')){
       if(await requestDeleteConfirmation('确定卸载技能「'+s.name+'」吗？卸载后可在「更多技能」中重新安装。',{title:'确认卸载',confirmLabel:'确认卸载'})){s.installed=false;paint();toast('已卸载技能「'+s.name+'」');}

@@ -56,6 +56,7 @@ function submitToTenant(kind,item,tenant){
     rows.push({id:'review-'+Date.now(),kind,sourceId:item.id,name:item.name,tenantId:tenant,tenantName,author:cvCurrentUserName(),ownerId:assetOwnerKey(),status:'pending',note,bundle,at:new Date().toLocaleString('zh-CN',{hour12:false})});
     if(!store(rows)){$('#assetReviewError').textContent='保存失败，请重试';return;}
     assetReviewClose();
+    document.dispatchEvent(new Event('lingee:cloud-assets-changed'));   /* 卡片上的发布去向随之刷新 */
     $('#expertModal')?.classList.remove('show');$('#teamModal')?.classList.remove('show');
     toast('<span class="asset-submit-toast"><strong>提交成功！</strong><span>「'+xesc(item.name)+'」已提交到 '+xesc(tenantName)+'，待企业管理员审核。审核通过前，内容不会出现在“更多”中，个人开发版本仍可继续使用。</span></span>','success');
   },'提交',{style:'submit'});

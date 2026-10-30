@@ -1,6 +1,7 @@
 import moreIcon from '../../../assets/figma/expert-assets/more.svg';
 import dialogIcon from '../../../assets/figma/expert-assets/dialog.svg';
 import { xesc } from './data.js';
+import { routeControlsHtml, routeOf } from './asset-routes.js';
 let menuSequence=0;
 
 /* 列表卡片的菜单只负责呈现；查看沿用所属页面的点击委托，卸载交给安装模块。 */
@@ -15,14 +16,11 @@ export function assetCardActionsHtml(kind, item, personal, callAttribute) {
     +'</div></div>';
 }
 
-/* 「技能·智能体·连接器」菜单里卡片的两条运行路线：在开发板块运行，或（个人开发）发布到 Work；
+/* 「技能·智能体·连接器」菜单里卡片的发布去向与运行入口，逻辑见 asset-routes.js；
    在协作开发自己的页签里由样式隐藏，见 styles/pages/asset-hub.css */
 export function assetRoutesHtml(kind, item, personal, callAttribute) {
-  const noun=kind==='team'?'智能体团队':'智能体';
-  return '<div class="asset-card-routes">'
-    +'<button type="button" class="asset-card-route" '+callAttribute+'="'+xesc(item.id)+'" title="在开发板块新建会话并带上该'+noun+'">在开发中运行</button>'
-    +(personal?'<button type="button" class="asset-card-route asset-card-route--work" data-asset-route-publish="'+kind+':'+xesc(item.id)+'" title="提交审核，通过后在 Work 中使用">发布到 Work</button>':'')
-    +'</div>';
+  const controls=routeControlsHtml(routeOf(kind,item.id),{kind,id:item.id,personal,runAttribute:callAttribute});
+  return controls?'<div class="asset-card-routes">'+controls+'</div>':'';
 }
 
 function closeMenus(except, returnFocus=false) {

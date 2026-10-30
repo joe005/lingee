@@ -13,7 +13,8 @@
 @media(max-width:760px){#view-collab>.asset-hub-nav{height:auto;min-height:52px;flex-wrap:wrap;row-gap:8px;padding:12px 0}}
 
 /* 智能体、智能体团队卡片的运行路线：只在本菜单里显示，协作开发自己的页签不出现；卡片随之放开固定高度 */
-#view-collab .asset-card-routes{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 0 48px}
+#view-collab .asset-card-routes{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:12px 0 0 48px}
+#view-collab .asset-card-route-state{color:var(--text-secondary);font-size:var(--font-size-12);line-height:18px}
 #view-collab:not(.asset-hub-mode) .asset-card-routes{display:none}
 #view-collab.asset-hub-mode :is(#cv-experts,#cv-teams) .apps-grid:not(.asset-cloud-grid) .x-card{height:auto;min-height:var(--asset-expert-card-height-compact)}
 #view-collab .asset-card-route{height:28px;padding:0 10px;border:1px solid var(--border-hover);border-radius:8px;background:var(--bg);color:var(--text);font:inherit;font-size:var(--font-size-12);line-height:18px;white-space:nowrap;cursor:pointer}
