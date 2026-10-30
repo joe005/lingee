@@ -3,7 +3,8 @@ import { $, $$ } from '../core/dom.js';
 import { toast } from '../core/toast.js';
 import { requestDeleteConfirmation } from '../core/delete-confirm.js';
 import { setNavActive, showView } from '../core/view.js';
-import { chooseRoute, demoActionToast, moreMenuItems, routeControlsHtml, routeTagHtml, showMoreMenu } from '../features/expert/asset-routes.js';
+import dialogIcon from '../../assets/figma/expert-assets/dialog.svg';
+import { chooseRoute, demoActionToast, moreMenuItems, routeTagHtml, showMoreMenu } from '../features/expert/asset-routes.js';
 /* 能力中心 · 技能：与智能体页同一维度。「我的技能」分「个人开发」和「我添加的」两组，
    「更多技能」是还没安装的金蝶官方、企业自建技能，点 + 安装后进入「我添加的」。
    个人开发的技能点「发布」后在弹窗里选择路径：开发板块，或工作板块的企业分发（需审核）/ 个人自用（即时安装），开发与工作互斥（工作板块两条路径与原「技能开发」页的提交路径一致）；已添加的技能可在开发中运行。
@@ -34,23 +35,19 @@ export function init(){
   const list=$('#scList'),filters=$('#scFilters'),search=$('#scSearch');
   let mode='mine',source='all';
   const match=s=>{const kw=search.value.trim().toLowerCase();return !kw||(s.name+s.desc).toLowerCase().includes(kw);};
-  /* 发布去向与运行入口：个人开发的技能二选一（发布到开发 / 发布到工作，互斥），已添加的技能可在开发中运行；未添加的先安装 */
-  function routes(s){
-    if(s.source!=='personal'&&!s.installed)return '';
-    const html=routeControlsHtml(s.route||'',{kind:'skill',id:s.id,personal:s.source==='personal',runAttribute:'data-sc-run'});
-    return html?`<div class="asset-card-routes">${html}</div>`:'';
-  }
   function card(s){
     const badge=`<span class="sc-badge ${s.source}">${SOURCE_LABEL[s.source]}</span><span class="sc-chip">${s.v||'V1.0.0'}</span>${s.source==='personal'?routeTagHtml(s.route||''):''}`;
+    /* 个人开发和已添加的技能都有对话图标，点击去开发板块的对话框试用 */
+    const chat=(s.source==='personal'||s.installed)?`<button type="button" class="sc-chat" data-sc-run aria-label="试用${esc(s.name)}" title="试一试"><img src="${dialogIcon}" alt=""></button>`:'';
     let action='';
     if(s.source==='personal')action=`<button type="button" class="sc-more" data-sc-more aria-haspopup="menu" aria-expanded="false" aria-label="${esc(s.name)}的更多操作" title="更多操作">···</button>`;
     else action=s.installed
       ?`<button type="button" class="sc-uninstall" data-sc-uninstall>卸载</button>`
       :`<button type="button" class="sc-install" data-sc-install aria-label="安装${esc(s.name)}" title="安装${esc(s.name)}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>`;
-    return `<article class="sc-card" data-sc="${s.id}">${action}
+    return `<article class="sc-card${s.source==='personal'?' sc-card--personal':''}" data-sc="${s.id}">${action}${chat}
       <div class="sc-card-top"><span class="sc-icon" aria-hidden="true">${esc(s.mark)}</span><div class="sc-titles"><div class="sc-name" title="${esc(s.name)}">${esc(s.name)}</div><div class="sc-sub">${badge}</div></div></div>
       <p class="sc-desc" title="${esc(s.desc)}">${esc(s.desc)}</p>
-      <div class="sc-tags">${s.tags.split(',').map(t=>`<span class="sc-tag">${esc(t)}</span>`).join('')}</div>${routes(s)}</article>`;
+      <div class="sc-tags">${s.tags.split(',').map(t=>`<span class="sc-tag">${esc(t)}</span>`).join('')}</div></article>`;
   }
   const section=(title,rows)=>rows.length?`<section class="sc-section"><h2 class="sc-section-title">${title}</h2><div class="sc-grid">${rows.map(card).join('')}</div></section>`:'';
   function paint(){

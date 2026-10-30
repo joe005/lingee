@@ -2,7 +2,7 @@ import { assetUpgradeHtml, assetModesHtml, assetTagsHtml, isMoreAssets, syncAsse
 import { layerOf, layerVisible, layerActions, layerToolbar, assetSourceBadge } from '../expert/layers.js';
 import { $ } from '../../core/dom.js';
 import { EXPERTS, skillInfo, xav, xesc } from '../expert/data.js';
-import { assetCardActionsHtml, assetRoutesHtml } from '../expert/card-actions.js';
+import { assetCardActionsHtml } from '../expert/card-actions.js';
 import { routeOf, routeTagHtml } from '../expert/asset-routes.js';
 /* 协作开发：专家管理分组卡片
    拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
@@ -35,7 +35,6 @@ function cvBuildExpertCard(e){
     +'<div class="x-sub asset-card-summary">'+assetSourceBadge('expert',e)+'<span>'+(e.skills||[]).length+' 个技能</span>'+(layerOf('expert',e)==='personal'?routeTagHtml(routeOf('expert',e.id)):'')+'<span class="asset-card-upgrade-anchor">'+assetUpgradeHtml('expert',e.id)+'</span></div></div></div>'
     +'<div class="card-desc" title="'+xesc(e.desc)+'">'+xesc(e.desc)+'</div>'
     +assetTagsHtml(tags)+assetModesHtml(e.modes)
-    +assetRoutesHtml('expert',e,layerOf('expert',e)==='personal','data-cv-call')
     +layerActions('expert',e)+'</div>';
 }
 function cvRenderExperts(){

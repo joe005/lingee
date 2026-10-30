@@ -30,18 +30,9 @@ export function withdrawPendingReview(kind,id){
   return write(REVIEW_KEY,rows.filter(row=>!(row.kind===kind&&row.sourceId===id&&row.status==='pending')));
 }
 const TAG_TEXT={dev:'开发','dev-pending':'开发 · 审核中','work-personal':'工作 · 个人自用','work-pending':'工作 · 企业分发审核中',work:'工作 · 企业分发'};
-const TITLES={run:'在开发板块新建会话并带上它',withdraw:'撤回发布，之后可重新选择发布去向',publish:'选择发布到开发板块或工作板块（二选一）'};
 /* 已发布的简单标签，放在卡片标题下的标签行里 */
 export function routeTagHtml(route){
   return route?'<span class="asset-route-tag asset-route-tag--'+route+'" title="已发布到'+TAG_TEXT[route]+'">'+TAG_TEXT[route]+'</span>':'';
-}
-/* 卡片底部只放运行入口：已添加的官方、企业内容，以及已发布到开发的个人内容；
-   发布、撤回收进个人开发卡片的「⋯」菜单（见 moreMenuItems）。runAttribute 沿用各页已有的「对话」属性，点击即在开发板块运行 */
-export function routeControlsHtml(route,{kind,id,personal,runAttribute}){
-  const run=runAttribute?'<button type="button" class="asset-card-route" '+runAttribute+'="'+xesc(id)+'" title="'+TITLES.run+'">在开发中运行</button>':'';
-  /* 个人开发的技能、智能体发布到开发板块后才可运行；智能体团队只在开发板块，随时可运行 */
-  if(personal&&kind!=='team'&&route!=='dev')return '';
-  return run;
 }
 /* 个人开发卡片的「⋯」菜单项，与「技能开发」页的卡片菜单一致：编辑、本地测试、云端测试、检查、提交、删除。
    「提交」弹窗选择发布去向（开发板块，或工作板块的企业分发 / 个人自用）；已提交或已发布的置灰。智能体团队只在开发板块使用，没有提交项 */

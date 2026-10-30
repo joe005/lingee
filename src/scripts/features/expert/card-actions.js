@@ -1,7 +1,7 @@
 import moreIcon from '../../../assets/figma/expert-assets/more.svg';
 import dialogIcon from '../../../assets/figma/expert-assets/dialog.svg';
 import { xesc } from './data.js';
-import { moreMenuItems, routeControlsHtml, routeOf } from './asset-routes.js';
+import { moreMenuItems, routeOf } from './asset-routes.js';
 let menuSequence=0;
 
 /* 列表卡片的菜单只负责呈现；查看沿用所属页面的点击委托，卸载交给安装模块。 */
@@ -20,13 +20,6 @@ export function assetCardActionsHtml(kind, item, personal, callAttribute) {
     +(personal?hubMenuItemsHtml(kind,item):'')
     +(personal?'<button type="button" role="menuitem" class="asset-card-uninstall" data-asset-card-delete="'+xesc(item.id)+'" data-asset-card-kind="'+kind+'">删除</button>':'<button type="button" role="menuitem" class="asset-card-uninstall" data-cloud-uninstall="'+xesc(kind+':'+item.id)+'">卸载</button>')
     +'</div></div>';
-}
-
-/* 「技能·智能体·连接器」菜单里卡片的发布去向与运行入口，逻辑见 asset-routes.js；
-   在协作开发自己的页签里由样式隐藏，见 styles/pages/asset-hub.css */
-export function assetRoutesHtml(kind, item, personal, callAttribute) {
-  const controls=routeControlsHtml(routeOf(kind,item.id),{kind,id:item.id,personal,runAttribute:callAttribute});
-  return controls?'<div class="asset-card-routes">'+controls+'</div>':'';
 }
 
 function closeMenus(except, returnFocus=false) {
