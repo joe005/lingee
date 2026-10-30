@@ -1,3 +1,5 @@
+.skill-card-menu .agent-card-menu-item:disabled{color:var(--text-soft);cursor:default}
+.skill-card-menu .agent-card-menu-item:disabled:hover{background:transparent}
 /* 技能开发页：卡片更多按钮与提交技能的路径选择弹窗（对照 Lingee Build 技能开发页） */
 #view-skills .card-more{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;border-radius:var(--asset-pill-radius);cursor:pointer}
 #view-skills .card-more:hover{background:var(--hover)}

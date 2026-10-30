@@ -25,14 +25,16 @@ export function init(){
   function openMenu(card,button){
     closeMenu(false);
     menuCard=card;trigger=button;
-    /* 与智能体开发一致：只有待提交、已驳回的技能可提交 */
-    menu.querySelector('[data-skill-action="submit"]').hidden=!['待提交','已驳回'].includes(card.dataset.status||'');
+    /* 所有技能都有「提交」；审核中的不能重复提交，已发布的可提交新版本 */
+    const submit=menu.querySelector('[data-skill-action="submit"]'),reviewing=card.dataset.status==='审核中';
+    submit.disabled=reviewing;
+    submit.title=reviewing?'已提交审核，请等待管理员审核':'';
     menu.hidden=false;
     const rect=button.getBoundingClientRect();
     menu.style.top=Math.min(rect.bottom+4,window.innerHeight-menu.offsetHeight-8)+'px';
     menu.style.left=Math.max(8,Math.min(rect.left,window.innerWidth-menu.offsetWidth-8))+'px';
     button.setAttribute('aria-expanded','true');
-    menu.querySelector('.agent-card-menu-item:not([hidden])')?.focus();
+    menu.querySelector('.agent-card-menu-item:not(:disabled)')?.focus();
   }
   function openSubmit(card){
     submitCard=card;
