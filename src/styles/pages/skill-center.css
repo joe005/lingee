@@ -26,27 +26,27 @@
 #view-skill-center .sc-filter.active span{color:inherit}
 
 #view-skill-center .sc-section+.sc-section{margin-top:20px}
-#view-skill-center .sc-section-title{display:flex;align-items:center;gap:8px;min-height:32px;margin:0 0 12px;color:var(--text);font-size:var(--font-size-16);font-weight:500;line-height:var(--line-height-16)}
-#view-skill-center .sc-section-title span{color:var(--text-secondary);font-size:var(--font-size-14);font-weight:400}
+#view-skill-center .sc-section-title{display:flex;align-items:center;min-height:32px;margin:0 0 12px;color:var(--text);font-size:var(--font-size-16);font-weight:500;line-height:24px}
 #view-skill-center .sc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr));gap:20px;align-items:stretch}
-#view-skill-center .sc-card{position:relative;display:flex;flex-direction:column;gap:12px;min-width:0;padding:16px;border-radius:24px;background:var(--bg);box-shadow:var(--card-shadow)}
-#view-skill-center .sc-card-top{display:flex;align-items:center;gap:12px;min-width:0;padding-right:40px}
-#view-skill-center .sc-icon{display:flex;flex:none;align-items:center;justify-content:center;width:40px;height:40px;border-radius:12px;background:var(--brand-fill);color:var(--brand);font-size:var(--font-size-16);font-weight:600}
-#view-skill-center .sc-titles{min-width:0}
-#view-skill-center .sc-name{overflow:hidden;color:var(--text-title);font-size:var(--font-size-16);font-weight:500;line-height:var(--line-height-16);text-overflow:ellipsis;white-space:nowrap}
-#view-skill-center .sc-sub{display:flex;align-items:center;gap:8px;margin-top:2px;color:var(--text-secondary);font-size:var(--font-size-12);line-height:var(--line-height-12)}
-#view-skill-center .sc-badge{padding:1px 6px;border-radius:5px;white-space:nowrap}
-#view-skill-center .sc-badge.official{color:var(--asset-source-official-text);background:var(--asset-source-official-bg)}
-#view-skill-center .sc-badge.tenant{color:var(--asset-source-tenant-text);background:var(--asset-source-tenant-bg)}
-#view-skill-center .sc-badge.personal{color:var(--asset-source-personal-text);background:var(--asset-source-personal-bg)}
-#view-skill-center .sc-desc{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;flex:1;margin:0;overflow:hidden;color:var(--text-secondary);font-size:var(--font-size-14);line-height:var(--line-height-14)}
-#view-skill-center .sc-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:32px}
-#view-skill-center .sc-state{color:var(--text-secondary);font-size:var(--font-size-12);line-height:var(--line-height-12)}
-#view-skill-center .sc-state.draft{color:var(--warning)}
-#view-skill-center .sc-state.done{color:var(--success)}
-#view-skill-center .sc-uninstall{height:32px;padding:0 12px;border:0;border-radius:8px;background:transparent;color:var(--text-secondary);font:inherit;font-size:var(--font-size-14);cursor:pointer}
-#view-skill-center .sc-uninstall:hover{background:var(--hover);color:var(--text)}
-#view-skill-center .sc-install{position:absolute;top:16px;right:16px;display:flex;align-items:center;justify-content:center;width:32px;height:32px;border:1px solid var(--border-hover);border-radius:50%;background:var(--bg);color:var(--text-secondary);cursor:pointer}
+/* 卡片结构与智能体卡片一致：40px 圆形头像、描边小标签行、简介缩进到标题列、底部标签 */
+#view-skill-center .sc-card{position:relative;display:flex;flex-direction:column;min-width:0;min-height:176px;box-sizing:border-box;padding:16px;border-radius:24px;background:var(--bg);box-shadow:var(--card-shadow)}
+#view-skill-center .sc-card-top{display:flex;align-items:flex-start;gap:8px;min-width:0}
+#view-skill-center .sc-icon{display:flex;flex:none;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;background:var(--brand-fill);color:var(--brand);font-size:var(--font-size-16);font-weight:600}
+#view-skill-center .sc-titles{min-width:0;padding-right:28px}
+#view-skill-center .sc-name{overflow:hidden;color:var(--text-title);font-size:var(--font-size-16);font-weight:500;line-height:24px;text-overflow:ellipsis;white-space:nowrap}
+#view-skill-center .sc-sub{display:flex;flex-wrap:wrap;align-items:center;gap:4px;min-height:20px;margin-top:2px;color:var(--text-secondary);font-size:var(--font-size-12);line-height:18px}
+#view-skill-center .sc-badge,#view-skill-center .sc-chip{padding:0 4px;border:1px solid var(--border);border-radius:4px;background:transparent;color:var(--text-secondary);white-space:nowrap}
+#view-skill-center .sc-badge.official{border-color:var(--border-focus);color:var(--asset-source-official-text)}
+#view-skill-center .sc-badge.tenant{border-color:var(--asset-tenant-outline-border);color:var(--asset-source-tenant-text)}
+#view-skill-center .sc-badge.personal{border-color:var(--asset-personal-outline-border);color:var(--asset-personal-outline)}
+#view-skill-center .sc-desc{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;flex:0 0 auto;height:40px;margin:8px 0 8px 48px;overflow:hidden;color:var(--text-secondary);font-size:var(--font-size-14);line-height:20px}
+#view-skill-center .sc-tags{display:flex;flex-wrap:nowrap;gap:4px;max-height:20px;margin:auto 0 0 48px;overflow:hidden}
+#view-skill-center .sc-tag{padding:0 6px;border-radius:var(--asset-pill-radius);background:var(--tag-bg);color:var(--text);font-size:var(--font-size-12);line-height:20px;white-space:nowrap}
+#view-skill-center .sc-install{position:absolute;top:16px;right:16px;display:flex;align-items:center;justify-content:center;width:24px;height:24px;border:1px solid var(--border-hover);border-radius:var(--tb-radius);background:var(--bg);color:var(--text-secondary);cursor:pointer}
 #view-skill-center .sc-install:hover{border-color:var(--brand);background:var(--brand-fill);color:var(--brand)}
+/* 已安装技能的卸载入口悬停或键盘聚焦时才出现 */
+#view-skill-center .sc-uninstall{position:absolute;top:12px;right:12px;height:24px;padding:0 8px;border:0;border-radius:var(--asset-pill-radius);background:var(--bg);color:var(--text-secondary);font:inherit;font-size:var(--font-size-12);opacity:0;pointer-events:none;cursor:pointer}
+#view-skill-center .sc-card:hover .sc-uninstall,#view-skill-center .sc-card:focus-within .sc-uninstall{opacity:1;pointer-events:auto}
+#view-skill-center .sc-uninstall:hover{background:var(--hover);color:var(--text)}
 #view-skill-center .sc-empty{margin:80px 0 0;color:var(--text-secondary);font-size:var(--font-size-14);text-align:center}
 @media(max-width:760px){#view-skill-center .sc-toolbar{flex-direction:column;align-items:stretch}#view-skill-center .sc-actions{flex-wrap:wrap}#view-skill-center .sc-search{flex:1 1 180px;width:auto}}
