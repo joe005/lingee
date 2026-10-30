@@ -54,7 +54,7 @@
 #view-skill-center .sc-install{position:absolute;top:16px;right:16px;display:flex;align-items:center;justify-content:center;width:24px;height:24px;border:1px solid var(--border-hover);border-radius:var(--tb-radius);background:var(--bg);color:var(--text-secondary);cursor:pointer}
 #view-skill-center .sc-install:hover{border-color:var(--brand);background:var(--brand-fill);color:var(--brand)}
 /* 已安装技能的卸载入口悬停或键盘聚焦时才出现 */
-#view-skill-center .sc-uninstall{position:absolute;top:12px;right:44px;height:24px;padding:0 8px;border:0;border-radius:var(--asset-pill-radius);background:var(--bg);color:var(--text-secondary);font:inherit;font-size:var(--font-size-12);opacity:0;pointer-events:none;cursor:pointer}
+#view-skill-center .sc-uninstall{position:absolute;top:16px;right:44px;height:24px;padding:0 8px;border:0;border-radius:var(--asset-pill-radius);background:var(--bg);color:var(--text-secondary);font:inherit;font-size:var(--font-size-12);opacity:0;pointer-events:none;cursor:pointer}
 #view-skill-center .sc-card:hover .sc-uninstall,#view-skill-center .sc-card:focus-within .sc-uninstall{opacity:1;pointer-events:auto}
 #view-skill-center .sc-uninstall:hover{background:var(--hover);color:var(--text)}
 #view-skill-center .sc-empty{margin:80px 0 0;color:var(--text-secondary);font-size:var(--font-size-14);text-align:center}
