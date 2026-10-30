@@ -6,7 +6,8 @@ import { setNavActive, showView } from '../core/view.js';
    原菜单与页面保持不变；导航条按当前页签挂到对应页面顶部，离开菜单时移除。 */
 const MENUS={center:{label:'能力中心',tab:'skills'}};
 const TABS=[['skills','技能'],['experts','智能体'],['teams','智能体团队'],['connectors','连接器']];
-const HOSTS={skills:'#view-skills',connectors:'#view-connectors'};
+/* 技能与连接器是独立页面，智能体、智能体团队挂在协作开发容器里 */
+const VIEWS={skills:'skill-center',connectors:'connectors'};
 let state=null,nav=null;
 
 function buildNav(){
@@ -27,10 +28,10 @@ function unmount(){
 function mount(tab){
   if(!nav)buildNav();
   unmount();
-  const host=$(HOSTS[tab]||'#view-collab');
+  const host=$('#view-'+(VIEWS[tab]||'collab'));
   if(!host)return;
   host.classList.add('asset-hub-mode');
-  host.insertBefore(nav,HOSTS[tab]?host.firstChild:$('#cvTabNav'));
+  host.insertBefore(nav,VIEWS[tab]?host.firstChild:$('#cvTabNav'));
   nav.querySelectorAll('[data-hub-tab]').forEach(button=>{
     const on=button.dataset.hubTab===tab;
     button.classList.toggle('active',on);
@@ -39,8 +40,8 @@ function mount(tab){
 }
 function openHub(menu,tab){
   state={menu,tab};
-  if(HOSTS[tab]){
-    showView(tab);
+  if(VIEWS[tab]){
+    showView(VIEWS[tab]);
   }else{
     showView('collab');
     /* 协作开发自己监听该事件：初始化并切到对应页签 */
@@ -58,8 +59,8 @@ export function init(){
       if(event.key==='Enter'||event.key===' '){event.preventDefault();open();}
     });
   });
-  /* 刷新后停在连接器页时，补回页签导航 */
-  if(!$('#view-connectors').classList.contains('hidden'))openHub('center','connectors');
+  /* 刷新后停在技能或连接器页时，补回页签导航 */
+  Object.keys(VIEWS).forEach(tab=>{if(!$('#view-'+VIEWS[tab]).classList.contains('hidden'))openHub('center',tab);});
   /* 侧栏切到其他菜单（其他入口调用 setNavActive）时，能力中心不再高亮：撤掉导航条，原页面恢复原样 */
   new MutationObserver(()=>{
     if(state&&!items.some(item=>item.classList.contains('active'))){state=null;unmount();}

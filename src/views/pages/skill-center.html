@@ -1,0 +1,23 @@
+<div class="view hidden" id="view-skill-center" data-route="skill-center">
+  <div class="sc-page">
+    <div class="sc-toolbar">
+      <div class="sc-tabs" id="scModes" role="group" aria-label="技能目录">
+        <button type="button" class="sc-tab active" data-sc-mode="mine" aria-pressed="true">我的技能</button>
+        <button type="button" class="sc-tab" data-sc-mode="more" aria-pressed="false">更多技能</button>
+      </div>
+      <div class="sc-actions">
+        <div class="sc-search">
+          <input type="search" id="scSearch" placeholder="搜索技能" aria-label="搜索技能" autocomplete="off">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        </div>
+        <button type="button" class="sc-create" id="scCreate"><svg width="10" height="10" viewBox="0 0 11 11" fill="none" aria-hidden="true"><path d="M5.25 0C5.66 0 6 .34 6 .75V4.5h3.75a.75.75 0 0 1 0 1.5H6v3.75a.75.75 0 0 1-1.5 0V6H.75a.75.75 0 0 1 0-1.5H4.5V.75C4.5.34 4.84 0 5.25 0Z" fill="currentColor"/></svg>新建</button>
+      </div>
+    </div>
+    <div class="sc-filters" id="scFilters" role="group" aria-label="来源筛选" hidden>
+      <button type="button" class="sc-filter active" data-sc-source="all" aria-pressed="true">全部 <span data-sc-count="all"></span></button>
+      <button type="button" class="sc-filter" data-sc-source="official" aria-pressed="false">金蝶官方 <span data-sc-count="official"></span></button>
+      <button type="button" class="sc-filter" data-sc-source="tenant" aria-pressed="false">企业自建 <span data-sc-count="tenant"></span></button>
+    </div>
+    <div id="scList"></div>
+  </div>
+</div>
