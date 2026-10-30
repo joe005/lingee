@@ -69,13 +69,16 @@ export function init(){
     if(act==='publish'){
       if(route)return;
       const choice=await chooseRoute(item.name);
-      if(choice==='work-enterprise'){submitAssetForReview(kind,item);return;}   /* 企业分发：原有提交审核流程 */
-      if(choice==='dev'){setRoute(kind,id,'dev');toast('已发布到开发板块，可直接运行','success');}
-      else if(choice==='work-personal'){setRoute(kind,id,'work-personal');toast('已发布到工作板块（个人自用），安全检测通过后安装到 Work','success');}
+      if(choice==='dev'||choice==='work-enterprise'){
+        /* 开发板块与企业分发都走原有的提交审核流程；记下这次提交面向哪个板块 */
+        setRoute(kind,id,choice==='dev'?'dev':'');
+        submitAssetForReview(kind,item);return;
+      }
+      if(choice==='work-personal'){setRoute(kind,id,'work-personal');toast('已发布到工作板块（个人自用），安全检测通过后安装到 Work','success');}
       else return;
-    }else if(route==='dev'||route==='work-personal')setRoute(kind,id,'');
-    else if(route==='work-pending'){withdrawPendingReview(kind,id);toast('已撤回提交');}
-    else{toast('已通过企业分发的内容需由企业管理员下架','warning');return;}
+    }else if(route==='work-personal')setRoute(kind,id,'');
+    else if(route==='dev-pending'||route==='work-pending'){withdrawPendingReview(kind,id);toast('已撤回提交');}
+    else{toast('已通过审核的内容需由企业管理员下架','warning');return;}
     document.dispatchEvent(new Event('lingee:cloud-assets-changed'));
   },true);
   const items=$$('.sb-scroll [data-hub-menu]');

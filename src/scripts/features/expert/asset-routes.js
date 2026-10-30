@@ -1,5 +1,5 @@
 import { xesc } from './data.js';
-/* 技能、智能体的发布去向：开发板块（直接运行，无需审核）或工作板块（沿用原有「企业分发 / 个人自用」两条路径），二者互斥。
+/* 技能、智能体的发布去向：开发板块（需审核，通过后在开发板块使用）或工作板块（沿用原有「企业分发 / 个人自用」两条路径），二者互斥。
    智能体团队只在开发板块使用，没有发布去向可选，卡片上只有运行入口。
    工作去向由提交审核记录推出（待审核 / 已通过），开发去向存在本地；技能没有审核记录，由技能页自己维护状态。 */
 const KEY='lingee.asset-routes.v1';
@@ -7,14 +7,17 @@ const KEY='lingee.asset-routes.v1';
 const REVIEW_KEY='lingee.platform.reviews.v1';
 function read(key,fallback){try{const value=JSON.parse(localStorage.getItem(key)||'null');return value??fallback;}catch(_){return fallback;}}
 function write(key,value){try{localStorage.setItem(key,JSON.stringify(value));return true;}catch(_){return false;}}
-/* ''（未发布）、'dev'（开发）、'work-personal'（工作·个人自用，即时安装）、'work-pending'（工作·企业分发审核中）、'work'（工作·企业分发已发布） */
+/* ''（未发布）、'dev-pending'（开发·审核中）、'dev'（开发·已通过）、'work-personal'（工作·个人自用，即时安装）、
+   'work-pending'（工作·企业分发审核中）、'work'（工作·企业分发已通过）。开发与企业分发都走提交审核，
+   本地记录的 'dev' 只标明这次提交面向开发板块 */
 export function routeOf(kind,id){
+  const stored=read(KEY,{})[kind+':'+id]||'';
   const rows=read(REVIEW_KEY,[]).filter(row=>row.kind===kind&&row.sourceId===id);
-  if(rows.some(row=>row.status==='approved'))return 'work';
-  if(rows.some(row=>row.status==='pending'))return 'work-pending';
-  return read(KEY,{})[kind+':'+id]||'';
+  if(rows.some(row=>row.status==='approved'))return stored==='dev'?'dev':'work';
+  if(rows.some(row=>row.status==='pending'))return stored==='dev'?'dev-pending':'work-pending';
+  return stored==='work-personal'?stored:'';
 }
-/* value 为 'dev' 或 'work-personal'；传空清除 */
+/* value 为 'dev'（本次提交面向开发板块）或 'work-personal'；传空清除 */
 export function setRoute(kind,id,value){
   const data=read(KEY,{});
   if(value)data[kind+':'+id]=value;else delete data[kind+':'+id];
@@ -23,9 +26,10 @@ export function setRoute(kind,id,value){
 /* 撤回待审核的提交，使其可改发布到开发 */
 export function withdrawPendingReview(kind,id){
   const rows=read(REVIEW_KEY,[]);
+  setRoute(kind,id,'');
   return write(REVIEW_KEY,rows.filter(row=>!(row.kind===kind&&row.sourceId===id&&row.status==='pending')));
 }
-const TAG_TEXT={dev:'开发','work-personal':'工作 · 个人自用','work-pending':'工作 · 企业分发审核中',work:'工作 · 企业分发'};
+const TAG_TEXT={dev:'开发','dev-pending':'开发 · 审核中','work-personal':'工作 · 个人自用','work-pending':'工作 · 企业分发审核中',work:'工作 · 企业分发'};
 const TITLES={run:'在开发板块新建会话并带上它',withdraw:'撤回发布，之后可重新选择发布去向',publish:'选择发布到开发板块或工作板块（二选一）'};
 /* 已发布的简单标签，放在卡片标题下的标签行里 */
 export function routeTagHtml(route){
@@ -38,12 +42,12 @@ export function routeControlsHtml(route,{kind,id,personal,runAttribute}){
   const run=runAttribute?'<button type="button" class="asset-card-route" '+runAttribute+'="'+xesc(id)+'" title="'+TITLES.run+'">在开发中运行</button>':'';
   if(!personal||kind==='team')return run;
   if(!route)return '<button type="button" class="asset-card-route asset-card-route--work" data-route-act="publish"'+data+' title="'+TITLES.publish+'">发布</button>';
-  return (route==='dev'?run:'')+(route==='work'?'':'<button type="button" class="asset-card-route" data-route-act="withdraw"'+data+' title="'+TITLES.withdraw+'">撤回</button>');
+  return (route==='dev'?run:'')+(route==='work'||route==='dev'?'':'<button type="button" class="asset-card-route" data-route-act="withdraw"'+data+' title="'+TITLES.withdraw+'">撤回</button>');
 }
 /* 发布时的去向选择弹窗：开发板块，或工作板块的「企业分发 / 个人自用」（沿用原有提交路径），三选一，开发与工作互斥。
    返回 'dev' / 'work-enterprise' / 'work-personal'，取消返回 null */
 const ROUTE_HINTS={
-  dev:'发布到开发板块后仅在开发板块使用，不会出现在 Work。',
+  dev:'发布到开发板块需管理员审核后生效，仅在开发板块使用，不会出现在 Work。',
   'work-enterprise':'企业分发将对团队成员或市场开放，需管理员审核后生效。',
   'work-personal':'个人自用无需审核，安全检测通过后即时安装到 Work。'
 };
@@ -59,7 +63,7 @@ export function chooseRoute(name){
       +'<h3 id="assetRouteTitle">发布「'+xesc(name)+'」· 选择路径</h3>'
       +'<div class="asset-route-options" role="radiogroup" aria-label="发布去向">'
       +'<div class="asset-route-group">开发板块</div>'
-      +option('dev','发布到开发','在开发板块直接运行，无需审核')
+      +option('dev','发布到开发','适合在开发板块使用，需管理员审核，通过后可直接运行')
       +'<div class="asset-route-group">工作板块</div>'
       +option('work-enterprise','企业分发','适合团队协作与知识沉淀，可共享给他人或发布至企业市场，需管理员审核')
       +option('work-personal','个人自用','适合本人独立使用，安全检测通过后即时安装到 Work，无需审核')

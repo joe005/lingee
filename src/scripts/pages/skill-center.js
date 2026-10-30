@@ -85,11 +85,11 @@ export function init(){
       if(e.target.closest('[data-route-act]').dataset.routeAct==='publish'){
         if(s.route)return;
         const choice=await chooseRoute(s.name);
-        if(choice==='dev'){s.route='dev';toast('已发布到开发板块，可直接运行','success');}
+        if(choice==='dev'){s.route='dev-pending';toast('「'+s.name+'」已提交开发板块审核，通过后可在开发板块运行','success');}
         else if(choice==='work-personal'){s.route='work-personal';toast('已发布到工作板块（个人自用），安全检测通过后安装到 Work','success');}
         else if(choice==='work-enterprise'){s.route='work-pending';toast('「'+s.name+'」已提交企业分发审核，通过后在 Work 中使用','success');}
         else return;
-      }else if(s.route==='work'){toast('已通过企业分发的内容需由企业管理员下架','warning');return;}
+      }else if(s.route==='work'||s.route==='dev'){toast('已通过审核的内容需由企业管理员下架','warning');return;}
       else{s.route='';toast('已撤回');}
       paint();
     }else if(e.target.closest('[data-sc-install]')){s.installed=true;paint();toast('已添加技能「'+s.name+'」','success');}
