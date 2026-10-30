@@ -24,22 +24,52 @@ export function withdrawPendingReview(kind,id){
   const rows=read(REVIEW_KEY,[]);
   return write(REVIEW_KEY,rows.filter(row=>!(row.kind===kind&&row.sourceId===id&&row.status==='pending')));
 }
-const STATE_TEXT={dev:'已发布到开发','work-pending':'已提交到工作 · 审核中',work:'已发布到工作'};
-const TITLES={
-  dev:'发布到开发：在开发板块直接运行，无需审核。与发布到工作互斥',
-  work:'发布到工作：提交审核，通过后在 Work 中使用。与发布到开发互斥',
-  run:'在开发板块新建会话并带上它',
-  withdraw:'撤回发布，之后可重新选择发布去向'
-};
-/* 个人开发：未发布时给「发布到开发 / 发布到工作」二选一，已选后显示状态与撤回；
+const TAG_TEXT={dev:'开发','work-pending':'工作 · 审核中',work:'工作'};
+const TITLES={run:'在开发板块新建会话并带上它',withdraw:'撤回发布，之后可重新选择发布去向',publish:'选择发布到开发或发布到工作（二选一）'};
+/* 已发布的简单标签，放在卡片标题下的标签行里 */
+export function routeTagHtml(route){
+  return route?'<span class="asset-route-tag asset-route-tag--'+route+'" title="已发布到'+TAG_TEXT[route].replace(' · 审核中','（审核中）')+'">'+TAG_TEXT[route]+'</span>':'';
+}
+/* 个人开发：未发布时只有一个「发布」按钮，点击后弹窗二选一；已发布后标签在标题下，这里只留运行和撤回。
    已添加的官方、企业内容只有运行入口。runAttribute 沿用各页已有的「对话」属性，点击即在开发板块运行 */
 export function routeControlsHtml(route,{kind,id,personal,runAttribute}){
   const data=' data-route-kind="'+kind+'" data-route-id="'+xesc(id)+'"';
   const run=runAttribute?'<button type="button" class="asset-card-route" '+runAttribute+'="'+xesc(id)+'" title="'+TITLES.run+'">在开发中运行</button>':'';
   if(!personal||kind==='team')return run;
-  if(!route)return '<button type="button" class="asset-card-route" data-route-act="dev"'+data+' title="'+TITLES.dev+'">发布到开发</button>'
-    +'<button type="button" class="asset-card-route asset-card-route--work" data-route-act="work"'+data+' title="'+TITLES.work+'">发布到工作</button>';
-  return '<span class="asset-card-route-state">'+STATE_TEXT[route]+'</span>'
-    +(route==='dev'?run:'')
-    +(route==='work'?'':'<button type="button" class="asset-card-route" data-route-act="withdraw"'+data+' title="'+TITLES.withdraw+'">撤回</button>');
+  if(!route)return '<button type="button" class="asset-card-route asset-card-route--work" data-route-act="publish"'+data+' title="'+TITLES.publish+'">发布</button>';
+  return (route==='dev'?run:'')+(route==='work'?'':'<button type="button" class="asset-card-route" data-route-act="withdraw"'+data+' title="'+TITLES.withdraw+'">撤回</button>');
+}
+/* 发布时的去向选择弹窗：开发、工作二选一（互斥）；返回 'dev' / 'work'，取消返回 null */
+let activeDialog=null;
+export function chooseRoute(name){
+  if(activeDialog)return Promise.resolve(null);
+  return new Promise(resolve=>{
+    const previous=document.activeElement;
+    const overlay=document.createElement('div');
+    overlay.className='app-delete-confirm asset-route-dialog';
+    overlay.innerHTML='<div class="app-delete-confirm-card" role="dialog" aria-modal="true" aria-labelledby="assetRouteTitle">'
+      +'<h3 id="assetRouteTitle">发布「'+xesc(name)+'」</h3>'
+      +'<p>选择发布去向，开发与工作二选一，同一时间只能发布到一处。</p>'
+      +'<div class="asset-route-options" role="radiogroup" aria-label="发布去向">'
+      +'<label class="asset-route-option"><input type="radio" name="assetRoute" value="dev"><span><strong>开发</strong><small>在开发板块直接运行，无需审核</small></span></label>'
+      +'<label class="asset-route-option"><input type="radio" name="assetRoute" value="work"><span><strong>工作</strong><small>提交审核，通过后在 Work 中使用</small></span></label>'
+      +'</div>'
+      +'<div class="app-delete-confirm-actions"><button type="button" data-route-cancel>取消</button><button type="button" class="asset-route-confirm" data-route-confirm disabled>发布</button></div></div>';
+    const confirm=overlay.querySelector('[data-route-confirm]');
+    const close=value=>{
+      if(activeDialog!==overlay)return;
+      activeDialog=null;overlay.remove();document.removeEventListener('keydown',onKey,true);
+      if(previous?.isConnected)previous.focus();
+      resolve(value);
+    };
+    const onKey=event=>{if(event.key==='Escape'){event.preventDefault();close(null);}};
+    overlay.addEventListener('change',()=>{confirm.disabled=false;});
+    overlay.addEventListener('click',event=>{
+      if(event.target===overlay||event.target.closest('[data-route-cancel]'))close(null);
+      else if(event.target.closest('[data-route-confirm]'))close(overlay.querySelector('input:checked')?.value||null);
+    });
+    document.addEventListener('keydown',onKey,true);
+    activeDialog=overlay;document.body.appendChild(overlay);
+    overlay.querySelector('input').focus();
+  });
 }

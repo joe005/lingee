@@ -3,10 +3,10 @@ import { $, $$ } from '../core/dom.js';
 import { toast } from '../core/toast.js';
 import { requestDeleteConfirmation } from '../core/delete-confirm.js';
 import { setNavActive, showView } from '../core/view.js';
-import { routeControlsHtml } from '../features/expert/asset-routes.js';
+import { chooseRoute, routeControlsHtml, routeTagHtml } from '../features/expert/asset-routes.js';
 /* 能力中心 · 技能：与智能体页同一维度。「我的技能」分「个人开发」和「我添加的」两组，
    「更多技能」是还没安装的金蝶官方、企业自建技能，点 + 安装后进入「我添加的」。
-   个人开发的技能可发布到开发或发布到工作，二者互斥（发布到工作需提交审核，与原「技能开发」页的提交路线一致）；已添加的技能可在开发中运行。
+   个人开发的技能点「发布」后在弹窗里二选一：发布到开发或发布到工作，二者互斥（发布到工作需提交审核，与原「技能开发」页的提交路线一致）；已添加的技能可在开发中运行。
    技能数据为原型演示数据，状态只保存在本页内存里。 */
 const SOURCE_LABEL={official:'金蝶官方',tenant:'企业自建',personal:'个人开发'};
 const SOURCES=['official','tenant','personal'];
@@ -41,7 +41,7 @@ export function init(){
     return html?`<div class="asset-card-routes">${html}</div>`:'';
   }
   function card(s){
-    const badge=`<span class="sc-badge ${s.source}">${SOURCE_LABEL[s.source]}</span><span class="sc-chip">${s.v||'V1.0.0'}</span>`;
+    const badge=`<span class="sc-badge ${s.source}">${SOURCE_LABEL[s.source]}</span><span class="sc-chip">${s.v||'V1.0.0'}</span>${s.source==='personal'?routeTagHtml(s.route||''):''}`;
     let action='';
     if(s.source!=='personal')action=s.installed
       ?`<button type="button" class="sc-uninstall" data-sc-uninstall>卸载</button>`
@@ -82,13 +82,12 @@ export function init(){
       if(input){input.textContent='使用「'+s.name+'」技能：';input.dispatchEvent(new Event('input',{bubbles:true}));input.focus();}
       toast('已在开发板块带上「'+s.name+'」技能发起对话','success');
     }else if(e.target.closest('[data-route-act]')){
-      const act=e.target.closest('[data-route-act]').dataset.routeAct,inWork=(s.route||'').startsWith('work');
-      if(act==='dev'){
-        if(inWork){toast('已发布到工作，与发布到开发互斥','warning');return;}
-        s.route='dev';toast('已发布到开发，可在开发板块运行','success');
-      }else if(act==='work'){
-        if(s.route==='dev'){toast('已发布到开发，与发布到工作互斥，请先撤回','warning');return;}
-        s.route='work-pending';toast('「'+s.name+'」已提交审核，通过后发布到工作','success');
+      if(e.target.closest('[data-route-act]').dataset.routeAct==='publish'){
+        if(s.route)return;
+        const choice=await chooseRoute(s.name);
+        if(choice==='dev'){s.route='dev';toast('已发布到开发，可在开发板块运行','success');}
+        else if(choice==='work'){s.route='work-pending';toast('「'+s.name+'」已提交审核，通过后发布到工作','success');}
+        else return;
       }else if(s.route==='work'){toast('已发布到工作的内容需由企业管理员下架','warning');return;}
       else{s.route='';toast('已撤回');}
       paint();

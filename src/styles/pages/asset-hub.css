@@ -14,7 +14,6 @@
 
 /* 智能体、智能体团队卡片的运行路线：只在本菜单里显示，协作开发自己的页签不出现；卡片随之放开固定高度 */
 #view-collab .asset-card-routes{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:12px 0 0 48px}
-#view-collab .asset-card-route-state{color:var(--text-secondary);font-size:var(--font-size-12);line-height:18px}
 #view-collab:not(.asset-hub-mode) .asset-card-routes{display:none}
 #view-collab.asset-hub-mode :is(#cv-experts,#cv-teams) .apps-grid:not(.asset-cloud-grid) .x-card{height:auto;min-height:var(--asset-expert-card-height-compact)}
 #view-collab .asset-card-route{height:28px;padding:0 10px;border:1px solid var(--border-hover);border-radius:8px;background:var(--bg);color:var(--text);font:inherit;font-size:var(--font-size-12);line-height:18px;white-space:nowrap;cursor:pointer}
@@ -22,3 +21,19 @@
 #view-collab .asset-card-route--work{border-color:var(--brand);color:var(--brand)}
 #view-collab .asset-card-route--work:hover{background:var(--brand-fill)}
 #view-collab .asset-card-route:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+/* 已发布标签：开发 / 工作，卡片标题下的标签行；协作开发自己的页签不显示 */
+.asset-route-tag{padding:0 6px;border-radius:4px;background:var(--brand-fill);color:var(--brand);font-size:var(--font-size-12);line-height:18px;white-space:nowrap}
+.asset-route-tag--work-pending{background:var(--warning-bg);color:var(--warning)}
+#view-collab:not(.asset-hub-mode) .asset-route-tag{display:none}
+/* 发布去向选择弹窗 */
+.asset-route-dialog .asset-route-options{display:flex;flex-direction:column;gap:8px;margin-top:16px}
+.asset-route-option{display:flex;align-items:flex-start;gap:12px;padding:12px;border:1px solid var(--border-hover);border-radius:12px;cursor:pointer}
+.asset-route-option:hover{background:var(--fill-1)}
+.asset-route-option:has(input:checked){border-color:var(--brand);background:var(--brand-fill)}
+.asset-route-option:has(input:focus-visible){outline:2px solid var(--focus-ring);outline-offset:2px}
+.asset-route-option input{margin:4px 0 0;accent-color:var(--brand)}
+.asset-route-option strong{display:block;color:var(--text);font-size:var(--font-size-14);font-weight:500;line-height:22px}
+.asset-route-option small{display:block;color:var(--text-secondary);font-size:var(--font-size-12);line-height:18px}
+.asset-route-dialog .asset-route-confirm{border-color:var(--brand);background:var(--brand);color:var(--bg)}
+.asset-route-dialog .asset-route-confirm:hover{background:var(--brand-hover)}
+.asset-route-dialog .asset-route-confirm:disabled{border-color:var(--border);background:var(--fill-1);color:var(--text-secondary);cursor:default}
