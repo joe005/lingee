@@ -4,7 +4,7 @@ import { setNavActive, showView } from '../core/view.js';
 import { EX } from '../features/expert/data.js';
 import { TEAMS } from '../features/expert/store.js';
 import { submitAssetForReview } from '../features/expert/asset-review.js';
-import { chooseRoute, demoActionToast, routeOf, setRoute, withdrawPendingReview } from '../features/expert/asset-routes.js';
+import { chooseRoute, demoActionToast, routeOf, setRoute } from '../features/expert/asset-routes.js';
 import { toast } from '../core/toast.js';
 /* 侧栏「技能·智能体·连接器」菜单：挂技能 / 智能体 / 智能体团队 / 连接器四个页签。
    页签只是导航条，内容仍是原有页面（技能页、协作开发里的智能体与智能体团队、连接器页），
@@ -81,10 +81,6 @@ export function init(){
         submitAssetForReview(kind,item);return;
       }
       if(choice==='work-personal'){setRoute(kind,id,'work-personal');toast('已发布到工作板块（个人自用），安全检测通过后安装到 Work','success');}
-      else return;
-    }else if(act==='withdraw'){
-      if(route==='work-personal')setRoute(kind,id,'');
-      else if(route==='dev-pending'||route==='work-pending'){withdrawPendingReview(kind,id);toast('已撤回提交');}
       else return;
     }else{
       toast(demoActionToast(act,item.name),act==='check'?'success':undefined);return;

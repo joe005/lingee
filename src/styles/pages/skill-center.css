@@ -46,10 +46,9 @@
 #view-skill-center .asset-card-route{height:28px;padding:0 10px;border:1px solid var(--border-hover);border-radius:8px;background:var(--bg);color:var(--text);font:inherit;font-size:var(--font-size-12);line-height:18px;white-space:nowrap;cursor:pointer}
 #view-skill-center .asset-card-route:hover{background:var(--hover)}
 #view-skill-center .asset-card-route:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
-/* 个人开发技能的「⋯」菜单入口：悬停或键盘聚焦时出现，与智能体卡片一致 */
-#view-skill-center .sc-more{position:absolute;top:12px;right:12px;display:flex;align-items:center;justify-content:center;width:24px;height:24px;padding:0;border:0;border-radius:var(--asset-pill-radius);background:var(--bg);color:var(--text-secondary);opacity:0;cursor:pointer}
-#view-skill-center .sc-card:hover .sc-more,#view-skill-center .sc-card:focus-within .sc-more,#view-skill-center .sc-more[aria-expanded="true"]{opacity:1}
-#view-skill-center .sc-more:hover{background:var(--hover);color:var(--text)}
+/* 个人开发技能的「⋯」菜单入口：与「技能开发」页卡片的「···」同款（常显、浅灰），点开是下拉菜单 */
+#view-skill-center .sc-more{position:absolute;top:16px;right:16px;display:flex;align-items:center;justify-content:center;min-width:24px;height:24px;padding:0 4px;border:0;border-radius:var(--asset-pill-radius);background:transparent;color:var(--text-secondary);font:inherit;font-size:var(--font-size-16);letter-spacing:1px;line-height:1;cursor:pointer}
+#view-skill-center .sc-more:hover,#view-skill-center .sc-more[aria-expanded="true"]{background:var(--hover);color:var(--text)}
 #view-skill-center .sc-more:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 #view-skill-center .sc-install{position:absolute;top:16px;right:16px;display:flex;align-items:center;justify-content:center;width:24px;height:24px;border:1px solid var(--border-hover);border-radius:var(--tb-radius);background:var(--bg);color:var(--text-secondary);cursor:pointer}
 #view-skill-center .sc-install:hover{border-color:var(--brand);background:var(--brand-fill);color:var(--brand)}

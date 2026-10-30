@@ -43,7 +43,7 @@ export function init(){
   function card(s){
     const badge=`<span class="sc-badge ${s.source}">${SOURCE_LABEL[s.source]}</span><span class="sc-chip">${s.v||'V1.0.0'}</span>${s.source==='personal'?routeTagHtml(s.route||''):''}`;
     let action='';
-    if(s.source==='personal')action=`<button type="button" class="sc-more" data-sc-more aria-haspopup="menu" aria-expanded="false" aria-label="${esc(s.name)}的更多操作" title="更多操作"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>`;
+    if(s.source==='personal')action=`<button type="button" class="sc-more" data-sc-more aria-haspopup="menu" aria-expanded="false" aria-label="${esc(s.name)}的更多操作" title="更多操作">···</button>`;
     else action=s.installed
       ?`<button type="button" class="sc-uninstall" data-sc-uninstall>卸载</button>`
       :`<button type="button" class="sc-install" data-sc-install aria-label="安装${esc(s.name)}" title="安装${esc(s.name)}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>`;
@@ -92,7 +92,7 @@ export function init(){
         else if(choice==='work-personal'){s.route='work-personal';toast('已发布到工作板块（个人自用），安全检测通过后安装到 Work','success');}
         else if(choice==='work-enterprise'){s.route='work-pending';toast('「'+s.name+'」已提交企业分发审核，通过后在 Work 中使用','success');}
         else return;
-      }else if(act==='withdraw'){s.route='';toast('已撤回发布');}
+      }
       else if(act==='delete'){
         if(!await requestDeleteConfirmation('确定删除技能「'+s.name+'」吗？删除后不可恢复。'))return;
         SKILLS.splice(SKILLS.indexOf(s),1);toast('已删除技能「'+s.name+'」');

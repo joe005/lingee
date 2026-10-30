@@ -43,8 +43,17 @@ export function routeControlsHtml(route,{kind,id,personal,runAttribute}){
   if(personal&&kind!=='team'&&route!=='dev')return '';
   return run;
 }
-/* 个人开发卡片的「⋯」菜单项：编辑、本地测试、云端测试、检查、发布（或撤回发布）、删除。
-   智能体团队只在开发板块使用，没有发布项。act 供各页处理 */
+/* 个人开发卡片的「⋯」菜单项，与「技能开发」页的卡片菜单一致：编辑、本地测试、云端测试、检查、提交、删除。
+   「提交」弹窗选择发布去向（开发板块，或工作板块的企业分发 / 个人自用）；已提交或已发布的置灰。智能体团队只在开发板块使用，没有提交项 */
+const SVG='<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">';
+const ICONS={
+  edit:SVG+'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>',
+  'local-test':SVG+'<path d="M9 3h6M10 3v6L4.5 19a1.5 1.5 0 0 0 1.3 2.2h12.4a1.5 1.5 0 0 0 1.3-2.2L14 9V3"/><path d="M7.5 15h9"/></svg>',
+  'cloud-test':SVG+'<path d="M17.5 19H9a7 7 0 1 1 6.7-9h1.8a4 4 0 0 1 0 8z"/></svg>',
+  check:SVG+'<circle cx="12" cy="12" r="9"/><path d="m8.5 12.5 2.5 2.5 4.5-5"/></svg>',
+  publish:SVG+'<path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>',
+  delete:SVG+'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>'
+};
 export function moreMenuItems(kind,route){
   const items=[
     {act:'edit',label:'编辑'},
@@ -52,13 +61,9 @@ export function moreMenuItems(kind,route){
     {act:'cloud-test',label:'云端测试'},
     {act:'check',label:'检查'}
   ];
-  if(kind!=='team'){
-    if(!route)items.push({act:'publish',label:'发布',title:TITLES.publish});
-    else if(route==='dev'||route==='work')items.push({act:'published',label:'已发布',disabled:true,title:'已通过审核，需企业管理员下架'});
-    else items.push({act:'withdraw',label:'撤回发布',title:TITLES.withdraw});
-  }
+  if(kind!=='team')items.push({act:'publish',label:'提交',disabled:!!route,title:route?'已提交或已发布，如需调整请联系企业管理员':''});
   items.push({act:'delete',label:'删除',danger:true});
-  return items;
+  return items.map(item=>({...item,icon:ICONS[item.act]}));
 }
 /* 浏览器里的演示动作：编辑、测试、检查只给提示，文案与「技能开发」页一致 */
 export function demoActionToast(act,name){
@@ -77,7 +82,7 @@ export function showMoreMenu(anchor,items){
     const menu=document.createElement('div');
     menu.className='agent-card-menu';
     menu.setAttribute('role','menu');
-    menu.innerHTML=items.map(item=>'<button type="button" class="agent-card-menu-item'+(item.danger?' is-danger':'')+'" role="menuitem" data-more-act="'+item.act+'"'+(item.disabled?' disabled':'')+(item.title?' title="'+xesc(item.title)+'"':'')+'>'+xesc(item.label)+'</button>').join('');
+    menu.innerHTML=items.map(item=>'<button type="button" class="agent-card-menu-item'+(item.danger?' is-danger':'')+'" role="menuitem" data-more-act="'+item.act+'"'+(item.disabled?' disabled':'')+(item.title?' title="'+xesc(item.title)+'"':'')+'>'+(item.icon||'')+xesc(item.label)+'</button>').join('');
     document.body.appendChild(menu);
     const rect=anchor.getBoundingClientRect();
     menu.style.top=Math.min(rect.bottom+4,window.innerHeight-menu.offsetHeight-8)+'px';
