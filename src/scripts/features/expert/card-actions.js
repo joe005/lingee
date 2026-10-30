@@ -1,10 +1,15 @@
 import moreIcon from '../../../assets/figma/expert-assets/more.svg';
 import dialogIcon from '../../../assets/figma/expert-assets/dialog.svg';
 import { xesc } from './data.js';
-import { routeControlsHtml, routeOf } from './asset-routes.js';
+import { moreMenuItems, routeControlsHtml, routeOf } from './asset-routes.js';
 let menuSequence=0;
 
 /* 列表卡片的菜单只负责呈现；查看沿用所属页面的点击委托，卸载交给安装模块。 */
+/* 「技能·智能体·连接器」菜单里，个人开发卡片的菜单多出编辑、测试、检查、发布等项；协作开发自己的页签由样式隐藏 */
+function hubMenuItemsHtml(kind, item) {
+  return moreMenuItems(kind,routeOf(kind,item.id)).filter(entry=>entry.act!=='delete').map(entry=>
+    '<button type="button" role="menuitem" data-asset-hub-only data-asset-menu-act="'+entry.act+'" data-asset-menu-kind="'+kind+'" data-asset-menu-id="'+xesc(item.id)+'"'+(entry.disabled?' disabled':'')+(entry.title?' title="'+xesc(entry.title)+'"':'')+'>'+entry.label+'</button>').join('');
+}
 export function assetCardActionsHtml(kind, item, personal, callAttribute) {
   const menuId='asset-card-menu-'+kind+'-'+encodeURIComponent(item.id)+'-'+(++menuSequence);
   return '<div class="asset-card-actions">'
@@ -12,6 +17,7 @@ export function assetCardActionsHtml(kind, item, personal, callAttribute) {
     +'<button type="button" class="x-call" '+callAttribute+'="'+xesc(item.id)+'" aria-label="对话'+xesc(item.name)+'" title="对话"><img src="'+dialogIcon+'" width="16" height="16" alt=""></button>'
     +'<div class="asset-card-menu" id="'+xesc(menuId)+'" role="menu" hidden>'
     +'<button type="button" role="menuitem" data-asset-card-view><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-8 10-8 10 8 10 8-3.5 8-10 8S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg><span>查看</span></button>'
+    +(personal?hubMenuItemsHtml(kind,item):'')
     +(personal?'<button type="button" role="menuitem" class="asset-card-uninstall" data-asset-card-delete="'+xesc(item.id)+'" data-asset-card-kind="'+kind+'">删除</button>':'<button type="button" role="menuitem" class="asset-card-uninstall" data-cloud-uninstall="'+xesc(kind+':'+item.id)+'">卸载</button>')
     +'</div></div>';
 }

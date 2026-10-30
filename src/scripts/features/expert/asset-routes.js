@@ -35,14 +35,70 @@ const TITLES={run:'在开发板块新建会话并带上它',withdraw:'撤回发�
 export function routeTagHtml(route){
   return route?'<span class="asset-route-tag asset-route-tag--'+route+'" title="已发布到'+TAG_TEXT[route]+'">'+TAG_TEXT[route]+'</span>':'';
 }
-/* 个人开发：未发布时只有一个「发布」按钮，点击后弹窗二选一；已发布后标签在标题下，这里只留运行和撤回。
-   已添加的官方、企业内容只有运行入口。runAttribute 沿用各页已有的「对话」属性，点击即在开发板块运行 */
+/* 卡片底部只放运行入口：已添加的官方、企业内容，以及已发布到开发的个人内容；
+   发布、撤回收进个人开发卡片的「⋯」菜单（见 moreMenuItems）。runAttribute 沿用各页已有的「对话」属性，点击即在开发板块运行 */
 export function routeControlsHtml(route,{kind,id,personal,runAttribute}){
-  const data=' data-route-kind="'+kind+'" data-route-id="'+xesc(id)+'"';
   const run=runAttribute?'<button type="button" class="asset-card-route" '+runAttribute+'="'+xesc(id)+'" title="'+TITLES.run+'">在开发中运行</button>':'';
-  if(!personal||kind==='team')return run;
-  if(!route)return '<button type="button" class="asset-card-route asset-card-route--work" data-route-act="publish"'+data+' title="'+TITLES.publish+'">发布</button>';
-  return (route==='dev'?run:'')+(route==='work'||route==='dev'?'':'<button type="button" class="asset-card-route" data-route-act="withdraw"'+data+' title="'+TITLES.withdraw+'">撤回</button>');
+  /* 个人开发的技能、智能体发布到开发板块后才可运行；智能体团队只在开发板块，随时可运行 */
+  if(personal&&kind!=='team'&&route!=='dev')return '';
+  return run;
+}
+/* 个人开发卡片的「⋯」菜单项：编辑、本地测试、云端测试、检查、发布（或撤回发布）、删除。
+   智能体团队只在开发板块使用，没有发布项。act 供各页处理 */
+export function moreMenuItems(kind,route){
+  const items=[
+    {act:'edit',label:'编辑'},
+    {act:'local-test',label:'本地测试'},
+    {act:'cloud-test',label:'云端测试'},
+    {act:'check',label:'检查'}
+  ];
+  if(kind!=='team'){
+    if(!route)items.push({act:'publish',label:'发布',title:TITLES.publish});
+    else if(route==='dev'||route==='work')items.push({act:'published',label:'已发布',disabled:true,title:'已通过审核，需企业管理员下架'});
+    else items.push({act:'withdraw',label:'撤回发布',title:TITLES.withdraw});
+  }
+  items.push({act:'delete',label:'删除',danger:true});
+  return items;
+}
+/* 浏览器里的演示动作：编辑、测试、检查只给提示，文案与「技能开发」页一致 */
+export function demoActionToast(act,name){
+  return {
+    edit:'打开开发会话：'+name,
+    'local-test':'已进入本地测试：'+name,
+    'cloud-test':'已推送到云端测试环境：'+name,
+    check:'检查完成：「'+name+'」未发现问题'
+  }[act]||'';
+}
+/* 技能卡片用的弹出菜单（智能体、团队卡片沿用各自已有的卡片菜单）；选中返回 act，关闭返回 null */
+let activeMenu=null;
+export function showMoreMenu(anchor,items){
+  activeMenu?.close(null);
+  return new Promise(resolve=>{
+    const menu=document.createElement('div');
+    menu.className='agent-card-menu';
+    menu.setAttribute('role','menu');
+    menu.innerHTML=items.map(item=>'<button type="button" class="agent-card-menu-item'+(item.danger?' is-danger':'')+'" role="menuitem" data-more-act="'+item.act+'"'+(item.disabled?' disabled':'')+(item.title?' title="'+xesc(item.title)+'"':'')+'>'+xesc(item.label)+'</button>').join('');
+    document.body.appendChild(menu);
+    const rect=anchor.getBoundingClientRect();
+    menu.style.top=Math.min(rect.bottom+4,window.innerHeight-menu.offsetHeight-8)+'px';
+    menu.style.left=Math.max(8,Math.min(rect.right-menu.offsetWidth,window.innerWidth-menu.offsetWidth-8))+'px';
+    anchor.setAttribute('aria-expanded','true');
+    const close=value=>{
+      if(activeMenu?.menu!==menu)return;
+      activeMenu=null;menu.remove();anchor.setAttribute('aria-expanded','false');
+      document.removeEventListener('click',onOutside,true);document.removeEventListener('keydown',onKey,true);
+      resolve(value);
+    };
+    const onOutside=event=>{if(!menu.contains(event.target))close(null);};
+    const onKey=event=>{if(event.key==='Escape'){event.preventDefault();close(null);anchor.focus();}};
+    menu.addEventListener('click',event=>{
+      const item=event.target.closest('[data-more-act]:not(:disabled)');
+      if(item){event.stopPropagation();close(item.dataset.moreAct);}
+    });
+    activeMenu={menu,close};
+    document.addEventListener('click',onOutside,true);document.addEventListener('keydown',onKey,true);
+    menu.querySelector('button:not(:disabled)')?.focus();
+  });
 }
 /* 发布时的去向选择弹窗：开发板块，或工作板块的「企业分发 / 个人自用」（沿用原有提交路径），三选一，开发与工作互斥。
    返回 'dev' / 'work-enterprise' / 'work-personal'，取消返回 null */

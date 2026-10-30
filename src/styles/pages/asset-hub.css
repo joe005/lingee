@@ -18,8 +18,6 @@
 #view-collab.asset-hub-mode :is(#cv-experts,#cv-teams) .apps-grid:not(.asset-cloud-grid) .x-card{height:auto;min-height:var(--asset-expert-card-height-compact)}
 #view-collab .asset-card-route{height:28px;padding:0 10px;border:1px solid var(--border-hover);border-radius:8px;background:var(--bg);color:var(--text);font:inherit;font-size:var(--font-size-12);line-height:18px;white-space:nowrap;cursor:pointer}
 #view-collab .asset-card-route:hover{background:var(--hover)}
-#view-collab .asset-card-route--work{border-color:var(--brand);color:var(--brand)}
-#view-collab .asset-card-route--work:hover{background:var(--brand-fill)}
 #view-collab .asset-card-route:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 /* 已发布标签：开发 / 工作，卡片标题下的标签行；协作开发自己的页签不显示 */
 .asset-route-tag{padding:0 6px;border-radius:4px;background:var(--brand-fill);color:var(--brand);font-size:var(--font-size-12);line-height:18px;white-space:nowrap}
@@ -42,3 +40,6 @@
 .asset-route-dialog .asset-route-confirm{border-color:var(--brand);background:var(--brand);color:var(--bg)}
 .asset-route-dialog .asset-route-confirm:hover{background:var(--brand-hover)}
 .asset-route-dialog .asset-route-confirm:disabled{border-color:var(--border);background:var(--fill-1);color:var(--text-secondary);cursor:default}
+/* 个人开发卡片菜单里新增的编辑、测试、检查、发布项，只在本菜单里显示 */
+#view-collab:not(.asset-hub-mode) [data-asset-hub-only]{display:none}
+#view-collab .asset-card-menu [data-asset-hub-only]:disabled{color:var(--text-soft);cursor:default}

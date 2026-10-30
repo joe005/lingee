@@ -4,7 +4,7 @@ import { setNavActive, showView } from '../core/view.js';
 import { EX } from '../features/expert/data.js';
 import { TEAMS } from '../features/expert/store.js';
 import { submitAssetForReview } from '../features/expert/asset-review.js';
-import { chooseRoute, routeOf, setRoute, withdrawPendingReview } from '../features/expert/asset-routes.js';
+import { chooseRoute, demoActionToast, routeOf, setRoute, withdrawPendingReview } from '../features/expert/asset-routes.js';
 import { toast } from '../core/toast.js';
 /* 侧栏「技能·智能体·连接器」菜单：挂技能 / 智能体 / 智能体团队 / 连接器四个页签。
    页签只是导航条，内容仍是原有页面（技能页、协作开发里的智能体与智能体团队、连接器页），
@@ -56,29 +56,39 @@ function openHub(menu,tab){
   mount(tab);
 }
 export function init(){
-  /* 卡片上的发布：点「发布」弹窗选择路径（开发板块，或工作板块的企业分发 / 个人自用；开发与工作互斥）；企业分发走原有的提交审核流程。
+  /* 个人开发卡片的「⋯」菜单：编辑、本地测试、云端测试、检查、发布 / 撤回发布。
+     「发布」弹窗选择路径（开发板块，或工作板块的企业分发 / 个人自用；开发与工作互斥），开发与企业分发走原有的提交审核流程。
      捕获阶段拦截，避免同时打开卡片详情 */
   document.addEventListener('click',async event=>{
-    const button=event.target.closest('#view-collab [data-route-act]');
+    const button=event.target.closest('#view-collab [data-asset-menu-act]');
     if(!button)return;
     event.stopPropagation();
-    const {routeKind:kind,routeId:id,routeAct:act}=button.dataset;
+    const {assetMenuAct:act,assetMenuKind:kind,assetMenuId:id}=button.dataset;
     const item=kind==='team'?TEAMS.find(team=>team.id===id):EX[id];
     if(!item)return;
     const route=routeOf(kind,id);
+    if(act==='edit'){
+      /* 先打开详情，再进入编辑 */
+      document.querySelector(kind==='team'?'[data-team="'+id+'"]':'[data-cv-expert="'+id+'"]')?.click();
+      setTimeout(()=>document.querySelector(kind==='team'?'#teamModal [data-team-detail-edit]':'#expertModal [data-x-edit]')?.click(),80);
+      return;
+    }
     if(act==='publish'){
       if(route)return;
       const choice=await chooseRoute(item.name);
       if(choice==='dev'||choice==='work-enterprise'){
-        /* 开发板块与企业分发都走原有的提交审核流程；记下这次提交面向哪个板块 */
-        setRoute(kind,id,choice==='dev'?'dev':'');
+        setRoute(kind,id,choice==='dev'?'dev':'');   /* 记下这次提交面向哪个板块 */
         submitAssetForReview(kind,item);return;
       }
       if(choice==='work-personal'){setRoute(kind,id,'work-personal');toast('已发布到工作板块（个人自用），安全检测通过后安装到 Work','success');}
       else return;
-    }else if(route==='work-personal')setRoute(kind,id,'');
-    else if(route==='dev-pending'||route==='work-pending'){withdrawPendingReview(kind,id);toast('已撤回提交');}
-    else{toast('已通过审核的内容需由企业管理员下架','warning');return;}
+    }else if(act==='withdraw'){
+      if(route==='work-personal')setRoute(kind,id,'');
+      else if(route==='dev-pending'||route==='work-pending'){withdrawPendingReview(kind,id);toast('已撤回提交');}
+      else return;
+    }else{
+      toast(demoActionToast(act,item.name),act==='check'?'success':undefined);return;
+    }
     document.dispatchEvent(new Event('lingee:cloud-assets-changed'));
   },true);
   const items=$$('.sb-scroll [data-hub-menu]');

@@ -3,7 +3,7 @@ import { $, $$ } from '../core/dom.js';
 import { toast } from '../core/toast.js';
 import { requestDeleteConfirmation } from '../core/delete-confirm.js';
 import { setNavActive, showView } from '../core/view.js';
-import { chooseRoute, routeControlsHtml, routeTagHtml } from '../features/expert/asset-routes.js';
+import { chooseRoute, demoActionToast, moreMenuItems, routeControlsHtml, routeTagHtml, showMoreMenu } from '../features/expert/asset-routes.js';
 /* 能力中心 · 技能：与智能体页同一维度。「我的技能」分「个人开发」和「我添加的」两组，
    「更多技能」是还没安装的金蝶官方、企业自建技能，点 + 安装后进入「我添加的」。
    个人开发的技能点「发布」后在弹窗里选择路径：开发板块，或工作板块的企业分发（需审核）/ 个人自用（即时安装），开发与工作互斥（工作板块两条路径与原「技能开发」页的提交路径一致）；已添加的技能可在开发中运行。
@@ -43,7 +43,8 @@ export function init(){
   function card(s){
     const badge=`<span class="sc-badge ${s.source}">${SOURCE_LABEL[s.source]}</span><span class="sc-chip">${s.v||'V1.0.0'}</span>${s.source==='personal'?routeTagHtml(s.route||''):''}`;
     let action='';
-    if(s.source!=='personal')action=s.installed
+    if(s.source==='personal')action=`<button type="button" class="sc-more" data-sc-more aria-haspopup="menu" aria-expanded="false" aria-label="${esc(s.name)}的更多操作" title="更多操作"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg></button>`;
+    else action=s.installed
       ?`<button type="button" class="sc-uninstall" data-sc-uninstall>卸载</button>`
       :`<button type="button" class="sc-install" data-sc-install aria-label="安装${esc(s.name)}" title="安装${esc(s.name)}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>`;
     return `<article class="sc-card" data-sc="${s.id}">${action}
@@ -81,16 +82,21 @@ export function init(){
       const input=$('#composerInput');
       if(input){input.textContent='使用「'+s.name+'」技能：';input.dispatchEvent(new Event('input',{bubbles:true}));input.focus();}
       toast('已在开发板块带上「'+s.name+'」技能发起对话','success');
-    }else if(e.target.closest('[data-route-act]')){
-      if(e.target.closest('[data-route-act]').dataset.routeAct==='publish'){
-        if(s.route)return;
+    }else if(e.target.closest('[data-sc-more]')){
+      /* 个人开发技能的「⋯」菜单：编辑、本地测试、云端测试、检查、发布 / 撤回发布、删除，与「技能开发」页一致 */
+      const act=await showMoreMenu(e.target.closest('[data-sc-more]'),moreMenuItems('skill',s.route||''));
+      if(!act)return;
+      if(act==='publish'){
         const choice=await chooseRoute(s.name);
         if(choice==='dev'){s.route='dev-pending';toast('「'+s.name+'」已提交开发板块审核，通过后可在开发板块运行','success');}
         else if(choice==='work-personal'){s.route='work-personal';toast('已发布到工作板块（个人自用），安全检测通过后安装到 Work','success');}
         else if(choice==='work-enterprise'){s.route='work-pending';toast('「'+s.name+'」已提交企业分发审核，通过后在 Work 中使用','success');}
         else return;
-      }else if(s.route==='work'||s.route==='dev'){toast('已通过审核的内容需由企业管理员下架','warning');return;}
-      else{s.route='';toast('已撤回');}
+      }else if(act==='withdraw'){s.route='';toast('已撤回发布');}
+      else if(act==='delete'){
+        if(!await requestDeleteConfirmation('确定删除技能「'+s.name+'」吗？删除后不可恢复。'))return;
+        SKILLS.splice(SKILLS.indexOf(s),1);toast('已删除技能「'+s.name+'」');
+      }else{toast(demoActionToast(act,s.name),act==='check'?'success':undefined);return;}
       paint();
     }else if(e.target.closest('[data-sc-install]')){s.installed=true;paint();toast('已添加技能「'+s.name+'」','success');}
     else if(e.target.closest('[data-sc-uninstall]')){
