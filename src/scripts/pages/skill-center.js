@@ -2,8 +2,8 @@ import '../../styles/pages/skill-center.css';
 import { $, $$ } from '../core/dom.js';
 import { toast } from '../core/toast.js';
 import { requestDeleteConfirmation } from '../core/delete-confirm.js';
-/* 能力中心 · 技能：与智能体页同一维度。「我的技能」分「我开发的」（个人开发）和「我安装的」，
-   「更多技能」是还没安装的金蝶官方、企业自建技能，点 + 安装后进入「我安装的」。
+/* 能力中心 · 技能：与智能体页同一维度。「我的技能」分「个人开发」和「我添加的」两组，
+   「更多技能」是还没安装的金蝶官方、企业自建技能，点 + 安装后进入「我添加的」。
    技能数据为原型演示数据，状态只保存在本页内存里。 */
 const SOURCE_LABEL={official:'金蝶官方',tenant:'企业自建',personal:'个人开发'};
 const SOURCES=['official','tenant','personal'];
@@ -53,7 +53,7 @@ export function init(){
       $$('[data-sc-count]').forEach(el=>{el.textContent=el.dataset.scCount==='all'?mineAll.length:mineAll.filter(s=>s.source===el.dataset.scCount).length;});
       $$('[data-sc-source]').forEach(b=>{const on=b.dataset.scSource===source;b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on));});
       const rows=mineAll.filter(s=>source==='all'||s.source===source);
-      html=section('我开发的',rows.filter(s=>s.source==='personal'))+section('我安装的',rows.filter(s=>s.source!=='personal'));
+      html=section('个人开发',rows.filter(s=>s.source==='personal'))+section('我添加的',rows.filter(s=>s.source!=='personal'));
     }else{
       const rows=SKILLS.filter(s=>s.source!=='personal'&&!s.installed&&match(s));
       html=rows.length?`<div class="sc-grid">${rows.map(card).join('')}</div>`:'';
