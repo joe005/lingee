@@ -2,8 +2,10 @@ import '../../styles/pages/skill-center.css';
 import { $, $$ } from '../core/dom.js';
 import { toast } from '../core/toast.js';
 import { requestDeleteConfirmation } from '../core/delete-confirm.js';
+import { setNavActive, showView } from '../core/view.js';
 /* 能力中心 · 技能：与智能体页同一维度。「我的技能」分「个人开发」和「我添加的」两组，
    「更多技能」是还没安装的金蝶官方、企业自建技能，点 + 安装后进入「我添加的」。
+   每张已添加的技能有两条运行路线：「在开发中运行」留在开发板块新建会话；「发布到 Work」（仅个人开发）提交审核，通过后到 Work 中使用，与原「技能开发」页的提交路线一致。
    技能数据为原型演示数据，状态只保存在本页内存里。 */
 const SOURCE_LABEL={official:'金蝶官方',tenant:'企业自建',personal:'个人开发'};
 const SOURCES=['official','tenant','personal'];
@@ -31,6 +33,15 @@ export function init(){
   const list=$('#scList'),filters=$('#scFilters'),search=$('#scSearch');
   let mode='mine',source='all';
   const match=s=>{const kw=search.value.trim().toLowerCase();return !kw||(s.name+s.desc).toLowerCase().includes(kw);};
+  /* 两条路线：在开发板块运行，或发布到 Work 运行；未添加的技能先安装，不显示路线 */
+  function routes(s){
+    if(s.source==='personal'){
+      const label={'已发布':'已发布到 Work','审核中':'审核中'}[s.status]||'发布到 Work';
+      const done=s.status==='已发布'||s.status==='审核中';
+      return `<div class="sc-routes"><button type="button" class="sc-route" data-sc-run title="在开发板块新建会话并带上该技能">在开发中运行</button><button type="button" class="sc-route sc-route--work" data-sc-publish${done?' disabled':''} title="提交审核，通过后在 Work 中使用">${label}</button></div>`;
+    }
+    return s.installed?`<div class="sc-routes"><button type="button" class="sc-route" data-sc-run title="在开发板块新建会话并带上该技能">在开发中运行</button></div>`:'';
+  }
   function card(s){
     const badge=`<span class="sc-badge ${s.source}">${SOURCE_LABEL[s.source]}</span><span class="sc-chip">${s.v||'V1.0.0'}</span>${s.status?`<span class="sc-chip">${s.status}</span>`:''}`;
     let action='';
@@ -40,7 +51,7 @@ export function init(){
     return `<article class="sc-card" data-sc="${s.id}">${action}
       <div class="sc-card-top"><span class="sc-icon" aria-hidden="true">${esc(s.mark)}</span><div class="sc-titles"><div class="sc-name" title="${esc(s.name)}">${esc(s.name)}</div><div class="sc-sub">${badge}</div></div></div>
       <p class="sc-desc" title="${esc(s.desc)}">${esc(s.desc)}</p>
-      <div class="sc-tags">${s.tags.split(',').map(t=>`<span class="sc-tag">${esc(t)}</span>`).join('')}</div></article>`;
+      <div class="sc-tags">${s.tags.split(',').map(t=>`<span class="sc-tag">${esc(t)}</span>`).join('')}</div>${routes(s)}</article>`;
   }
   const section=(title,rows)=>rows.length?`<section class="sc-section"><h2 class="sc-section-title">${title}</h2><div class="sc-grid">${rows.map(card).join('')}</div></section>`:'';
   function paint(){
@@ -67,7 +78,14 @@ export function init(){
   list.addEventListener('click',async e=>{
     const root=e.target.closest('[data-sc]');if(!root)return;
     const s=SKILLS.find(x=>x.id===root.dataset.sc);
-    if(e.target.closest('[data-sc-install]')){s.installed=true;paint();toast('已添加技能「'+s.name+'」','success');}
+    if(e.target.closest('[data-sc-run]')){
+      showView('newtask');setNavActive('新会话');
+      const input=$('#composerInput');
+      if(input){input.textContent='使用「'+s.name+'」技能：';input.dispatchEvent(new Event('input',{bubbles:true}));input.focus();}
+      toast('已在开发板块带上「'+s.name+'」技能发起对话','success');
+    }else if(e.target.closest('[data-sc-publish]')){
+      s.status='审核中';paint();toast('「'+s.name+'」已提交审核，通过后发布到 Work','success');
+    }else if(e.target.closest('[data-sc-install]')){s.installed=true;paint();toast('已添加技能「'+s.name+'」','success');}
     else if(e.target.closest('[data-sc-uninstall]')){
       if(await requestDeleteConfirmation('确定卸载技能「'+s.name+'」吗？卸载后可在「更多技能」中重新安装。',{title:'确认卸载',confirmLabel:'确认卸载'})){s.installed=false;paint();toast('已卸载技能「'+s.name+'」');}
     }
