@@ -210,15 +210,17 @@ function renderTaskHumanFeedEntry(event) {
     + '<p>' + escapeHtml(content) + '</p></div></article>';
 }
 
+var ASSIGNEE_ICON = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="color:var(--text-soft);flex:none"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>';
 function feedLeadIcon(event) {
   var entry = event.entry;
+  if (event.type === 'transfer') return ASSIGNEE_ICON;
   if (entry.kind === 'agent-run') return '<span class="tk-feed-activity-avatar" aria-hidden="true">' + escapeHtml((entry.author || '智').slice(0, 1)) + '</span>';
   if (event.type === 'status') return statusSvg(entry.to);
   if (event.type === 'delivery') {
     var sid = entry.stageId || '';
     if (sid === 'status-flow' || /状态/.test(entry.stage)) return statusSvg('in_progress');
     if (sid === 'kickoff' || /创建/.test(entry.stage)) return statusSvg('planned');
-    if (sid === 'assignee') return '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="color:var(--text-soft);flex:none"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>';
+    if (sid === 'assignee') return ASSIGNEE_ICON;
     return '<span class="tk-feed-activity-avatar" aria-hidden="true">' + escapeHtml((entry.author || '?').slice(0, 1)) + '</span>';
   }
   return statusSvg(entry.status || 'in_progress');
@@ -283,6 +285,14 @@ function taskStatusActivityEvents(task, activity) {
       else message = '开始执行任务';
     }
     add(change.from, change.to, change.time, automaticSeedCompletion ? taskStageAgentName(task, change.stageId) : (change.actorKind === 'system' && change.message?.includes('已自动通过')) || (change.actorKind === 'agent' && (change.author === '执行智能体' || change.author?.includes('、'))) ? taskStageAgentName(task, change.stageId) : change.author || tkGetPerson(change.authorId).name, message, previousSortTime);
+  });
+  /* 阶段转交：状态不变，单独记录转出人、接手人、时间和说明 */
+  (task.stageTransfers || []).forEach(function (change) {
+    var stageLabel = change.stageName ? '「' + change.stageName + '」' : '任务';
+    transitions.push({ type:'transfer', time:change.createdAt, sortTime:change.createdAt, entry:{
+      author:tkGetPerson(change.fromId).name,
+      text:'将' + stageLabel + '转交给 ' + tkGetPerson(change.toId).name + (change.reason ? '：' + change.reason : ''),
+    } });
   });
   return transitions;
 }

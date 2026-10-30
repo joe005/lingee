@@ -1,0 +1,24 @@
+<form>
+  <div class="tk-stage-return-head">
+    <h2 id="tkStageTransferTitle">转交任务</h2>
+    <button type="button" class="tk-stage-return-close" data-transfer-cancel aria-label="关闭">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+    </button>
+  </div>
+  <p class="tk-stage-return-notice"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="currentColor"/><path d="M12 11v6m0-10v1" stroke="var(--bg)" stroke-width="2" stroke-linecap="round"/></svg><span id="tkStageTransferNotice">转交后由所选成员继续处理，你将不再处理该节点；产物和操作记录保留。</span></p>
+  <div class="tk-stage-return-field">
+    <label for="tkStageTransferTarget">转交给<span class="tk-stage-return-required" aria-hidden="true">*</span></label>
+    <div class="tk-stage-return-select">
+      <select id="tkStageTransferTarget" required><option value="" disabled selected>请选择成员</option></select>
+    </div>
+  </div>
+  <div class="tk-stage-return-field">
+    <label for="tkStageTransferReason">转交说明<span class="tk-stage-return-required" aria-hidden="true">*</span></label>
+    <div class="tk-stage-return-reason">
+      <textarea id="tkStageTransferReason" rows="4" maxlength="100" placeholder="说明转交原因及需要对方注意的事项" aria-describedby="tkStageTransferCount" required></textarea>
+      <span id="tkStageTransferCount">0/100</span>
+    </div>
+  </div>
+  <p class="tk-stage-return-error" role="alert" hidden></p>
+  <div class="tk-stage-return-actions"><button type="button" data-transfer-cancel>取消</button><button type="submit">确定转交</button></div>
+</form>

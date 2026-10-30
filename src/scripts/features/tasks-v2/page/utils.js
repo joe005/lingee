@@ -9,6 +9,7 @@ import { set_activePick } from '../../expert/store.js';
 import { showTaskConfirm, showTaskStageConfirm } from '../confirm.js';
 import { TK_DELETE_BLOCKED_REASON, TK_STATUSES, tkCanDeleteTask, tkCanStartTask, tkCurrentStageHandlerId, tkCurrentUserId, tkDeleteTask, tkGetPerson, tkGetTasks, tkProjectById, tkUpdateTask } from '../data.js';
 import { openNewIssueCopy, openNewIssueEdit } from '../new-issue-ui.js';
+import { transferTargets } from '../stage-transfer.js';
 import { reviewTaskStage, scheduleTaskStageStartedNotice, startTaskStage } from '../task-execution.js';
 import { TASK_SESSION_STATUS, tkAddTaskSession, tkGetMySessions, tkLatestStageSession, tkTaskSessionOpeningMessage, tkTaskSessionTitle } from '../task-sessions.js';
 import { openListReviewPreview } from './detail-panel.js';
@@ -179,11 +180,14 @@ export function showCardMenu(taskId, anchorEl, detailOnly) {
   var itemSvg = {
     chat: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>',
     subtask: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>',
+    transfer: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/></svg>',
     delete: DELETE_ICON
   };
   menu.innerHTML = ''
     + (editable ? '<div class="tk-card-menu-item" data-card-task="' + taskId + '" data-card-action="edit"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 3 5 5M4 20l4-1 13-13a2.8 2.8 0 0 0-4-4L4 15l-1 6Z"/></svg><span>编辑</span></div>' : '')
     + (detailOnly || anchorEl.hasAttribute('data-delete-only-menu') || anchorEl.closest('.tk-card') || anchorEl.closest('.tk-list-card')?.querySelector('[data-list-task-action="start"]') || !tkCanStartTask(tkGetTasks().find(function (task) { return task.id === Number(taskId); })) ? '' : '<div class="tk-card-menu-item" data-card-task="' + taskId + '" data-card-action="chat">' + (pageState.taskStartLegacy ? TASK_START_CHAT_ICON : TASK_START_PLAY_ICON) + '<span>' + (pageState.taskStartLegacy ? '发起会话' : '开始执行') + '</span></div>')
+    + (!detailOnly && transferTargets(task).length
+      ? '<button type="button" role="menuitem" class="tk-card-menu-item" data-card-task="' + taskId + '" data-card-action="transfer">' + itemSvg.transfer + '<span>转交</span></button>' : '')
     + (tkCanDeleteTask(tkGetTasks().find(function (task) { return task.id === Number(taskId); }))
       ? '<button type="button" role="menuitem" class="tk-card-menu-item danger" data-card-task="' + taskId + '" data-card-action="delete">' + itemSvg.delete + '<span>删除</span></button>'
       : '<button type="button" role="menuitem" class="tk-card-menu-item danger is-disabled" aria-disabled="true" title="' + TK_DELETE_BLOCKED_REASON + '" data-card-task="' + taskId + '" data-card-action="delete">' + itemSvg.delete + '<span>删除</span></button>');
@@ -245,6 +249,7 @@ function handleCardAction(act, aid) {
   else if (act === 'delete') confirmDeleteTask(aid);
   else if (act === 'copy') openNewIssueCopy(aid);
   else if (act === 'subtask') openTaskModal(null, aid);
+  else if (act === 'transfer') document.dispatchEvent(new CustomEvent('lingee:task-transfer', {detail:{taskId:aid}}));
 }
 
 export function priClass(p) { return 'tk-pri-' + (p || 'low'); }

@@ -1,4 +1,5 @@
 import { returnableStages } from '../stage-return.js';
+import { transferTargets } from '../stage-transfer.js';
 import { TK_PEOPLE, tkCanViewTask, tkCurrentStageHandlerId, tkCurrentUserId, tkGetTasks, tkGetViews, tkIsMyStageDone, tkProjectsForCurrentUser } from '../data.js';
 import { taskListKind, taskNeedsMyAction } from '../list-kind.js';
 import { taskViewState } from '../ui-state.js';
@@ -111,7 +112,17 @@ export function renderTaskStartAction() {
       returnButton.textContent = '退回';
       els.tkDrawerFoot.insertBefore(returnButton, button);
     }
-    els.tkDrawerFoot.hidden = !action && !canReturn;
+    els.tkDrawerFoot.querySelectorAll('[data-task-stage-transfer]').forEach(item => item.remove());
+    var canTransfer = !viewOnly && transferTargets(task).length > 0;
+    if (canTransfer) {
+      var transferButton = document.createElement('button');
+      transferButton.type = 'button';
+      transferButton.className = 'tk-stage-return-trigger';
+      transferButton.dataset.taskStageTransfer = task.id;
+      transferButton.textContent = '转交';
+      els.tkDrawerFoot.insertBefore(transferButton, button);
+    }
+    els.tkDrawerFoot.hidden = !action && !canReturn && !canTransfer;
     els.tkDrawer.classList.toggle('tk-drawer--viewonly', viewOnly);
     button.hidden = !action;
     if (!action) return;

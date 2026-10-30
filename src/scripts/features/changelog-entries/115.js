@@ -1,0 +1,1 @@
+export default {"id":"115","date":"2026-10-30","iconBg":"var(--brand-fill)","iconColor":"var(--brand)","type":"功能","module":"协同开发任务","author":"wuhc2023","body":"功能·协同开发任务：新增任务转交，当前节点处理人可在待开始、待评审、已阻塞时把节点转交给项目成员并必填转交说明，转交后“我的任务”归属与操作记录同步更新。"};

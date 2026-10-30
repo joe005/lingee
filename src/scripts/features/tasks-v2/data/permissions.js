@@ -49,7 +49,8 @@ function tkIsHandledByMe(task) {
     return comment?.kind === 'flow' && comment.fromAssignee === me && comment.assignee !== me
       && ['in_progress', 'in_review', 'blocked'].includes(comment.fromStatus);
   });
-  return completedStage || approvedReview || handedOffWork;
+  var transferredOut = (task.stageTransfers || []).some(function (change) { return change.fromId === me; });
+  return completedStage || approvedReview || handedOffWork || transferredOut;
 }
 /* 普通成员仅能查看自己参与的任务；管理员可查看所属项目内他人任务。 */
 function tkParticipatesCurrentUser(task) {
