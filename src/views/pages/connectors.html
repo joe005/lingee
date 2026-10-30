@@ -1,12 +1,25 @@
 <div class="view hidden" id="view-connectors" data-route="connectors">
   <div class="conn-page">
-    <div class="conn-head">
-      <h2 class="conn-title">MCP 服务器<span class="conn-info" tabindex="0" role="img" aria-label="MCP 服务器为智能体提供外部工具与数据连接" title="MCP 服务器为智能体提供外部工具与数据连接"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.01"/></svg></span></h2>
-      <div class="conn-actions">
-        <button type="button" class="conn-btn conn-btn--outline" id="connRefresh"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v5h-5"/></svg>刷新</button>
-        <button type="button" class="conn-btn conn-btn--primary" id="connAdd"><svg width="10" height="10" viewBox="0 0 11 11" fill="none" aria-hidden="true"><path d="M5.25 0C5.66 0 6 .34 6 .75V4.5h3.75a.75.75 0 0 1 0 1.5H6v3.75a.75.75 0 0 1-1.5 0V6H.75a.75.75 0 0 1 0-1.5H4.5V.75C4.5.34 4.84 0 5.25 0Z" fill="currentColor"/></svg>添加 MCP</button>
+    <section class="conn-section" aria-labelledby="connTitle">
+      <div class="conn-head">
+        <h2 class="conn-title" id="connTitle">连接器</h2>
+        <div class="conn-search">
+          <input type="search" id="connSearch" placeholder="搜索连接器" aria-label="搜索连接器" autocomplete="off">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        </div>
       </div>
-    </div>
-    <div class="conn-list" id="connList"></div>
+      <div class="conn-grid" id="connGrid"></div>
+      <p class="conn-empty" id="connEmpty" hidden>没有匹配的连接器</p>
+    </section>
+    <section class="conn-section" aria-labelledby="mcpTitle">
+      <div class="conn-head">
+        <h2 class="conn-title" id="mcpTitle">MCP 服务器<span class="conn-info" tabindex="0" role="img" aria-label="连接器通过 MCP 服务器接入，这里管理底层的 MCP 服务器" title="连接器通过 MCP 服务器接入，这里管理底层的 MCP 服务器"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.01"/></svg></span></h2>
+        <div class="mcp-actions">
+          <button type="button" class="mcp-btn mcp-btn--outline" id="connRefresh"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v5h-5"/></svg>刷新</button>
+          <button type="button" class="mcp-btn mcp-btn--primary" id="connAdd"><svg width="10" height="10" viewBox="0 0 11 11" fill="none" aria-hidden="true"><path d="M5.25 0C5.66 0 6 .34 6 .75V4.5h3.75a.75.75 0 0 1 0 1.5H6v3.75a.75.75 0 0 1-1.5 0V6H.75a.75.75 0 0 1 0-1.5H4.5V.75C4.5.34 4.84 0 5.25 0Z" fill="currentColor"/></svg>添加 MCP</button>
+        </div>
+      </div>
+      <div class="conn-list" id="connList"></div>
+    </section>
   </div>
 </div>

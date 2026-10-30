@@ -1,10 +1,10 @@
 import '../../styles/pages/asset-hub.css';
 import { $, $$ } from '../core/dom.js';
 import { setNavActive, showView } from '../core/view.js';
-/* 侧栏「能力中心」菜单：挂技能 / 智能体 / 连接器三个页签。
+/* 侧栏「技能·智能体·连接器」菜单：挂技能 / 智能体 / 连接器三个页签。
    页签只是导航条，内容仍是原有页面（技能页、协作开发里的智能体、连接器页），
    原菜单与页面保持不变；导航条按当前页签挂到对应页面顶部，离开菜单时移除。 */
-const MENUS={center:{label:'能力中心',tab:'skills'}};
+const MENUS={center:{label:'技能·智能体·连接器',tab:'skills'}};
 const TABS=[['skills','技能'],['experts','智能体'],['connectors','连接器']];
 /* 技能与连接器是独立页面，智能体挂在协作开发容器里 */
 const VIEWS={skills:'skill-center',connectors:'connectors'};
@@ -14,7 +14,7 @@ function buildNav(){
   nav=document.createElement('div');
   nav.className='asset-hub-nav';
   nav.setAttribute('role','tablist');
-  nav.setAttribute('aria-label','能力中心');
+  nav.setAttribute('aria-label','技能·智能体·连接器');
   nav.innerHTML=TABS.map(([tab,text])=>`<button type="button" role="tab" data-hub-tab="${tab}">${text}</button>`).join('');
   nav.addEventListener('click',event=>{
     const button=event.target.closest('[data-hub-tab]');
@@ -61,7 +61,7 @@ export function init(){
   });
   /* 刷新后停在技能或连接器页时，补回页签导航 */
   Object.keys(VIEWS).forEach(tab=>{if(!$('#view-'+VIEWS[tab]).classList.contains('hidden'))openHub('center',tab);});
-  /* 侧栏切到其他菜单（其他入口调用 setNavActive）时，能力中心不再高亮：撤掉导航条，原页面恢复原样 */
+  /* 侧栏切到其他菜单（其他入口调用 setNavActive）时，该菜单不再高亮：撤掉导航条，原页面恢复原样 */
   new MutationObserver(()=>{
     if(state&&!items.some(item=>item.classList.contains('active'))){state=null;unmount();}
   }).observe($('.sb-scroll'),{subtree:true,attributes:true,attributeFilter:['class']});
