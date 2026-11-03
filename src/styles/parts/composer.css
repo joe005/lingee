@@ -133,8 +133,9 @@
   @keyframes conn-pulse{0%,100%{opacity:1}50%{opacity:.3}}
   .connector-badges{display:flex;align-items:center;margin-left:-4px;padding:0}
   .conn-badge{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;cursor:default;flex:none;border:2px solid var(--bg);margin-left:-6px;position:relative}
-  .connector-manage{display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 12px;border-top:1px solid var(--border);font-size:var(--font-size-14);color:var(--text-secondary);cursor:pointer;transition:background .1s}
+  .connector-manage{display:flex;align-items:center;justify-content:flex-start;gap:8px;width:100%;box-sizing:border-box;padding:10px 12px;border:none;border-top:1px solid var(--border);background:transparent;font:inherit;font-size:var(--font-size-14);color:var(--text);cursor:pointer;flex:none;text-align:left;transition:background .1s}
   .connector-manage:hover{background:var(--hover)}
+  .connector-manage:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}
 
   /* app picker 搜索 */
   .app-menu{min-width:280px;padding:0;flex-direction:column;overflow:hidden}

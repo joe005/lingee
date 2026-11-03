@@ -1,5 +1,7 @@
-import { gitRemoteKey, gitRepoProblem } from '../../../core/git-url.js';
-import { tkCurrentUserId, tkGetPerson, tkProjectById, tkProjectsForCurrentUser } from '../../tasks-v2/data.js';
+import { buildRepoList, buildTaskRepoConfig, buildRepoIdentity, buildRepoResolve } from '../repository-config.js';
+import { wsFlatTree, wsPathNames } from '../../../core/workspace-tree.js';
+import { gitRepoProblem } from '../../../core/git-url.js';
+import { tkCurrentUserId, tkGetTasks, tkGetPerson, tkProjectById, tkProjectsForCurrentUser } from '../../tasks-v2/data.js';
 
 /* 本地开发 · 数据核心：本机状态存储、仓库解析、Git 账号、空间就绪判断、目录绑定与检测结果。
    只放数据和判断，不渲染界面；状态变化后调用 ldRefresh() 广播 lingee:local-dev-changed，
@@ -15,7 +17,19 @@ export function ldReadAll() {
 /* 某个人上报的本机状态；不传时为当前登录人 */
 export function ldStateOf(userId) {
   var row = ldReadAll()[userId || tkCurrentUserId() || 'guest'] || {};
-  var mine = Object.assign({}, row, { auths: row.auths || {}, bindings: row.bindings || {}, knownHosts: row.knownHosts || [], checks: row.checks || null, gitMissing: !!row.gitMissing, netDown: !!row.netDown });
+  var mine = Object.assign({}, row, { auths: row.auths || {}, bindings: row.bindings || {}, repoBindings: row.repoBindings || {}, scopeBindings:row.scopeBindings || {}, knownHosts: row.knownHosts || [], checks: row.checks || null, gitMissing: !!row.gitMissing, netDown: !!row.netDown });
+  /* 旧空间绑定按旧仓库迁入，保留路径；不会把旧目录误绑到新覆盖的仓库。 */
+  if (!mine.repoBindingsMigrated) {
+    Object.keys(mine.bindings).forEach(function (id) {
+      var legacy = tkProjectById(id), binding = mine.bindings[id];
+      var repo = binding.repo || legacy?.repo;
+      if (!repo || !binding.path) return;
+      var key = ldRemoteKey(repo);
+      if (!mine.repoBindings[key]) mine.repoBindings[key] = Object.assign({}, binding, {repo:repo, repoKey:key});
+    });
+    mine.repoBindingsMigrated = true;
+    if (!userId || userId === tkCurrentUserId()) ldSaveMine(mine);
+  }
   /* 公司 GitLab 的主机名是 git.kingdee.com：旧缓存里按 gitlab.kingdee.com 保存的账号迁过来（凭据按主机名匹配，名字不同就用不上） */
   if (mine.auths['gitlab.kingdee.com'] && !mine.auths['git.kingdee.com']) mine.auths['git.kingdee.com'] = mine.auths['gitlab.kingdee.com'];
   delete mine.auths['gitlab.kingdee.com'];
@@ -26,7 +40,7 @@ export function ldMine() { return ldStateOf(); }
 export function ldSaveMine(mine) {
   var all = ldReadAll(), me = tkCurrentUserId() || 'guest';
   all[me] = mine;
-  try { localStorage.setItem(LD_KEY, JSON.stringify(all)); } catch (e) { /* 存储不可用时仅本次会话有效 */ }
+  try { localStorage.setItem(LD_KEY, JSON.stringify(all)); return true; } catch (e) { return false; }
 }
 
 /* 吴晓锋（p23）的演示空间默认已完成认证与目录准备；不涉及真实 Git 凭据或拉取。
@@ -36,20 +50,20 @@ export function ldEnsureDemoReady(mine, userId) {
   var seeded = mine.demoReadyRepos || {}, changed = false;
   tkProjectsForCurrentUser().forEach(function(project){
     var info = ldRepoInfo(project);
-    if (!info || !info.valid || ldRemoteProtocol(info.repo) !== 'https' || seeded[project.id] === info.repo) return;
+    if (!info || !info.valid || ldRemoteProtocol(info.repo) !== 'https' || seeded[project.id]) return;
     var auth = mine.auths[info.host];
     if (!auth || (auth.expiresAt && auth.expiresAt < new Date().toISOString().slice(0,10))) {
       mine.auths[info.host] = { platform:info.platform, username:ldGitUsername(), account:tkGetPerson(userId)?.name || '吴晓锋',
         source:'local', sourceLabel:'演示预配置', scopes:['read_repository','write_repository'], expiresAt:'', savedAt:ldNow() };
     }
-    if (!mine.bindings[project.id]) {
-      mine.bindings[project.id] = { path:ldDefaultPath(project), mode:'auto', protocol:'https', writable:true, branch:info.baseBranch, syncedAt:ldNow() };
+    if (!mine.repoBindings[info.repoKey]) {
+      mine.repoBindings[info.repoKey] = { repo:info.repo, repoKey:info.repoKey, path:ldDefaultPath(project), mode:'auto', protocol:'https', writable:true, branch:info.baseBranch, syncedAt:ldNow() };
     }
     mine.gitMissing = false;
     if (!mine.knownHosts.includes(info.host)) mine.knownHosts.push(info.host);
     if (!mine.checks) mine.checks = { projects:{}, accounts:{} };
     mine.checks.projects = mine.checks.projects || {}; mine.checks.accounts = mine.checks.accounts || {};
-    mine.checks.projects[project.id] = 'ready'; mine.checks.accounts[info.host] = 'ready';
+    mine.checks.projects[info.repoKey] = 'ready'; mine.checks.accounts[info.host] = 'ready';
     seeded[project.id] = info.repo;
     changed = true;
   });
@@ -64,8 +78,36 @@ export function ldEnsureDemoReady(mine, userId) {
 export function ldEsc(value) {
   return String(value == null ? '' : value).replace(/[&<>"']/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; });
 }
-export var ldRemoteKey = gitRemoteKey;
+export var ldRemoteKey = buildRepoIdentity;
+/* 环境引用携带解析后的配置，初始化期间配置变更也不切换仓库。 */
+export function ldEnvironmentId(config) {
+  return 'repo-env:' + encodeURIComponent(JSON.stringify({ repo:config.repo || '', baseBranch:config.baseBranch || 'main', name:config.name || '', spaceId:config.spaceId || '', workspaceId:config.workspaceId || '', bindingKey:config.bindingKey || '' }));
+}
+export function ldTargetProject(target) {
+  if (typeof target === 'string' && target.startsWith('repo-env:')) {
+    try { return Object.assign(JSON.parse(decodeURIComponent(target.slice(9))), { id:target, _repoResolved:true }); } catch (_) { return null; }
+  }
+  if (target && typeof target === 'object' && target._repoResolved) return target;
+  var p = typeof target === 'object' ? target : tkProjectById(target);
+  return p ? Object.assign({}, p, buildRepoResolve(p, p.workspaceId || ''), { _repoResolved:true }) : null;
+}
+export function ldScopeBindingKey(info) { return JSON.stringify([info.spaceId || '',info.workspaceId || '',info.repoKey || ldRemoteKey(info.repo)]); }
+export function ldBindingKey(target, userId) {
+  var project = ldTargetProject(target);
+  if (!project) return '';
+  return project.bindingKey || (project.spaceId && ldStateOf(userId).scopeBindings[ldScopeBindingKey(project)]) || ldRemoteKey(project.repo);
+}
+export function ldBindingFor(target, userId) {
+  return ldStateOf(userId).repoBindings[ldBindingKey(target,userId)] || null;
+}
+export function ldTaskEnvironmentId(task, userId) {
+  var p = tkProjectById(task.project), mine = ldStateOf(userId);
+  var config = buildTaskRepoConfig(task, p), saved = mine.taskDirectories?.[task.id];
+  var fixedKey = saved?.bindingKey || (saved ? Object.keys(mine.repoBindings).find(key => mine.repoBindings[key].path === saved.repositoryDirectory && mine.repoBindings[key].repoKey === ldRemoteKey(config.repo)) : '');
+  return ldEnvironmentId(Object.assign({},config,{name:p?.name || task.title || '',spaceId:task.project,workspaceId:task.workspaceId || '',bindingKey:fixedKey || ''}));
+}
 export function ldRepoInfo(project) {
+  project = ldTargetProject(project);
   var repo = String(project?.repo || '').trim();
   if (!repo) return null;
   var key = ldRemoteKey(repo);
@@ -83,19 +125,36 @@ export function ldRepoInfo(project) {
   /* Manage 新建和修改时已做同一套静态校验，这里兜底历史数据 */
   var problem = gitRepoProblem(repo);
   return { repo:repo, valid:!problem, problem:problem, httpsRepo:httpsRepo, sshRepo:sshRepo, sshPort:portMatch ? Number(portMatch[1]) : 22,
-    host:host, path:path, name:name, platform:platform, baseBranch:project.baseBranch || 'main' };
+    host:host, path:path, name:name, platform:platform, baseBranch:project.baseBranch || 'main', repoKey:key, spaceId:project.spaceId || '', workspaceId:project.workspaceId || '', bindingKey:project.bindingKey || '' };
 }
 export function ldRemoteProtocol(url) { return /^https?:\/\//i.test(String(url || '').trim()) ? 'https' : 'ssh'; }
 export function ldCloneUrl(info) { return info.httpsRepo; }
 export function ldAuthProtocol() { return 'https'; }
 export function ldBindingProtocol(binding) { return binding?.protocol || 'https'; }
-/* 空间目录：与任务执行（harness）同一目录。默认为工作区目录下的「空间名」文件夹，可改为工作区目录内的其他文件夹；
-   任务执行只接受工作区目录内的目录，所以不能选 ~/Projects 等其他位置。工作区目录按登录身份区分，演示固定一个。 */
+/* 本机根目录：仓库克隆与隔离任务目录均位于根内，绑定按仓库归属；演示路径按登录身份隔离。 */
 export var LD_WORKSPACE_ROOT = '~/lingeebuild/workspaces/<身份>';
-export function ldDefaultPath(project) { return LD_WORKSPACE_ROOT + '/' + String(project?.name || project?.id || 'project').replace(/[\\/:*?"<>|]/g, '-'); }
-export function ldInsideWorkspace(path) { return String(path || '').indexOf(LD_WORKSPACE_ROOT + '/') === 0; }
-/* 空间目录绑定：与任务执行共用，写在工作区目录的 .lingee-project-bindings 下，不改动仓库文件 */
-export function ldLocalConfigPath(projectId) { return LD_WORKSPACE_ROOT + '/.lingee-project-bindings/' + projectId + '.json'; }
+export function ldDefaultPath(project) {
+  var info = ldRepoInfo(project);
+  if (!info) return '';
+  var sameNames = new Set(ldMyDevProjects().map(function (p) { return ldRepoInfo(p); }).filter(function (i) { return i && i.name === info.name; }).map(function (i) { return i.repoKey; }));
+  var folder = info.name;
+  if (sameNames.size > 1) folder = [info.host, info.path.split('/').slice(0, -1).join('-'), info.name].filter(Boolean).join('-').replace(/[^\w.-]/g, '-');
+  var saved = ldReadAll()[tkCurrentUserId() || 'guest']?.repoBindings || {};
+  if (Object.keys(saved).some(function (key) { return key !== info.repoKey && saved[key].path === LD_WORKSPACE_ROOT + '/' + folder; })) folder = info.repoKey.replace(/[^\w.-]/g, '-');
+  if (info.bindingKey && info.bindingKey !== info.repoKey) {
+    var owner = [info.spaceId,info.workspaceId];
+    try { if (info.bindingKey.startsWith('scope:')) owner = JSON.parse(info.bindingKey.slice(6)); } catch (_) {}
+    folder += '-scope-' + encodeURIComponent(owner[0] + '-' + (owner[1] || 'root'));
+  }
+  return LD_WORKSPACE_ROOT + '/' + folder;
+}
+export function ldInsideWorkspace(path) {
+  return String(path || '').startsWith(LD_WORKSPACE_ROOT + '/') && !String(path).split('/').includes('..') && !/[\\\x00-\x1f]/.test(String(path));
+}
+export function ldLocalConfigPath(target) {
+  var info = ldRepoInfo(ldTargetProject(target));
+  return LD_WORKSPACE_ROOT + '/.lingee-repository-bindings/' + encodeURIComponent(ldBindingKey(target) || info?.repoKey || String(target)) + '.json';
+}
 export function ldNow() {
   var d = new Date();
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0')
@@ -159,8 +218,8 @@ export function ldSaveAuthEntry(host, entry) {
   var mine = ldMine();
   var auth = mine.auths[host] = Object.assign({ username:ldGitUsername(), account:me?.name || '当前用户', savedAt:ldNow() }, entry);
   var rechecked = 0;
-  ldProjectsOnHost(host).forEach(function (project) {
-    var binding = mine.bindings[project.id];
+  Object.values(mine.repoBindings).forEach(function (binding) {
+    if (ldRepoInfo({repo:binding.repo,_repoResolved:true})?.host !== host) return;
     if (!binding) return;
     if (binding.mode !== 'existing') {
       binding.protocol = ldAuthProtocol(auth);
@@ -190,47 +249,39 @@ export function ldAuthFor(host, userId) {
   return Object.assign({}, auth, { expired:expired, expiring:!expired && !!auth.expiresAt && auth.expiresAt <= soon });
 }
 /* 账号按仓库主机自动匹配；写权限针对具体仓库，保存账号时判断不了，拉取或绑定目录时校验并记在 binding.writable 上 */
-export var LD_STATUS_LABELS = { ready:'已就绪', download:'未初始化', login:'未登录', expired:'凭据失效', noaccess:'无权访问', offline:'无法连接', mismatch:'目录不匹配', git:'Git 不可用', invalid:'地址不规范', notfound:'仓库不存在', norepo:'未配置仓库', ssh:'SSH 仓库', unchecked:'待检测' };
+export var LD_STATUS_LABELS = { ready:'已就绪', download:'未初始化', login:'未登录', expired:'凭据失效', noaccess:'无权访问', offline:'无法连接', mismatch:'目录不匹配', git:'Git 不可用', invalid:'地址不规范', notfound:'仓库不存在', norepo:'未配置仓库', ssh:'SSH 仓库', unchecked:'待检测', missing:'目录丢失', unused:'可清理' };
 /* 状态颜色：已就绪绿，未初始化黄，地址无效、凭据失效红，其余橙 */
 export function ldStatusTone(key) { return key === 'ready' ? 'is-ok' : key === 'download' ? 'is-pending' : ['invalid', 'expired', 'notfound'].includes(key) ? 'is-danger' : ['unchecked', 'norepo', 'ssh'].includes(key) ? 'is-muted' : 'is-warn'; }
 export function ldProjectStatus(projectId, userId) {
-  var info = ldRepoInfo(tkProjectById(projectId));
-  if (!info) return { needed:false, ready:true };
-  if (!info.valid) return { needed:true, ready:false, invalid:true, info:info, key:'invalid', label:LD_STATUS_LABELS.invalid, reason:'Git 地址不规范：' + info.problem + '。' + ldRepoFixHint(tkProjectById(projectId)) };
+  var info = ldRepoInfo(ldTargetProject(projectId));
+  if (!info) return { needed:true, ready:false, key:'norepo', label:'未配置仓库', reason:'当前范围未配置代码仓库，请到 Build「设置 › 仓库」配置' };
+  if (!info.valid) return { needed:true, ready:false, invalid:true, info:info, key:'invalid', label:LD_STATUS_LABELS.invalid, reason:'Git 地址不规范：' + info.problem + '。' + ldRepoFixHint(ldTargetProject(projectId)) };
   /* 一期本页只管 HTTPS；SSH 地址按本机已有 SSH 配置使用，不检测、不初始化 */
-  if (ldRemoteProtocol(info.repo) !== 'https') return { needed:false, ready:true, ssh:true, info:info, key:'ssh', label:'SSH 仓库', reason:'一期不支持 SSH 地址：请在 Manage 把代码仓库改成 HTTPS 地址，再在这里登录 Git 账号' };
+  if (ldRemoteProtocol(info.repo) !== 'https') return { needed:true, ready:false, ssh:true, info:info, key:'ssh', label:'SSH 仓库', reason:'请到 Build「设置 › 仓库」把地址改为 HTTPS 后准备本机环境' };
   var auth = ldAuthFor(info.host, userId);
-  var binding = ldStateOf(userId).bindings[projectId] || null;
+  var binding = ldBindingFor(projectId,userId);
   /* Git 不可用时仍带上账号与目录，卡片照常显示账号和已绑定目录 */
   if (ldStateOf(userId).gitMissing) return { needed:true, ready:false, info:info, auth:auth, authOk:!!auth && !auth.expired, writeOk:true, protocolOk:true, binding:binding, key:'git', label:'Git 不可用', reason:'本机没有安装 Git，点「安装 Git」由智能体帮你完成安装' };
   var authOk = !!auth && !auth.expired && auth.source !== 'ssh';
   var writeOk = !binding || binding.writable !== false;
   /* 一期仅支持 HTTPS，保留已有 SSH 目录，不改它的远端。 */
   var protocolOk = !binding || ldBindingProtocol(binding) === 'https';
-  var ready = authOk && !!binding && protocolOk && writeOk;
+  var missing = !!binding && (binding.directoryMissing === true || /(?:missing-dir|目录丢失)/.test(binding.path));
+  var ready = authOk && !!binding && !missing && protocolOk && writeOk;
   /* 状态与客户端一致：已就绪、未初始化、未登录、凭据失效、无权访问、目录不匹配、Git 不可用、地址无效 */
-  var key = !auth ? 'login' : auth.expired || !authOk ? 'expired' : !binding ? 'download' : !protocolOk ? 'mismatch' : !writeOk ? 'noaccess' : 'ready';
+  var key = !auth ? 'login' : auth.expired || !authOk ? 'expired' : !binding ? 'download' : missing ? 'missing' : !protocolOk ? 'mismatch' : !writeOk ? 'noaccess' : 'ready';
   return { needed:true, ready:ready, info:info, auth:auth, authOk:authOk, writeOk:writeOk, protocolOk:protocolOk, binding:binding, key:key, label:LD_STATUS_LABELS[key],
     reason:key === 'login' ? '还没有登录 ' + info.host + ' 的 Git 账号'
       : key === 'expired' ? '本机保存的凭据被平台拒绝，可能已过期或被撤销，请重新登录'
-      : key === 'download' ? '空间代码尚未初始化到本机'
-      : key === 'mismatch' ? '空间目录不是该空间的 HTTPS 仓库，请重新选择或使用默认目录，原目录保持不变'
+      : key === 'download' ? '仓库尚未初始化到本机'
+      : key === 'missing' ? '本机目录已丢失或移走，请重新绑定'
+      : key === 'mismatch' ? '本机目录不是该 HTTPS 仓库，请重新选择或使用默认目录，原目录保持不变'
       : key === 'noaccess' ? (ldPushIssueText(binding.pushIssue ? { pushIssue:binding.pushIssue, username:ldAuthUser(auth) } : auth, info.platform) || ldAuthUser(auth) + ' 没有该仓库的推送权限') : '' };
 
 }
 /* 谁来改地址：Manage 空间由能管理空间的人（负责人、空间管理员、系统管理员，与 Manage 一致）在「空间设置 › 代码仓库」修改；
    协作开发自己的空间由负责人在空间设置中修改 */
-export function ldRepoFixHint(project) {
-  var me = tkCurrentUserId(), person = tkGetPerson(me);
-  if (project?.space === 'manage') {
-    var admins = (project.adminIds || []).filter(Boolean);
-    if (admins.includes(me) || person?.workspaceRole === 'system_admin' || (person && project.owner === person.name)) return '请到 Manage「空间设置 › 代码仓库」修改';
-    var names = admins.map(function (id) { return tkGetPerson(id)?.name; }).filter(Boolean);
-    return '请联系空间管理员' + (names.length ? ' ' + names.join('、') : '') + ' 到 Manage「空间设置 › 代码仓库」修改';
-  }
-  var owner = project?.owner || '';
-  return owner && owner !== tkGetPerson(me)?.name ? '请联系空间负责人 ' + owner + ' 在空间设置中修改' : '请在空间设置中修改';
-}
+export function ldRepoFixHint() { return '请到 Build「设置 › 工作区设置 › 仓库」修改，或联系该范围负责人'; }
 /* 连通性：真实客户端用 git ls-remote 检查。连不上主机为「无法连接」；登录后仍拿不到仓库为「仓库不存在」（平台不区分不存在与无权访问）。
    「检测」和初始化时检查，结果记在 checks 里，下次检测或初始化成功前一直显示。
    演示：地址含 offline 或打开「演示：模拟网络不通」视为连不上，含 private / missing 视为仓库不存在 */
@@ -244,31 +295,42 @@ export function ldNetCheck(info, auth) {
 export function ldProjectView(project) {
   var st = ldProjectStatus(project.id);
   var checks = ldMine().checks || {};
-  var last = (checks.projects || {})[project.id];
+  var last = (checks.projects || {})[ldBindingKey(project.id)];
   if (!st.info) return { st:st, key:'norepo', reason:'没有配置代码仓库，' + ldRepoFixHint(project).replace(/修改$/, '填写') };
   if (st.invalid || st.ssh) return { st:st, key:st.key, reason:st.reason };
   /* Git 是否可用随本机实时判断，不等「检测」 */
-  if (st.key === 'git') return { st:st, key:'git', reason:st.reason };
-  if (last === 'offline' || last === 'notfound') return { st:st, key:last, reason:(checks.reasons || {})[project.id] || '' };
-  return { st:st, key:st.binding ? last : 'download', reason:st.reason };
+  if (st.key === 'git' || st.key === 'missing') return { st:st, key:st.key, reason:st.reason };
+  if (last === 'offline' || last === 'notfound') return { st:st, key:last, reason:(checks.reasons || {})[ldBindingKey(project.id)] || '' };
+  return { st:st, key:st.binding ? (last || st.key) : 'download', reason:st.reason };
 }
 /* 开发空间：有仓库地址、Manage 里的研发类空间，或协作开发自己的空间（不带 space:'manage'）。新建任务的空间下拉也用它 */
-export function ldIsDevProject(project) { return !!project && (!!String(project.repo || '').trim() || project.containsRd === true || project.space !== 'manage'); }
-/* 有仓库的空间；设置页「我的空间」另外列出没配仓库的开发空间 */
+export function ldIsDevProject(project) { return !!project && (project.space !== 'manage' || project.containsRd === true || ['devtest','collab','collaboration'].includes(project.template)); }
+/* 按规范化仓库聚合当前用户的有效开发范围，避免重复初始化。 */
 export function ldMyDevProjects() {
-  return tkProjectsForCurrentUser().filter(function (project) { return !!ldRepoInfo(project); });
+  var groups = new Map();
+  tkProjectsForCurrentUser().filter(ldIsDevProject).forEach(function (p) {
+    if (p.status === 'archived') return;
+    [{ id:'', name:p.name }].concat(wsFlatTree(p).map(function (row) { return { id:row.ws.id, name:p.name + ' / ' + wsPathNames(p, row.ws.id).join(' / ') }; })).forEach(function (scope) {
+      buildRepoList(p, scope.id).repositories.forEach(function (config) {
+        var key = ldRemoteKey(config.repo);
+        if (!groups.has(key)) groups.set(key, Object.assign({}, config, {id:ldEnvironmentId(config), usages:[]}));
+        groups.get(key).usages.push({spaceId:p.id,workspaceId:scope.id,name:scope.name,baseBranch:config.baseBranch});
+      });
+    });
+  });
+  return Array.from(groups.values());
 }
 export function ldProjectsOnHost(host) {
   return ldMyDevProjects().filter(function (project) { return ldRepoInfo(project).host === host; });
 }
 /* 需要本人配置的空间；地址无效的要到 Manage 修正，SSH 仓库不检测，都不算在内 */
 export function ldPendingProjects() {
-  return ldMyDevProjects().filter(function (project) { var status = ldProjectStatus(project.id); return !status.ready && !status.invalid; });
+  return ldActiveEnvironments().filter(function (project) { var status = ldProjectStatus(project.id); return !status.ready && !status.invalid; });
 }
 /* 顶部提示：需要本人配置的空间，加上地址不规范、上次检测连不上或找不到仓库的空间（地址问题要找管理员改，也提示出来） */
 export function ldAttentionProjects() {
   var pendingIds = ldPendingProjects().map(function (project) { return project.id; });
-  return ldMyDevProjects().filter(function (project) {
+  return ldActiveEnvironments().filter(function (project) {
     var key = ldProjectView(project).key;
     return key === 'invalid' || key === 'offline' || key === 'notfound' || pendingIds.includes(project.id);
   });
@@ -277,35 +339,45 @@ export function ldAttentionProjects() {
 /* ---------- 空间目录 ---------- */
 /* 记录空间目录绑定（任务执行读同一份）；mode 为 auto（默认目录）或 existing（更改过的目录） */
 export function ldBindDir(projectId, path, mode) {
-  var info = ldRepoInfo(tkProjectById(projectId));
-  var mine = ldMine();
-  var auth = info ? mine.auths[info.host] : null;
-  mine.bindings[projectId] = { path:path, mode:mode, protocol:ldAuthProtocol(auth), branch:info?.baseBranch || 'main', writable:ldPushCheck(auth), pushIssue:ldPushIssue(auth), syncedAt:ldNow() };
-  ldSaveMine(mine);
-  ldRefresh();
+  var info = ldRepoInfo(ldTargetProject(projectId));
+  if (!info || ldCheckDir(projectId, path)) return false;
+  var mine = ldMine(), auth = mine.auths[info.host], bindingKey = ldBindingKey(projectId);
+  mine.repoBindings[bindingKey] = { repo:info.repo, repoKey:info.repoKey, path:path, mode:mode, protocol:ldAuthProtocol(auth), branch:info.baseBranch, writable:ldPushCheck(auth), pushIssue:ldPushIssue(auth), syncedAt:ldNow() };
+  if (info.spaceId) mine.scopeBindings[ldScopeBindingKey(info)] = bindingKey;
+  if (!ldSaveMine(mine)) return false;
+  ldRefresh(); return true;
 }
 export function ldMarkInitialized(projectId) {
-  var mine = ldMine();
-  if (!mine.bindings[projectId]) return;
-  mine.bindings[projectId].initializedAt = ldNow();
-  ldSaveMine(mine);
+  var info = ldRepoInfo(ldTargetProject(projectId)), mine = ldMine();
+  if (!info || !mine.repoBindings[ldBindingKey(projectId)]) return false;
+  mine.repoBindings[ldBindingKey(projectId)].initializedAt = ldNow();
+  return ldSaveMine(mine);
 }
-/* 校验所选目录（真实客户端读取目录里的仓库与目录标记）：
-   - 必须在工作区目录内；目录里是别的仓库、已被其他空间使用、或已有文件与仓库文件同名时失败，原目录和原绑定不变；
-   - 原目录下还有任务工作区时不允许更改目录（进行中的任务封存时要找原执行目录）。
-   演示：路径含 outside 视为工作区外，含 other / 别的 视为别的仓库，含 used 视为已被其他空间使用，含 conflict 视为同名文件冲突，
-   空间设置里路径含 busy 的原目录视为还有任务工作区。 */
+export function ldRepoHasRunningTasks(repoKey) {
+  return tkGetTasks().some(function (task) {
+    return task.repoSnapshot && ldRemoteKey(task.repoSnapshot.repo) === repoKey && !['done', 'cancelled'].includes(task.status);
+  });
+}
 export function ldCheckDir(projectId, path) {
-  var current = ldMine().bindings[projectId];
-  if (!ldInsideWorkspace(path) || /outside/i.test(path)) return '空间目录必须在工作区目录（' + LD_WORKSPACE_ROOT + '）内';
-  if (current && current.path !== path && /busy/i.test(current.path)) return '原目录下还有任务工作区，请等任务完成并封存后再更改目录';
-  if (/other|别的/.test(path)) return '目录里的仓库与空间仓库地址不一致';
-  if (/used/i.test(path)) return '该目录已被其他空间使用';
-  if (/conflict/i.test(path)) return '目录里已有文件与仓库文件同名，Git 未覆盖。请移走或改名这些文件后重试';
+  var info = ldRepoInfo(ldTargetProject(projectId)), mine = ldMine();
+  if (!info) return '请先配置代码仓库';
+  var bindingKey = ldBindingKey(projectId), current = mine.repoBindings[bindingKey];
+  var scopeError = ldScopeDirectoryChangeError(info,bindingKey); if (scopeError) return scopeError;
+  if (!ldInsideWorkspace(path) || /outside/i.test(path)) return '本机目录必须在本机根目录（' + LD_WORKSPACE_ROOT + '）内';
+  if (current && current.path !== path && (ldBindingHasRunningTasks(bindingKey) || /busy/i.test(current.path))) return '该仓库还有进行中的任务，请完成后再更改本机目录';
+  if (/other|别的/.test(path)) return '目录里的仓库与当前仓库地址不一致';
+  if (Object.keys(mine.repoBindings).some(function (key) { return key !== bindingKey && mine.repoBindings[key].path === path; })) return '该目录已有绑定，请选择列表中的已有目录或使用不同目录';
+  if (/conflict/i.test(path)) return '目录里已有同名文件，未覆盖；请移走或改名后重试';
   return '';
 }
-/* 演示：系统目录选择器打开在工作区目录，固定返回其中的 <仓库名> 文件夹 */
-export function ldPickDir(info) { return LD_WORKSPACE_ROOT + '/' + info.name; }
+export function ldPickDir(info) { return ldDefaultPath(Object.assign({},info,{_repoResolved:true})); }
+export function ldForgetRepoBinding(repoKey) {
+  if (ldBindingHasRunningTasks(repoKey)) return '目录还有未结束任务，暂不能清理绑定';
+  var mine = ldMine(); delete mine.repoBindings[repoKey];
+  Object.keys(mine.scopeBindings).forEach(function (key) { if (mine.scopeBindings[key] === repoKey) delete mine.scopeBindings[key]; });
+  if (!ldSaveMine(mine)) return '保存失败，请重试';
+  ldRefresh(); return '';
+}
 
 /* ---------- 检测结果 ----------
    设置页打开时不检测，展示上次结果；点「检测」或登录、初始化成功后更新（只更新相关平台）。
@@ -329,13 +401,13 @@ export function ldRecordChecks(host) {
   var mine = ldMine();
   var checks = mine.checks || { projects:{}, accounts:{} };
   checks.reasons = checks.reasons || {};
-  ldMyDevProjects().forEach(function (project) {
+  ldActiveEnvironments().forEach(function (project) {
     var info = ldRepoInfo(project);
     if (host && info.host !== host) return;
     var status = ldProjectStatus(project.id);
     var net = status.invalid || status.key === 'git' ? null : ldNetCheck(info, status.auth);
-    checks.projects[project.id] = net ? net.key : status.key;
-    checks.reasons[project.id] = net ? net.reason : '';
+    checks.projects[ldBindingKey(project.id)] = net ? net.key : status.key;
+    checks.reasons[ldBindingKey(project.id)] = net ? net.reason : '';
   });
   ldSettingsHosts().forEach(function (item) { if (!host || item === host) checks.accounts[item] = ldAccountKey(item); });
   var d = new Date();
@@ -370,10 +442,31 @@ export function ldDetect() {
     ldRefresh();
   }, 900);
 }
-/* 设置页「我的空间」列出的开发空间：有仓库的在前，没配仓库的标「未配置仓库」 */
+/* 环境列表保留不再使用的旧仓库绑定；进行中的任务仍可沿用。 */
 export function ldSettingsProjects() {
-  var all = tkProjectsForCurrentUser().filter(ldIsDevProject);
-  return all.filter(function (project) { return !!ldRepoInfo(project); }).concat(all.filter(function (project) { return !ldRepoInfo(project); }));
+  var projects = ldMyDevProjects(), saved = ldMine().repoBindings;
+  var used = new Set(projects.map(function (p) { return ldRemoteKey(p.repo); }));
+  projects.forEach(function (p) { p.bindingKey = ldRemoteKey(p.repo); p.id = ldEnvironmentId(p); });
+  Object.keys(saved).forEach(function (key) {
+    if (used.has(key)) return;
+    var binding = saved[key]; if (!binding.repo) return;
+    var repoKey = binding.repoKey || ldRemoteKey(binding.repo), parent = projects.find(function (p) { return !p.isCopy && ldRemoteKey(p.repo) === repoKey; });
+    var usages = (parent?.usages || []).filter(function (scope) { return ldBindingKey(ldEnvironmentId(Object.assign({},binding,scope))) === key; });
+    projects.push({id:ldEnvironmentId({repo:binding.repo,baseBranch:binding.branch,bindingKey:key,name:'独立目录 · ' + repoKey.split('/').pop()}),bindingKey:key,repo:binding.repo,
+      name:repoKey.split('/').pop(),groupKey:repoKey,isCopy:key !== repoKey,usages:usages,unused:!usages.length && !ldBindingHasRunningTasks(key)});
+  });
+  return projects;
+}
+export function ldActiveEnvironments() {
+  var rows = new Map();
+  ldMyDevProjects().forEach(function (project) {
+    project.usages.forEach(function (scope) {
+      var target = Object.assign({},project,scope,{bindingKey:'',_repoResolved:true});
+      var key = ldBindingKey(target); target.bindingKey = key; target.id = ldEnvironmentId(target);
+      if (!rows.has(key)) rows.set(key,target);
+    });
+  });
+  return Array.from(rows.values());
 }
 
 /* ---------- 执行前检查（只读本机，不联网） ----------
@@ -387,7 +480,7 @@ export function ldPreflight(projectId, userId) {
   if (hit && Date.now() - hit.at < 3000) return hit.result;
   var status = ldProjectStatus(projectId, userId);
   var binding = status.binding;
-  var initialized = !status.needed || (!!binding && status.protocolOk !== false && !ldStateOf(userId).gitMissing);
+  var initialized = !!status.info && !status.invalid && status.key !== 'missing' && (!!binding && status.protocolOk !== false && !ldStateOf(userId).gitMissing);
   var result = { status:status, initialized:initialized };
   preflightCache.set(key, { at:Date.now(), result:result });
   return result;
@@ -425,4 +518,46 @@ export function ldRemoveAuth(host) {
   delete mine.auths[host];
   ldSaveMine(mine);
   ldRecordChecks(host);
+}
+
+/* 任务目录是当前用户本机信息，不写入团队任务对象。原型记录隔离目录；真实 worktree 由客户端创建。 */
+export function ldRememberTaskDirectory(task, snapshot, userId) {
+  if (!snapshot) return true;
+  if (userId !== tkCurrentUserId()) return true;
+  var mine = ldMine(), bindingKey = ldBindingKey(ldTaskEnvironmentId(task,userId),userId), binding = mine.repoBindings[bindingKey];
+  if (!binding) return false;
+  mine.taskDirectories = mine.taskDirectories || {};
+  if (mine.taskDirectories[task.id]) return true;
+  var segment = encodeURIComponent(String(task.code || task.id)) + '-' + encodeURIComponent(String(task.id));
+  var taskDirectory = binding.path + '/.lingee-tasks/' + segment;
+  mine.taskDirectories[task.id] = { bindingKey:bindingKey, spaceId:task.project, workspaceId:task.workspaceId || '', repoKey:snapshot.repoKey, repositoryDirectory:binding.path,
+    taskDirectory:taskDirectory, workingDirectory:taskDirectory, branch:snapshot.baseBranch };
+  return ldSaveMine(mine);
+}
+
+export function ldTaskDirectory(task) { return ldMine().taskDirectories?.[task.id] || null; }
+
+/* Personal scope preference, separate from shared repository configuration. */
+export function ldBindingHasRunningTasks(bindingKey) {
+  var mine = ldMine();
+  return tkGetTasks().some(function (task) {
+    if (!task.repoSnapshot || ['done','cancelled'].includes(task.status)) return false;
+    var saved = mine.taskDirectories?.[task.id];
+    var key = saved?.bindingKey || (saved ? Object.keys(mine.repoBindings).find(id => mine.repoBindings[id].path === saved.repositoryDirectory) : ldRemoteKey(task.repoSnapshot.repo));
+    return key === bindingKey;
+  });
+}
+export function ldScopeDirectoryChangeError(info,bindingKey) {
+  if (!info.spaceId) return '';
+  var current = ldBindingKey(ldEnvironmentId(Object.assign({},info,{bindingKey:''})));
+  return current !== bindingKey && tkGetTasks().some(function (task) { return task.repoSnapshot && task.project === info.spaceId && (task.workspaceId || '') === info.workspaceId && !['done','cancelled'].includes(task.status); }) ? '当前工作范围还有未结束任务，暂不能更换目录' : '';
+}
+export function ldAssignScopeDirectory(target,bindingKey) {
+  var info = ldRepoInfo(ldTargetProject(target)), mine = ldMine();
+  if (!info?.spaceId) return '请选择工作区';
+  if (bindingKey !== info.repoKey && mine.repoBindings[bindingKey]?.repoKey !== info.repoKey) return '目录不属于当前仓库';
+  var error = ldScopeDirectoryChangeError(info,bindingKey); if (error) return error;
+  mine.scopeBindings[ldScopeBindingKey(info)] = bindingKey;
+  if (!ldSaveMine(mine)) return '保存失败，请重试';
+  ldRefresh(); return '';
 }

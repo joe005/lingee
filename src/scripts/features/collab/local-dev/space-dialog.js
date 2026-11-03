@@ -1,8 +1,7 @@
 import { $ } from '../../../core/dom.js';
 import { toast } from '../../../core/toast.js';
-import { tkProjectById } from '../../tasks-v2/data.js';
 import { ldJobOf } from './init-jobs.js';
-import { ldEsc, ldHide, ldMine, ldProjectStatus, ldRepoInfo, ldShow, ldVisible } from './core.js';
+import { ldBindingFor, ldTargetProject, ldEsc, ldHide, ldProjectStatus, ldRepoInfo, ldShow, ldVisible } from './core.js';
 import { ldBackgroundSpaceInit, ldCancelSpaceInit, ldNewSpaceForm, ldRunSpaceInit, ldSpaceFormChange, ldSpaceFormClick, ldSpaceFormHtml, ldSpaceFormTarget } from './space-form.js';
 
 /* 本地开发 · 初始化空间 / 空间设置弹窗（#ldSpaceOverlay）。
@@ -12,15 +11,16 @@ var settings = false;
 var onReady = null;
 var returnFocus = null;
 
-export function ldOpenSpaceDialog(projectId, readyCallback) {
-  var project = tkProjectById(projectId);
+export function ldOpenSpaceDialog(projectId, readyCallback, directoryMode) {
+  var project = ldTargetProject(projectId);
   if (!ldRepoInfo(project)) { toast('该空间未配置代码仓库', 'warning'); return; }
   if (ldJobOf(projectId)) { toast('该空间正在后台初始化，完成后会提示', 'warning'); return; }
   returnFocus = document.activeElement;
   form = ldNewSpaceForm(projectId);
-  settings = !!ldMine().bindings[projectId];
+  if (['auto','existing'].includes(directoryMode)) form.mode = directoryMode;
+  settings = !!ldBindingFor(projectId);
   onReady = readyCallback || null;
-  $('#ldSpaceTitle').textContent = settings ? '空间设置' : '初始化空间';
+  $('#ldSpaceTitle').textContent = settings ? '本机目录设置' : '初始化仓库';
   $('#ldSpaceSub').textContent = project.name;
   $('#ldSpaceSub').title = project.name;
   render();
@@ -34,7 +34,7 @@ function render() {
   body.setAttribute('aria-busy', String(!!form.pulling));
   body.innerHTML = (settings && !status.ready && !form.pulling ? '<div class="ld-warn"><span>' + ldEsc(status.reason) + '</span></div>' : '') + ldSpaceFormHtml(form);
   var done = $('#ldSpaceDone'), target = ldSpaceFormTarget(form), running = !!form.pulling;
-  done.disabled = !status.authOk || !target || (settings && target === status.binding?.path);
+  done.disabled = !status.authOk || !target || (settings && status.key !== 'missing' && target === status.binding?.path);
   done.textContent = settings ? '保存' : '初始化';
   /* 初始化进行中底部换成「停止 / 后台初始化」（UE） */
   [['#ldSpaceCancel', running], ['#ldSpaceDone', running], ['#ldSpaceStop', !running], ['#ldSpaceBg', !running]].forEach(function (row) { $(row[0]).hidden = row[1]; });

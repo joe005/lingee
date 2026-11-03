@@ -1,18 +1,8 @@
-<!-- 设置：顶部分段页签「我的空间 / Git 账号」，右侧上次检测与「检测」；两个面板各自一个片段和模块
-     （features/collab/local-dev/settings-page.js 外壳、spaces-page.js、git-accounts-page.js）。 -->
+<!-- 空间、工作区与本机个人配置共用设置页。 -->
 <div class="cv-panel" id="cv-local">
   <div class="scroll">
     <div class="ld-settings">
-      <div class="ld-settings-bar">
-        <div class="ld-settings-tabs" role="tablist" aria-label="设置分类">
-          <button type="button" class="ld-settings-tab is-on" id="ldSpacesTab" data-ld-settings-tab="spaces" role="tab" aria-selected="true" aria-controls="ldSpacesPanel">我的空间</button>
-          <button type="button" class="ld-settings-tab" id="ldGitTab" data-ld-settings-tab="git" role="tab" aria-selected="false" aria-controls="ldGitPanel" tabindex="-1">Git 账号</button>
-        </div>
-        <div class="ld-settings-tools" id="ldSettingsTools"></div>
-      </div>
-      <!--#include "src/views/collab/local-settings/spaces.html" -->
-      <!--#include "src/views/collab/local-settings/git-accounts.html" -->
-      <div class="ld-demo-links" id="ldDemoLinks"></div>
+      <!--#include "src/views/collab/local-settings/workspaces.html" -->
     </div>
   </div>
 </div>

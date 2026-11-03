@@ -1,9 +1,13 @@
+import { capabilityExecutor, capabilityTaskEntry } from '../collab/capability-config.js';
 /* 任务的执行方：默认取任务所选的智能体团队；
    任务指定单个智能体（expertId）时，按只含该智能体的团队处理，名称与头像都用这个智能体。 */
 import { EXPERTS, PRESET_TEAMS } from './data.js';
 import { TEAMS } from './store.js';
 
 export function taskExecutorTeam(task, project) {
+  if (task?.executorSnapshot) return capabilityExecutor(task.executorSnapshot);
+  const scoped = project && task ? capabilityTaskEntry(task,project) : null;
+  if (scoped) return capabilityExecutor(scoped);
   if (task?.expertId) {
     var expert = EXPERTS.find(function (row) { return row.id === task.expertId; });
     return { id:'expert:' + task.expertId, name:expert?.name || task.expertId, members:[task.expertId], leadId:task.expertId, solo:true };

@@ -183,9 +183,9 @@
 #view-collab :is(#cv-experts,#cv-teams) .asset-card-menu-toggle[aria-expanded="true"]{background:var(--hover)}
 #view-collab :is(#cv-experts,#cv-teams) .x-card:has(.asset-card-menu-toggle[aria-expanded="true"]){z-index:3}
 #view-collab :is(#cv-experts,#cv-teams) .asset-list-section:has(.asset-card-menu-toggle[aria-expanded="true"]){position:relative;z-index:3}
-#view-collab :is(#cv-experts,#cv-teams) .asset-card-menu{position:absolute;top:28px;right:28px;z-index:4;min-width:100px;padding:4px;border-radius:12px;background:var(--bg);box-shadow:var(--menu-shadow)}
+#view-collab :is(#cv-experts,#cv-teams) .asset-card-menu{position:absolute;top:28px;right:28px;z-index:4;width:max-content;min-width:160px;padding:4px;border-radius:12px;background:var(--bg);box-shadow:var(--menu-shadow)}
 #view-collab :is(#cv-experts,#cv-teams) .asset-card-menu[hidden]{display:none}
-#view-collab :is(#cv-experts,#cv-teams) .asset-card-menu button{display:flex;align-items:center;width:100%;height:32px;padding:0 12px;border:0;border-radius:var(--tb-radius);background:transparent;color:var(--text);font:inherit;font-size:var(--font-size-14);cursor:pointer;font-weight:400;line-height:var(--line-height-14);}
+#view-collab :is(#cv-experts,#cv-teams) .asset-card-menu button{display:flex;align-items:center;box-sizing:border-box;white-space:nowrap;width:100%;height:32px;padding:0 12px;border:0;border-radius:var(--tb-radius);background:transparent;color:var(--text);font:inherit;font-size:var(--font-size-14);cursor:pointer;font-weight:400;line-height:var(--line-height-14);}
 #view-collab :is(#cv-experts,#cv-teams) .asset-card-menu button:hover{background:var(--hover)}
 #view-collab :is(#cv-experts,#cv-teams) .asset-card-menu [data-asset-card-view]{gap:8px}
 #view-collab :is(#cv-experts,#cv-teams) .asset-card-menu [data-asset-card-view] svg{flex:none;color:var(--text-secondary)}
@@ -202,3 +202,10 @@
   #view-collab :is(#cv-experts,#cv-teams) .asset-search{width:auto;flex:1}
 }
 #view-collab :is(#cv-experts,#cv-teams) .asset-card-menu .asset-card-uninstall::before{content:'';display:block;width:16px;height:16px;margin-right:8px;flex:none;background:var(--danger);mask:url('../../../assets/figma/task-list/trash.svg') center / 16px 16px no-repeat}
+
+/* 智能体 / 智能体团队：去掉「全部 / 金蝶官方 / 企业自建 / 个人开发」来源筛选行（行内容仍由脚本渲染，筛选恒为「全部」） */
+#view-collab :is(#cv-experts,#cv-teams) .asset-secondary-row:has(.asset-source-filters) { display:none; }
+
+/* 个人开发菜单复用动作定义中的图标，避免仅文字项与查看项错位。 */
+#view-collab :is(#cv-experts,#cv-teams) .asset-card-menu [data-asset-menu-act] { gap: 8px; }
+#view-collab :is(#cv-experts,#cv-teams) .asset-card-menu [data-asset-menu-act] > svg { flex: none; width: 16px; height: 16px; color: var(--text-secondary); }

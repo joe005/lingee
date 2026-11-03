@@ -22,6 +22,7 @@
 @import './parts/env-auth.css';
 @import './parts/erp-consent.css';
 @import './parts/expert.css';
+@import './parts/env-picker.css';
 @import './parts/collab.css';
 @import './parts/expert-extra.css';
 @import './parts/analytics.css';

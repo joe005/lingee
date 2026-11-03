@@ -1,3 +1,4 @@
+import { setCapabilityCatalog, setPersonalAssets } from '../collab/capability-config.js';
 import { REVIEW_KEY, countAssetReviews, renderAssetReviewCards, openAssetReview, rejectedReviewEntries, mergeVersionHistory } from './asset-review.js';
 import { cvWorkspace, cvWorkspaceName, cvCanAccessWorkspace, cvCurrentUserName } from '../collab/data.js';
 import { $, $$ } from '../../core/dom.js';
@@ -7,7 +8,7 @@ import { renderExpertChips } from './chips.js';
 import upgradeIcon from '../../../assets/figma/expert-assets/upgrade.svg';
 import { showView } from '../../core/view.js';
 import { getPlatformIdentity, getLoginAccount, LOGIN_KEY } from '../login.js';
-import { AV_KEYS, EXPERTS, PRESET_TEAMS, setBuiltinExperts, xav, xesc } from './data.js';
+import { AV_KEYS, EX, EXPERTS, MY_EXPERTS, PRESET_TEAMS, setBuiltinExperts, xav, xesc } from './data.js';
 import { TEAMS, activePick, clearPick, setBuiltinTeams } from './store.js';
 import { cvRenderExperts } from '../collab/experts.js';
 import { renderExpertGrid } from './library.js';
@@ -441,6 +442,8 @@ async function uninstallCloudAsset(itemKey){
   toast('已卸载「'+name+'」','success');
 }
 setCloudAssetProviders({catalog:cloudCatalog,upgradeBadge:cloudUpgradeBadge});
+setCapabilityCatalog(project => cloudCatalog(project?.tenantId || project?.workspace));
+setPersonalAssets(() => ({experts: MY_EXPERTS, teams: TEAMS.filter(team => !team.preset && team.source !== 'tenant'), lookup: id => EX[id] || null}));
 const UPDATE_SETTINGS_KEY='lingee.asset-update-settings.v1';
 let updateQueued=false,updateAttempt='';
 function updateSettings(){return read(UPDATE_SETTINGS_KEY,{})[getLoginAccount()]||{expert:false,team:false};}
@@ -561,9 +564,9 @@ export function initPlatformAdmin(){
 }
 
 /* 广场通过此接口读取平台已上架版本，安装与个人定义的存储独立。 */
-export function cloudCatalog(){
+export function cloudCatalog(tenantId){
   return Object.entries(meta)
-    .filter(([id,item])=>item.status==='online'&&active(id)&&availableToClient(item))
+    .filter(([id,item])=>item.status==='online'&&active(id)&&(tenantId ? !item.tenantId || item.tenantId===tenantId : availableToClient(item)))
     .sort(([aId,a],[bId,b])=>{
       const aTime=Date.parse(a.modified)||0,bTime=Date.parse(b.modified)||0;
       return bTime-aTime||String(bId).localeCompare(String(aId));

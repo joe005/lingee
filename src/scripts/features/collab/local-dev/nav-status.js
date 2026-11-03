@@ -2,7 +2,7 @@ import { $ } from '../../../core/dom.js';
 import { ldAttentionProjects, ldEsc, ldProjectView } from './core.js';
 import { ldProjectAction } from './ui.js';
 
-/* 本地开发 · 协作开发顶部「N 个空间环境未就绪」提醒与浮层（#ldNavStatus / #ldNavPop）。
+/* 本地开发 · 协作开发顶部「N 个目录未就绪」提醒与浮层（#ldNavStatus / #ldNavPop）。
    有未就绪空间时橙色提示，点开列出这些空间及各自操作；全部就绪时不显示。 */
 function renderNavStatus() {
   var btn = $('#ldNavStatus');
@@ -10,8 +10,8 @@ function renderNavStatus() {
   var pending = ldAttentionProjects().length;
   btn.hidden = !pending;
   if (!pending) { toggleNavPop(false); return; }
-  btn.querySelector('.ld-nav-text').textContent = pending + ' 个空间环境未就绪';
-  btn.setAttribute('aria-label', '本地开发环境：' + pending + ' 个空间未就绪');
+  btn.querySelector('.ld-nav-text').textContent = pending + ' 个目录未就绪';
+  btn.setAttribute('aria-label', '本地开发环境：' + pending + ' 个目录未就绪');
 }
 function renderNavPop() {
   var pop = $('#ldNavPop');

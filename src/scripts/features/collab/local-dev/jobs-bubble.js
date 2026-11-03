@@ -3,7 +3,7 @@ import { ldEsc } from './core.js';
 import { ldBackgroundJobs } from './init-jobs.js';
 
 /* 本地开发 · 后台初始化进度气泡（#ldJobStatus / #ldJobBubble）。
-   有后台初始化任务时顶部出现「N 个空间初始化中」，悬停（或键盘聚焦）显示气泡：一个任务只出一条进度，
+   有后台初始化任务时顶部出现「N 个目录初始化中」，悬停（或键盘聚焦）显示气泡：一个任务只出一条进度，
    多个任务最多展示 5 条，超出 5 条出滚动条。任务完成后自动消失。 */
 var LD_BUBBLE_ROWS = 5;
 function itemHtml(job) {
@@ -16,7 +16,7 @@ function renderBubble() {
   if (!btn) return;
   btn.hidden = !list.length;
   if (!list.length) { bubble.hidden = true; return; }
-  btn.querySelector('.ld-job-text').textContent = list.length > 1 ? list.length + ' 个空间初始化中' : '空间初始化中';
+  btn.querySelector('.ld-job-text').textContent = list.length > 1 ? list.length + ' 个目录初始化中' : '目录初始化中';
   bubble.innerHTML = '<div class="ld-job-head">后台初始化</div><ul class="ld-job-list" style="max-height:' + (LD_BUBBLE_ROWS * 62) + 'px">' + list.map(itemHtml).join('') + '</ul>';
 }
 function place() {

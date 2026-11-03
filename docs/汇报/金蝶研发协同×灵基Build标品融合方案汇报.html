@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>金蝶研发协同 × 灵基Build 标品融合方案汇报</title>
+<style>
+  :root {
+    --navy: #0b1f3a; --navy-2: #15325c; --blue: #2b62d9; --gold: #c9a45c;
+    --ink: #1a2333; --body: #3a4456; --quiet: #7a8496; --line: #e3e7ee;
+    --paper: #f4f6fa; --card: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--paper); color: var(--body);
+    font: 15px/1.8 -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  strong { color: var(--ink); }
+
+  /* 封面 */
+  .cover {
+    position: relative; overflow: hidden; color: #fff;
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy-2) 62%, #1d4580 100%);
+  }
+  .cover::after {
+    content: ""; position: absolute; right: -120px; top: -120px; width: 460px; height: 460px;
+    border-radius: 50%; border: 1px solid rgba(255,255,255,.08);
+    box-shadow: 0 0 0 60px rgba(255,255,255,.025), 0 0 0 140px rgba(255,255,255,.02);
+  }
+  .cover-in { position: relative; z-index: 1; max-width: 1040px; margin: 0 auto; padding: 72px 40px 88px; }
+  .eyebrow { display: flex; align-items: center; gap: 12px; font-size: 12.5px; letter-spacing: .24em; color: var(--gold); }
+  .eyebrow::before { content: ""; width: 28px; height: 2px; background: var(--gold); }
+  .cover h1 { margin: 22px 0 14px; font-size: 40px; line-height: 1.25; font-weight: 700; letter-spacing: .02em; color: #fff; }
+  .cover h1 .x { color: var(--gold); font-weight: 400; margin: 0 .25em; }
+  .cover .sub { margin: 0; max-width: 640px; font-size: 16.5px; color: rgba(255,255,255,.78); }
+  .cover-meta { display: flex; flex-wrap: wrap; gap: 8px 36px; margin-top: 40px; padding-top: 22px; border-top: 1px solid rgba(255,255,255,.14); font-size: 13px; color: rgba(255,255,255,.62); }
+  .cover-meta b { display: block; font-weight: 500; font-size: 14px; color: #fff; }
+
+  /* 关键数字 */
+  .stats { max-width: 1040px; margin: -44px auto 0; padding: 0 40px; position: relative; z-index: 2; }
+  .stats-in { display: grid; grid-template-columns: repeat(4, 1fr); background: var(--card); border-radius: 10px; box-shadow: 0 12px 32px rgba(11,31,58,.10); }
+  .stat { padding: 22px 26px; border-left: 1px solid var(--line); }
+  .stat:first-child { border-left: 0; }
+  .stat .n { font-size: 30px; line-height: 1.2; font-weight: 700; color: var(--navy); }
+  .stat .n small { font-size: 15px; font-weight: 600; margin-left: 2px; }
+  .stat .t { font-size: 13px; color: var(--quiet); }
+
+  /* 章节 */
+  main { max-width: 1040px; margin: 0 auto; padding: 8px 40px 56px; }
+  section { background: var(--card); border-radius: 10px; padding: 40px 44px; margin-top: 24px; box-shadow: 0 1px 2px rgba(11,31,58,.05); }
+  .sec-head { display: flex; align-items: baseline; gap: 16px; margin-bottom: 18px; }
+  .sec-no { font-size: 34px; line-height: 1; font-weight: 700; color: var(--gold); font-variant-numeric: tabular-nums; }
+  .sec-head h2 { margin: 0; font-size: 22px; color: var(--ink); }
+  .sec-head .en { font-size: 11.5px; letter-spacing: .18em; color: var(--quiet); text-transform: uppercase; }
+  p { margin: 10px 0; }
+  .lede { font-size: 16px; color: var(--ink); }
+
+  .banner { margin: 18px 0; padding: 16px 22px; border-radius: 8px; background: linear-gradient(90deg, #eef3fd, #f7f9fe); border-left: 4px solid var(--blue); color: var(--ink); }
+  .banner .k { display: inline-block; margin-right: 10px; font-size: 12px; letter-spacing: .12em; color: var(--blue); font-weight: 600; }
+  .note { color: var(--quiet); font-size: 13px; }
+
+  .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 16px 0; }
+  .card { padding: 18px 20px; border: 1px solid var(--line); border-radius: 8px; background: #fbfcfe; }
+  .card .i { font-size: 12px; font-weight: 700; color: var(--gold); letter-spacing: .1em; }
+  .card h3 { margin: 6px 0 4px; font-size: 15.5px; color: var(--ink); }
+  .card p { margin: 0; font-size: 13.5px; line-height: 1.7; }
+
+  figure { margin: 22px 0; padding: 18px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+  figure img, figure svg { display: block; width: 100%; height: auto; }
+  figcaption { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); font-size: 12.5px; color: var(--quiet); }
+  figcaption b { color: var(--navy); font-weight: 600; margin-right: 6px; }
+
+  .table-wrap { overflow-x: auto; margin: 16px 0; border-radius: 8px; border: 1px solid var(--line); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { background: var(--navy); color: #fff; font-weight: 500; text-align: left; padding: 11px 16px; letter-spacing: .04em; white-space: nowrap; }
+  td { padding: 12px 16px; border-top: 1px solid var(--line); vertical-align: top; }
+  td:first-child { color: var(--ink); font-weight: 600; }
+  tr.group td { background: #eef2f8 !important; color: var(--navy); font-size: 13px; font-weight: 600; letter-spacing: .06em; padding: 8px 16px; }
+  tr.group td .c { margin-left: 6px; font-weight: 400; color: var(--quiet); }
+  .tag { display: inline-block; padding: 1px 10px; border-radius: 999px; font-size: 12.5px; background: #eef3fd; color: var(--blue); white-space: nowrap; }
+  .tag.warn { background: #fdf4e6; color: #a86a12; }
+  .tag.mute { background: #f0f2f5; color: var(--quiet); }
+
+  footer { max-width: 1040px; margin: 0 auto; padding: 0 40px 48px; display: flex; justify-content: space-between; font-size: 12px; color: var(--quiet); }
+
+  @media (max-width: 760px) {
+    .cover-in { padding: 48px 20px 72px; }
+    .cover h1 { font-size: 28px; }
+    .stats, main, footer { padding-left: 16px; padding-right: 16px; }
+    .stats-in { grid-template-columns: repeat(2, 1fr); }
+    .stat:nth-child(3) { border-left: 0; }
+    .stat:nth-child(n+3) { border-top: 1px solid var(--line); }
+    section { padding: 28px 20px; }
+    .cards { grid-template-columns: 1fr; }
+    figure { padding: 10px; }
+  }
+  @media print {
+    body { background: #fff; }
+    .cover, th, .stat, .banner, .tag { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    section { box-shadow: none; border: 1px solid var(--line); }
+    figure, table, tr, .card { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<header class="cover">
+  <div class="cover-in">
+    <div class="eyebrow">融合方案汇报 · 2026.10</div>
+    <h1>金蝶研发协同<span class="x">×</span>灵基Build<br>标品融合方案</h1>
+    <p class="sub">一个入口、一套能力、一条任务链路：以标品能力承接 AI 驱动的研发模式，下周启动内部试点。</p>
+    <div class="cover-meta">
+      <div><b>2026 年 10 月 28 日</b>汇报日期</div>
+      <div><b>AI 研发管理系统方案讨论</b>依据会议纪要</div>
+      <div><b>金蝶研发协同 · 灵基Build</b>融合双方</div>
+    </div>
+  </div>
+</header>
+
+<div class="stats">
+  <div class="stats-in">
+    <div class="stat"><div class="n">1<small>个</small></div><div class="t">统一入口：研发协同</div></div>
+    <div class="stat"><div class="n">4<small>类</small></div><div class="t">核心能力复用标品</div></div>
+    <div class="stat"><div class="n">4<small>阶段</small></div><div class="t">从试点到代码共建</div></div>
+    <div class="stat"><div class="n">11.2<small>当周</small></div><div class="t">启动内部试点</div></div>
+  </div>
+</div>
+
+<main>
+  <section>
+    <div class="sec-head"><span class="sec-no">01</span><h2>背景与目标</h2><span class="en">Background</span></div>
+    <p class="lede">AI 时代由智能体团队按固化流程自驱动研发，双方已对齐这一理念。</p>
+    <figure>
+      <svg xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, PingFang SC, Microsoft YaHei, sans-serif" viewBox="0 0 760 248" role="img" aria-label="研发从人工逐阶段推进，转为智能体团队按固化流程自驱动" font-size="13"><defs><marker id="mode-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#b9bfc9"></path></marker></defs><text x="24" y="32" font-size="15" font-weight="600" fill="#1a2333">研发从人工逐阶段推进，转为智能体团队按固化流程自驱动</text><g fill="none" stroke="#b9bfc9" stroke-width="1.25"><path d="M256 88H276" marker-end="url(#mode-arrow)"></path><path d="M416 88H436" marker-end="url(#mode-arrow)"></path><path d="M256 188H276" marker-end="url(#mode-arrow)"></path><path d="M416 188H436" marker-end="url(#mode-arrow)"></path><path d="M576 188H596" marker-end="url(#mode-arrow)"></path></g><g><text x="24" y="88" font-weight="600" fill="#6b7385">过去</text><text x="24" y="104" font-size="11.5" fill="#6b7385">线性阶段</text><rect x="116" y="64" width="140" height="48" rx="8" fill="none" fill-opacity="1" stroke="#b9bfc9" stroke-width="1.25"></rect><text x="186" y="92" text-anchor="middle" fill="#6b7385">需求</text><rect x="276" y="64" width="140" height="48" rx="8" fill="none" fill-opacity="1" stroke="#b9bfc9" stroke-width="1.25"></rect><text x="346" y="92" text-anchor="middle" fill="#6b7385">开发</text><rect x="436" y="64" width="140" height="48" rx="8" fill="none" fill-opacity="1" stroke="#b9bfc9" stroke-width="1.25"></rect><text x="506" y="92" text-anchor="middle" fill="#6b7385">测试</text><text x="596" y="92" font-size="11.5" fill="#6b7385">人工团队逐阶段交接</text></g><g><text x="24" y="184" font-weight="600" fill="#1a2333">现在</text><text x="24" y="200" font-size="11.5" fill="#6b7385">AI 自驱动</text><rect x="116" y="152" width="140" height="72" rx="8" fill="none" fill-opacity="1" stroke="#b9bfc9" stroke-width="1.25"></rect><text x="128" y="176" font-weight="600" fill="#1a2333">任务</text><text x="128" y="196" font-size="11.5" fill="#1a2333">用户故事 · 缺陷</text><text x="128" y="212" font-size="11.5" fill="#6b7385">专题规划</text><rect x="276" y="152" width="140" height="72" rx="8" fill="#2b62d9" fill-opacity="0.12" stroke="#2b62d9" stroke-width="2"></rect><text x="288" y="176" font-weight="600" fill="#1a2333">智能体团队</text><text x="288" y="196" font-size="11.5" fill="#1a2333">替代人工团队</text><text x="288" y="212" font-size="11.5" fill="#6b7385">按产品线配置</text><rect x="436" y="152" width="140" height="72" rx="8" fill="none" fill-opacity="1" stroke="#b9bfc9" stroke-width="1.25"></rect><text x="448" y="176" font-weight="600" fill="#1a2333">固化研发流程</text><text x="448" y="196" font-size="11.5" fill="#1a2333">需求开发 / Bug 修改</text><text x="448" y="212" font-size="11.5" fill="#6b7385">故障分析等</text><rect x="596" y="152" width="140" height="72" rx="8" fill="none" fill-opacity="1" stroke="#b9bfc9" stroke-width="1.25"></rect><text x="608" y="176" font-weight="600" fill="#1a2333">产物 · 状态</text><text x="608" y="196" font-size="11.5" fill="#1a2333">阶段完成自动回传</text><text x="608" y="212" font-size="11.5" fill="#6b7385">评审可自动通过</text></g></svg>
+      <figcaption><b>图 1</b>研发模式转变 · 过去 vs 现在</figcaption>
+    </figure>
+    <div class="cards">
+      <div class="card"><div class="i">问题 01</div><h3>两套入口、两套页面</h3><p>重复开发，独立代码库长期成本高。</p></div>
+      <div class="card"><div class="i">问题 02</div><h3>任务流转断点</h3><p>从故事 / 缺陷直接跳会话，缺少承接和状态回传。</p></div>
+      <div class="card"><div class="i">问题 03</div><h3>实时性不足</h3><p>客户端轮询导致推送延迟，产物上传慢、无提示。</p></div>
+    </div>
+    <div class="banner"><span class="k">目标</span>一个入口、一套能力、一条任务链路。</div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-no">02</span><h2>融合总体方案</h2><span class="en">Architecture</span></div>
+    <p class="lede">融合原则是「一个入口、不做两套页面」：研发协同做成标品，项目管理等按金蝶定制，核心 AI 研发能力复用同一套前后端。</p>
+    <figure>
+      <svg xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, PingFang SC, Microsoft YaHei, sans-serif" viewBox="0 0 760 496" role="img" aria-label="一个入口：金蝶侧产生任务，Build 标品负责执行与产物" font-size="13"><defs><marker id="fuse-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#b9bfc9"></path></marker></defs><text x="24" y="32" font-size="15" font-weight="600" fill="#1a2333">一个入口：金蝶侧产生任务，Build 标品负责执行与产物</text><g><rect x="24" y="52" width="712" height="48" rx="8" fill="#2b62d9" fill-opacity="0.12" stroke="#2b62d9" stroke-width="2"></rect><text x="380" y="81" text-anchor="middle" font-size="14" font-weight="600" fill="#1a2333">研发协同（唯一入口，标品）</text></g><g fill="none" stroke="#b9bfc9" stroke-width="1.25"><path d="M174 100V128" marker-end="url(#fuse-arrow)"></path><path d="M586 100V128" marker-end="url(#fuse-arrow)"></path><path d="M308 276H452" marker-end="url(#fuse-arrow)"></path><path d="M452 296H308" marker-end="url(#fuse-arrow)"></path><path d="M452 360H308" marker-end="url(#fuse-arrow)"></path></g><g><rect x="24" y="128" width="300" height="280" rx="8" fill="none" stroke="#b9bfc9" stroke-width="1.25"></rect><text x="40" y="152" font-size="14" font-weight="600" fill="#1a2333">金蝶侧（定制）</text></g><g><rect x="40" y="168" width="268" height="64" rx="8" fill="none" stroke="#b9bfc9" stroke-width="1.25" stroke-dasharray="4 4"></rect><text x="52" y="192" font-weight="600" fill="#6b7385">协作开发入口、自有任务界面</text><text x="52" y="212" font-size="11.5" fill="#6b7385">融合后取消，避免两套界面来回跳转</text></g><g><rect x="40" y="248" width="268" height="72" rx="8" fill="none" stroke="#b9bfc9" stroke-width="1.25" stroke-dasharray="none"></rect><text x="52" y="272" font-weight="600" fill="#1a2333">项目管理</text><text x="52" y="288" font-size="11.5" fill="#1a2333">需求 · 用户故事 · 缺陷 · 专题规划</text><text x="52" y="304" font-size="11.5" fill="#6b7385">原有状态流转规则保持不变</text></g><g><rect x="40" y="336" width="268" height="56" rx="8" fill="none" stroke="#b9bfc9" stroke-width="1.25" stroke-dasharray="none"></rect><text x="52" y="360" font-weight="600" fill="#1a2333">产物归集</text><text x="52" y="376" font-size="11.5" fill="#6b7385">只做归集，不重复建设</text></g><g><rect x="436" y="128" width="300" height="280" rx="8" fill="#f1f3f7" stroke="#b9bfc9" stroke-width="1.25"></rect><text x="452" y="152" font-size="14" font-weight="600" fill="#1a2333">灵基Build（标品）</text></g><g><rect x="452" y="168" width="268" height="72" rx="8" fill="none" stroke="#b9bfc9" stroke-width="1.25" stroke-dasharray="none"></rect><text x="464" y="192" font-weight="600" fill="#1a2333">技能 → 智能体</text><text x="464" y="208" font-size="11.5" fill="#1a2333">技能统一归集，组装成智能体</text><text x="464" y="224" font-size="11.5" fill="#6b7385">下发到个人 / 团队 / 工作区</text></g><g><rect x="452" y="256" width="268" height="56" rx="8" fill="none" stroke="#b9bfc9" stroke-width="1.25" stroke-dasharray="none"></rect><text x="464" y="280" font-weight="600" fill="#1a2333">智能体团队 · 研发流程</text><text x="464" y="296" font-size="11.5" fill="#6b7385">按任务类型编排，评审可配置</text></g><g><rect x="452" y="328" width="268" height="56" rx="8" fill="none" stroke="#b9bfc9" stroke-width="1.25" stroke-dasharray="none"></rect><text x="464" y="352" font-weight="600" fill="#1a2333">产物中心</text><text x="464" y="368" font-size="11.5" fill="#6b7385">按标识映射，可对接客户存储</text></g><text x="380" y="268" text-anchor="middle" font-size="11.5" fill="#6b7385">任务数据透传</text><text x="380" y="314" text-anchor="middle" font-size="11.5" fill="#6b7385">阶段完成 · 状态回传</text><text x="380" y="352" text-anchor="middle" font-size="11.5" fill="#6b7385">产物同步</text><g><rect x="24" y="424" width="712" height="48" rx="8" fill="#f1f3f7" stroke="#b9bfc9" stroke-width="1.25"></rect><text x="380" y="453" text-anchor="middle" fill="#1a2333">底座：页面嵌入 + API / 对话传参 · 云端 WebSocket 推送 · 配置云端同步</text></g></svg>
+      <figcaption><b>图 2</b>融合架构 · 金蝶侧与 Build 标品的分工</figcaption>
+    </figure>
+    <p>金蝶侧只产生任务并归集产物；任务透传到 Build 后由智能体团队按研发流程执行，每完成一个阶段就回传状态。</p>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-no">03</span><h2>核心能力对齐</h2><span class="en">Capabilities</span></div>
+    <p class="lede">任务和产物是本次对接重点，其余能力直接用标品。</p>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>能力</th><th>要点</th><th>定位</th></tr></thead>
+      <tbody>
+        <tr><td>任务</td><td>通用载体（故事 / 缺陷 / 专题规划），不做列表页，透传落库</td><td><span class="tag warn">对接重点</span></td></tr>
+        <tr><td>技能 → 智能体</td><td>统一归集、组装；下发到个人 / 团队 / 工作区</td><td><span class="tag">复用标品</span></td></tr>
+        <tr><td>智能体团队</td><td>即研发模式编排；按产品线配置，流程云端同步</td><td><span class="tag">复用标品</span></td></tr>
+        <tr><td>产物中心</td><td>按标识映射上传，金蝶侧只做归集</td><td><span class="tag warn">对接重点</span></td></tr>
+      </tbody>
+    </table>
+    </div>
+    <figure>
+      <svg xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, PingFang SC, Microsoft YaHei, sans-serif" viewBox="0 0 760 316" role="img" aria-label="任务每完成一个阶段，就回传状态并流转到下一阶段" font-size="13"><defs><marker id="task-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#b9bfc9"></path></marker></defs><text x="24" y="30" font-size="15" font-weight="600" fill="#1a2333">任务每完成一个阶段，就回传状态并流转到下一阶段</text><g fill="none" stroke="#b9bfc9" stroke-width="1.25"><path d="M170 130H196" marker-end="url(#task-arrow)"></path><path d="M344 130H370" marker-end="url(#task-arrow)"></path><path d="M518 130H574" marker-end="url(#task-arrow)"></path><path d="M630 94V74H444V98" marker-end="url(#task-arrow)"></path><path d="M630 166V228" marker-end="url(#task-arrow)"></path><path d="M550 260H518" marker-end="url(#task-arrow)"></path><path d="M444 228V162" marker-end="url(#task-arrow)"></path></g><g><rect x="22" y="98" width="148" height="64" rx="8" fill="none" fill-opacity="1" stroke="#b9bfc9" stroke-width="1.25"></rect><text x="96" y="126" text-anchor="middle" font-weight="600" fill="#1a2333">用户故事 / 缺陷</text><text x="96" y="146" text-anchor="middle" font-size="11.5" fill="#6b7385">金蝶项目管理侧</text></g><g><rect x="196" y="98" width="148" height="64" rx="8" fill="none" fill-opacity="1" stroke="#b9bfc9" stroke-width="1.25"></rect><text x="270" y="126" text-anchor="middle" font-weight="600" fill="#1a2333">任务透传落库</text><text x="270" y="146" text-anchor="middle" font-size="11.5" fill="#6b7385">不单独做任务界面</text></g><g><rect x="370" y="98" width="148" height="64" rx="8" fill="#2b62d9" fill-opacity="0.12" stroke="#2b62d9" stroke-width="2"></rect><text x="444" y="126" text-anchor="middle" font-weight="600" fill="#1a2333">执行当前阶段</text><text x="444" y="146" text-anchor="middle" font-size="11.5" fill="#1a2333">智能体团队按流程</text></g><g><polygon points="574,130 630,94 686,130 630,166" fill="none" stroke="#b9bfc9" stroke-width="1.25"></polygon><text x="630" y="134" text-anchor="middle" fill="#1a2333">评审</text></g><g><rect x="550" y="228" width="160" height="64" rx="8" fill="none" fill-opacity="1" stroke="#b9bfc9" stroke-width="1.25"></rect><text x="630" y="256" text-anchor="middle" font-weight="600" fill="#1a2333">状态回传 · 产物上传</text><text x="630" y="276" text-anchor="middle" font-size="11.5" fill="#6b7385">同步到项目管理侧</text></g><g><rect x="370" y="228" width="148" height="64" rx="8" fill="none" fill-opacity="1" stroke="#b9bfc9" stroke-width="1.25"></rect><text x="444" y="256" text-anchor="middle" font-weight="600" fill="#1a2333">进入下一阶段</text><text x="444" y="276" text-anchor="middle" font-size="11.5" fill="#6b7385">流转到对应处理人</text></g><text x="537" y="66" text-anchor="middle" font-size="11.5" fill="#6b7385">有问题 · 反馈修改</text><text x="620" y="194" text-anchor="end" font-size="11.5" fill="#6b7385">通过（可设自动通过）</text><text x="434" y="194" text-anchor="end" font-size="11.5" fill="#6b7385">下一阶段</text></svg>
+      <figcaption><b>图 3</b>任务流转 · 阶段与研发流程一一对应</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-no">04</span><h2>决策与待决事项</h2><span class="en">Decisions &amp; Open Issues</span></div>
+    <div class="banner"><span class="k">核心决策</span>去掉自有任务界面，任务透传入库，流程编排与产物管理用标品，下周先按当前方案落地；临时方案需及时替换，避免固化成两套实现。</div>
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>事项</th><th>负责人 / 建议</th><th>状态</th></tr></thead>
+      <tbody>
+        <tr class="group"><td colspan="3">一、已决策<span class="c">3 项</span></td></tr>
+        <tr><td>研发协同保留唯一入口，取消协作开发菜单</td><td>负责人待定</td><td><span class="tag">已决策</span></td></tr>
+        <tr><td>技能、智能体、智能体团队由标品侧开发完成后对接，不做两套页面</td><td>负责人待定</td><td><span class="tag">已决策</span></td></tr>
+        <tr><td>云端 WebSocket 长连接替代客户端轮询</td><td>Build 研发，可协调邵华支持</td><td><span class="tag">已决策</span></td></tr>
+        <tr class="group"><td colspan="3">二、待解决<span class="c">4 项</span></td></tr>
+        <tr><td>任务流转适配</td><td>现有任务流转基于 Git，研发 DevOps 较松散、基于文件服务，需适配改造；各团队阶段、状态不一致，需统一术语</td><td><span class="tag warn">需改造</span></td></tr>
+        <tr><td>工作区统一还是分开建设</td><td>需要讨论技术方案</td><td><span class="tag warn">待讨论</span></td></tr>
+        <tr><td>建任务必填字段多</td><td>与行管协商精简</td><td><span class="tag warn">需支持</span></td></tr>
+        <tr><td>个人工作台 vs 任务看板</td><td>—</td><td><span class="tag warn">待决策</span></td></tr>
+        <tr class="group"><td colspan="3">三、后续讨论<span class="c">1 项</span></td></tr>
+        <tr><td>多人评审、测试联调、部门空间</td><td>另行讨论</td><td><span class="tag mute">后续</span></td></tr>
+      </tbody>
+    </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="sec-no">05</span><h2>落地计划</h2><span class="en">Roadmap</span></div>
+    <p class="lede">下周试点是关键节点，先用现有代码跑通，再逐步替换。</p>
+    <figure>
+      <svg xmlns="http://www.w3.org/2000/svg" font-family="-apple-system, PingFang SC, Microsoft YaHei, sans-serif" viewBox="0 0 760 248" role="img" aria-label="先按现有逻辑跑通，再逐步换成标品，最终共用一套代码" font-size="12.5"><text x="24" y="32" font-size="15" font-weight="600" fill="#1a2333">先按现有逻辑跑通，再逐步换成标品，最终共用一套代码</text><g><g><rect x="24" y="60" width="154" height="148" rx="8" fill="none" fill-opacity="1" stroke="#b9bfc9" stroke-width="1.25"></rect><line x1="36" x2="166" y1="120" y2="120" stroke="#e3e7ee"></line></g><text x="36" y="86" font-size="14" font-weight="600" fill="#1a2333">方案定稿</text><text x="36" y="106" font-size="11.5" fill="#6b7385">10月29日</text><text x="36" y="144" fill="#1a2333">任务对接方案</text><text x="36" y="164" fill="#1a2333">下午评审</text><text x="36" y="184" fill="#1a2333">当晚发文档</text></g><g><g><rect x="202" y="60" width="154" height="148" rx="8" fill="#2b62d9" fill-opacity="0.12" stroke="#2b62d9" stroke-width="2"></rect><line x1="214" x2="344" y1="120" y2="120" stroke="#e3e7ee"></line></g><text x="214" y="86" font-size="14" font-weight="600" fill="#1a2333">内部试点</text><text x="214" y="106" font-size="11.5" fill="#1a2333">11月2日当周</text><text x="214" y="144" fill="#1a2333">跑通任务核心链路</text><text x="214" y="164" fill="#1a2333">取消协作开发入口</text><text x="214" y="184" fill="#1a2333">侧栏统一调整</text></g><g><g><rect x="380" y="60" width="154" height="148" rx="8" fill="none" fill-opacity="1" stroke="#b9bfc9" stroke-width="1.25"></rect><line x1="392" x2="522" y1="120" y2="120" stroke="#e3e7ee"></line></g><text x="392" y="86" font-size="14" font-weight="600" fill="#1a2333">能力替换</text><text x="392" y="106" font-size="11.5" fill="#6b7385">试点后</text><text x="392" y="144" fill="#1a2333">标品页面嵌入</text><text x="392" y="164" fill="#1a2333">WebSocket 推送</text><text x="392" y="184" fill="#1a2333">评估底层 SDK</text></g><g><g><rect x="558" y="60" width="154" height="148" rx="8" fill="none" fill-opacity="1" stroke="#b9bfc9" stroke-width="1.25"></rect><line x1="570" x2="700" y1="120" y2="120" stroke="#e3e7ee"></line></g><text x="570" y="86" font-size="14" font-weight="600" fill="#1a2333">代码共建</text><text x="570" y="106" font-size="11.5" fill="#6b7385">中长期</text><text x="570" y="144" fill="#1a2333">研发协同做标品</text><text x="570" y="164" fill="#1a2333">双方共用一套代码</text></g><g><path d="M190 124L200 134L190 144L180 134Z" fill="#1f9d55" stroke="#1f9d55"></path><path d="M368 124L378 134L368 144L358 134Z" fill="#1f9d55" stroke="#1f9d55"></path></g><text x="190" y="236" text-anchor="middle" font-size="11.5" fill="#6b7385">方案评审通过</text><text x="368" y="236" text-anchor="middle" font-size="11.5" fill="#6b7385">试点跑通</text></svg>
+      <figcaption><b>图 4</b>落地路线 · 4 个阶段、2 个关口</figcaption>
+    </figure>
+    <p class="note">会上提到「111014 发版节点」，具体日期待确认。</p>
+  </section>
+
+</main>
+
+<footer>
+  <span>金蝶研发协同 × 灵基Build 标品融合方案</span>
+  <span>2026.10.28</span>
+</footer>
+</body>
+</html>

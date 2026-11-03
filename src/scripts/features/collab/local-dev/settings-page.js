@@ -3,22 +3,20 @@ import { toast } from '../../../core/toast.js';
 import { ldEsc, ldIsDetecting, ldMine, ldRefresh, ldSaveMine } from './core.js';
 import { LD_ICONS } from './ui.js';
 
-/* 本地开发 · 协作开发「设置」页签外壳（#cv-local）：顶部分段页签「我的空间 / Git 账号」、上次检测与「检测」、演示入口。
-   两个页签的内容分别由 spaces-page.js、git-accounts-page.js 渲染到各自面板，
-   这里只负责切换面板显隐并广播 lingee:ld-settings-shown，不渲染页签内容。 */
-var tab = 'spaces';
+/* 本机个人配置合并到设置 › 基础；分类切换由 workspace-settings.js 统一控制。 */
+var tab = 'workspaces';
 export function ldSettingsTab() { return tab; }
 export function ldSettingsVisible() { return !!$('#cv-local')?.classList.contains('active'); }
-
+/* 环境提醒等旧入口统一跳转到当前工作区的设置 › 仓库。 */
+export function ldOpenPersonalSettings() {
+  document.dispatchEvent(new Event('lingee:open-personal-settings'));
+  document.dispatchEvent(new CustomEvent('lingee:collab-nav', { detail: { tab: 'local' } }));
+}
 function renderShell() {
-  if (!ldSettingsVisible()) return;
-  document.querySelectorAll('#cv-local [data-ld-settings-tab]').forEach(function (button) {
-    var selected = button.dataset.ldSettingsTab === tab;
-    button.classList.toggle('is-on', selected);
-    button.setAttribute('aria-selected', String(selected));
-    button.tabIndex = selected ? 0 : -1;
-  });
+  if (!ldSettingsVisible() || (tab !== 'spaces' && tab !== 'git')) return;
+  $('#ldPersonalSectionTitle').textContent = tab === 'git' ? 'Git 账号' : '本机环境';
   $('#ldSpacesPanel').hidden = tab !== 'spaces';
+  $('#ldEnvironmentNote').hidden = tab !== 'spaces';
   $('#ldGitPanel').hidden = tab !== 'git';
   var checks = ldMine().checks || {}, detecting = ldIsDetecting();
   $('#ldSettingsTools').innerHTML = (checks.checkedAt && !detecting ? '<span class="ld-checked-at">上次检测：' + ldEsc(checks.checkedAt) + '</span>' : '')
@@ -28,12 +26,6 @@ function renderShell() {
   $('#ldDemoLinks').innerHTML = '<button type="button" class="ld-link" data-ld-reset>演示：清空本机配置</button>'
     + '<button type="button" class="ld-link" data-ld-toggle-git>' + (mine.gitMissing ? '演示：恢复已安装 Git' : '演示：模拟未安装 Git') + '</button>'
     + '<button type="button" class="ld-link" data-ld-toggle-net>' + (mine.netDown ? '演示：恢复网络' : '演示：模拟网络不通') + '</button>';
-}
-function selectTab(next) {
-  if (next !== 'spaces' && next !== 'git') return;
-  tab = next;
-  renderShell();
-  document.dispatchEvent(new CustomEvent('lingee:ld-settings-shown', { detail:{ tab:tab } }));
 }
 function demoToggle(field, onText, offText) {
   var mine = ldMine();
@@ -45,15 +37,22 @@ function demoToggle(field, onText, offText) {
 }
 
 export function initSettingsPage() {
-  var panel = $('#cv-local');
-  if (!panel) return;
-  /* 切到「设置」页签时渲染 */
-  new MutationObserver(function () { if (ldSettingsVisible()) selectTab(tab); }).observe(panel, { attributes:true, attributeFilter:['class'] });
+  var panel = $('#ldPersonalSettings'), workspacePanel = $('#cv-local');
+  if (!panel || !workspacePanel) return;
+  new MutationObserver(function () {
+    if (workspacePanel.classList.contains('active')) {
+      $('#ldWorkspacesPanel').hidden = false;
+      document.dispatchEvent(new CustomEvent('lingee:ld-settings-shown', { detail: { tab: 'workspaces' } }));
+    }
+  }).observe(workspacePanel, { attributes: true, attributeFilter: ['class'] });
+  document.addEventListener('lingee:settings-category', function (e) {
+    tab = e.detail.tab === 'spaces' || e.detail.tab === 'git' ? e.detail.tab : 'workspaces';
+    renderShell();
+    if (tab !== 'workspaces') document.dispatchEvent(new CustomEvent('lingee:ld-settings-shown', { detail: { tab: tab } }));
+  });
   panel.addEventListener('click', function (e) {
     var t = e.target;
     if (!(t instanceof Element)) return;
-    var tabBtn = t.closest('[data-ld-settings-tab]');
-    if (tabBtn) { selectTab(tabBtn.dataset.ldSettingsTab); return; }
     if (t.closest('[data-ld-toggle-git]')) { demoToggle('gitMissing', '已模拟未安装 Git，点「检测」查看提示', '已恢复，点「检测」更新状态'); return; }
     if (t.closest('[data-ld-toggle-net]')) { demoToggle('netDown', '已模拟网络不通，点「检测」查看提示', '已恢复网络，点「检测」更新状态'); return; }
     if (t.closest('[data-ld-reset]')) {
@@ -61,13 +60,6 @@ export function initSettingsPage() {
       ldRefresh();
       toast('已清空本机配置', 'success');
     }
-  });
-  panel.querySelector('.ld-settings-tabs')?.addEventListener('keydown', function (e) {
-    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
-    e.preventDefault();
-    var next = e.key === 'Home' ? 'spaces' : e.key === 'End' ? 'git' : tab === 'spaces' ? 'git' : 'spaces';
-    selectTab(next);
-    panel.querySelector('[data-ld-settings-tab="' + next + '"]')?.focus();
   });
   document.addEventListener('lingee:local-dev-changed', renderShell);
 }

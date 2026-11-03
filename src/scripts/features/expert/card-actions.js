@@ -8,7 +8,7 @@ let menuSequence=0;
 /* 「技能·智能体·连接器」菜单里，个人开发卡片的菜单多出编辑、测试、检查、发布等项；协作开发自己的页签由样式隐藏 */
 function hubMenuItemsHtml(kind, item) {
   return moreMenuItems(kind,routeOf(kind,item.id)).filter(entry=>entry.act!=='delete').map(entry=>
-    '<button type="button" role="menuitem" data-asset-hub-only data-asset-menu-act="'+entry.act+'" data-asset-menu-kind="'+kind+'" data-asset-menu-id="'+xesc(item.id)+'"'+(entry.disabled?' disabled':'')+(entry.title?' title="'+xesc(entry.title)+'"':'')+'>'+entry.label+'</button>').join('');
+    '<button type="button" role="menuitem" data-asset-hub-only data-asset-menu-act="'+entry.act+'" data-asset-menu-kind="'+kind+'" data-asset-menu-id="'+xesc(item.id)+'"'+(entry.disabled?' disabled':'')+(entry.title?' title="'+xesc(entry.title)+'"':'')+'>'+entry.icon+'<span>'+entry.label+'</span></button>').join('');
 }
 export function assetCardActionsHtml(kind, item, personal, callAttribute) {
   const menuId='asset-card-menu-'+kind+'-'+encodeURIComponent(item.id)+'-'+(++menuSequence);

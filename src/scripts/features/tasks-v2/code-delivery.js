@@ -34,13 +34,13 @@ export function initTaskCodeDelivery() {
     snapshot=signature(task,info);
     const blocked=!info.target || !info.test.assigneeId || scenario==='protected';
     if(blocked){
-      const reason=!info.target ? '空间尚未配置目标分支，请在已有空间设置中完善。' : !info.test.assigneeId ? '请先在已有执行计划中指定测试处理人。' : '目标分支受保护，请按团队约定在代码平台处理合并权限或审批。';
+      const reason=!info.target ? '任务尚未确定目标分支，请先完善 Build 仓库配置。' : !info.test.assigneeId ? '请先在已有执行计划中指定测试处理人。' : '目标分支受保护，请按团队约定在代码平台处理合并权限或审批。';
       show('暂未通过审核','<div class="tk-cd-callout warning">'+reason+'任务保留在开发待审核阶段。</div>',cdButton('返回审核','close'));
       return;
     }
     if(scenario==='conflict'&&!resolved){
       show('合并存在冲突','<div class="tk-cd-callout warning">开发审核尚未完成。请开发负责人解决冲突并自测，再重试合并。</div>'
-        +'<div class="tk-cd-grid"><div><span>任务分支</span><code>'+cdEscape(info.branch)+'</code></div><div><span>空间目标分支</span><code>'+cdEscape(info.target)+'</code></div></div>'
+        +'<div class="tk-cd-grid"><div><span>任务分支</span><code>'+cdEscape(info.branch)+'</code></div><div><span>目标分支</span><code>'+cdEscape(info.target)+'</code></div></div>'
         +'<p class="tk-cd-note">模拟冲突文件：src/pages/orders/list.tsx</p>'
         +'<label class="tk-cd-check"><input type="checkbox" id="tkCdResolved">已检查冲突解决结果并完成受影响功能自测</label><p id="tkCdError" class="tk-cd-error" role="alert"></p>',cdButton('返回审核','close')+cdButton('重新检查并合并','retry',true));
       return;
@@ -50,7 +50,7 @@ export function initTaskCodeDelivery() {
       show('暂未通过审核','<div class="tk-cd-callout warning">请先在现有执行计划中指定下一阶段处理人，任务仍保留在开发待审核阶段。</div>',cdButton('返回审核','close'));return;
     }
     busy=true;
-    show('正在完成开发审核','<p class="tk-cd-note">正在模拟检查并合并到空间配置的目标分支，成功后自动流转。</p>',cdButton('正在合并…','none',true,true));
+    show('正在完成开发审核','<p class="tk-cd-note">正在模拟检查并合并到任务快照中的目标分支，成功后自动流转。</p>',cdButton('正在合并…','none',true,true));
     setTimeout(()=>{
       const latest=activeTask(),context=taskCodeDeliveryContext(latest);
       if(!allowed(latest)||!context||signature(latest,context)!==snapshot){busy=false;close();toast('任务或空间配置已变化，请重新审核','warning');return;}

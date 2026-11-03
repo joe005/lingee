@@ -1,4 +1,6 @@
+import { buildTaskRepoConfig } from '../../collab/repository-config.js';
 import { toast } from '../../../core/toast.js';
+import { wsPathNames } from '../../../core/workspace-tree.js';
 import { DELETE_ICON } from '../../../core/delete-icon.js';
 import { setNavActive, showView } from '../../../core/view.js';
 import { setChannel } from '../../sidebar.js';
@@ -326,6 +328,19 @@ export var _showOlderActivityIds = new Set();
 var ACTIVITY_COLLAPSED_STORAGE_KEY = 'lingee_tasks_activity_collapsed';
 var ACTIVITY_PREFERENCE_STORAGE_KEY = 'lingee_tasks_activity_collapsed_preference';
 var activityCollapsedPreference = null;
+/* 任务所属工作区的完整路径（只读）；没有归属的任务不显示这一行 */
+function workspacePathRow(t) {
+  var project = t.workspaceId ? tkProjectById(t.project) : null;
+  var names = project ? wsPathNames(project, t.workspaceId) : [];
+  return names.length ? '<div class="tk-prop-row"><span>所属工作区</span><span class="tk-prop-val" title="' + escapeHtml(names.join(' › ')) + '">' + escapeHtml(names.join(' › ')) + '</span></div>' : '';
+}
+
+function repositoryRow(t) {
+  var config = buildTaskRepoConfig(t, tkProjectById(t.project));
+  if (!config.repo) return '';
+  return '<div class="tk-prop-row"><span>代码仓库</span><span class="tk-prop-val" title="' + escapeHtml(config.repo) + '">' + escapeHtml(config.name || config.repo.replace(/\/+$/, '').split('/').pop().replace(/\.git$/, '')) + '</span></div><div class="tk-prop-row"><span>目标分支</span><span class="tk-prop-val">' + escapeHtml(config.baseBranch) + (t.repoSnapshot ? ' · 已固定' : '') + '</span></div>';
+}
+
 export function restoreCollapsedActivity() {
   try {
     var preference = localStorage.getItem(ACTIVITY_PREFERENCE_STORAGE_KEY);
@@ -574,6 +589,7 @@ export function openDrawer(taskId) {
         propPicker('状态', t.status, statusOpts) +
         propPicker('处理人', t.assignee, peopleOpts) +
         propPicker('项目', t.project, projOpts) +
+        workspacePathRow(t) + repositoryRow(t) +
         (pageState.taskDetailVersion === 'latest' ? '<div class="tk-prop-row"><span>任务类型</span><span class="tk-prop-val">' + escapeHtml(taskTypeLabel(t.issueType || (t.labels?.includes('缺陷') ? '缺陷' : '需求'))) + '</span></div>' : '') +
         propPicker('优先级', t.priority, priOpts) +
         propPicker('截止日期', t.dueDate, null, true) +

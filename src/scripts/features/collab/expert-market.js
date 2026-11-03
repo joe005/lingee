@@ -30,12 +30,13 @@ export function teamWorkModes(team,lookup=id=>EX[id]){
 }
 export function cloudCardsHtml(kind,keyword){
   const kw=keyword.trim().toLowerCase();
-  const catalog=cloudCatalogProvider(),experts=new Map(catalog.filter(item=>item.kind==='expert').map(item=>[item.data.id,item.data]));
+  const catalog=workspaceCatalog?.()||cloudCatalogProvider(),experts=new Map(catalog.filter(item=>item.kind==='expert').map(item=>[item.data.id,item.data]));
   /* 「更多」只列未安装的云端内容：卡片右上角的 + 即添加入口，安装成功后回到「我的」列表。 */
   const rows=catalog.filter(item=>item.kind===kind&&!item.installed&&(!kw||`${item.data.name} ${item.data.desc} ${(item.data.tags||item.data.domains||[]).join(' ')}`.toLowerCase().includes(kw)));
   return rows.map(item=>{
     const {data,version}=item;
-    const installButton=`<button type="button" class="expert-install-plus" data-market-install="${xesc(item.key)}" aria-label="安装${xesc(data.name)}" title="安装${xesc(data.name)}"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg></button>`;
+    const controls=workspaceAssetControls(kind,data);
+    const installButton=controls || `<button type="button" class="expert-install-plus" data-market-install="${xesc(item.key)}" aria-label="安装${xesc(data.name)}" title="安装${xesc(data.name)}"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg></button>`;
     const members=data.members||[],showMemberCount=members.length>4;
     const face=kind==='team'?`<span class="x-faces">${members.slice(0,showMemberCount?3:4).map(id=>`<img src="${xav((experts.get(id)||EX[id])?.k||'lead')}" alt="">`).join('')}${showMemberCount?`<span class="asset-faces-count">+${members.length-3}</span>`:''}</span>`:`<img class="x-av" src="${xav(data.k||'lead')}" alt="">`;
     const tags=assetTagsHtml(kind==='team'?data.domains:data.tags);
@@ -54,3 +55,18 @@ export function initExpertMarket(renderers){
   }
   document.addEventListener('lingee:cloud-assets-changed',()=>{renderers.expert();renderers.team();});
 }
+
+let workspaceRenderer = () => false;
+export function setWorkspaceCapabilityRenderer(renderer) { workspaceRenderer = renderer; }
+export function renderWorkspaceCapabilities(host) { return workspaceRenderer(host); }
+
+let workspaceControls = () => '';
+let workspaceExtras = () => '';
+let workspaceCatalog = null;
+export function setWorkspaceAssetControls(controls, extras, catalog) { workspaceControls = controls; workspaceExtras = extras; workspaceCatalog = catalog || null; }
+export function workspaceAssetControls(kind, item) { return workspaceControls(kind,item); }
+export function workspaceExtraCards(kind, items, keyword = '', layer = 'all') { return workspaceExtras(kind,items,keyword,layer); }
+
+let workspaceVisibility = () => true;
+export function setWorkspaceAssetVisibility(provider) { workspaceVisibility = provider; }
+export function workspaceAssetVisible(kind,item) { return workspaceVisibility(kind,item); }

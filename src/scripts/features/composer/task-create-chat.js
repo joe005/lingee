@@ -1,13 +1,17 @@
+import { capabilityTeamDefault, capabilityExecutor, capabilityTaskError } from '../collab/capability-config.js';
+import { getSpaceScope } from '../tasks-v2/page/space-filter.js';
+import { wsById } from '../../core/workspace-tree.js';
+import { canCreateTaskIn, wsMemberIds } from '../manager/workspaces.js';
 import { $ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
 import { showView } from '../../core/view.js';
 import { renderExpertChips } from '../expert/chips.js';
 import { xav } from '../expert/data.js';
 import { hideAssetEditorPanel } from '../expert/editor-panel.js';
-import { set_activePick, teamById } from '../expert/store.js';
+import { set_activePick } from '../expert/store.js';
 import { CV_MEMBERS, CV_PROJECTS } from '../collab/data.js';
 import { tbTeamStages } from '../collab/tb-core.js';
-import { tkAddTask, tkCanStartTask, tkCurrentUserId, tkGetTasks, tkPeopleInProject, tkProjectsForCurrentUser } from '../tasks-v2/data.js';
+import { tkAddTask, tkCanStartTask, tkCurrentUserId, tkGetTasks, tkPeopleInProject, tkProjectsForCurrentUser, tkProjectById } from '../tasks-v2/data.js';
 import { defaultStageAssigneeId } from '../tasks-v2/stage-owner.js';
 import { appendAssistantMessage, appendUserMessage, escapeHtml, messagesList, scrollChatBottom, setComposerTaskReference } from './messages.js';
 import { activeSessionId, activeSessionTaskId, collapsedChatProjects, createChatSession, renderChatSessions, saveChatSessions, set_activeSessionTaskId } from './sessions.js';
@@ -22,10 +26,14 @@ function setTaskCreateChipLabel() {
   var label = document.getElementById('chatExpertLabel');
   if (label) label.textContent = '任务创建智能体';
 }
+function draftPeople(draft) {
+  const project = tkProjectById(draft.projectId), ws = wsById(project,draft.workspaceId || '');
+  return tkPeopleInProject(draft.projectId).filter(person => !ws || wsMemberIds(project,ws).includes(person.id));
+}
 function taskCreateStages(draft) {
-  var project = CV_PROJECTS.find(function (row) { return row.id === draft.projectId; });
-  var team = teamById(draft.teamId || '');
-  var people = tkPeopleInProject(draft.projectId);
+  var project = tkProjectById(draft.projectId);
+  var team = capabilityExecutor(capabilityTeamDefault(project,draft.workspaceId || ''));
+  var people = draftPeople(draft);
   var allStages = team ? tbTeamStages(team, { type: draft.issueType, title: draft.title || draft.prompt }) : [];
   var stages = draft.selectedStages
     ? allStages.filter(function (s) { return draft.selectedStages.includes(s.id); })
@@ -33,7 +41,7 @@ function taskCreateStages(draft) {
   return stages.map(function (stage) {
     return {
       workType:stage.name, title:stage.name, description:stage.desc || '',
-      assigneeId:draft.reviewers?.[stage.name] || defaultStageAssigneeId(project, people, CV_MEMBERS, stage.name)
+      assigneeId:(people.some(p => p.id === draft.reviewers?.[stage.name]) ? draft.reviewers[stage.name] : '') || defaultStageAssigneeId(project, people, CV_MEMBERS, stage.name)
         || (people.some(function (person) { return person.id === tkCurrentUserId(); }) ? tkCurrentUserId() : people[0]?.id) || '',
       requiresConfirmation:!(Array.isArray(draft.autoReviewStages) ? draft.autoReviewStages.includes(stage.name) : draft.autoReview),
       status:'pending',
@@ -48,12 +56,15 @@ function hideTaskQuestionPanel() {
   if (panel) panel.hidden = true;
 }
 function prepareTaskCreateDraft(draft, latestMessage) {
-  var project = CV_PROJECTS.find(function (row) { return row.id === draft.projectId; });
+  var project = tkProjectById(draft.projectId);
   var priorityMatch = String(latestMessage || draft.prompt || '').match(/(?:优先级(?:为|是|设为|改为|改成)?[：:\s]*)(紧急|高|中|低)/);
   draft.priority = priorityMatch ? ({'紧急':'urgent','高':'high','中':'medium','低':'low'}[priorityMatch[1]]) : draft.priority || 'medium';
   var explicitType = String(latestMessage || '').match(/(?:改为|改成|类型是|类型为)(需求|缺陷)/);
   draft.issueType = explicitType?.[1] || draft.issueType || (/缺陷|Bug|报错|故障|修复/i.test(draft.prompt) ? '缺陷' : '需求');
-  var draftTeam = teamById(draft.teamId || '');
+  var execution = capabilityTeamDefault(project,draft.workspaceId || '');
+  draft.teamId = execution?.kind === 'team' ? execution.data.id : '';
+  draft.expertId = execution?.kind === 'expert' ? execution.data.id : '';
+  var draftTeam = capabilityExecutor(execution);
   var allStages = draftTeam ? tbTeamStages(draftTeam, { type: draft.issueType, title: draft.title || draft.prompt }) : [];
   if (explicitType || !draft.selectedStages?.length) draft.selectedStages = inferDefaultStageIds(draft.prompt, draft.issueType, allStages);
   var instruction = String(latestMessage || draft.prompt);
@@ -66,7 +77,7 @@ function prepareTaskCreateDraft(draft, latestMessage) {
   });
   if (!draft.selectedStages.length) draft.selectedStages = inferDefaultStageIds(draft.prompt, draft.issueType, allStages);
   draft.reviewers ||= {};
-  var people = tkPeopleInProject(draft.projectId);
+  var people = draftPeople(draft);
   allStages.filter(function (stage) { return draft.selectedStages.includes(stage.id); }).forEach(function (stage) {
     var sentence = String(latestMessage || draft.prompt).split(/[。！？；;\n]/).find(function (part) { return part.includes(stage.name); }) || '';
     var namedPerson = people.find(function (person) { return sentence.includes(person.name); });
@@ -83,8 +94,8 @@ function prepareTaskCreateDraft(draft, latestMessage) {
   }
 }
 function taskCreateRecommendation(draft) {
-  var project = CV_PROJECTS.find(function (row) { return row.id === draft.projectId; });
-  var people = tkPeopleInProject(draft.projectId);
+  var project = tkProjectById(draft.projectId);
+  var people = draftPeople(draft);
   var stages = taskCreateStages(draft);
   return '## 推荐任务\n'
     + '- **标题**：' + draft.title + '\n'
@@ -104,7 +115,7 @@ function appendTaskCreateAgent(html) {
   response.innerHTML = '<div class="chat-agent-identity"><img class="task-create-avatar" src="' + xav('pm') + '" alt=""><strong>任务创建智能体</strong><span class="chat-agent-state">任务创建 Skill · 原型</span></div>' + html;
 }
 function taskCreateIntentText(draft) {
-  var project = CV_PROJECTS.find(function (row) { return row.id === draft.projectId; });
+  var project = tkProjectById(draft.projectId);
   return '正在理解你要完成的工作…\n'
     + '识别目标：' + draft.title + '\n'
     + '任务归属：' + (project?.name || '当前项目') + '；初步判断为' + draft.issueType + '类任务。\n'
@@ -206,11 +217,14 @@ function confirmTaskCreate(session) {
   var draft = session.taskCreate;
   if (draft.status !== 'confirm' || !tkProjectsForCurrentUser().some(function (row) { return row.id === draft.projectId; })) { toast('请先确认所属项目', 'warning'); return; }
   var stages = taskCreateStages(draft);
-  if (!teamById(draft.teamId || '')) { toast('请先选择智能体团队', 'warning'); $('#chatTaskTeamSelect').focus(); return; }
+  var p = tkProjectById(draft.projectId), ws = wsById(p,draft.workspaceId || '');
+  var error = capabilityTaskError({project:draft.projectId,workspaceId:draft.workspaceId || '',teamId:draft.teamId,expertId:draft.expertId},p);
+  if (error) { toast(error,'warning'); return; }
+  if (ws && (!canCreateTaskIn(p,ws) || stages.some(s => s.assigneeId && !wsMemberIds(p,ws).includes(s.assigneeId)))) { toast('阶段执行人须加入当前工作区，请联系负责人添加成员','warning'); return; }
   if (!stages.length) { toast('所选智能体团队没有可用执行阶段', 'warning'); return; }
   var owner = stages[0].assigneeId || '';
   var task = tkAddTask({ title:draft.title, desc:draft.description, issueType:draft.issueType, status:'backlog', priority:draft.priority || 'medium', dueDate:'',
-    assignee:owner, createdBy:tkCurrentUserId(), project:draft.projectId, teamId:draft.teamId || '',
+    assignee:owner, createdBy:tkCurrentUserId(), project:draft.projectId, workspaceId:draft.workspaceId || '', teamId:draft.teamId || '',expertId:draft.expertId || '',
     labels:[], executionPlan:stages.map(function (stage) { return {...stage, id:crypto.randomUUID()}; }), planStatus:stages.every(function (stage) { return !!stage.assigneeId; }) ? 'confirmed' : 'draft' });
   session.taskId = task.id;
   session.title = task.title;
@@ -235,7 +249,9 @@ function startTaskCreationChat(projectId, initialPrompt) {
   setComposerTaskReference(null);
   var selectedProjectId = projectId || '';
   var session = createChatSession('创建任务', null);
-  session.taskCreate = {projectId:selectedProjectId, teamId:'', prompt:'', title:'', description:'', issueType:'', selectedStages:null, autoReviewStages:[], reviewers:{}, revisions:[], status:'prompt'};
+  var scope = getSpaceScope();
+  var executor = capabilityTeamDefault(tkProjectById(selectedProjectId),scope.project === selectedProjectId ? scope.ws : '');
+  session.taskCreate = {projectId:selectedProjectId, workspaceId:scope.project === selectedProjectId ? scope.ws : '', teamId:executor?.kind === 'team' ? executor.data.id : '',expertId:executor?.kind === 'expert' ? executor.data.id : '', prompt:'', title:'', description:'', issueType:'', selectedStages:null, autoReviewStages:[], reviewers:{}, revisions:[], status:'prompt'};
   session.projectId = selectedProjectId;
   session.teamId = '';
   if (selectedProjectId) collapsedChatProjects.delete(selectedProjectId);

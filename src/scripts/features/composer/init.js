@@ -7,7 +7,6 @@ import { commitAssetDraft } from '../expert/asset-creation.js';
 import { hideAssetEditorPanel, renderAssetCreationPanel } from '../expert/editor-panel.js';
 import { renderExpertGrid, set_teamLayer } from '../expert/library.js';
 import { cvRenderExperts, set_cvExpertLayer } from '../collab/experts.js';
-import { teamById } from '../expert/store.js';
 import { set__prevWishW } from '../sidebar.js';
 import { tkCanStartTask, tkGetTasks, tkProjectsForCurrentUser } from '../tasks-v2/data.js';
 import { refreshSend, sendBtn, setComposerTaskReference } from './messages.js';
@@ -45,16 +44,7 @@ function initComposer() {
     var session=chatSessions.find(function(row){return row.id===activeSessionId&&row.taskCreate;});
     var projectId=event.target.value;
     if(!session||session.taskCreate.status==='done'||!tkProjectsForCurrentUser().some(function(project){return project.id===projectId;}))return;
-    session.taskCreate.projectId=projectId;session.projectId=projectId;
-    if(session.taskCreate.prompt){set_activeResponseRun(activeResponseRun + 1);session.taskCreate.selectedStages=null;session.taskCreate.reviewers={};prepareTaskCreateDraft(session.taskCreate);session.taskCreate.status='confirm';}
-    saveChatSessions();renderChatSessions();renderTaskCreateChat(session);chatInput.focus();
-  });
-  /* 智能体团队跟任务走：在创建任务对话里单独选，换团队后按新团队的阶段重新生成草稿 */
-  $('#chatTaskTeamSelect').addEventListener('change',function(event){
-    var session=chatSessions.find(function(row){return row.id===activeSessionId&&row.taskCreate;});
-    var teamId=event.target.value;
-    if(!session||session.taskCreate.status==='done'||!teamById(teamId))return;
-    session.taskCreate.teamId=teamId;session.teamId=teamId;
+    session.taskCreate.projectId=projectId;session.taskCreate.workspaceId='';session.projectId=projectId;
     if(session.taskCreate.prompt){set_activeResponseRun(activeResponseRun + 1);session.taskCreate.selectedStages=null;session.taskCreate.reviewers={};prepareTaskCreateDraft(session.taskCreate);session.taskCreate.status='confirm';}
     saveChatSessions();renderChatSessions();renderTaskCreateChat(session);chatInput.focus();
   });

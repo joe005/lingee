@@ -90,7 +90,8 @@ function bindAddDropdown(btn){
   }
   $$('.connector-toggle',dd).forEach(bindToggle);
   var cm=dd.querySelector('.connector-manage');
-  if(cm) cm.addEventListener('click',function(){dd.classList.remove('open');toast('管理连接器');});
+  /* 进入能力中心的连接器页（由 pages/asset-hub.js 监听） */
+  if(cm) cm.addEventListener('click',function(e){e.stopPropagation();closeAll(null);document.dispatchEvent(new CustomEvent('lingee:open-connectors'));});
   var connectorItem=dd.querySelector('[data-action="connector"]');
   if(connectorItem) connectorItem.addEventListener('mouseenter',function(){
     var input=connectorItem.querySelector('.connector-search input');

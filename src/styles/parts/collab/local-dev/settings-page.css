@@ -1,51 +1,92 @@
 /* 协作开发「设置」：顶部分段页签 + 检测，「我的空间」空间卡片与「Git 账号」账号卡片（features/collab/local-dev/settings-page.js 等）。
    灰画布上的白色卡片，与任务、智能体页同宽。 */
 /* 与智能体、智能体团队页、顶部导航同一内容宽度（calc(100% - 32px)、最大 1160px、水平居中），顶部 8px，第二排分段页签 40px 高、下方间距 20px（见 11-shared-navigation.css） */
-#view-collab #cv-local>.scroll{display:flex;flex-direction:column;box-sizing:border-box;min-height:0;width:calc(100% - 32px);max-width:1160px;margin-left:auto;margin-right:auto;padding:8px 0 20px;overflow-y:auto;background:transparent}
-#cv-local .ld-settings{display:flex;flex-direction:column;gap:16px;box-sizing:border-box;width:100%;min-width:0;margin:0;padding:0}
+#view-collab :is(#cv-local,#ldPersonalSettings)>.scroll{display:flex;flex-direction:column;box-sizing:border-box;min-height:0;width:calc(100% - 32px);max-width:1160px;margin-left:auto;margin-right:auto;padding:8px 0 20px;overflow-y:auto;background:transparent}
+:is(#cv-local,#ldPersonalSettings) .ld-settings{display:flex;flex-direction:column;gap:16px;box-sizing:border-box;width:100%;min-width:0;margin:0;padding:0}
 
 /* 顶部：左分段页签，右上次检测与操作 */
-#cv-local .ld-settings-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;min-height:40px;margin-bottom:4px}
-#cv-local .ld-settings-tabs{display:inline-flex;box-sizing:border-box;height:40px;padding:4px;gap:4px;border-radius:999px;background:var(--segment-track)}
-#cv-local .ld-settings-tab{height:32px;padding:0 16px;border:0;border-radius:999px;background:transparent;font:inherit;font-size:var(--font-size-14);font-weight:400;line-height:22px;color:var(--text-muted);white-space:nowrap;cursor:pointer;transition:background .15s,color .15s}
-#cv-local .ld-settings-tab:hover:not(.is-on){background:var(--hover);color:var(--text)}
-#cv-local .ld-settings-tab.is-on{background:var(--bg);font-weight:500;color:var(--text-title)}
-#cv-local .ld-settings-tab:focus-visible,#cv-local .ld-settings-panel:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
-#cv-local .ld-settings-tools{display:flex;align-items:center;gap:12px}
-#cv-local .ld-settings-tools .ld-checked-at{font-size:var(--font-size-12);color:var(--text-secondary)}
-#cv-local .ld-settings-tools .ld-set-btn{height:32px;min-width:0;padding:0 12px;border-radius:8px;gap:4px;font-weight:400}
-#cv-local .ld-settings-panel{display:flex;flex-direction:column;gap:12px;min-width:0}
-#cv-local .ld-settings-panel[hidden]{display:none}
-#cv-local .ld-demo-links{display:flex;flex-wrap:wrap;gap:16px;padding:0 4px}
-#cv-local .ld-demo-links .ld-link{font-size:var(--font-size-12);line-height:20px;color:var(--text-secondary)}
-#cv-local .ld-demo-links .ld-link:hover{color:var(--text)}
+:is(#cv-local,#ldPersonalSettings) .ld-settings-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;min-height:40px;margin-bottom:4px}
+:is(#cv-local,#ldPersonalSettings) .ld-settings-tabs{display:inline-flex;box-sizing:border-box;height:40px;padding:4px;gap:4px;border-radius:999px;background:var(--segment-track)}
+:is(#cv-local,#ldPersonalSettings) .ld-settings-tab{height:32px;padding:0 16px;border:0;border-radius:999px;background:transparent;font:inherit;font-size:var(--font-size-14);font-weight:400;line-height:22px;color:var(--text-muted);white-space:nowrap;cursor:pointer;transition:background .15s,color .15s}
+:is(#cv-local,#ldPersonalSettings) .ld-settings-tab:hover:not(.is-on){background:var(--hover);color:var(--text)}
+:is(#cv-local,#ldPersonalSettings) .ld-settings-tab.is-on{background:var(--bg);font-weight:500;color:var(--text-title)}
+:is(#cv-local,#ldPersonalSettings) .ld-settings-tab:focus-visible,:is(#cv-local,#ldPersonalSettings) .ld-settings-panel:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+:is(#cv-local,#ldPersonalSettings) .ld-settings-tools{display:flex;align-items:center;gap:12px}
+:is(#cv-local,#ldPersonalSettings) .ld-settings-tools .ld-checked-at{font-size:var(--font-size-12);color:var(--text-secondary)}
+:is(#cv-local,#ldPersonalSettings) .ld-settings-tools .ld-set-btn{height:32px;min-width:0;padding:0 12px;border-radius:8px;gap:4px;font-weight:400}
+:is(#cv-local,#ldPersonalSettings) .ld-settings-panel{display:flex;flex-direction:column;gap:12px;min-width:0}
+:is(#cv-local,#ldPersonalSettings) .ld-settings-panel[hidden]{display:none}
+:is(#cv-local,#ldPersonalSettings) .ld-demo-links{display:flex;flex-wrap:wrap;gap:16px;padding:0 4px}
+:is(#cv-local,#ldPersonalSettings) .ld-demo-links .ld-link{font-size:var(--font-size-12);line-height:20px;color:var(--text-secondary)}
+:is(#cv-local,#ldPersonalSettings) .ld-demo-links .ld-link:hover{color:var(--text)}
 
 /* 我的空间：每个空间一张卡片 —— 名称 + 状态 / 仓库地址 | GIT 账号 | 空间目录 | 操作 */
-#cv-local .ld-space-list{display:flex;flex-direction:column;gap:12px}
-#cv-local .ld-space-card{display:grid;grid-template-columns:minmax(200px,1.6fr) minmax(96px,.6fr) minmax(160px,1.4fr) auto;align-items:center;gap:24px;box-sizing:border-box;min-height:72px;padding:16px 16px 16px 16px;border-radius:12px;background:var(--bg);box-shadow:var(--card-shadow)}
-#cv-local .ld-space-main{display:flex;flex-direction:column;gap:4px;min-width:0}
-#cv-local .ld-space-title{display:flex;align-items:center;gap:8px;min-width:0}
-#cv-local .ld-space-title strong{min-width:0;overflow:hidden;font-size:var(--font-size-14);font-weight:500;line-height:22px;color:var(--text-title);text-overflow:ellipsis;white-space:nowrap}
-#cv-local .ld-space-title .ld-state{display:inline-flex;align-items:center;height:20px;padding:0 6px;border-radius:4px;line-height:20px}
-#cv-local .ld-space-title .ld-state.is-muted{padding:0 6px;background:var(--tag-bg);font-weight:500}
-#cv-local .ld-space-repo,#cv-local .ld-space-problem{overflow:hidden;font-size:var(--font-size-12);line-height:20px;color:var(--text-secondary);text-overflow:ellipsis;white-space:nowrap}
-#cv-local .ld-space-problem{color:var(--danger)}
-#cv-local .ld-space-field{display:flex;flex-direction:column;gap:4px;min-width:0}
-#cv-local .ld-space-label{font-size:var(--font-size-12);line-height:20px;color:var(--text-secondary)}
-#cv-local .ld-space-value{overflow:hidden;font-family:inherit;font-size:var(--font-size-12);line-height:20px;color:var(--text);text-overflow:ellipsis;white-space:nowrap;word-break:normal}
-#cv-local .ld-space-act{display:flex;align-items:center;justify-content:flex-end;min-width:64px}
-#cv-local .ld-space-act .ld-muted{font-size:var(--font-size-12);color:var(--text-secondary)}
+:is(#cv-local,#ldPersonalSettings) .ld-space-list{display:flex;flex-direction:column;gap:12px}
+:is(#cv-local,#ldPersonalSettings) .ld-space-card{display:grid;grid-template-columns:minmax(200px,1.6fr) minmax(96px,.6fr) minmax(160px,1.4fr) auto;align-items:center;gap:24px;box-sizing:border-box;min-height:72px;padding:16px 16px 16px 16px;border-radius:12px;background:var(--bg);box-shadow:var(--card-shadow)}
+:is(#cv-local,#ldPersonalSettings) .ld-space-main{display:flex;flex-direction:column;gap:4px;min-width:0}
+:is(#cv-local,#ldPersonalSettings) .ld-space-title{display:flex;align-items:center;gap:8px;min-width:0}
+:is(#cv-local,#ldPersonalSettings) .ld-space-title strong{min-width:0;overflow:hidden;font-size:var(--font-size-14);font-weight:500;line-height:22px;color:var(--text-title);text-overflow:ellipsis;white-space:nowrap}
+:is(#cv-local,#ldPersonalSettings) .ld-space-title .ld-state{display:inline-flex;align-items:center;height:20px;padding:0 6px;border-radius:4px;line-height:20px}
+:is(#cv-local,#ldPersonalSettings) .ld-space-title .ld-state.is-muted{padding:0 6px;background:var(--tag-bg);font-weight:500}
+:is(#cv-local,#ldPersonalSettings) .ld-space-repo,:is(#cv-local,#ldPersonalSettings) .ld-space-problem{overflow:hidden;font-size:var(--font-size-12);line-height:20px;color:var(--text-secondary);text-overflow:ellipsis;white-space:nowrap}
+:is(#cv-local,#ldPersonalSettings) .ld-space-problem{color:var(--danger)}
+:is(#cv-local,#ldPersonalSettings) .ld-space-field{display:flex;flex-direction:column;gap:4px;min-width:0}
+:is(#cv-local,#ldPersonalSettings) .ld-space-label{font-size:var(--font-size-12);line-height:20px;color:var(--text-secondary)}
+:is(#cv-local,#ldPersonalSettings) .ld-space-value{overflow:hidden;font-family:inherit;font-size:var(--font-size-12);line-height:20px;color:var(--text);text-overflow:ellipsis;white-space:nowrap;word-break:normal}
+:is(#cv-local,#ldPersonalSettings) .ld-space-act{display:flex;align-items:center;justify-content:flex-end;min-width:64px}
+:is(#cv-local,#ldPersonalSettings) .ld-space-act .ld-muted{font-size:var(--font-size-12);color:var(--text-secondary)}
 /* 行内操作：需要处理的动作为主色描边，其余灰描边 */
-#cv-local .ld-space-btn{height:28px;padding:0 10px;border:1px solid var(--border-hover);border-radius:6px;background:var(--bg);font:inherit;font-size:var(--font-size-12);font-weight:400;color:var(--text);white-space:nowrap;cursor:pointer;transition:background .15s,border-color .15s}
-#cv-local .ld-space-btn:hover:not(:disabled){background:var(--hover)}
-#cv-local .ld-space-btn--primary{border-color:var(--brand);color:var(--brand)}
-#cv-local .ld-space-btn--primary:hover:not(:disabled){background:var(--brand-fill)}
-#cv-local .ld-space-btn:disabled{opacity:.5;cursor:not-allowed}
-#cv-local .ld-space-btn:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+:is(#cv-local,#ldPersonalSettings) .ld-space-btn{height:28px;padding:0 10px;border:1px solid var(--border-hover);border-radius:6px;background:var(--bg);font:inherit;font-size:var(--font-size-12);font-weight:400;color:var(--text);white-space:nowrap;cursor:pointer;transition:background .15s,border-color .15s}
+:is(#cv-local,#ldPersonalSettings) .ld-space-btn:hover:not(:disabled){background:var(--hover)}
+:is(#cv-local,#ldPersonalSettings) .ld-space-btn--primary{border-color:var(--brand);color:var(--brand)}
+:is(#cv-local,#ldPersonalSettings) .ld-space-btn--primary:hover:not(:disabled){background:var(--brand-fill)}
+:is(#cv-local,#ldPersonalSettings) .ld-space-btn:disabled{opacity:.5;cursor:not-allowed}
+:is(#cv-local,#ldPersonalSettings) .ld-space-btn:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 
 @media(max-width:900px){
-  #cv-local .ld-space-card{grid-template-columns:minmax(0,1fr) auto;gap:8px 16px}
-  #cv-local .ld-space-main{grid-column:1/-1}
-  #cv-local .ld-space-field--dir:empty{display:none}
+  :is(#cv-local,#ldPersonalSettings) .ld-space-card{grid-template-columns:minmax(0,1fr) auto;gap:8px 16px}
+  :is(#cv-local,#ldPersonalSettings) .ld-space-main{grid-column:1/-1}
+  :is(#cv-local,#ldPersonalSettings) .ld-space-field--dir:empty{display:none}
 }
-@media(prefers-reduced-motion:reduce){#cv-local .ld-settings-tab,#cv-local .ld-space-btn{transition:none}}
+@media(prefers-reduced-motion:reduce){:is(#cv-local,#ldPersonalSettings) .ld-settings-tab,:is(#cv-local,#ldPersonalSettings) .ld-space-btn{transition:none}}
+
+/* 基础 › 我的空间 / Git 账号：复用紧凑列表，与其他设置分类共用页面容器。 */
+#ldPersonalSettings .ld-personal-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }
+#ldPersonalSettings .ld-personal-toolbar h3 { margin: 0; font-size: var(--font-size-18); font-weight: 500; line-height: var(--line-height-18); }
+#ldPersonalSettings .ld-settings-tools { flex-wrap: wrap; gap: 8px; }
+#ldPersonalSettings .ld-acct-grid { grid-template-columns: minmax(0, 1fr); }
+#ldPersonalSettings .ld-demo-links { margin-top: 24px; }
+/* 我的空间：一体列表，信息三行内排列，异常原因按需增加一行。 */
+#ldPersonalSettings .ld-space-list { gap: 0; border: 1px solid var(--border); border-radius: 12px; }
+#ldPersonalSettings .ld-space-card { grid-template-columns: minmax(0, 1fr) auto; min-height: 0; gap: 8px 16px; padding: 12px 16px; border: none; border-radius: 0; }
+#ldPersonalSettings .ld-space-card + .ld-space-card { border-top: 1px solid var(--divider); }
+#ldPersonalSettings .ld-space-card:first-child { border-top-left-radius: 12px; border-top-right-radius: 12px; }
+#ldPersonalSettings .ld-space-card:last-child { border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; }
+#ldPersonalSettings .ld-space-main { grid-column: 1; gap: 4px; }
+#ldPersonalSettings .ld-space-act { grid-column: 2; grid-row: 1; align-self: center; }
+#ldPersonalSettings .ld-space-title > span { flex: none; white-space: nowrap; }
+#ldPersonalSettings :is(.ld-space-repo,.ld-space-value,.ld-space-label,.ld-space-problem) { line-height: var(--line-height-12); }
+#ldPersonalSettings .ld-space-meta { display: flex; align-items: center; gap: 16px; min-width: 0; }
+#ldPersonalSettings .ld-space-field { flex-direction: row; align-items: center; gap: 6px; flex: 0 1 auto; }
+#ldPersonalSettings .ld-space-label { flex: none; }
+#ldPersonalSettings .ld-space-field--dir { flex: 1; }
+#ldPersonalSettings .ld-space-value { min-width: 0; }
+#ldPersonalSettings .ld-space-problem { white-space: normal; overflow-wrap: anywhere; }
+
+/* 同一仓库的使用范围，长路径可换行，操作保持居中。 */
+#ldPersonalSettings .ld-space-usages { display: flex; flex-wrap: wrap; gap: 4px; }
+#ldPersonalSettings .ld-env-usage { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 6px; border-radius: 4px; background: var(--tag-bg); color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); }
+
+/* 本机环境按仓库分组，独立目录与个人范围选择在组内展开。 */
+#ldPersonalSettings .ld-repo-group + .ld-repo-group { border-top: 1px solid var(--divider); }
+#ldPersonalSettings .ld-repo-copy { margin: 0 16px 12px 32px; padding: 12px; border-radius: 8px; background: var(--fill-1); }
+#ldPersonalSettings .ld-repo-copy .ld-space-card { padding: 8px 0; background: transparent; box-shadow: none; }
+#ldPersonalSettings .ld-scope-directories { padding: 0 16px 16px; }
+#ldPersonalSettings .ld-scope-directories summary { cursor: pointer; color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); }
+#ldPersonalSettings .ld-scope-directories summary:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+#ldPersonalSettings .ld-scope-directories label { display: flex; align-items: center; gap: 16px; margin-top: 12px; }
+#ldPersonalSettings .ld-scope-directories label > span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--font-size-12); }
+#ldPersonalSettings .ld-scope-directories select { width: 50%; min-width: 0; height: var(--control-h); border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); font: inherit; font-size: var(--font-size-12); padding: 0 8px; }
+#ldPersonalSettings .ld-scope-directories select:hover { border-color: var(--border-hover); }
+#ldPersonalSettings .ld-scope-directories select:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+@media (max-width: 900px) { #ldPersonalSettings .ld-scope-directories label { align-items: stretch; flex-direction: column; gap: 8px; } #ldPersonalSettings .ld-scope-directories select { width: 100%; } }

@@ -4,7 +4,7 @@ import { setNavActive, showView } from '../../core/view.js';
 import { renderExpertChips } from '../expert/chips.js';
 import { hideAssetEditorPanel } from '../expert/editor-panel.js';
 import { clearPick } from '../expert/store.js';
-import { tkProjectById } from '../tasks-v2/data.js';
+import { ldTargetProject } from '../collab/local-dev/core.js';
 import { LD_QUIET_ENV, ldAdoptLocalCred, ldAuthUser, ldFindLocalCred, ldLocalConfigPath, ldMarkInitialized, ldOpenAuth, ldOpenDirModal, ldProjectStatus, ldRepoInfo, ldSourceLabel } from '../collab/local-dev.js';
 import { appendAssistantMessage, appendUserMessage, escapeHtml, messagesList, scrollChatBottom, setComposerTaskReference } from './messages.js';
 import { activeSessionId, chatSessions, createChatSession, isMyChatSession, rememberActiveChatSession, renderChatSessions, saveChatSessions, set_activeSessionId, set_activeSessionTaskId } from './sessions.js';
@@ -23,8 +23,8 @@ var askSelection = -1;
 /* ---------- 工具 ---------- */
 function findSession(id) { return chatSessions.find(function (row) { return row.id === id && row.localEnv?.version === ENV_VERSION; }); }
 function activeEnvSession() { return chatSessions.find(function (row) { return row.id === activeSessionId && row.localEnv?.version === ENV_VERSION; }) || null; }
-function projectName(id) { return tkProjectById(id)?.name || id; }
-function infoOf(id) { return ldRepoInfo(tkProjectById(id)); }
+function projectName(id) { return ldTargetProject(id)?.name || id; }
+function infoOf(id) { return ldRepoInfo(ldTargetProject(id)); }
 function envId(env) { return env.projectIds[0]; }
 function say(env, html) { env.blocks.push({ type:'text', html:html }); }
 function tools(env, summary, rows) { env.blocks.push({ type:'tools', summary:summary, rows:rows, open:false }); }

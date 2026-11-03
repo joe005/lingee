@@ -103,6 +103,7 @@ export function initHoverDropdowns() {
     if(dd.id==='ntExpertDropdown' || dd.id==='chatExpertDropdown') return; // 智能体选择仅点击打开
     if(dd.classList.contains('field-dd')) return; // 表单内下拉改为点击展开
     if(dd.classList.contains('project-dd')) return; // 项目操作同为点击展开，与会话操作一致
+    if(dd.classList.contains('env-pick-dd')) return; // 环境选择器自带点击展开（features/env-picker.js）
     if(dd.classList.contains('dd-float')) return; // 弹窗内浮层下拉改为点击展开，避免 hover 先打开与 click 切换冲突
     var t=null;
     dd.addEventListener('mouseenter',function(){

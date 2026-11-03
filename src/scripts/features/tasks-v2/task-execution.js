@@ -1,3 +1,6 @@
+import { capabilityTaskError, capabilityTaskSnapshot } from '../collab/capability-config.js';
+import { buildTaskRepoSelectionError, buildTaskNeedsRepo, buildTaskRepoSnapshot } from '../collab/repository-config.js';
+import { ldPreflight, ldTaskEnvironmentId, ldRememberTaskDirectory } from '../collab/local-dev/core.js';
 import { taskCodeDeliveryApprovalError, taskCodeDeliveryContext, taskCodeTestArtifacts } from './code-delivery-context.js';
 import { builtinDeliveryStages, deliveryStagesFor } from '../expert/delivery-stages.js';
 import { EX, STAGES } from '../expert/data.js';
@@ -16,8 +19,8 @@ export function taskStageAgentName(task, stageId) {
   const team = taskExecutorTeam(task, tkProjectById(task.project));
   const matched = tbTeamStages(team, task).find(row => row.name === stage?.name || row.name === entry?.workType);
   const ids = task.expertId ? [task.expertId] : entry?.expertIds?.length ? entry.expertIds : matched?.expertIds || [];
-  const executorId = entry?.executionExpertId || ids.find(id => EX[id]);
-  return EX[executorId]?.name || '执行智能体';
+  const executorId = entry?.executionExpertId || ids.find(id => team?.expertDefinitions?.[id] || EX[id]);
+  return task.executorSnapshot?.experts?.find(e => e.id === executorId)?.data.name || EX[executorId]?.name || '执行智能体';
 }
 
 
@@ -65,14 +68,25 @@ export function startTaskStage(task, options) {
     return {ok:!!current, stage:current};
   }
   if (!['planned','backlog'].includes(task.status)) return {ok:false};
+  var capabilityError = capabilityTaskError(task,tkProjectById(task.project));
+  if (capabilityError) return {ok:false,message:capabilityError};
+  var executorSnapshot = capabilityTaskSnapshot(task,tkProjectById(task.project));
   if (task.executionPlan?.length && task.executionPlan.some(function (stage) { return !stage.assigneeId; })) return {ok:false, message:'请先为执行计划的每个阶段指定负责人'};
   var stages = taskExecutionStages(task);
   var stage = stages.find(function (row) { return row.id === task.executionStageId; })
     || stages.find(function (row) { return task.executionPlan?.find(function (item) { return item.id === row.id; })?.status !== 'done'; })
     || stages[0];
   if (!stage) return {ok:false};
+  var repoSnapshot = buildTaskRepoSnapshot(task, tkProjectById(task.project));
+  if (buildTaskNeedsRepo(task, tkProjectById(task.project))) {
+    var selectionError = buildTaskRepoSelectionError(task, tkProjectById(task.project));
+    if (selectionError) return {ok:false,message:selectionError};
+    var env = ldPreflight(ldTaskEnvironmentId(task,currentHandlerId || tkCurrentUserId()), currentHandlerId || tkCurrentUserId());
+    if (!env.initialized) return {ok:false, message:env.status.reason || '请先准备本机环境'};
+    if (!ldRememberTaskDirectory(task, repoSnapshot, currentHandlerId || tkCurrentUserId())) return {ok:false, message:'任务目录记录保存失败，请重试'};
+  }
   var assigneeId = currentHandlerId || tkCurrentUserId() || task.assignee;
-  tkUpdateTask(task.id, {status:'in_progress', assignee:assigneeId, executionStageId:stage.id, executionPlan:stagePlan(task,stage.id,'running'),
+  tkUpdateTask(task.id, { executorSnapshot:executorSnapshot, ...(repoSnapshot ? {repoSnapshot:repoSnapshot} : {}), status:'in_progress', assignee:assigneeId, executionStageId:stage.id, executionPlan:stagePlan(task,stage.id,'running'),
     ...(options?.fromSave ? {createdAndStarted:true} : {}),
     planStatus:task.executionPlan?.length ? 'confirmed' : task.planStatus,
     statusHistory:(task.statusHistory || []).concat({from:task.status,to:'in_progress',authorId:tkCurrentUserId(),stageId:stage.id,time:flowTimestamp(),creationStart:!!options?.fromSave,message:'开始执行「' + stage.name + '」'})});

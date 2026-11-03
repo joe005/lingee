@@ -1,0 +1,13 @@
+<!-- 管理 · 工作区弹窗：新建 / 改名、移动、添加成员、归档、删除、移动任务共用一个容器，内容与按钮由 workspace-admin.js 按场景渲染 -->
+<div class="sync-overlay mgr-modal" id="mgrWsDialog" style="display:none" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="mgrWsDialogTitle">
+  <div class="sync-modal mgr-ws-dialog">
+    <div class="sync-modal__header mgr-projedit-header">
+      <span class="mgr-projedit-title" id="mgrWsDialogTitle"></span>
+      <button type="button" class="sync-modal__close mgr-projedit-close" data-mgr-wsd-close aria-label="关闭弹窗">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="sync-modal__body mgr-ws-dialog-body" id="mgrWsDialogBody"></div>
+    <div class="sync-modal__footer mgr-projedit-footer" id="mgrWsDialogFoot"></div>
+  </div>
+</div>

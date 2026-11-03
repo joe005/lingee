@@ -50,6 +50,8 @@ function cardHtml(host, checks) {
   var auth = ldAuthFor(host), key = stateKey(host, checks), detecting = ldIsDetectingHost(host);
   var avatar = '<span class="ld-acct-avatar">' + ldPlatformLogo(ldPlatformKey(host)) + '</span>';
   var name = ldAuthUser(auth);
+  var platform = { KDGitLab:'金蝶 GitLab', GitHub:'GitHub', Gitee:'Gitee', GitLab:'GitLab' }[ldPlatformKey(host)] || 'Git';
+  var title = platform + ' · ' + name;
   var open = menuHost === host;
   var menu = open ? '<div class="ld-acct-menu" role="menu">' + menuItems(host, auth, key).map(function (item) {
     return '<button type="button" role="menuitem"' + (item.danger ? ' class="is-danger"' : '') + ' ' + item.attr + '>' + item.icon + '<span>' + item.text + '</span></button>';
@@ -57,7 +59,7 @@ function cardHtml(host, checks) {
   var action = '<div class="ld-acct-more"><button type="button" class="ld-acct-more-btn" data-ld-acct-more="' + ldEsc(host) + '" aria-haspopup="menu" aria-expanded="' + open + '" aria-label="' + ldEsc(name) + ' 的更多操作">' + ICONS.more + '</button>' + menu + '</div>';
   var tag = detecting ? '<span class="ld-state is-muted" role="status">检测中…</span>' : key ? ldStateTag(key, LD_ACCOUNT_LABELS) : '';
   return '<article class="ld-acct-card' + (open ? ' is-menu-open' : '') + '"' + (detecting ? ' aria-busy="true"' : '') + '>' + avatar
-    + '<div class="ld-acct-main"><div class="ld-acct-title"><strong title="' + ldEsc(name) + '">' + ldEsc(name) + '</strong>' + tag + '</div>'
+    + '<div class="ld-acct-main"><div class="ld-acct-title"><strong title="' + ldEsc(title) + '">' + ldEsc(title) + '</strong>' + tag + '</div>'
     + '<span class="ld-acct-desc" title="' + ldEsc(host) + '">' + ldEsc(host + ' · ' + descOf(auth)) + '</span></div>'
     + '<div class="ld-acct-act">' + action + '</div></article>';
 }

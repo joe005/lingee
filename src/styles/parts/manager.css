@@ -14,3 +14,4 @@
 @import './manager/12-rd-tasks.css';   /* 研发任务页签、行操作菜单、新建 / 编辑任务弹窗尺寸 */
 @import './manager/13-settings-pages.css';   /* 空间设置 · 首页板块（旧版功能页面样式） */
 @import './manager/14-space.css';   /* 空间：列表头、底部对话、右栏与子页面、首页板块设置、成员与智能体、小灵、AI 组织 */
+@import './manager/15-workspace.css';   /* 工作区：详情头部切换、侧栏目录树、任务列与批量移动、工作区管理页与弹窗 */

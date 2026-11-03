@@ -1,6 +1,7 @@
+import { ldGateTaskStart } from '../collab/local-dev/task-gate.js';
 /* T00 结构拆分：list。保留原交互；事件在 init* 中按原顺序注册。 */
 import { taskViewState, els, LIST_FIELDS, DEFAULT_LIST_FIELD_ORDER } from './ui-state.js';
-import { tkGetViews, tkGetTasks, TK_PEOPLE, tkProjectsForCurrentUser, tkDeleteTask, tkAddTask, tkCurrentUserId, tkCanStartTask, tkCanViewTask, tkInMyTaskList, tkParticipatesCurrentUser, tkWasTaskHandler, TK_STATUSES, tkGetPerson, tkGetProjectName, TK_PRIORITIES, tkGetPriorityObj, TK_FILTER_FIELDS, TK_OPERATORS, tkSyncPeople, tkPeopleInProject, TK_LABELS, tkAddView, tkUpdateTask, tkDeleteView, tkRenameView, TK_PROJECTS, tkGetStatusObj, tkProjectById } from './data.js';
+import { tkGetViews, tkGetTasks, TK_PEOPLE, tkProjectsForCurrentUser, tkDeleteTask, tkAddTask, tkCurrentUserId, tkCanStartTask, tkCanViewTask, tkInMyTaskList, tkParticipatesCurrentUser, tkWasTaskHandler, TK_STATUSES, tkGetPerson, tkGetProjectName, tkGetTaskSpaceLabel, TK_PRIORITIES, tkGetPriorityObj, TK_FILTER_FIELDS, TK_OPERATORS, tkSyncPeople, tkPeopleInProject, TK_LABELS, tkAddView, tkUpdateTask, tkDeleteView, tkRenameView, TK_PROJECTS, tkGetStatusObj, tkProjectById } from './data.js';
 import { TEAMS } from '../expert/store.js';
 import { AV_KEYS, EX, EXPERTS, xav } from '../expert/data.js';
 import { createDeliveryActivity } from '../collab/delivery-activity.js';
@@ -133,6 +134,7 @@ function showCardMenu(taskId, anchorEl, detailOnly) {
 function startTaskExec(taskId) {
   var task = tkGetTasks().find(function(t) { return t.id === taskId; });
   if (!task) return;
+  if (!ldGateTaskStart(task, { onReady:function () { startTaskExec(taskId); } })) return;
   var started = startTaskStage(task);
   if (!started.ok) { if (started.message) toast(started.message,'warning'); else openDrawer(taskId); return; }
   scheduleTaskStageStartedNotice(taskId, started.stage?.id);
@@ -313,7 +315,7 @@ function renderListRow(t, opts, ctx) {
     + '<td class="tk-col-status"><span class="tk-row-status">' + ctx.statusSvg(t.status) + ctx.escapeHtml(st.name) + '</span></td>'
     + '<td class="tk-col-priority"><span class="tk-row-priority">' + ctx.escapeHtml(pri.name) + '</span></td>'
 
-    + '<td class="tk-col-project">' + ctx.escapeHtml(tkGetProjectName(t.project)) + '</td>'
+    + '<td class="tk-col-project">' + ctx.escapeHtml(tkGetTaskSpaceLabel(t)) + '</td>'
     + '<td class="tk-col-created">' + ctx.fmtDate(t.createDate) + '</td>'
     + '<td class="tk-col-actions"><button class="tk-card-more" data-card-more="' + t.id + '" data-tooltip="更多操作" aria-label="更多操作"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button></td></tr>';
 }
@@ -407,7 +409,7 @@ function renderCard(t, opts) {
       : (team ? '<img class="tk-card-team-avatar" src="' + xav(AV_KEYS[Math.abs(t.id) % AV_KEYS.length]) + '" alt="" title="' + escapeHtml(team.name) + '">' : '');
     footExtraHtml = (props.priority ? '<span class="tk-card-priority ' + priClass(t.priority) + '">' + escapeHtml(pri.name) + '</span>' : '')
       + (props.startDate && t.startDate ? '<span class="tk-card-due">' + fmtDate(t.startDate) + '</span>' : '')
-      + (props.project && t.project ? '<span class="tk-card-project">' + escapeHtml(tkGetProjectName(t.project)) + '</span>' : '');
+      + (props.project && t.project ? '<span class="tk-card-project">' + escapeHtml(tkGetTaskSpaceLabel(t)) + '</span>' : '');
   } else {
     teamAvatarHtml = team ? '<img class="tk-card-team-avatar" src="' + xav(AV_KEYS[Math.abs(t.id) % AV_KEYS.length]) + '" alt="" title="' + escapeHtml(team.name) + '">' : '';
     var activity = createDeliveryActivity(t, project || {});

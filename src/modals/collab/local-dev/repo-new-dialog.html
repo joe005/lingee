@@ -1,5 +1,5 @@
 <!-- 新建空间：与 Manage「新建空间」的开发空间（测试研发空间模版）格式一致——空间名称、空间目标、Git 地址 + 基准分支；
-     Git 地址粘贴后自动校验格式与连通性，另选本机目录，创建后在 Manage 生成空间并初始化到本机。内容由 features/collab/local-dev/repo-new-dialog.js 渲染 -->
+     Git 地址粘贴后自动校验格式与连通性，创建后保存 Build 仓库配置，首次执行时再初始化。内容由 features/collab/local-dev/repo-new-dialog.js 渲染 -->
 <div class="sync-overlay ld-overlay ld-overlay--repo" id="ldRepoOverlay" style="display:none" aria-hidden="true">
   <div class="sync-modal ld-modal ld-modal--repo" role="dialog" aria-modal="true" aria-labelledby="ldRepoTitle">
     <div class="sync-modal__header">
@@ -27,15 +27,11 @@
         <div class="ld-repo-check" id="ldRepoCheck" role="status" aria-live="polite"></div>
         <p class="ld-error" id="ldRepoBranchHint" hidden></p>
       </div>
-      <div class="ld-field ld-field--last">
-        <span class="ld-field-label" id="ldRepoDirLabel">本机目录</span>
-        <div id="ldRepoDir"></div>
-      </div>
       <div id="ldRepoProgress"></div>
     </div>
     <div class="sync-modal__footer">
       <button type="button" class="sync-modal__btn sync-modal__btn--ghost" data-ld-repo-close>取消</button>
-      <button type="button" class="sync-modal__btn sync-modal__btn--primary" id="ldRepoSubmit" disabled>创建并初始化</button>
+      <button type="button" class="sync-modal__btn sync-modal__btn--primary" id="ldRepoSubmit" disabled>创建空间</button>
     </div>
   </div>
 </div>

@@ -2,7 +2,7 @@ import { taskCodeDeliveryContext } from '../code-delivery-context.js';
 import { toast } from '../../../core/toast.js';
 import { input, setNavActive, showView } from '../../../core/view.js';
 import { cvSwitchView } from '../../collab/view.js';
-import { ldGateTaskStart, ldIsEnvBlocked, ldOpenSetup, ldProjectStatus, ldRestoreEnvBlocked } from '../../collab/local-dev.js';
+import { ldGateTaskStart, ldIsEnvBlocked, ldTaskEnvironmentId, ldOpenSetup, ldProjectStatus, ldRestoreEnvBlocked } from '../../collab/local-dev.js';
 import { continueBlockedTaskConversation, openTaskExceptionHistory, openTaskSessionHistory, openTaskStatusConversation, sendComposerText, setComposerTaskReference } from '../../composer.js';
 import { renderExpertChips } from '../../expert/chips.js';
 import { set_activePick } from '../../expert/store.js';
@@ -64,8 +64,8 @@ export function retryBlockedTask(task) {
   /* 本地环境未就绪导致的阻塞：「去配置」打开准备面板，就绪后恢复并重新开始执行 */
   if (ldIsEnvBlocked(task)) {
     var resume = function () { ldRestoreEnvBlocked(task); startTaskExecution(task.id); };
-    if (ldProjectStatus(task.project).ready) resume();
-    else ldOpenSetup(task.project, { resumeLabel:'完成并执行', onReady:resume });
+    if (ldProjectStatus(ldTaskEnvironmentId(task)).ready) resume();
+    else ldOpenSetup(task.project, { task:task, resumeLabel:'完成并执行', onReady:resume });
     return;
   }
   closeDrawer();

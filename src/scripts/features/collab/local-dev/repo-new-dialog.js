@@ -1,21 +1,20 @@
+import { buildRepoSave } from '../repository-config.js';
 import { $ } from '../../../core/dom.js';
 import { gitRepoUrlError } from '../../../core/git-url.js';
 import { toast } from '../../../core/toast.js';
 import { tkBranchNameError } from '../../tasks-v2/git-branch.js';
-import { tkCurrentUserId, tkGetPerson, tkProjectById, tkProjectsForCurrentUser } from '../../tasks-v2/data.js';
-import { LD_WORKSPACE_ROOT, ldAdoptLocalCred, ldAuthFor, ldAuthUser, ldBindDir, ldCheckDir, ldDefaultPath, ldEsc, ldFindLocalCred, ldHide, ldMarkInitialized, ldMine, ldProjectStatus, ldPushIssueText, ldRecordChecks, ldRefresh, ldRemoteKey, ldRepoInfo, ldShow, ldVisible } from './core.js';
+import { tkCurrentUserId, tkGetPerson, tkProjectById } from '../../tasks-v2/data.js';
+import { ldAdoptLocalCred, ldAuthFor, ldAuthUser, ldEsc, ldFindLocalCred, ldHide, ldPushIssueText, ldRefresh, ldRemoteKey, ldRepoInfo, ldShow, ldVisible } from './core.js';
 import { ldOpenAuth } from './auth-dialog.js';
 
 /* 本地开发 · 新建空间弹窗（#ldRepoOverlay）。设置页入口暂时隐藏，新建任务的空间下拉通过 lingee:repo-project-new 打开。 */
 var repoCheck = null;
 var repoCheckTimer = 0;
-var repoDirMode = 'auto';
-var repoDirPath = '';
 var repoOnCreated = null;
 var repoProgress = 0;
 var repoRun = 0;
 /* ---------- 新建空间 ----------
-   格式与 Manage「新建空间」的开发空间（协作开发）一致：空间名称、空间目标（预填）、Git 地址 + 基准分支，另选本机目录。
+   格式与 Manage「新建空间」的开发空间（协作开发）一致：空间名称、空间目标（预填）、Git 地址 + 基准分支，不选择本机目录。
    Git 地址粘贴后自动检查（停止输入 0.5 秒、回车或离开输入框时）：
    1. 格式：一期只支持 HTTPS 地址，主机要像域名、要有仓库路径；
    2. 账号：这个平台没登录时先用本机凭据，没有就请用户登录，登录后自动重新检查；
@@ -23,8 +22,8 @@ var repoRun = 0;
       推送权限另用 git push --dry-run 校验（见 ldPushCheck）。区分连不上（网络 / 内网 / VPN）、仓库不存在或无权访问、能读但不能推送。
    基准分支检查前为 main / master / develop / 其他，检查通过后换成仓库里的分支并选中默认分支；名称没填时取仓库名，
    目标还是预填内容时换成仓库描述。创建：
-   - 地址已是我的空间：直接使用该空间；
-   - 否则通过 Manage 接口新建开发空间（负责人为本人），再初始化到所选本机目录。成员、里程碑在 Manage 空间详情里补。
+   - 同一仓库可以供多个空间使用；
+   - 否则通过 Manage 接口新建开发空间（负责人为本人），再保存 Build 仓库配置，首次执行时初始化。成员、里程碑在 Manage 空间详情里补。
    权限与 Manage「新建空间」一致：正式实现向 Manage 查询，没有权限时入口置灰。原型里能进 Manage 的人都能建。 */
 /* 演示：这些仓库的默认分支、分支列表与描述（真实取自 git ls-remote --symref / --heads 与平台接口）；其余地址为 main、develop，默认 main。
    地址含 offline 视为连不上，含 private / missing 视为不存在或无权访问 */
@@ -37,10 +36,6 @@ var LD_DEMO_REPOS = {
 };
 export function ldCanCreateProject() { return true; }
 /* 这个仓库是否已经是我的空间（按统一后的远端地址比较） */
-function ldProjectForRepo(url) {
-  var key = ldRemoteKey(url);
-  return tkProjectsForCurrentUser().find(function (project) { return project.repo && ldRemoteKey(project.repo) === key; }) || null;
-}
 /* 解析粘贴的地址；不合法时返回错误说明 */
 function ldParseRepoUrl(text) {
   var url = String(text || '').trim();
@@ -62,21 +57,11 @@ function ldSetBranchOptions(branches, selected, defaultBranch) {
 function ldRepoBranchValue() { return $('#ldRepoBranch').value === '__custom' ? $('#ldRepoBranchCustom').value.trim() : $('#ldRepoBranch').value; }
 /* 手填的分支先校验名称，正式实现再用 git ls-remote --heads 确认仓库里有这个分支 */
 function ldRepoBranchError() { return tkBranchNameError(ldRepoBranchValue()); }
-function ldRepoTargetPath() { return repoDirMode === 'existing' ? repoDirPath : ldDefaultPath({ name:ldRepoNameValue() || repoCheck?.name || 'project' }); }
-/* 空间目录校验：工作区目录内、未被其他空间使用，其余按 ldCheckDir 的演示规则 */
-function ldRepoDirError() {
-  var path = ldRepoTargetPath();
-  if (!path) return '';
-  var used = Object.keys(ldMine().bindings).some(function (id) { return ldMine().bindings[id].path === path; });
-  return used ? '该目录已被其他空间使用，请改用其他目录' : ldCheckDir('__new', path);
-}
 export function ldOpenRepoNew(onCreated) {
   if (!ldCanCreateProject()) { toast('你没有新建空间的权限，请联系 Manage 管理员', 'warning'); return; }
   repoOnCreated = onCreated || null;
   repoCheck = null;
   repoProgress = 0;
-  repoDirMode = 'auto';
-  repoDirPath = '';
   repoRun++;
   $('#ldRepoUrl').value = '';
   $('#ldRepoName').value = '';
@@ -95,8 +80,6 @@ function runRepoCheck() {
   var parsed = ldParseRepoUrl($('#ldRepoUrl').value);
   if (repoCheck && parsed.url && repoCheck.url === parsed.url && repoCheck.state !== 'login') return;
   if (!parsed.url) { repoCheck = parsed.error ? { state:'error', message:parsed.error } : null; renderRepoModal(); return; }
-  var existing = ldProjectForRepo(parsed.url);
-  if (existing) { repoCheck = Object.assign(parsed, { state:'existing', message:'这个仓库已经是空间「' + existing.name + '」，将直接使用该空间', projectId:existing.id }); renderRepoModal(); return; }
   var auth = ldAuthFor(parsed.host);
   if ((!auth || auth.expired) && ldFindLocalCred(parsed.host)) { ldAdoptLocalCred(parsed.host); auth = ldAuthFor(parsed.host); }
   if (!auth || auth.expired) { repoCheck = Object.assign(parsed, { state:'login', message:(auth ? parsed.host + ' 的凭据已失效' : '还没有登录 ' + parsed.host + ' 的 Git 账号') + '，登录后才能检查和下载代码' }); renderRepoModal(); return; }
@@ -141,19 +124,11 @@ function renderRepoModal() {
   $('#ldRepoBranchCustom').setAttribute('aria-invalid', branchError ? 'true' : 'false');
   $('#ldRepoBranchHint').textContent = branchError;
   $('#ldRepoBranchHint').hidden = !branchError;
-  var dirError = ldRepoDirError();
-  var defaultPath = ldDefaultPath({ name:ldRepoNameValue() || c?.name || '空间名称' });
-  $('#ldRepoDir').innerHTML = '<div class="ld-choice" role="radiogroup" aria-labelledby="ldRepoDirLabel">'
-    + '<label class="ld-choice-item"><input type="radio" name="ldRepoDirMode" value="auto"' + (repoDirMode === 'auto' ? ' checked' : '') + (busy ? ' disabled' : '') + '><span>默认目录<code class="ld-choice-path" title="' + ldEsc(defaultPath) + '">' + ldEsc(defaultPath) + '</code></span></label>'
-    + '<label class="ld-choice-item"><input type="radio" name="ldRepoDirMode" value="existing"' + (repoDirMode === 'existing' ? ' checked' : '') + (busy ? ' disabled' : '') + '><span>自定义目录</span></label>'
-    + '</div>'
-    + (repoDirMode === 'existing' ? '<div class="ld-path-row"><input type="text" class="ld-input" readonly placeholder="未选择" value="' + ldEsc(repoDirPath) + '" aria-label="自定义目录"><button type="button" class="ld-btn" data-ld-repo-pick-dir' + (busy ? ' disabled' : '') + '>选择…</button></div>' : '')
-    + (dirError && (repoDirMode === 'auto' || repoDirPath) ? '<p class="ld-error">' + ldEsc(dirError) + '</p>' : '');
-  $('#ldRepoProgress').innerHTML = repoProgress ? '<div class="ld-progress" role="progressbar" aria-label="创建并初始化" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + repoProgress + '"><span style="width:' + repoProgress + '%"></span></div>' : '';
+  $('#ldRepoProgress').innerHTML = repoProgress ? '<div class="ld-progress" role="progressbar" aria-label="创建空间" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + repoProgress + '"><span style="width:' + repoProgress + '%"></span></div>' : '';
   var btn = $('#ldRepoSubmit');
   var existing = c && c.state === 'existing';
-  btn.disabled = busy || !(existing || (passed && ldRepoNameValue() && ldRepoGoalValue() && !ldRepoBranchError() && ldRepoTargetPath() && !dirError));
-  btn.textContent = busy ? (repoProgress < 30 ? '创建中…' : '初始化中…') : existing ? '使用这个空间' : '创建并初始化';
+  btn.disabled = busy || !(existing || (passed && ldRepoNameValue() && ldRepoGoalValue() && !ldRepoBranchError()));
+  btn.textContent = busy ? '创建中…' : existing ? '使用这个空间' : '创建空间';
 }
 function closeRepoModal() {
   clearTimeout(repoCheckTimer);
@@ -179,17 +154,13 @@ function submitRepoNew() {
   if (!goal) { toast('请填写空间目标', 'warning'); $('#ldRepoGoal').focus(); return; }
   var branchError = ldRepoBranchError();
   if (branchError) { toast(ldEsc(branchError), 'warning'); ($('#ldRepoBranch').value === '__custom' ? $('#ldRepoBranchCustom') : $('#ldRepoBranch')).focus(); return; }
-  if (repoDirMode === 'existing' && !repoDirPath) { toast('请先选择目录', 'warning'); return; }
-  var dirError = ldRepoDirError();
-  if (dirError) { toast(ldEsc(dirError), 'error'); return; }
   var me = tkCurrentUserId(), person = tkGetPerson(me);
-  var host = c.host, path = ldRepoTargetPath(), mode = repoDirMode;
   var id = 'proj-' + Date.now();
   var project = {
     id:id, name:name, desc:goal, goal:goal,
     instruction:'', dot:'blue', containsRd:true, space:'manage', template:'devtest',
     status:'planned', priority:'中', owner:person?.name || '未指定', platform:c.platform,
-    repo:c.url, baseBranch:ldRepoBranchValue(), code:c.name.replace(/[^a-zA-Z0-9-]/g, '-').toUpperCase(),
+    code:c.name.replace(/[^a-zA-Z0-9-]/g, '-').toUpperCase(),
     start:'', end:'', milestones:[], members:me ? [me] : [], memberRoles:{}, adminIds:[], teamIds:[], projectExperts:[],
     createdFrom:'build-repo', updatedAt:Date.now(),
   };
@@ -201,19 +172,9 @@ function submitRepoNew() {
     if (run !== repoRun) return;
     if (!manager.mgrAddProject(project)) { repoProgress = 0; renderRepoModal(); toast('空间创建失败，请重试', 'error'); return; }
     document.dispatchEvent(new CustomEvent('lingee:mgr-projects-changed', { detail:{ created:id } }));
-    var timer = setInterval(function () {
-      if (run !== repoRun) { clearInterval(timer); return; }
-      repoProgress = Math.min(100, repoProgress + 18);
-      if (repoProgress < 100) { renderRepoModal(); return; }
-      clearInterval(timer);
-      ldBindDir(id, path, mode);
-      ldMarkInitialized(id);
-      ldRecordChecks(host);
-      var after = ldProjectStatus(id);
-      if (after.ready) toast('已创建「' + ldEsc(name) + '」，代码在 ' + ldEsc(path), 'success');
-      else toast('已创建「' + ldEsc(name) + '」，但' + ldEsc(after.reason), 'warning');
-      finishRepo(id);
-    }, 300);
+    var saved = buildRepoSave(project, '', {repo:c.url, baseBranch:ldRepoBranchValue()});
+    toast(saved ? '空间已创建，首次执行任务时准备本机环境' : '空间已创建，但仓库配置保存失败，请在 Build「设置 › 仓库」重试', saved ? 'success' : 'warning');
+    finishRepo(id);
   }, function () { repoProgress = 0; renderRepoModal(); toast('空间创建失败，请重试', 'error'); });
 }
 
@@ -227,11 +188,9 @@ export function initRepoNewDialog() {
     if (t.closest('[data-ld-repo-new]')) { ldOpenRepoNew(null); return; }
     if (t.closest('[data-ld-repo-login]') && repoCheck?.host) { ldOpenAuth(repoCheck.host, function () { repoCheck = null; runRepoCheck(); }); return; }
     if (t.closest('[data-ld-repo-recheck]')) { repoCheck = null; runRepoCheck(); return; }
-    if (t.closest('[data-ld-repo-pick-dir]')) { repoDirPath = LD_WORKSPACE_ROOT + '/code/' + (repoCheck?.name || 'project'); renderRepoModal(); }
   });
   document.addEventListener('change', function (e) {
     var t = e.target;
-    if (t instanceof HTMLInputElement && t.name === 'ldRepoDirMode') { repoDirMode = t.value; renderRepoModal(); return; }
     if (t instanceof HTMLElement && t.id === 'ldRepoBranch') {
       var custom = t.value === '__custom';
       $('#ldRepoBranchCustom').hidden = !custom;

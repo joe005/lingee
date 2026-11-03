@@ -1,3 +1,4 @@
+import { renderWorkspaceCapabilities, workspaceAssetControls, workspaceExtraCards, workspaceAssetVisible } from '../collab/expert-market.js';
 import { detailIdentityHtml, detailReviewHtml, detailCommandsHtml } from './detail-presentation.js';
 import { assetUpgradeHtml, assetModesHtml, assetTagsHtml, isMoreAssets, syncAssetBrowser, cloudCardsHtml, teamWorkModes } from '../collab/expert-market.js';
 import { layerOf, layerVisible, layerActions, layerToolbar, handleLayerAction, assetSourceBadge } from './layers.js';
@@ -27,6 +28,7 @@ function facesHtml(ids,n,compact=false){
     +(showCount?'<span class="asset-faces-count">+'+(ids.length-limit+1)+'</span>':'')+'</span>';
 }
 function renderExpertGrid(){
+  if (expertGrid && renderWorkspaceCapabilities(expertGrid)) return;
   if(!expertGrid) return;
   var si=$('#expertSearchInput');
   if(si && si.value!==expertKw) si.value=expertKw;
@@ -37,7 +39,7 @@ function renderExpertGrid(){
     expertGrid.classList.toggle('asset-cloud-grid',isMoreAssets('team'));
     if(isMoreAssets('team')){expertGrid.innerHTML=cloudCardsHtml('team',expertKw);return;}
     var rows=TEAMS.filter(function(t){
-      if(!layerVisible('team',t)||(teamLayer!=='all'&&layerOf('team',t)!==teamLayer))return false;
+      if(!workspaceAssetVisible('team',t)||!layerVisible('team',t)||(teamLayer!=='all'&&layerOf('team',t)!==teamLayer))return false;
       if(!kw) return true;
       return (t.name+t.desc+teamDomains(t).join()+t.members.map(function(m){return EX[m].name}).join()).indexOf(kw)>=0;
     });
@@ -49,9 +51,9 @@ function renderExpertGrid(){
         +'</div>'
         +'<div class="x-sub asset-card-summary">'+assetSourceBadge('team',t)+'<span>'+t.members.length+' 个智能体</span><span class="asset-card-upgrade-anchor">'+assetUpgradeHtml('team',t.id)+'</span></div></div></div>'
         +'<div class="card-desc">'+xesc(t.desc)+'</div>'
-        +assetTagsHtml(teamDomains(t))+assetModesHtml(teamWorkModes(t))+layerActions('team',t)+'</div>';
+        +assetTagsHtml(teamDomains(t))+assetModesHtml(teamWorkModes(t))+layerActions('team',t)+workspaceAssetControls('team',t)+'</div>';
     }
-    html=[{title:'个人开发',rows:rows.filter(t=>layerOf('team',t)==='personal')},{title:'我添加的',rows:rows.filter(t=>layerOf('team',t)!=='personal')}].filter(section=>section.rows.length).map(section=>'<section class="asset-list-section"><h2 class="expert-section-title">'+section.title+'</h2><div class="apps-grid">'+section.rows.map(teamCard).join('')+'</div></section>').join('');
+    html=workspaceExtraCards('team',TEAMS,expertKw,teamLayer)+[{title:'个人开发',rows:rows.filter(t=>layerOf('team',t)==='personal')},{title:'我添加的',rows:rows.filter(t=>layerOf('team',t)!=='personal')}].filter(section=>section.rows.length).map(section=>'<section class="asset-list-section"><h2 class="expert-section-title">'+section.title+'</h2><div class="apps-grid">'+section.rows.map(teamCard).join('')+'</div></section>').join('');
   }else{
     var rows2=EXPERTS.filter(function(e){
       if(!layerVisible('expert',e))return false;
@@ -70,7 +72,7 @@ function renderExpertGrid(){
         +'</div>';
     }).join('');
   }
-  expertGrid.innerHTML = html || '<div class="x-empty">没有匹配的结果</div>';
+  expertGrid.innerHTML = html || '<div class="x-empty">当前列表没有智能体团队，可从「更多智能体团队」添加到当前工作区。</div>';
   var tc=$('#teamTabCount'), ec=$('#expertTabCount');
   if(tc) tc.textContent=TEAMS.length;
   if(ec) ec.textContent=EXPERTS.filter(function(e){return e.listed!==false&&!UNLISTED_EXPERT_IDS.has(e.id)}).length;

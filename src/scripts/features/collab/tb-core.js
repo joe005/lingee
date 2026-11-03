@@ -56,11 +56,12 @@ export function tbMatchExperts(t) {
 export function tbPriority(t) { return t.priority || (t.type === 'Bug' ? '高' : '中'); }
 /* 智能体团队实际能覆盖到的阶段：团内成员有匹配该阶段能力项的智能体（每阶段最多 2 位）。 */
 export function tbTeamStages(team, issue) {
+  if (team?.solo) return [{id:'execution',name:'任务执行',desc:team.desc || '',expertIds:team.members.slice()}];
   const scenario = teamStageScenario(issue);
   /* 缺陷修复固定为开发实现、测试验证；其他类型取团队的交付范围（内置团队固定，自建团队用默认 4 阶段） */
   const stages = scenario.id === 'bug' ? scenario.stages : teamFeatureStages(team);
   if (!team) return stages.slice();
-  const withExperts = stages.map(stage => ({ ...stage, expertIds: stageExperts(stage.id, team.members || [], team.stageMembers?.[stage.id]) }));
+  const withExperts = stages.map(stage => ({ ...stage, expertIds: team.solo ? team.members.slice() : stageExperts(stage.id, team.members || [], team.stageMembers?.[stage.id], team.expertDefinitions || EX) }));
   const covered = withExperts.filter(s => s.expertIds.length);
   return covered.length ? covered : withExperts;
 }

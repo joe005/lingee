@@ -1,0 +1,202 @@
+/* 工作区（空间之下的工作范围）：切换下拉树和「设置 › 工作区」管理面板的样式，供协作开发使用（管理板块不再有工作区界面）。
+   只用设计令牌；选择器以 .mgr-ws-* 限定，不影响其他界面。 */
+
+/* ---------- 工作区切换下拉（协作开发顶部使用；.mgr-ws-switch* / .mgr-ws-pop*） ---------- */
+.mgr-ws-switch { position: relative; min-width: 0; }
+.mgr-ws-switch[hidden] { display: none; }
+.mgr-ws-switch-btn {
+  display: inline-flex; align-items: center; gap: 4px; max-width: 360px; height: var(--control-h-sm); padding: 0 8px;
+  border: none; border-radius: 8px; background: none; color: var(--text-secondary);
+  font: inherit; font-size: var(--font-size-14); line-height: var(--line-height-14); cursor: pointer; transition: background .15s, color .15s;
+}
+.mgr-ws-switch-btn:hover { background: var(--hover); color: var(--text); }
+.mgr-ws-switch-btn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.mgr-ws-switch-btn.has-scope { color: var(--brand); background: var(--brand-fill); }
+.mgr-ws-crumb { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+.mgr-ws-caret { flex: none; }
+.mgr-ws-switch-btn[aria-expanded="true"] .mgr-ws-caret { transform: rotate(180deg); }
+
+.mgr-ws-pop {
+  position: absolute; z-index: 30; top: calc(100% + 4px); left: 0; width: 320px; max-width: calc(100vw - 32px);
+  padding: 8px; border-radius: 12px; background: var(--bg); box-shadow: var(--menu-shadow);
+}
+.mgr-ws-pop-search {
+  display: flex; align-items: center; gap: 6px; height: var(--control-h-sm); padding: 0 10px;
+  border: 1px solid var(--border); border-radius: 8px; color: var(--text-soft);
+}
+.mgr-ws-pop-search:focus-within { border-color: var(--border-focus); }
+.mgr-ws-pop-search input { flex: 1; min-width: 0; border: none; outline: none; background: none; color: var(--text); font: inherit; font-size: var(--font-size-14); }
+.mgr-ws-pop-search input::placeholder { color: var(--text-soft); }
+.mgr-ws-pop-count { padding: 8px 8px 4px; color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); }
+.mgr-ws-pop-list { max-height: 320px; overflow-y: auto; }
+.mgr-ws-pop-row {
+  display: flex; align-items: center; gap: 4px; width: 100%; min-height: 36px; padding: 0 8px 0 calc(8px + var(--ws-depth, 0) * 16px);
+  border: none; border-radius: 8px; background: none; color: var(--text); font: inherit; font-size: var(--font-size-14); text-align: left; cursor: pointer;
+}
+.mgr-ws-pop-row:hover { background: var(--hover); }
+.mgr-ws-pop-row.is-on { background: var(--neutral-100); }
+.mgr-ws-pop-row:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+.mgr-ws-pop-row--space { padding-left: 8px; font-weight: 500; }
+.mgr-ws-pop-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mgr-ws-pop-row b { display: inline-flex; flex: none; color: var(--brand); }
+.mgr-ws-pop-toggle,
+.mgr-ws-pop-toggle-gap { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 16px; height: 16px; }
+.mgr-ws-pop-toggle { border-radius: 4px; color: var(--text-secondary); transition: transform .15s; }
+.mgr-ws-pop-toggle:hover { background: var(--active); }
+.mgr-ws-pop-toggle.is-open { transform: rotate(90deg); }
+.mgr-ws-pop-empty { margin: 0; padding: 12px 8px; color: var(--text-secondary); font-size: var(--font-size-14); text-align: center; }
+.mgr-ws-pop-foot { margin-top: 4px; padding-top: 4px; border-top: 1px solid var(--divider); }
+.mgr-ws-pop-create {
+  display: flex; align-items: center; gap: 6px; width: 100%; height: 36px; padding: 0 8px; border: none; border-radius: 8px;
+  background: none; color: var(--brand); font: inherit; font-size: var(--font-size-14); cursor: pointer;
+}
+.mgr-ws-pop-create:hover { background: var(--brand-fill); }
+.mgr-ws-pop-create:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+
+/* ---------- 工作区管理页 ---------- */
+/* 协作开发「设置 › 工作区」：工具栏与按钮（这个区域不在 #view-manager 里，用自己的按钮类） */
+.mgr-ws-toolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; min-width: 0; }
+.mgr-ws-toolbar h2 { margin: 0; color: var(--text-title); font-size: var(--font-size-16); font-weight: 600; line-height: var(--line-height-16); }
+.mgr-ws-toolbar-sub { min-width: 0; overflow: hidden; color: var(--text-secondary); font-size: var(--font-size-14); text-overflow: ellipsis; white-space: nowrap; }
+.mgr-ws-toolbar-actions { margin-left: auto; }
+.mgr-ws-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 5px; height: var(--control-h-sm); padding: 0 14px; border: 1px solid transparent; border-radius: 8px;
+  font: inherit; font-size: var(--font-size-14); line-height: var(--line-height-14); white-space: nowrap; cursor: pointer; transition: background .15s, border-color .15s, color .15s;
+}
+.mgr-ws-btn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.mgr-ws-btn--primary { background: var(--brand); color: #fff; }
+.mgr-ws-btn--primary:hover { background: var(--brand-hover); }
+.mgr-ws-btn--ghost { border-color: var(--border-hover); background: var(--bg); color: var(--text-secondary); }
+.mgr-ws-btn--ghost:hover { background: var(--hover); color: var(--text); }
+.mgr-ws-btn--danger { border-color: var(--danger); background: var(--bg); color: var(--danger); }
+.mgr-ws-btn--danger:hover { background: var(--danger-bg); }
+.mgr-ws-layout { display: grid; grid-template-columns: minmax(260px, 340px) minmax(0, 1fr); gap: 16px; align-items: start; }
+.mgr-ws-card {
+  margin-bottom: 16px; padding: 16px 20px; border-radius: var(--r-card); background: var(--bg); box-shadow: var(--card-shadow);
+}
+.mgr-ws-tree-card { margin-bottom: 0; }
+.mgr-ws-card-head { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.mgr-ws-card-head h2 { margin: 0; color: var(--text-title); font-size: var(--font-size-16); font-weight: 600; line-height: var(--line-height-16); }
+.mgr-ws-card-head .mgr-ws-btn { margin-left: auto; }
+.mgr-ws-count { color: var(--text-secondary); font-size: var(--font-size-12); font-weight: 400; }
+.mgr-ws-empty,
+.mgr-ws-detail-empty { padding: 24px 8px; color: var(--text-secondary); font-size: var(--font-size-14); line-height: var(--line-height-14); text-align: center; }
+.mgr-ws-hint { margin: 8px 0 0; color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); }
+.mgr-ws-tree { margin: 0; padding: 0; list-style: none; }
+.mgr-ws-node { position: relative; display: flex; align-items: center; margin: 2px 0; border-radius: 8px; padding-left: calc(var(--ws-depth, 0) * 16px); }
+.mgr-ws-node:hover { background: var(--hover); }
+.mgr-ws-node.is-on { background: var(--brand-fill); }
+.mgr-ws-node.is-archived .mgr-ws-node-name { color: var(--text-secondary); }
+.mgr-ws-node-main {
+  display: flex; flex: 1; flex-wrap: wrap; align-items: center; gap: 2px 8px; min-width: 0; min-height: 44px; padding: 4px 4px 4px 8px; border: none; border-radius: 8px;
+  background: none; color: var(--text); font: inherit; font-size: var(--font-size-14); text-align: left; cursor: pointer;
+}
+.mgr-ws-node-main:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+.mgr-ws-node-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+.mgr-ws-node.is-on .mgr-ws-node-name { color: var(--brand); }
+.mgr-ws-node-meta { flex-basis: 100%; color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); }
+.mgr-ws-node-more { position: relative; flex: none; }
+.mgr-ws-icon-btn {
+  display: inline-flex; align-items: center; justify-content: center; width: var(--control-h-sm); height: var(--control-h-sm); border: none; border-radius: 6px;
+  background: none; color: var(--text-secondary); cursor: pointer;
+}
+.mgr-ws-icon-btn:hover { background: var(--active); color: var(--text); }
+.mgr-ws-icon-btn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.mgr-ws-menu {
+  position: absolute; z-index: 20; top: calc(100% + 2px); right: 0; min-width: 132px; padding: 4px; border-radius: 12px; background: var(--bg); box-shadow: var(--menu-shadow);
+}
+.mgr-ws-menu button {
+  display: block; width: 100%; height: 32px; padding: 0 12px; border: none; border-radius: 8px; background: none; color: var(--text);
+  font: inherit; font-size: var(--font-size-14); text-align: left; white-space: nowrap; cursor: pointer;
+}
+.mgr-ws-menu button:hover { background: var(--hover); }
+.mgr-ws-menu button:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+.mgr-ws-menu button.is-danger { color: var(--danger); }
+.mgr-ws-menu button.is-danger:hover { background: var(--danger-bg); }
+
+.mgr-ws-tag {
+  display: inline-flex; align-items: center; height: 20px; padding: 0 6px; border-radius: 4px; background: var(--tag-bg);
+  color: var(--text-secondary); font-size: var(--font-size-12); font-weight: 500; line-height: var(--line-height-12); white-space: nowrap;
+}
+.mgr-ws-tag.is-brand { background: var(--brand-fill); color: var(--brand); }
+.mgr-ws-path { margin: -4px 0 12px; color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); }
+.mgr-ws-field { min-width: 0; margin-bottom: 12px; }
+.mgr-ws-field > label { display: block; margin-bottom: 6px; color: var(--text); font-size: var(--font-size-14); font-weight: 600; }
+.mgr-ws-field > label b { margin-left: 2px; color: var(--danger); }
+.mgr-ws-field input[type="text"],
+.mgr-ws-field textarea,
+.mgr-ws-owner select {
+  width: 100%; box-sizing: border-box; padding: 0 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg);
+  color: var(--text); font: inherit; font-size: var(--font-size-14);
+}
+.mgr-ws-field input[type="text"] { height: var(--control-h-sm); }
+.mgr-ws-field textarea { padding: 8px 10px; line-height: var(--line-height-14); resize: vertical; }
+.mgr-ws-field input:disabled,
+.mgr-ws-field textarea:disabled { background: var(--fill-1); color: var(--text-secondary); cursor: not-allowed; }
+.mgr-ws-field input:focus-visible,
+.mgr-ws-field textarea:focus-visible,
+.mgr-ws-owner select:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 0; }
+.mgr-ws-field-row { display: grid; grid-template-columns: 1fr 2fr; gap: 16px; }
+.mgr-ws-static { min-height: var(--control-h-sm); display: flex; align-items: center; color: var(--text); font-size: var(--font-size-14); line-height: var(--line-height-14); }
+.mgr-ws-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+.mgr-ws-owner { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--divider); font-size: var(--font-size-14); }
+.mgr-ws-owner-label { color: var(--text-secondary); }
+.mgr-ws-owner select { width: auto; min-width: 120px; height: var(--control-h-sm); margin-left: auto; }
+.mgr-ws-avatar {
+  display: inline-flex; flex: none; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%;
+  background: var(--brand-fill); color: var(--brand); font-size: var(--font-size-12); font-weight: 500;
+}
+.mgr-ws-members { margin: 0; padding: 0; list-style: none; }
+.mgr-ws-members li { display: flex; align-items: center; gap: 8px; min-height: 40px; border-bottom: 1px solid var(--divider); font-size: var(--font-size-14); }
+.mgr-ws-members li:last-child { border-bottom: none; }
+.mgr-ws-member-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mgr-ws-text-btn { border: none; background: none; color: var(--text-secondary); font: inherit; font-size: var(--font-size-14); cursor: pointer; border-radius: 6px; padding: 4px 8px; }
+.mgr-ws-text-btn:hover { background: var(--danger-bg); color: var(--danger); }
+.mgr-ws-text-btn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.mgr-ws-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.mgr-ws-stats div { display: flex; flex-direction: column; gap: 2px; }
+.mgr-ws-stats b { color: var(--text-title); font-size: var(--font-size-20); font-weight: 700; line-height: 30px; }
+.mgr-ws-stats span { color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); }
+.mgr-ws-card--danger { border: 1px solid var(--danger-bg); }
+.mgr-ws-danger-row { display: flex; align-items: center; gap: 16px; padding: 12px 0; border-top: 1px solid var(--divider); }
+.mgr-ws-danger-row:first-of-type { border-top: none; padding-top: 0; }
+.mgr-ws-danger-row > div { flex: 1; min-width: 0; }
+.mgr-ws-danger-row b { color: var(--text); font-size: var(--font-size-14); font-weight: 600; }
+.mgr-ws-danger-row p { margin: 2px 0 0; color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); }
+
+/* 协作开发 · 设置 › 工作区：未选空间时的提示 */
+.cv-wsadmin-empty { padding: 48px 8px; color: var(--text-secondary); font-size: var(--font-size-14); text-align: center; }
+
+/* ---------- 工作区弹窗（挂在 #mgrModals，作用域 .mgr-scope） ---------- */
+.mgr-scope .mgr-ws-dialog { width: min(480px, calc(100vw - 32px)); max-height: calc(100vh - 48px); display: flex; flex-direction: column; background: var(--bg); border-radius: var(--r-modal); box-shadow: var(--menu-shadow); }
+.mgr-scope .mgr-ws-dialog-body { overflow-y: auto; padding: 8px 20px 4px; }
+.mgr-scope .mgr-ws-hint { margin: 6px 0 0; color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); }
+.mgr-scope .mgr-ws-hint--top { margin: 0 0 12px; }
+.mgr-scope .mgr-ws-hint .is-error { color: var(--danger); }
+.mgr-scope .mgr-ws-confirm-text { margin: 0 0 12px; color: var(--text); font-size: var(--font-size-14); line-height: var(--line-height-14); }
+.mgr-scope .mgr-ws-pick-list { display: flex; flex-direction: column; max-height: 280px; overflow-y: auto; }
+.mgr-scope .mgr-ws-pick { display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 8px; border-radius: 8px; color: var(--text); font-size: var(--font-size-14); cursor: pointer; }
+.mgr-scope .mgr-ws-pick:hover { background: var(--hover); }
+.mgr-scope .mgr-ws-pick input { width: 16px; height: 16px; margin: 0; accent-color: var(--brand); }
+.mgr-scope .mgr-ws-avatar {
+  display: inline-flex; flex: none; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%;
+  background: var(--brand-fill); color: var(--brand); font-size: var(--font-size-12); font-weight: 500;
+}
+/* 主按钮与焦点沿用新建空间弹窗的规格（那组规则限定在 .mgr-projedit-modal 下，这里补一份） */
+.mgr-scope .mgr-ws-dialog .sync-modal__btn--primary { border: 1px solid var(--brand); background: var(--brand); color: #fff; }
+.mgr-scope .mgr-ws-dialog .sync-modal__btn--primary:hover { background: var(--brand-hover); }
+.mgr-scope .mgr-ws-dialog .sync-modal__btn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.mgr-scope .mgr-ws-dialog .mgr-delete-confirm { border: 1px solid var(--danger); background: var(--danger); color: #fff; }
+.mgr-scope .mgr-ws-dialog .mgr-delete-confirm:hover:not(:disabled) { opacity: .9; }
+.mgr-scope .mgr-ws-dialog .mgr-delete-confirm:disabled { opacity: .5; cursor: not-allowed; }
+
+@media (max-width: 900px) {
+  .mgr-ws-layout { grid-template-columns: minmax(0, 1fr); }
+  .mgr-ws-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
+  .mgr-ws-field-row { grid-template-columns: minmax(0, 1fr); gap: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mgr-ws-pop-toggle { transition: none; }
+}

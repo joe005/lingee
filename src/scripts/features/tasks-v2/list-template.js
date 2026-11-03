@@ -6,7 +6,7 @@ import stageLinkCurrent from '../../../assets/figma/task-list/stage-link-current
 import stageLink from '../../../assets/figma/task-list/stage-link.svg';
 import stageLinkComplete from '../../../assets/figma/task-list/stage-link-complete.svg';
 import moreIcon from '../../../assets/figma/task-list/more.svg';
-import { tkGetPerson, tkGetPriorityObj, tkGetProjectName, tkGetStatusObj } from './data.js';
+import { tkGetPerson, tkGetPriorityObj, tkGetStatusObj, tkGetTaskSpaceLabel } from './data.js';
 import { taskCardStatus, taskCardAction, taskListKind } from './list-kind.js';
 
 export function taskTypeLabel(type) {
@@ -48,7 +48,7 @@ function renderTaskListRow(t, opts, context) {
       + '<td class="tk-col-type">' + (t.issueType ? '<span class="tk-row-type" data-type="' + context.escapeHtml(t.issueType) + '">' + context.escapeHtml(taskTypeLabel(t.issueType)) + '</span>' : '—') + '</td>'
       + '<td class="tk-col-priority"><span class="tk-row-priority">' + context.escapeHtml(pri.name) + '</span></td>'
       + '<td class="tk-col-assignee"><div class="tk-row-assignee">' + context.avatarSm(t.assignee) + '<span>' + context.escapeHtml(person.name) + '</span></div></td>'
-      + '<td class="tk-col-project">' + context.escapeHtml(tkGetProjectName(t.project)) + '</td>'
+      + '<td class="tk-col-project">' + context.escapeHtml(tkGetTaskSpaceLabel(t)) + '</td>'
       + '<td class="tk-col-created">' + context.fmtDate(t.createDate) + '</td>'
       + '<td class="tk-col-desc">' + (t.desc ? '<span class="tk-row-desc" title="' + context.escapeHtml(String(t.desc).replace(/\s+/g, ' ')) + '">' + context.escapeHtml(t.desc) + '</span>' : '—') + '</td>'
       + '<td class="tk-col-actions"><button class="tk-card-more" data-card-more="' + t.id + '" data-tooltip="更多操作" aria-label="更多操作"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button></td></tr>';
@@ -87,7 +87,7 @@ function renderTaskListRow(t, opts, context) {
   return '<tr class="tk-row tk-list-card-row' + sel + (context.drawerTaskId === t.id ? ' detail-active' : '') + (depth ? ' tk-row--child' : '') + (hasChildren ? ' tk-row--parent' : '') + '" data-task-id="' + t.id + '" data-depth="' + depth + '" tabindex="0">'
     + '<td class="tk-list-card-cell" colspan="11"><div class="tk-list-card tk-list-card--' + info.kind + '">'
     + '<div class="tk-list-card-main"><div class="tk-list-card-meta"><span class="tk-list-status" data-kind="' + cardStatus.kind + '">' + e(cardStatus.badge) + '</span><span class="tk-list-card-code">' + e(t.code) + '</span>'
-    + (t.project ? '<span class="tk-list-card-project">' + e(tkGetProjectName(t.project)) + '</span>' : '') + '</div>'
+    + (t.project ? '<span class="tk-list-card-project">' + e(tkGetTaskSpaceLabel(t)) + '</span>' : '') + '</div>'
     + '<div class="tk-list-card-title"><button type="button" class="tk-list-card-title-btn" title="' + e(t.title) + '">' + e(t.title) + '</button>' + toggle + childBadge + '</div>'
     + '<p class="tk-list-card-desc" title="' + e(hintTitle) + '">' + e(descText || info.hint) + '</p>'
     + (typeTag || priorityTag ? '<div class="tk-list-card-foot">' + typeTag + priorityTag + '</div>' : '')

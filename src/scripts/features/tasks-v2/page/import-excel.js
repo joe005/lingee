@@ -1,6 +1,6 @@
+import { capabilityTeamDefault } from '../../collab/capability-config.js';
 import { toast } from '../../../core/toast.js';
-import { TEAMS, activePick } from '../../expert/store.js';
-import { tkAddTask, tkCurrentUserId, tkPeopleInProject, tkProjectsForCurrentUser, tkUpdateTask } from '../data.js';
+import { tkAddTask, tkCurrentUserId, tkGetTasks, tkPeopleInProject, tkProjectById, tkProjectsForCurrentUser, tkUpdateTask } from '../data.js';
 import { closeTaskModal } from './form-modal.js';
 import { render } from './layout.js';
 import { pageState } from './page-state.js';
@@ -235,11 +235,14 @@ export function saveTask() {
   var createdForOpenParent = !state.editingTaskId && state.editingParentId && state.drawerTaskId === state.editingParentId;
   var labels = pageState.modalLabelSelection.slice();
   if (!tkPeopleInProject(els.tkFormProject.value).some(function (person) { return person.id === els.tkFormAssignee.value; })) { toast('请选择该项目成员作为处理人', 'warning'); return; }
-  if (!TEAMS.some(function (team) { return team.id === (activePick.kind==='team' ? activePick.id : ''); })) { toast('请选择智能体团队', 'warning'); return; }
+  var parent = state.editingParentId ? tkGetTasks().find(t => t.id === state.editingParentId) : null;
+  var workspaceId = parent?.workspaceId || '';
+  var execution = capabilityTeamDefault(tkProjectById(els.tkFormProject.value),workspaceId);
+  if (!execution) { toast('请联系管理员配置当前工作区的默认执行方','warning'); return; }
   var data = {
     title: title, desc: els.tkFormDesc.value.trim(),
     status: els.tkFormStatus.value, priority: els.tkFormPriority.value,
-    assignee: els.tkFormAssignee.value, teamId: activePick.kind==='team' ? activePick.id : '', project: els.tkFormProject.value,
+    assignee: els.tkFormAssignee.value, workspaceId:workspaceId, teamId:execution.kind === 'team' ? execution.data.id : '',expertId:execution.kind === 'expert' ? execution.data.id : '', project: els.tkFormProject.value,
     dueDate: els.tkFormDue.value, labels: labels,
   };
   if (state.editingTaskId) { tkUpdateTask(state.editingTaskId, data); }

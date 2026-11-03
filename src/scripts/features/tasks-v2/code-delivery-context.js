@@ -1,9 +1,11 @@
+import { buildTaskRepoConfig } from '../collab/repository-config.js';
 import { tkProjectById } from './data.js';
 
 /* 现有任务的代码交付上下文：读取已存在的项目与阶段人员，不另设负责人配置。 */
 export function taskCodeDeliveryContext(task) {
   if (!task) return null;
-  const project = tkProjectById(task.project);
+  const source = tkProjectById(task.project);
+  const project = Object.assign({}, source, buildTaskRepoConfig(task, source));
   if (!project?.repo) return null;
   const plan = task.executionPlan || [];
   const dev = plan.find(stage => /编码|开发|实现/.test(stage.title || stage.workType || '') && !/需求|规划|设计/.test(stage.title || stage.workType || ''));

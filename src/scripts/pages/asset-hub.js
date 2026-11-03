@@ -87,6 +87,8 @@ export function init(){
     }
     document.dispatchEvent(new Event('lingee:cloud-assets-changed'));
   },true);
+  /* 对话「＋ → 连接器 → 管理连接器」直达连接器页签 */
+  document.addEventListener('lingee:open-connectors',()=>openHub('center','connectors'));
   const items=$$('.sb-scroll [data-hub-menu]');
   items.forEach(item=>{
     const open=()=>openHub(item.dataset.hubMenu,MENUS[item.dataset.hubMenu].tab);

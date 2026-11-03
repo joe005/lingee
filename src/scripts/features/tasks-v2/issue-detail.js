@@ -20,7 +20,7 @@ import { tkTaskBranch } from './git-branch.js';
 function renderTaskBranchRow(t) {
   var info = tkTaskBranch(t);
   if (!info) return '';
-  return '<div class="tk-prop-row"><span>代码分支</span><span class="tk-prop-val" title="' + escapeHtml(info.repo + ' · ' + info.state.hint) + '">'
+  return '<div class="tk-prop-row"><span>代码仓库</span><span class="tk-prop-val" title="' + escapeHtml(info.repo) + '">' + escapeHtml(info.repo) + '</span></div><div class="tk-prop-row"><span>代码分支</span><span class="tk-prop-val" title="' + escapeHtml(info.repo + ' · ' + info.state.hint) + '">'
     + escapeHtml(info.branch) + ' → ' + escapeHtml(info.base) + ' · ' + escapeHtml(info.state.label) + '</span></div>';
 }
 

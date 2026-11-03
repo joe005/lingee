@@ -1,0 +1,9 @@
+#view-collab #cvTabNav [hidden] { display: none; }
+#view-collab.cv-capabilities-readonly:not(.asset-hub-mode) :is(#cv-experts,#cv-teams) > .scroll > :is(.cv-head,.asset-secondary-row) { display: none; }
+#niuCreateOverlay .niu-auto-config { display: none; }
+#view-chat.task-builder-session [data-open-chat-expert],
+#view-chat.task-builder-session #chatExpertDropdown { display: none; }
+#view-chat.task-builder-session .task-builder-skill { display: none; }
+
+
+#view-collab .x-card[data-workspace-asset] { cursor: default; }

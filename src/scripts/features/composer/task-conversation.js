@@ -1,9 +1,9 @@
+import { capabilityTeamDefault } from '../collab/capability-config.js';
 import { $ } from '../../core/dom.js';
 import { showView, viewChat } from '../../core/view.js';
 import { syncTogglePreviewBtn } from '../chat.js';
 import { renderExpertChips } from '../expert/chips.js';
-import { TEAMS } from '../expert/store.js';
-import { tkCurrentStageHandlerId, tkGetTasks, tkPeopleInProject, tkProjectsForCurrentUser } from '../tasks-v2/data.js';
+import { tkCurrentStageHandlerId, tkGetTasks, tkPeopleInProject, tkProjectsForCurrentUser, tkProjectById } from '../tasks-v2/data.js';
 import { ldIsDevProject } from '../collab/local-dev.js';
 import { taskExecutionStages } from '../tasks-v2/task-execution.js';
 import { tkAnswerTaskSessionQuestion, tkGetMySessions, tkTaskSessionOpeningMessage } from '../tasks-v2/task-sessions.js';
@@ -171,8 +171,13 @@ function syncTaskCreateProjectPicker(){
   select.innerHTML='<option value="" disabled hidden>选择项目</option>'+projects.map(function(project){return '<option value="'+escapeHtml(project.id)+'">'+escapeHtml(project.name)+'</option>';}).join('');
   select.value=session.taskCreate.projectId||'';
   var teamSelect=$('#chatTaskTeamSelect');
-  teamSelect.innerHTML='<option value="" disabled hidden>选择智能体团队</option>'+TEAMS.map(function(team){return '<option value="'+escapeHtml(team.id)+'">'+escapeHtml(team.name)+'</option>';}).join('');
-  teamSelect.value=session.taskCreate.teamId||'';
+  const row=capabilityTeamDefault(tkProjectById(session.taskCreate.projectId),session.taskCreate.workspaceId || '');
+  session.taskCreate.teamId=row?.kind==='team'?row.data.id:'';
+  session.taskCreate.expertId=row?.kind==='expert'?row.data.id:'';
+  teamSelect.innerHTML='<option value="'+escapeHtml(row?.key || '')+'">'+escapeHtml(row?.data.name || '请联系管理员配置工作区能力')+'</option>';
+  teamSelect.disabled=true;
+  teamSelect.setAttribute('aria-label','工作区自动安排的执行方');
+
 }
 function renderChatTaskSide() {
   syncTaskCreateProjectPicker();

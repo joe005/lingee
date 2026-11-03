@@ -1,3 +1,4 @@
+import { renderWorkspaceCapabilities, workspaceAssetControls, workspaceExtraCards, workspaceAssetVisible } from './expert-market.js';
 import { assetUpgradeHtml, assetModesHtml, assetTagsHtml, isMoreAssets, syncAssetBrowser, cloudCardsHtml } from './expert-market.js';
 import { layerOf, layerVisible, layerActions, layerToolbar, assetSourceBadge } from '../expert/layers.js';
 import { $ } from '../../core/dom.js';
@@ -16,7 +17,7 @@ export function set_cvExpertLayer(v){cvExpertLayer=v;}
 function cvExpertGroups(){
   var kw=cvExpertKw.trim();
   var rows=EXPERTS.filter(function(e){
-    if(!layerVisible('expert',e))return false;
+    if(!workspaceAssetVisible('expert',e)||!layerVisible('expert',e))return false;
     if(!kw) return true;
     return (e.name+e.role+e.desc+(e.tags||[]).join()+(e.skills||[]).map(function(id){return skillInfo(id).name}).join()).indexOf(kw)>=0;
   });
@@ -35,9 +36,10 @@ function cvBuildExpertCard(e){
     +'<div class="x-sub asset-card-summary">'+assetSourceBadge('expert',e)+'<span>'+(e.skills||[]).length+' 个技能</span>'+(layerOf('expert',e)==='personal'?routeTagHtml(routeOf('expert',e.id)):'')+'<span class="asset-card-upgrade-anchor">'+assetUpgradeHtml('expert',e.id)+'</span></div></div></div>'
     +'<div class="card-desc" title="'+xesc(e.desc)+'">'+xesc(e.desc)+'</div>'
     +assetTagsHtml(tags)+assetModesHtml(e.modes)
-    +layerActions('expert',e)+'</div>';
+    +layerActions('expert',e)+workspaceAssetControls('expert',e)+'</div>';
 }
 function cvRenderExperts(){
+  if ($('#cvExpertSections') && renderWorkspaceCapabilities($('#cvExpertSections'))) return;
   var box=$('#cvExpertSections'); if(!box) return;
   /* 浏览器自动填充会往搜索框里塞账号，渲染时以 JS 里的关键词为准回写，别让框里显示的和实际筛选的不一致 */
   var si=$('#cvExpertSearch');
@@ -46,14 +48,15 @@ function cvRenderExperts(){
   layerToolbar('expert',EXPERTS,cvExpertLayer);
   if(isMoreAssets('expert')){box.innerHTML='<div class="apps-grid asset-cloud-grid">'+cloudCardsHtml('expert',cvExpertKw)+'</div>';return;}
   var groups=cvExpertGroups();
+  const extra=workspaceExtraCards('expert',EXPERTS,cvExpertKw,cvExpertLayer);
   /* 搜索把结果筛空时要说清楚。 */
-  if(cvExpertKw.trim() && !groups.some(function(g){return g.list.length})){
+  if(cvExpertKw.trim() && !extra && !groups.some(function(g){return g.list.length})){
     box.innerHTML='<div class="x-empty">没有匹配「'+xesc(cvExpertKw.trim())+'」的智能体</div>';
     return;
   }
   var rows=groups.flatMap(function(g){return g.list;});
   var sections=[{title:'个人开发',rows:rows.filter(e=>layerOf('expert',e)==='personal')},{title:'我添加的',rows:rows.filter(e=>layerOf('expert',e)!=='personal')}];
-  box.innerHTML=sections.filter(section=>section.rows.length).map(section=>'<section class="asset-list-section"><h2 class="expert-section-title">'+section.title+'</h2><div class="apps-grid">'+section.rows.map(cvBuildExpertCard).join('')+'</div></section>').join('')||'<div class="x-empty">没有匹配的智能体</div>';
+  box.innerHTML=extra+sections.filter(section=>section.rows.length).map(section=>'<section class="asset-list-section"><h2 class="expert-section-title">'+section.title+'</h2><div class="apps-grid">'+section.rows.map(cvBuildExpertCard).join('')+'</div></section>').join('')||'<div class="x-empty">当前列表没有智能体，可从「更多智能体」添加到当前工作区。</div>';
 }
 
 /* cvExpertKw 由其它模块写回；import 绑定只读，所以走这个 setter */

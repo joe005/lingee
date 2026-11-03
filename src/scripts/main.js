@@ -12,6 +12,7 @@ import { initAttachApp, initAttachModal } from './features/attach-app.js';
 import { initViewSwitch, initSidebarNav, initHomeCards } from './core/view.js';
 import { initPreview, initHistoryPanel } from './features/chat.js';
 import { initEnvArea } from './features/env.js';
+import { initEnvPicker } from './features/env-picker.js';
 import { initApps, initNewAppModal, initAppsNewDropdown } from './features/apps.js';
 import { initAgentSubmit } from './features/agent-submit.js';
 import { initAgentConfig } from './features/agent-config.js';
@@ -58,6 +59,7 @@ initPreview();                    /*  827  features/chat.js */
 initUserMenu();                   /*  905  features/sidebar.js */
 initFormDropdowns();              /*  955  features/dropdown.js */
 initEnvArea();                    /*  971–1614  features/env.js：配置 / 授权 / 断开 */
+initEnvPicker();                  /* 输入框里的 ERP 环境选择器（读取 env.js 的环境列表） */
 initSidebarIcons();               /* 2061  features/sidebar.js */
 initSidebarNav();                 /* 2180  core/view.js */
 initApps();                       /* 2208  features/apps.js */

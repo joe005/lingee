@@ -1,14 +1,15 @@
 import '../../styles/pages/connectors.css';
 import { $ } from '../core/dom.js';
 import { toast } from '../core/toast.js';
-/* 连接器页：上方是各类系统的连接器卡片（对话「＋ → 连接器」里的同一批），下方是接入它们的 MCP 服务器列表。
+import { showView } from '../core/view.js';
+import { getEnvOptions } from '../features/env.js';
+/* 连接器页：上方是各类系统的连接器卡片（对话「＋ → 连接器」里的同一批；「金蝶 ERP」按环境实例展示），下方是接入它们的 MCP 服务器列表。
    连接器通过 MCP 接入；卡片与服务器均为原型演示数据，状态只在本页内存里演示，不与对话输入框联动。 */
 const CONNECTORS=[
   {id:'tencent',name:'腾讯云',type:'云平台',mark:'腾',desc:'连接腾讯云账号，让智能体部署应用并管理云服务器等资源。'},
   {id:'aliyun',name:'阿里云',type:'云平台',mark:'阿',desc:'连接阿里云账号，让智能体部署应用并管理云上资源。'},
   {id:'huawei',name:'华为云',type:'云平台',mark:'华',desc:'连接华为云账号，让智能体部署应用并管理云服务器等资源。'},
-  {id:'xinghan',name:'金蝶AI 星瀚',type:'金蝶产品',mark:'瀚',desc:'连接金蝶AI 星瀚环境，让智能体读取和处理业务数据。'},
-  {id:'xingkong',name:'金蝶AI 星空',type:'金蝶产品',mark:'空',desc:'连接金蝶AI 星空环境，让智能体读取和处理业务数据。'}
+  {id:'erp',name:'金蝶 ERP',type:'金蝶产品',mark:'金',desc:'连接金蝶 ERP 环境，让智能体读取和处理业务数据；可配置多个环境实例，会话中选择使用哪一个。'}
 ];
 const SERVERS=['kingdee-k3cloud','odoo','vb_test_mcp','xkmcp_test_im'];
 const CARD_LABEL={on:'已连接',busy:'连接中',off:'未连接'};
@@ -21,6 +22,15 @@ export function init(){
     const kw=search.value.trim().toLowerCase();
     const rows=CONNECTORS.filter(c=>!kw||c.name.toLowerCase().includes(kw)||c.type.includes(kw));
     grid.innerHTML=rows.map(c=>{
+      if(c.id==='erp'){
+        /* 金蝶 ERP 不是开关式连接器：状态来自已配置的环境实例，操作是新增 / 管理环境 */
+        const count=getEnvOptions().length;
+        return `<article class="conn-card" data-conn="erp" data-state="${count?'on':'off'}">
+        <div class="conn-card-top"><span class="conn-icon" aria-hidden="true">${esc(c.mark)}</span><div class="conn-titles"><div class="conn-name">${esc(c.name)}</div><div class="conn-type">${esc(c.type)} · 多环境实例</div></div></div>
+        <p class="conn-desc">${esc(c.desc)}</p>
+        <div class="conn-foot"><span class="conn-status">${count?'已配置 '+count+' 个环境':'未配置环境'}</span><button type="button" class="conn-btn" data-erp-manage>${count?'管理环境':'新增环境'}</button></div>
+      </article>`;
+      }
       const st=cardState[c.id]||'off';
       return `<article class="conn-card" data-conn="${c.id}" data-state="${st}">
         <div class="conn-card-top"><span class="conn-icon" aria-hidden="true">${esc(c.mark)}</span><div class="conn-titles"><div class="conn-name">${esc(c.name)}</div><div class="conn-type">${esc(c.type)} · 通过 MCP 接入</div></div></div>
@@ -42,6 +52,11 @@ export function init(){
     }).join('');
   }
   grid.addEventListener('click',event=>{
+    if(event.target.closest('[data-erp-manage]')){
+      if(getEnvOptions().length)showView('settings');
+      else document.dispatchEvent(new CustomEvent('lingee:env-create'));
+      return;
+    }
     const button=event.target.closest('[data-conn-toggle]');
     if(!button)return;
     const id=button.closest('[data-conn]').dataset.conn,c=CONNECTORS.find(x=>x.id===id);
@@ -50,6 +65,7 @@ export function init(){
     setTimeout(()=>{cardState[id]='on';paintCards();toast('连接器 '+c.name+' 已连接','success');},1200);
   });
   search.addEventListener('input',paintCards);
+  document.addEventListener('lingee:envs-changed',paintCards);
   list.addEventListener('click',event=>{
     const row=event.target.closest('[data-mcp]');if(!row)return;
     const name=row.dataset.mcp;

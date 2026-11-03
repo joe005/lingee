@@ -354,11 +354,11 @@ function stageScore(expert,stageId){
   return total;
 }
 /* 阶段承担的智能体：有人工绑定（explicit）就用绑定的（最多 2 位），否则按能力项匹配 */
-function stageExperts(stageId,memberIds,explicit){
-  var members=(memberIds||[]).filter(function(id){return EX[id];});
+function stageExperts(stageId,memberIds,explicit,lookup=EX){
+  var members=(memberIds||[]).filter(function(id){return lookup[id];});
   var bound=(Array.isArray(explicit)?explicit:[]).filter(function(id){return members.indexOf(id)>=0;});
   if(bound.length) return bound.slice(0,STAGE_EXPERT_MAX);
-  var ranked=members.map(function(id,i){return {id:id,i:i,score:stageScore(EX[id],stageId)};})
+  var ranked=members.map(function(id,i){return {id:id,i:i,score:stageScore(lookup[id],stageId)};})
     .filter(function(x){return x.score>0;})
     .sort(function(a,b){return (b.score-a.score)||(a.i-b.i);});
   if(!ranked.length) return [];

@@ -1,0 +1,4 @@
+/* 任务页 · 工作区：空间下拉里级联的工作区行（只在选中有工作区的空间时出现） */
+.tk-space-popup button.tk-space-ws { min-height: 32px; padding-left: calc(8px + var(--ws-depth, 1) * 12px); color: var(--text-secondary); font-size: var(--font-size-12); }
+.tk-space-popup button.tk-space-ws[aria-selected=true] { color: var(--brand); font-weight: 500; }
+.tk-space-popup button.tk-space-ws:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }

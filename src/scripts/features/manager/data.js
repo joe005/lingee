@@ -2,6 +2,7 @@ import { CV_MEMBERS, cvCurrentUserName, cvPersonById } from '../collab/data.js';
 import { EX, EXPERTS } from '../expert/data.js';
 import { TEAMS, teamById } from '../expert/store.js';
 import { TK_TICKET_CODE_STATS } from '../tasks-v2/ticket-demo.js';
+import { WS_DEMO, WS_DEMO_DONE_KEY, WS_DEMO_KEY } from './workspace-seed.js';
 import { tkAddTask, tkCanDeleteTask, tkCurrentStageHandlerId, tkDeleteTask, tkGetTasks, tkPruneOrphanTasks, tkSetTasks, tkSetExternalProjects } from '../tasks-v2/data.js';
 /* 管理板块数据：管理项目、项目任务、议题、项目知识库。
    与协作开发的项目 / 任务数据分开存放，避免管理项目出现在开发板块的项目列表里；
@@ -236,7 +237,7 @@ function mgrProjectById(id) {
 }
 /* 只持久化用户新建或改动过的项目；演示项目每次从种子恢复后再叠加改动 */
 function mgrSaveProjects() {
-  return writeJson(PROJECTS_KEY, PROJECTS.filter(function (p) { return p.custom || p.updatedAt; }));
+  return writeJson(PROJECTS_KEY, PROJECTS.filter(function (p) { return p.custom || p.updatedAt || (p.workspaces && p.workspaces.length); }));
 }
 function mgrAddProject(project) {
   project.custom = true;
@@ -722,6 +723,32 @@ function normalizeDevTasks() {
   if (changed) tkSetTasks(tkGetTasks());
 }
 
+/* 工作区演示数据：每个空间在每个浏览器里只写入一次；用户已自己建过工作区、或之后删光，都不再覆盖 */
+function applyWorkspaceDemo() {
+  var done;
+  try {
+    done = readJson(WS_DEMO_DONE_KEY) || {};
+    if (localStorage.getItem(WS_DEMO_KEY)) done['ticket-mgmt'] = true;   /* 旧版只给工单管理系统写过 */
+  } catch (e) { return; }
+  var at = Date.now();
+  var tasks = tkGetTasks();
+  var tasksChanged = false;
+  Object.keys(WS_DEMO).forEach(function (id) {
+    if (done[id]) return;
+    done[id] = true;
+    var project = PROJECTS.find(function (p) { return p.id === id; });
+    if (!project || (project.workspaces && project.workspaces.length)) return;
+    project.workspaces = WS_DEMO[id].workspaces(at);
+    var map = WS_DEMO[id].tasks;
+    tasks.forEach(function (t) {
+      if (t.project === id && !t.workspaceId && map[t.code]) { t.workspaceId = map[t.code]; tasksChanged = true; }
+    });
+  });
+  writeJson(WS_DEMO_DONE_KEY, done);
+  mgrSaveProjects();
+  if (tasksChanged) tkSetTasks(tasks);
+}
+
 /* 在开发板块任务模块初始化前调用：先注册管理项目，开发板块才能识别管理项目下的任务与成员 */
 export function initManagerData() {
   PROJECTS = SEED_PROJECTS.map(function (p) {
@@ -764,6 +791,7 @@ export function initManagerData() {
   }
 
   normalizeDevTasks();
+  applyWorkspaceDemo();
 
   ISSUES = SEED_ISSUES.map(function (i) { return Object.assign({}, i); });
   var savedIssues = readJson(ISSUES_KEY);

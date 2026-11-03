@@ -68,7 +68,45 @@
           </button>
         </div>
         <div class="composer">
-          <div class="composer-tags hidden" id="chatTags"></div>
+          <div class="composer-tag-row">
+            <div class="composer-tags hidden" id="chatTags"></div>
+            <!-- ERP 环境：与技能标签、关联应用连成一组，先选环境再选环境下的应用；随苍穹应用模式显示；与「＋」→ 连接器里的「金蝶 ERP」共用同一份环境列表 -->
+          <div class="dropdown composer-tag-env env-pick-dd" data-dd="env" data-env-picker id="chatEnvDropdown">
+            <button type="button" class="chip env-pick-chip" data-chip aria-haspopup="listbox" aria-expanded="false" title="ERP 环境">
+              <svg class="ic env-pick-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="8" rx="2"/><rect x="2" y="13" width="20" height="8" rx="2"/><path d="M6 7h.01M6 17h.01"/></svg>
+              <span class="chip-label">环境</span>
+              <span class="env-pick-warn"></span>
+              <svg class="caret" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 7.5 5 5 5-5"/></svg>
+            </button>
+            <div class="menu app-menu env-pick-menu">
+              <div class="app-list env-pick-list" role="listbox" aria-label="ERP 环境"></div>
+              <div class="env-pick-foot"><div class="env-pick-manage" data-env-act="manage" role="button" tabindex="0"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h2M10 12h10M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>管理环境</div></div>
+            </div>
+          </div>
+            <!-- 关联应用：与真实版一致，接在技能标签右侧；会话中锁定为本会话绑定的应用 -->
+            <div class="dropdown composer-tag-app" data-dd="app" id="chatAppDropdown">
+              <div class="chip muted" data-chip>
+                <span class="app-dot"></span>
+                <span class="chip-label">关联应用</span>
+                <svg class="caret" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 7.5 5 5 5-5"/></svg>
+              </div>
+              <div class="menu app-menu">
+                <div class="app-search-wrap">
+                  <div class="app-search">
+                    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                    <input type="text" id="chatAppSearchInput" placeholder="搜索" autocomplete="off">
+                  </div>
+                </div>
+                <div class="app-list" id="chatAppList"></div>
+                <div class="app-foot">
+                  <div class="app-foot-item" id="chatExpandAppBtn">
+                    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+                    新建
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
           <div id="chatTaskProjectPicker" class="chat-task-project-picker" hidden><span class="task-builder-skill" data-skill-mention="task-builder" title="task-builder · 智能创建任务"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 6-6 6 6 6M16 6l6 6-6 6M14 3l-4 18"/></svg><span>task-builder</span></span><span class="task-builder-divider" aria-hidden="true"></span><select id="chatTaskProjectSelect" aria-label="选择所属项目"></select><span class="task-builder-divider" aria-hidden="true"></span><select id="chatTaskTeamSelect" aria-label="选择智能体团队"></select></div>
           <div class="composer-input" id="chatInput" contenteditable="true" data-placeholder="布置开发任务，输入 / 调用技能或命令"></div>
           <div class="composer-bar">
@@ -129,6 +167,18 @@
                       <input type="text" placeholder="搜索" />
                     </div>
                     <div class="connector-list">
+                  <div class="connector-item env-pick-group expanded" data-env-picker>
+                    <div class="env-pick-group-head" role="button" tabindex="0" aria-expanded="true" data-env-toggle>
+                      <img class="connector-logo-img" src="https://www.kingdee.com/r/cms/www/default/v0.1/images/favicon.ico" style="width:20px;height:20px;border-radius:3px;flex:none" alt="">
+                      <span class="connector-name">金蝶 ERP</span>
+                      <span class="env-pick-entry-state" data-env-state></span>
+                      <button type="button" class="env-pick-connect" data-env-act="create">连接</button>
+                      <svg class="ic ic-sm env-pick-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+                    </div>
+                    <div class="env-pick-group-body">
+                      <div class="env-pick-list" role="listbox" aria-label="ERP 环境"></div>
+                    </div>
+                  </div>
                       <div class="connector-item">
 <img class="connector-logo-img" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADgAAAA4CAYAAACohjseAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAIRSURBVHgB7dk9TwIxAMbxpwWd2QyDybk5OEBMnHXTTQfdndTJD+Dg8SF8nZicHd3UTwCLmjjhCAyyC9SWJoR3rvTa45r+F2PvlPvdEbj2AJ/P5/MtHsECnTUal4SxAnTrdkv3+XwNBstCsfN6/ZoxFjLox8/uO/9RhsGUgD0cECKG+P8pPeTzZRgu8ls0btzj2loIC0UCphUnmgtMM040E5h2nGgq0AWcaCLQFZxoDOgSTjQEdA0n6gNdxIl6QFdxIuIyTkROfn5+KZCDZpTS6tP6enF0/OCWHTKCS+j39nJBSlAs+9ls1viZ15/6AEGhUgmqxWJtcJDjcvzS7kK/3f07BlUkbWcyRyCkBv1yf93uq0AODvIDKnOg8pmfGEPIkdcqf9L7kNnkB5XhBwfGAujGT9YKpXujV3L/hoX81ZQObvprIIx6JftfE64ih77oXUSO3aq5hpx4s+0Scup0yRXkzAmvC8i5SxZpR0ZadEozMvKyYVqRSkv3aUQqP5uIGXn6sb1dHh3eumpVCCFxTAAWe/gikNl2O4BG/PlG62Nnpzq24fi7gA6rII4InhcCGkviXhHD/JTjquis7i0P0AAOzxut5QAawslfk84gTg4lmWGcHE4qCzi5KYks4eRm21nEyV1sZhknd7NVAji5q40SwsndTXf4FfB1fXFvaR0nojAd7S3bJ4Lz+Xw+n29O/yrorSpqVmGIAAAAAElFTkSuQmCC" style="width:20px;height:20px;border-radius:3px;flex:none" alt="腾讯云">
                         <span class="connector-name">腾讯云</span>
@@ -144,47 +194,14 @@
                         <span class="connector-name">华为云</span>
                         <button class="connector-btn">连接</button>
                       </div>
-                      <div class="connector-item">
-                        <img class="connector-logo-img" src="https://www.kingdee.com/r/cms/www/default/v0.1/images/favicon.ico" style="width:20px;height:20px;border-radius:3px;flex:none" alt="金蝶AI 星瀚">
-                        <span class="connector-name">金蝶AI 星瀚</span>
-                        <div class="connector-toggle"></div>
-                      </div>
-                      <div class="connector-item">
-                        <img class="connector-logo-img" src="https://www.kingdee.com/r/cms/www/default/v0.1/images/favicon.ico" style="width:20px;height:20px;border-radius:3px;flex:none" alt="金蝶AI 星空">
-                        <span class="connector-name">金蝶AI 星空</span>
-                        <div class="connector-toggle"></div>
-                      </div>
                     </div>
+                  <button type="button" class="connector-manage" data-connector-manage><svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg>管理连接器</button>
                   </div>
                 </div>
               </div>
             </div>
 
             <!-- model -->
-
-            <!-- app binding -->
-            <div class="dropdown" data-dd="app" id="chatAppDropdown">
-              <div class="chip muted" data-chip>
-                <span class="app-dot"></span>
-                <span class="chip-label">关联应用</span>
-                <svg class="caret" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 7.5 5 5 5-5"/></svg>
-              </div>
-              <div class="menu app-menu">
-                <div class="app-search-wrap">
-                  <div class="app-search">
-                    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-                    <input type="text" id="chatAppSearchInput" placeholder="搜索" autocomplete="off">
-                  </div>
-                </div>
-                <div class="app-list" id="chatAppList"></div>
-                <div class="app-foot">
-                  <div class="app-foot-item" id="chatExpandAppBtn">
-                    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-                    新建
-                  </div>
-                </div>
-              </div>
-            </div>
 
             <div class="dropdown" data-dd="expert" id="chatExpertDropdown">
               <button type="button" class="chip muted" data-chip aria-haspopup="true" aria-expanded="false">

@@ -1,5 +1,6 @@
 import { CV_MEMBERS } from '../../collab/data.js';
 import { TK_PEOPLE, TK_PRIORITIES, TK_STATUSES } from './constants.js';
+import { wsTaskLabel } from '../../../core/workspace-tree.js';
 import { tkProjectById } from './people.js';
 /* 任务数据：名称与对象查询（拆自 tasks-v2/data.js） */
 
@@ -29,4 +30,11 @@ function tkGetPriorityObj(id) {
   return TK_PRIORITIES.find(function (x) { return x.id === id; }) || {};
 }
 
-export { tkGetPerson, tkGetPriorityName, tkGetPriorityObj, tkGetProjectName, tkGetStatusName, tkGetStatusObj };
+/* 任务所属位置标签：「空间 › 工作区」，工作区路径过长只显示末级，没有归属只显示空间 */
+function tkGetTaskSpaceLabel(task) {
+  if (!task) return '';
+  var p = tkProjectById(task.project);
+  return p ? wsTaskLabel(p, task) : tkGetProjectName(task.project);
+}
+
+export { tkGetPerson, tkGetPriorityName, tkGetPriorityObj, tkGetProjectName, tkGetStatusName, tkGetStatusObj, tkGetTaskSpaceLabel };

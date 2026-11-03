@@ -1,3 +1,4 @@
+import { ldTaskDirectory } from '../collab/local-dev/core.js';
 /* 任务会话：按「任务 + 当前用户」过滤；演示数据按任务确定性生成，首次查看时补齐。 */
 import { CV_PROJECTS } from '../collab/data.js';
 import { STAGES } from '../expert/data.js';
@@ -53,7 +54,11 @@ function createSession(task, ownerId, spec) {
 export function tkTaskSessionOpeningMessage(task, origin, stageId) {
   if (origin === 'revise') return '退回修改「' + stageName(stageId, task) + '」阶段，请按审核意见调整后重新提交。';
   if (origin === 'retry') return '重试执行「' + stageName(stageId, task) + '」阶段，沿用上次的输入与配置。';
-  if (origin === 'start') return '执行「' + (stageName(stageId, task) || '当前节点') + '」：任务「' + task.title + '」；' + clip(task.desc, 60);
+  if (origin === 'start') {
+    var directory = ldTaskDirectory(task), repo = task.repoSnapshot;
+    var environment = repo ? '\n代码仓库：' + repo.repo + '；目标分支：' + repo.baseBranch + (directory ? '；工作目录：' + directory.workingDirectory : '') : '';
+    return '执行「' + (stageName(stageId, task) || '当前节点') + '」：任务「' + task.title + '」；' + clip(task.desc, 60) + environment;
+  }
   return '关于任务「' + task.title + '」，我想先确认几个问题。';
 }
 

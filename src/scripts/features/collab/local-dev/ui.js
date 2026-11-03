@@ -1,3 +1,4 @@
+import { ldBindingKey } from './core.js';
 import { LD_STATUS_LABELS, ldEsc, ldHostPlatform, ldIsDetecting, ldStatusTone } from './core.js';
 
 /* 本地开发 · 跨界面共用的小片段：状态标签、只读代码仓库、初始化进度、空间操作按钮、图标。
@@ -44,7 +45,7 @@ export function ldReadonlyRepoHtml(info) {
     '<span class="ld-repo-readonly-branch" aria-label="基准分支：' + ldEsc(info.baseBranch) + '">' + LD_ICONS.branch + '<code>' + ldEsc(info.baseBranch) + '</code></span></div>';
 }
 
-/* 初始化进度（UE）：标题 + 进度条 + 步骤表（执行内容 / 执行结果）+ 代码仓库与空间目录。pulling 为 0–100 */
+/* 初始化进度（UE）：标题 + 进度条 + 步骤表（执行内容 / 执行结果）+ 代码仓库与本机目录。pulling 为 0–100 */
 var LD_INIT_STEPS = [['校验仓库访问权限', '已通过'], ['获取基准分支最新代码', '已完成'], ['准备本机代码目录', '已完成'], ['校验分支与推送权限', '已通过']];
 var LD_RESULT_ICONS = {
   done:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>',
@@ -62,7 +63,7 @@ export function ldInitProgressHtml(info, pulling, path) {
     + '<p class="ld-prog-sub">正在从 <code>origin/' + ldEsc(info.baseBranch) + '</code> 获取最新代码</p>'
     + '<div class="ld-prog-bar"><div class="ld-progress" role="progressbar" aria-label="初始化基准分支 ' + ldEsc(info.baseBranch) + '" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pulling + '"><span style="width:' + pulling + '%"></span></div><span class="ld-prog-pct">' + pulling + '%</span></div>'
     + '<div class="ld-prog-table-wrap"><table class="ld-prog-table"><thead><tr><th>#</th><th>执行内容</th><th>执行结果</th></tr></thead><tbody>' + rows + '</tbody></table></div>'
-    + '<dl class="ld-prog-meta"><dt>代码仓库</dt><dd title="' + ldEsc(info.repo) + '">' + ldEsc(info.repo) + '</dd><dt>空间目录</dt><dd title="' + ldEsc(path || '') + '">' + ldEsc(path || '') + '</dd></dl></section>';
+    + '<dl class="ld-prog-meta"><dt>代码仓库</dt><dd title="' + ldEsc(info.repo) + '">' + ldEsc(info.repo) + '</dd><dt>本机目录</dt><dd title="' + ldEsc(path || '') + '">' + ldEsc(path || '') + '</dd></dl></section>';
 }
 
 /* 每个空间的操作：地址问题要找管理员改，只给文字；连不上可重新检测，找不到仓库可更换账号。
@@ -70,6 +71,8 @@ export function ldInitProgressHtml(info, pulling, path) {
 export function ldProjectAction(project, view, cls) {
   var key = view.key, host = view.st.info?.host || '';
   var btn = function (attr, text, primary, extra) { return '<button type="button" class="' + cls + (primary ? ' ' + cls + '--primary' : '') + '" ' + attr + (extra || '') + '>' + text + '</button>'; };
+  if (project.unused) return btn('data-ld-forget-repo="' + ldEsc(ldBindingKey(project.id)) + '"', '清理绑定', false);
+  if (key === 'missing') return btn('data-ld-dir-open="' + ldEsc(project.id) + '"', '重新绑定', true);
   if (key === 'invalid') return '<span class="ld-muted">待修改地址</span>';
   if (key === 'norepo') return '<span class="ld-muted">待配置</span>';
   if (key === 'ssh') return '<span class="ld-muted">待改 HTTPS 地址</span>';

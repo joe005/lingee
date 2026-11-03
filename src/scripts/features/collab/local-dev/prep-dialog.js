@@ -1,6 +1,5 @@
 import { $ } from '../../../core/dom.js';
 import { toast } from '../../../core/toast.js';
-import { tkProjectById } from '../../tasks-v2/data.js';
 import { ldJobOf } from './init-jobs.js';
 import { ldEsc, ldHide, ldMine, ldProjectStatus, ldShow, ldVisible } from './core.js';
 import { ldGitInstallHtml } from './git-install.js';
@@ -33,7 +32,7 @@ function render() {
   if (!info) return;
   var body = $('#ldPrepBody'), done = $('#ldPrepDone');
   body.setAttribute('aria-busy', String(!!form.pulling));
-  var intro = '<div class="ld-info-banner">' + LD_ICONS.info + '<span>首次在本机执行此空间的任务，需要准备以下环境。完成后将继续当前任务。</span></div>';
+  var intro = '<div class="ld-info-banner">' + LD_ICONS.info + '<span>首次在本机使用此仓库执行任务，需要准备以下环境。完成后将继续当前任务。</span></div>';
   if (status.invalid) {
     body.innerHTML = intro + '<div class="ld-warn"><span><strong>代码仓库需要管理员完善：</strong>' + ldEsc(status.reason) + '</span></div>';
     done.disabled = true;

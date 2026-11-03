@@ -105,15 +105,14 @@ function resolveChatTeam(session, task){
   if (session?.previewRepair) return null;
   /* 管理板块立项的项目（如设备巡检维修系统建设）不在 CV_PROJECTS 里，按任务项目统一查找 */
   var project = tkProjectById(task?.project || session?.projectId);
-  if (task?.expertId) return taskExecutorTeam(task, project);
-  if(task) return teamById(task.teamId || '');
+  if(task) return taskExecutorTeam(task, project);
   var pick=session?.executionPick;
   if(pick?.kind==='expert'&&EX[pick.id]) return {id:'expert:'+pick.id,name:EX[pick.id].name,members:[pick.id]};
   if(pick) return pick.kind==='team' ? teamById(pick.id) : null;
   return teamById(session?.teamId || '');
 }
 function teamAvatarHtml(team){
-  var members = (team.members || []).map(function (id) { return EX[id]; }).filter(Boolean).slice(0, 3);
+  var members = (team.members || []).map(function (id) { return team.expertDefinitions?.[id] || EX[id]; }).filter(Boolean).slice(0, 3);
   return '<span class="chat-team-avatars" role="img" aria-label="' + xesc(team.name) + '成员头像">'
     + members.map(function (member) { return '<img src="' + xesc(xav(member.k)) + '" alt="" title="' + xesc(member.name) + '">'; }).join('') + '</span>';
 }

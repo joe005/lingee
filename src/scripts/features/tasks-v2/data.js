@@ -33,5 +33,5 @@ export { tkCurrentStageHandlerId, tkCurrentUserId, tkPeopleInProject, tkProjectB
 export { tkCanStartTask, tkCanViewTask, tkInMyTaskList, tkIsHandledByMe, tkIsMyCurrentStage, tkIsMyStageDone, tkIsProjectOwner, tkParticipatesCurrentUser, tkProjectsForCurrentUser, tkWasTaskHandler } from './data/permissions.js';
 export { tkGetTaskArtifacts } from './data/artifacts.js';
 export { TK_TASKS } from './data/seed-tasks.js';
-export { tkGetPerson, tkGetPriorityName, tkGetPriorityObj, tkGetProjectName, tkGetStatusName, tkGetStatusObj } from './data/lookups.js';
+export { tkGetPerson, tkGetPriorityName, tkGetPriorityObj, tkGetProjectName, tkGetStatusName, tkGetStatusObj, tkGetTaskSpaceLabel } from './data/lookups.js';
 export { TK_DELETE_BLOCKED_REASON, tkAddTask, tkAddView, tkCanDeleteTask, tkDeleteTask, tkDeleteView, tkEnsureCompletedDemoTask, tkEnsureWorkspaceDemoTasks, tkGetTasks, tkGetViews, tkPruneOrphanTasks, tkRenameView, tkSetTasks, tkUpdateTask } from './data/store.js';

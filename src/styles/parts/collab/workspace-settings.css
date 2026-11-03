@@ -16,7 +16,15 @@
 #view-collab .cv-workspace-onboarding-form button{align-self:flex-start;margin-top:14px;padding:10px 18px;border:0;border-radius:9px;background:var(--brand);color:#fff;font:inherit;font-size:var(--font-size-14);font-weight:400;cursor:pointer;line-height:var(--line-height-14);}
 #view-collab .cv-workspace-onboarding-form button:hover{background:var(--brand-hover)}
 #view-collab .cv-workspace-onboarding-card>.cv-workspace-onboarding-help{margin-top:22px;padding-top:18px;border-top:1px solid var(--border);color:var(--text-soft);font-size:var(--font-size-12)}
-#view-collab .cv-wsbar{display:none}
+#view-collab .cv-wsbar{display:flex;position:relative;align-self:center;width:calc(100% - 32px);max-width:1160px;box-sizing:border-box;padding:16px 0 0;border-bottom:0;background:transparent}
+#view-collab .cv-wsbar #cvWsSwitch,#view-collab .cv-wsbar #cvWsCreateForm{display:none}
+#view-collab .cv-space-switch{position:relative;flex:none;min-width:0;max-width:360px}
+/* 旧版顶部工作区标题：大号字、无边框，右侧小箭头；下拉复用 .mgr-ws-pop 样式 */
+#view-collab .cv-space-switch .mgr-ws-switch-btn{height:36px;max-width:360px;padding:0 6px 0 0;background:transparent;color:var(--text-title);font-size:var(--font-size-18);font-weight:600;line-height:var(--line-height-18)}
+#view-collab .cv-space-switch .mgr-ws-switch-btn:hover{background:transparent;color:var(--brand)}
+#view-collab .cv-space-switch .mgr-ws-switch-btn svg{color:var(--text-soft)}
+/* 顶部切换器取代任务工具栏里的「全部空间」按钮（同一份筛选条件） */
+#view-collab #cv-tasks-current #view-tasks #tkSpaceBtn,#view-collab #cv-tasks-current #view-tasks #tkSpacePopup{display:none}
 #view-collab .cv-wsbar .cv-ws .cv-proj-btn{padding:3px 0;background:transparent;border:0;border-radius:0;color:var(--text);font-size:var(--font-size-20);font-weight:650;gap:10px}
 #view-collab .cv-wsbar .cv-ws .cv-proj-btn:hover{color:var(--brand);background:transparent}
 #view-collab .cv-wsbar .cv-ws .cv-proj-btn svg{color:var(--text-soft)}
@@ -109,3 +117,189 @@
   box-sizing:border-box; max-width:100%; overflow-wrap:anywhere;
 }
 @media(max-width:760px){#view-collab #cv-config .config-layout{gap:12px}}
+/* 右上角「个人设置」入口（我的空间、Git 账号）；顶部「设置」页签只给管理员 */
+#view-collab .cv-personal-settings{display:inline-flex;align-items:center;gap:6px;flex:none;height:var(--control-h-sm);margin-left:auto;padding:0 12px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text-secondary);font:inherit;font-size:var(--font-size-14);line-height:var(--line-height-14);cursor:pointer;transition:background .15s,color .15s,border-color .15s}
+#view-collab .cv-personal-settings:hover{background:var(--hover);color:var(--text)}
+#view-collab .cv-personal-settings.is-on{border-color:var(--brand);background:var(--brand-fill);color:var(--brand)}
+#view-collab .cv-personal-settings:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+#view-collab #cvTabNav .tab-nav-item[hidden]{display:none}
+#cv-local .ld-settings-bar[hidden],#cv-local .ld-demo-links[hidden]{display:none}
+
+/* 空间选择树：行内选择、展开和创建各自独立，搜索只保留外层细焦点边框。 */
+#view-collab #cvSpaceSwitch .mgr-ws-pop-search input:focus-visible { outline: none; box-shadow: none; }
+#view-collab #cvSpaceSwitch .mgr-ws-pop-search:focus-within { border-color: var(--border-focus); }
+#view-collab #cvSpaceSwitch .mgr-ws-pop-row { box-sizing: border-box; }
+#view-collab #cvSpaceSwitch div.mgr-ws-pop-row { padding-right: 4px; }
+#view-collab #cvSpaceSwitch button.mgr-ws-pop-row--space[data-cvss-pick=""] { padding-left: 8px; }
+#view-collab #cvSpaceSwitch button.mgr-ws-pop-row--space[data-cvss-pick=""] .mgr-ws-pop-toggle-gap { display: none; }
+#view-collab #cvSpaceSwitch .cv-space-create-child { box-sizing: border-box; padding-left: 24px; }
+#view-collab #cvSpaceSwitch .cv-space-tree-empty {
+  margin: 0; padding: 8px 8px 8px 24px; color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12);
+}
+#view-collab #cvSpaceSwitch .mgr-ws-pop-pick {
+  display: flex; flex: 1; align-items: center; gap: 8px; min-width: 0; min-height: 36px; padding: 0;
+  border: none; border-radius: 4px; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer;
+}
+#view-collab #cvSpaceSwitch button.mgr-ws-pop-toggle { padding: 0; border: none; background: none; cursor: pointer; }
+#view-collab #cvSpaceSwitch button.mgr-ws-pop-toggle:hover { background: var(--active); }
+#view-collab #cvSpaceSwitch .mgr-ws-icon-btn { width: 24px; height: 24px; color: var(--text-secondary); opacity: 0; pointer-events: none; }
+#view-collab #cvSpaceSwitch .mgr-ws-pop-row:is(:hover,:focus-within) .mgr-ws-icon-btn { opacity: 1; pointer-events: auto; }
+#view-collab #cvSpaceSwitch .cv-space-total { margin-left: 4px; color: var(--text-secondary); font-size: var(--font-size-12); font-weight: 400; }
+@media(hover:none){#view-collab #cvSpaceSwitch .mgr-ws-icon-btn{opacity:1;pointer-events:auto}}
+#view-collab #cvSpaceSwitch .mgr-ws-icon-btn:hover { color: var(--brand); background: var(--brand-fill); }
+#view-collab #cvSpaceSwitch :is(.mgr-ws-pop-pick,.mgr-ws-pop-toggle):focus-visible {
+  outline: 2px solid var(--focus-ring); outline-offset: -2px;
+}
+@media(prefers-reduced-motion:reduce){#view-collab #cvSpaceSwitch .mgr-ws-pop-toggle{transition:none}}
+
+/* 空间 / 工作区设置：左侧基础分类，右侧内容，沿用当前页面令牌和表单按钮。 */
+#view-collab #cv-local > .scroll:has(.cv-basic-layout) { width: calc(100% - 32px); max-width: 1160px; margin-inline: auto; padding: 8px 0 20px; overflow: hidden; }
+#view-collab #cv-local > .scroll > .ld-settings { flex: 1 1 0; min-height: 0; overflow: hidden; }
+#view-collab #ldWorkspacesPanel { flex: 1 1 0; min-height: 0; overflow: hidden; }
+#view-collab .cv-basic-layout { display: grid; flex: 1 1 0; grid-template-rows: minmax(0, 1fr); overflow: hidden; grid-template-columns: 180px minmax(0, 1fr); align-items: start; box-sizing: border-box; min-height: 0; padding: 24px; gap: 24px; border-radius: var(--r-card); background: var(--bg); }
+#view-collab .cv-basic-nav { display: flex; flex-direction: column; align-self: stretch; min-height: 0; overflow-y: auto; overscroll-behavior: contain; gap: 4px; padding-right: 16px; border-right: 1px solid var(--divider); }
+#view-collab .cv-basic-nav-label { padding: 8px 12px; color: var(--text-secondary); font-size: var(--font-size-12); }
+#view-collab .cv-basic-nav-item { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 36px; padding: 6px 12px; border: none; border-radius: 8px; background: none; color: var(--text); font: inherit; font-size: var(--font-size-14); text-align: left; cursor: pointer; }
+#view-collab .cv-basic-nav-item:hover:not(.is-on) { background: var(--fill-1); }
+#view-collab .cv-basic-nav-item.is-on { background: var(--hover); font-weight: 500; color: var(--text-title); }
+#view-collab .cv-basic-nav-item svg { flex: none; width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
+#view-collab .cv-basic-nav-item:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+#view-collab .cv-basic-main { align-self: stretch; min-width: 0; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding-right: 4px; }
+#view-collab .cv-basic-main [hidden] { display: none; }
+#view-collab .cv-basic-scope { margin: 0 0 16px; overflow: hidden; color: var(--text-secondary); font-size: var(--font-size-12); text-overflow: ellipsis; white-space: nowrap; }
+#view-collab .cv-basic-heading { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-bottom: 24px; }
+#view-collab .cv-basic-heading h2 { margin: 0; color: var(--text-title); font-size: var(--font-size-18); font-weight: 500; line-height: var(--line-height-18); }
+#view-collab .cv-basic-heading p, #view-collab .cv-basic-note { margin: 8px 0; color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); }
+#view-collab .cv-basic-card { padding: 8px 24px; border: 1px solid var(--border); border-radius: var(--r-card); }
+#view-collab .cv-basic-field { display: flex; flex-direction: column; gap: 8px; padding: 16px 0; }
+#view-collab .cv-basic-field label, #view-collab .cv-basic-field > span { color: var(--text); font-size: var(--font-size-14); font-weight: 500; }
+#view-collab .cv-basic-field p { margin: 0; color: var(--text-secondary); font-size: var(--font-size-14); }
+#view-collab .cv-basic-field :is(input,textarea), #view-collab .cv-basic-add select { box-sizing: border-box; width: 100%; min-width: 0; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); font: inherit; font-size: var(--font-size-14); line-height: var(--line-height-14); }
+#view-collab .cv-basic-field textarea { resize: vertical; }
+#view-collab #cvBasicDesc { min-height: 128px; }
+#view-collab .cv-basic-field :is(input,textarea):disabled { background: var(--fill-1); color: var(--text-secondary); }
+#view-collab .cv-basic-field :is(input,textarea):focus-visible, #view-collab .cv-basic-add select:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 0; }
+#view-collab .cv-basic-error { margin: 12px 0; color: var(--danger); font-size: var(--font-size-14); }
+#view-collab .cv-basic-add { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; font-size: var(--font-size-14); }
+#view-collab .cv-basic-add select { width: auto; flex: 1; max-width: 320px; }
+#view-collab .cv-basic-add .cv-basic-error { flex-basis: 100%; margin: 0; }
+#view-collab .cv-basic-members { list-style: none; padding: 0; margin: 0; }
+#view-collab .cv-basic-members li { display: flex; align-items: center; gap: 12px; min-height: 56px; }
+#view-collab .cv-basic-members li + li { border-top: 1px solid var(--divider); }
+#view-collab .cv-basic-avatar { display: inline-grid; place-items: center; flex: none; width: 32px; height: 32px; border-radius: 50%; background: var(--brand-fill); color: var(--brand); font-size: var(--font-size-14); }
+#view-collab .cv-basic-member-name { flex: 1; min-width: 0; overflow-wrap: anywhere; font-size: var(--font-size-14); }
+@media(max-width:900px) { #view-collab .cv-basic-layout { grid-template-columns: 160px minmax(0, 1fr); padding: 16px; gap: 16px; } #view-collab .cv-basic-nav { padding-right: 8px; } }
+@media(max-width:600px) { #view-collab .cv-basic-layout { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); } #view-collab .cv-basic-nav { flex-direction: row; flex-wrap: wrap; padding: 0 0 12px; border-right: none; border-bottom: 1px solid var(--divider); } #view-collab .cv-basic-nav-item { width: auto; padding: 8px 12px; } #view-collab .cv-basic-nav-label { display: none; } #view-collab .cv-basic-card { padding: 8px 16px; } #view-collab .cv-basic-heading { gap: 12px; } }
+
+/* 成员：展开式搜索添加栏，身份信息与角色分两行展示。 */
+#view-collab .cv-basic-add { padding: 12px; border: 1px solid var(--border); border-radius: var(--r-card); }
+#view-collab .cv-member-search { position: relative; display: flex; align-items: center; flex: 1; min-width: 160px; height: var(--control-h); gap: 8px; padding: 0 12px; border: 1px solid var(--border); border-radius: 10px; color: var(--text-secondary); }
+#view-collab .cv-member-search:focus-within { border-color: var(--border-focus); }
+#view-collab .cv-member-search > svg { flex: none; }
+#view-collab .cv-member-search input[type="search"] { width: 100%; min-width: 0; padding: 0; border: none; outline: none; background: none; color: var(--text); font: inherit; font-size: var(--font-size-14); }
+#view-collab .cv-member-search input[type="search"]:focus-visible { outline: none; box-shadow: none; }
+#view-collab .cv-basic-add #cvBasicMemberRole { flex: none; width: 120px; height: var(--control-h); padding: 0 10px; }
+#view-collab .cv-member-results { overscroll-behavior: contain; position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 20; max-height: 240px; overflow-y: auto; padding: 4px; border-radius: 12px; background: var(--bg); box-shadow: var(--menu-shadow); }
+#view-collab .cv-member-results > button { display: flex; align-items: center; gap: 12px; width: 100%; padding: 8px; border: none; border-radius: 8px; background: none; color: var(--text); text-align: left; font: inherit; cursor: pointer; }
+#view-collab .cv-member-results > button:hover { background: var(--hover); }
+#view-collab .cv-member-results > button:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+#view-collab .cv-member-results small { display: block; margin-top: 4px; color: var(--text-secondary); font-size: var(--font-size-12); }
+#view-collab .cv-basic-members li { min-height: 80px; }
+#view-collab .cv-member-identity { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+#view-collab .cv-member-identity strong { font-weight: 500; }
+#view-collab .cv-member-identity > span { color: var(--text-secondary); font-size: var(--font-size-12); }
+#view-collab .cv-member-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+#view-collab .cv-member-tags > span { padding: 0 8px; border: 1px solid var(--border); border-radius: 999px; color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); }
+#view-collab .cv-member-more { position: relative; flex: none; }
+#view-collab .cv-member-more summary { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 6px; list-style: none; color: var(--text-secondary); cursor: pointer; }
+#view-collab .cv-member-more summary::-webkit-details-marker { display: none; }
+#view-collab .cv-member-more summary:hover { background: var(--hover); }
+#view-collab .cv-member-more summary:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+#view-collab .cv-member-more > button { position: absolute; top: 100%; right: 0; z-index: 20; min-width: 104px; padding: 8px 12px; border-radius: 8px; background: var(--bg); box-shadow: var(--menu-shadow); }
+@media(max-width:600px) { #view-collab .cv-member-search { flex-basis: 100%; } }
+
+/* 仓库地址与基准分支成组展示，与 Manage 的仓库设置布局一致。 */
+#view-collab .cv-basic-repo-row { display: flex; align-items: stretch; gap: 8px; min-width: 0; }
+#view-collab .cv-basic-repo-row > input { flex: 1; min-width: 0; height: var(--control-h); }
+#view-collab .cv-basic-repo-branch { position: relative; display: flex; align-items: center; flex: 0 0 180px; min-width: 0; }
+#view-collab .cv-basic-repo-branch > svg { position: absolute; left: 12px; color: var(--text-secondary); pointer-events: none; }
+#view-collab .cv-basic-repo-branch input { height: var(--control-h); padding-left: 36px; }
+@media(max-width:600px) { #view-collab .cv-basic-repo-row { flex-wrap: wrap; } #view-collab .cv-basic-repo-row > input, #view-collab .cv-basic-repo-branch { flex-basis: 100%; } }
+#view-collab .cv-basic-repo-branch .niu-select-trigger { box-sizing: border-box; width: 100%; height: var(--control-h); min-width: 0; padding: 0 12px 0 36px; border-radius: 8px; background: var(--bg); }
+#view-collab .cv-basic-repo-branch > svg { z-index: 1; }
+#view-collab .cv-basic-repo-branch select.niu-custom-select-source { display: none; }
+
+#view-collab .cv-member-pagination { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 16px; padding: 16px 0; color: var(--text-secondary); font-size: var(--font-size-12); }
+#view-collab .cv-member-pagination > span { margin-right: auto; }
+#view-collab .cv-member-pagination label, #view-collab .cv-member-pagination > div { display: flex; align-items: center; gap: 8px; }
+#view-collab .cv-member-pagination select { height: 28px; padding: 0 8px; border: 1px solid var(--border-hover); border-radius: 6px; background: var(--bg); color: var(--text); font: inherit; }
+#view-collab .cv-member-pagination select:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+#view-collab .cv-member-page-status { min-width: 40px; text-align: center; font-variant-numeric: tabular-nums; }
+
+/* 成员页仅列表控件负责滚动，头部与分页不进入滚动区域。 */
+#view-collab .cv-basic-main:has(> #cvBasicSettingsHost.is-member-list) { display: flex; flex-direction: column; overflow: hidden; }
+#view-collab #cvBasicSettingsHost.is-member-list { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
+#view-collab #cvBasicSettingsHost.is-member-list > * { flex-shrink: 0; }
+#view-collab #cvBasicSettingsHost.is-member-list > .cv-member-list-scroll { flex: 1 1 0; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
+#view-collab .cv-member-list-scroll:focus-visible { outline: 2px solid var(--border-focus); outline-offset: -2px; }
+
+#view-collab #cvSpaceSwitch .mgr-ws-icon-btn.is-default { opacity: 1; pointer-events: auto; color: var(--brand); }
+#view-collab #cvSpaceSwitch .mgr-ws-icon-btn.is-default svg { fill: var(--brand-fill); }
+#view-collab #cvSpaceSwitch .cv-space-default-label { flex: none; padding: 0 4px; border-radius: 4px; background: var(--brand-fill); color: var(--brand); font-size: var(--font-size-12); font-weight: 400; }
+
+/* 仓库：紧凑摘要卡片，统一更多菜单；新增与编辑共用弹窗。 */
+#view-collab .cv-repo-toolbar { margin-bottom: 12px; }
+#view-collab .cv-repo-toolbar .cv-basic-note { margin: 0; }
+#view-collab .cv-repo-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: stretch; }
+#view-collab .cv-repo-card { box-sizing: border-box; min-width: 0; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); }
+#view-collab .cv-repo-cards > .cv-repo-card { min-height: 112px; padding: 12px 16px; }
+#view-collab .cv-repo-card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 28px; flex-wrap: wrap; }
+#view-collab .cv-repo-title { display: flex; align-items: center; gap: 8px; min-width: 0; }
+#view-collab .cv-repo-title strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--font-size-14); font-weight: 500; }
+#view-collab .cv-repo-default { flex: none; padding: 0 6px; border-radius: 4px; color: var(--brand); background: var(--brand-fill); font-size: var(--font-size-12); line-height: var(--line-height-12); }
+#view-collab .cv-repo-summary { margin-top: 8px; }
+#view-collab .cv-repo-summary p { margin: 0 0 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); }
+#view-collab .cv-repo-summary .cv-basic-note { margin: 0; }
+#view-collab .cv-repo-card-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; flex: none; gap: 4px; }
+#view-collab .cv-repo-card-actions button { display: flex; align-items: center; justify-content: center; height: 28px; padding: 0 8px; border: 0; border-radius: 6px; background: none; color: var(--text-secondary); font: inherit; font-size: var(--font-size-12); cursor: pointer; }
+#view-collab .cv-repo-card-actions button:hover { color: var(--text); background: var(--hover); }
+#view-collab .cv-repo-card-actions button:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+#view-collab .cv-repo-card-actions button.is-danger { color: var(--danger); }
+#view-collab .cv-repo-card-actions button.is-danger:hover { background: var(--danger-bg); }
+#view-collab .cv-repo-add-card { box-sizing: border-box; min-height: 112px; border: 1px dashed var(--border-hover); border-radius: 12px; background: var(--bg); color: var(--brand); font: inherit; font-size: var(--font-size-14); cursor: pointer; }
+#view-collab .cv-repo-add-card:hover { background: var(--brand-fill); border-color: var(--brand); }
+#view-collab .cv-repo-add-card:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+#view-collab .cv-repo-empty { padding: 16px; color: var(--text-secondary); font-size: var(--font-size-14); }
+#view-collab .cv-repo-dialog-overlay { position: fixed; inset: 0; z-index: 250; display: flex; align-items: center; justify-content: center; padding: 16px; background: var(--overlay); }
+#view-collab .cv-repo-dialog { box-sizing: border-box; width: min(640px, 100%); max-height: calc(100vh - 32px); overflow-y: auto; padding: 20px; border-radius: 24px; background: var(--bg); }
+#view-collab .cv-repo-dialog > header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+#view-collab .cv-repo-dialog h3 { margin: 0; font-size: var(--font-size-20); font-weight: 500; }
+#view-collab .cv-repo-icon-btn { display: grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 8px; background: none; color: var(--text-secondary); font: inherit; cursor: pointer; }
+#view-collab .cv-repo-icon-btn:hover { background: var(--hover); }
+#view-collab .cv-repo-icon-btn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+#view-collab .cv-repo-dialog .cv-repo-card { border: 0; }
+#view-collab .cv-repo-dialog .cv-repo-card-head { display: none; }
+#view-collab .cv-repo-dialog-subtitle { margin: 4px 0 0; color: var(--text-secondary); font-size: var(--font-size-14); line-height: var(--line-height-14); }
+#view-collab .cv-repo-address-branch { display: grid; grid-template-columns: minmax(0, 1fr) 144px; align-items: start; gap: 8px 12px; margin-bottom: 24px; }
+#view-collab .cv-repo-url-label { grid-column: 1 / -1; color: var(--text-secondary); font-size: var(--font-size-14); line-height: var(--line-height-14); }
+#view-collab .cv-repo-dialog .cv-basic-field { min-width: 0; padding: 0; }
+#view-collab .cv-repo-dialog .cv-basic-field :is(input,.shared-select-trigger) { box-sizing: border-box; width: 100%; height: 40px; min-height: 40px; border-radius: 8px; background: var(--fill-1); }
+#view-collab .cv-repo-dialog select.niu-custom-select-source { display: none; }
+#view-collab .cv-repo-dialog input[data-cv-repo-field="branchCustom"] { margin-top: 8px; }
+#view-collab .cv-repo-local-directory { padding: 0; }
+#view-collab .cv-repo-directory-label { display: block; margin-bottom: 8px; color: var(--text-secondary); font-size: var(--font-size-14); line-height: var(--line-height-14); }
+#view-collab .cv-repo-directory-modes { display: grid; gap: 12px; }
+/* 复用初始化仓库已有的 ld-dir-card，仅收敛聚焦为单层边框，不增加尺寸。 */
+#view-collab .cv-repo-dir-option:has(input:focus-visible) { outline: none; border-color: var(--focus-ring); }
+#view-collab .cv-repo-editor-actions { display: flex; justify-content: flex-end; gap: 8px; margin: 20px -20px -20px; padding: 16px 20px; border-top: 1px solid var(--divider); }
+#view-collab .cv-repo-editor-actions > button { box-sizing: border-box; height: 40px; min-height: 40px; padding: 0 16px; border-radius: 8px; font-size: var(--font-size-14); }
+#view-collab .cv-repo-custom-directory { display: flex; gap: 8px; min-width: 0; margin: 8px 0 0; }
+#view-collab .cv-repo-custom-directory input { position: static; opacity: 1; width: auto; box-sizing: border-box; flex: 1; min-width: 0; height: 40px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); font: inherit; font-size: var(--font-size-14); }
+#view-collab .cv-repo-custom-directory input:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 0; }
+#view-collab .cv-repo-custom-directory .ld-space-btn { flex: none; height: 40px; border-radius: 8px; }
+@media (max-width: 600px) { #view-collab .cv-repo-address-branch { grid-template-columns: minmax(0, 1fr) 120px; } #view-collab .cv-repo-custom-directory { flex-wrap: wrap; } }
+@media (max-width: 900px) { #view-collab .cv-repo-cards { grid-template-columns: minmax(0, 1fr); } }
+
+#view-collab .cv-repo-address-summary { display: flex; align-items: center; gap: 8px; min-width: 0; margin-bottom: 4px; }
+#view-collab .cv-repo-address-summary p { flex: 0 1 auto; min-width: 0; margin: 0; }
+#view-collab .cv-repo-branch-summary { flex: 0 0 auto; max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 6px; border-radius: 4px; background: var(--fill-1); color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); }

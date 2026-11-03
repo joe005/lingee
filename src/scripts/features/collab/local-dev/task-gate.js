@@ -1,6 +1,7 @@
+import { buildTaskRepoSelectionError, buildTaskNeedsRepo } from '../repository-config.js';
 import { toast } from '../../../core/toast.js';
 import { tkCurrentStageHandlerId, tkCurrentUserId, tkGetPerson, tkProjectById, tkUpdateTask } from '../../tasks-v2/data.js';
-import { ldEsc, ldNow, ldPreflight, ldProjectStatus, ldRepoInfo } from './core.js';
+import { ldTargetProject, ldTaskEnvironmentId, ldEsc, ldNow, ldPreflight, ldProjectStatus, ldRepoInfo } from './core.js';
 import { ldOpenPrepDialog } from './prep-dialog.js';
 
 /* 本地开发 · 任务启动前的执行前检查。
@@ -39,9 +40,16 @@ export function ldRestoreEnvBlocked(task) {
 /* 返回 true 表示可以直接执行；false 时已按场景处理（打开准备执行环境或转阻塞） */
 export function ldGateTaskStart(task, options) {
   if (!task || !['planned','backlog'].includes(task.status)) return true;
+  if (!buildTaskNeedsRepo(task, tkProjectById(task.project))) return true;
+  var selectionError = buildTaskRepoSelectionError(task, tkProjectById(task.project));
+  if (selectionError) {
+    if (options?.automatic || tkCurrentStageHandlerId(task) !== tkCurrentUserId()) ldBlockTaskForEnv(task, selectionError);
+    toast(selectionError, 'warning'); return false;
+  }
+  var environmentId = ldTaskEnvironmentId(task,tkCurrentStageHandlerId(task) || tkCurrentUserId());
   var me = tkCurrentUserId();
   var handlerId = tkCurrentStageHandlerId(task) || me;
-  var check = ldPreflight(task.project, handlerId), status = check.status;
+  var check = ldPreflight(environmentId, handlerId), status = check.status;
   if (check.initialized) {
     if (status.auth?.expiring && handlerId === me) toast(ldEsc(status.info.host) + ' 的访问令牌将于 ' + ldEsc(status.auth.expiresAt) + ' 到期，到期后任务会鉴权失败，请到「设置」重新登录', 'warning');
     return true;
@@ -52,13 +60,15 @@ export function ldGateTaskStart(task, options) {
     toast('「' + ldEsc(task.title) + '」未启动：本地环境未就绪', 'warning');
     return false;
   }
-  ldOpenPrepDialog(task.project, { id:task.id, title:task.title }, options?.onReady);
+  if (!status.info) { toast('当前范围尚未配置仓库，请到「设置 › 工作区设置 › 仓库」配置后再启动', 'warning'); return false; }
+  ldOpenPrepDialog(environmentId, task, options?.onReady);
   return false;
 }
 
 /* 原「本地环境配置」对话入口：由对话技能完成，一次只配置一个空间；onReady 在就绪后由对话里的「继续执行任务」调用 */
 export function ldOpenSetup(projectId, options) {
-  if (!ldRepoInfo(tkProjectById(projectId))) { toast('该空间未配置代码仓库，无需准备本地环境', 'warning'); return; }
+  if (options?.task) { projectId = ldTaskEnvironmentId(options.task); if (!ldProjectStatus(projectId).info) { toast('请先配置当前工作区的代码仓库', 'warning'); return; } ldOpenPrepDialog(projectId, options.task, options.onReady); return; }
+  if (!ldRepoInfo(ldTargetProject(projectId))) { toast('当前范围未配置仓库，请先到 Build 设置配置', 'warning'); return; }
   var invalid = ldProjectStatus(projectId);
   if (invalid.invalid) { toast(ldEsc(invalid.reason), 'warning'); return; }
   document.dispatchEvent(new CustomEvent('lingee:local-env-chat', { detail:{ projectIds:[projectId], onReady:options?.onReady || null } }));

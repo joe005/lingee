@@ -1,21 +1,21 @@
 import { toast } from '../../../core/toast.js';
-import { tkProjectById } from '../../tasks-v2/data.js';
-import { ldAuthUser, ldBindDir, ldCheckDir, ldDefaultPath, ldEsc, ldMarkInitialized, ldMine, ldNetCheck, ldPickDir, ldProjectStatus, ldRecordChecks, ldRefresh } from './core.js';
+import { ldBindingKey, ldAuthUser, ldBindingFor, ldEnvironmentId, ldTargetProject, ldBindDir, ldCheckDir, ldDefaultPath, ldEsc, ldMarkInitialized, ldNetCheck, ldPickDir, ldProjectStatus, ldRecordChecks, ldRefresh } from './core.js';
 import { ldJobOf, ldJobRemove, ldJobSet } from './init-jobs.js';
 import { LD_ICONS, ldInitProgressHtml, ldReadonlyRepoHtml } from './ui.js';
 
-/* 本地开发 · 空间表单：代码仓库（只读）、Git 账号、空间目录三段，以及初始化执行。
+/* 本地开发 · 空间表单：代码仓库（只读）、Git 账号、本机目录三段，以及初始化执行。
    「初始化空间 / 空间设置」与「准备执行环境」两个弹窗各持一份表单状态，共用这里的渲染和执行逻辑，
    弹窗本身只管标题、说明和底部按钮。 */
 
 export function ldNewSpaceForm(projectId) {
-  var project = tkProjectById(projectId);
-  var binding = ldMine().bindings[projectId];
+  var project = ldTargetProject(projectId);
+  projectId = ldEnvironmentId(Object.assign({},project,{bindingKey:ldBindingKey(project)}));
+  var binding = ldBindingFor(projectId);
   var mode = binding && binding.path !== ldDefaultPath(project) ? 'existing' : 'auto';
   return { projectId:projectId, mode:mode, path:mode === 'existing' ? binding.path : '', pulling:0, error:'', menu:false, run:0 };
 }
 export function ldSpaceFormTarget(form) {
-  return form.mode === 'existing' ? form.path : ldDefaultPath(tkProjectById(form.projectId));
+  return form.mode === 'existing' ? form.path : ldDefaultPath(ldTargetProject(form.projectId));
 }
 
 /* Git 账号：账号按仓库主机自动匹配，同一平台登录一次即可复用；下拉里列出这个平台的账号，底部「新增账号」 */
@@ -31,18 +31,18 @@ function accountHtml(form, status) {
   return '<div class="ld-form-field"><span class="ld-form-label" id="ldFormAccount-' + ldEsc(form.projectId) + '">Git 账号<b class="ld-req" aria-hidden="true">*</b></span><div class="ld-select-wrap">' + trigger + menu + '</div></div>';
 }
 
-/* 空间目录：默认目录 / 自定义目录两张单选卡片，自定义选中后在卡片内选择文件夹 */
+/* 本机目录：默认目录 / 自定义目录两张单选卡片，自定义选中后在卡片内选择文件夹 */
 function directoryHtml(form) {
   var busy = form.pulling ? ' disabled' : '';
-  var defaultPath = ldDefaultPath(tkProjectById(form.projectId));
+  var defaultPath = ldDefaultPath(ldTargetProject(form.projectId));
   var card = function (value, title, desc, extra) {
     return '<label class="ld-dir-card"><input type="radio" name="ldFormDir-' + ldEsc(form.projectId) + '" data-ld-form-dir value="' + value + '"' + (form.mode === value ? ' checked' : '') + busy + '>'
       + '<span class="ld-dir-card-radio" aria-hidden="true"></span><span class="ld-dir-card-body"><strong>' + title + '</strong><span class="ld-dir-card-desc" title="' + ldEsc(desc) + '">' + ldEsc(desc) + '</span>' + (extra || '') + '</span></label>';
   };
   var custom = form.mode === 'existing'
-    ? card('existing', '自定义目录', form.path || '选择工作区目录内的文件夹', '<button type="button" class="ld-btn ld-dir-card-pick" data-ld-form-pick' + busy + '>' + (form.path ? '重新选择' : '选择文件夹') + '</button>')
-    : card('existing', '自定义目录', '选择工作区目录内的文件夹');
-  return '<div class="ld-form-field"><span class="ld-form-label">空间目录</span><div class="ld-dir-cards" role="radiogroup" aria-label="空间目录">'
+    ? card('existing', '自定义目录', form.path || '选择本机根目录内的文件夹', '<button type="button" class="ld-btn ld-dir-card-pick" data-ld-form-pick' + busy + '>' + (form.path ? '重新选择' : '选择文件夹') + '</button>')
+    : card('existing', '自定义目录', '选择本机根目录内的文件夹');
+  return '<div class="ld-form-field"><span class="ld-form-label">本机目录</span><div class="ld-dir-cards" role="radiogroup" aria-label="本机目录">'
     + card('auto', '默认目录', defaultPath) + custom + '</div></div>';
 }
 
@@ -84,6 +84,7 @@ export function ldSpaceFormChange(form, target) {
 export function ldRunSpaceInit(form, hooks) {
   var status = ldProjectStatus(form.projectId);
   if (!status.authOk || form.pulling) return false;
+  if (ldJobOf(form.projectId)) { toast('这个仓库正在初始化，请等待完成', 'warning'); return false; }
   if (form.mode === 'existing' && !form.path) { toast('请先选择目录', 'warning'); return false; }
   var path = ldSpaceFormTarget(form);
   var error = ldCheckDir(form.projectId, path);
@@ -92,7 +93,7 @@ export function ldRunSpaceInit(form, hooks) {
   form.error = net ? net.reason : '';
   if (net) { ldRecordChecks(status.info.host); ldRefresh(); hooks.render(); return false; }
   var projectId = form.projectId, mode = form.mode, first = !status.binding;
-  var name = tkProjectById(projectId)?.name || '';
+  var name = ldTargetProject(projectId)?.name || '';
   form.menu = false;
   form.pulling = 8;
   ldJobSet(projectId, { name:name, branch:status.info.baseBranch, pulling:8, background:false });
@@ -104,7 +105,7 @@ export function ldRunSpaceInit(form, hooks) {
     ldJobSet(projectId, { pulling:form.pulling });
     if (form.pulling < 100) { hooks.render(); return; }
     clearInterval(timer);
-    ldBindDir(projectId, path, mode);
+    if (!ldBindDir(projectId, path, mode)) { form.pulling = 0; form.error = '本机目录绑定保存失败，请重试'; ldJobRemove(projectId); hooks.render(); return; }
     var after = ldProjectStatus(projectId);
     if (!after.ready) { form.pulling = 0; form.error = after.reason; ldJobRemove(projectId); hooks.render(); return; }
     ldMarkInitialized(projectId);
@@ -114,7 +115,7 @@ export function ldRunSpaceInit(form, hooks) {
     setTimeout(function () {
       if (run !== form.run) return;
       ldJobRemove(projectId);
-      toast(first ? '「' + ldEsc(name) + '」已就绪，已获取 ' + ldEsc(status.info.baseBranch) + ' 最新代码，目录：' + ldEsc(path) : '空间目录已更改为 ' + ldEsc(path), 'success');
+      toast(first ? '「' + ldEsc(name) + '」已就绪，已获取 ' + ldEsc(status.info.baseBranch) + ' 最新代码，目录：' + ldEsc(path) : '本机目录已更改为 ' + ldEsc(path), 'success');
       hooks.done(first, path);
     }, 600);
   }, 900);

@@ -123,6 +123,7 @@ export function openTaskModal(taskId, parentId) {
   if (!parentId && !taskId) { openNewIssueCreate(pageState.projectListMode ? pageState.projectListProjectId : ''); return; }
   if (!tkProjectsForCurrentUser().length) { toast('请先加入项目再创建任务', 'warning'); return; }
   fillSelects();
+  document.getElementById('tkFormExpertDropdown').hidden = true;
   state.editingTaskId = null;
   state.editingParentId = parentId || null;
   els.tkModalTitle.textContent = parentId ? '新增子任务' : (pageState.projectListMode ? '新建任务 · '+(tkProjectById(pageState.projectListProjectId)?.name||'项目') : '新建任务');

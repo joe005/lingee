@@ -1,3 +1,4 @@
+import { buildTaskRepoConfig } from '../collab/repository-config.js';
 /* 任务代码分支：项目配置了 Git 仓库和基准分支时，项目下的开发任务按分支开发——
    开始执行时从基准分支拉取任务分支；开发交付时由负责人确认模拟合并。
    合并以代码交付记录为准，任务完成本身不构成合并证据。 */
@@ -20,7 +21,8 @@ function tkTaskBranchName(task) {
 /* 返回 null 表示该任务不走分支开发（项目未配置仓库或基准分支） */
 function tkTaskBranch(task) {
   if (!task) return null;
-  var project = tkProjectById(task.project);
+  var source = tkProjectById(task.project);
+  var project = Object.assign({}, source, buildTaskRepoConfig(task, source));
   var delivery = task.codeDeliveries?.at(-1);
   if (!project || !project.repo || !(delivery?.target || project.baseBranch)) return null;
   var base = delivery?.target || project.baseBranch;
