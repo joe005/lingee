@@ -95,7 +95,7 @@ console.log('多仓库、工作区独立配置、主仓库、兼容迁移、任�
 // Render the actual settings states without launching a browser.
 const viewSource=readFileSync(new URL('../src/scripts/features/collab/basic-settings.js',import.meta.url),'utf8');
 let selectedScope={project:p.id,ws:''};
-const host={innerHTML:'',classList:{toggle(){}},querySelectorAll:()=>[]};
+const host={innerHTML:'',dataset:{},classList:{toggle(){}},querySelectorAll:()=>[]};
 const viewDeps={...repositories,...tree,ldBindingFor:()=>null,ldEnvironmentId:config=>'repo-env:'+JSON.stringify(config),ldDefaultPath:config=>'~/repos/'+config.name, basicEditable:()=>true, getSpaceScope:()=>selectedScope, wsProjectById:dependencies.tkProjectById,
   $:()=>null, initSelectDropdowns:selects=>assert.equal(selects.includes(null),false)};
 const view=new Function(...Object.keys(viewDeps),viewSource.replace(/^import .*;\n/gm,'').replace(/\bexport /g,'')+'\nreturn {renderBasicSettings,repoDirectory,repoLocalTarget,setEditing:index=>{repoEditing=index;},setDraft:value=>{repoDraft=value;}};')(...Object.values(viewDeps));

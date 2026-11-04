@@ -1,5 +1,5 @@
 import { renderWorkspaceCapabilities, workspaceAssetControls, workspaceExtraCards, workspaceAssetVisible } from './expert-market.js';
-import { assetUpgradeHtml, assetModesHtml, assetTagsHtml, isMoreAssets, syncAssetBrowser, cloudCardsHtml } from './expert-market.js';
+import { assetUpgradeHtml, assetModesHtml, assetTagsHtml, isPersonalAssets, isMoreAssets, syncAssetBrowser, cloudCardsHtml } from './expert-market.js';
 import { layerOf, layerVisible, layerActions, layerToolbar, assetSourceBadge } from '../expert/layers.js';
 import { $ } from '../../core/dom.js';
 import { EXPERTS, skillInfo, xav, xesc } from '../expert/data.js';
@@ -33,10 +33,10 @@ function cvBuildExpertCard(e){
     +'<div class="card-top"><img class="x-av" src="'+xav(e.k)+'" alt="">'
     +'<div class="card-titles"><div class="card-title-row"><span class="card-title">'+xesc(e.name)+'</span>'
     +'</div>'
-    +'<div class="x-sub asset-card-summary">'+assetSourceBadge('expert',e)+'<span>'+(e.skills||[]).length+' 个技能</span>'+(layerOf('expert',e)==='personal'?routeTagHtml(routeOf('expert',e.id)):'')+'<span class="asset-card-upgrade-anchor">'+assetUpgradeHtml('expert',e.id)+'</span></div></div></div>'
+    +'<div class="x-sub asset-card-summary">'+assetSourceBadge('expert',e)+workspaceAssetControls('expert',e)+'<span>'+(e.skills||[]).length+' 个技能</span>'+(layerOf('expert',e)==='personal'?routeTagHtml(routeOf('expert',e.id)):'')+'<span class="asset-card-upgrade-anchor">'+assetUpgradeHtml('expert',e.id)+'</span></div></div></div>'
     +'<div class="card-desc" title="'+xesc(e.desc)+'">'+xesc(e.desc)+'</div>'
     +assetTagsHtml(tags)+assetModesHtml(e.modes)
-    +layerActions('expert',e)+workspaceAssetControls('expert',e)+'</div>';
+    +layerActions('expert',e)+'</div>';
 }
 function cvRenderExperts(){
   if ($('#cvExpertSections') && renderWorkspaceCapabilities($('#cvExpertSections'))) return;
@@ -55,8 +55,8 @@ function cvRenderExperts(){
     return;
   }
   var rows=groups.flatMap(function(g){return g.list;});
-  var sections=[{title:'个人开发',rows:rows.filter(e=>layerOf('expert',e)==='personal')},{title:'我添加的',rows:rows.filter(e=>layerOf('expert',e)!=='personal')}];
-  box.innerHTML=extra+sections.filter(section=>section.rows.length).map(section=>'<section class="asset-list-section"><h2 class="expert-section-title">'+section.title+'</h2><div class="apps-grid">'+section.rows.map(cvBuildExpertCard).join('')+'</div></section>').join('')||'<div class="x-empty">当前列表没有智能体，可从「更多智能体」添加到当前工作区。</div>';
+  var sections=[{title:'个人开发',rows:rows.filter(e=>layerOf('expert',e)==='personal')},{title:'我添加的',rows:rows.filter(e=>layerOf('expert',e)!=='personal'),extra}];
+  box.innerHTML=sections.filter(section=>section.rows.length||section.extra).map(section=>'<section class="asset-list-section"><h2 class="expert-section-title">'+section.title+'</h2><div class="apps-grid">'+section.rows.map(cvBuildExpertCard).join('')+(section.extra||'')+'</div></section>').join('')||'<div class="x-empty">'+(isPersonalAssets('expert') ? '暂无我的智能体，可点击「新建」创建。' : '当前列表没有智能体，可从「更多智能体」添加到当前工作区。')+'</div>';
 }
 
 /* cvExpertKw 由其它模块写回；import 绑定只读，所以走这个 setter */

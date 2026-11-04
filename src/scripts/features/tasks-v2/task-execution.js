@@ -1,4 +1,4 @@
-import { capabilityTaskError, capabilityTaskSnapshot } from '../collab/capability-config.js';
+import { capabilityTaskError, capabilityTaskSnapshot, capabilityLocalInstallError } from '../collab/capability-config.js';
 import { buildTaskRepoSelectionError, buildTaskNeedsRepo, buildTaskRepoSnapshot } from '../collab/repository-config.js';
 import { ldPreflight, ldTaskEnvironmentId, ldRememberTaskDirectory } from '../collab/local-dev/core.js';
 import { taskCodeDeliveryApprovalError, taskCodeDeliveryContext, taskCodeTestArtifacts } from './code-delivery-context.js';
@@ -71,6 +71,8 @@ export function startTaskStage(task, options) {
   var capabilityError = capabilityTaskError(task,tkProjectById(task.project));
   if (capabilityError) return {ok:false,message:capabilityError};
   var executorSnapshot = capabilityTaskSnapshot(task,tkProjectById(task.project));
+  var installError = capabilityLocalInstallError(executorSnapshot,currentHandlerId || tkCurrentUserId());
+  if (installError) return {ok:false,message:installError};
   if (task.executionPlan?.length && task.executionPlan.some(function (stage) { return !stage.assigneeId; })) return {ok:false, message:'请先为执行计划的每个阶段指定负责人'};
   var stages = taskExecutionStages(task);
   var stage = stages.find(function (row) { return row.id === task.executionStageId; })

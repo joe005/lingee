@@ -1,6 +1,6 @@
 import { renderWorkspaceCapabilities, workspaceAssetControls, workspaceExtraCards, workspaceAssetVisible } from '../collab/expert-market.js';
 import { detailIdentityHtml, detailReviewHtml, detailCommandsHtml } from './detail-presentation.js';
-import { assetUpgradeHtml, assetModesHtml, assetTagsHtml, isMoreAssets, syncAssetBrowser, cloudCardsHtml, teamWorkModes } from '../collab/expert-market.js';
+import { assetUpgradeHtml, assetModesHtml, assetTagsHtml, isPersonalAssets, isMoreAssets, syncAssetBrowser, cloudCardsHtml, teamWorkModes } from '../collab/expert-market.js';
 import { layerOf, layerVisible, layerActions, layerToolbar, handleLayerAction, assetSourceBadge } from './layers.js';
 import { UNLISTED_EXPERT_IDS } from './builtin-catalog.js';
 import { $, $$ } from '../../core/dom.js';
@@ -49,11 +49,12 @@ function renderExpertGrid(){
         +'<div class="card-top">'+facesHtml(t.members,4,true)
         +'<div class="card-titles"><div class="card-title-row"><span class="card-title">'+xesc(t.name)+'</span>'
         +'</div>'
-        +'<div class="x-sub asset-card-summary">'+assetSourceBadge('team',t)+'<span>'+t.members.length+' 个智能体</span><span class="asset-card-upgrade-anchor">'+assetUpgradeHtml('team',t.id)+'</span></div></div></div>'
+        +'<div class="x-sub asset-card-summary">'+assetSourceBadge('team',t)+workspaceAssetControls('team',t)+'<span>'+t.members.length+' 个智能体</span><span class="asset-card-upgrade-anchor">'+assetUpgradeHtml('team',t.id)+'</span></div></div></div>'
         +'<div class="card-desc">'+xesc(t.desc)+'</div>'
-        +assetTagsHtml(teamDomains(t))+assetModesHtml(teamWorkModes(t))+layerActions('team',t)+workspaceAssetControls('team',t)+'</div>';
+        +assetTagsHtml(teamDomains(t))+assetModesHtml(teamWorkModes(t))+layerActions('team',t)+'</div>';
     }
-    html=workspaceExtraCards('team',TEAMS,expertKw,teamLayer)+[{title:'个人开发',rows:rows.filter(t=>layerOf('team',t)==='personal')},{title:'我添加的',rows:rows.filter(t=>layerOf('team',t)!=='personal')}].filter(section=>section.rows.length).map(section=>'<section class="asset-list-section"><h2 class="expert-section-title">'+section.title+'</h2><div class="apps-grid">'+section.rows.map(teamCard).join('')+'</div></section>').join('');
+    const workspaceCards=workspaceExtraCards('team',TEAMS,expertKw,teamLayer);
+    html=[{title:'个人开发',rows:rows.filter(t=>layerOf('team',t)==='personal')},{title:'我添加的',rows:rows.filter(t=>layerOf('team',t)!=='personal'),extra:workspaceCards}].filter(section=>section.rows.length||section.extra).map(section=>'<section class="asset-list-section"><h2 class="expert-section-title">'+section.title+'</h2><div class="apps-grid">'+section.rows.map(teamCard).join('')+(section.extra||'')+'</div></section>').join('');
   }else{
     var rows2=EXPERTS.filter(function(e){
       if(!layerVisible('expert',e))return false;
@@ -72,7 +73,7 @@ function renderExpertGrid(){
         +'</div>';
     }).join('');
   }
-  expertGrid.innerHTML = html || '<div class="x-empty">当前列表没有智能体团队，可从「更多智能体团队」添加到当前工作区。</div>';
+  expertGrid.innerHTML = html || '<div class="x-empty">'+(isPersonalAssets('team') ? '暂无我的智能体团队，可点击「新建」创建。' : '当前列表没有智能体团队，可从「更多智能体团队」添加到当前工作区。')+'</div>';
   var tc=$('#teamTabCount'), ec=$('#expertTabCount');
   if(tc) tc.textContent=TEAMS.length;
   if(ec) ec.textContent=EXPERTS.filter(function(e){return e.listed!==false&&!UNLISTED_EXPERT_IDS.has(e.id)}).length;

@@ -1,3 +1,4 @@
+import { initRecruitmentSettings } from './recruitment-settings.js';
 import { initCollabView, initCollabTabs } from './view.js';
 import { initCollabTasks } from './tasks.js';
 import { initCollabProjects } from './projects.js';
@@ -20,5 +21,6 @@ export function initCollabArea() {
   initCollabWorkspaceSettings();  /* 设置 › 工作区：空间之下的工作区管理 */
   initCollabSpaceSwitch();        /* 顶部空间 / 工作区切换，与任务筛选同一份条件 */
   initCapabilitySettings();
+  initRecruitmentSettings();
   initCollab();                   /* 6445 */
 }

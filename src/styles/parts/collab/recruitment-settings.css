@@ -1,0 +1,45 @@
+/* 工作区设置 · 添加与移除。共享资产配置不混入个人添加入口。 */
+#view-collab .cv-recruit-tabs { display: inline-flex; gap: 4px; padding: 4px; margin-bottom: 16px; border-radius: var(--asset-pill-radius); background: var(--segment-track); }
+#view-collab .cv-recruit-tabs button { min-height: 32px; padding: 4px 16px; border: 0; border-radius: var(--asset-pill-radius); background: none; color: var(--text-secondary); font: inherit; font-size: var(--font-size-14); cursor: pointer; }
+#view-collab .cv-recruit-tabs button:hover { background: var(--hover); color: var(--text); }
+#view-collab .cv-recruit-tabs button.is-on { background: var(--bg); color: var(--text); box-shadow: var(--pill-shadow); }
+#view-collab .cv-recruit-tabs button:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+#view-collab .cv-recruit-list.apps-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 0; }
+#view-collab .cv-recruit-list .x-av { width: 40px; height: 40px; border-radius: 50%; object-fit: contain; }
+#view-collab .cv-recruit-list .x-faces { display: grid; grid-template-columns: repeat(2, 20px); gap: 4px; padding: 0; flex: none; align-content: center; }
+#view-collab .cv-recruit-list .x-faces img { display: block; width: 20px; height: 20px; margin: 0; border: 0; border-radius: 50%; object-fit: contain; }
+@media (max-width: 760px) { #view-collab .cv-recruit-list.apps-grid { grid-template-columns: minmax(0, 1fr); } }
+#view-collab .cv-recruit-list .cv-recruit-empty { grid-column: 1 / -1; }
+#view-collab .cv-recruit-list .x-card { position: relative; }
+#view-collab .cv-recruit-list .cv-recruit-remove { position: absolute; top: 16px; right: 16px; display: grid; place-items: center; width: 24px; height: 24px; padding: 0; border: 0; border-radius: 6px; background: none; color: var(--text-secondary); cursor: pointer; opacity: 0; pointer-events: none; }
+#view-collab .cv-recruit-list .cv-recruit-remove:hover { background: var(--hover); color: var(--danger); }
+#view-collab .cv-recruit-list .cv-recruit-remove:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+#view-collab .cv-recruit-list .x-card:hover .cv-recruit-remove,
+#view-collab .cv-recruit-list .x-card:focus-within .cv-recruit-remove { opacity: 1; pointer-events: auto; }
+@media (hover: none) { #view-collab .cv-recruit-list .cv-recruit-remove { opacity: 1; pointer-events: auto; } }
+.cv-recruit-empty { padding: 20px 0; color: var(--text-secondary); font-size: var(--font-size-14); }
+#cvRecruitOverlay { position: fixed; inset: 0; z-index: 270; display: flex; align-items: center; justify-content: center; padding: 16px; background: var(--overlay); }
+#cvRecruitOverlay[hidden] { display: none; }
+#cvRecruitOverlay .cv-recruit-dialog { box-sizing: border-box; display: flex; flex-direction: column; gap: 16px; width: min(640px, 100%); max-height: calc(100dvh - 32px); padding: 20px; border-radius: 24px; background: var(--bg); }
+#cvRecruitOverlay header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+#cvRecruitOverlay h3 { margin: 0; color: var(--text); font-size: var(--font-size-20); font-weight: 500; }
+#cvRecruitOverlay header p { margin: 4px 0 0; color: var(--text-secondary); font-size: var(--font-size-12); }
+#cvRecruitOverlay .cv-recruit-close { display: grid; place-items: center; flex: none; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 8px; background: none; color: var(--text-secondary); font: inherit; cursor: pointer; }
+#cvRecruitOverlay .cv-recruit-close:hover { background: var(--hover); }
+#cvRecruitOverlay input[type="search"] { box-sizing: border-box; flex: none; width: 100%; height: 36px; padding: 0 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); font: inherit; font-size: var(--font-size-14); }
+#cvRecruitOverlay .cv-recruit-options { min-height: 0; max-height: 360px; overflow-y: auto; display: grid; gap: 8px; }
+#cvRecruitOverlay .cv-recruit-option { display: flex; align-items: flex-start; gap: 12px; padding: 12px; border: 1px solid var(--border); border-radius: 12px; cursor: pointer; }
+#cvRecruitOverlay .cv-recruit-option:hover { border-color: var(--border-hover); }
+#cvRecruitOverlay .cv-recruit-option:has(input:checked) { border-color: var(--brand); }
+#cvRecruitOverlay .cv-recruit-option:has(input:disabled) { cursor: default; background: var(--fill-1); }
+#cvRecruitOverlay input[type="checkbox"] { flex: none; width: 16px; height: 16px; margin: 4px 0 0; accent-color: var(--brand); }
+#cvRecruitOverlay .cv-recruit-option > span { min-width: 0; display: grid; gap: 4px; }
+#cvRecruitOverlay .cv-recruit-option strong { color: var(--text); font-size: var(--font-size-14); font-weight: 500; }
+#cvRecruitOverlay .cv-recruit-option :is(small,span > span) { color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); overflow-wrap: anywhere; }
+#cvRecruitOverlay footer { display: flex; flex: none; justify-content: flex-end; gap: 8px; padding-top: 16px; border-top: 1px solid var(--divider); }
+#cvRecruitOverlay footer button { min-height: 36px; padding: 0 16px; border-radius: 8px; font: inherit; font-size: var(--font-size-14); cursor: pointer; }
+#cvRecruitOverlay footer .ld-space-btn { border: 1px solid var(--border); background: var(--bg); color: var(--text); }
+#cvRecruitOverlay footer .ld-space-btn:hover { background: var(--hover); }
+#cvRecruitOverlay footer button:disabled { opacity: .5; cursor: default; }
+#cvRecruitOverlay :is(button,input):focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+#cvRecruitOverlay .cv-basic-error { margin: 0; color: var(--danger); font-size: var(--font-size-12); }

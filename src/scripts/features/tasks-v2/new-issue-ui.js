@@ -124,7 +124,9 @@ function renderWorkspaceOptions(selected = '') {
   byId('niuWorkspace').innerHTML = '<option value="">空间根</option>' + (p ? wsFlatTree(p).map(row => '<option value="' + escapeHtml(row.ws.id) + '">' + escapeHtml(wsPathNames(p, row.ws.id).join(' / ')) + '</option>').join('') : '');
   byId('niuWorkspace').value = p && wsById(p, selected) ? selected : '';
   byId('niuWorkspace').disabled = !p;
-  byId('niuWorkspace').closest('.niu-field').hidden = true;
+  const showWorkspace = editingTaskId === null && !!byId('niuWorkspace').value;
+  byId('niuWorkspace').closest('.niu-field').hidden = !showWorkspace;
+  byId('niuProjectTrigger').closest('.niu-field').hidden = showWorkspace;
   renderWorkspaceRepoHint();
 }
 function renderWorkspaceRepoHint(preferred, preserveInvalid = false) {
@@ -478,7 +480,7 @@ function taskSaveMessage(project, stages) {
 }
 
 function createTask(startNow) {
-  if (!byId('niuTeam').value) { toast(capabilityOptions(tkProjectById(selectedProjectId),byId('niuWorkspace').value).some(row => !row.personal && row.kind === 'team') ? '请选择智能体团队' : '当前工作区尚无可用智能体团队，请联系管理员从「更多智能体团队」添加','warning'); selectCreateTab('info'); byId('niuTeam').focus(); return; }
+  if (!byId('niuTeam').value) { toast(capabilityOptions(tkProjectById(selectedProjectId),byId('niuWorkspace').value).some(row => !row.personal && row.kind === 'team') ? '请选择智能体团队' : '当前工作区尚无可用智能体团队，请联系管理员在「设置 → 智能体与团队」添加','warning'); selectCreateTab('info'); byId('niuTeam').focus(); return; }
   if (!validateTaskInfo()) return;
   const title = byId('niuTitle').value.trim();
   const description = byId('niuDescription').value.trim();

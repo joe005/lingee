@@ -1,4 +1,5 @@
-import { setCapabilityCatalog, setPersonalAssets } from '../collab/capability-config.js';
+import { localAssetStorageKey, readLocalAssetInstalls, writeLocalAssetInstalls, requiredLocalPackages, localAssetInstallError } from './local-install-state.js';
+import { setCapabilityCatalog, setPersonalAssets, setCapabilityLocalChecker } from '../collab/capability-config.js';
 import { REVIEW_KEY, countAssetReviews, renderAssetReviewCards, openAssetReview, rejectedReviewEntries, mergeVersionHistory } from './asset-review.js';
 import { cvWorkspace, cvWorkspaceName, cvCanAccessWorkspace, cvCurrentUserName } from '../collab/data.js';
 import { $, $$ } from '../../core/dom.js';
@@ -22,8 +23,8 @@ const INSTALL_KEY='lingee.platform.installed.v1';
 const clone=value=>JSON.parse(JSON.stringify(value));
 const key=(kind,id)=>kind+':'+id;
 const now=()=>new Date().toLocaleString('zh-CN',{hour12:false});
-function read(name,fallback){try{const value=JSON.parse(localStorage.getItem(name));return value&&typeof value==='object'?value:clone(fallback);}catch(_){return clone(fallback);}}
-function write(name,value){try{localStorage.setItem(name,JSON.stringify(value));return true;}catch(_){return false;}}
+function read(name,fallback){if(name===INSTALL_KEY)return readLocalAssetInstalls();try{const value=JSON.parse(localStorage.getItem(name));return value&&typeof value==='object'?value:clone(fallback);}catch(_){return clone(fallback);}}
+function write(name,value){if(name===INSTALL_KEY)return writeLocalAssetInstalls(value);try{localStorage.setItem(name,JSON.stringify(value));return true;}catch(_){return false;}}
 const originals={expert:EXPERTS.filter(e=>!e.mine).map(clone),team:PRESET_TEAMS.map(clone)};
 const retiredSeedKeys=new Set(['expert:frontend-engineer','expert:ux-designer','expert:cosmic-form','expert:cosmic-workflow','expert:cosmic-report','expert:cosmic-plugin','expert:cosmic-api','expert:cloud-delivery-advisor','expert:cosmic-software-engineer','expert:cosmic-code-reviewer','expert:agent-development-expert','team:kingdee-saas-implementation','team:kingdee-secondary-dev']);
 const retiredDemoTeams=new Set(['team:cloud-delivery-team','team:tenant-ws-build-build-delivery-team']);
@@ -425,13 +426,14 @@ function uninstallDependencies(itemKey){
   return TEAMS.filter(team=>team.members.includes(item.id));
 }
 async function uninstallCloudAsset(itemKey){
+  const uninstallOwner=localAssetStorageKey();
   const item=meta[itemKey];
   if(!item||!installed[itemKey]||!availableToClient(item))return;
   const dependencies=uninstallDependencies(itemKey);
   if(dependencies.length){assetReviewDialog('无法卸载','<p>「'+xesc(label(itemKey))+'」正被以下智能体团队使用：'+dependencies.map(team=>'「'+xesc(team.name)+'」').join('、')+'。请先卸载这些团队或把它移出团队。</p>',null,'知道了',{style:'notice'});return;}
   const name=installedSnapshot(item.kind,item.id)?.name||label(itemKey);
-  const confirmed=await requestDeleteConfirmation('卸载「'+name+'」？它会从“我的”列表移除，之后可在“更多”中重新安装。云端版本、个人配置和会话历史会保留。',{title:'卸载'+(item.kind==='team'?'智能体团队':'智能体'),confirmLabel:'确认卸载'});
-  if(!confirmed||!installed[itemKey])return;
+  const confirmed=await requestDeleteConfirmation('卸载「'+name+'」？个人安装将被移除；若工作区仍分配此资产，会继续在“我添加的”显示为未安装。云端版本、工作区关系、个人配置和会话历史保留。',{title:'卸载'+(item.kind==='team'?'智能体团队':'智能体'),confirmLabel:'确认卸载'});
+  if(!confirmed||uninstallOwner!==localAssetStorageKey()||!installed[itemKey])return;
   if(!meta[itemKey]||!availableToClient(meta[itemKey])||uninstallDependencies(itemKey).length){toast('资产权限或团队引用已变化，请刷新列表后重试','warning');return;}
   const next={...installed};delete next[itemKey];
   if(!write(INSTALL_KEY,next)){toast('卸载失败，原版本保持不变','error');return;}
@@ -442,6 +444,7 @@ async function uninstallCloudAsset(itemKey){
   toast('已卸载「'+name+'」','success');
 }
 setCloudAssetProviders({catalog:cloudCatalog,upgradeBadge:cloudUpgradeBadge});
+setCapabilityLocalChecker(localAssetInstallError);
 setCapabilityCatalog(project => cloudCatalog(project?.tenantId || project?.workspace));
 setPersonalAssets(() => ({experts: MY_EXPERTS, teams: TEAMS.filter(team => !team.preset && team.source !== 'tenant'), lookup: id => EX[id] || null}));
 const UPDATE_SETTINGS_KEY='lingee.asset-update-settings.v1';
@@ -518,8 +521,10 @@ function validateInstall(rows){
   return '';
 }
 function doInstall(){
+  const installOwner=localAssetStorageKey();
   const rows=installable();if(!rows.length)return showUpdate();showUpdate('loading');
   setTimeout(()=>{
+    if(installOwner!==localAssetStorageKey()){toast('账号已变化，请重新更新','warning');return;}
     if($('#platformFailOnce').checked){$('#platformFailOnce').checked=false;return showUpdate('error','模拟下载失败');}
     const error=validateInstall(rows);if(error)return showUpdate('error',error);
     const next={...installed};for(const item of rows)next[item.id]=item.row.version;
@@ -529,6 +534,8 @@ function doInstall(){
 }
 export function initPlatformAdmin(){
   seed();applyInstalled();
+  document.addEventListener('lingee:auth-changed',()=>{installed=read(INSTALL_KEY,{});applyInstalled();});
+  document.addEventListener('lingee:install-workspace-asset',event=>{if(event.detail?.entry)installWorkspaceAsset(event.detail.entry);});
   $$('[data-asset-update-settings]').forEach(button=>button.addEventListener('click',showUpdateSettings));
   $$('[data-platform-nav]').forEach(button=>button.addEventListener('click',()=>{assetReviewClose();refreshAccess();}));
   $('[data-platform-back]')?.addEventListener('click',()=>showView('collab'));
@@ -551,7 +558,7 @@ export function initPlatformAdmin(){
   },true);
   window.addEventListener('storage',event=>{
     if(event.key===UPDATE_SETTINGS_KEY){updateAttempt='';scheduleAutoUpdate();return;}
-    if(![META_KEY,VERSION_KEY,INSTALL_KEY,REVIEW_KEY].includes(event.key))return;
+    if(![META_KEY,VERSION_KEY,localAssetStorageKey(),REVIEW_KEY].includes(event.key))return;
     if(event.key!==REVIEW_KEY){meta=read(META_KEY,{});versions=read(VERSION_KEY,{});installed=read(INSTALL_KEY,{});applyInstalled();}
     if(!$('#view-platform').classList.contains('hidden'))renderCards();
   });
@@ -585,7 +592,26 @@ function cloudInstallRows(id,reinstall=false){
   }
   collect(id);return [...rows.values()];
 }
+/* 工作区分配仅授权；由成员确认后安装固定的团队及成员版本到本机。保留个人当前版本选择。 */
+function workspaceInstallPlan(entry) {
+  const rows=[];
+  for(const required of requiredLocalPackages(entry)){
+    const item=meta[required.key],target=version(required.key,required.version);
+    if(!item || item.status!=='online' || !target) throw new Error('资产或依赖版本不可安装，请联系管理员检查工作区配置');
+    rows.push({key:required.key,kind:item.kind,version:required.version,old:installed[required.key] || '',data:target.data});
+  }
+  return rows;
+}
+export function installWorkspaceAsset(entry) {
+  let plan;try{plan=workspaceInstallPlan(entry);}catch(error){return assetReviewDialog('无法安装','<p class="platform-dialog-error">'+xesc(error.message)+'</p>',null,'知道了',{style:'notice'});}
+  const next={...installed};
+  for(const row of plan)next[row.key] ||= row.version;
+  if(!writeLocalAssetInstalls(next,plan.map(row=>({key:row.key,version:row.version})))){toast('本机安装失败，原记录保持不变，请重试','error');return;}
+  installed=next;applyInstalled();
+  toast('已安装「'+(plan.find(row=>row.key===entry.key) || plan[0]).data.name+'」，可执行本工作区的任务','success');
+}
 export function installCloudAsset(id,options={}){
+  const installOwner=localAssetStorageKey();
   let rows;try{rows=cloudInstallRows(id,true);}catch(error){return assetReviewDialog('无法安装',`<p class="platform-dialog-error">${xesc(error.message)}</p>`,null,'关闭');}
   if(!rows.length)return assetReviewDialog('已安装', '<p>当前已是最新版本。</p>',null,'关闭');
   const row=active(id),old=installed[id]||'';
@@ -606,9 +632,11 @@ export function installCloudAsset(id,options={}){
     ${dependencyCount?`<div class="platform-install-dependency">将同步更新 ${dependencyCount} 位依赖的智能体，确认后一起生效。${dependencyRows}</div>`:''}
     <details class="platform-install-demo" open><summary>演示选项</summary><label><input type="checkbox" id="marketFailOnce"> 模拟本次安装失败</label></details>`;
   assetReviewDialog(reinstall?`重新安装${kind}`:old?`升级${kind}`:`安装${kind}`,body,()=>{
+    if(installOwner!==localAssetStorageKey()){toast('账号已变化，请重新安装','warning');return;}
     const simulateFailure=$('#marketFailOnce')?.checked;
     assetReviewDialog('正在安装','<p>正在校验版本及成员依赖…</p>',null,'关闭');
     setTimeout(()=>{
+      if(installOwner!==localAssetStorageKey()){toast('账号已变化，请重新安装','warning');return;}
       let current;try{current=cloudInstallRows(id,true);}catch(error){return assetReviewDialog('安装失败',`<p>${xesc(error.message)}，旧版本保持不变。</p>`,()=>installCloudAsset(id),'重试');}
       const error=simulateFailure?'模拟下载失败':validateInstall(current);
       if(error)return assetReviewDialog('安装失败',`<p class="platform-dialog-error">${xesc(error)}，旧版本和个人配置保持不变。</p>`,()=>installCloudAsset(id),'重试');

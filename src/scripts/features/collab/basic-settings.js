@@ -1,3 +1,4 @@
+import { renderRecruitmentSettings } from './recruitment-settings.js';
 import { ldBindingFor, ldEnvironmentId, ldDefaultPath, ldCheckDir, ldBindDir, ldPickDir } from './local-dev/core.js';
 import { buildRepoOwn, buildRepoList, buildRepoIdentity } from './repository-config.js';
 import { initSelectDropdowns } from '../../core/select-dropdown.js';
@@ -116,9 +117,9 @@ function members(p, ws) {
   memberPage = Math.min(Math.max(1, memberPage), pages);
   var pageIds = ids.slice((memberPage - 1) * memberPageSize, memberPage * memberPageSize);
   var owner = ws ? wsOwnerId(p, ws) : (CV_MEMBERS.find(function (m) { return m.name === p.owner; }) || {}).id;
-  return '<div class="cv-basic-heading"><div><h2>成员</h2><p>' + esc((ws || p).name) + '</p></div>' + (editable ? '<button type="button" class="ld-set-btn ld-set-btn--primary" data-cv-member-open aria-expanded="false" aria-controls="cvBasicMemberForm">添加成员</button>' : '') + '</div>' +
+  return '<div class="cv-basic-heading"><div><h2>成员</h2></div>' + (editable ? '<button type="button" class="ld-set-btn ld-set-btn--primary" data-cv-member-open aria-expanded="false" aria-controls="cvBasicMemberForm">添加成员</button>' : '') + '</div>' +
     (editable ? '<form id="cvBasicMemberForm" class="cv-basic-add" data-cv-basic-form="add" hidden><div class="cv-member-search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="m15 15 6 6"/></svg><input type="search" id="cvBasicMemberSearch" placeholder="搜索姓名、邮箱、手机号或工号" aria-label="搜索要添加的成员" aria-controls="cvBasicMemberResults" aria-expanded="false" autocomplete="off"><input type="hidden" id="cvBasicMember"><div class="cv-member-results" id="cvBasicMemberResults" role="listbox" aria-label="可添加成员" hidden></div></div><select id="cvBasicMemberRole" aria-label="成员角色"><option value="member">成员</option>' + (!ws ? '<option value="admin">管理员</option>' : '') + '</select><button type="submit" class="ld-set-btn ld-set-btn--primary" id="cvBasicMemberAdd" disabled>添加</button><p class="cv-basic-error" role="alert" hidden></p></form>' : '<p class="cv-basic-note">当前成员设置只读，请联系负责人或管理员修改。</p>') +
-    '<p class="cv-basic-note">成员 ' + ids.length + (ws ? ' · 仅从所属空间添加，工作区成员独立维护' : '') + '</p><div class="cv-basic-card cv-member-list-scroll" role="region" aria-label="成员列表" tabindex="0"><ul class="cv-basic-members">' + pageIds.map(function (id) {
+    '<div class="cv-basic-card cv-member-list-scroll" role="region" aria-label="成员列表" tabindex="0"><ul class="cv-basic-members">' + pageIds.map(function (id) {
       var m = CV_MEMBERS.find(function (person) { return person.id === id; }) || { name:personName(id) };
       var role = id === owner ? '负责人' : !ws && (p.adminIds || []).includes(id) ? '管理员' : '成员';
       return '<li><span class="cv-basic-avatar">' + esc(m.name.slice(0, 1)) + '</span><div class="cv-basic-member-name"><div class="cv-member-identity"><strong>' + esc(m.name) + '</strong><span>' + esc(m.email || '') + '</span></div><div class="cv-member-tags">' + (m.dept ? '<span>' + esc(m.dept) + '</span>' : '') + '<span>' + role + '</span></div></div>' + (editable && id !== owner ? '<details class="cv-member-more"><summary aria-label="' + esc(m.name) + '的更多操作">···</summary><button type="button" class="mgr-ws-text-btn" data-cv-basic-remove="' + esc(id) + '">移出成员</button></details>' : '') + '</li>';
@@ -126,6 +127,8 @@ function members(p, ws) {
 }
 export function renderBasicSettings(host, tab) {
   currentTab = tab;
+  delete host.dataset.recruitmentPage;
+  if (tab === 'agents') { host.classList.remove('is-member-list'); renderRecruitmentSettings(host); return; }
   host.classList.toggle('is-member-list', tab === 'members');
   var s = scope();
   var nextScope = s.p ? s.p.id + ':' + (s.ws ? s.ws.id : '') : '';

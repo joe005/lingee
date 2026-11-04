@@ -1,114 +1,78 @@
-import { setWorkspaceCapabilityRenderer, setWorkspaceAssetControls, setWorkspaceAssetVisibility, setAssetBrowseMode, assetTagsHtml } from './expert-market.js';
+import { isLocalAssetInstalled } from '../expert/local-install-state.js';
+import { setWorkspaceCapabilityRenderer, setWorkspaceAssetControls, setWorkspaceMoreInstall, setWorkspaceAssetVisibility, assetTagsHtml } from './expert-market.js';
 import '../../../styles/parts/collab/capability-settings.css';
-import moreIcon from '../../../assets/figma/expert-assets/more.svg';
 import { getSpaceScope } from '../tasks-v2/page/space-filter.js';
 import { tkProjectsForCurrentUser } from '../tasks-v2/data.js';
 import { wsById } from '../../core/workspace-tree.js';
 import { basicEditable } from './basic-settings-data.js';
-import { capabilityCatalog, capabilityList, capabilityChange, capabilityMigrate } from './capability-config.js';
-import { UNLISTED_EXPERT_IDS } from '../expert/builtin-catalog.js';
+import { capabilityList, capabilityMigrate } from './capability-config.js';
+import { layerVisible } from '../expert/layers.js';
 import { xav, xesc } from '../expert/data.js';
-import { toast } from '../../core/toast.js';
-import { requestDeleteConfirmation } from '../../core/delete-confirm.js';
 
 export function capabilityContext() {
   const scope = getSpaceScope(), p = tkProjectsForCurrentUser().find(p => p.id === scope.project);
   const ws = p && scope.ws ? wsById(p,scope.ws) : null;
-  return {p, ws, editable:!!p && (!scope.ws || !!ws) && basicEditable(p,ws)};
+  return {p,ws,editable:!!p && (!scope.ws || !!ws) && basicEditable(p,ws)};
 }
-function inPersonalHub() { return document.getElementById('view-collab')?.classList.contains('asset-hub-mode'); }
-function actionAttributes(action,key,p,ws) {
-  return ' data-capability-action="'+action+'" data-capability-key="'+xesc(key)+'" data-space="'+xesc(p.id)+'" data-workspace="'+xesc(ws?.id || '')+'"';
+/* 已聚焦到具体范围，来源只标「工作区」，不重复范围名称。 */
+function originHtml() { return '<span class="cv-workspace-origin">工作区</span>'; }
+function installButton(row,p,ws) {
+  return '<div class="asset-card-actions"><button type="button" class="cv-local-install" data-workspace-install="'+xesc(row.key)+'" data-space="'+xesc(p.id)+'" data-workspace="'+xesc(ws?.id || '')+'" title="安装到当前用户本机">安装</button></div>';
 }
+/* 「我添加的」只呈现已在本机安装的资产及其工作区来源；添加、移除归属设置页面，本机安装在「更多」。 */
 export function workspaceCapabilityControls(kind,item) {
-  const {p,ws,editable} = capabilityContext();
-  if (!p || !editable || inPersonalHub()) return '';
-  const key = kind+':'+item.id, list = capabilityList(p,ws?.id);
-  if (list.entries.some(row => row.key === key)) return '';
-  if (!capabilityCatalog(p).some(row => row.key === key)) return '';
-  return '<button type="button" class="expert-install-plus"'+actionAttributes('install',key,p,ws)+' aria-label="添加'+xesc(item.name)+'到当前工作区" title="添加到当前工作区"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg></button>';
+  const {p,ws} = capabilityContext();
+  const row = p && capabilityList(p,ws?.id).entries.find(row => row.key === kind+':'+item.id);
+  return row && isLocalAssetInstalled(row) ? originHtml(p,ws) : '';
 }
-export function workspaceInstalledControls(row) {
-  const {p,ws,editable} = capabilityContext();
-  if (!p || !editable || inPersonalHub()) return '';
-  const menuId='workspace-asset-menu-'+row.kind+'-'+encodeURIComponent(row.data.id);
-  return '<div class="asset-card-actions"><button type="button" class="asset-card-menu-toggle" data-asset-card-menu-toggle aria-haspopup="menu" aria-expanded="false" aria-controls="'+xesc(menuId)+'" aria-label="'+xesc(row.data.name)+'的更多操作" title="更多操作"><img src="'+moreIcon+'" width="16" height="16" alt=""></button><div class="asset-card-menu" id="'+xesc(menuId)+'" role="menu" hidden><button type="button" role="menuitem" class="asset-card-uninstall"'+actionAttributes('uninstall',row.key,p,ws)+'>卸载</button></div></div>';
+/* 工作区已添加、本机尚未安装工作区版本的资产：在「更多」里带工作区标记，按工作区固定版本安装。 */
+export function workspaceInstallOffer(kind,item) {
+  const {p,ws} = capabilityContext();
+  const row = p && capabilityList(p,ws?.id).entries.find(row => row.key === kind+':'+item.id);
+  return row && !isLocalAssetInstalled(row) ? {tag:originHtml(p,ws),button:installButton(row,p,ws),version:row.version} : null;
 }
-function cardsHtml(rows, editable) {
-  return '<div class="apps-grid">'+rows.map(row => {
-    const face = row.kind === 'team' ? '<span class="x-faces">'+(row.experts || []).slice(0,4).map(e => '<img src="'+xav(e.data.k)+'" alt="">').join('')+'</span>' : '<img class="x-av" src="'+xav(row.data.k)+'" alt="">';
-    const shared = !!row.data.tenantId;
-    const source = '<span class="x-badge asset-source-badge asset-source-'+(shared ? 'shared' : 'builtin')+'">'+(shared ? '企业自建' : '金蝶官方')+'</span>';
-    const summary = row.kind === 'team' ? (row.data.members || []).length+' 个智能体' : (row.data.skills || []).length+' 个技能';
-    return '<article class="app-card x-card" data-workspace-asset="'+xesc(row.key)+'">'+(editable ? workspaceInstalledControls(row) : '')+'<div class="card-top">'+face+'<div class="card-titles"><div class="card-title-row"><span class="card-title">'+xesc(row.data.name)+'</span></div><div class="x-sub asset-card-summary">'+source+'<span class="platform-client-badge">V'+xesc(row.version)+'</span><span>'+summary+'</span></div></div></div><div class="card-desc">'+xesc(row.data.desc || '')+'</div>'+assetTagsHtml(row.data.tags || row.data.domains || [])+'</article>';
-  }).join('')+'</div>';
+/* 工作区已添加、本机未安装的资产，不依赖个人云端目录：设置里可添加的内容，「更多」里同样可见、可安装。 */
+export function workspaceInstallCandidates(kind) {
+  const {p,ws} = capabilityContext();
+  if (!p) return [];
+  return capabilityList(p,ws?.id).entries.filter(row => row.kind === kind && !isLocalAssetInstalled(row)).map(row => ({key:row.key,kind:row.kind,data:row.data,version:row.version,installed:''}));
 }
+export function workspaceCapabilityVisible() { return true; }
+export function workspaceCatalogRows() { return null; }
+export function renderWorkspaceCapabilities() { return false; }
 export function workspaceCapabilityExtras(kind,items,keyword,layer='all') {
-  const {p,ws,editable} = capabilityContext();
-  if (!p || !editable || inPersonalHub()) return '';
+  const {p,ws} = capabilityContext();
+  if (!p) return '';
+  const known = new Set(items.filter(item => layerVisible(kind,item)).map(item => kind+':'+item.id));
   const kw = keyword.trim().toLocaleLowerCase();
-  const rows = capabilityList(p,ws?.id).entries.filter(row => row.kind === kind && (layer === 'all' || layer === (row.data.tenantId ? 'shared' : 'builtin')) && (!kw || (row.data.name+' '+row.data.desc).toLocaleLowerCase().includes(kw)));
-  return rows.length ? '<section class="asset-list-section"><h2 class="expert-section-title">我添加的</h2>'+cardsHtml(rows,true)+'</section>' : '';
-}
-export function workspaceCapabilityVisible(kind,item) {
-  if (inPersonalHub()) return true;
-  // 全局个人安装不代表已经安装到当前工作区；个人草稿保留原开发入口。
-  return kind === 'team' ? !item.preset && item.source !== 'tenant' : !!item.mine;
-}
-export function workspaceCatalogRows() {
-  const {p,ws,editable} = capabilityContext();
-  if (!p || !editable || inPersonalHub()) return null;
-  const installed = new Set(capabilityList(p,ws?.id).entries.map(row => row.key));
-  return capabilityCatalog(p).filter(row => row.kind === 'team' || row.data.listed !== false && !UNLISTED_EXPERT_IDS.has(row.data.id))
-    .map(row => ({...row,installed:installed.has(row.key) ? row.version : ''}));
-}
-export function renderWorkspaceCapabilities(host) {
-  if (inPersonalHub()) return false;
-  const {p,ws,editable} = capabilityContext();
-  if (!p) { host.innerHTML='<div class="x-empty">请先创建或加入一个空间，再添加智能体或团队。</div>'; return true; }
-  if (editable) return false;
-  const kind = host.id === 'expertGrid' ? 'team' : 'expert';
-  const rows = capabilityList(p,ws?.id).entries.filter(row => row.kind === kind);
-  host.classList.remove('asset-cloud-grid');
-  host.innerHTML = cardsHtml(rows,false)+(!rows.length ? '<div class="x-empty">当前工作区目录暂无'+(kind === 'team' ? '智能体团队' : '智能体')+'，可自建或联系管理员添加。</div>' : '');
-  return true;
+  const rows = capabilityList(p,ws?.id).entries.filter(row => row.kind === kind && !known.has(row.key) && isLocalAssetInstalled(row)
+    && (layer === 'all' || layer === (row.data.tenantId ? 'shared' : 'builtin'))
+    && (!kw || [row.data.name,row.data.desc,...(row.data.tags || row.data.domains || [])].join(' ').toLocaleLowerCase().includes(kw)));
+  if (!rows.length) return '';
+  return rows.map(row => {
+    const face = row.kind === 'team' ? '<span class="x-faces">'+(row.experts || []).slice(0,4).map(e => '<img src="'+xav(e.data.k)+'" alt="">').join('')+'</span>' : '<img class="x-av" src="'+xav(row.data.k)+'" alt="">';
+    return '<article class="app-card x-card" data-workspace-asset="'+xesc(row.key)+'"><div class="card-top">'+face+'<div class="card-titles"><div class="card-title-row"><span class="card-title">'+xesc(row.data.name)+'</span></div><div class="x-sub asset-card-summary"><span class="platform-client-badge">V'+xesc(row.version)+'</span>'+originHtml(p,ws)+'</div></div></div><div class="card-desc">'+xesc(row.data.desc || '')+'</div>'+assetTagsHtml(row.data.tags || row.data.domains || [])+'</article>';
+  }).join('');
 }
 export function initCapabilitySettings() {
+  document.addEventListener('click',event => {
+    const button=event.target.closest('[data-workspace-install]');if(!button)return;
+    event.preventDefault();event.stopPropagation();
+    const {p,ws}=capabilityContext();
+    if(!p || p.id!==button.dataset.space || (ws?.id || '')!==button.dataset.workspace)return;
+    const row=capabilityList(p,ws?.id).entries.find(row=>row.key===button.dataset.workspaceInstall);
+    if(row)document.dispatchEvent(new CustomEvent('lingee:install-workspace-asset',{detail:{entry:row}}));
+  },true);
   setWorkspaceCapabilityRenderer(renderWorkspaceCapabilities);
   setWorkspaceAssetControls(workspaceCapabilityControls,workspaceCapabilityExtras,workspaceCatalogRows);
   setWorkspaceAssetVisibility(workspaceCapabilityVisible);
-  function refresh() { document.dispatchEvent(new Event('lingee:cloud-assets-changed')); }
-  async function change(action,key,expected) {
-    const {p,ws,editable} = capabilityContext();
-    if (!editable || inPersonalHub() || p.id !== expected.space || (ws?.id || '') !== expected.workspace) return;
-    const list = capabilityList(p,ws?.id);
-    if (action === 'uninstall' && !await requestDeleteConfirmation('从当前工作区卸载？其他工作区、个人安装和已启动任务的版本记录均保留。',{title:'卸载',confirmLabel:'卸载'})) return;
-    const latest = capabilityContext();
-    if (!latest.editable || latest.p.id !== p.id || (latest.ws?.id || '') !== (ws?.id || '')) { toast('当前范围或权限已变化，请重新操作','warning'); refresh(); return; }
-    const error = capabilityChange(p,ws?.id || '',action,key);
-    if (error) { toast(error,'warning'); return; }
-    if (action === 'install') { setAssetBrowseMode(key.startsWith('team:') ? 'team' : 'expert','mine'); refresh(); }
-    toast(action === 'install' ? '已添加到当前工作区' : action === 'uninstall' ? '已从当前工作区卸载' : '已更新','success');
-  }
-  document.addEventListener('click',event => {
-    const button = event.target.closest('[data-capability-action]'); if (!button) return;
-    event.preventDefault(); event.stopPropagation();
-    button.disabled=true;
-    change(button.dataset.capabilityAction,button.dataset.capabilityKey,{space:button.dataset.space,workspace:button.dataset.workspace}).finally(() => { if (button.isConnected) button.disabled=false; });
-  },true);
-  function syncNavigation() {
-    const view = document.getElementById('view-collab');
-    if (view?.classList.contains('asset-hub-mode')) return;
-    const {p,editable} = capabilityContext();
+  setWorkspaceMoreInstall(workspaceInstallOffer,workspaceInstallCandidates);
+  function refresh() {
+    const {p} = capabilityContext();
     if (p) capabilityMigrate(p);
-    view?.querySelectorAll('#cvTabNav [data-cvview="experts"],#cvTabNav [data-cvview="teams"]').forEach(button => { button.hidden = false; });
-    const readonly = !!p && !editable;
-    if (view && view.classList.contains('cv-capabilities-readonly') !== readonly) view.classList.toggle('cv-capabilities-readonly',readonly);
+    document.dispatchEvent(new Event('lingee:cloud-assets-changed'));
   }
-  document.addEventListener('lingee:tk-space-changed', () => { syncNavigation(); refresh(); });
-  document.addEventListener('lingee:capabilities-changed', () => { syncNavigation(); refresh(); });
-  document.addEventListener('lingee:mgr-projects-changed',syncNavigation);
-  const view = document.getElementById('view-collab');
-  if (view) new MutationObserver(syncNavigation).observe(view,{attributes:true,attributeFilter:['class'],subtree:true});
-  syncNavigation(); refresh();
+  document.addEventListener('lingee:tk-space-changed',refresh);
+  document.addEventListener('lingee:capabilities-changed',refresh);
+  refresh();
 }

@@ -6,6 +6,9 @@ export function setCapabilityCatalog(provider) { catalogProvider = provider; }
 /* 个人自建资产由 expert 区域注册：避免本模块顶层依赖头像等静态资源，Node 直跑的命令行测试才可加载 */
 let personalProvider = () => ({experts: [], teams: [], lookup: () => null});
 export function setPersonalAssets(provider) { personalProvider = provider; }
+let localInstallChecker = () => '';
+export function setCapabilityLocalChecker(checker) { localInstallChecker = checker; }
+export function capabilityLocalInstallError(entry,userId) { return localInstallChecker(entry,userId); }
 const clone = value => structuredClone(value);
 const keyOf = (p, ws) => JSON.stringify([p.id, ws || '']);
 function read() { try { const value = JSON.parse(localStorage.getItem(CAPABILITY_KEY) || '{}'); return value && typeof value === 'object' && !Array.isArray(value) ? value : {}; } catch (_) { return {}; } }
