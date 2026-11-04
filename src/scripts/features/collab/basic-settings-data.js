@@ -64,9 +64,8 @@ export function basicAddMember(p, ws, id, role) {
   if (!basicEditable(p, ws)) return '没有权限管理成员';
   if (!CV_MEMBERS.some(function (m) { return m.id === id && m.status !== 'disabled'; })) return '请选择有效成员';
   if (role && role !== 'member' && role !== 'admin') return '请选择有效角色';
-  if (ws && role === 'admin') return '工作区只支持添加成员';
   if ((ws ? ws.memberIds || [] : p.members || []).includes(id)) return '该人员已是成员';
-  if (ws) { var res = wsAddMembers(p, ws.id, [id]); return res.ok ? '' : res.error; }
+  if (ws) { var res = wsAddMembers(p, ws.id, [id], role); return res.ok ? '' : res.error; }
   var patch = { members: Array.from(new Set((p.members || []).concat(id))) };
   if (role === 'admin') patch.adminIds = Array.from(new Set((p.adminIds || []).concat(id)));
   return save(p, patch);

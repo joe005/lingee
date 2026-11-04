@@ -284,6 +284,11 @@
 #view-collab .cv-repo-url-label { grid-column: 1 / -1; color: var(--text-secondary); font-size: var(--font-size-14); line-height: var(--line-height-14); }
 #view-collab .cv-repo-dialog .cv-basic-field { min-width: 0; padding: 0; }
 #view-collab .cv-repo-dialog .cv-basic-field :is(input,.shared-select-trigger) { box-sizing: border-box; width: 100%; height: 40px; min-height: 40px; border-radius: 8px; background: var(--fill-1); }
+#view-collab .cv-repo-meta { display: grid; gap: 16px; margin-bottom: 24px; }
+#view-collab .cv-repo-dialog .cv-repo-meta .cv-basic-field { gap: 8px; }
+#view-collab .cv-repo-dialog .cv-repo-meta label { color: var(--text-secondary); font-size: var(--font-size-14); font-weight: 400; line-height: var(--line-height-14); }
+#view-collab .cv-repo-dialog .cv-repo-meta textarea { box-sizing: border-box; width: 100%; min-height: 76px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--fill-1); color: var(--text); font: inherit; font-size: var(--font-size-14); line-height: var(--line-height-14); resize: vertical; }
+#view-collab .cv-repo-dialog .cv-repo-meta textarea:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 0; }
 #view-collab .cv-repo-dialog select.niu-custom-select-source { display: none; }
 #view-collab .cv-repo-dialog input[data-cv-repo-field="branchCustom"] { margin-top: 8px; }
 #view-collab .cv-repo-local-directory { padding: 0; }
@@ -303,3 +308,36 @@
 #view-collab .cv-repo-address-summary { display: flex; align-items: center; gap: 8px; min-width: 0; margin-bottom: 4px; }
 #view-collab .cv-repo-address-summary p { flex: 0 1 auto; min-width: 0; margin: 0; }
 #view-collab .cv-repo-branch-summary { flex: 0 0 auto; max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 6px; border-radius: 4px; background: var(--fill-1); color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); }
+#view-collab .cv-basic-advanced { margin-top: 32px; }
+#view-collab .cv-basic-advanced h3 { margin: 0 0 12px; color: var(--text); font-size: var(--font-size-16); font-weight: 500; }
+#view-collab .cv-basic-danger { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 24px; border: 1px solid var(--border); border-radius: var(--r-card); }
+#view-collab .cv-basic-danger + .cv-basic-danger { margin-top: 12px; }
+#view-collab .cv-basic-danger > div { min-width: 0; }
+#view-collab .cv-basic-danger strong { color: var(--text); font-size: var(--font-size-14); font-weight: 500; }
+#view-collab .cv-basic-danger p { margin: 4px 0 0; color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); }
+#view-collab .cv-basic-danger p.cv-basic-danger-reason { color: var(--danger); }
+#view-collab .cv-basic-danger-btn { flex: none; min-height: 32px; padding: 0 16px; border: 1px solid var(--danger); border-radius: 8px; background: var(--bg); color: var(--danger); font: inherit; font-size: var(--font-size-14); cursor: pointer; }
+#view-collab .cv-basic-danger-btn:hover:not(:disabled) { background: var(--danger-bg); }
+#view-collab .cv-basic-danger-btn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+#view-collab .cv-basic-danger-btn:disabled { border-color: var(--border); color: var(--text-secondary); cursor: not-allowed; }
+@media(max-width:600px) { #view-collab .cv-basic-danger { flex-direction: column; align-items: stretch; } }
+#view-collab .cv-member-role-host { flex: none; width: 120px; }
+#view-collab .cv-member-size-host { display: inline-block; width: 72px; }
+#view-collab .cv-member-size-host > .shared-select-trigger { height: 28px; min-height: 28px; padding: 0 8px; border-radius: 6px; font-size: var(--font-size-12); }
+#view-collab .cv-repo-cards > .cv-repo-card--rich { display: flex; flex-direction: column; gap: 12px; padding: 16px; transition: border-color .15s, box-shadow .15s; }
+#view-collab .cv-repo-card--rich:hover { border-color: var(--border-hover); box-shadow: var(--menu-shadow); }
+#view-collab .cv-repo-card--rich .cv-repo-title { gap: 12px; flex: 1; }
+#view-collab .cv-repo-icon { display: grid; place-items: center; flex: none; width: 36px; height: 36px; border-radius: 10px; background: var(--brand-fill); color: var(--brand); }
+#view-collab .cv-repo-title-copy { min-width: 0; }
+#view-collab .cv-repo-title-line { display: flex; align-items: center; gap: 8px; min-width: 0; }
+#view-collab .cv-repo-provider { display: block; margin-top: 2px; color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); }
+#view-collab .cv-repo-desc { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); }
+#view-collab .cv-repo-facts { display: grid; gap: 8px; padding: 12px; border-radius: 10px; background: var(--fill-1); }
+#view-collab .cv-repo-fact { display: grid; grid-template-columns: 84px minmax(0, 1fr); align-items: center; gap: 8px; font-size: var(--font-size-12); line-height: var(--line-height-12); }
+#view-collab .cv-repo-fact-label { display: inline-flex; align-items: center; gap: 4px; color: var(--text-secondary); white-space: nowrap; }
+#view-collab .cv-repo-fact-value { display: flex; align-items: center; gap: 8px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
+#view-collab .cv-repo-path { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#view-collab .cv-repo-chip { flex: none; padding: 0 8px; border-radius: 6px; background: var(--bg); border: 1px solid var(--border); color: var(--text-secondary); font-size: var(--font-size-12); line-height: 20px; }
+#view-collab .cv-repo-chip.is-brand { border-color: transparent; background: var(--brand-fill); color: var(--brand); }
+#view-collab .cv-repo-chip.is-success { border-color: transparent; background: var(--success-bg); color: var(--success); }
+#view-collab .cv-repo-apps { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }

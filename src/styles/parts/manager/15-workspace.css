@@ -200,3 +200,22 @@
 @media (prefers-reduced-motion: reduce) {
   .mgr-ws-pop-toggle { transition: none; }
 }
+/* 新建工作区向导 */
+.mgr-scope .mgr-ws-dialog.is-wizard { width: min(560px, calc(100vw - 32px)); }
+.mgr-scope .mgr-ws-dialog .shared-select-host > .shared-select-trigger { height: 34px; min-height: 34px; padding: 0 10px; }
+.mgr-scope .mgr-ws-steps { display: flex; align-items: center; gap: 8px; margin: 4px 0 16px; padding: 0; list-style: none; }
+.mgr-scope .mgr-ws-step { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; color: var(--text-secondary); font-size: var(--font-size-12); white-space: nowrap; }
+.mgr-scope .mgr-ws-step:not(:last-child)::after { content: ""; flex: 1; min-width: 12px; height: 1px; background: var(--divider); }
+.mgr-scope .mgr-ws-step-dot { display: grid; place-items: center; flex: none; width: 22px; height: 22px; border-radius: 50%; background: var(--fill-1); border: 1px solid var(--border); color: var(--text-secondary); font-size: var(--font-size-12); }
+.mgr-scope .mgr-ws-step.is-current { color: var(--text); font-weight: 500; }
+.mgr-scope .mgr-ws-step.is-current .mgr-ws-step-dot { border-color: var(--brand); background: var(--brand); color: var(--bg); }
+.mgr-scope .mgr-ws-step.is-done .mgr-ws-step-dot { border-color: transparent; background: var(--brand-fill); color: var(--brand); }
+.mgr-scope .mgr-ws-pick-tag { margin-left: auto; padding: 0 6px; border-radius: 4px; background: var(--brand-fill); color: var(--brand); font-size: var(--font-size-12); font-style: normal; }
+.mgr-scope .mgr-ws-pick--asset { align-items: flex-start; padding: 12px; border: 1px solid var(--border); }
+.mgr-scope .mgr-ws-asset-list { gap: 8px; }
+.mgr-scope .mgr-ws-pick--asset:has(input:checked) { border-color: var(--brand); }
+.mgr-scope .mgr-ws-pick--asset input { margin-top: 3px; flex: none; }
+.mgr-scope .mgr-ws-asset-copy { display: grid; gap: 4px; min-width: 0; }
+.mgr-scope .mgr-ws-asset-copy strong { font-weight: 500; }
+.mgr-scope .mgr-ws-asset-copy small, .mgr-scope .mgr-ws-asset-copy > span { color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); overflow-wrap: anywhere; }
+.mgr-scope .mgr-ws-empty { margin: 16px 0; color: var(--text-secondary); font-size: var(--font-size-14); }

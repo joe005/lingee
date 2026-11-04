@@ -313,9 +313,11 @@ function syncFlowOptions(issueType) {
   select.value = issueType === '缺陷' ? '缺陷' : '需求';
   select.disabled = false;
 }
+/* 执行方下拉的值是工作区条目 key（team:xxx / expert:xxx），任务里存的是去掉前缀的 id；两个方向都走这里，避免 key 被当成 id 导致找不到团队和阶段 */
 function executorFields(value) {
-  return value.startsWith('expert:') ? {teamId:'',expertId:value.slice(7)} : {teamId:value,expertId:''};
+  return value.startsWith('expert:') ? {teamId:'',expertId:value.slice(7)} : {teamId:value.replace(/^team:/,''),expertId:''};
 }
+const executorKeyOf = task => task?.expertId ? 'expert:'+task.expertId : task?.teamId ? 'team:'+String(task.teamId).replace(/^team:/,'') : '';
 function fillTeamOptions(preferred, issueType) {
   const select = byId('niuTeam'), p = tkProjectById(selectedProjectId), ws = byId('niuWorkspace').value;
   const task = editingTaskId === null ? null : tkGetTasks().find(t => t.id === editingTaskId);
@@ -323,7 +325,7 @@ function fillTeamOptions(preferred, issueType) {
   const options = capabilityOptions(p,ws).filter(row => !row.personal && row.kind === 'team');
   if (locked) {
     const snap = task?.executorSnapshot;
-    const key = snap?.key || (task?.expertId ? 'expert:'+task.expertId : task?.teamId || '');
+    const key = snap?.key || executorKeyOf(task);
     const label = snap?.data?.name || options.find(row => row.key === key)?.data?.name || taskTeamOf(task)?.name || '执行方已移除';
     select.innerHTML = '<option value="'+escapeHtml(key || '')+'">'+escapeHtml(label)+'</option>';
     select.value = key || '';
@@ -331,7 +333,7 @@ function fillTeamOptions(preferred, issueType) {
     syncFlowOptions(issueType);
     return;
   }
-  const savedValue = task ? (task.expertId ? 'expert:'+task.expertId : (task.teamId || '')) : '';
+  const savedValue = task ? executorKeyOf(task) : '';
   const rows = options.slice();
   const chosen = [preferred,savedValue].concat(rows.filter(row => row.isDefault).map(row => row.key), rows.map(row => row.key)).find(value => value && rows.some(row => row.key === value)) || '';
   select.innerHTML = '<option value="">'+(rows.length ? '请选择智能体团队' : '当前工作区暂无可用智能体团队')+'</option>'
@@ -392,7 +394,7 @@ export function openNewIssueCopy(taskId) {
   byId('niuPriority').value = source.priority || 'medium';
   if (tkPeopleInProject(source.project).some(person => person.id === source.assignee)) selectedOwnerId = source.assignee;
   renderWorkspaceOptions(source.workspaceId || '');
-  fillTeamOptions(source.expertId ? 'expert:'+source.expertId : source.teamId, source.issueType);
+  fillTeamOptions(executorKeyOf(source), source.issueType);
   renderWorkspaceRepoHint(source.repositoryKey || buildRepoIdentity(buildTaskRepoConfig(source, tkProjectById(source.project)).repo));
   copiedTaskFields = { labels: [...(source.labels || [])], dueDate: source.dueDate || '', module: source.module || '' };
   draftStages = defaultPlanStages(source.project, selectedOwnerId).map(stage => ({
@@ -423,8 +425,8 @@ export function openNewIssueEdit(taskId) {
   byId('niuTitle').value = task.title || '';
   byId('niuDescription').value = task.desc || '';
   byId('niuPriority').value = task.priority || 'medium';
-  fillTeamOptions(task.expertId ? 'expert:'+task.expertId : task.teamId, task.issueType);
-  if (!planLocked() && (task.expertId ? 'expert:'+task.expertId : task.teamId) !== byId('niuTeam').value) { draftStages = defaultPlanStages(selectedProjectId); draftConfirmed = false; }
+  fillTeamOptions(executorKeyOf(task), task.issueType);
+  if (!planLocked() && executorKeyOf(task) !== byId('niuTeam').value) { draftStages = defaultPlanStages(selectedProjectId); draftConfirmed = false; }
   selectedOwnerId = task.assignee || '';
   byId('niuCreateSubmit').textContent = '保存修改';
   byId('niuCreateStageCount').textContent = String(draftStages.length);

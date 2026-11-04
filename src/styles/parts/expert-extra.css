@@ -159,6 +159,10 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
 #expertModal .x-chips{display:flex;flex-wrap:wrap;gap:12px}
 #expertModal .x-chips .ptag{padding:8px 12px;border:0;border-radius:12px;background:var(--fill-1);font-size:var(--font-size-14);line-height:20px;color:var(--text)}
 #expertModal .asset-detail-review,#teamModal.team-detail-view .asset-detail-review{display:flex;align-items:center;gap:12px;flex:none;margin:0 0 20px;padding:16px;border-radius:var(--r-card);background:var(--fill-1)}
+/* 提交审核固定在弹窗底部，不随正文滚动 */
+#expertModal .asset-detail-review-dock,#teamModal.team-detail-view .asset-detail-review-dock{flex:none;padding:0 20px 20px}
+#expertModal .asset-detail-review-dock:empty,#teamModal .asset-detail-review-dock:empty{display:none}
+#expertModal .asset-detail-review-dock .asset-detail-review,#teamModal.team-detail-view .asset-detail-review-dock .asset-detail-review{margin:0}
 #expertModal .asset-detail-review>img,#teamModal.team-detail-view .asset-detail-review>img{flex:none}
 #expertModal .asset-detail-review>div,#teamModal.team-detail-view .asset-detail-review>div{flex:1;min-width:0}
 #expertModal .asset-detail-review strong,#teamModal.team-detail-view .asset-detail-review strong{font-size:var(--font-size-14);line-height:22px;font-weight:500;color:var(--text)}

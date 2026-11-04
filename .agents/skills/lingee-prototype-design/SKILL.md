@@ -39,6 +39,13 @@ description: 设计和修改 Lingee 原型界面时使用，统一页面布局�
 - 按钮、弹窗、菜单、列表页标题区沿用本作用域的现行实现，不新建类名体系。
 - 控件处理适用的默认、悬停、`focus-visible`、选中、禁用和加载状态；列表和表单处理空态、无结果、失败和成功反馈。
 - 先查父容器的 padding、gap、宽度和滚动责任，再定子区域尺寸；长名称和窄窗口要有截断、换行或局部滚动方案。
+- **下拉选择必须用共享下拉，不用裸 `<select>`。** 原生下拉弹层是系统样式（macOS 上是蓝色高亮、对勾、系统字体），和原型不一致，这是反复出错的点。新增或修改任何 `<select>`，逐条做到：
+  1. 外层容器加 `shared-select-host`，`<select>` 紧跟在容器里（触发器会插在它后面）。
+  2. 渲染后调用 `initSelectDropdowns([select])`（`src/scripts/core/select-dropdown.js`）；它会隐藏原生控件并生成 `.shared-select-trigger`，选项、对勾、键盘操作都由它负责。
+  3. 用 `innerHTML` 重绘后，新生成的 `<select>` 必须重新调用，弹窗每一步、每个页签切换都一样。
+  4. 触发器高度跟随所在表单：弹窗里的输入框 34px，设置页用 `var(--control-h)`，在页面归属的 CSS 里覆盖 `.shared-select-host > .shared-select-trigger`，不要改共享样式。
+  5. 在弹窗里使用时，浮层挂在最近的 `.sync-overlay`、`.modal-overlay` 或 `[role=dialog]` 上，不要手动挂到 body。
+  交付前自检：对本次改动的文件执行 `grep -n "<select"`，每一处都要能在同文件或其渲染后的初始化代码里找到对应的 `initSelectDropdowns`；找不到就是漏了。不开浏览器也必须做这一步。
 - 样式放在页面归属的 CSS，限定作用域；不用裸 `button`、`input` 选择器，不叠加 `!important`，不改归档页面。
 - 保留既有 CSS 导入顺序、DOM id 和路由契约；共享样式变更先查调用范围。日常设计修改不更新变更日志。
 

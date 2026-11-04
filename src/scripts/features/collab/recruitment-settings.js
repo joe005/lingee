@@ -24,12 +24,15 @@ function sameScope(expected) { const context = capabilityContext(); return conte
 /* 工作区只能添加企业自建、且不是面向工作板块发布的资产；金蝶官方与工作板块去向的不在此列。 */
 const WORK_ROUTES = ['work','work-pending','work-personal'];
 function recruitable(row) { return !!row.data.tenantId && !WORK_ROUTES.includes(routeOf(row.kind,row.data.id)); }
-export function recruitmentOptions(p,ws,assetKind,keyword='') {
-  const installed = new Set(capabilityList(p,ws?.id).entries.map(row => row.key));
+/* 空间内工作区可添加的资产目录（新建工作区向导与添加弹窗共用） */
+export function recruitCatalog(p,assetKind,keyword='') {
   const kw = keyword.trim().toLocaleLowerCase();
   return capabilityCatalog(p).filter(row => row.kind === assetKind && recruitable(row) && (assetKind === 'team' || row.data.listed !== false && !UNLISTED_EXPERT_IDS.has(row.data.id))
-    && (!kw || [row.data.name,row.data.desc,...(row.data.tags || row.data.domains || [])].join(' ').toLocaleLowerCase().includes(kw)))
-    .map(row => ({...row,recruited:installed.has(row.key)}));
+    && (!kw || [row.data.name,row.data.desc,...(row.data.tags || row.data.domains || [])].join(' ').toLocaleLowerCase().includes(kw)));
+}
+export function recruitmentOptions(p,ws,assetKind,keyword='') {
+  const installed = new Set(capabilityList(p,ws?.id).entries.map(row => row.key));
+  return recruitCatalog(p,assetKind,keyword).map(row => ({...row,recruited:installed.has(row.key)}));
 }
 export function recruitAssets(expected,keys) {
   const context = sameScope(expected);

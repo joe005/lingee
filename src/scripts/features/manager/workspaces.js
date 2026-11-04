@@ -52,8 +52,15 @@ function isWsOwnerChain(project, ws) {
   var me = mgrCurrentPersonId();
   return !!me && wsPath(project, ws.id).some(function (w) { return wsOwnerId(project, w) === me; });
 }
-/* 管理本工作区及下级：改名、移动、归档、删除、成员与负责人、设置 */
-function canManageWs(project, ws) { return !!ws && (isSpaceManager(project) || isWsOwnerChain(project, ws)); }
+/* 工作区管理员：在本工作区或任一上级工作区被设为管理员（须仍是空间成员） */
+function wsAdminIds(ws) { return Array.isArray(ws.adminIds) ? ws.adminIds : []; }
+function isWsAdminChain(project, ws) {
+  var me = mgrCurrentPersonId();
+  return !!me && isSpaceMember(project, me) && wsPath(project, ws.id).some(function (w) { return wsAdminIds(w).indexOf(me) >= 0; });
+}
+/* 管理本工作区及下级：改名、移动、归档、成员、设置；删除与更换负责人不含工作区管理员 */
+function canManageWs(project, ws) { return !!ws && (isSpaceManager(project) || isWsOwnerChain(project, ws) || isWsAdminChain(project, ws)); }
+function canOwnWs(project, ws) { return !!ws && (isSpaceManager(project) || isWsOwnerChain(project, ws)); }
 function canCreateChild(project, parent) { return parent ? canManageWs(project, parent) : isSpaceManager(project); }
 /* 在工作区新建任务：空间级角色、工作区负责人链、工作区成员；空间根不受限 */
 function canCreateTaskIn(project, ws) {
@@ -232,7 +239,7 @@ function wsRestore(project, id) {
 function wsDeleteBlockReason(project, id) {
   var ws = wsById(project, id);
   if (!ws) return '工作区不存在';
-  if (!canManageWs(project, ws)) return '没有权限删除该工作区';
+  if (!canOwnWs(project, ws)) return '没有权限删除该工作区';
   if (wsChildren(project, id).length) return '还有下级工作区，请先移动或删除下级';
   var n = wsTasksOf(project, id, false).length;
   if (n) return '还有 ' + n + ' 个任务，请先移走；需要保留历史任务时请改为归档';
@@ -248,7 +255,7 @@ function wsDelete(project, id) {
 }
 
 /* ---------- 成员与负责人 ---------- */
-function wsAddMembers(project, id, personIds) {
+function wsAddMembers(project, id, personIds, role) {
   var ws = wsById(project, id);
   if (!ws) return fail('工作区不存在');
   if (!canManageWs(project, ws)) return fail('没有权限管理该工作区的成员');
@@ -258,6 +265,7 @@ function wsAddMembers(project, id, personIds) {
   var set = (ws.memberIds || []).slice();
   personIds.forEach(function (p) { if (set.indexOf(p) < 0) set.push(p); });
   ws.memberIds = set;
+  if (role === 'admin') ws.adminIds = Array.from(new Set(wsAdminIds(ws).concat(personIds)));
   if (!commit(project, before, { members: id })) return fail('保存失败，请重试');
   return { ok: true };
 }
@@ -270,6 +278,25 @@ function wsRemoveMember(project, id, personId) {
   if (load.length) return fail(personName(personId) + ' 在该工作区仍有 ' + load.length + ' 个未完成任务，请先转交');
   var before = snapshot(project);
   ws.memberIds = (ws.memberIds || []).filter(function (p) { return p !== personId; });
+  ws.adminIds = wsAdminIds(ws).filter(function (p) { return p !== personId; });
+  if (!commit(project, before, { members: id })) return fail('保存失败，请重试');
+  return { ok: true };
+}
+/* 成员自己离开工作区：负责人需先更换负责人，名下仍有未完成任务需先转交 */
+function wsLeaveBlockReason(project, ws, personId) {
+  if (!ws) return '工作区不存在';
+  if (ws.status === 'archived') return '已归档的工作区不能离开';
+  if ((ws.memberIds || []).indexOf(personId) < 0) return '你不是该工作区的成员';
+  if (wsOwnerId(project, ws) === personId) return '你是该工作区的负责人，请先更换负责人再离开';
+  var load = wsMemberOpenTasks(project, ws, personId);
+  return load.length ? '你在该工作区仍有 ' + load.length + ' 个未完成任务，请先转交' : '';
+}
+function wsLeave(project, id, personId) {
+  var ws = wsById(project, id), reason = wsLeaveBlockReason(project, ws, personId);
+  if (reason) return fail(reason);
+  var before = snapshot(project);
+  ws.memberIds = (ws.memberIds || []).filter(function (p) { return p !== personId; });
+  ws.adminIds = wsAdminIds(ws).filter(function (p) { return p !== personId; });
   if (!commit(project, before, { members: id })) return fail('保存失败，请重试');
   return { ok: true };
 }
@@ -344,6 +371,6 @@ function wsMoveTasks(project, tasks, targetId) {
 
 export {
   WS_MAX_DEPTH, WS_NAME_MAX, canCreateChild, canCreateTaskIn, canManageWs, isSpaceManager, isSpaceMember, isWsMember, personName, spaceMemberIds,
-  wsAddMembers, wsArchive, wsArchivePlan, wsAvailable, wsCreate, wsDelete, wsDeleteBlockReason, wsEnabled, wsMemberIds, wsMemberOpenTasks, wsMove, wsMoveTargets, wsMoveTasks,
-  wsNameError, wsProjectById, wsOpenTasks, wsOwnerId, wsPlanMove, wsProgress, wsRdTasks, wsRemoveMember, wsReorder, wsRestore, wsSetOwner, wsTasksOf, wsUpdateInfo,
+  wsAddMembers, wsAdminIds, wsArchive, wsArchivePlan, wsAvailable, wsCreate, wsDelete, wsDeleteBlockReason, wsEnabled, wsMemberIds, wsMemberOpenTasks, wsMove, wsMoveTargets, wsMoveTasks,
+  wsLeave, wsLeaveBlockReason, wsNameError, wsProjectById, wsOpenTasks, wsOwnerId, wsPlanMove, wsProgress, wsRdTasks, wsRemoveMember, wsReorder, wsRestore, wsSetOwner, wsTasksOf, wsUpdateInfo,
 };

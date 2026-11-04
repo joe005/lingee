@@ -93,7 +93,7 @@ function openExpertModal(id){
 
   var tags=e.tags||[];
   var overview=detailIdentityHtml('expert',e)
-    +'<div class="x-sec x-desc">'+xesc(e.desc)+'</div>'+detailReviewHtml('expert',e)
+    +'<div class="x-sec x-desc">'+xesc(e.desc)+'</div>'
     +(tags.length?'<section class="x-sec"><div class="x-sec-t">标签</div><div class="x-chips">'+tags.map(tag=>'<span class="ptag">'+xesc(tag)+'</span>').join('')+'</div></section>':'')
     +detailCommandsHtml('expert',e);
 
@@ -115,6 +115,7 @@ function openExpertModal(id){
     +'<div class="x-detail-pane hidden" id="xdPane-skills" role="tabpanel" aria-labelledby="xdTab-skills" data-xdpane="skills">'+skillsHtml+'</div>'
     +(knHtml?'<div class="x-detail-pane hidden" id="xdPane-kn" role="tabpanel" aria-labelledby="xdTab-kn" data-xdpane="kn">'+knHtml+'</div>':'');
   $('#expertModalFoot').innerHTML=knHtml?'<button type="button" class="modal-btn cancel hidden" id="xkDtlCancelBtn">取消</button><button type="button" class="modal-btn confirm hidden" id="xkDtlSaveBtn" data-x-save-kn="'+e.id+'">保存</button>':'';
+  $('#expertModalReview').innerHTML=detailReviewHtml('expert',e);
   $('#expertModalFoot').className='modal-footer team-modal-footer';
   expertModal.classList.add('show');
 }

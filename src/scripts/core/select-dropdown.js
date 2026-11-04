@@ -10,7 +10,7 @@ export function initSelectDropdowns(selects, onOpen = () => {}) {
     const overlay = select.closest('.sync-overlay, .modal-overlay, #niuCreateOverlay, #niuPlanOverlay') || select.closest('[role=dialog]') || document.body;
     const trigger = document.createElement('button');
     trigger.type = 'button';
-    trigger.className = 'niu-person-trigger niu-select-trigger';
+    trigger.className = 'niu-person-trigger niu-select-trigger shared-select-trigger';
     trigger.setAttribute('aria-haspopup', 'listbox');
     trigger.setAttribute('aria-expanded', 'false');
     trigger.setAttribute('aria-label', select.getAttribute('aria-label') || select.labels?.[0]?.textContent || '选择选项');
@@ -20,6 +20,7 @@ export function initSelectDropdowns(selects, onOpen = () => {}) {
     menu.setAttribute('role', 'listbox');
     menu.hidden = true;
     select.classList.add('niu-custom-select-source');
+    select.style.display = 'none';   /* 原生 select 的隐藏不依赖页面样式，避免在没配隐藏规则的页面里同时出现原生控件 */
     select.after(trigger);
     overlay.appendChild(menu);
     const sync = () => {
