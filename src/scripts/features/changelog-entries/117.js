@@ -1,1 +1,1 @@
-export default {"id":"117","date":"2026-11-04","iconBg":"var(--brand-fill)","iconColor":"var(--brand)","type":"功能","module":"工作区与协作开发","author":"wuhc2023","body":"功能·工作区与协作开发：工作区智能体与团队改为在设置中添加并由成员安装到本机，完善版本依赖和账号隔离，同时优化任务工作区默认归属及设置页展示。"};
+export default {"id":"117","date":"2026-11-04","iconBg":"var(--brand-fill)","iconColor":"var(--brand)","type":"功能","module":"工作区与协作开发","author":"wuhc2023","body":"功能·工作区与协作开发：完善工作区资产分配、本机安装及版本隔离，开放企业资产原型管理操作，补齐技能、团队成员与历史操作人详情，并统一卡片和菜单展示。"};

@@ -1,5 +1,7 @@
 import { localAssetStorageKey, readLocalAssetInstalls, writeLocalAssetInstalls, requiredLocalPackages, localAssetInstallError } from './local-install-state.js';
 import { setCapabilityCatalog, setPersonalAssets, setCapabilityLocalChecker } from '../collab/capability-config.js';
+import { platformExpertSkills } from './platform-skill-details.js';
+import { platformTeamFields, platformTeamMembers } from './platform-team-details.js';
 import { REVIEW_KEY, countAssetReviews, renderAssetReviewCards, openAssetReview, rejectedReviewEntries, mergeVersionHistory } from './asset-review.js';
 import { cvWorkspace, cvWorkspaceName, cvCanAccessWorkspace, cvCurrentUserName } from '../collab/data.js';
 import { $, $$ } from '../../core/dom.js';
@@ -8,7 +10,7 @@ import { requestDeleteConfirmation } from '../../core/delete-confirm.js';
 import { renderExpertChips } from './chips.js';
 import upgradeIcon from '../../../assets/figma/expert-assets/upgrade.svg';
 import { showView } from '../../core/view.js';
-import { getPlatformIdentity, getLoginAccount, LOGIN_KEY } from '../login.js';
+import { getPlatformIdentity, getLoginAccount, getLoginPeople, LOGIN_KEY } from '../login.js';
 import { AV_KEYS, EX, EXPERTS, MY_EXPERTS, PRESET_TEAMS, setBuiltinExperts, xav, xesc } from './data.js';
 import { TEAMS, activePick, clearPick, setBuiltinTeams } from './store.js';
 import { cvRenderExperts } from '../collab/experts.js';
@@ -125,14 +127,17 @@ function label(id){return latest(id)?.data?.name||meta[id]?.id||'未命名';}
 function identity(){try{return sessionStorage.getItem(LOGIN_KEY)?getPlatformIdentity():null;}catch(_){return null;}}
 export function isFactoryAdmin(){return identity()?.role==='factory'&&platformMode()==='factory';}
 function platformExpertName(){return '智能体';}
-function platformMode(){return $('#view-platform').dataset.platformMode||identity()?.role||'factory';}
+function platformMode(){return $('#view-platform').dataset.platformMode||identity()?.role||'tenant';}
 function previewTenantId(){const user=identity();return user?.role==='tenant'?user.tenantId:'ws-build';}
 function inScope(item){return !!item&&!retiredSeed(item)&&(platformMode()==='factory'?!item.tenantId:item.tenantId===previewTenantId());}
-export function canApprovePlatformReview(row){const user=identity();return !!row&&(isFactoryAdmin()||user?.role==='tenant'&&platformMode()==='tenant'&&row.tenantId===user.tenantId);}
+export function canApprovePlatformReview(row){return !!sessionStorage.getItem(LOGIN_KEY)&&!!row&&(isFactoryAdmin()||platformMode()==='tenant'&&row.tenantId===previewTenantId());}
 export function nextReviewVersion(kind,id){return bumpVersion(latest(key(kind,id))?.version);}
 export function currentPublishedVersion(kind,id){return meta[key(kind,id)]?.activeVersion||'';}
 export function canViewPlatformReview(row){return !!sessionStorage.getItem(LOGIN_KEY)&&!!row&&(platformMode()==='factory'||row.tenantId===previewTenantId());}
-function canEdit(){return identity()?.role===platformMode();}
+function canEdit(){return !!sessionStorage.getItem(LOGIN_KEY)&&(platformMode()==='tenant'||identity()?.role===platformMode());}
+/* 原型企业资产管理面向全员开放；真实产品再接角色权限，仍限定当前企业范围。 */
+function canImport(){return !!sessionStorage.getItem(LOGIN_KEY)&&(platformMode()==='tenant'||canEdit());}
+function importIdentity(){return platformMode()==='tenant'?{role:'tenant',tenantId:previewTenantId()}:identity();}
 function canManage(item){return canEdit()&&inScope(item);}
 function currentTenant(){return identity()?.tenantId||cvWorkspace||'';}
 function availableToClient(item){return !retiredSeed(item)&&(!item.tenantId||item.tenantId===currentTenant()||!cvWorkspace&&cvCanAccessWorkspace(item.tenantId,cvCurrentUserName()));}
@@ -141,12 +146,10 @@ function refreshAccess(){
   $('#platformDenied').classList.toggle('hidden',signedIn);$('#platformBody').classList.toggle('hidden',!signedIn);
   $('#view-platform h1').textContent='智能体管理';
   $('[data-platform-tab="expert"]').firstChild.textContent=platformExpertName()+' ';
-  $('#platformIntro').textContent=mode==='factory'?'查看金蝶原厂智能体与智能体团队。':'查看租户智能体与智能体团队。';
   $('#platformDeniedTitle').textContent=mode==='factory'?'当前账号没有原厂管理权限':'当前账号没有租户管理权限';
   $('#platformDeniedHint').textContent=mode==='factory'?'请使用金蝶原厂管理员账号。':'请使用租户管理员账号。';
   if(!signedIn){$('#platformList').innerHTML='';return;}
-  $('#platformReadOnly').classList.toggle('hidden',editable);
-  $('#platformImport').classList.toggle('hidden',!editable);
+  $('#platformImport').classList.toggle('hidden',!canImport());
   renderCards();
 }
 export function assetReviewDialog(title,body,onConfirm,confirmText='确认',options={}){
@@ -156,7 +159,9 @@ export function assetReviewDialog(title,body,onConfirm,confirmText='确认',opti
   $('#platformDialogConfirm').textContent=confirmText;$('#platformDialogConfirm').disabled=false;
   $('#platformDialogCancel').classList.toggle('hidden',!onConfirm);
   dialogConfirm=onConfirm;$('#platformDialog').classList.remove('hidden');
-  (onConfirm?$('#platformDialogCancel'):$('#platformDialogConfirm')).focus();
+  (onConfirm?$('#platformDialogCancel'):$('#platformDialogConfirm')).focus({preventScroll:true});
+  $('#platformDialogBody').scrollTop=0;
+  $('#platformDialog .platform-dialog').scrollTop=0;
 }
 export function assetReviewClose(){$('#platformDialog').classList.add('hidden');dialogConfirm=null;}
 function renderCards(){
@@ -180,7 +185,7 @@ function renderCards(){
   };
   for(const [status,count] of Object.entries(counts))$(`[data-platform-count="${status}"]`).textContent=count;
   $('[data-platform-count="review"]').classList.toggle('platform-status-count--alert',counts.review>0);
-  $('#platformImport').classList.toggle('hidden',!canEdit());
+  $('#platformImport').classList.toggle('hidden',!canImport());
   $('#platformImport').textContent='导入';
   $$('.platform-tabs button').forEach(button=>{const on=button.dataset.platformTab===tab;button.classList.toggle('on',on);button.setAttribute('aria-pressed',String(on));});
   $$('.platform-status-tabs button').forEach(button=>{const on=button.dataset.platformStatus===statusTab;button.classList.toggle('on',on);button.setAttribute('aria-pressed',String(on));});
@@ -190,7 +195,7 @@ function renderCards(){
     const face=team?`<span class="platform-faces">${(d.members||[]).slice(0,4).map(memberId=>{const expert=latest(key('expert',memberId))?.data;return expert?`<img src="${xav(expert.k)}" alt="">`:'';}).join('')}</span>`:`<img class="x-av" src="${xav(d.k)}" alt="">`;
     const source=xesc(m.tenantId?cvWorkspaceName(m.tenantId):'原厂'),tags=(team?d.domains:d.tags)||[],updated=String(row.at||'').replace(/:\d{2}$/,'');
     const status=visibleStatus(m);
-    return `<button type="button" class="app-card x-card platform-card" data-platform-card="${xesc(id)}"><div class="card-top">${face}<div class="card-titles"><div class="card-title-row"><span class="card-title">${xesc(d.name)}</span></div><div class="x-sub">${source} · ${team?'智能体团队 · '+(d.members||[]).length+' 位智能体':xesc(d.role||'智能体')}</div></div><span class="platform-card-version">V${row.version}${m.pendingVersion&&m.reviewSubmitted?' 待审核':''}</span></div><div class="card-desc">${xesc(d.desc||'暂无简介')}</div><div class="card-tags">${tags.slice(0,3).map(value=>`<span class="ptag">${xesc(value)}</span>`).join('')}</div><div class="platform-card-meta"><span class="platform-card-status ${status}">${status==='draft'?'草稿':status==='review'?'待审核':status==='offline'?'已下架':'已上架'}</span><time title="${xesc(row.at)}">更新于 ${xesc(updated)}</time></div></button>`;
+    return `<button type="button" class="app-card x-card platform-card" data-platform-card="${xesc(id)}"><div class="card-top">${face}<div class="card-titles"><div class="card-title-row"><span class="card-title">${xesc(d.name)}</span></div><div class="x-sub">${team?(d.members||[]).length+' 个智能体':(d.skills||[]).length+' 个技能'}</div></div><span class="platform-card-version">V${row.version}${m.pendingVersion&&m.reviewSubmitted?' 待审核':''}</span></div><div class="card-desc">${xesc(d.desc||'暂无简介')}</div><div class="card-tags">${tags.slice(0,3).map(value=>`<span class="ptag">${xesc(value)}</span>`).join('')}</div><div class="platform-card-meta"><span class="platform-card-status ${status}">${status==='draft'?'草稿':status==='review'?'待审核':status==='offline'?'已下架':'已上架'}</span><time title="${xesc(row.at)}">${xesc(updated)}</time></div></button>`;
   }).join('');
   const reviewStatuses=statusTab==='all'?['pending','rejected']:statusTab==='review'?['pending']:statusTab==='draft'?['rejected']:[];
   const reviewCards=reviewStatuses.length?renderAssetReviewCards(kw,{kind:tab,statuses:reviewStatuses,tenantId}):'';
@@ -198,11 +203,12 @@ function renderCards(){
 }
 function showCard(id){
   const m=meta[id],row=latest(id);if(!inScope(m)||!row)return;
-  const d=row.data,team=m.kind==='team',members=d.members||[];
+  const d=row.data,team=m.kind==='team';
+  const resolveMember=memberId=>latest(key('expert',memberId)) || (EX[memberId]?{data:EX[memberId]}:null);
   const status=visibleStatus(m);
   const canSubmit=canManage(m)&&!!m.pendingVersion;
-  const manageActions=canSubmit&&!team&&!m.reviewSubmitted?`<button type="button" class="platform-link" data-platform-avatar="${xesc(id)}">选择头像</button>`:canManage(m)&&!m.pendingVersion&&m.activeVersion?`<button type="button" class="platform-link" data-platform-toggle="${xesc(id)}">${m.status==='offline'?'重新上架':'下架'}</button>`:'';
-  assetReviewDialog(`${team?'智能体团队':platformExpertName()}详情`,`<div class="platform-detail-headline"><strong>${xesc(d.name)}</strong><span>V${row.version}</span></div><dl class="platform-info-list"><dt>状态</dt><dd>${status==='draft'?'草稿':status==='review'?'待审核':status==='offline'?'已下架':'已上架'}</dd><dt>编码</dt><dd>${xesc(d.id)}</dd><dt>简介</dt><dd>${xesc(d.desc||'暂无')}</dd><dt>更新说明</dt><dd>${xesc(row.note)}</dd><dt>更新时间</dt><dd>${xesc(row.at)}</dd>${team?`<dt>引用成员</dt><dd>${members.length?members.map(memberId=>xesc(label(key('expert',memberId)))).join('、'):'未提供成员清单'}</dd>`:''}</dl><button type="button" class="platform-link" data-platform-history="${xesc(id)}">查看历史版本</button> <button type="button" class="platform-link" data-platform-export="${xesc(id)}" data-platform-version="${row.version}">导出 ZIP</button> ${manageActions}`,canSubmit?()=>publishPending(id):null,canSubmit?(m.reviewSubmitted?'审核通过':'提交审核'):'关闭');
+  const manageActions=canManage(m)&&!m.pendingVersion&&m.activeVersion?`<button type="button" class="platform-link" data-platform-toggle="${xesc(id)}">${m.status==='offline'?'重新上架':'下架'}</button>`:'';
+  assetReviewDialog(`${team?'智能体团队':platformExpertName()}详情`,`<div class="platform-detail-headline"><strong>${xesc(d.name)}</strong><span>V${row.version}</span></div><dl class="platform-info-list"><dt>状态</dt><dd>${status==='draft'?'草稿':status==='review'?'待审核':status==='offline'?'已下架':'已上架'}</dd><dt>当前上架</dt><dd>${m.activeVersion?'V'+xesc(m.activeVersion):'暂无'}</dd><dt>最新版本</dt><dd>V${xesc(row.version)}</dd><dt>编码</dt><dd>${xesc(d.id)}</dd><dt>简介</dt><dd>${xesc(d.desc||'暂无')}</dd><dt>更新说明</dt><dd>${xesc(row.note)}</dd><dt>更新时间</dt><dd>${xesc(row.at)}</dd>${team?platformTeamFields(d,resolveMember):`<dt>技能数</dt><dd>${(d.skills||[]).length}</dd>`}</dl>${team?platformTeamMembers(d,resolveMember):platformExpertSkills(d)}<button type="button" class="platform-link" data-platform-history="${xesc(id)}">查看历史版本</button> <button type="button" class="platform-link" data-platform-export="${xesc(id)}" data-platform-version="${row.version}">导出 ZIP</button> ${manageActions}`,canSubmit?()=>publishPending(id):null,canSubmit?(m.reviewSubmitted?'审核通过':'提交审核'):'关闭');
 }
 function chooseDraftAvatar(id){
   const m=meta[id],row=version(id,m?.pendingVersion);
@@ -216,10 +222,16 @@ function chooseDraftAvatar(id){
     renderCards();showCard(id);toast('头像已保存到草稿','success');
   },'保存头像');
 }
+function versionOperator(row){
+  const name=row.operator||row.author||'';
+  // 系统种子版本使用固定演示操作人，不随当前登录账号变化。
+  if(!row.operator&&['Lingee','Lingee 演示'].includes(row.author))return getLoginPeople().find(person=>person.id==='p22')?.name||'未记录';
+  return !name||['平台管理员','租户管理员','原厂管理员'].includes(name)?'未记录':name;
+}
 function showHistory(id){
   if(!inScope(meta[id]))return;
   const rows=(versions[id]||[]).slice().reverse(),rejected=rejectedReviewEntries(meta[id].kind,meta[id].id);
-  assetReviewDialog(`${label(id)} · 历史版本`,mergeVersionHistory(rows,rejected,row=>`<div class="platform-history"><strong>V${row.version}</strong><span>${xesc(row.note)}</span><small>${xesc(row.at)}</small><button type="button" class="platform-link" data-platform-export="${xesc(id)}" data-platform-version="${row.version}">导出</button></div>`)+'<p class="platform-dialog-note">版本只读；再次导入同一编码的 ZIP 按主版本、次版本或修订号递增。</p>',null,'关闭');
+  assetReviewDialog(`${label(id)} · 历史版本`,mergeVersionHistory(rows,rejected,row=>`<div class="platform-history"><strong>V${row.version}</strong><span>${xesc(row.note)}</span><small><span class="platform-history-operator"${!row.operator&&['Lingee','Lingee 演示'].includes(row.author)?' title="演示操作人"':''}>${xesc(versionOperator(row))}</span>${xesc(row.at)}</small><button type="button" class="platform-link" data-platform-export="${xesc(id)}" data-platform-version="${row.version}">导出</button></div>`),null,'关闭');
 }
 function crc32(bytes){
   let crc=-1;for(const byte of bytes){crc^=byte;for(let i=0;i<8;i++)crc=(crc>>>1)^((crc&1)?0xedb88320:0);}return (crc^-1)>>>0;
@@ -331,7 +343,7 @@ async function inspectZip(file){
   return {count,manifest:manifest&&typeof manifest==='object'?manifest:{}};
 }
 async function importZip(file){
-  const user=identity(),kind=tab;if(!user||!canEdit())return;
+  const user=importIdentity(),kind=tab,account=getLoginAccount();if(!user||!canImport())return;
   // 演示进度不读取、解压或校验实际文件；取消后不继续导入。
   const cancelScan=()=>assetReviewClose();
   const scanBody=step=>`<div class="platform-import-file"><strong>${xesc(file.name)}</strong><span>ZIP 导入 · 原型演示</span></div><div class="platform-import-scan" role="status" aria-live="polite"><p>${step===1?'正在解析包信息…':'解析完成，正在扫描配置…'}</p><progress max="2" value="${step-1}" aria-label="模拟解析与扫描进度"></progress></div><p class="platform-dialog-note">模拟解析与扫描，不读取实际文件，不执行真实安全检测。</p>`;
@@ -341,11 +353,11 @@ async function importZip(file){
   assetReviewDialog('解析与扫描',scanBody(2),cancelScan,'取消');
   await new Promise(resolve=>setTimeout(resolve,600));
   if(dialogConfirm!==cancelScan)return;
-  if(!canEdit()||identity()?.role!==user.role||identity()?.tenantId!==user.tenantId||tab!==kind){assetReviewClose();return;}
+  if(!canImport()||importIdentity()?.role!==user.role||importIdentity()?.tenantId!==user.tenantId||getLoginAccount()!==account||tab!==kind){assetReviewClose();return;}
   const name=cleanName(file.name),packageId=stableId(name);
   const matching=Object.entries(meta).find(([id,item])=>inScope(item)&&item.kind===kind&&(item.id===name||item.id===packageId||latest(id)?.data?.name===name));
   const id=matching?matching[1].id:user.role==='tenant'?`tenant-${user.tenantId}-${packageId}`:packageId,itemKey=key(kind,id);
-  if(meta[itemKey]&&!canManage(meta[itemKey]))return assetReviewDialog('无法导入','<p>同编码内容属于其他管理范围，请更换文件名。</p>',null,'关闭');
+  if(meta[itemKey]&&!inScope(meta[itemKey]))return assetReviewDialog('无法导入','<p>同编码内容属于其他管理范围，请更换文件名。</p>',null,'关闭');
   if(meta[itemKey]?.reviewSubmitted)return assetReviewDialog('已有待审核版本','<p>请先完成当前版本的审核，再导入新版本。</p>',null,'关闭');
   const previous=latest(itemKey),data=normalizePackage(kind,id,{name:previous?.data.name||name},file,user.tenantId);
   if(!previous){
@@ -355,13 +367,13 @@ async function importZip(file){
   if(user.role==='tenant'){data.source='tenant';data.tenantId=user.tenantId;data.by=cvWorkspaceName(user.tenantId);}
   let next=bumpVersion(previous?.version);
   function saveDraft(note){
-    if(!canEdit()||identity()?.role!==user.role||identity()?.tenantId!==user.tenantId)return;
+    if(!canImport()||importIdentity()?.role!==user.role||importIdentity()?.tenantId!==user.tenantId||getLoginAccount()!==account)return;
     if(meta[itemKey]?.reviewSubmitted){$('#platformImportError').textContent='已有版本提交审核，请先完成审核';return;}
     const chosen=bumpVersion(latest(itemKey)?.version);
     if(chosen!==next){next=chosen;$('#platformNextVersion').value='V'+chosen;$('#platformImportError').textContent='版本已自动更新，请再次确认';return;}
     const oldMeta=meta[itemKey]?clone(meta[itemKey]):null,oldVersions=versions[itemKey]?clone(versions[itemKey]):null;
-    meta[itemKey]={kind,id,source:user.role==='tenant'?'tenant':'factory',tenantId:user.tenantId,status:oldMeta?.status||'draft',activeVersion:oldMeta?.activeVersion||'',pendingVersion:chosen,reviewSubmitted:false,modified:now(),editor:user.role==='tenant'?'租户管理员':'原厂管理员'};
-    (versions[itemKey]||(versions[itemKey]=[])).push({version:chosen,data,note,at:now(),author:'平台管理员',packageName:file.name,packageBytes:file.size});
+    meta[itemKey]={kind,id,source:user.role==='tenant'?'tenant':'factory',tenantId:user.tenantId,status:oldMeta?.status||'draft',activeVersion:oldMeta?.activeVersion||'',pendingVersion:chosen,reviewSubmitted:false,modified:now(),editor:cvCurrentUserName()};
+    (versions[itemKey]||(versions[itemKey]=[])).push({version:chosen,data,note,at:now(),author:cvCurrentUserName(),operator:cvCurrentUserName(),packageName:file.name,packageBytes:file.size});
     if(!persist()){
       if(oldMeta)meta[itemKey]=oldMeta;else delete meta[itemKey];
       if(oldVersions)versions[itemKey]=oldVersions;else delete versions[itemKey];
@@ -384,6 +396,7 @@ async function importZip(file){
 }
 
 function openImportDialog(){
+  if(!canImport())return;
   const kind=tab;
   assetReviewDialog('导入'+(kind==='team'?'智能体团队':platformExpertName()),`<div class="platform-import-drop-zone" id="platformImportDropZone" tabindex="0" role="button" aria-label="点击或拖拽 ZIP 包到此处上传"><input id="platformDialogZip" type="file" accept=".zip,application/zip" hidden><svg class="platform-import-drop-icon" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m-4-4 4-4 4 4"/><path d="M5 15v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg><p class="platform-import-drop-primary">点击或拖拽 ZIP 包到此处上传</p><p class="platform-import-drop-secondary">支持 .zip 格式，原型演示不校验实际内容</p></div><div class="platform-import-file-bar hidden" id="platformImportFileBar"><div class="platform-import-file-info"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg><div class="platform-import-file-meta"><span id="platformImportFileName" class="platform-import-file-name"></span><span id="platformImportFileSize" class="platform-import-file-size"></span></div></div><button type="button" class="platform-import-file-remove" id="platformImportFileRemove" aria-label="重新选择文件">×</button></div><p class="platform-dialog-note">选择文件后点击“解析并导入”，将进入模拟解析与扫描流程。</p><div class="platform-dialog-error" id="platformImportPickerError" role="alert"></div>`,()=>{
     if(!selectedFile){$('#platformImportPickerError').textContent='请选择一个 ZIP 包';return;}
@@ -661,7 +674,7 @@ export function publishReviewedBundle(bundle,note,reviewEntry){
     if(item.kind==='team')for(const memberId of data.members||[]){const expertId=key('expert',memberId);if(!numbers[expertId]&&!(meta[expertId]?.status==='online'&&active(expertId))){meta=oldMeta;versions=oldVersions;return '引用的成员尚未发布，无法发布智能体团队';}}
     delete data.memberRefs;
     meta[id]={kind:item.kind,id:data.id,source:'tenant',tenantId:data.tenantId,status:'online',activeVersion:number,pendingVersion:'',modified:now(),editor:'平台管理员'};
-    (versions[id]||(versions[id]=[])).push({version:number,data,note,at:now(),author:data.by});
+    (versions[id]||(versions[id]=[])).push({version:number,data,note,at:now(),author:data.by,operator:cvCurrentUserName()});
   }
   if(!persist([reviewEntry])){meta=oldMeta;versions=oldVersions;return '保存失败，发布内容保持原样，请重试';}
   renderCards();return '';
