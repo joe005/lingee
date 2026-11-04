@@ -91,13 +91,14 @@ var LOGIN_PEOPLE_IDS={
 };
 export function getLoginPersonId(){ return LOGIN_PEOPLE_IDS[getAuthedUser()] || ''; }
 export function getLoginAccount(){ return getAuthedUser() || ''; }
-/* 受限菜单只授权给张工：原厂管理、租户管理（云端），以及协作开发的「项目」「设置」页签。
+/* 受限菜单只授权给张工：原厂管理（云端），以及协作开发的「项目」「设置」页签。企业资产入口面向全员可见。
    其他账号不显示入口，直接用地址或旧链接打开也会被退回默认页面。 */
 var RESTRICTED_MENU_PERSON_ID='p01';
 export function canAccessRestrictedMenus(){ return getLoginPersonId()===RESTRICTED_MENU_PERSON_ID; }
 function applyRestrictedMenuAccess(){
   var allowed=canAccessRestrictedMenus();
-  document.querySelectorAll('[data-platform-nav],#cvTabNav [data-cvview="members"],#cvTabNav [data-cvview="config"]').forEach(function(item){ item.classList.toggle('hidden',!allowed); });
+  document.querySelectorAll('[data-platform-nav="tenant"]').forEach(function(item){ item.classList.remove('hidden'); });
+  document.querySelectorAll('[data-platform-nav="factory"],#cvTabNav [data-cvview="members"],#cvTabNav [data-cvview="config"]').forEach(function(item){ item.classList.toggle('hidden',!allowed); });
 }
 export function getPlatformIdentity(){
   var personId=getLoginPersonId();

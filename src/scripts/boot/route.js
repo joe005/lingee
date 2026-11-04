@@ -5,7 +5,7 @@ import { set_cvPendingProj, set_cvPendingTab } from '../features/collab/view.js'
 import { appendAssistantMessage, appendUserMessage, messagesList, restoreChatSession, simulateAIResponse } from '../features/composer.js';
 import { dsNavEl, renderOverview } from '../features/design/index.js';
 import { stripBase } from '../core/base-path.js';
-import { canAccessRestrictedMenus, getPlatformIdentity } from '../features/login.js';
+import { getPlatformIdentity } from '../features/login.js';
 import { setMgrPendingRoute } from '../features/manager/nav.js';
 /* 启动路由：从路径 / 旧链接 / localStorage 还原视图
    拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
@@ -74,14 +74,14 @@ export function initRoute() {
     /* 管理板块最后才初始化，这里先显示视图并记下要打开的菜单和项目 */
     showView('manager');
     setMgrPendingRoute(new URLSearchParams(_origSearch));
-  }else if(dsViewParam && dsViewParam!=='newtask' && !(dsViewParam==='platform' && !canAccessRestrictedMenus())){
+  }else if(dsViewParam && dsViewParam!=='newtask'){
     showView(dsViewParam);
     if(dsViewParam==='skills') setNavActive('技能开发');
     else if(dsViewParam==='agents') setNavActive('智能体开发');
     else if(dsViewParam==='apps') setNavActive('应用开发');
     else if(dsViewParam==='tasks') setNavActive('任务');
     else if(PAGE_ROUTES.indexOf(dsViewParam)>=0) setNavActiveByView(dsViewParam);
-    else if(dsViewParam==='platform') setNavActive(getPlatformIdentity()?.role==='tenant'?'企业资产':'原厂资产');
+    else if(dsViewParam==='platform') setNavActive(getPlatformIdentity()?.role==='factory'?'原厂资产':'企业资产');
     else if(dsViewParam==='collab'){
       setNavActive('协作开发');
       /* 协作开发模块最后才初始化，这里只记下要打开的页签。

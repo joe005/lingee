@@ -1,0 +1,1 @@
+export default {"id":"116","date":"2026-11-04","iconBg":"var(--brand-fill)","iconColor":"var(--brand)","type":"功能","module":"企业资产","author":"wuhc2023","body":"功能·企业资产：企业资产面向全员开放原型管理操作，补齐智能体技能与团队成员详情、历史版本操作人，并统一卡片布局和菜单图标。"};
