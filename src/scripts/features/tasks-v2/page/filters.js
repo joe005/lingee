@@ -61,7 +61,7 @@ function matchFilter(task, filter) {
   var field = filter.field, op = filter.op, val = filter.value;
   if (!val && op !== 'today' && op !== 'overdue') return true;
   if (field === 'creator') return task.createdBy === val;
-  /* 工作区筛选含下级工作区；与「空间」搭配使用，不设操作符选择 */
+  /* 工作区筛选只看该工作区；与「空间」搭配使用，不设操作符选择 */
   if (field === 'workspaceId') { var inScope = wsTaskInScope(tkProjectById(task.project), task, val); return op === 'neq' ? !inScope : inScope; }
   /* 「已办」不是任务状态，而是本人处理过但已流转的视角；看板已隐藏该列，此处保留兼容已保存视图的筛选 */
   if (field === 'status' && val === 'handled') return op === 'neq' ? !tkIsHandledByMe(task) : tkIsHandledByMe(task);

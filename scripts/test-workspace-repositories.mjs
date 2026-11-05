@@ -8,7 +8,7 @@ const storage = new Map();
 globalThis.localStorage = {getItem:key=>storage.get(key) ?? null,setItem:(key,value)=>storage.set(key,value)};
 globalThis.document = new EventTarget();
 const p={id:'space',name:'费用报销',space:'manage',containsRd:true,repo:'https://Git.Example.com/Team/Expense.git/',baseBranch:'main',workspaces:[
-  {id:'backend',name:'后端',parentId:''}, {id:'api',name:'API',parentId:'backend'},
+  {id:'backend',name:'后端',parentId:''}, {id:'api',name:'API',parentId:''},
   {id:'legacy',name:'旧分支覆盖',parentId:'',baseBranch:'release/old'},
   {id:'archived',name:'归档',status:'archived',repo:'https://git.example.com/old/repo'},
 ]};
@@ -28,15 +28,9 @@ assert.equal(repositories.buildRepoList(p,'api').source.id,'api');
 assert.equal(repositories.buildRepoResolve(p,'legacy').baseBranch,'release/old','legacy branch override preserved');
 assert.equal(repositories.buildRepoResolve(p,'legacy').repo,A.repo);
 assert.equal(repositories.buildRepoSave(p,'backend',{repositories:[B],defaultRepo:b}),true);
-assert.equal(repositories.buildRepoList(p,'api').repositories.length,0,'parent changes do not populate child');
+assert.equal(repositories.buildRepoList(p,'api').repositories.length,0,'sibling changes do not populate another workspace');
 assert.equal(repositories.buildRepoSave(p,'backend',{mode:'inherit'}),false);
-// Freeze an explicitly inherited old record before the parent changes.
-const oldRecords=JSON.parse(localStorage.getItem(repositories.BUILD_REPO_KEY));
-oldRecords[JSON.stringify([p.id,'api'])]={mode:'inherit'};
-localStorage.setItem(repositories.BUILD_REPO_KEY,JSON.stringify(oldRecords));
-assert.equal(repositories.buildRepoList(p,'api').repositories[0].key,b);
 assert.equal(repositories.buildRepoSave(p,'backend',{repositories:[]}),true);
-assert.equal(repositories.buildRepoList(p,'api').repositories[0].key,b,'old inherited list becomes independent');
 assert.equal(repositories.buildRepoSave(p,'api',{repositories:[A,B],defaultRepo:b}),true);
 assert.equal(repositories.buildRepoResolve(p,'api').key,b,'primary repository drives task fallback');
 const source=readFileSync(new URL('../src/scripts/features/collab/local-dev/core.js',import.meta.url),'utf8');

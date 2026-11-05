@@ -5,7 +5,7 @@ import { layerOf, layerVisible, layerActions, layerToolbar, handleLayerAction, a
 import { UNLISTED_EXPERT_IDS } from './builtin-catalog.js';
 import { $, $$ } from '../../core/dom.js';
 import { summon } from './automatch.js';
-import { EX, EXPERTS, phraseHtml, skillInfo, xav, xesc } from './data.js';
+import { EX, EXPERTS, phraseHtml, skillInfo, tierInfo, xav, xesc } from './data.js';
 import { submitAssetForReview } from './asset-review.js';
 import { deleteMyExpert, openExpertEditor } from './editor.js';
 import { knSecHtml, resetKnDetail, saveKnDetail } from './knowledge.js';
@@ -26,6 +26,11 @@ function facesHtml(ids,n,compact=false){
   return '<span class="x-faces">'+ids.slice(0,showCount?limit-1:limit).map(function(i){
     return '<img src="'+xav(EX[i]?.k)+'" alt="">'; }).join('')
     +(showCount?'<span class="asset-faces-count">+'+(ids.length-limit+1)+'</span>':'')+'</span>';
+}
+/* 模型级别：智能体运行时用的推理档位，未设置时为「自动」 */
+function tierHtml(tier){
+  var t=tierInfo(tier);
+  return '<section class="x-sec"><div class="x-sec-t">模型级别</div><div class="x-chips"><span class="ptag ptag-tier" title="'+xesc(t.desc)+'">'+xesc(t.label)+'</span><span class="x-tier-desc">'+xesc(t.desc)+'</span></div></section>';
 }
 function renderExpertGrid(){
   if (expertGrid && renderWorkspaceCapabilities(expertGrid)) return;
@@ -95,6 +100,7 @@ function openExpertModal(id){
   var overview=detailIdentityHtml('expert',e)
     +'<div class="x-sec x-desc">'+xesc(e.desc)+'</div>'
     +(tags.length?'<section class="x-sec"><div class="x-sec-t">标签</div><div class="x-chips">'+tags.map(tag=>'<span class="ptag">'+xesc(tag)+'</span>').join('')+'</div></section>':'')
+    +tierHtml(e.tier)
     +detailCommandsHtml('expert',e);
 
   var skills=e.skills||[];

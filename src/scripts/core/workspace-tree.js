@@ -1,7 +1,11 @@
-/* 工作区树（空间之下的工作范围）：只放纯函数，不依赖任何业务模块，Manage 与 Build 共用。
-   工作区随空间保存在 project.workspaces 数组里，按 parentId 存树（空 = 挂在空间根）；层级上限放在这里一处。 */
+/* 工作区（空间之下的工作范围）：只放纯函数，不依赖任何业务模块，Manage 与 Build 共用。
+   工作区随空间保存在 project.workspaces 数组里，只有一级、互相平铺，不再有上下级。
+   下面保留原有函数名，便于各页面沿用；路径即自身，没有下级。 */
 
-export var WS_MAX_DEPTH = 3;
+export var WS_MAX_DEPTH = 1;
+/* 空间只是容器：空间根下的任务和配置就是「默认工作区」（workspaceId 为空），与其他工作区平级 */
+export var WS_DEFAULT_NAME = '默认工作区';
+export var WS_DEFAULT_FILTER = '__default';
 export var WS_NAME_MAX = 30;
 
 export function wsList(project) {
@@ -11,64 +15,49 @@ export function wsById(project, id) {
   if (!id) return null;
   return wsList(project).find(function (w) { return w.id === id; }) || null;
 }
-/* 同级按 order 再按创建先后排列 */
+/* 空间下的全部工作区（parentId 为空表示空间根），按 order 再按创建先后排列；工作区没有下级 */
 export function wsChildren(project, parentId) {
-  return wsList(project).filter(function (w) { return (w.parentId || '') === (parentId || ''); })
+  if (parentId) return [];
+  return wsList(project).slice()
     .sort(function (a, b) { return (a.order || 0) - (b.order || 0) || (a.createdAt || 0) - (b.createdAt || 0); });
 }
-/* 从一级到自身的工作区链；链断了（父级不存在）时停在断点 */
 export function wsPath(project, id) {
-  var path = [];
-  var seen = {};
-  var cur = wsById(project, id);
-  while (cur && !seen[cur.id]) {
-    seen[cur.id] = true;
-    path.unshift(cur);
-    cur = wsById(project, cur.parentId);
-  }
-  return path;
+  var ws = wsById(project, id);
+  return ws ? [ws] : [];
 }
 export function wsPathNames(project, id) {
   return wsPath(project, id).map(function (w) { return w.name; });
 }
 export function wsDepth(project, id) { return wsPath(project, id).length; }
-/* 以该工作区为根的子树高度（自身为 1） */
-export function wsHeight(project, id) {
-  var kids = wsChildren(project, id);
-  return 1 + kids.reduce(function (m, k) { return Math.max(m, wsHeight(project, k.id)); }, 0);
-}
-/* 自身及全部下级的 ID */
-export function wsSubtreeIds(project, id) {
-  var ids = [id];
-  wsChildren(project, id).forEach(function (k) { ids = ids.concat(wsSubtreeIds(project, k.id)); });
-  return ids;
-}
-export function wsAncestorIds(project, id) {
-  return wsPath(project, id).slice(0, -1).map(function (w) { return w.id; });
-}
-/* 深度优先展开，供下拉树和管理列表使用；归档的工作区默认不出现 */
+export function wsHeight() { return 1; }
+export function wsSubtreeIds(project, id) { return [id]; }
+export function wsAncestorIds() { return []; }
+/* 供下拉和管理列表使用；归档的工作区默认不出现 */
 export function wsFlatTree(project, opts) {
   var withArchived = !!(opts && opts.archived);
-  var rows = [];
-  (function walk(parentId, depth) {
-    wsChildren(project, parentId).forEach(function (w) {
-      if (!withArchived && w.status === 'archived') return;
-      rows.push({ ws: w, depth: depth, hasChildren: wsChildren(project, w.id).some(function (k) { return withArchived || k.status !== 'archived'; }) });
-      walk(w.id, depth + 1);
-    });
-  })('', 1);
-  return rows;
+  return wsChildren(project, '').filter(function (w) { return withArchived || w.status !== 'archived'; })
+    .map(function (w) { return { ws: w, depth: 1, hasChildren: false }; });
 }
-/* 任务归属：task.workspaceId 落在 id 的子树内（id 为空表示不限） */
+/* 工作区成员（含负责人与工作区管理员）；空间负责人、空间管理员另行判断 */
+export function wsHasPerson(ws, personId) {
+  if (!ws || !personId) return false;
+  return ws.ownerId === personId || (ws.memberIds || []).indexOf(personId) >= 0 || (ws.adminIds || []).indexOf(personId) >= 0;
+}
+/* 任务归属：task.workspaceId 等于 id（id 为空表示不限） */
 export function wsTaskInScope(project, task, id) {
   if (!id) return true;
-  var tid = task && task.workspaceId;
-  return !!tid && wsSubtreeIds(project, id).indexOf(tid) >= 0;
+  if (id === WS_DEFAULT_FILTER) return !!task && !task.workspaceId;
+  return !!task && task.workspaceId === id;
 }
-/* 「空间 › 工作区」标签：路径过长只显示末级；没有归属的任务只显示空间 */
+/* 范围名称：'' 为默认工作区 */
+export function wsScopeName(project, id) {
+  var ws = id ? wsById(project, id) : null;
+  return ws ? ws.name : WS_DEFAULT_NAME;
+}
+/* 「空间 › 工作区」标签；空间还没有其他工作区时只显示空间 */
 export function wsTaskLabel(project, task) {
   if (!project) return '';
-  var names = task && task.workspaceId ? wsPathNames(project, task.workspaceId) : [];
-  if (!names.length) return project.name;
-  return project.name + ' › ' + (names.length > 2 ? names[names.length - 1] : names.join(' › '));
+  var ws = task && task.workspaceId ? wsById(project, task.workspaceId) : null;
+  if (ws) return project.name + ' › ' + ws.name;
+  return wsList(project).length ? project.name + ' › ' + WS_DEFAULT_NAME : project.name;
 }

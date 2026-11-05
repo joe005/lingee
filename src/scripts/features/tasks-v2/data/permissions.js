@@ -1,6 +1,7 @@
 import { CV_MEMBERS, cvWorkspaceRole } from '../../collab/data.js';
 import { tkAllProjects } from './external-projects.js';
 import { tkCurrentStageHandlerId, tkCurrentUserId } from './people.js';
+import { wsById, wsFlatTree, wsHasPerson } from '../../../core/workspace-tree.js';
 /* 任务数据：「我的任务」归属与查看 / 开始权限（拆自 tasks-v2/data.js） */
 
 /* 任务页签按人员分配：默认只列出与我当前相关的任务——
@@ -60,10 +61,28 @@ function tkParticipatesCurrentUser(task) {
     || (task.comments || []).some(function (c) { return c && (c.authorId === me || c.assignee === me); })
     || (task.statusHistory || []).some(function (entry) { return entry && entry.authorId === me; });
 }
+/* 空间负责人、空间管理员与系统管理员可看到空间内全部工作区 */
+function tkIsSpaceManager(project, me) {
+  if (!project || !me) return false;
+  return cvWorkspaceRole(me) === 'system_admin' || project.owner === me.name || (project.adminIds || []).includes(me.id);
+}
+/* 工作区隔离：工作区里的任务只对该工作区成员与空间管理者可见；默认工作区（空间根）的任务沿用原规则 */
+function tkCanSeeWorkspace(project, workspaceId) {
+  if (!workspaceId) return true;
+  var me = CV_MEMBERS.find(function (person) { return person.id === tkCurrentUserId(); });
+  if (tkIsSpaceManager(project, me)) return true;
+  var ws = wsById(project, workspaceId);
+  return !!ws && wsHasPerson(ws, tkCurrentUserId());
+}
+/* 当前用户可见的工作区（切换器、筛选、新建任务、默认范围共用） */
+function tkVisibleWorkspaces(project, opts) {
+  return project ? wsFlatTree(project, opts).filter(function (row) { return tkCanSeeWorkspace(project, row.ws.id); }) : [];
+}
 function tkCanViewTask(task) {
   if (!task) return false;
   var project = tkProjectsForCurrentUser().find(function (row) { return row.id === task.project; });
   if (!project) return false;
+  if (!tkCanSeeWorkspace(project, task.workspaceId)) return false;
   var me = CV_MEMBERS.find(function (person) { return person.id === tkCurrentUserId(); });
   return cvWorkspaceRole(me) === 'system_admin' || tkParticipatesCurrentUser(task);
 }
@@ -81,4 +100,4 @@ function tkProjectsForCurrentUser() {
   }) : [];
 }
 
-export { tkCanStartTask, tkCanViewTask, tkInMyTaskList, tkIsHandledByMe, tkIsMyCurrentStage, tkIsMyStageDone, tkIsProjectOwner, tkParticipatesCurrentUser, tkProjectsForCurrentUser, tkWasTaskHandler };
+export { tkCanSeeWorkspace, tkVisibleWorkspaces, tkCanStartTask, tkCanViewTask, tkInMyTaskList, tkIsHandledByMe, tkIsMyCurrentStage, tkIsMyStageDone, tkIsProjectOwner, tkParticipatesCurrentUser, tkProjectsForCurrentUser, tkWasTaskHandler };

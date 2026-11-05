@@ -1,0 +1,55 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import * as tree from '../src/scripts/core/workspace-tree.js';
+
+/* 工作区任务可见性：工作区任务只对工作区成员与空间管理者可见，空间根任务不受影响 */
+const source = readFileSync(new URL('../src/scripts/features/tasks-v2/data/permissions.js', import.meta.url), 'utf8');
+const names = [...source.matchAll(/export \{([^}]*)\}/g)].flatMap(m => m[1].split(',').map(s => s.trim()).filter(Boolean));
+let currentUser = 'member';
+const people = [
+  { id: 'owner', name: '空间负责人' }, { id: 'admin', name: '空间管理员' }, { id: 'member', name: '工作区成员' },
+  { id: 'outsider', name: '其他空间成员' }, { id: 'wsadmin', name: '工作区管理员' }, { id: 'sys', name: '系统管理员', workspaceRole: 'system_admin' },
+];
+const project = {
+  id: 'space', name: '产品研发', owner: '空间负责人', adminIds: ['admin'], members: people.map(p => p.id),
+  workspaces: [{ id: 'ws-a', name: '应用开发组', ownerId: 'owner', memberIds: ['owner', 'member'], adminIds: ['wsadmin'] }, { id: 'ws-b', name: '质量组', ownerId: 'owner', memberIds: ['owner'] }],
+};
+const deps = {
+  ...tree,
+  CV_MEMBERS: people,
+  cvWorkspaceRole: p => p?.workspaceRole || 'member',
+  tkAllProjects: () => [project],
+  tkCurrentUserId: () => currentUser,
+  tkCurrentStageHandlerId: t => t.assignee,
+};
+const mod = new Function(...Object.keys(deps), source.replace(/^import .*;\n/gm, '').replace(/^export \{[^}]*\};?\n?/gm, '') + '\nreturn {' + names.join(',') + '};')(...Object.values(deps));
+
+const everyone = ['owner', 'admin', 'member', 'outsider', 'wsadmin'];
+const task = (workspaceId) => ({ id: 't-' + workspaceId, project: 'space', workspaceId, createdBy: 'x', assignee: 'x',
+  executionPlan: [], comments: everyone.map(id => ({ authorId: id })) });
+const view = (user, t) => { currentUser = user; return mod.tkCanViewTask(t); };
+
+assert.equal(view('outsider', task('')), true, 'space-root tasks stay visible to participants');
+assert.equal(view('member', task('ws-a')), true, 'workspace members see workspace tasks');
+assert.equal(view('wsadmin', task('ws-a')), true, 'workspace admins see workspace tasks');
+assert.equal(view('outsider', task('ws-a')), false, 'non-members cannot see workspace tasks even when they participated');
+assert.equal(view('member', task('ws-b')), false, 'members of one workspace cannot see another');
+assert.equal(view('owner', task('ws-b')), true, 'space owner sees every workspace');
+assert.equal(view('admin', task('ws-b')), true, 'space admin sees every workspace');
+assert.equal(view('sys', task('ws-b')), true, 'system admin sees every workspace');
+
+currentUser = 'member';
+assert.deepEqual(mod.tkVisibleWorkspaces(project).map(r => r.ws.id), ['ws-a'], 'switcher lists only member workspaces');
+currentUser = 'outsider';
+assert.deepEqual(mod.tkVisibleWorkspaces(project).map(r => r.ws.id), [], 'non-members see no workspace');
+currentUser = 'admin';
+assert.deepEqual(mod.tkVisibleWorkspaces(project).map(r => r.ws.id), ['ws-a', 'ws-b'], 'space admin sees all workspaces');
+// 空间只是容器：空间根就是默认工作区
+const rootTask = { project: 'space', workspaceId: '' }, wsTask = { project: 'space', workspaceId: 'ws-a' };
+assert.equal(tree.wsTaskInScope(project, rootTask, tree.WS_DEFAULT_FILTER), true, 'default workspace holds space-root tasks');
+assert.equal(tree.wsTaskInScope(project, wsTask, tree.WS_DEFAULT_FILTER), false, 'default workspace excludes other workspaces');
+assert.equal(tree.wsScopeName(project, ''), '默认工作区');
+assert.equal(tree.wsScopeName(project, 'ws-a'), '应用开发组');
+assert.equal(tree.wsTaskLabel(project, rootTask), '产品研发 › 默认工作区', 'label names the default workspace once workspaces exist');
+assert.equal(tree.wsTaskLabel({ name: '老空间', workspaces: [] }, rootTask), '老空间', 'spaces without workspaces keep the plain label');
+console.log('工作区可见性回归通过：默认工作区任务不受影响、工作区任务仅成员与空间管理者可见、切换器只列可见工作区与默认工作区范围。');

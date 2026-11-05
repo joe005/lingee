@@ -5,6 +5,7 @@ import { routeOf } from '../expert/asset-routes.js';
 import { assetTagsHtml } from './expert-market.js';
 import { xav, xesc } from '../expert/data.js';
 import { toast } from '../../core/toast.js';
+import { WS_DEFAULT_NAME } from '../../core/workspace-tree.js';
 import { requestDeleteConfirmation } from '../../core/delete-confirm.js';
 import '../../../styles/parts/collab/recruitment-settings.css';
 
@@ -49,7 +50,7 @@ export function renderRecruitmentSettings(target) {
   const {p,ws,editable} = capabilityContext();
   if (!p) { host.innerHTML='<div class="cv-wsadmin-empty">请先选择空间或工作区。</div>'; return; }
   const rows = capabilityList(p,ws?.id).entries.filter(row => row.kind === kind && recruitable(row));
-  host.innerHTML='<p class="cv-basic-scope">'+xesc(p.name+(ws ? ' / '+ws.name : ''))+'</p><div class="cv-basic-heading"><div><h2>智能体与团队</h2><p>添加后，本工作区成员即可使用。</p></div>'+(editable ? '<button type="button" class="ld-set-btn ld-set-btn--primary" data-recruit-open>添加</button>' : '')+'</div>'
+  host.innerHTML='<p class="cv-basic-scope">'+xesc(p.name+' / '+(ws ? ws.name : WS_DEFAULT_NAME))+'</p><div class="cv-basic-heading"><div><h2>智能体与团队</h2><p>添加后，本工作区成员即可使用。</p></div>'+(editable ? '<button type="button" class="ld-set-btn ld-set-btn--primary" data-recruit-open>添加</button>' : '')+'</div>'
     +'<div class="cv-recruit-tabs" role="group" aria-label="资产类型">'+[['expert','智能体'],['team','智能体团队']].map(([key,label])=>'<button type="button" data-recruit-tab="'+key+'" aria-pressed="'+(key===kind)+'"'+(key===kind?' class="is-on"':'')+'>'+label+'</button>').join('')+'</div>'
     +'<div class="apps-grid cv-recruit-list">'+(rows.length ? rows.map(row=>recruitCard(row,editable,scopeId(p,ws))).join('') : '<div class="cv-recruit-empty">暂无已添加的'+(kind==='team'?'智能体团队':'智能体')+(editable?'，点击“添加”选择。':'，请联系工作区管理员添加。')+'</div>')+'</div>';
 }

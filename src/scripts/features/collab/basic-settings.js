@@ -5,7 +5,7 @@ import { initSelectDropdowns } from '../../core/select-dropdown.js';
 import { $ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
 import { requestDeleteConfirmation } from '../../core/delete-confirm.js';
-import { wsById, wsPathNames } from '../../core/workspace-tree.js';
+import { WS_DEFAULT_NAME, wsById } from '../../core/workspace-tree.js';
 import { CV_MEMBERS } from './data.js';
 import { getSpaceScope, setSpaceScope } from '../tasks-v2/page/space-filter.js';
 import { mgrCurrentPersonId } from '../manager/data.js';
@@ -17,6 +17,7 @@ var memberPage = 1;
 var memberPageSize = 10;
 var memberScope = '';
 function esc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]; }); }
+/* '' 为默认工作区（空间根） */
 function scope() { var s = getSpaceScope(), p = wsProjectById(s.project); return { p:p, ws:p ? wsById(p, s.ws) : null }; }
 function field(id, label, value, disabled, multiline, max) {
   return '<div class="cv-basic-field"><label for="' + id + '">' + label + '</label>' + (multiline
@@ -42,7 +43,7 @@ function dangerRow(title, text, reason, attr, label) {
 function leaveSection(p, ws) {
   var me = mgrCurrentPersonId(), rows = '';
   if (!me) return '';
-  if (wsOwnerId(p, ws) === me) rows = dangerRow('删除工作区', '删除后无法恢复。工作区内没有任务、也没有下级工作区时才能删除。', wsDeleteBlockReason(p, ws.id), 'data-cv-ws-delete', '删除工作区');
+  if (wsOwnerId(p, ws) === me) rows = dangerRow('删除工作区', '删除后无法恢复。工作区内没有任务时才能删除。', wsDeleteBlockReason(p, ws.id), 'data-cv-ws-delete', '删除工作区');
   else if ((ws.memberIds || []).indexOf(me) >= 0) rows = dangerRow('离开工作区', '将自己从该工作区移除，离开后不能再在此工作区创建和处理任务。', wsLeaveBlockReason(p, ws, me), 'data-cv-ws-leave', '离开工作区');
   return rows ? '<section class="cv-basic-advanced" aria-labelledby="cvBasicAdvancedTitle"><h3 id="cvBasicAdvancedTitle">高级选项</h3>' + rows + '</section>' : '';
 }
@@ -169,7 +170,7 @@ export function renderBasicSettings(host, tab) {
   var nextScope = s.p ? s.p.id + ':' + (s.ws ? s.ws.id : '') : '';
   if (nextScope !== memberScope) { memberScope = nextScope; memberPage = 1; }
   if (!s.p) { host.innerHTML = '<div class="cv-wsadmin-empty">请先在页面顶部选择一个空间，再查看设置。</div>'; return; }
-  var path = s.p.name + (s.ws ? ' / ' + wsPathNames(s.p, s.ws.id).join(' / ') : '');
+  var path = s.p.name + ' / ' + (s.ws ? s.ws.name : WS_DEFAULT_NAME);
   host.innerHTML = '<p class="cv-basic-scope" title="' + esc(path) + '">' + esc(path) + '</p>' + (tab === 'repo' ? repo(s.p, s.ws) : tab === 'members' ? members(s.p, s.ws) : general(s.p, s.ws));
   if (tab === 'members') {
     host.querySelectorAll('#cvBasicMemberRole, #cvMemberPageSize').forEach(function (select) { if (select instanceof HTMLSelectElement) initSelectDropdowns([select]); select.nextElementSibling?.classList.add('shared-select-trigger'); });
@@ -394,7 +395,7 @@ export function initBasicSettings(host) {
       var removed = wsDelete(ds.p, ds.ws.id);
       if (!removed.ok) { toast(removed.error, 'warning'); renderBasicSettings(host, currentTab); return; }
       toast('已删除工作区「' + ds.ws.name + '」', 'success');
-      setSpaceScope(ds.p.id, ds.ws.parentId || ''); return;
+      setSpaceScope(ds.p.id, ''); return;
     }
     var leave = e.target.closest('[data-cv-ws-leave]');
     if (leave) {
@@ -403,7 +404,7 @@ export function initBasicSettings(host) {
       var left = wsLeave(ls.p, ls.ws.id, me);
       if (!left.ok) { toast(left.error, 'warning'); renderBasicSettings(host, currentTab); return; }
       toast('已离开工作区「' + ls.ws.name + '」', 'success');
-      setSpaceScope(ls.p.id, ls.ws.parentId || ''); return;
+      setSpaceScope(ls.p.id, ''); return;
     }
     var button = e.target.closest('[data-cv-basic-remove]'); if (!button) return;
     var s = scope(), id = button.dataset.cvBasicRemove; if (!s.p) return;

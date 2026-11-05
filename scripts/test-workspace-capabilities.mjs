@@ -6,7 +6,7 @@ const storage = new Map();
 let failWrite = false;
 globalThis.localStorage = {getItem:k => storage.get(k) ?? null,setItem:(k,v) => {if (failWrite) throw Error('quota'); storage.set(k,v);}};
 globalThis.document = new EventTarget();
-const p = {id:'space',name:'产品研发',workspaces:[{id:'a',name:'后端',parentId:''},{id:'b',name:'前端',parentId:''},{id:'a1',name:'接口',parentId:'a'},{id:'archived',parentId:'',status:'archived'}]};
+const p = {id:'space',name:'产品研发',workspaces:[{id:'a',name:'后端',parentId:''},{id:'b',name:'前端',parentId:''},{id:'a1',name:'接口',parentId:''},{id:'archived',parentId:'',status:'archived'}]};
 const q = {...p,id:'other'};
 let catalog = [
   {key:'expert:one',kind:'expert',version:'1.0.0',data:{id:'one',name:'开发',skills:['read-code'],comp:['engineering.implementation:3']}},
@@ -22,14 +22,9 @@ assert.equal(save('a',['expert:one']), '');
 assert.equal(capabilities.capabilityDefault(p,'a1'),null,'child workspace needs its own installation');
 assert.equal(capabilities.capabilityDefault(p,'b'),null,'sibling workspace starts empty');
 assert.equal(capabilities.capabilityDefault(q,'a'),null,'space IDs isolate identical workspace IDs');
-// Preserve records explicitly configured as inherited before the installation model changed.
-const legacy=JSON.parse(storage.get(capabilities.CAPABILITY_KEY));
-legacy[JSON.stringify([p.id,'a1'])]={mode:'inherit'};
-storage.set(capabilities.CAPABILITY_KEY,JSON.stringify(legacy));
-assert.equal(capabilities.capabilityMigrate(p),'');
-assert.equal(capabilities.capabilityDefault(p,'a1').key,'expert:one');
+assert.equal(save('a1',['expert:one']),'');
 assert.equal(save('a',[]),'');
-assert.equal(capabilities.capabilityDefault(p,'a1').key,'expert:one','legacy installations are pinned, not linked to future parent changes');
+assert.equal(capabilities.capabilityDefault(p,'a1').key,'expert:one','workspaces keep their own installations');
 assert.ok(capabilities.capabilitySave(p,'a1',{mode:'inherit'}),'new inheritance configuration is rejected');
 assert.equal(save('b'),'');
 assert.ok(save('missing'));
@@ -186,10 +181,10 @@ assert.match(formHtml,/<label class="niu-field"><span>[^\n]*id="niuTeam"/);
 const formSource = readFileSync(new URL('../src/scripts/features/tasks-v2/new-issue-ui.js',import.meta.url),'utf8');
 // Workspace creation shows the selected workspace; space and edit entries retain the space field.
 const workspaceRenderSource = formSource.slice(formSource.indexOf('function renderWorkspaceOptions('), formSource.indexOf('function renderWorkspaceRepoHint('));
-for (const [selected, editingTaskId, visible] of [['a', null, true], ['', null, false], ['missing', null, false], ['a', 1, false]]) {
+for (const [selected, editingTaskId, visible] of [['a', null, true], ['', null, true], ['missing', null, true], ['a', 1, false]]) {
   const workspaceField = {}, spaceField = {};
   const fields = {niuWorkspace:{value:'',closest:()=>workspaceField},niuProjectTrigger:{closest:()=>spaceField}};
-  const deps = {byId:id=>fields[id],selectedProjectId:p.id,editingTaskId,tkProjectById:()=>p,wsFlatTree:()=>[{ws:p.workspaces[0]}],wsById:(project,id)=>project.workspaces.find(w=>w.id===id),wsPathNames:()=>['后端'],escapeHtml:v=>v,renderWorkspaceRepoHint:()=>{}};
+  const deps = {byId:id=>fields[id],selectedProjectId:p.id,editingTaskId,tkProjectById:()=>p,tkVisibleWorkspaces:()=>[{ws:p.workspaces[0]}],WS_DEFAULT_NAME:'默认工作区',wsById:(project,id)=>project.workspaces.find(w=>w.id===id),wsPathNames:()=>['后端'],escapeHtml:v=>v,renderWorkspaceRepoHint:()=>{}};
   new Function(...Object.keys(deps),workspaceRenderSource+'return renderWorkspaceOptions;')(...Object.values(deps))(selected);
   assert.equal(workspaceField.hidden,!visible);
   assert.equal(spaceField.hidden,visible);

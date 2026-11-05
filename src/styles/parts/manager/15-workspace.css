@@ -30,7 +30,7 @@
 .mgr-ws-pop-count { padding: 8px 8px 4px; color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); }
 .mgr-ws-pop-list { max-height: 320px; overflow-y: auto; }
 .mgr-ws-pop-row {
-  display: flex; align-items: center; gap: 4px; width: 100%; min-height: 36px; padding: 0 8px 0 calc(8px + var(--ws-depth, 0) * 16px);
+  display: flex; align-items: center; gap: 4px; width: 100%; min-height: 36px; padding: 0 8px;
   border: none; border-radius: 8px; background: none; color: var(--text); font: inherit; font-size: var(--font-size-14); text-align: left; cursor: pointer;
 }
 .mgr-ws-pop-row:hover { background: var(--hover); }
@@ -83,7 +83,7 @@
 .mgr-ws-detail-empty { padding: 24px 8px; color: var(--text-secondary); font-size: var(--font-size-14); line-height: var(--line-height-14); text-align: center; }
 .mgr-ws-hint { margin: 8px 0 0; color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); }
 .mgr-ws-tree { margin: 0; padding: 0; list-style: none; }
-.mgr-ws-node { position: relative; display: flex; align-items: center; margin: 2px 0; border-radius: 8px; padding-left: calc(var(--ws-depth, 0) * 16px); }
+.mgr-ws-node { position: relative; display: flex; align-items: center; margin: 2px 0; border-radius: 8px; }
 .mgr-ws-node:hover { background: var(--hover); }
 .mgr-ws-node.is-on { background: var(--brand-fill); }
 .mgr-ws-node.is-archived .mgr-ws-node-name { color: var(--text-secondary); }

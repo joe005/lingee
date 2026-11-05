@@ -1,7 +1,7 @@
 import { readDefaultScope } from '../../collab/default-scope.js';
 import { ldIsDevProject } from '../../collab/local-dev.js';
-import { wsById, wsFlatTree } from '../../../core/workspace-tree.js';
-import { tkProjectsForCurrentUser } from '../data.js';
+import { WS_DEFAULT_FILTER, WS_DEFAULT_NAME, wsScopeName } from '../../../core/workspace-tree.js';
+import { tkProjectsForCurrentUser, tkVisibleWorkspaces } from '../data.js';
 import { filterListStatus, getFilteredTasks } from './filters.js';
 import { render } from './layout.js';
 import { updateFilterButton } from './menus.js';
@@ -34,14 +34,25 @@ function spaceOptions() {
     .sort(function (a, b) { return (picked.includes(b.id) - picked.includes(a.id)) || (b.count - a.count) || a.name.localeCompare(b.name, 'zh'); });
 }
 
-/* 协作开发顶部的空间 / 工作区切换读写同一份筛选条件：project（单选）+ workspaceId（含下级） */
+/* 协作开发顶部的空间 / 工作区切换读写同一份筛选条件：project（单选）+ workspaceId。
+   范围值：'' 为默认工作区（筛选值 __default，即没有归属工作区的任务）或工作区 ID；看不到的工作区一律退回默认工作区。 */
+function wsFilterValue(project, wsId) {
+  if (wsId && project && tkVisibleWorkspaces(project).some(function (row) { return row.ws.id === wsId; })) return wsId;
+  return WS_DEFAULT_FILTER;
+}
+function setWsFilter(project, wsId) {
+  state.filters = state.filters.filter(function (f) { return f.field !== 'workspaceId'; });
+  var value = wsFilterValue(project, wsId);
+  if (value) state.filters.push({ field:'workspaceId', op:'eq', value:value });
+}
 function ensureSpaceScope() {
   var available = tkProjectsForCurrentUser().filter(ldIsDevProject);
   var picked = selectedSpaces();
   var current = picked.length === 1 ? available.find(function (p) { return p.id === picked[0]; }) : null;
   if (current) {
     var ws = selectedWorkspace();
-    if (ws && !wsFlatTree(current).some(function (row) { return row.ws.id === ws; })) state.filters = state.filters.filter(function (f) { return f.field !== 'workspaceId'; });
+    var wanted = ws === WS_DEFAULT_FILTER ? '' : ws;
+    if (wsFilterValue(current, wanted) !== ws) setWsFilter(current, wanted);
     return;
   }
   var preferred = readDefaultScope();
@@ -49,17 +60,21 @@ function ensureSpaceScope() {
   state.filters = state.filters.filter(function (f) { return f.field !== 'project' && f.field !== 'workspaceId'; });
   if (!project) return;
   state.filters.push({field:'project',op:'eq',value:project.id});
-  if (preferred?.project === project.id && preferred.ws && wsFlatTree(project).some(function (row) { return row.ws.id === preferred.ws; })) state.filters.push({field:'workspaceId',op:'eq',value:preferred.ws});
+  setWsFilter(project, preferred?.project === project.id ? preferred.ws : '');
 }
 export function getSpaceScope() {
   ensureSpaceScope();
-  var picked = selectedSpaces();
-  return { project: picked.length === 1 ? picked[0] : '', ws: selectedWorkspace() };
+  var picked = selectedSpaces(), ws = selectedWorkspace();
+  var project = picked.length === 1 ? picked[0] : '';
+  return { project: project, ws: !project || ws === WS_DEFAULT_FILTER ? '' : ws };
 }
+/* wsId：'' 默认工作区或工作区 ID */
 export function setSpaceScope(projectId, wsId) {
   state.filters = state.filters.filter(function (f) { return f.field !== 'project' && f.field !== 'workspaceId'; });
-  if (projectId) state.filters.push({ field:'project', op:'eq', value:projectId });
-  if (projectId && wsId) state.filters.push({ field:'workspaceId', op:'eq', value:wsId });
+  if (projectId) {
+    state.filters.push({ field:'project', op:'eq', value:projectId });
+    setWsFilter(tkProjectsForCurrentUser().find(function (p) { return p.id === projectId; }), wsId || '');
+  }
   closePopup();
   updateFilterButton();
   render();
@@ -71,8 +86,8 @@ export function updateSpaceButton() {
   if (!label || !btn) return;
   var picked = selectedSpaces();
   var pickedProject = picked.length === 1 ? tkProjectsForCurrentUser().find(function (p) { return p.id === picked[0]; }) : null;
-  var wsPicked = pickedProject ? wsById(pickedProject, selectedWorkspace()) : null;
-  var name = pickedProject ? (pickedProject.name || '空间') + (wsPicked ? ' › ' + wsPicked.name : '') : '';
+  var scopeWs = getSpaceScope().ws;
+  var name = pickedProject ? (pickedProject.name || '空间') + (tkVisibleWorkspaces(pickedProject).length || scopeWs ? ' › ' + wsScopeName(pickedProject, scopeWs) : '') : '';
   label.textContent = !picked.length ? '暂无可用空间' : picked.length === 1 ? name : picked.length + ' 个空间';
   btn.title = label.textContent;
   btn.classList.toggle('has-filters', picked.length > 0);
@@ -81,12 +96,14 @@ export function updateSpaceButton() {
   document.dispatchEvent(new Event('lingee:tk-space-changed'));
 }
 
-/* 选中某个有工作区的空间后，在它下面级联列出工作区（按层级缩进）；选工作区即同时限定空间和工作区 */
+/* 选中某个有工作区的空间后，在它下面列出工作区；选工作区即同时限定空间和工作区 */
 function workspaceRows(projectId) {
   var project = tkProjectsForCurrentUser().find(function (p) { return p.id === projectId; });
-  var rows = project ? wsFlatTree(project) : [];
+  var rows = project ? tkVisibleWorkspaces(project) : [];
   if (!rows.length) return '';
-  var picked = selectedWorkspace();
+  var picked = getSpaceScope().ws;
+  /* 默认工作区与其他工作区平级 */
+  rows = [{ ws: { id: '', name: WS_DEFAULT_NAME }, depth: 1 }].concat(rows);
   return rows.map(function (r) {
     var on = r.ws.id === picked;
     return '<button type="button" role="option" class="tk-space-ws" style="--ws-depth:' + r.depth + '" aria-selected="' + on + '" data-tk-ws="' + escapeHtml(r.ws.id) + '"><span class="tk-space-option-label" title="' + escapeHtml(r.ws.name) + '"><span class="tk-space-option-name">' + escapeHtml(r.ws.name) + '</span></span><b>' + (on ? CHECK : '') + '</b></button>';
@@ -99,7 +116,7 @@ function renderOptions() {
   var rows = spaceOptions().filter(function (row) { return !q || row.name.toLocaleLowerCase().includes(q); });
   document.getElementById('tkSpaceOptions').innerHTML = (rows.length ? rows.map(function (row) {
     var on = picked.length === 1 && picked[0] === row.id;
-    return '<button type="button" role="option" aria-selected="' + on + '" data-tk-space="' + escapeHtml(row.id) + '"><span class="tk-space-option-label" title="' + escapeHtml(row.name) + '"><span class="tk-space-option-name">' + escapeHtml(row.name) + '</span><small>（' + row.count + '）</small></span><b>' + (on && !selectedWorkspace() ? CHECK : '') + '</b></button>' + (on ? workspaceRows(row.id) : '');
+    return '<button type="button" role="option" aria-selected="' + on + '" data-tk-space="' + escapeHtml(row.id) + '"><span class="tk-space-option-label" title="' + escapeHtml(row.name) + '"><span class="tk-space-option-name">' + escapeHtml(row.name) + '</span><small>（' + row.count + '）</small></span><b>' + (on && !workspaceRows(row.id) ? CHECK : '') + '</b></button>' + (on ? workspaceRows(row.id) : '');
   }).join('') : '<p>没有匹配的空间</p>');
 }
 
@@ -123,14 +140,15 @@ function pickSpace(id) {
   state.filters = state.filters.filter(function (f) { return f.field !== 'project' && f.field !== 'workspaceId'; });
   if (id) state.filters.push({ field:'project', op:'eq', value:id });
   var project = id ? tkProjectsForCurrentUser().find(function (p) { return p.id === id; }) : null;
-  var cascade = !!project && wsFlatTree(project).length > 0;
+  if (project) setWsFilter(project, '');
+  var cascade = !!project && tkVisibleWorkspaces(project).length > 0;
   if (cascade) renderOptions(); else closePopup();
   updateFilterButton();
   render();
 }
 function pickWorkspace(id) {
-  state.filters = state.filters.filter(function (f) { return f.field !== 'workspaceId'; });
-  if (id) state.filters.push({ field:'workspaceId', op:'eq', value:id });
+  var picked = selectedSpaces();
+  setWsFilter(picked.length === 1 ? tkProjectsForCurrentUser().find(function (p) { return p.id === picked[0]; }) : null, id);
   closePopup();
   updateFilterButton();
   render();
@@ -152,7 +170,7 @@ export function initSpaceFilter() {
     if (option) {
       var sid = option.getAttribute('data-tk-space');
       /* 再点已选空间：保留空间、清掉工作区 */
-      if (sid && selectedSpaces().length === 1 && selectedSpaces()[0] === sid && selectedWorkspace()) { pickWorkspace(''); return; }
+      if (sid && selectedSpaces().length === 1 && selectedSpaces()[0] === sid && selectedWorkspace() !== WS_DEFAULT_FILTER) { pickWorkspace(''); return; }
       pickSpace(sid);
     }
   });

@@ -157,7 +157,7 @@
     <div class="cards">
       <div class="card"><div class="i">原则 01</div><h3>标品为基础</h3><p>复用 Build 标品的任务、智能体团队与技能能力，不做两套页面。</p></div>
       <div class="card"><div class="i">原则 02</div><h3>任务为核心驱动</h3><p>AI OPS 下发需求并使用任务界面，Build 负责任务持久化与执行。</p></div>
-      <div class="card"><div class="i">原则 03</div><h3>状态与成果闭环</h3><p>运行完成后状态同步回 AI OPS，阶段成果经 Git 上报。</p></div>
+      <div class="card"><div class="i">原则 03</div><h3>状态与成果闭环</h3><p>运行完成后状态同步回 AI OPS，阶段产物经 API 获取后上报。</p></div>
     </div>
     <figure class="wide">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 476" role="img" aria-label="以灵基Build 标品为底座：AI OPS 下发需求、使用任务界面，Build 持久化任务并执行" font-family="-apple-system, PingFang SC, Microsoft YaHei, sans-serif">
@@ -180,8 +180,8 @@
 <text x="518" y="151" font-size="11.5" font-weight="400" fill="#6b7385" text-anchor="start">回写研发协同工作项</text>
 <rect x="738" y="90" width="220" height="74" rx="8" fill="#fff" stroke="#b9bfc9" stroke-width="1.25"/>
 <text x="750" y="113" font-size="13.5" font-weight="600" fill="#1a2333" text-anchor="start">产物上报</text>
-<text x="750" y="133" font-size="11.5" font-weight="400" fill="#1a2333" text-anchor="start">从 Git 获取，区分文档与代码</text>
-<text x="750" y="151" font-size="11.5" font-weight="400" fill="#6b7385" text-anchor="start">上报到工作项文件服务器</text>
+<text x="750" y="133" font-size="11.5" font-weight="400" fill="#1a2333" text-anchor="start">经 API 从 Build 后端获取产物</text>
+<text x="750" y="151" font-size="11.5" font-weight="400" fill="#6b7385" text-anchor="start">区分文档与代码，上报文件服务器</text>
 <path d="M152.0 182V250" stroke="#b9bfc9" stroke-width="1.5" marker-end="url(#a-arr)"/>
 <text x="162.0" y="220" font-size="12" font-weight="600" fill="#1a2333" text-anchor="start">① 下发需求</text>
 <path d="M384.0 250V182" stroke="#b9bfc9" stroke-width="1.5" marker-end="url(#a-arr)"/>
@@ -189,7 +189,7 @@
 <path d="M616.0 250V182" stroke="#b9bfc9" stroke-width="1.5" marker-end="url(#a-arr)"/>
 <text x="626.0" y="220" font-size="12" font-weight="600" fill="#1a2333" text-anchor="start">③ 状态同步</text>
 <path d="M848.0 250V182" stroke="#b9bfc9" stroke-width="1.5" marker-end="url(#a-arr)"/>
-<text x="858.0" y="220" font-size="12" font-weight="600" fill="#1a2333" text-anchor="start">④ 成果经 Git</text>
+<text x="858.0" y="220" font-size="12" font-weight="600" fill="#1a2333" text-anchor="start">④ 产物经 API</text>
 <rect x="24" y="252" width="952" height="200" rx="10" fill="#2b62d9" fill-opacity="0.07" stroke="#2b62d9" stroke-width="2"/>
 <text x="42" y="280" font-size="16" font-weight="700" fill="#2b62d9" text-anchor="start">灵基Build 标品能力</text>
 <rect x="196" y="266" width="76" height="20" rx="10" fill="#2b62d9"/>
@@ -201,7 +201,7 @@
 <text x="205.5" y="326.5" font-size="11" font-weight="600" fill="#2b62d9" text-anchor="middle">复用 · 改进</text>
 <text x="54" y="354" font-size="11.5" font-weight="400" fill="#1a2333" text-anchor="start">接收下发需求，创建任务</text>
 <text x="54" y="374" font-size="11.5" font-weight="400" fill="#1a2333" text-anchor="start">选智能体团队或单智能体</text>
-<text x="54" y="394" font-size="11.5" font-weight="400" fill="#6b7385" text-anchor="start">状态查询 API、主动推送</text>
+<text x="54" y="394" font-size="11.5" font-weight="400" fill="#6b7385" text-anchor="start">状态与产物 API、主动推送</text>
 <rect x="274" y="300" width="220" height="134" rx="8" fill="#fff" stroke="#2b62d9" stroke-opacity="0.45" stroke-width="1.25"/>
 <text x="286" y="326" font-size="14" font-weight="700" fill="#1a2333" text-anchor="start">智能体团队</text>
 <rect x="393" y="313" width="89" height="19" rx="9.5" fill="#2b62d9" fill-opacity="0.12"/>
@@ -236,7 +236,7 @@
         <tr><td>智能体团队</td><td>智能体团队编排研发流程</td><td>适配 DevOps 复杂流程，评审可配置自动通过，补充阶段通知；支持新建智能体团队</td><td><span class="tag">改进</span></td></tr>
         <tr><td>智能体与技能</td><td>技能组装智能体</td><td>云端维护、本地招募或安装；多个智能体复用同一技能；支持新建智能体</td><td><span class="tag">改进</span></td></tr>
         <tr><td>工作区</td><td>—</td><td>新增 Build 工作区能力与同步，支撑 Git 多仓库</td><td><span class="tag warn">新增</span></td></tr>
-        <tr><td>产物</td><td>阶段产出成果</td><td>阶段成果提交 Git，由 AI OPS 获取、区分文档与代码后上报；接口方式作为后续替代</td><td><span class="tag">改进</span></td></tr>
+        <tr><td>产物</td><td>阶段产出成果</td><td>后端提供产物获取 API，AI OPS 获取后区分文档与代码上报</td><td><span class="tag">改进</span></td></tr>
       </tbody>
     </table>
     </div>
@@ -276,7 +276,7 @@
 </svg>
       <figcaption><b>图 2</b>端到端流程 · 第 2–4 步在每个研发阶段重复</figcaption>
     </figure>
-    <div class="banner"><span class="k">过渡策略</span>先按现有机制跑通：交付沿用 Git，linky CLI 通道短期保留；产物由 AI OPS 从 Git 获取并上报到工作项文件服务器；推送和多仓库就绪后再逐步替换。</div>
+    <div class="banner"><span class="k">过渡策略</span>先按现有机制跑通：交付沿用 Git，linky CLI 通道短期保留；产物由 AI OPS 通过 API 从 Build 后端获取并上报到工作项文件服务器；推送和多仓库就绪后再逐步替换。</div>
   </section>
 
   <section>
@@ -289,9 +289,9 @@
         <p>任务能力 · 工作区与产物 · 智能体与技能，共 14 项。</p></div>
     </div>
     <div class="ms">
-      <div><b>11/6 · W1</b>技能、智能体云端管理上线；CLI 预检查；转交流程、智能体调用能力支持；对应页面支持嵌套到 AI OPS</div>
+      <div><b>11/6 · W1</b>技能、智能体云端管理上线；CLI 预检查；转交流程、智能体调用能力支持；支持 AI DevOps 集成到 Build</div>
       <div><b>11/13 · W2</b>接口约定与设计评审：工作区、推送、空间映射</div>
-      <div><b>11/20 · W3</b>核心能力完成；任务透传与状态回写联通</div>
+      <div><b>11/20 · W3</b>核心能力与产物 API 完成；任务透传与状态回写联通</div>
       <div><b>11/27 · W4</b>Git 多仓库、产物上报就绪；端到端验收</div>
     </div>
   </section>
@@ -383,7 +383,8 @@
 <rect x="782" y="639" width="166" height="14" rx="4" fill="#2b62d9"/>
 <line x1="24" x2="984" y1="688" y2="688" stroke="#eef1f5"/>
 <text x="52" y="678" font-size="12.5" font-weight="400" fill="#1a2333" text-anchor="start">产物获取接口</text>
-<rect x="612" y="667" width="166" height="14" rx="4" fill="#2b62d9" fill-opacity="0.12" stroke="#2b62d9" stroke-dasharray="3 3"/>
+<rect x="442" y="667" width="166" height="14" rx="4" fill="#2b62d9" fill-opacity="0.12" stroke="#2b62d9" stroke-dasharray="3 3"/>
+<rect x="612" y="667" width="166" height="14" rx="4" fill="#2b62d9"/>
 <rect x="32" y="691" width="952" height="20" rx="4" fill="#2b62d9" fill-opacity="0.07"/>
 <circle cx="42" cy="701" r="3" fill="#2b62d9"/>
 <text x="52" y="705.5" font-size="12" font-weight="700" fill="#2b62d9" text-anchor="start">智能体与技能 · 6 项</text>
@@ -391,7 +392,7 @@
 <text x="52" y="732" font-size="12.5" font-weight="400" fill="#1a2333" text-anchor="start">智能体调用能力支持</text>
 <rect x="272" y="721" width="166" height="14" rx="4" fill="#2b62d9"/>
 <line x1="24" x2="984" y1="770" y2="770" stroke="#eef1f5"/>
-<text x="52" y="760" font-size="12.5" font-weight="400" fill="#1a2333" text-anchor="start">页面嵌套到 AI OPS</text>
+<text x="52" y="760" font-size="12.5" font-weight="400" fill="#1a2333" text-anchor="start">支持 AI DevOps 集成</text>
 <rect x="272" y="749" width="166" height="14" rx="4" fill="#2b62d9"/>
 <line x1="24" x2="984" y1="798" y2="798" stroke="#eef1f5"/>
 <text x="52" y="788" font-size="12.5" font-weight="400" fill="#1a2333" text-anchor="start">技能管理</text>
@@ -443,8 +444,8 @@
 <tr><td>任务透传与创建<span class="src">10/28 决策 · 10/29 第 8 条</span></td><td>需求 + 工作区关联调用 Build 创建任务，支持选团队或单个智能体</td><td class="wk">W2</td><td><span class="tag ">开发</span></td></tr>
 <tr><td>任务状态查询与回写<span class="src">10/29 第 5 条</span></td><td>主动查询 Build 任务执行状态，回写研发协同</td><td class="wk">W2–W3</td><td><span class="tag ">开发</span></td></tr>
 <tr class="sub ops"><td colspan="4"><i></i>产物<span class="c">2 项</span></td></tr>
-<tr><td>产物上报<span class="src">10/29 第 5 条</span></td><td>从 Git 获取阶段产物，上报到对应工作项的文件服务器</td><td class="wk">W2 设计 · W3–W4 开发</td><td><span class="tag ">开发</span></td></tr>
-<tr><td>产物区分文档与代码<span class="src">10/29 第 5 条</span></td><td>从 Git 上报时按文档、代码区分，归档到工作项文件服务器</td><td class="wk">W2 设计 · W3 开发</td><td><span class="tag ">开发</span></td></tr>
+<tr><td>产物上报<span class="src">10/29 第 5 条</span></td><td>通过 API 从 Build 后端获取阶段产物，上报到对应工作项的文件服务器</td><td class="wk">W2 设计 · W3–W4 开发</td><td><span class="tag warn">有依赖</span></td></tr>
+<tr><td>产物区分文档与代码<span class="src">10/29 第 5 条</span></td><td>上报时按文档、代码区分，归档到工作项文件服务器</td><td class="wk">W2 设计 · W3 开发</td><td><span class="tag ">开发</span></td></tr>
 <tr class="group"><td class="bld" colspan="4">Build 团队<span class="c">14 项</span></td></tr>
 <tr class="sub bld"><td colspan="4"><i></i>任务能力<span class="c">5 项</span></td></tr>
 <tr><td>任务创建<span class="src">10/28 决策</span></td><td>接收 AI OPS 透传的需求与工作区，创建 Build 任务</td><td class="wk">W1</td><td><span class="tag ">本周</span></td></tr>
@@ -455,10 +456,10 @@
 <tr class="sub bld"><td colspan="4"><i></i>工作区与产物<span class="c">3 项</span></td></tr>
 <tr><td>Build 工作区能力<span class="src">10/29 第 6、9 条</span></td><td>含工作区同步，是 Git 多仓库的前提</td><td class="wk">W1–W2 设计 · W3 开发</td><td><span class="tag warn">需设计</span></td></tr>
 <tr><td>任务支持 Git 多仓库<span class="src">10/29 第 6 条</span></td><td>依赖工作区同步</td><td class="wk">W3 设计 · W4 开发</td><td><span class="tag warn">有依赖</span></td></tr>
-<tr><td>产物获取接口<span class="src">10/29 第 5 条</span></td><td>接口方式获取阶段产物，作为 Git 方式的后续替代；本期只做方案设计，开发放到下期</td><td class="wk">W3 设计</td><td><span class="tag mute">后续替代</span></td></tr>
+<tr><td>产物获取接口<span class="src">10/29 第 5 条</span></td><td>后端提供产物获取 API，供 AI OPS 获取阶段产物后上报</td><td class="wk">W2 设计 · W3 开发</td><td><span class="tag ">开发</span></td></tr>
 <tr class="sub bld"><td colspan="4"><i></i>智能体与技能<span class="c">6 项</span></td></tr>
 <tr><td>智能体调用能力支持<span class="src">11/2 补充</span></td><td>任务执行时可调用智能体完成当前阶段</td><td class="wk">W1</td><td><span class="tag ">本周</span></td></tr>
-<tr><td>页面嵌套到 AI OPS<span class="src">10/28 决策</span></td><td>技能、智能体、智能体团队等对应页面支持嵌入 AI OPS 使用，不做两套页面</td><td class="wk">W1</td><td><span class="tag ">本周</span></td></tr>
+<tr><td>支持 AI DevOps 集成<span class="src">10/28 决策</span></td><td>AI DevOps 集成到 Build，复用技能、智能体、智能体团队等页面，不做两套页面</td><td class="wk">W1</td><td><span class="tag ">本周</span></td></tr>
 <tr><td>技能管理<span class="src">10/29 第 1、7 条</span></td><td>技能在云端统一维护，本地端可安装；多个智能体复用同一技能</td><td class="wk">W1 上线 · W2 设计复用 · W3 开发</td><td><span class="tag ">开发</span></td></tr>
 <tr><td>智能体管理<span class="src">10/29 第 1 条</span></td><td>智能体在云端维护管理，本地端可招募或安装</td><td class="wk">W1</td><td><span class="tag ">本周</span></td></tr>
 <tr><td>智能体团队管理<span class="src">10/28 决策 · 10/29 第 1 条</span></td><td>云端维护智能体团队与研发流程，适配 DevOps 复杂流程，评审可配置自动通过，补充阶段通知</td><td class="wk">W2 设计 · W3–W4 开发</td><td><span class="tag ">开发</span></td></tr>
@@ -477,7 +478,7 @@
     <table>
       <thead><tr><th>事项</th><th>说明</th><th>状态</th></tr></thead>
       <tbody>
-        <tr><td>阶段成果提交 Git → AI OPS 上报</td><td>Build 执行时把阶段成果提交到 Git，AI OPS 在 W3–W4 从 Git 获取，区分文档与代码后上报</td><td><span class="tag warn">关键路径</span></td></tr>
+        <tr><td>产物获取 API → AI OPS 产物上报</td><td>Build 在 W3 完成产物获取 API，AI OPS 在 W3–W4 通过 API 获取并上报</td><td><span class="tag warn">关键路径</span></td></tr>
         <tr><td>工作区同步 → Git 多仓库</td><td>Build 工作区能力 W3 完成，Git 多仓库 W4 开发</td><td><span class="tag warn">关键路径</span></td></tr>
         <tr><td>任务流转机制差异</td><td>现有任务流转基于 Git，研发 DevOps 较松散、基于文件服务，需适配改造</td><td><span class="tag warn">需改造</span></td></tr>
         <tr><td>工作区与 Manage 空间映射</td><td>需与 Manage 团队对接，排期不在两队控制内</td><td><span class="tag warn">外部依赖</span></td></tr>
@@ -491,7 +492,7 @@
 
 <footer>
   <span>研发协同 × 灵基Build 融合整体方案与工作计划</span>
-  <span>2026.11.02</span>
+  <span>2026.11.04</span>
 </footer>
 </body>
 </html>

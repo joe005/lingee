@@ -1,14 +1,14 @@
 import { toast } from '../../core/toast.js';
 import { readDefaultScope, saveDefaultScope, validDefaultScope } from './default-scope.js';
 import { $ } from '../../core/dom.js';
-import { WS_MAX_DEPTH, wsFlatTree, wsPath, wsPathNames } from '../../core/workspace-tree.js';
-import { tkProjectsForCurrentUser } from '../tasks-v2/data.js';
+import { WS_DEFAULT_NAME, wsScopeName } from '../../core/workspace-tree.js';
+import { tkProjectsForCurrentUser, tkVisibleWorkspaces } from '../tasks-v2/data.js';
 import { getSpaceScope, setSpaceScope } from '../tasks-v2/page/space-filter.js';
-import { canCreateChild, wsAvailable } from '../manager/workspaces.js';
+import { canCreateWs, wsAvailable } from '../manager/workspaces.js';
 import { ldIsDevProject } from './local-dev.js';
-/* 协作开发顶部的空间 / 工作区切换（旧版顶部工作区标题的样式）：标题是当前范围，点开是下拉树——
-   各开发空间 → 空间下的各级工作区。选择写入任务页的 project / workspaceId 筛选条件，
-   与任务列表是同一份状态；各空间和工作区行内「＋」就地创建下级，设置 › 工作区维护完整信息。 */
+/* 协作开发顶部的空间 / 工作区切换（旧版顶部工作区标题的样式）：标题是当前范围，点开是两级列表——
+   各开发空间（只是分组，不能选中）→ 平级的「默认工作区」与各工作区。选择写入任务页的 project / workspaceId 筛选条件，
+   与任务列表是同一份状态；空间行内「＋」就地创建工作区（空间负责人或管理员），设置 › 工作区维护完整信息。 */
 
 var CARET = '<svg class="mgr-ws-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
 var NODE_CARET = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>';
@@ -22,8 +22,8 @@ var collapsed = {};
 
 function esc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 /* 管理与协作开发两类空间共用工作区能力，保留各自的持久化来源。 */
-function canCreate(p, ws, depth) {
-  return wsAvailable(p) && depth < WS_MAX_DEPTH && canCreateChild(p, ws);
+function canCreate(p, ws) {
+  return !ws && wsAvailable(p) && canCreateWs(p);
 }
 function spaces() { return tkProjectsForCurrentUser().filter(ldIsDevProject); }
 
@@ -31,45 +31,33 @@ function rowsHtml() {
   var scope = getSpaceScope();
   var preferred = readDefaultScope();
   var q = query.trim().toLocaleLowerCase();
-  function node(p, ws, depth, children, hasChildren) {
-    var id = ws ? ws.id : '';
-    var key = p.id + ':' + id;
-    var open = !!q || !(Object.prototype.hasOwnProperty.call(collapsed, key) ? collapsed[key] : !ws && !hasChildren);
+  /* 空间行只是分组标题：点名称展开 / 收起，不能选中；可选的是下面平级的「默认工作区」和各工作区 */
+  function spaceNode(p, children) {
+    var key = p.id + ':';
+    var open = !!q || !(Object.prototype.hasOwnProperty.call(collapsed, key) && collapsed[key]);
+    var add = canCreate(p, null)
+      ? '<button type="button" class="mgr-ws-icon-btn" data-cvss-create="' + esc(p.id) + '" title="创建工作区" aria-label="在' + esc(p.name) + '下创建工作区">' + PLUS + '</button>' : '';
+    return '<div role="treeitem" aria-level="1" aria-expanded="' + open + '">' +
+      '<div class="mgr-ws-pop-row mgr-ws-pop-row--space" style="--ws-depth:0">' +
+      '<button type="button" class="mgr-ws-pop-toggle' + (open ? ' is-open' : '') + '" data-cvss-toggle="' + esc(key) + '" aria-label="' + (open ? '收起' : '展开') + esc(p.name) + '" aria-expanded="' + open + '">' + NODE_CARET + '</button>' +
+      '<button type="button" class="mgr-ws-pop-pick" data-cvss-toggle="' + esc(key) + '" aria-expanded="' + open + '" title="' + esc(p.name) + '"><span class="mgr-ws-pop-name">' + esc(p.name) + '</span></button>' + add + '</div>' +
+      (open ? '<div role="group">' + children + '</div>' : '') + '</div>';
+  }
+  function scopeNode(p, id, name) {
     var on = scope.project === p.id && scope.ws === id;
-    var name = ws ? ws.name : p.name;
     var isDefault = !!preferred && preferred.project === p.id && preferred.ws === id;
-    var defaultAction = '<button type="button" class="mgr-ws-icon-btn' + (isDefault ? ' is-default' : '') + '" data-cvss-default="' + esc(p.id) + '" data-cvss-default-ws="' + esc(id) + '" aria-pressed="' + isDefault + '" title="' + (isDefault ? '取消默认' : '设为默认') + '" aria-label="' + (isDefault ? '取消默认：' : '设为默认：') + esc(name) + '">' + STAR + '</button>';
-    var path = ws ? p.name + ' / ' + wsPathNames(p, id).join(' / ') : p.name;
-    var expandable = hasChildren;
-    var toggle = expandable
-      ? '<button type="button" class="mgr-ws-pop-toggle' + (open ? ' is-open' : '') + '" data-cvss-toggle="' + esc(key) + '" aria-label="' + (open ? '收起' : '展开') + esc(name) + '" aria-expanded="' + open + '">' + NODE_CARET + '</button>'
-      : '<span class="mgr-ws-pop-toggle-gap"></span>';
-    var add = canCreate(p, ws, depth)
-      ? '<button type="button" class="mgr-ws-icon-btn" data-cvss-create="' + esc(p.id) + '" data-cvss-parent="' + esc(id) + '" title="' + (ws ? '创建下级工作区' : '创建工作区') + '" aria-label="在' + esc(path) + '下创建工作区">' + PLUS + '</button>' : '';
-    return '<div role="treeitem" aria-level="' + (depth + 1) + '" aria-selected="' + on + '"' + (expandable ? ' aria-expanded="' + open + '"' : '') + '>' +
-      '<div class="mgr-ws-pop-row' + (ws ? '' : ' mgr-ws-pop-row--space') + (on ? ' is-on' : '') + '" style="--ws-depth:' + depth + '">' + toggle +
-      '<button type="button" class="mgr-ws-pop-pick" data-cvss-pick="' + esc(p.id) + '" data-cvss-ws="' + esc(id) + '" title="' + esc(path) + '"><span class="mgr-ws-pop-name">' + esc(name) + '</span>' + (isDefault ? '<small class="cv-space-default-label">默认</small>' : '') + (on ? '<b>' + CHECK + '</b>' : '') + '</button>' + defaultAction + add + '</div>' +
-      (expandable && open ? '<div role="group">' + children + '</div>' : '') + '</div>';
+    var path = p.name + ' / ' + name;
+    var defaultAction = '<button type="button" class="mgr-ws-icon-btn' + (isDefault ? ' is-default' : '') + '" data-cvss-default="' + esc(p.id) + '" data-cvss-default-ws="' + esc(id) + '" aria-pressed="' + isDefault + '" title="' + (isDefault ? '取消默认' : '设为默认') + '" aria-label="' + (isDefault ? '取消默认：' : '设为默认：') + esc(path) + '">' + STAR + '</button>';
+    return '<div role="treeitem" aria-level="2" aria-selected="' + on + '"><div class="mgr-ws-pop-row' + (on ? ' is-on' : '') + '" style="--ws-depth:1"><span class="mgr-ws-pop-toggle-gap"></span>' +
+      '<button type="button" class="mgr-ws-pop-pick" data-cvss-pick="' + esc(p.id) + '" data-cvss-ws="' + esc(id) + '" title="' + esc(path) + '"><span class="mgr-ws-pop-name">' + esc(name) + '</span>' + (isDefault ? '<small class="cv-space-default-label">默认</small>' : '') + (on ? '<b>' + CHECK + '</b>' : '') + '</button>' + defaultAction + '</div></div>';
   }
   var rows = spaces().map(function (p) {
-    var tree = wsFlatTree(p);
     var hit = !q || p.name.toLocaleLowerCase().includes(q);
-    /* 搜索匹配子项时保留祖先链，避免工作区脱离所属空间。 */
-    var shown = new Set();
-    tree.forEach(function (r) {
-      if (hit || r.ws.name.toLocaleLowerCase().includes(q)) {
-        wsPath(p, r.ws.id).forEach(function (w) { shown.add(w.id); });
-      }
-    });
-    if (!hit && !shown.size) return '';
-    function children(parentId) {
-      return tree.filter(function (r) { return (r.ws.parentId || '') === parentId && shown.has(r.ws.id); }).map(function (r) {
-        var body = children(r.ws.id);
-        return node(p, r.ws, r.depth, body, !!body);
-      }).join('');
-    }
-    var body = children('');
-    return node(p, null, 0, body, !!body);
+    var items = [['', WS_DEFAULT_NAME]].concat(tkVisibleWorkspaces(p).map(function (r) { return [r.ws.id, r.ws.name]; }));
+    /* 搜索命中工作区时连同所属空间一起显示 */
+    var shown = items.filter(function (it) { return hit || it[1].toLocaleLowerCase().includes(q); });
+    if (!shown.length) return '';
+    return spaceNode(p, shown.map(function (it) { return scopeNode(p, it[0], it[1]); }).join(''));
   }).join('');
   return rows || '<p class="mgr-ws-pop-empty">'+(q ? '没有匹配的空间或工作区' : '暂无可用空间')+'</p>';
 }
@@ -78,9 +66,9 @@ function render() {
   if (!host) return;
   var scope = getSpaceScope();
   var p = scope.project ? spaces().find(function (x) { return x.id === scope.project; }) : null;
-  var names = p && scope.ws ? wsPathNames(p, scope.ws) : [];
-  var path = p ? p.name + (names.length ? ' / ' + names.join(' / ') : '') : '暂无可用空间';
-  var label = names.length ? names[names.length - 1] : (p ? p.name : '暂无可用空间');
+  var scopeName = p ? wsScopeName(p, scope.ws) : '';
+  var path = p ? p.name + ' / ' + scopeName : '暂无可用空间';
+  var label = p ? scopeName : '暂无可用空间';
   host.innerHTML = '<button type="button" class="mgr-ws-switch-btn" id="cvSpaceBtn" aria-haspopup="tree" aria-expanded="' + popOpen + '" aria-label="切换空间或工作区：' + esc(path) + '"><span class="mgr-ws-crumb" title="' + esc(path) + '">' + esc(label) + '</span>' + CARET + '</button>' +
     (popOpen ? '<div class="mgr-ws-pop" role="dialog" aria-label="切换空间或工作区"><label class="mgr-ws-pop-search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg>' +
       '<input type="search" id="cvSpaceSearch" value="' + esc(query) + '" placeholder="搜索空间或工作区…" aria-label="搜索空间或工作区" autocomplete="off"></label>' +
@@ -147,13 +135,11 @@ export function initCollabSpaceSwitch() {
     var create = t.closest('[data-cvss-create]');
     if (create) {
       var target = create.getAttribute('data-cvss-create');
-      var parentId = create.getAttribute('data-cvss-parent');
       collapsed[target + ':'] = false;
-      if (parentId) collapsed[target + ':' + parentId] = false;
       setPop(false);
       var btn = $('#cvSpaceBtn');
       if (btn) btn.focus();
-      document.dispatchEvent(new CustomEvent('lingee:mgr-ws-create', { detail: { project: target, parentId: parentId } }));
+      document.dispatchEvent(new CustomEvent('lingee:mgr-ws-create', { detail: { project: target } }));
     }
   });
   host.addEventListener('input', function (e) {

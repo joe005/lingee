@@ -1,13 +1,13 @@
 import { capabilityOptions, capabilityExecutor, capabilityList, capabilityTaskError } from '../collab/capability-config.js';
 import { wsMemberIds, canCreateTaskIn } from '../manager/workspaces.js';
-import { wsFlatTree, wsById, wsPathNames } from '../../core/workspace-tree.js';
+import { WS_DEFAULT_NAME, wsById, wsPathNames } from '../../core/workspace-tree.js';
 import { getSpaceScope } from './page/space-filter.js';
 import { buildRepoList, buildRepoIdentity, buildTaskRepoConfig, buildTaskMoveError } from '../collab/repository-config.js';
 import { showTaskConfirm } from './confirm.js';
 import { initSelectDropdowns, niuSelectCaret } from '../../core/select-dropdown.js';
 /* 新版任务界面原型。复用当前任务数据；执行计划只在当前页面会话中保存。 */
 import { escapeHtml } from './ui-utils.js';
-import { TK_STATUSES, tkAddTask, tkCurrentUserId, tkGetTasks, tkPeopleInProject, tkProjectsForCurrentUser, tkUpdateTask, tkProjectById } from './data.js';
+import { TK_STATUSES, tkAddTask, tkCurrentUserId, tkGetTasks, tkPeopleInProject, tkProjectsForCurrentUser, tkUpdateTask, tkProjectById, tkVisibleWorkspaces } from './data.js';
 import { CV_MEMBERS, CV_PROJECTS } from '../collab/data.js';
 import { defaultStageAssigneeId } from './stage-owner.js';
 import { tbTeamStages } from '../collab/tb-core.js';
@@ -121,10 +121,11 @@ function openProjectPopup() {
 
 function renderWorkspaceOptions(selected = '') {
   const p = tkProjectById(selectedProjectId);
-  byId('niuWorkspace').innerHTML = '<option value="">空间根</option>' + (p ? wsFlatTree(p).map(row => '<option value="' + escapeHtml(row.ws.id) + '">' + escapeHtml(wsPathNames(p, row.ws.id).join(' / ')) + '</option>').join('') : '');
-  byId('niuWorkspace').value = p && wsById(p, selected) ? selected : '';
+  byId('niuWorkspace').innerHTML = '<option value="">' + WS_DEFAULT_NAME + '</option>' + (p ? tkVisibleWorkspaces(p).map(row => '<option value="' + escapeHtml(row.ws.id) + '">' + escapeHtml(wsPathNames(p, row.ws.id).join(' / ')) + '</option>').join('') : '');
+  byId('niuWorkspace').value = p && tkVisibleWorkspaces(p).some(row => row.ws.id === selected) ? selected : '';
   byId('niuWorkspace').disabled = !p;
-  const showWorkspace = editingTaskId === null && !!byId('niuWorkspace').value;
+  /* 空间下有其他工作区时，新建任务直接选工作区（默认工作区与其他工作区平级）；编辑和没有工作区的空间仍显示所属空间 */
+  const showWorkspace = editingTaskId === null && !!p && tkVisibleWorkspaces(p).length > 0;
   byId('niuWorkspace').closest('.niu-field').hidden = !showWorkspace;
   byId('niuProjectTrigger').closest('.niu-field').hidden = showWorkspace;
   renderWorkspaceRepoHint();
