@@ -6,7 +6,8 @@ import { CV_MEMBERS, CV_PROJECTS, cvPersistProjects } from './data.js';
 import { mgrProjects, mgrSaveProjects, mgrMemberOpenTasks, mgrProjectTasks } from '../manager/data.js';
 import { isSpaceManager, canManageWs, personName, wsAddMembers, wsRemoveMember, wsSetAdmin, wsUpdateInfo } from '../manager/workspaces.js';
 /* 基本设置的数据操作：两类空间分别写回原存储，工作区继续使用现有校验。 */
-export function basicEditable(p, ws) { return ws ? ws.status !== 'archived' && canManageWs(p, ws) : isSpaceManager(p); }
+export function basicCanViewManagement(p, ws) { return !!p && (ws ? canManageWs(p, ws) : isSpaceManager(p)); }
+export function basicEditable(p, ws) { return ws?.status !== 'archived' && basicCanViewManagement(p, ws); }
 function save(p, patch) {
   var before = {};
   Object.keys(patch).concat('updatedAt').forEach(function (key) { before[key] = { exists: Object.hasOwn(p, key), value: p[key] }; });

@@ -164,6 +164,7 @@
 #view-collab .cv-basic-nav-item.is-on { background: var(--hover); font-weight: 500; color: var(--text-title); }
 #view-collab .cv-basic-nav-item svg { flex: none; width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
 #view-collab .cv-basic-nav-item:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+#view-collab .cv-basic-nav [hidden] { display: none; }
 #view-collab .cv-basic-main { align-self: stretch; min-width: 0; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding-right: 4px; }
 #view-collab .cv-basic-main [hidden] { display: none; }
 #view-collab .cv-basic-scope { margin: 0 0 16px; overflow: hidden; color: var(--text-secondary); font-size: var(--font-size-12); text-overflow: ellipsis; white-space: nowrap; }
@@ -176,7 +177,6 @@
 #view-collab .cv-basic-field p { margin: 0; color: var(--text-secondary); font-size: var(--font-size-14); }
 #view-collab .cv-basic-field :is(input,textarea), #view-collab .cv-basic-add select { box-sizing: border-box; width: 100%; min-width: 0; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); font: inherit; font-size: var(--font-size-14); line-height: var(--line-height-14); }
 #view-collab .cv-basic-field textarea { resize: vertical; }
-#view-collab #cvBasicDesc { min-height: 128px; }
 #view-collab .cv-basic-field :is(input,textarea):disabled { background: var(--fill-1); color: var(--text-secondary); }
 #view-collab .cv-basic-field :is(input,textarea):focus-visible, #view-collab .cv-basic-add select:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 0; }
 #view-collab .cv-basic-error { margin: 12px 0; color: var(--danger); font-size: var(--font-size-14); }
@@ -237,8 +237,8 @@
 #view-collab .cv-member-page-status { min-width: 40px; text-align: center; font-variant-numeric: tabular-nums; }
 
 /* 成员页仅列表控件负责滚动，头部与分页不进入滚动区域。 */
-#view-collab .cv-basic-main:has(> #cvBasicSettingsHost.is-member-list) { display: flex; flex-direction: column; overflow: hidden; }
-#view-collab #cvBasicSettingsHost.is-member-list { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
+#view-collab .cv-basic-main:has(> #cvBasicSettingsHost.is-member-list:not([hidden])) { display: flex; flex-direction: column; overflow: hidden; }
+#view-collab #cvBasicSettingsHost.is-member-list:not([hidden]) { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
 #view-collab #cvBasicSettingsHost.is-member-list > * { flex-shrink: 0; }
 #view-collab #cvBasicSettingsHost.is-member-list > .cv-member-list-scroll { flex: 1 1 0; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
 #view-collab .cv-member-list-scroll:focus-visible { outline: 2px solid var(--border-focus); outline-offset: -2px; }
@@ -291,36 +291,42 @@
 #view-collab .cv-repo-dialog .cv-repo-meta textarea:focus-visible { outline: 2px solid var(--border-focus); outline-offset: 0; }
 #view-collab .cv-repo-dialog select.niu-custom-select-source { display: none; }
 #view-collab .cv-repo-dialog input[data-cv-repo-field="branchCustom"] { margin-top: 8px; }
-#view-collab .cv-repo-local-directory { padding: 0; }
-#view-collab .cv-repo-directory-label { display: block; margin-bottom: 8px; color: var(--text-secondary); font-size: var(--font-size-14); line-height: var(--line-height-14); }
-#view-collab .cv-repo-directory-modes { display: grid; gap: 12px; }
-/* 复用初始化仓库已有的 ld-dir-card，仅收敛聚焦为单层边框，不增加尺寸。 */
-#view-collab .cv-repo-dir-option:has(input:focus-visible) { outline: none; border-color: var(--focus-ring); }
 #view-collab .cv-repo-editor-actions { display: flex; justify-content: flex-end; gap: 8px; margin: 20px -20px -20px; padding: 16px 20px; border-top: 1px solid var(--divider); }
 #view-collab .cv-repo-editor-actions > button { box-sizing: border-box; height: 40px; min-height: 40px; padding: 0 16px; border-radius: 8px; font-size: var(--font-size-14); }
-#view-collab .cv-repo-custom-directory { display: flex; gap: 8px; min-width: 0; margin: 8px 0 0; }
-#view-collab .cv-repo-custom-directory input { position: static; opacity: 1; width: auto; box-sizing: border-box; flex: 1; min-width: 0; height: 40px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); font: inherit; font-size: var(--font-size-14); }
-#view-collab .cv-repo-custom-directory input:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 0; }
-#view-collab .cv-repo-custom-directory .ld-space-btn { flex: none; height: 40px; border-radius: 8px; }
-@media (max-width: 600px) { #view-collab .cv-repo-address-branch { grid-template-columns: minmax(0, 1fr) 120px; } #view-collab .cv-repo-custom-directory { flex-wrap: wrap; } }
+@media (max-width: 600px) { #view-collab .cv-repo-address-branch { grid-template-columns: minmax(0, 1fr) 120px; } }
 @media (max-width: 900px) { #view-collab .cv-repo-cards { grid-template-columns: minmax(0, 1fr); } }
 
 #view-collab .cv-repo-address-summary { display: flex; align-items: center; gap: 8px; min-width: 0; margin-bottom: 4px; }
 #view-collab .cv-repo-address-summary p { flex: 0 1 auto; min-width: 0; margin: 0; }
 #view-collab .cv-repo-branch-summary { flex: 0 0 auto; max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 6px; border-radius: 4px; background: var(--fill-1); color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); }
-#view-collab .cv-basic-advanced { margin-top: 32px; }
-#view-collab .cv-basic-advanced h3 { margin: 0 0 12px; color: var(--text); font-size: var(--font-size-16); font-weight: 500; }
-#view-collab .cv-basic-danger { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 24px; border: 1px solid var(--border); border-radius: var(--r-card); }
-#view-collab .cv-basic-danger + .cv-basic-danger { margin-top: 12px; }
+#view-collab .cv-general-settings :is(.cv-general-fields, .cv-basic-advanced) { max-width: 760px; }
+#view-collab .cv-general-settings .cv-basic-heading { margin-bottom: 16px; }
+#view-collab .cv-general-settings .cv-basic-heading > button { flex: none; }
+#view-collab .cv-general-fields { border-block: 1px solid var(--divider); }
+#view-collab .cv-general-fields .cv-basic-field { display: grid; grid-template-columns: minmax(0, 144px) minmax(0, 1fr); align-items: start; gap: 16px; padding: 12px 0; }
+#view-collab .cv-general-fields .cv-basic-field + .cv-basic-field { border-top: 1px solid var(--divider); }
+#view-collab .cv-general-fields .cv-basic-field > :first-child { padding-top: 8px; line-height: var(--line-height-14); }
+#view-collab .cv-general-fields .cv-basic-field :is(input, .shared-select-trigger) { box-sizing: border-box; width: 100%; min-height: var(--control-h); border-radius: 8px; }
+#view-collab .cv-general-fields .cv-basic-field textarea { display: block; }
+#view-collab .cv-general-fields .cv-basic-field .cv-general-hint { margin: 4px 0 0; color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); }
+#view-collab .cv-general-space { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; min-width: 0; min-height: var(--control-h); color: var(--text); font-size: var(--font-size-14); overflow-wrap: anywhere; }
+#view-collab .cv-general-readonly { padding: 0 8px; border-radius: 4px; background: var(--tag-bg); color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); }
+#view-collab .cv-general-settings .cv-basic-advanced { margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--divider); }
+#view-collab .cv-general-settings .cv-basic-advanced h3 { margin: 0 0 12px; color: var(--text); font-size: var(--font-size-16); font-weight: 500; line-height: var(--line-height-16); }
+#view-collab .cv-basic-danger { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 16px; border-radius: 12px; background: var(--fill-1); }
 #view-collab .cv-basic-danger > div { min-width: 0; }
 #view-collab .cv-basic-danger strong { color: var(--text); font-size: var(--font-size-14); font-weight: 500; }
 #view-collab .cv-basic-danger p { margin: 4px 0 0; color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); }
-#view-collab .cv-basic-danger p.cv-basic-danger-reason { color: var(--danger); }
+#view-collab .cv-basic-danger p.cv-basic-danger-reason { color: var(--text); }
 #view-collab .cv-basic-danger-btn { flex: none; min-height: 32px; padding: 0 16px; border: 1px solid var(--danger); border-radius: 8px; background: var(--bg); color: var(--danger); font: inherit; font-size: var(--font-size-14); cursor: pointer; }
 #view-collab .cv-basic-danger-btn:hover:not(:disabled) { background: var(--danger-bg); }
 #view-collab .cv-basic-danger-btn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 #view-collab .cv-basic-danger-btn:disabled { border-color: var(--border); color: var(--text-secondary); cursor: not-allowed; }
-@media(max-width:600px) { #view-collab .cv-basic-danger { flex-direction: column; align-items: stretch; } }
+@media(max-width:600px) {
+  #view-collab .cv-general-fields .cv-basic-field { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  #view-collab .cv-general-fields .cv-basic-field > :first-child { padding-top: 0; }
+  #view-collab .cv-basic-danger { flex-direction: column; align-items: stretch; }
+}
 #view-collab .cv-member-role-host { flex: none; width: 120px; }
 #view-collab .cv-member-size-host { display: inline-block; width: 72px; }
 #view-collab .cv-member-size-host > .shared-select-trigger { height: 28px; min-height: 28px; padding: 0 8px; border-radius: 6px; font-size: var(--font-size-12); }
@@ -343,7 +349,6 @@
 #view-collab .cv-repo-apps { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 
 /* 通用 › 关联管理工作区：共享下拉与同卡片的输入框同宽同高（8px 内边距 + 22px 行高 + 边框） */
-#view-collab .cv-basic-card .cv-basic-field.shared-select-host > .shared-select-trigger { box-sizing: border-box; width: 100%; min-height: 40px; border-radius: 8px; font-size: var(--font-size-14); }
 
 /* 切换器类型标签「Manage空间」「Build工作区」：紧跟名称的中性小标签（与蓝色「默认」标签区分）；名称过长时先截断名称 */
 #view-collab #cvSpaceSwitch .mgr-ws-pop-pick .mgr-ws-pop-name { flex: 0 1 auto; }
@@ -372,16 +377,6 @@
 #view-collab .cv-member-results > label.cv-member-option:has(input:focus-visible) { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
 #view-collab .cv-member-results > label.cv-member-option input[type="checkbox"] { flex: none; width: 16px; height: 16px; margin: 0; accent-color: var(--brand); }
 
-/* 编辑仓库 › 本机目录：初始化状态与「初始化」按钮（复用本地开发的初始化流程） */
-#view-collab .cv-repo-init { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; padding: 10px 12px; border-radius: 8px; background: var(--fill-1); }
-#view-collab .cv-repo-init-copy { display: flex; align-items: center; gap: 8px; min-width: 0; }
-#view-collab .cv-repo-init-copy p { margin: 0; color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); }
-#view-collab .cv-repo-init-state { flex: none; padding: 0 6px; border-radius: 4px; background: var(--bg); color: var(--text-secondary); font-size: var(--font-size-12); line-height: 20px; }
-#view-collab .cv-repo-init-state.is-ok { background: var(--success-bg); color: var(--success); }
-#view-collab .cv-repo-init-state.is-pending { background: var(--brand-fill); color: var(--brand); }
-#view-collab .cv-repo-init-state.is-warn { background: var(--danger-bg); color: var(--danger); }
-#view-collab .cv-repo-init .ld-space-btn { flex: none; }
-#view-collab .cv-repo-init-error { margin: 6px 0 0; color: var(--danger); font-size: var(--font-size-12); }
 /* 新增 / 编辑仓库：必填标记（代码仓库、名称） */
 #view-collab .cv-repo-dialog .cv-required,
 #view-collab .cv-basic-field .cv-required { margin-left: 2px; color: var(--danger); font-weight: 500; }
@@ -439,6 +434,8 @@
 #view-collab .cv-repo-info dd { min-width: 0; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
 #view-collab .cv-repo-card--rich .cv-repo-local { margin-top: auto; }
 #view-collab .cv-repo-card--rich .cv-repo-local-label { margin-right: 4px; }
-/* 描述按实际行数展示，不再预留两行高度；状态条不显示目录路径，状态后留白、右侧为对勾或「初始化」 */
+/* 描述按实际行数展示，不再预留两行高度；状态条不显示目录路径，状态后留白、右侧提供本机目录操作 */
 #view-collab .cv-repo-card--rich .cv-repo-desc { min-height: 0; }
 #view-collab .cv-repo-card--rich .cv-repo-local-state { flex: 1; }
+
+@media (max-width: 600px) { #view-collab .cv-repo-local { flex-wrap: wrap; } }

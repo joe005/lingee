@@ -89,42 +89,62 @@ console.log('多仓库、工作区独立配置、主仓库、兼容迁移、任�
 // Render the actual settings states without launching a browser.
 const viewSource=readFileSync(new URL('../src/scripts/features/collab/basic-settings.js',import.meta.url),'utf8');
 let selectedScope={project:p.id,ws:''};
-const host={innerHTML:'',dataset:{},classList:{toggle(){}},querySelectorAll:()=>[]};
-const viewDeps={...repositories,...tree,...core,ldBindingFor:()=>null,mgrCurrentPersonId:()=>"u1",ldEnvironmentId:config=>'repo-env:'+JSON.stringify(config),ldDefaultPath:config=>'~/repos/'+config.name, basicEditable:()=>true, getSpaceScope:()=>selectedScope, wsProjectById:dependencies.tkProjectById,ldProjectStatus:()=>({ready:false,authOk:true,key:'download',label:'未初始化'}),ldNewSpaceForm:id=>({projectId:id,mode:'auto',path:'',pulling:0,error:''}),ldRunSpaceInit:()=>false,isWsHost:p=>!!p?.wsHost,wsMappableSpaces:()=>[],wsSpaceOf:p=>p,wsScopePath:(p,ws)=>p.name+' / '+(ws?ws.name:'默认工作区'),
-  $:()=>null, initSelectDropdowns:selects=>assert.equal(selects.includes(null),false)};
-const view=new Function(...Object.keys(viewDeps),viewSource.replace(/^import .*;\n/gm,'').replace(/\bexport /g,'')+'\nreturn {renderBasicSettings,repoDirectory,repoLocalTarget,setEditing:index=>{repoEditing=index;},setDraft:value=>{repoDraft=value;}};')(...Object.values(viewDeps));
+let canEdit=true, directoryReady=false, openedDirectory;
+const handlers={};
+const host={innerHTML:'',dataset:{},classList:{toggle(){}},querySelectorAll:()=>[],
+  addEventListener(type,handler){ if (type === 'click') handlers.click=handler; }};
+const viewDeps={...repositories,...tree,...core,ldBindingFor:()=>null,mgrCurrentPersonId:()=>currentUser,
+  basicCanViewManagement:()=>canEdit,basicEditable:()=>canEdit,getSpaceScope:()=>selectedScope,wsProjectById:dependencies.tkProjectById,
+  wsScopePath:(p,ws)=>p.name+' / '+(ws?.name || p.name),
+  ldProjectStatus:()=>directoryReady ? {ready:true,key:'ready'} : {ready:false,authOk:false,key:'login',label:'未登录'},
+  ldOpenSpaceDialog:(...args)=>{openedDirectory=args;},
+  $:()=>null,initSelectDropdowns:selects=>assert.equal(selects.includes(null),false)};
+const view=new Function(...Object.keys(viewDeps),viewSource.replace(/^import .*;\n/gm,'').replace(/\bexport /g,'')+'\nreturn {initBasicSettings,renderBasicSettings,setEditing:index=>{repoEditing=index;},setDraft:value=>{repoDraft=value;}};')(...Object.values(viewDeps));
+view.initBasicSettings(host);
 view.renderBasicSettings(host,'repo');
 assert.ok(host.innerHTML.includes('expense-service'));
 assert.ok(host.innerHTML.includes('data-cv-repo-add'));
 assert.ok(host.innerHTML.includes('cv-repo-info')&&host.innerHTML.includes('仓库地址')&&host.innerHTML.includes('基准分支')&&host.innerHTML.includes('本机执行目录')&&host.innerHTML.includes('默认目录'),'repository cards show address, branch and working directory facts');
 assert.ok(host.innerHTML.includes('基准分支')&&host.innerHTML.includes('cv-repo-icon'),'repository cards show the branch and a repository icon');
-assert.ok(!host.innerHTML.includes('data-ld-directory-mode'),'directory configuration stays in the editor');
+assert.ok(host.innerHTML.includes('data-cv-repo-local-dir'),'directory configuration opens from the repository card');
 assert.ok(!host.innerHTML.includes('data-cv-repo-field="repo"'),'repository cards start in summary mode');
 assert.ok(host.innerHTML.includes('data-cv-repo-edit'));
 assert.ok(!host.innerHTML.includes('type="submit"'),'summary view has no outer Save button');
 view.setEditing(0);view.renderBasicSettings(host,'repo');
 assert.ok(host.innerHTML.includes('role="dialog"'),'edit opens a dialog');
 assert.equal((host.innerHTML.match(/cv-repo-editor-actions/g)||[]).length,1,'only the editor has save actions');
-assert.ok([1,2].includes((host.innerHTML.match(/type="submit"/g)||[]).length),'the editor offers Save, plus Save and initialize while the directory is not ready');
+assert.equal((host.innerHTML.match(/type="submit"/g)||[]).length,1,'the repository editor only saves shared settings');
+assert.ok(!host.innerHTML.includes('data-cv-dir-mode'),'shared editing has no personal directory controls');
 assert.ok(host.innerHTML.includes('data-cv-repo-field="repo"'),'repository fields belong to the editor');
 view.setEditing(-1);view.renderBasicSettings(host,'repo');
-assert.ok(view.repoDirectory(p,null,repositories.buildRepoList(p,'').repositories[0]).includes('data-cv-dir-mode="existing"'));
 assert.ok(host.innerHTML.includes('主仓库'));
 assert.ok(!host.innerHTML.includes('cv-repo-info-banner'));
 assert.ok(!host.innerHTML.includes('管理令牌'));
 assert.ok(!host.innerHTML.includes('关联应用'));
-const currentRepo = repositories.buildRepoList(p,'').repositories[0];
-const scopedDirectory = view.repoDirectory(p,{id:'api'},currentRepo);
-assert.ok(view.repoLocalTarget(p,{id:'api'},currentRepo).target.includes('\"workspaceId\":\"api\"'),'directory save must carry the current workspace');
-const pendingDirectory = view.repoDirectory(p,null,{...currentRepo,repo:'https://git.example.com/new/unsaved'});
-assert.ok(pendingDirectory.includes('data-cv-dir-mode="existing"'));
-assert.ok(!pendingDirectory.includes('disabled'),'new repository allows directory selection before saving');
-const customDraft={...currentRepo,localDirectory:{mode:'existing',path:'~/repos/custom'}};
-assert.ok(view.repoDirectory(p,null,customDraft).includes('data-cv-dir-path'));
-assert.equal(view.repoLocalTarget(p,null,customDraft).path,'~/repos/custom');
-assert.ok(!pendingDirectory.includes('data-ld-quick'),'unsaved repository must not create a local binding');
-
-selectedScope={project:p.id,ws:'api'};view.renderBasicSettings(host,'repo');
+selectedScope={project:p.id,ws:'api'};
+canEdit=false;
+view.renderBasicSettings(host,'repo');
+assert.doesNotMatch(host.innerHTML, /data-cv-repo-(add|edit|remove|default)/, 'members cannot edit shared repositories');
+assert.ok(host.innerHTML.includes('<h2>仓库</h2>') && host.innerHTML.includes('cv-repo-info')
+  && host.innerHTML.includes('仓库地址') && host.innerHTML.includes('基准分支') && host.innerHTML.includes('cv-repo-provider'),
+  'members see the same repository card details as managers');
+view.renderBasicSettings(host,'members');
+assert.ok(host.innerHTML.includes('<h2>仓库</h2>') && !host.innerHTML.includes('成员列表'),'members cannot open workspace membership settings directly');
+view.renderBasicSettings(host,'agents');
+assert.ok(host.innerHTML.includes('<h2>仓库</h2>'),'members cannot open workspace agent settings directly');
+assert.match(host.innerHTML,/data-cv-repo-local-dir="[^"]+">初始化<\/button>/,'members can open initialization before signing in to Git');
+const currentRepo = repositories.buildRepoList(p,'api').repositories[0];
+const target = core.ldEnvironmentId({...currentRepo,spaceId:p.id,workspaceId:'api'});
+const legacyPath = '~/repos/custom';
+localStorage.setItem('lingee-repo-dir-pref-v1',JSON.stringify({[currentUser+'|'+target]:{mode:'existing',path:legacyPath}}));
+const localButton = {dataset:{cvRepoLocalDir:currentRepo.key}};
+await handlers.click({target:{closest:selector=>selector === '[data-cv-repo-local-dir]' ? localButton : null}});
+assert.deepEqual(openedDirectory,[target,null,'existing',legacyPath],'member action opens the shared directory dialog and restores a previous directory choice');
+directoryReady=true;
+view.renderBasicSettings(host,'repo');
+assert.match(host.innerHTML,/data-cv-repo-local-dir="[^"]+">修改本机目录<\/button>/,'members can reconfigure a ready local directory');
+canEdit=true;
+view.renderBasicSettings(host,'repo');
 assert.ok(!host.innerHTML.includes('继承'));
 assert.ok(host.innerHTML.includes('data-cv-repo-add'),'each workspace can add its own repositories');
 repositories.buildRepoSave(p,'api',{repositories:[]});view.setDraft(null);view.renderBasicSettings(host,'repo');
@@ -176,3 +196,53 @@ assert.ok(core.ldMine().repoBindings[a],'cleanup removes only selected binding, 
 currentUser='another-user';assert.equal(core.ldBindingKey(scopeTarget),a);
 assert.equal(core.ldBindingFor(scopeTarget),null,'other users do not inherit private directory choices');
 console.log('独立目录、默认复用、范围选择、任务目录冻结、按目录加锁与个人隔离回归通过');
+
+// A different folder is selected from the picker and only becomes active after reinitialization.
+currentUser='tester';
+const spaceFormSource=readFileSync(new URL('../src/scripts/features/collab/local-dev/space-form.js',import.meta.url),'utf8');
+let tick, finish;
+const formDeps={...core,LD_ICONS:{},ldReadonlyRepoHtml:()=>'',ldInitProgressHtml:()=>'',toast:()=>{},
+  ldJobOf:()=>null,ldJobSet:()=>{},ldJobRemove:()=>{},
+  setInterval:callback=>{tick=callback;return 1;},clearInterval:()=>{},setTimeout:callback=>{finish=callback;}};
+const spaceForm=new Function(...Object.keys(formDeps),spaceFormSource.replace(/^import .*;\n/gm,'').replace(/\bexport /g,'')
+  +'\nreturn {ldNewSpaceForm,ldSpaceFormHtml,ldSpaceFormClick,ldSpaceFormTarget,ldRunSpaceInit};')(...Object.values(formDeps));
+const form=spaceForm.ldNewSpaceForm(scopeTarget);
+const originalPath=core.ldBindingFor(scopeTarget).path;
+form.mode='existing';
+const directoryHtml=spaceForm.ldSpaceFormHtml(form);
+assert.match(directoryHtml, /data-ld-form-folder="0"/);
+assert.doesNotMatch(directoryHtml, /type="text"/);
+const folderButton={dataset:{ldFormFolder:'0'}};
+assert.equal(spaceForm.ldSpaceFormClick(form,{closest:selector=>selector === '[data-ld-form-folder]' ? folderButton : null}),true);
+const chosenPath=spaceForm.ldSpaceFormTarget(form);
+assert.notEqual(chosenPath,originalPath);
+assert.ok(core.ldInsideWorkspace(chosenPath));
+let completed=false;
+assert.equal(spaceForm.ldRunSpaceInit(form,{render:()=>{},done:()=>{completed=true;}}),true);
+assert.equal(core.ldBindingFor(scopeTarget).path,originalPath,'selecting or starting initialization must not replace the previous binding');
+for (let step=0;step<12;step++) tick();
+finish();
+assert.equal(completed,true);
+assert.equal(core.ldBindingFor(scopeTarget).path,chosenPath);
+assert.ok(core.ldBindingFor(scopeTarget).initializedAt);
+console.log('自定义目录选择与重新初始化回归通过');
+
+// Legacy custom bindings could point at the same path as the default directory.
+assert.equal(core.ldBindDir(scopeTarget,originalPath,'existing'),true);
+const dialogSource=readFileSync(new URL('../src/scripts/features/collab/local-dev/space-dialog.js',import.meta.url),'utf8');
+const dialogElements=new Map();
+const dialogHandlers={};
+const dialogDeps={...core,...spaceForm,ldJobOf:()=>null,ldShow:()=>{},
+  $:selector=>{
+    if (!dialogElements.has(selector)) dialogElements.set(selector,{setAttribute(){},addEventListener(type,handler){dialogHandlers[type]=handler;}});
+    return dialogElements.get(selector);
+  },
+  ldSpaceFormChange:(form,input)=>{form.mode=input.value;return true;}};
+const dialog=new Function(...Object.keys(dialogDeps),dialogSource.replace(/^import .*;\n/gm,'').replace(/\bexport /g,'')
+  +'\nreturn {initSpaceDialog,ldOpenSpaceDialog};')(...Object.values(dialogDeps));
+dialog.initSpaceDialog();
+dialog.ldOpenSpaceDialog(scopeTarget);
+assert.equal(dialogElements.get('#ldSpaceDone').disabled,true,'unchanged custom binding cannot reinitialize');
+assert.match(dialogElements.get('#ldSpaceBody').innerHTML,/当前已使用所选目录/);
+dialogHandlers.change({target:{value:'auto'}});
+assert.equal(dialogElements.get('#ldSpaceDone').disabled,false,'switching a legacy custom binding to default works even at the same path');

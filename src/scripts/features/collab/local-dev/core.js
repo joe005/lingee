@@ -372,7 +372,6 @@ export function ldCheckDir(projectId, path) {
   if (/conflict/i.test(path)) return '目录里已有同名文件，未覆盖；请移走或改名后重试';
   return '';
 }
-export function ldPickDir(info) { return ldDefaultPath(Object.assign({},info,{_repoResolved:true})); }
 export function ldForgetRepoBinding(repoKey) {
   if (ldBindingHasRunningTasks(repoKey)) return '目录还有未结束任务，暂不能清理绑定';
   var mine = ldMine(); delete mine.repoBindings[repoKey];

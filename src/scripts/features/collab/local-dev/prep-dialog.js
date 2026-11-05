@@ -79,7 +79,10 @@ export function initPrepDialog() {
     if (t.closest('#ldPrepBg')) { detach(); return; }
     if (t === overlay || t.closest('[data-ld-prep-close]')) { dismiss(); return; }
     if (t.closest('#ldPrepDone')) { submit(); return; }
-    if (ldSpaceFormClick(form, t)) render();
+    if (ldSpaceFormClick(form, t)) {
+      render();
+      if (t.closest('[data-ld-form-folder]')) overlay.querySelector('.ld-dir-picker summary')?.focus();
+    }
   });
   overlay.addEventListener('change', function (e) { if (form && ldSpaceFormChange(form, e.target)) render(); });
   document.addEventListener('keydown', function (e) {

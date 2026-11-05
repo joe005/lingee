@@ -4,20 +4,20 @@ import { ldJobOf } from './init-jobs.js';
 import { ldBindingFor, ldTargetProject, ldEsc, ldHide, ldProjectStatus, ldRepoInfo, ldShow, ldVisible } from './core.js';
 import { ldBackgroundSpaceInit, ldCancelSpaceInit, ldNewSpaceForm, ldRunSpaceInit, ldSpaceFormChange, ldSpaceFormClick, ldSpaceFormHtml, ldSpaceFormTarget } from './space-form.js';
 
-/* 本地开发 · 初始化空间 / 空间设置弹窗（#ldSpaceOverlay）。
-   未初始化时标题「初始化空间」、主按钮「初始化」；已初始化时标题「空间设置」、主按钮「保存」，目录改了才能保存。 */
+/* 本地开发 · 初始化仓库 / 本机目录设置弹窗（#ldSpaceOverlay）。 */
 var form = null;
 var settings = false;
 var onReady = null;
 var returnFocus = null;
 
-export function ldOpenSpaceDialog(projectId, readyCallback, directoryMode) {
+export function ldOpenSpaceDialog(projectId, readyCallback, directoryMode, initialPath) {
   var project = ldTargetProject(projectId);
   if (!ldRepoInfo(project)) { toast('该空间未配置代码仓库', 'warning'); return; }
   if (ldJobOf(projectId)) { toast('该空间正在后台初始化，完成后会提示', 'warning'); return; }
   returnFocus = document.activeElement;
   form = ldNewSpaceForm(projectId);
   if (['auto','existing'].includes(directoryMode)) form.mode = directoryMode;
+  if (directoryMode === 'existing' && initialPath) form.path = initialPath;
   settings = !!ldBindingFor(projectId);
   onReady = readyCallback || null;
   $('#ldSpaceTitle').textContent = settings ? '本机目录设置' : '初始化仓库';
@@ -26,24 +26,23 @@ export function ldOpenSpaceDialog(projectId, readyCallback, directoryMode) {
   render();
   ldShow('#ldSpaceOverlay');
 }
-/* 从「设置 › 仓库」的「保存并初始化」进入：按弹窗里选好的目录直接开始初始化，复用本弹窗的进度条与「停止 / 后台初始化」 */
-export function ldStartSpaceInit(projectId, mode, path) {
-  ldOpenSpaceDialog(projectId, null, mode);
-  if (!form || settings) return;
-  if (mode === 'existing') form.path = path || '';
-  render();
-  submit();
-}
 function render() {
   if (!form) return;
   var status = ldProjectStatus(form.projectId);
   if (!status.info) return;
   var body = $('#ldSpaceBody');
   body.setAttribute('aria-busy', String(!!form.pulling));
-  body.innerHTML = (settings && !status.ready && !form.pulling ? '<div class="ld-warn"><span>' + ldEsc(status.reason) + '</span></div>' : '') + ldSpaceFormHtml(form);
-  var done = $('#ldSpaceDone'), target = ldSpaceFormTarget(form), running = !!form.pulling;
-  done.disabled = !status.authOk || !target || (settings && status.key !== 'missing' && target === status.binding?.path);
-  done.textContent = settings ? '保存' : '初始化';
+  var needsGit = status.key === 'git';
+  var running = !!form.pulling, target = ldSpaceFormTarget(form);
+  var bindingMode = status.binding?.mode === 'existing' ? 'existing' : 'auto';
+  var unchanged = settings && status.ready && target === status.binding?.path && form.mode === bindingMode;
+  var gitAction = needsGit ? '<button type="button" class="ld-btn" data-ld-git-install="' + ldEsc(form.projectId) + '">安装 Git</button>' : '';
+  body.innerHTML = (!form.pulling && (needsGit || settings && !status.ready)
+    ? '<div class="ld-warn"><span>' + ldEsc(status.reason) + '</span>' + gitAction + '</div>' : '') + ldSpaceFormHtml(form)
+    + (!running && unchanged ? '<div class="ld-form-label">当前已使用所选目录。切换目录后可重新初始化。</div>' : '');
+  var done = $('#ldSpaceDone');
+  done.disabled = !status.authOk || needsGit || !target || unchanged;
+  done.textContent = settings ? '重新初始化' : '初始化';
   /* 初始化进行中底部换成「停止 / 后台初始化」（UE） */
   [['#ldSpaceCancel', running], ['#ldSpaceDone', running], ['#ldSpaceStop', !running], ['#ldSpaceBg', !running]].forEach(function (row) { $(row[0]).hidden = row[1]; });
 }
@@ -80,7 +79,10 @@ export function initSpaceDialog() {
     if (t.closest('#ldSpaceBg')) { detach(); return; }
     if (t === overlay || t.closest('[data-ld-space-close]')) { dismiss(); return; }
     if (t.closest('#ldSpaceDone')) { submit(); return; }
-    if (ldSpaceFormClick(form, t)) render();
+    if (ldSpaceFormClick(form, t)) {
+      render();
+      if (t.closest('[data-ld-form-folder]')) overlay.querySelector('.ld-dir-picker summary')?.focus();
+    }
   });
   overlay.addEventListener('change', function (e) { if (form && ldSpaceFormChange(form, e.target)) render(); });
   document.addEventListener('keydown', function (e) {

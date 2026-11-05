@@ -1,5 +1,5 @@
 import { toast } from '../../../core/toast.js';
-import { ldBindingKey, ldAuthUser, ldBindingFor, ldEnvironmentId, ldTargetProject, ldBindDir, ldCheckDir, ldDefaultPath, ldEsc, ldMarkInitialized, ldNetCheck, ldPickDir, ldProjectStatus, ldRecordChecks, ldRefresh } from './core.js';
+import { ldBindingKey, ldAuthUser, ldBindingFor, ldEnvironmentId, ldTargetProject, ldBindDir, ldCheckDir, ldDefaultPath, ldEsc, ldMarkInitialized, ldNetCheck, ldProjectStatus, ldPushCheck, ldPushIssueText, ldRecordChecks, ldRefresh } from './core.js';
 import { ldJobOf, ldJobRemove, ldJobSet } from './init-jobs.js';
 import { LD_ICONS, ldInitProgressHtml, ldReadonlyRepoHtml } from './ui.js';
 
@@ -11,7 +11,7 @@ export function ldNewSpaceForm(projectId) {
   var project = ldTargetProject(projectId);
   projectId = ldEnvironmentId(Object.assign({},project,{bindingKey:ldBindingKey(project)}));
   var binding = ldBindingFor(projectId);
-  var mode = binding && binding.path !== ldDefaultPath(project) ? 'existing' : 'auto';
+  var mode = binding && (binding.mode === 'existing' || binding.path !== ldDefaultPath(project)) ? 'existing' : 'auto';
   return { projectId:projectId, mode:mode, path:mode === 'existing' ? binding.path : '', pulling:0, error:'', menu:false, run:0 };
 }
 export function ldSpaceFormTarget(form) {
@@ -32,18 +32,28 @@ function accountHtml(form, status) {
 }
 
 /* 本机目录：默认目录 / 自定义目录两张单选卡片，自定义选中后在卡片内选择文件夹 */
+function directoryOptions(form) {
+  var base = ldDefaultPath(ldTargetProject(form.projectId));
+  return [base + '-dev', base + '-test'];
+}
 function directoryHtml(form) {
   var busy = form.pulling ? ' disabled' : '';
   var defaultPath = ldDefaultPath(ldTargetProject(form.projectId));
-  var card = function (value, title, desc, extra) {
+  var card = function (value, title, desc) {
     return '<label class="ld-dir-card"><input type="radio" name="ldFormDir-' + ldEsc(form.projectId) + '" data-ld-form-dir value="' + value + '"' + (form.mode === value ? ' checked' : '') + busy + '>'
-      + '<span class="ld-dir-card-radio" aria-hidden="true"></span><span class="ld-dir-card-body"><strong>' + title + '</strong><span class="ld-dir-card-desc" title="' + ldEsc(desc) + '">' + ldEsc(desc) + '</span>' + (extra || '') + '</span></label>';
+      + '<span class="ld-dir-card-radio" aria-hidden="true"></span><span class="ld-dir-card-body"><strong>' + title + '</strong><span class="ld-dir-card-desc" title="' + ldEsc(desc) + '">' + ldEsc(desc) + '</span></span></label>';
   };
-  var custom = form.mode === 'existing'
-    ? card('existing', '自定义目录', form.path || '选择本机根目录内的文件夹', '<button type="button" class="ld-btn ld-dir-card-pick" data-ld-form-pick' + busy + '>' + (form.path ? '重新选择' : '选择文件夹') + '</button>')
-    : card('existing', '自定义目录', '选择本机根目录内的文件夹');
+  var custom = card('existing', '自定义目录', form.path || '选择本机根目录内的文件夹');
+  var picker = form.mode === 'existing'
+    ? '<details class="ld-dir-picker"><summary>' + (form.path ? '重新选择' : '选择文件夹') + '</summary>'
+      + '<div class="ld-dir-picker-options" role="group" aria-label="可选演示文件夹"><span class="ld-form-label">可选演示文件夹</span>'
+      + directoryOptions(form).map(function (path, index) {
+        return '<button type="button" class="ld-btn" data-ld-form-folder="' + index + '" title="' + ldEsc(path) + '"'
+          + (path === form.path ? ' disabled' : '') + '>' + ldEsc(path) + '</button>';
+      }).join('') + '</div></details>'
+    : '';
   return '<div class="ld-form-field"><span class="ld-form-label">本机目录</span><div class="ld-dir-cards" role="radiogroup" aria-label="本机目录">'
-    + card('auto', '默认目录', defaultPath) + custom + '</div></div>';
+    + card('auto', '默认目录', defaultPath) + custom + '</div>' + picker + '</div>';
 }
 
 export function ldSpaceFormHtml(form) {
@@ -67,7 +77,14 @@ export function ldSpaceFormClick(form, target) {
     form.menu = !form.menu;
     return true;
   }
-  if (target.closest('[data-ld-form-pick]')) { form.path = ldPickDir(ldProjectStatus(form.projectId).info); form.error = ''; return true; }
+  var folder = target.closest('[data-ld-form-folder]');
+  if (folder && form.mode === 'existing' && !form.pulling) {
+    var path = directoryOptions(form)[folder.dataset.ldFormFolder];
+    if (!path) return false;
+    form.path = path;
+    form.error = '';
+    return true;
+  }
   if (form.menu && !target.closest('.ld-select-wrap')) { form.menu = false; return true; }
   return false;
 }
@@ -83,7 +100,7 @@ export function ldSpaceFormChange(form, target) {
    进度记在 init-jobs.js，导航气泡据此展示后台任务。 */
 export function ldRunSpaceInit(form, hooks) {
   var status = ldProjectStatus(form.projectId);
-  if (!status.authOk || form.pulling) return false;
+  if (!status.authOk || status.key === 'git' || form.pulling) return false;
   if (ldJobOf(form.projectId)) { toast('这个仓库正在初始化，请等待完成', 'warning'); return false; }
   if (form.mode === 'existing' && !form.path) { toast('请先选择目录', 'warning'); return false; }
   var path = ldSpaceFormTarget(form);
@@ -92,6 +109,11 @@ export function ldRunSpaceInit(form, hooks) {
   var net = ldNetCheck(status.info, status.auth);
   form.error = net ? net.reason : '';
   if (net) { ldRecordChecks(status.info.host); ldRefresh(); hooks.render(); return false; }
+  if (!ldPushCheck(status.auth)) {
+    form.error = ldPushIssueText(status.auth, status.info.platform);
+    hooks.render();
+    return false;
+  }
   var projectId = form.projectId, mode = form.mode, first = !status.binding;
   var name = ldTargetProject(projectId)?.name || '';
   form.menu = false;
@@ -115,7 +137,7 @@ export function ldRunSpaceInit(form, hooks) {
     setTimeout(function () {
       if (run !== form.run) return;
       ldJobRemove(projectId);
-      toast(first ? '「' + ldEsc(name) + '」已就绪，已获取 ' + ldEsc(status.info.baseBranch) + ' 最新代码，目录：' + ldEsc(path) : '本机目录已更改为 ' + ldEsc(path), 'success');
+      toast(first ? '「' + ldEsc(name) + '」已就绪，已获取 ' + ldEsc(status.info.baseBranch) + ' 最新代码，目录：' + ldEsc(path) : '仓库已重新初始化，目录：' + ldEsc(path), 'success');
       hooks.done(first, path);
     }, 600);
   }, 900);
