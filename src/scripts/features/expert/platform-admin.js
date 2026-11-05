@@ -453,7 +453,13 @@ async function uninstallCloudAsset(itemKey){
   renderExpertChips();
   toast('已卸载「'+name+'」','success');
 }
-setCloudAssetProviders({catalog:cloudCatalog,upgradeBadge:cloudUpgradeBadge});
+function cloudPublicationStatus(id,reviewedVersion){
+  const item=meta[id];
+  if(!item?.activeVersion||!['online','offline'].includes(item.status))return '';
+  if(reviewedVersion&&item.activeVersion!==reviewedVersion)return 'offline';
+  return item.status;
+}
+setCloudAssetProviders({catalog:cloudCatalog,upgradeBadge:cloudUpgradeBadge,publicationStatus:cloudPublicationStatus});
 const UPDATE_SETTINGS_KEY='lingee.asset-update-settings.v1';
 let updateQueued=false,updateAttempt='';
 function updateSettings(){return read(UPDATE_SETTINGS_KEY,{})[getLoginAccount()]||{expert:false,team:false};}

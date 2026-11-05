@@ -4,11 +4,14 @@ import { assetSourceBadge, layerVisible } from '../expert/layers.js';
 const modes={expert:'mine',team:'mine'};
 let cloudCatalogProvider=()=>[];
 let cloudUpgradeBadgeProvider=()=>'';
+let publicationStatusProvider=()=>'';
 export function setCloudAssetProviders(providers){
   cloudCatalogProvider=providers?.catalog||cloudCatalogProvider;
   cloudUpgradeBadgeProvider=providers?.upgradeBadge||cloudUpgradeBadgeProvider;
+  publicationStatusProvider=providers?.publicationStatus||publicationStatusProvider;
 }
 export function assetUpgradeHtml(kind,id){return cloudUpgradeBadgeProvider(kind+':'+id);}
+export function assetPublicationStatus(kind,id,version){return publicationStatusProvider(kind+':'+id,version);}
 export function setAssetBrowseMode(kind,mode){modes[kind]=mode;}
 export function isMoreAssets(kind){return modes[kind]==='more';}
 export function syncAssetBrowser(kind,items){
@@ -53,4 +56,5 @@ export function initExpertMarket(renderers){
 
   }
   document.addEventListener('lingee:cloud-assets-changed',()=>{renderers.expert();renderers.team();});
+  document.addEventListener('lingee:asset-editor-saved',event=>renderers[event.detail.kind]?.());
 }

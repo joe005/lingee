@@ -1,13 +1,27 @@
 import { xav, xesc, phraseHtml } from './data.js';
 import { assetSourceBadge, layerOf } from './layers.js';
+import { assetPublicationStatus } from '../collab/expert-market.js';
+import { hasPersonalReviewChanges, latestPersonalReview, reviewedAsset } from './review-state.js';
 import dialogIcon from '../../../assets/figma/expert-assets/dialog.svg';
 import uploadIcon from '../../../assets/icons/chat/ui-submit-upload.svg';
 
-export function personalReviewStatus(kind,id){
-  try{
-    const rows=JSON.parse(localStorage.getItem('lingee.platform.reviews.v1')||'[]');
-    return rows.filter(row=>row.kind===kind&&row.sourceId===id).at(-1)?.status||'';
-  }catch(_){return '';}
+const REVIEW_STATUS_LABELS={pending:'待审核',approved:'审核通过',rejected:'已驳回',unsubmitted:'未提交'};
+const CARD_STATUS_LABELS={...REVIEW_STATUS_LABELS,modified:'本地有更新',online:'已上架',offline:'已下架'};
+
+function reviewStatus(review){
+  return Object.hasOwn(REVIEW_STATUS_LABELS,review?.status)?review.status:'unsubmitted';
+}
+export function personalReviewBadge(kind,item){
+  if(layerOf(kind,item)!=='personal')return '';
+  const review=latestPersonalReview(kind,item);
+  let status=reviewStatus(review);
+  if(review&&hasPersonalReviewChanges(kind,item,review)){
+    status='modified';
+  }else if(status==='approved'){
+    const asset=reviewedAsset(review);
+    if(asset)status=assetPublicationStatus(kind,asset.id,review.version)||status;
+  }
+  return '<span class="asset-review-badge" data-review-status="'+status+'">'+CARD_STATUS_LABELS[status]+'</span>';
 }
 export function detailIdentityHtml(kind,item,face){
   const personal=layerOf(kind,item)==='personal';
@@ -19,9 +33,15 @@ export function detailIdentityHtml(kind,item,face){
 }
 export function detailReviewHtml(kind,item){
   if(layerOf(kind,item)!=='personal')return '';
-  const status=personalReviewStatus(kind,item.id),pending=status==='pending';
-  const title=pending?'待审核':status==='approved'?'审核通过':status==='rejected'?'已驳回':'尚未提交';
-  const text=pending?'企业管理员正在审核，个人开发版本仍可继续使用。':status==='approved'?'企业版本已发布，可在“更多”中安装。':'如需供同事使用，可提交审核，企业管理员审核通过后出现在「更多'+(kind==='team'?'智能体团队':'智能体')+'」中。';
+  const review=latestPersonalReview(kind,item),status=reviewStatus(review),pending=status==='pending';
+  const title=REVIEW_STATUS_LABELS[status];
+  const asset=status==='approved'?reviewedAsset(review):null;
+  const publication=asset?assetPublicationStatus(kind,asset.id,review.version):'';
+  const text=pending?'企业管理员正在审核，个人开发版本仍可继续使用。'
+    :publication==='online'?'企业版本已上架，可在“更多”中安装。'
+    :publication==='offline'?'对应企业版本已下架，个人开发版本仍可继续使用。'
+    :status==='approved'?'此提交已通过审核。'
+    :'如需供同事使用，可提交审核，企业管理员审核通过后出现在「更多'+(kind==='team'?'智能体团队':'智能体')+'」中。';
   return '<div class="asset-detail-review"><img src="'+uploadIcon+'" width="20" height="20" alt=""><div><strong>'+title+'</strong><p>'+text+'</p></div>'
     +'<button type="button" class="asset-detail-button" '+(kind==='expert'?'data-x-submit':'data-team-detail-submit')+'="'+xesc(item.id)+'"'+(pending?' disabled':'')+'>'+(pending?'已提交':'提交审核')+'</button></div>';
 }

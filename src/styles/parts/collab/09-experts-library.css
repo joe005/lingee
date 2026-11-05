@@ -161,6 +161,12 @@
 #view-collab :is(#cv-experts,#cv-teams) .asset-card-summary>.asset-source-shared{color:var(--asset-source-tenant-text);border-color:var(--asset-tenant-outline-border)}
 #view-collab :is(#cv-experts,#cv-teams) .asset-card-summary>.asset-source-personal{color:var(--asset-personal-outline);border-color:var(--asset-personal-outline-border)}
 #view-collab :is(#cv-experts,#cv-teams) .asset-card-summary>span:not([class]){padding:0 4px;border:1px solid var(--border);border-radius:4px}
+#view-collab :is(#cv-experts,#cv-teams) .asset-review-badge{padding:0 4px;border:1px solid var(--border);border-radius:4px;color:var(--text-secondary);font-weight:500;white-space:nowrap}
+#view-collab :is(#cv-experts,#cv-teams) .asset-review-badge[data-review-status="pending"]{background:var(--review-bg);border-color:var(--review-bg);color:var(--pending)}
+#view-collab :is(#cv-experts,#cv-teams) .asset-review-badge:is([data-review-status="approved"],[data-review-status="online"]){background:var(--success-bg);border-color:var(--success-bg);color:var(--success)}
+#view-collab :is(#cv-experts,#cv-teams) .asset-review-badge[data-review-status="offline"]{background:var(--warning-bg);border-color:var(--warning-bg);color:var(--warning)}
+#view-collab :is(#cv-experts,#cv-teams) .asset-review-badge[data-review-status="modified"]{background:var(--brand-fill);border-color:var(--brand-fill);color:var(--brand)}
+#view-collab :is(#cv-experts,#cv-teams) .asset-review-badge[data-review-status="rejected"]{background:var(--danger-bg);border-color:var(--danger-bg);color:var(--danger)}
 #view-collab :is(#cv-experts,#cv-teams) .apps-grid .x-card .card-desc{margin:8px 0 8px 48px;flex:0 0 auto;height:40px;line-height:20px;font-size:var(--font-size-14);color:var(--text-secondary);-webkit-line-clamp:2}
 #view-collab :is(#cv-experts,#cv-teams) .apps-grid .x-card .card-tags{margin:0 0 0 48px;gap:4px;max-height:20px;overflow:hidden;flex-wrap:nowrap}
 #view-collab :is(#cv-experts,#cv-teams) .apps-grid .x-card .ptag{font-size:var(--font-size-12);line-height:20px;padding:0 6px;border:0;border-radius:var(--asset-pill-radius);background:var(--tag-bg);white-space:nowrap}
