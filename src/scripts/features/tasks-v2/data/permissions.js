@@ -1,4 +1,4 @@
-import { CV_MEMBERS, cvWorkspaceRole } from '../../collab/data.js';
+import { CV_MEMBERS, cvWorkspaceRole, isWsHost, wsHost } from '../../collab/data.js';
 import { tkAllProjects } from './external-projects.js';
 import { tkCurrentStageHandlerId, tkCurrentUserId } from './people.js';
 import { wsById, wsFlatTree, wsHasPerson } from '../../../core/workspace-tree.js';
@@ -72,7 +72,10 @@ function tkCanSeeWorkspace(project, workspaceId) {
   var me = CV_MEMBERS.find(function (person) { return person.id === tkCurrentUserId(); });
   if (tkIsSpaceManager(project, me)) return true;
   var ws = wsById(project, workspaceId);
-  return !!ws && wsHasPerson(ws, tkCurrentUserId());
+  if (!ws) return false;
+  if (wsHasPerson(ws, tkCurrentUserId())) return true;
+  /* 独立工作区关联了开发空间时，该空间的负责人和管理员也能查看 */
+  return isWsHost(project) && !!ws.spaceId && tkIsSpaceManager(tkAllProjects().find(function (p) { return p.id === ws.spaceId; }), me);
 }
 /* 当前用户可见的工作区（切换器、筛选、新建任务、默认范围共用） */
 function tkVisibleWorkspaces(project, opts) {
@@ -80,7 +83,7 @@ function tkVisibleWorkspaces(project, opts) {
 }
 function tkCanViewTask(task) {
   if (!task) return false;
-  var project = tkProjectsForCurrentUser().find(function (row) { return row.id === task.project; });
+  var project = tkScopeProjects().find(function (row) { return row.id === task.project; });
   if (!project) return false;
   if (!tkCanSeeWorkspace(project, task.workspaceId)) return false;
   var me = CV_MEMBERS.find(function (person) { return person.id === tkCurrentUserId(); });
@@ -95,9 +98,15 @@ function tkIsProjectOwner() {
 function tkProjectsForCurrentUser() {
   var userId = tkCurrentUserId();
   return userId ? tkAllProjects().filter(function (project) {
+    if (isWsHost(project)) return false;
     return (project.members || []).includes(userId)
       || CV_MEMBERS.some(function (person) { return person.id === userId && project.owner === person.name; });
   }) : [];
 }
+/* 任务范围：我加入的空间，加上我能看到工作区的独立工作区容器（切换器、默认范围、新建任务与查看权限用；空间下拉仍用上面的函数） */
+function tkScopeProjects() {
+  var host = wsHost();
+  return tkProjectsForCurrentUser().concat(tkCurrentUserId() && tkVisibleWorkspaces(host).length ? [host] : []);
+}
 
-export { tkCanSeeWorkspace, tkVisibleWorkspaces, tkCanStartTask, tkCanViewTask, tkInMyTaskList, tkIsHandledByMe, tkIsMyCurrentStage, tkIsMyStageDone, tkIsProjectOwner, tkParticipatesCurrentUser, tkProjectsForCurrentUser, tkWasTaskHandler };
+export { tkScopeProjects, tkCanSeeWorkspace, tkVisibleWorkspaces, tkCanStartTask, tkCanViewTask, tkInMyTaskList, tkIsHandledByMe, tkIsMyCurrentStage, tkIsMyStageDone, tkIsProjectOwner, tkParticipatesCurrentUser, tkProjectsForCurrentUser, tkWasTaskHandler };

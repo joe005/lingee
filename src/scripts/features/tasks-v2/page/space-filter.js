@@ -1,7 +1,8 @@
 import { readDefaultScope } from '../../collab/default-scope.js';
 import { ldIsDevProject } from '../../collab/local-dev.js';
-import { WS_DEFAULT_FILTER, WS_DEFAULT_NAME, wsScopeName } from '../../../core/workspace-tree.js';
-import { tkProjectsForCurrentUser, tkVisibleWorkspaces } from '../data.js';
+import { WS_DEFAULT_FILTER, wsScopeName } from '../../../core/workspace-tree.js';
+import { tkScopeProjects, tkVisibleWorkspaces } from '../data.js';
+import { isWsHost } from '../../collab/data.js';
 import { filterListStatus, getFilteredTasks } from './filters.js';
 import { render } from './layout.js';
 import { updateFilterButton } from './menus.js';
@@ -28,7 +29,7 @@ function spaceCountTasks(){
 function spaceOptions() {
   var tasks = spaceCountTasks();
   var picked = selectedSpaces();
-  return tkProjectsForCurrentUser().map(function (project) {
+  return tkScopeProjects().map(function (project) {
     return { id:project.id, name:project.name, count:tasks.filter(function (task) { return task.project === project.id; }).length, dev:ldIsDevProject(project) };
   }).filter(function (row) { return row.dev; })
     .sort(function (a, b) { return (picked.includes(b.id) - picked.includes(a.id)) || (b.count - a.count) || a.name.localeCompare(b.name, 'zh'); });
@@ -37,7 +38,10 @@ function spaceOptions() {
 /* 协作开发顶部的空间 / 工作区切换读写同一份筛选条件：project（单选）+ workspaceId。
    范围值：'' 为默认工作区（筛选值 __default，即没有归属工作区的任务）或工作区 ID；看不到的工作区一律退回默认工作区。 */
 function wsFilterValue(project, wsId) {
-  if (wsId && project && tkVisibleWorkspaces(project).some(function (row) { return row.ws.id === wsId; })) return wsId;
+  var rows = project ? tkVisibleWorkspaces(project) : [];
+  if (wsId && rows.some(function (row) { return row.ws.id === wsId; })) return wsId;
+  /* 独立工作区容器没有默认工作区，退回第一个可见的工作区 */
+  if (isWsHost(project) && rows.length) return rows[0].ws.id;
   return WS_DEFAULT_FILTER;
 }
 function setWsFilter(project, wsId) {
@@ -46,7 +50,7 @@ function setWsFilter(project, wsId) {
   if (value) state.filters.push({ field:'workspaceId', op:'eq', value:value });
 }
 function ensureSpaceScope() {
-  var available = tkProjectsForCurrentUser().filter(ldIsDevProject);
+  var available = tkScopeProjects().filter(ldIsDevProject);
   var picked = selectedSpaces();
   var current = picked.length === 1 ? available.find(function (p) { return p.id === picked[0]; }) : null;
   if (current) {
@@ -73,7 +77,7 @@ export function setSpaceScope(projectId, wsId) {
   state.filters = state.filters.filter(function (f) { return f.field !== 'project' && f.field !== 'workspaceId'; });
   if (projectId) {
     state.filters.push({ field:'project', op:'eq', value:projectId });
-    setWsFilter(tkProjectsForCurrentUser().find(function (p) { return p.id === projectId; }), wsId || '');
+    setWsFilter(tkScopeProjects().find(function (p) { return p.id === projectId; }), wsId || '');
   }
   closePopup();
   updateFilterButton();
@@ -85,9 +89,10 @@ export function updateSpaceButton() {
   var label = document.getElementById('tkSpaceLabel'), btn = document.getElementById('tkSpaceBtn');
   if (!label || !btn) return;
   var picked = selectedSpaces();
-  var pickedProject = picked.length === 1 ? tkProjectsForCurrentUser().find(function (p) { return p.id === picked[0]; }) : null;
+  var pickedProject = picked.length === 1 ? tkScopeProjects().find(function (p) { return p.id === picked[0]; }) : null;
   var scopeWs = getSpaceScope().ws;
-  var name = pickedProject ? (pickedProject.name || '空间') + (tkVisibleWorkspaces(pickedProject).length || scopeWs ? ' › ' + wsScopeName(pickedProject, scopeWs) : '') : '';
+  var name = !pickedProject ? '' : isWsHost(pickedProject) ? wsScopeName(pickedProject, scopeWs)
+    : (pickedProject.name || '空间') + (tkVisibleWorkspaces(pickedProject).length || scopeWs ? ' › ' + wsScopeName(pickedProject, scopeWs) : '');
   label.textContent = !picked.length ? '暂无可用空间' : picked.length === 1 ? name : picked.length + ' 个空间';
   btn.title = label.textContent;
   btn.classList.toggle('has-filters', picked.length > 0);
@@ -98,12 +103,12 @@ export function updateSpaceButton() {
 
 /* 选中某个有工作区的空间后，在它下面列出工作区；选工作区即同时限定空间和工作区 */
 function workspaceRows(projectId) {
-  var project = tkProjectsForCurrentUser().find(function (p) { return p.id === projectId; });
+  var project = tkScopeProjects().find(function (p) { return p.id === projectId; });
   var rows = project ? tkVisibleWorkspaces(project) : [];
   if (!rows.length) return '';
   var picked = getSpaceScope().ws;
-  /* 默认工作区与其他工作区平级 */
-  rows = [{ ws: { id: '', name: WS_DEFAULT_NAME }, depth: 1 }].concat(rows);
+  /* 默认工作区与其他工作区平级；独立工作区容器没有默认工作区 */
+  if (!isWsHost(project)) rows = [{ ws: { id: '', name: project.name }, depth: 1 }].concat(rows);
   return rows.map(function (r) {
     var on = r.ws.id === picked;
     return '<button type="button" role="option" class="tk-space-ws" style="--ws-depth:' + r.depth + '" aria-selected="' + on + '" data-tk-ws="' + escapeHtml(r.ws.id) + '"><span class="tk-space-option-label" title="' + escapeHtml(r.ws.name) + '"><span class="tk-space-option-name">' + escapeHtml(r.ws.name) + '</span></span><b>' + (on ? CHECK : '') + '</b></button>';
@@ -139,7 +144,7 @@ function openPopup() {
 function pickSpace(id) {
   state.filters = state.filters.filter(function (f) { return f.field !== 'project' && f.field !== 'workspaceId'; });
   if (id) state.filters.push({ field:'project', op:'eq', value:id });
-  var project = id ? tkProjectsForCurrentUser().find(function (p) { return p.id === id; }) : null;
+  var project = id ? tkScopeProjects().find(function (p) { return p.id === id; }) : null;
   if (project) setWsFilter(project, '');
   var cascade = !!project && tkVisibleWorkspaces(project).length > 0;
   if (cascade) renderOptions(); else closePopup();
@@ -148,7 +153,7 @@ function pickSpace(id) {
 }
 function pickWorkspace(id) {
   var picked = selectedSpaces();
-  setWsFilter(picked.length === 1 ? tkProjectsForCurrentUser().find(function (p) { return p.id === picked[0]; }) : null, id);
+  setWsFilter(picked.length === 1 ? tkScopeProjects().find(function (p) { return p.id === picked[0]; }) : null, id);
   closePopup();
   updateFilterButton();
   render();

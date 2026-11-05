@@ -341,3 +341,33 @@
 #view-collab .cv-repo-chip.is-brand { border-color: transparent; background: var(--brand-fill); color: var(--brand); }
 #view-collab .cv-repo-chip.is-success { border-color: transparent; background: var(--success-bg); color: var(--success); }
 #view-collab .cv-repo-apps { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+/* 通用 › 关联管理工作区：共享下拉与同卡片的输入框同宽同高（8px 内边距 + 22px 行高 + 边框） */
+#view-collab .cv-basic-card .cv-basic-field.shared-select-host > .shared-select-trigger { box-sizing: border-box; width: 100%; min-height: 40px; border-radius: 8px; font-size: var(--font-size-14); }
+
+/* 切换器类型标签「Manage空间」「Build工作区」：紧跟名称的中性小标签（与蓝色「默认」标签区分）；名称过长时先截断名称 */
+#view-collab #cvSpaceSwitch .mgr-ws-pop-pick .mgr-ws-pop-name { flex: 0 1 auto; }
+#view-collab #cvSpaceSwitch .cv-space-kind { flex: none; padding: 0 4px; border-radius: 4px; background: var(--fill-1); color: var(--text-secondary); font-size: var(--font-size-12); font-weight: 400; line-height: var(--line-height-12); white-space: nowrap; }
+#view-collab #cvSpaceSwitch .mgr-ws-pop-pick > b { margin-left: auto; }
+
+/* 切换器视图页签：「全部工作区」平铺（默认）/「管理视图」按 Manage 空间分组 */
+#view-collab #cvSpaceSwitch .cv-space-view { display: flex; gap: 2px; margin: 8px 0 4px; padding: 2px; border-radius: 8px; background: var(--fill-1); }
+#view-collab #cvSpaceSwitch .cv-space-view button {
+  flex: 1; height: 28px; padding: 0 8px; border: none; border-radius: 6px; background: none;
+  color: var(--text-secondary); font: inherit; font-size: var(--font-size-12); cursor: pointer;
+}
+#view-collab #cvSpaceSwitch .cv-space-view button:hover { color: var(--text); }
+#view-collab #cvSpaceSwitch .cv-space-view button.is-on { background: var(--bg); color: var(--text); font-weight: 500; box-shadow: 0 0 0 1px var(--border); }
+#view-collab #cvSpaceSwitch .cv-space-view button:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+
+/* 设置 › 成员：标题右侧「搜索成员」筛选当前列表，与「添加成员」并排 */
+#view-collab .cv-member-tools { display: flex; align-items: center; gap: 12px; min-width: 0; }
+#view-collab .cv-member-tools .cv-member-filter { flex: none; width: 240px; min-width: 0; }
+@media(max-width:600px) { #view-collab .cv-member-tools { flex: 1; } #view-collab .cv-member-tools .cv-member-filter { flex: 1; width: auto; } }
+
+/* 设置 › 添加成员：搜索结果可多选，每行前置复选框，勾选后点「添加（N）」一次加入 */
+#view-collab .cv-member-results > label.cv-member-option { display: flex; align-items: center; gap: 12px; width: 100%; box-sizing: border-box; padding: 8px; border-radius: 8px; color: var(--text); cursor: pointer; }
+#view-collab .cv-member-results > label.cv-member-option:hover { background: var(--hover); }
+#view-collab .cv-member-results > label.cv-member-option:has(input:checked) { background: var(--brand-fill); }
+#view-collab .cv-member-results > label.cv-member-option:has(input:focus-visible) { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+#view-collab .cv-member-results > label.cv-member-option input[type="checkbox"] { flex: none; width: 16px; height: 16px; margin: 0; accent-color: var(--brand); }

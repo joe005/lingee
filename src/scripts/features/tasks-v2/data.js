@@ -30,7 +30,7 @@ import './site-preview.js';
 export { TK_AGENTS, TK_FILTER_FIELDS, TK_LABELS, TK_OPERATORS, TK_PEOPLE, TK_PRIORITIES, TK_PROJECTS, TK_STATUSES, TK_VIEWS } from './data/constants.js';
 export { tkSetExternalProjects } from './data/external-projects.js';
 export { tkCurrentStageHandlerId, tkCurrentUserId, tkPeopleInProject, tkProjectById, tkSyncPeople } from './data/people.js';
-export { tkCanSeeWorkspace, tkVisibleWorkspaces, tkCanStartTask, tkCanViewTask, tkInMyTaskList, tkIsHandledByMe, tkIsMyCurrentStage, tkIsMyStageDone, tkIsProjectOwner, tkParticipatesCurrentUser, tkProjectsForCurrentUser, tkWasTaskHandler } from './data/permissions.js';
+export { tkScopeProjects, tkCanSeeWorkspace, tkVisibleWorkspaces, tkCanStartTask, tkCanViewTask, tkInMyTaskList, tkIsHandledByMe, tkIsMyCurrentStage, tkIsMyStageDone, tkIsProjectOwner, tkParticipatesCurrentUser, tkProjectsForCurrentUser, tkWasTaskHandler } from './data/permissions.js';
 export { tkGetTaskArtifacts } from './data/artifacts.js';
 export { TK_TASKS } from './data/seed-tasks.js';
 export { tkGetPerson, tkGetPriorityName, tkGetPriorityObj, tkGetProjectName, tkGetStatusName, tkGetStatusObj, tkGetTaskSpaceLabel } from './data/lookups.js';

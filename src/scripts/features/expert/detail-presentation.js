@@ -1,7 +1,6 @@
 import { xav, xesc, phraseHtml } from './data.js';
 import { assetSourceBadge, layerOf } from './layers.js';
 import dialogIcon from '../../../assets/figma/expert-assets/dialog.svg';
-import uploadIcon from '../../../assets/icons/chat/ui-submit-upload.svg';
 
 export function personalReviewStatus(kind,id){
   try{
@@ -17,13 +16,14 @@ export function detailIdentityHtml(kind,item,face){
     +(personal?'<button type="button" class="asset-detail-button" '+attrs[0]+'="'+xesc(item.id)+'">编辑</button>':'')
     +'<button type="button" class="asset-detail-button primary" '+attrs[1]+'="'+xesc(item.id)+'">发起对话</button></div></div>';
 }
+/* 个人开发资产的详情底栏：右侧「取消 / 提交审核」，不再展示提交状态说明卡；
+   待审核时按钮显示「已提交审核」并禁用，已驳回可重新提交，审核通过后只留「取消」 */
 export function detailReviewHtml(kind,item){
   if(layerOf(kind,item)!=='personal')return '';
-  const status=personalReviewStatus(kind,item.id),pending=status==='pending';
-  const title=pending?'待审核':status==='approved'?'审核通过':status==='rejected'?'已驳回':'尚未提交';
-  const text=pending?'企业管理员正在审核，个人开发版本仍可继续使用。':status==='approved'?'企业版本已发布，可在“更多”中安装。':'如需供同事使用，可提交审核，企业管理员审核通过后出现在「更多'+(kind==='team'?'智能体团队':'智能体')+'」中。';
-  return '<div class="asset-detail-review"><img src="'+uploadIcon+'" width="20" height="20" alt=""><div><strong>'+title+'</strong><p>'+text+'</p></div>'
-    +'<button type="button" class="asset-detail-button" '+(kind==='expert'?'data-x-submit':'data-team-detail-submit')+'="'+xesc(item.id)+'"'+(pending?' disabled':'')+'>'+(pending?'已提交':'提交审核')+'</button></div>';
+  const status=personalReviewStatus(kind,item.id),pending=status==='pending',approved=status==='approved';
+  const close=kind==='expert'?'data-x-close':'data-team-detail-close';
+  const submit=approved?'':'<button type="button" class="asset-detail-foot-btn primary" '+(kind==='expert'?'data-x-submit':'data-team-detail-submit')+'="'+xesc(item.id)+'"'+(pending?' disabled':'')+'>'+(pending?'已提交审核':status==='rejected'?'重新提交审核':'提交审核')+'</button>';
+  return '<div class="asset-detail-foot"><button type="button" class="asset-detail-foot-btn" '+close+'>取消</button>'+submit+'</div>';
 }
 export function detailCommandsHtml(kind,item){
   const commands=(item.cmds||[]).filter(c=>c[0]);

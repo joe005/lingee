@@ -6,6 +6,7 @@ import { EX, xesc, xav } from './data.js';
 import { CV_WORKSPACES, cvCanAccessWorkspace, cvWorkspace, cvWorkspaceName, cvCurrentUserName } from '../collab/data.js';
 import { getPlatformIdentity } from '../login.js';
 import { assetOwnerKey } from './layers.js';
+import { publishScopeHtml, readPublishScope, PUBLISH_SCOPES } from './platform-admin.js';
 import { assetReviewDialog, assetReviewClose, canViewPlatformReview, canApprovePlatformReview, nextReviewVersion, currentPublishedVersion, reviewVersionHistory, exportReviewSnapshot, publishedExpertRef, publishReviewedBundle } from './platform-admin.js';
 export const REVIEW_KEY='lingee.platform.reviews.v1';
 const clone=value=>JSON.parse(JSON.stringify(value));
@@ -99,7 +100,7 @@ export function openAssetReview(id,onChange){
     const resolveMember=id=>{const member=row.bundle.find(entry=>entry.kind==='expert'&&entry.data.id===id);return member?{data:member.data,version:member.version||nextReviewVersion('expert',id)}:reviewVersionHistory('expert',id).at(-1)||(EX[id]?{data:EX[id]}:null);};
     return `<section class="platform-review-definition"><div class="platform-detail-headline">${team?'':`<img class="x-av" src="${xav(d.k||'eng')}" alt="">`}<strong>${xesc(d.name)}</strong><span>V${nextReviewVersion(item.kind,d.id)}</span></div><dl class="platform-info-list"><dt>状态</dt><dd>${{pending:'待审核',approved:'审核通过',rejected:'已驳回'}[row.status]}</dd><dt>当前上架</dt><dd>${currentPublishedVersion(item.kind,d.id)?'V'+currentPublishedVersion(item.kind,d.id):'暂无'}</dd><dt>最新版本</dt><dd>V${nextReviewVersion(item.kind,d.id)}</dd><dt>编码</dt><dd>${xesc(d.id)}</dd><dt>简介</dt><dd>${xesc(d.desc||'暂无简介')}</dd><dt>更新说明</dt><dd>${xesc(row.note)}</dd><dt>更新时间</dt><dd>${xesc(row.at)}</dd>${team?platformTeamFields(d,resolveMember):`<dt>技能数</dt><dd>${(d.skills||[]).length}</dd>`}</dl>${team?platformTeamMembers(d,resolveMember):platformExpertSkills(d)}<button type="button" class="platform-link" data-review-history="${xesc(d.id)}">查看历史版本</button> <button type="button" class="platform-link" data-review-export="${xesc(d.id)}">导出 ZIP</button></section>`;
   }).join('');
-  assetReviewDialog((row.kind==='team'?'智能体团队':'智能体')+'详情',`${contents}${row.reason?`<p>驳回原因：${xesc(row.reason)}</p>`:''}${row.status==='pending'&&canApprove?'<label class="platform-import-note-label" id="assetRejectFields" hidden>驳回原因<textarea id="assetRejectReason" rows="2" maxlength="500" placeholder="请填写驳回原因"></textarea></label><div class="platform-dialog-error" id="assetReviewError"></div>':''}`,row.status==='pending'&&canApprove?()=>{
+  assetReviewDialog((row.kind==='team'?'智能体团队':'智能体')+'详情',`${contents}${row.reason?`<p>驳回原因：${xesc(row.reason)}</p>`:''}${row.status==='pending'&&canApprove?publishScopeHtml(row.scope||'tenant'):row.scope?`<p class="platform-dialog-note">上架范围：${PUBLISH_SCOPES[row.scope]||'全企业'}</p>`:''}${row.status==='pending'&&canApprove?'<label class="platform-import-note-label" id="assetRejectFields" hidden>驳回原因<textarea id="assetRejectReason" rows="2" maxlength="500" placeholder="请填写驳回原因"></textarea></label><div class="platform-dialog-error" id="assetReviewError"></div>':''}`,row.status==='pending'&&canApprove?()=>{
     if(!canApprovePlatformReview(row))return;
     const rows=reviews(),request=rows.find(item=>item.id===id);if(!request||request.status!=='pending')return;
     if(!$('#assetRejectFields').hidden){
@@ -110,8 +111,8 @@ export function openAssetReview(id,onChange){
       if(!store(rows)){$('#assetReviewError').textContent='保存失败，请重试';return;}
       assetReviewClose();onChange();return;
     }
-    request.status='approved';request.reviewer=cvCurrentUserName();
-    const error=publishReviewedBundle(request.bundle,request.note,{name:REVIEW_KEY,value:rows});
+    request.status='approved';request.reviewer=cvCurrentUserName();request.scope=readPublishScope();
+    const error=publishReviewedBundle(request.bundle,request.note,{name:REVIEW_KEY,value:rows},request.scope);
     if(error){$('#assetReviewError').textContent=error;return;}assetReviewClose();onChange();
   }:null,row.status==='pending'&&canApprove?'审核通过':'关闭');
   $('#platformDialogBody').querySelectorAll('[data-review-export]').forEach(button=>button.addEventListener('click',()=>{

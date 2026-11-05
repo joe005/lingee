@@ -97,7 +97,7 @@ console.log('个人本机安装回归通过：分配不自动安装、账号隔�
 catalog.push({key:'expert:two',kind:'expert',version:'1.0.0',data:{id:'two',name:'测试',skills:['test-code']}});
 const uiSource = readFileSync(new URL('../src/scripts/features/collab/capability-settings.js',import.meta.url),'utf8');
 let selectedScope = {project:p.id,ws:'a1'}, editable = true, localInstalled = false;
-const uiDeps = {...capabilities,isLocalAssetInstalled:()=>localInstalled,getSpaceScope:()=>selectedScope,tkProjectsForCurrentUser:()=>[p],wsById:(p,id)=>(p.workspaces || []).find(w=>w.id===id),basicEditable:()=>editable,xesc:v=>String(v ?? ''),xav:()=>'',assetTagsHtml:()=>'',layerVisible:()=>true};
+const uiDeps = {...capabilities,isLocalAssetInstalled:()=>localInstalled,getSpaceScope:()=>selectedScope,tkProjectsForCurrentUser:()=>[p],tkScopeProjects:()=>[p],assetSourceBadge:()=>"",layerOf:()=>"shared",wsById:(p,id)=>(p.workspaces || []).find(w=>w.id===id),basicEditable:()=>editable,xesc:v=>String(v ?? ''),xav:()=>'',assetTagsHtml:()=>'',layerVisible:()=>true};
 const ui = new Function(...Object.keys(uiDeps),uiSource.replace(/^import .*;\n/gm,'').replace(/\bexport /g,'')+'return {capabilityContext,workspaceCapabilityControls,workspaceInstallOffer,workspaceInstallCandidates,workspaceCapabilityVisible,workspaceCatalogRows,renderWorkspaceCapabilities,workspaceCapabilityExtras};')(...Object.values(uiDeps));
 assert.equal(ui.renderWorkspaceCapabilities(),false,'main page always uses personal My/More renderer');
 assert.equal(ui.workspaceCatalogRows(),null,'More uses personal installs, not recruitment');
@@ -110,7 +110,7 @@ assert.doesNotMatch(offer.tag,/a1|后端|接口/,'origin tag does not repeat the
 assert.equal(ui.workspaceInstallOffer('expert',{id:'unknown'}),null);
 assert.ok(ui.workspaceInstallCandidates('expert').some(row=>row.key==='expert:one'&&row.data&&row.version),'uninstalled workspace assets are offered in More even when absent from the personal catalog');
 localInstalled=true;
-assert.equal(ui.workspaceInstallCandidates('expert').length,0,'installed assets are not offered again');
+assert.ok(ui.workspaceInstallCandidates('expert').length>0&&ui.workspaceInstallCandidates('expert').every(row=>row.installed),'installed assets stay listed in More, marked installed so no install button is shown');
 assert.equal(ui.workspaceInstallOffer('expert',{id:'one'}),null,'installed assets need no install offer');
 assert.match(ui.workspaceCapabilityControls('expert',{id:'one'}),/工作区/);
 assert.doesNotMatch(ui.workspaceCapabilityControls('expert',{id:'one'}),/data-capability-action|uninstall|未安装|data-workspace-install/);
@@ -184,7 +184,7 @@ const workspaceRenderSource = formSource.slice(formSource.indexOf('function rend
 for (const [selected, editingTaskId, visible] of [['a', null, true], ['', null, true], ['missing', null, true], ['a', 1, false]]) {
   const workspaceField = {}, spaceField = {};
   const fields = {niuWorkspace:{value:'',closest:()=>workspaceField},niuProjectTrigger:{closest:()=>spaceField}};
-  const deps = {byId:id=>fields[id],selectedProjectId:p.id,editingTaskId,tkProjectById:()=>p,tkVisibleWorkspaces:()=>[{ws:p.workspaces[0]}],WS_DEFAULT_NAME:'默认工作区',wsById:(project,id)=>project.workspaces.find(w=>w.id===id),wsPathNames:()=>['后端'],escapeHtml:v=>v,renderWorkspaceRepoHint:()=>{}};
+  const deps = {byId:id=>fields[id],selectedProjectId:p.id,editingTaskId,tkProjectById:()=>p,tkVisibleWorkspaces:()=>[{ws:p.workspaces[0]}],WS_DEFAULT_NAME:'默认工作区',wsById:(project,id)=>project.workspaces.find(w=>w.id===id),wsPathNames:()=>['后端'],escapeHtml:v=>v,renderWorkspaceRepoHint:()=>{},isWsHost:project=>!!project?.wsHost};
   new Function(...Object.keys(deps),workspaceRenderSource+'return renderWorkspaceOptions;')(...Object.values(deps))(selected);
   assert.equal(workspaceField.hidden,!visible);
   assert.equal(spaceField.hidden,visible);

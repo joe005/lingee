@@ -1,14 +1,14 @@
 import { capabilityOptions, capabilityExecutor, capabilityList, capabilityTaskError } from '../collab/capability-config.js';
 import { wsMemberIds, canCreateTaskIn } from '../manager/workspaces.js';
-import { WS_DEFAULT_NAME, wsById, wsPathNames } from '../../core/workspace-tree.js';
+import { wsById, wsPathNames } from '../../core/workspace-tree.js';
 import { getSpaceScope } from './page/space-filter.js';
 import { buildRepoList, buildRepoIdentity, buildTaskRepoConfig, buildTaskMoveError } from '../collab/repository-config.js';
 import { showTaskConfirm } from './confirm.js';
 import { initSelectDropdowns, niuSelectCaret } from '../../core/select-dropdown.js';
 /* 新版任务界面原型。复用当前任务数据；执行计划只在当前页面会话中保存。 */
 import { escapeHtml } from './ui-utils.js';
-import { TK_STATUSES, tkAddTask, tkCurrentUserId, tkGetTasks, tkPeopleInProject, tkProjectsForCurrentUser, tkUpdateTask, tkProjectById, tkVisibleWorkspaces } from './data.js';
-import { CV_MEMBERS, CV_PROJECTS } from '../collab/data.js';
+import { TK_STATUSES, tkAddTask, tkCurrentUserId, tkGetTasks, tkPeopleInProject, tkProjectsForCurrentUser, tkScopeProjects, tkUpdateTask, tkProjectById, tkVisibleWorkspaces } from './data.js';
+import { CV_MEMBERS, CV_PROJECTS, isWsHost } from '../collab/data.js';
 import { defaultStageAssigneeId } from './stage-owner.js';
 import { tbTeamStages } from '../collab/tb-core.js';
 import { TEAMS } from '../expert/store.js';
@@ -59,7 +59,7 @@ function stageOwner(project, people, stageName) {
 }
 /* 所属空间下拉只列开发项目（Manage 的会议、预算等普通空间不列）；校验和已有任务仍按全部可见项目 */
 const devProjects = () => tkProjectsForCurrentUser().filter(ldIsDevProject);
-const projectName = id => tkProjectsForCurrentUser().find(project => project.id === id)?.name || '项目';
+const projectName = id => tkScopeProjects().find(project => project.id === id)?.name || '项目';
 const personName = (projectId, id, fallback = '待分配') => tkPeopleInProject(projectId).find(person => person.id === id)?.name || fallback;
 const hasTaskStarted = task => !['planned', 'backlog'].includes(task.status)
   || !['planned', 'backlog'].includes(task.initialStatus || task.status)
@@ -121,11 +121,14 @@ function openProjectPopup() {
 
 function renderWorkspaceOptions(selected = '') {
   const p = tkProjectById(selectedProjectId);
-  byId('niuWorkspace').innerHTML = '<option value="">' + WS_DEFAULT_NAME + '</option>' + (p ? tkVisibleWorkspaces(p).map(row => '<option value="' + escapeHtml(row.ws.id) + '">' + escapeHtml(wsPathNames(p, row.ws.id).join(' / ')) + '</option>').join('') : '');
-  byId('niuWorkspace').value = p && tkVisibleWorkspaces(p).some(row => row.ws.id === selected) ? selected : '';
+  /* 独立工作区容器没有默认工作区，只列可见的工作区 */
+  const rows = p ? tkVisibleWorkspaces(p) : [], host = isWsHost(p);
+  byId('niuWorkspace').innerHTML = (host || !p ? '' : '<option value="">' + escapeHtml(p.name) + '</option>') + rows.map(row => '<option value="' + escapeHtml(row.ws.id) + '">' + escapeHtml(wsPathNames(p, row.ws.id).join(' / ')) + '</option>').join('');
+  byId('niuWorkspace').value = rows.some(row => row.ws.id === selected) ? selected : host && rows.length ? rows[0].ws.id : '';
   byId('niuWorkspace').disabled = !p;
   /* 空间下有其他工作区时，新建任务直接选工作区（默认工作区与其他工作区平级）；编辑和没有工作区的空间仍显示所属空间 */
-  const showWorkspace = editingTaskId === null && !!p && tkVisibleWorkspaces(p).length > 0;
+  /* 独立工作区的任务没有所属空间，编辑时也显示所属工作区 */
+  const showWorkspace = !!p && (host || editingTaskId === null && rows.length > 0);
   byId('niuWorkspace').closest('.niu-field').hidden = !showWorkspace;
   byId('niuProjectTrigger').closest('.niu-field').hidden = showWorkspace;
   renderWorkspaceRepoHint();
@@ -345,7 +348,7 @@ function fillTeamOptions(preferred, issueType) {
 }
 
 export function openNewIssueCreate(projectId) {
-  const projects = tkProjectsForCurrentUser();
+  const projects = tkScopeProjects();
   if (!projects.length) { toast('请先加入空间再创建任务', 'warning'); return; }
   closeOverlays();
   activePlanScope = 'create';
@@ -408,7 +411,7 @@ export function openNewIssueCopy(taskId) {
 export function openNewIssueEdit(taskId) {
   const task = tkGetTasks().find(item => item.id === Number(taskId));
   if (!task) { toast('未找到任务', 'warning'); return; }
-  const projects = tkProjectsForCurrentUser();
+  const projects = tkScopeProjects();
   if (!projects.some(project => project.id === task.project)) { toast('未加入该项目，无法编辑任务', 'warning'); return; }
   closeOverlays();
   activePlanScope = 'create';
@@ -445,7 +448,7 @@ function taskInfoValidationFields() {
   return [
     {input:byId('niuTitle'), control:byId('niuTitle'), valid:!!byId('niuTitle').value.trim()},
     {input:byId('niuDescription'), control:byId('niuDescription'), valid:!!byId('niuDescription').value.trim()},
-    {input:byId('niuProject'), control:byId('niuProjectTrigger'), valid:tkProjectsForCurrentUser().some(item => item.id === byId('niuProject').value)},
+    {input:byId('niuProject'), control:byId('niuProjectTrigger'), valid:tkScopeProjects().some(item => item.id === byId('niuProject').value)},
     {input:byId('niuTeam'), control:byId('niuTeam').nextElementSibling || byId('niuTeam'), valid:!!byId('niuTeam').value},
     {input:byId('niuType'), control:byId('niuType').nextElementSibling, valid:!!byId('niuType').value},
   ];
@@ -483,7 +486,7 @@ function taskSaveMessage(project, stages) {
 }
 
 function createTask(startNow) {
-  if (!byId('niuTeam').value) { toast(capabilityOptions(tkProjectById(selectedProjectId),byId('niuWorkspace').value).some(row => !row.personal && row.kind === 'team') ? '请选择智能体团队' : '当前工作区尚无可用智能体团队，请联系管理员在「设置 → 智能体与团队」添加','warning'); selectCreateTab('info'); byId('niuTeam').focus(); return; }
+  if (!byId('niuTeam').value) { toast(capabilityOptions(tkProjectById(selectedProjectId),byId('niuWorkspace').value).some(row => !row.personal && row.kind === 'team') ? '请选择开发智能体团队' : '当前工作区尚无可用开发智能体团队，请联系管理员在「设置 → 智能体」添加','warning'); selectCreateTab('info'); byId('niuTeam').focus(); return; }
   if (!validateTaskInfo()) return;
   const title = byId('niuTitle').value.trim();
   const description = byId('niuDescription').value.trim();

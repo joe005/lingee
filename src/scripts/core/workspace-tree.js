@@ -49,15 +49,14 @@ export function wsTaskInScope(project, task, id) {
   if (id === WS_DEFAULT_FILTER) return !!task && !task.workspaceId;
   return !!task && task.workspaceId === id;
 }
-/* 范围名称：'' 为默认工作区 */
+/* 范围名称：'' 为空间根。老数据在 Build 里默认就是一个与空间同名的工作区（2026-11-05），名称随空间同步 */
 export function wsScopeName(project, id) {
   var ws = id ? wsById(project, id) : null;
-  return ws ? ws.name : WS_DEFAULT_NAME;
+  return ws ? ws.name : project && project.name ? project.name : WS_DEFAULT_NAME;
 }
-/* 「空间 › 工作区」标签；空间还没有其他工作区时只显示空间 */
+/* 「空间 › 工作区」标签；空间根的任务属于与空间同名的工作区，只显示空间名 */
 export function wsTaskLabel(project, task) {
   if (!project) return '';
   var ws = task && task.workspaceId ? wsById(project, task.workspaceId) : null;
-  if (ws) return project.name + ' › ' + ws.name;
-  return wsList(project).length ? project.name + ' › ' + WS_DEFAULT_NAME : project.name;
+  return ws ? project.name + ' › ' + ws.name : project.name;
 }

@@ -196,6 +196,7 @@ export function initTeamModal() {
     teamModal.addEventListener('click',function(e){
       if(e.target===teamModal){ if(teamDraft&&!teamDraft.preset&&teamEditMode)hideAssetEditorPanel();else teamModal.classList.remove('show'); return; }
       var n;
+      if(e.target.closest('[data-team-detail-close]')){teamModal.classList.remove('show');return;}
       if(e.target.closest('[data-team-detail-edit]')){$('#teamEditBtn').click();return;}
       if(e.target.closest('[data-team-detail-call]')){$('#teamCallBtn').click();return;}
       if(e.target.closest('[data-team-detail-submit]')){$('#teamViewSubmitBtn').click();return;}

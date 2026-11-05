@@ -152,6 +152,14 @@ function refreshAccess(){
   $('#platformImport').classList.toggle('hidden',!canImport());
   renderCards();
 }
+/* 上架范围（企业自建内容）：全企业＝上架后全员可在「更多」中安装使用；
+   工作区可用＝不进入「更多」，只能由工作区管理员在「设置 › 智能体」中添加，添加后该工作区成员可用。默认全企业 */
+export const PUBLISH_SCOPES={tenant:'全企业',workspace:'工作区可用'};
+export function publishScopeHtml(current='tenant'){
+  const option=(value,title,desc)=>`<label class="platform-scope-option"><input type="radio" name="platformPublishScope" value="${value}"${current===value?' checked':''}><span><strong>${title}</strong><small>${desc}</small></span></label>`;
+  return `<fieldset class="platform-scope"><legend>上架范围</legend>${option('tenant','全企业','上架后企业内全员可在「更多」中安装使用')}${option('workspace','工作区可用','不进入「更多」，由工作区管理员在「设置 › 智能体」中添加后，该工作区成员可用')}</fieldset>`;
+}
+export function readPublishScope(){return document.querySelector('input[name="platformPublishScope"]:checked')?.value==='workspace'?'workspace':'tenant';}
 export function assetReviewDialog(title,body,onConfirm,confirmText='确认',options={}){
   $('#assetRejectButton')?.remove();
   $('#platformDialog').dataset.assetDialog=options.style||'';
@@ -270,9 +278,10 @@ function publishPending(id){
     },'确认提交');
   }
   if(m.kind==='team')for(const memberId of row.data.members||[]){const expertId=key('expert',memberId);if(meta[expertId]?.status!=='online'||!active(expertId))return assetReviewDialog('无法上架',`<p>引用的成员 ${xesc(memberId)} 尚未上架。</p>`,null,'知道了');}
-  assetReviewDialog(`审核 V${row.version}`,`<p>将「${xesc(row.data.name)}」V${row.version} 上架。客户端卡片会自动提示可升级到这个版本。</p><p class="platform-dialog-note">更新说明：${xesc(row.note)}</p>`,()=>{
+  assetReviewDialog(`审核 V${row.version}`,`<p>将「${xesc(row.data.name)}」V${row.version} 上架。客户端卡片会自动提示可升级到这个版本。</p><p class="platform-dialog-note">更新说明：${xesc(row.note)}</p>${m.tenantId?publishScopeHtml(m.scope||'tenant'):''}`,()=>{
     if(!canManage(m))return;
-    const old=clone(m);m.activeVersion=row.version;m.pendingVersion='';m.reviewSubmitted=false;m.status='online';m.modified=now();
+    const scope=m.tenantId?readPublishScope():'tenant';
+    const old=clone(m);m.activeVersion=row.version;m.pendingVersion='';m.reviewSubmitted=false;m.status='online';m.modified=now();if(m.tenantId)m.scope=scope;
     if(!persist()){meta[id]=old;return assetReviewDialog('上架失败','<p>浏览器存储不可用，请重试。</p>',null,'关闭');}
     assetReviewClose();renderCards();
   },'审核通过并上架');
@@ -591,7 +600,7 @@ export function cloudCatalog(tenantId){
       const aTime=Date.parse(a.modified)||0,bTime=Date.parse(b.modified)||0;
       return bTime-aTime||String(bId).localeCompare(String(aId));
     })
-    .map(([id,item])=>({key:id,kind:item.kind,data:clone(active(id).data),version:active(id).version,note:active(id).note,modified:item.modified||'',installed:installed[id]||''}));
+    .map(([id,item])=>({key:id,kind:item.kind,data:clone(active(id).data),version:active(id).version,note:active(id).note,modified:item.modified||'',installed:installed[id]||'',scope:item.tenantId&&item.scope==='workspace'?'workspace':'tenant'}));
 }
 function cloudInstallRows(id,reinstall=false){
   const rows=new Map();
@@ -664,7 +673,7 @@ export function publishedExpertRef(id){
   const itemKey=key('expert',id),item=meta[itemKey];
   return item?.status==='online'&&active(itemKey)&&availableToClient(item)?{id}:null;
 }
-export function publishReviewedBundle(bundle,note,reviewEntry){
+export function publishReviewedBundle(bundle,note,reviewEntry,scope='tenant'){
   const requestTenant=reviewEntry?.value?.find(row=>row.status==='approved'&&row.bundle===bundle)?.tenantId||bundle[0]?.data.tenantId;
   if(!canApprovePlatformReview({tenantId:requestTenant})||bundle.some(item=>item.data.tenantId!==requestTenant))return '当前账号没有审核权限';
   const oldMeta=clone(meta),oldVersions=clone(versions),numbers={};
@@ -673,7 +682,7 @@ export function publishReviewedBundle(bundle,note,reviewEntry){
     const data=clone(item.data),id=key(item.kind,data.id),number=numbers[id];
     if(item.kind==='team')for(const memberId of data.members||[]){const expertId=key('expert',memberId);if(!numbers[expertId]&&!(meta[expertId]?.status==='online'&&active(expertId))){meta=oldMeta;versions=oldVersions;return '引用的成员尚未发布，无法发布智能体团队';}}
     delete data.memberRefs;
-    meta[id]={kind:item.kind,id:data.id,source:'tenant',tenantId:data.tenantId,status:'online',activeVersion:number,pendingVersion:'',modified:now(),editor:'平台管理员'};
+    meta[id]={kind:item.kind,id:data.id,source:'tenant',tenantId:data.tenantId,status:'online',activeVersion:number,pendingVersion:'',modified:now(),editor:'平台管理员',scope:scope==='workspace'?'workspace':'tenant'};
     (versions[id]||(versions[id]=[])).push({version:number,data,note,at:now(),author:data.by,operator:cvCurrentUserName()});
   }
   if(!persist([reviewEntry])){meta=oldMeta;versions=oldVersions;return '保存失败，发布内容保持原样，请重试';}

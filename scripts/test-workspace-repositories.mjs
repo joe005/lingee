@@ -35,7 +35,7 @@ assert.equal(repositories.buildRepoSave(p,'api',{repositories:[A,B],defaultRepo:
 assert.equal(repositories.buildRepoResolve(p,'api').key,b,'primary repository drives task fallback');
 const source=readFileSync(new URL('../src/scripts/features/collab/local-dev/core.js',import.meta.url),'utf8');
 const names=[...source.matchAll(/export (?:function|var) (\w+)/g)].map(m=>m[1]);
-const dependencies={...repositories,...tree,...git,tkCurrentUserId:()=>currentUser,tkGetTasks:()=>tasks,tkGetPerson:()=>({name:'测试',account:'tester'}),tkProjectById:id=>projects.find(p=>p.id===id),tkProjectsForCurrentUser:()=>projects};
+const dependencies={...repositories,...tree,...git,tkCurrentUserId:()=>currentUser,tkGetTasks:()=>tasks,tkGetPerson:()=>({name:'测试',account:'tester'}),tkProjectById:id=>projects.find(p=>p.id===id),tkProjectsForCurrentUser:()=>projects,tkScopeProjects:()=>projects,tkVisibleWorkspaces:p=>tree.wsFlatTree(p)};
 const core=new Function(...Object.keys(dependencies),source.replace(/^import .*;\n/gm,'').replace(/\bexport /g,'')+'\nreturn {'+names.join(',')+'};')(...Object.values(dependencies));
 assert.equal(core.ldMyDevProjects().length,2,'all repositories listed, even non-default ones');
 assert.equal(core.ldMyDevProjects().find(r=>r.key===a).usages.length,4,'deduplicate repositories across active scopes');
@@ -90,7 +90,7 @@ console.log('多仓库、工作区独立配置、主仓库、兼容迁移、任�
 const viewSource=readFileSync(new URL('../src/scripts/features/collab/basic-settings.js',import.meta.url),'utf8');
 let selectedScope={project:p.id,ws:''};
 const host={innerHTML:'',dataset:{},classList:{toggle(){}},querySelectorAll:()=>[]};
-const viewDeps={...repositories,...tree,ldBindingFor:()=>null,ldEnvironmentId:config=>'repo-env:'+JSON.stringify(config),ldDefaultPath:config=>'~/repos/'+config.name, basicEditable:()=>true, getSpaceScope:()=>selectedScope, wsProjectById:dependencies.tkProjectById,
+const viewDeps={...repositories,...tree,ldBindingFor:()=>null,ldEnvironmentId:config=>'repo-env:'+JSON.stringify(config),ldDefaultPath:config=>'~/repos/'+config.name, basicEditable:()=>true, getSpaceScope:()=>selectedScope, wsProjectById:dependencies.tkProjectById,isWsHost:p=>!!p?.wsHost,wsMappableSpaces:()=>[],wsSpaceOf:p=>p,wsScopePath:(p,ws)=>p.name+' / '+(ws?ws.name:'默认工作区'),
   $:()=>null, initSelectDropdowns:selects=>assert.equal(selects.includes(null),false)};
 const view=new Function(...Object.keys(viewDeps),viewSource.replace(/^import .*;\n/gm,'').replace(/\bexport /g,'')+'\nreturn {renderBasicSettings,repoDirectory,repoLocalTarget,setEditing:index=>{repoEditing=index;},setDraft:value=>{repoDraft=value;}};')(...Object.values(viewDeps));
 view.renderBasicSettings(host,'repo');

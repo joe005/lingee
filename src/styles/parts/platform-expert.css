@@ -218,3 +218,14 @@ body:has(.asset-submit-toast) #toast{max-width:min(960px,calc(100vw - 32px));bor
 #platformDialog .platform-expert-skills .x-skill-copy > span { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; font-size: var(--font-size-14); line-height: 20px; color: var(--text-secondary); }
 #platformDialog .platform-expert-skills .x-skill-empty { color: var(--text-secondary); }
 @media (max-width: 700px) { #platformDialog .platform-expert-skills .x-skill-list { grid-template-columns: minmax(0, 1fr); } }
+
+/* 审核上架：上架范围（全企业 / 工作区可用）单选 */
+.platform-scope { margin: 16px 0 0; padding: 0; border: 0; }
+.platform-scope legend { margin-bottom: 8px; padding: 0; color: var(--text); font-size: var(--font-size-14); font-weight: 500; }
+.platform-scope-option { display: flex; align-items: flex-start; gap: 8px; margin-top: 8px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; }
+.platform-scope-option:has(input:checked) { border-color: var(--brand); background: var(--brand-fill); }
+.platform-scope-option:has(input:focus-visible) { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.platform-scope-option input { flex: none; margin: 3px 0 0; accent-color: var(--brand); }
+.platform-scope-option span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.platform-scope-option strong { color: var(--text); font-size: var(--font-size-14); font-weight: 500; }
+.platform-scope-option small { color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); }

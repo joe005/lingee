@@ -1,7 +1,7 @@
 import { buildRepoList, buildTaskRepoConfig, buildRepoIdentity, buildRepoResolve } from '../repository-config.js';
 import { wsFlatTree, wsPathNames } from '../../../core/workspace-tree.js';
 import { gitRepoProblem } from '../../../core/git-url.js';
-import { tkCurrentUserId, tkGetTasks, tkGetPerson, tkProjectById, tkProjectsForCurrentUser } from '../../tasks-v2/data.js';
+import { tkCurrentUserId, tkGetTasks, tkGetPerson, tkProjectById, tkProjectsForCurrentUser, tkScopeProjects, tkVisibleWorkspaces } from '../../tasks-v2/data.js';
 
 /* 本地开发 · 数据核心：本机状态存储、仓库解析、Git 账号、空间就绪判断、目录绑定与检测结果。
    只放数据和判断，不渲染界面；状态变化后调用 ldRefresh() 广播 lingee:local-dev-changed，
@@ -308,9 +308,11 @@ export function ldIsDevProject(project) { return !!project && (project.space !==
 /* 按规范化仓库聚合当前用户的有效开发范围，避免重复初始化。 */
 export function ldMyDevProjects() {
   var groups = new Map();
-  tkProjectsForCurrentUser().filter(ldIsDevProject).forEach(function (p) {
+  tkScopeProjects().filter(ldIsDevProject).forEach(function (p) {
     if (p.status === 'archived') return;
-    [{ id:'', name:p.name }].concat(wsFlatTree(p).map(function (row) { return { id:row.ws.id, name:p.name + ' / ' + wsPathNames(p, row.ws.id).join(' / ') }; })).forEach(function (scope) {
+    /* 独立工作区容器没有根范围，只取我能看到的工作区 */
+    var rows = p.wsHost ? tkVisibleWorkspaces(p) : wsFlatTree(p);
+    (p.wsHost ? [] : [{ id:'', name:p.name }]).concat(rows.map(function (row) { return { id:row.ws.id, name:p.wsHost ? row.ws.name : p.name + ' / ' + wsPathNames(p, row.ws.id).join(' / ') }; })).forEach(function (scope) {
       buildRepoList(p, scope.id).repositories.forEach(function (config) {
         var key = ldRemoteKey(config.repo);
         if (!groups.has(key)) groups.set(key, Object.assign({}, config, {id:ldEnvironmentId(config), usages:[]}));

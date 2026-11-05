@@ -5,17 +5,20 @@ import { initSelectDropdowns } from '../../core/select-dropdown.js';
 import { $ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
 import { requestDeleteConfirmation } from '../../core/delete-confirm.js';
-import { WS_DEFAULT_NAME, wsById } from '../../core/workspace-tree.js';
+import { wsById } from '../../core/workspace-tree.js';
 import { CV_MEMBERS } from './data.js';
 import { getSpaceScope, setSpaceScope } from '../tasks-v2/page/space-filter.js';
 import { mgrCurrentPersonId } from '../manager/data.js';
-import { personName, spaceMemberIds, wsAdminIds, wsDelete, wsDeleteBlockReason, wsLeave, wsLeaveBlockReason, wsMemberIds, wsOwnerId, wsProjectById } from '../manager/workspaces.js';
+import { personName, spaceMemberIds, wsAdminIds, wsDelete, wsDeleteBlockReason, wsLeave, wsLeaveBlockReason, wsMappableSpaces, wsMemberIds, wsOwnerId, wsProjectById, wsScopePath, wsSpaceOf } from '../manager/workspaces.js';
+import { isWsHost } from './data.js';
 import { basicAddMember, basicRepoConfig, basicEditable, basicRemoveMember, basicSaveGeneral, basicSaveRepo } from './basic-settings-data.js';
 /* 当前空间 / 工作区的基本设置，顶部切换器决定范围；只渲染当前分类。 */
 var currentTab = 'general';
 var memberPage = 1;
 var memberPageSize = 10;
 var memberScope = '';
+var memberFilter = '';
+var memberPicked = [];   /* 添加成员：搜索结果中已勾选、待添加的人员（可多选，换搜索词保留） */   /* 成员列表搜索词：按姓名、邮箱、手机号、工号或部门筛选当前成员 */
 function esc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]; }); }
 /* '' 为默认工作区（空间根） */
 function scope() { var s = getSpaceScope(), p = wsProjectById(s.project); return { p:p, ws:p ? wsById(p, s.ws) : null }; }
@@ -27,13 +30,29 @@ function field(id, label, value, disabled, multiline, max) {
 function head(title, subtitle, save) {
   return '<div class="cv-basic-heading"><div><h2>' + title + '</h2>' + (subtitle ? '<p>' + esc(subtitle) + '</p>' : '') + '</div>' + (save ? '<button type="submit" class="ld-set-btn ld-set-btn--primary">保存</button>' : '') + '</div>';
 }
+/* 关联管理空间：独立工作区可选一个 Manage 开发空间或不关联；空间下的工作区固定为所在空间 */
+function mappingField(p, ws, editable) {
+  if (!isWsHost(p)) return field('cvBasicSpaceFixed', '关联管理空间', p.name, true, false, 60);
+  var current = wsSpaceOf(p, ws);
+  var options = wsMappableSpaces();
+  if (current && !options.some(function (s) { return s.id === current.id; })) options = [current].concat(options);
+  return '<div class="cv-basic-field shared-select-host"><label for="cvBasicSpace">关联管理空间</label><select id="cvBasicSpace"' + (editable ? '' : ' disabled') + '>' +
+    '<option value="">不关联</option>' + options.map(function (s) { return '<option value="' + esc(s.id) + '"' + (current && current.id === s.id ? ' selected' : '') + '>' + esc(s.name) + '</option>'; }).join('') + '</select></div>';
+}
+function mappingNote(p, ws) {
+  if (!ws) return '';   /* 空间根另有说明 */
+  return '<p class="cv-basic-note">' + (isWsHost(p)
+    ? '对应 Manage 的开发空间，一个工作区只能关联一个。关联后在顶部切换器中归到该空间下，空间负责人和管理员可以查看本工作区的任务；不关联时平铺显示。'
+    : '该工作区建在空间下，关联固定为所在空间。') + '</p>';
+}
 function general(p, ws) {
   var item = ws || p, editable = basicEditable(p, ws);
-  return '<form data-cv-basic-form="general">' + head('通用', editable ? '维护当前' + (ws ? '工作区' : '空间') + '的基本信息。' : '当前设置只读，请联系负责人或管理员修改。', editable) +
+  return '<form data-cv-basic-form="general">' + head('通用', editable ? (ws ? '维护当前工作区的基本信息。' : '与开发空间同名的工作区，名称、描述和上下文与空间同步。') : '当前设置只读，请联系负责人或管理员修改。', editable) +
     '<div class="cv-basic-card">' + field('cvBasicName', '名称', item.name, !editable, false, ws ? 30 : 60) +
     field('cvBasicDesc', '描述', item.desc || '', !editable, true, 200) +
-    (ws ? '' : field('cvBasicInstruction', '上下文', p.instruction || '', !editable, true, 10000)) + '</div>' +
-    (!ws ? '<p class="cv-basic-note">上下文作为空间指令，为智能体提供背景信息。</p>' : '') + '<p class="cv-basic-error" role="alert" hidden></p></form>' + (ws ? leaveSection(p, ws) : '');
+    (ws ? '' : field('cvBasicInstruction', '上下文', p.instruction || '', !editable, true, 10000)) +
+    mappingField(p, ws, editable) + '</div>' +
+    (!ws ? '<p class="cv-basic-note">上下文作为空间指令，为智能体提供背景信息。</p>' : mappingNote(p, ws)) + '<p class="cv-basic-error" role="alert" hidden></p></form>' + (ws ? leaveSection(p, ws) : '');
 }
 /* 高级选项：负责人只显示删除，普通成员只显示离开；不满足条件时按钮禁用并说明原因 */
 function dangerRow(title, text, reason, attr, label) {
@@ -142,24 +161,31 @@ function candidateHtml(p, ws, query) {
   var matches = memberPool(p, ws).filter(function (m) {
     return [m.name, m.email, m.phone, m.employeeId, m.id].some(function (v) { return String(v || '').toLocaleLowerCase().includes(q); });
   });
-  return matches.length ? matches.map(function (m) { return '<button type="button" role="option" aria-selected="false" data-cv-member-pick="' + esc(m.id) + '"><span class="cv-basic-avatar">' + esc(m.name.slice(0, 1)) + '</span><span><strong>' + esc(m.name) + '</strong><small>' + esc(m.email || m.dept || '') + '</small></span></button>'; }).join('') : '<p class="cv-basic-note">没有匹配的可添加成员</p>';
+  return matches.length ? matches.map(function (m) { var on = memberPicked.includes(m.id); return '<label class="cv-member-option" role="option" aria-selected="' + on + '"><input type="checkbox" data-cv-member-pick value="' + esc(m.id) + '"' + (on ? ' checked' : '') + '><span class="cv-basic-avatar">' + esc(m.name.slice(0, 1)) + '</span><span><strong>' + esc(m.name) + '</strong><small>' + esc(m.email || m.dept || '') + '</small></span></label>'; }).join('') : '<p class="cv-basic-note">没有匹配的可添加成员</p>';
 }
+function addLabel() { return memberPicked.length ? '添加（' + memberPicked.length + '）' : '添加'; }
 function memberPager(total, pages) {
   return '<nav class="cv-member-pagination" aria-label="成员分页"><span>共 ' + total + ' 位成员</span><label>每页 <span class="shared-select-host cv-member-size-host"><select id="cvMemberPageSize" aria-label="每页成员数">' + [10, 20, 50].map(function (size) { return '<option value="' + size + '"' + (size === memberPageSize ? ' selected' : '') + '>' + size + '</option>'; }).join('') + '</select></span> 条</label><div><button type="button" class="ld-space-btn" data-cv-member-page="' + (memberPage - 1) + '"' + (memberPage <= 1 ? ' disabled' : '') + '>上一页</button><span class="cv-member-page-status" tabindex="-1" aria-live="polite">' + memberPage + ' / ' + pages + '</span><button type="button" class="ld-space-btn" data-cv-member-page="' + (memberPage + 1) + '"' + (memberPage >= pages ? ' disabled' : '') + '>下一页</button></div></nav>';
 }
 function members(p, ws) {
-  var editable = basicEditable(p, ws), ids = ws ? wsMemberIds(p, ws) : spaceMemberIds(p);
+  var editable = basicEditable(p, ws), all = ws ? wsMemberIds(p, ws) : spaceMemberIds(p);
+  var fq = memberFilter.trim().toLocaleLowerCase();
+  var ids = !fq ? all : all.filter(function (id) {
+    var m = CV_MEMBERS.find(function (person) { return person.id === id; }) || { name: personName(id) };
+    return [m.name, m.email, m.phone, m.employeeId, m.dept, m.id].some(function (v) { return String(v || '').toLocaleLowerCase().includes(fq); });
+  });
   var pages = Math.max(1, Math.ceil(ids.length / memberPageSize));
   memberPage = Math.min(Math.max(1, memberPage), pages);
   var pageIds = ids.slice((memberPage - 1) * memberPageSize, memberPage * memberPageSize);
   var owner = ws ? wsOwnerId(p, ws) : (CV_MEMBERS.find(function (m) { return m.name === p.owner; }) || {}).id;
-  return '<div class="cv-basic-heading"><div><h2>成员</h2></div>' + (editable ? '<button type="button" class="ld-set-btn ld-set-btn--primary" data-cv-member-open aria-expanded="false" aria-controls="cvBasicMemberForm">添加成员</button>' : '') + '</div>' +
-    (editable ? '<form id="cvBasicMemberForm" class="cv-basic-add" data-cv-basic-form="add" hidden><div class="cv-member-search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="m15 15 6 6"/></svg><input type="search" id="cvBasicMemberSearch" placeholder="搜索姓名、邮箱、手机号或工号" aria-label="搜索要添加的成员" aria-controls="cvBasicMemberResults" aria-expanded="false" autocomplete="off"><input type="hidden" id="cvBasicMember"><div class="cv-member-results" id="cvBasicMemberResults" role="listbox" aria-label="可添加成员" hidden></div></div><span class="shared-select-host cv-member-role-host"><select id="cvBasicMemberRole" aria-label="成员角色"><option value="member">成员</option>' + '<option value="admin">管理员</option>' + '</select></span><button type="submit" class="ld-set-btn ld-set-btn--primary" id="cvBasicMemberAdd" disabled>添加</button><p class="cv-basic-error" role="alert" hidden></p></form>' : '<p class="cv-basic-note">当前成员设置只读，请联系负责人或管理员修改。</p>') +
+  var filterBox = '<label class="cv-member-search cv-member-filter"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="m15 15 6 6"/></svg><input type="search" id="cvMemberFilter" placeholder="搜索成员" aria-label="搜索当前成员" autocomplete="off" value="' + esc(memberFilter) + '"></label>';
+  return '<div class="cv-basic-heading"><div><h2>成员</h2></div><div class="cv-member-tools">' + filterBox + (editable ? '<button type="button" class="ld-set-btn ld-set-btn--primary" data-cv-member-open aria-expanded="false" aria-controls="cvBasicMemberForm">添加成员</button>' : '') + '</div></div>' +
+    (editable ? '<form id="cvBasicMemberForm" class="cv-basic-add" data-cv-basic-form="add" hidden><div class="cv-member-search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="m15 15 6 6"/></svg><input type="search" id="cvBasicMemberSearch" placeholder="搜索姓名、邮箱、手机号或工号" aria-label="搜索要添加的成员" aria-controls="cvBasicMemberResults" aria-expanded="false" autocomplete="off"><div class="cv-member-results" id="cvBasicMemberResults" role="listbox" aria-label="可添加成员" hidden></div></div><span class="shared-select-host cv-member-role-host"><select id="cvBasicMemberRole" aria-label="成员角色"><option value="member">成员</option>' + '<option value="admin">管理员</option>' + '</select></span><button type="submit" class="ld-set-btn ld-set-btn--primary" id="cvBasicMemberAdd"' + (memberPicked.length ? '' : ' disabled') + '>' + addLabel() + '</button><p class="cv-basic-error" role="alert" hidden></p></form>' : '<p class="cv-basic-note">当前成员设置只读，请联系负责人或管理员修改。</p>') +
     '<div class="cv-basic-card cv-member-list-scroll" role="region" aria-label="成员列表" tabindex="0"><ul class="cv-basic-members">' + pageIds.map(function (id) {
       var m = CV_MEMBERS.find(function (person) { return person.id === id; }) || { name:personName(id) };
       var role = id === owner ? '负责人' : (ws ? wsAdminIds(ws) : p.adminIds || []).includes(id) ? '管理员' : '成员';
       return '<li><span class="cv-basic-avatar">' + esc(m.name.slice(0, 1)) + '</span><div class="cv-basic-member-name"><div class="cv-member-identity"><strong>' + esc(m.name) + '</strong><span>' + esc(m.email || '') + '</span></div><div class="cv-member-tags">' + (m.dept ? '<span>' + esc(m.dept) + '</span>' : '') + '<span>' + role + '</span></div></div>' + (editable && id !== owner ? '<details class="cv-member-more"><summary aria-label="' + esc(m.name) + '的更多操作">···</summary><button type="button" class="mgr-ws-text-btn" data-cv-basic-remove="' + esc(id) + '">移出成员</button></details>' : '') + '</li>';
-    }).join('') + '</ul>' + (!ids.length ? '<p class="cv-basic-note">暂无成员</p>' : '') + '</div>' + memberPager(ids.length, pages);
+    }).join('') + '</ul>' + (!ids.length ? '<p class="cv-basic-note">' + (fq ? '没有匹配「' + esc(memberFilter.trim()) + '」的成员' : '暂无成员') + '</p>' : '') + '</div>' + memberPager(ids.length, pages);
 }
 export function renderBasicSettings(host, tab) {
   currentTab = tab;
@@ -168,10 +194,14 @@ export function renderBasicSettings(host, tab) {
   host.classList.toggle('is-member-list', tab === 'members');
   var s = scope();
   var nextScope = s.p ? s.p.id + ':' + (s.ws ? s.ws.id : '') : '';
-  if (nextScope !== memberScope) { memberScope = nextScope; memberPage = 1; }
+  if (nextScope !== memberScope) { memberScope = nextScope; memberPage = 1; memberFilter = ''; memberPicked = []; }
   if (!s.p) { host.innerHTML = '<div class="cv-wsadmin-empty">请先在页面顶部选择一个空间，再查看设置。</div>'; return; }
-  var path = s.p.name + ' / ' + (s.ws ? s.ws.name : WS_DEFAULT_NAME);
+  var path = wsScopePath(s.p, s.ws);
   host.innerHTML = '<p class="cv-basic-scope" title="' + esc(path) + '">' + esc(path) + '</p>' + (tab === 'repo' ? repo(s.p, s.ws) : tab === 'members' ? members(s.p, s.ws) : general(s.p, s.ws));
+  if (tab === 'general') {
+    var spaceSelect = host.querySelector('#cvBasicSpace');
+    if (spaceSelect instanceof HTMLSelectElement) { initSelectDropdowns([spaceSelect]); spaceSelect.nextElementSibling?.classList.add('shared-select-trigger'); }
+  }
   if (tab === 'members') {
     host.querySelectorAll('#cvBasicMemberRole, #cvMemberPageSize').forEach(function (select) { if (select instanceof HTMLSelectElement) initSelectDropdowns([select]); select.nextElementSibling?.classList.add('shared-select-trigger'); });
   }
@@ -263,11 +293,27 @@ export function initBasicSettings(host) {
     results.hidden = false; input.setAttribute('aria-expanded', 'true');
   }
   host.addEventListener('input', function (e) {
+    if (e.target.id === 'cvMemberFilter') {
+      /* 中文输入法组字期间不重绘，组字结束（compositionend）再筛选 */
+      if (!e.isComposing) applyMemberFilter(e.target.value);
+      return;
+    }
     if (e.target.id !== 'cvBasicMemberSearch') return;
-    $('#cvBasicMember').value = ''; $('#cvBasicMemberAdd').disabled = true;
     searchMembers();
   });
-  host.addEventListener('focusin', function (e) { if (e.target.id === 'cvBasicMemberSearch' && !$('#cvBasicMember').value) searchMembers(); });
+  /* 筛选当前成员：重绘后把焦点和光标放回搜索框 */
+  function applyMemberFilter(value) {
+    memberFilter = value; memberPage = 1;
+    renderBasicSettings(host, currentTab);
+    var box = $('#cvMemberFilter');
+    if (box) { box.focus(); box.setSelectionRange(box.value.length, box.value.length); }
+  }
+  host.addEventListener('compositionend', function (e) { if (e.target.id === 'cvMemberFilter') applyMemberFilter(e.target.value); });
+  host.addEventListener('focusin', function (e) { if (e.target.id === 'cvBasicMemberSearch') searchMembers(); });
+  /* 点候选行时不让搜索框失焦：macOS 上点复选框不会获得焦点，失焦判断会把浮层收起，导致勾一下就消失 */
+  host.addEventListener('mousedown', function (e) {
+    if (e.target.closest('#cvBasicMemberResults')) e.preventDefault();
+  });
   host.addEventListener('focusout', function (e) {
     if (e.target.closest('.cv-member-search') && !e.target.closest('.cv-member-search').contains(e.relatedTarget)) {
       $('#cvBasicMemberResults').hidden = true; $('#cvBasicMemberSearch').setAttribute('aria-expanded', 'false');
@@ -283,7 +329,29 @@ export function initBasicSettings(host) {
       var at = options.indexOf(document.activeElement);
       if (options.length) options[(at + (e.key === 'ArrowDown' ? 1 : options.length - 1) + options.length) % options.length].focus();
     }
-    if (e.key === 'Enter' && e.target.id === 'cvBasicMemberSearch') e.preventDefault();
+    if (e.key === 'Enter' && e.target.id === 'cvBasicMemberSearch') { e.preventDefault(); if (memberPicked.length) $('#cvBasicMemberForm').requestSubmit(); }
+  });
+  /* 添加成员：按所选角色逐个写入勾选的人，任一失败即停并提示，已成功的保留 */
+  var addedCount = 0;
+  function addPickedMembers(s) {
+    if (!memberPicked.length) return '请先在搜索结果中勾选人员';
+    var role = $('#cvBasicMemberRole').value;
+    addedCount = 0;
+    for (var i = 0; i < memberPicked.length; i++) {
+      var err = basicAddMember(s.p, s.ws, memberPicked[i], role);
+      if (err) { memberPicked = memberPicked.slice(i); return addedCount ? '已添加 ' + addedCount + ' 位，' + personName(memberPicked[0]) + '：' + err : err; }
+      addedCount += 1;
+    }
+    memberPicked = [];
+    return '';
+  }
+  host.addEventListener('change', function (e) {
+    if (!e.target.matches('[data-cv-member-pick]')) return;
+    var id = e.target.value, at = memberPicked.indexOf(id);
+    if (e.target.checked && at < 0) memberPicked.push(id);
+    if (!e.target.checked && at >= 0) memberPicked.splice(at, 1);
+    e.target.closest('[role="option"]')?.setAttribute('aria-selected', String(e.target.checked));
+    var btn = $('#cvBasicMemberAdd'); if (btn) { btn.disabled = !memberPicked.length; btn.textContent = addLabel(); }
   });
   host.addEventListener('submit', function (e) {
     var form = e.target.closest('[data-cv-basic-form]');
@@ -297,8 +365,9 @@ export function initBasicSettings(host) {
       const directoryError = !directory.path ? '请选择自定义工作目录' : ldCheckDir(directory.target,directory.path);
       if (directoryError) { const note = form.querySelector('.cv-basic-error'); note.textContent = directoryError; note.hidden = false; return; }
     }
-    var error = kind === 'general' ? basicSaveGeneral(s.p, s.ws, { name:$('#cvBasicName').value, desc:$('#cvBasicDesc').value, instruction:$('#cvBasicInstruction')?.value || '' })
-      : kind === 'repo' ? basicSaveRepo(s.p, s.ws, repoDraft) : basicAddMember(s.p, s.ws, $('#cvBasicMember').value, $('#cvBasicMemberRole').value);
+    var spaceSelect = $('#cvBasicSpace');
+    var error = kind === 'general' ? basicSaveGeneral(s.p, s.ws, Object.assign({ name:$('#cvBasicName').value, desc:$('#cvBasicDesc').value, instruction:$('#cvBasicInstruction')?.value || '' }, spaceSelect && !spaceSelect.disabled ? { spaceId: spaceSelect.value } : {}))
+      : kind === 'repo' ? basicSaveRepo(s.p, s.ws, repoDraft) : addPickedMembers(s);
     if (error) { var note = form.querySelector('.cv-basic-error'); note.textContent = error; note.hidden = false; return; }
     if (directory) {
       const binding = ldBindingFor(directory.target);
@@ -308,10 +377,11 @@ export function initBasicSettings(host) {
         return;
       }
     }
+    if (kind === 'add') memberFilter = '';
     if (kind === 'add') memberPage = Math.max(1, Math.ceil((s.ws ? wsMemberIds(s.p, s.ws) : spaceMemberIds(s.p)).length / memberPageSize));
     if (kind === 'repo') repoDraft = null;
     renderBasicSettings(host, currentTab);
-    toast(kind === 'add' ? '已添加成员' : '设置已保存', 'success');
+    toast(kind === 'add' ? '已添加 ' + addedCount + ' 位成员' : '设置已保存', 'success');
   });
   host.addEventListener('click', async function (e) {
 
@@ -374,17 +444,6 @@ export function initBasicSettings(host) {
       open.setAttribute('aria-expanded', String(!form.hidden));
       if (!form.hidden) $('#cvBasicMemberSearch').focus();
       return;
-    }
-    var pick = e.target.closest('[data-cv-member-pick]');
-    if (pick) {
-      var selected = CV_MEMBERS.find(function (m) { return m.id === pick.dataset.cvMemberPick; });
-      if (!selected) return;
-      $('#cvBasicMember').value = selected.id;
-      $('#cvBasicMemberSearch').value = selected.name;
-      $('#cvBasicMemberResults').hidden = true;
-      $('#cvBasicMemberSearch').setAttribute('aria-expanded', 'false');
-      $('#cvBasicMemberAdd').disabled = false;
-      $('#cvBasicMemberRole').focus(); return;
     }
     var del = e.target.closest('[data-cv-ws-delete]');
     if (del) {

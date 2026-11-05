@@ -1,4 +1,4 @@
-import { CV_MEMBERS, CV_PROJECTS, cvPeopleInProject } from '../../collab/data.js';
+import { CV_MEMBERS, CV_PROJECTS, cvPeopleInProject, isWsHost, wsHost } from '../../collab/data.js';
 import { getLoginPersonId } from '../../login.js';
 import { TK_DEMO_PERSON_IDS, TK_FILTER_FIELDS, TK_PEOPLE, TK_PERSON_COLORS } from './constants.js';
 import { externalProjects } from './external-projects.js';
@@ -26,7 +26,8 @@ function tkSyncPeople() {
 function tkProjectById(id) {
   if (!id) return undefined;
   return CV_PROJECTS.find(function (row) { return row.id === id; })
-    || (externalProjects() || []).find(function (row) { return row.id === id; });
+    || (externalProjects() || []).find(function (row) { return row.id === id; })
+    || (isWsHost({ id: id }) ? wsHost() : undefined);
 }
 function tkPeopleInProject(projectId) {
   var project = tkProjectById(projectId);

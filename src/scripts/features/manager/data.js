@@ -1,4 +1,4 @@
-import { CV_MEMBERS, cvCurrentUserName, cvPersonById } from '../collab/data.js';
+import { CV_MEMBERS, CV_PROJECTS, cvCurrentUserName, cvPersonById } from '../collab/data.js';
 import { EX, EXPERTS } from '../expert/data.js';
 import { TEAMS, teamById } from '../expert/store.js';
 import { TK_TICKET_CODE_STATS } from '../tasks-v2/ticket-demo.js';
@@ -750,6 +750,20 @@ function applyWorkspaceDemo() {
 }
 
 /* 在开发板块任务模块初始化前调用：先注册管理项目，开发板块才能识别管理项目下的任务与成员 */
+/* 工作区没有层级后，切换器里的顶级分组都是空间（2026-11-05）：协作开发预置的演示空间在 Manage 没有对应记录时，
+   按同一 id 补一条开发空间，任务按 id 共用；Build 侧仍以协作开发的那条为准（见 tkAllProjects）。
+   补出的记录不落库，每次加载重建；在 Manage 删除后不再补，改动后按普通空间保存。 */
+var BUILD_SPACE_FIELDS = ['id', 'name', 'desc', 'goal', 'dot', 'status', 'priority', 'owner', 'repo', 'baseBranch', 'start', 'end', 'milestones', 'adminIds', 'code', 'template'];
+function ensureBuildSpaces(deleted) {
+  var skip = Array.isArray(deleted) ? deleted : [];
+  CV_PROJECTS.forEach(function (cv) {
+    if (!cv || !cv.id || cv.status === 'archived' || skip.includes(cv.id) || PROJECTS.some(function (p) { return p.id === cv.id; })) return;
+    var copy = { space: 'manage', containsRd: true, fromBuild: true, projectExperts: [], members: (cv.members || []).slice() };
+    BUILD_SPACE_FIELDS.forEach(function (key) { if (cv[key] !== undefined) copy[key] = key === 'milestones' || key === 'adminIds' ? cv[key].slice() : cv[key]; });
+    if (!copy.status) copy.status = 'in_progress';
+    PROJECTS.push(copy);
+  });
+}
 export function initManagerData() {
   PROJECTS = SEED_PROJECTS.map(function (p) {
     return Object.assign({ space: 'manage', projectExperts: [] }, p, { members: p.members.slice() });
@@ -790,6 +804,7 @@ export function initManagerData() {
     mgrSaveTasks();
   }
 
+  ensureBuildSpaces(deleted);
   normalizeDevTasks();
   applyWorkspaceDemo();
 

@@ -51,12 +51,12 @@ function cvRenderExperts(){
   const extra=workspaceExtraCards('expert',EXPERTS,cvExpertKw,cvExpertLayer);
   /* 搜索把结果筛空时要说清楚。 */
   if(cvExpertKw.trim() && !extra && !groups.some(function(g){return g.list.length})){
-    box.innerHTML='<div class="x-empty">没有匹配「'+xesc(cvExpertKw.trim())+'」的智能体</div>';
+    box.innerHTML='<div class="x-empty">没有匹配「'+xesc(cvExpertKw.trim())+'」的开发智能体</div>';
     return;
   }
   var rows=groups.flatMap(function(g){return g.list;});
   var sections=[{title:'个人开发',rows:rows.filter(e=>layerOf('expert',e)==='personal')},{title:'我添加的',rows:rows.filter(e=>layerOf('expert',e)!=='personal'),extra}];
-  box.innerHTML=sections.filter(section=>section.rows.length||section.extra).map(section=>'<section class="asset-list-section"><h2 class="expert-section-title">'+section.title+'</h2><div class="apps-grid">'+section.rows.map(cvBuildExpertCard).join('')+(section.extra||'')+'</div></section>').join('')||'<div class="x-empty">'+(isPersonalAssets('expert') ? '暂无我的智能体，可点击「新建」创建。' : '当前列表没有智能体，可从「更多智能体」添加到当前工作区。')+'</div>';
+  box.innerHTML=sections.filter(section=>section.rows.length||section.extra).map(section=>'<section class="asset-list-section"><h2 class="expert-section-title">'+section.title+'</h2><div class="apps-grid">'+section.rows.map(cvBuildExpertCard).join('')+(section.extra||'')+'</div></section>').join('')||'<div class="x-empty">'+(isPersonalAssets('expert') ? '暂无我的开发智能体，可点击「新建」创建。' : '当前列表没有开发智能体，可从「更多开发智能体」添加到当前工作区。')+'</div>';
 }
 
 /* cvExpertKw 由其它模块写回；import 绑定只读，所以走这个 setter */

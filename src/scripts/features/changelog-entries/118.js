@@ -1,1 +1,1 @@
-export default {"id":"118","date":"2026-11-05","iconBg":"var(--brand-fill)","iconColor":"var(--brand)","type":"功能","module":"工作区与协作开发","author":"wuhc2023","body":"功能·工作区与协作开发：工作区改为空间下单级平铺，明确默认工作区的独立范围，按成员与管理权限隔离工作区任务及可选范围，并同步调整工作区设置、资产入口与方案说明。"};
+export default {"id":"118","date":"2026-11-05","iconBg":"var(--brand-fill)","iconColor":"var(--brand)","type":"功能","module":"工作区与协作开发","author":"wuhc2023","body":"功能·工作区与协作开发：Build 工作区改为单级平铺并支持独立创建、关联 Manage 开发空间，保留与原空间同名的默认工作区，按成员与管理权限隔离任务，并调整创建向导、开发智能体入口及企业资产上架范围。"};

@@ -11,8 +11,4 @@
 
 #view-collab .cv-workspace-origin { color: var(--brand); font-size: var(--font-size-12); line-height: var(--line-height-12); }
 
-#view-collab .cv-local-install { min-height: 28px; padding: 4px 12px; border: 0; border-radius: 8px; background: var(--brand); color: var(--bg); font: inherit; font-size: var(--font-size-12); cursor: pointer; }
-#view-collab .cv-local-install:hover { background: var(--brand-hover); }
-#view-collab .cv-local-install:active { background: var(--brand-active); }
-#view-collab .cv-local-install:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 #view-collab .expert-market-uninstalled > .asset-card-actions { position: absolute; top: 12px; right: 12px; opacity: 1; pointer-events: auto; }

@@ -311,3 +311,13 @@ input[type="search"]::-webkit-search-decoration{-webkit-appearance:none;appearan
 :is(#ntExpertDropdown,#chatExpertDropdown) .chip-faces img{box-sizing:border-box;width:20px;height:20px;object-fit:cover;border:1px solid var(--bg);border-radius:50%;margin:0}
 :is(#ntExpertDropdown,#chatExpertDropdown) .chip-faces img+img{margin-left:-8px}
 :is(#ntExpertDropdown,#chatExpertDropdown) .chip-faces:empty{display:none}
+
+/* 个人开发资产详情底栏：分隔线下右对齐「取消 / 提交审核」，替代原来的提交状态说明卡 */
+#expertModal .asset-detail-review-dock,#teamModal.team-detail-view .asset-detail-review-dock{padding:16px 20px;border-top:1px solid var(--divider)}
+#expertModal .asset-detail-foot,#teamModal.team-detail-view .asset-detail-foot{display:flex;align-items:center;justify-content:flex-end;gap:12px}
+#expertModal .asset-detail-foot-btn,#teamModal.team-detail-view .asset-detail-foot-btn{height:var(--control-h);padding:0 16px;border:1px solid transparent;border-radius:8px;background:none;color:var(--text);font:inherit;font-size:var(--font-size-14);font-weight:500;cursor:pointer}
+#expertModal .asset-detail-foot-btn:hover,#teamModal.team-detail-view .asset-detail-foot-btn:hover{background:var(--hover)}
+#expertModal .asset-detail-foot-btn.primary,#teamModal.team-detail-view .asset-detail-foot-btn.primary{border-color:var(--brand);background:var(--brand);color:var(--bg)}
+#expertModal .asset-detail-foot-btn.primary:hover:not(:disabled),#teamModal.team-detail-view .asset-detail-foot-btn.primary:hover:not(:disabled){background:var(--brand-hover)}
+#expertModal .asset-detail-foot-btn:disabled,#teamModal.team-detail-view .asset-detail-foot-btn:disabled{opacity:.5;cursor:not-allowed}
+#expertModal .asset-detail-foot-btn:focus-visible,#teamModal.team-detail-view .asset-detail-foot-btn:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}

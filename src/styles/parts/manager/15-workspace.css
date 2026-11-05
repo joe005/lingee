@@ -219,3 +219,87 @@
 .mgr-scope .mgr-ws-asset-copy strong { font-weight: 500; }
 .mgr-scope .mgr-ws-asset-copy small, .mgr-scope .mgr-ws-asset-copy > span { color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); overflow-wrap: anywhere; }
 .mgr-scope .mgr-ws-empty { margin: 16px 0; color: var(--text-secondary); font-size: var(--font-size-14); }
+
+
+/* 新建工作区 · 成员步骤：搜索添加（成员 / 管理员），下方为已添加列表，负责人固定在首行 */
+.mgr-scope .mgr-ws-member-add { margin-bottom: 12px; }
+.mgr-scope .mgr-ws-member-search { display: flex; gap: 8px; }
+.mgr-scope .mgr-ws-member-search input {
+  flex: 1; min-width: 0; box-sizing: border-box; height: 34px; padding: 0 10px; border: 1px solid var(--border); border-radius: 8px;
+  background: var(--bg); color: var(--text); font: inherit; font-size: var(--font-size-14);
+}
+.mgr-scope .mgr-ws-member-search input:focus-visible { outline: none; border-color: var(--border-focus); }
+.mgr-scope .mgr-ws-role-host { flex: none; width: 112px; }
+.mgr-scope .mgr-ws-role-host > .shared-select-trigger { box-sizing: border-box; width: 100%; height: 34px; min-height: 34px; border-radius: 8px; }
+.mgr-scope .mgr-ws-candidates { display: flex; flex-direction: column; max-height: 200px; margin-top: 4px; overflow-y: auto; }
+.mgr-scope .mgr-ws-candidates:empty { display: none; }
+.mgr-scope .mgr-ws-candidate {
+  display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 4px 8px; border: none; border-radius: 8px;
+  background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer;
+}
+.mgr-scope .mgr-ws-candidate:hover { background: var(--hover); }
+.mgr-scope .mgr-ws-candidate:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+.mgr-scope .mgr-ws-candidate-copy { display: flex; flex: 1; flex-direction: column; min-width: 0; }
+.mgr-scope .mgr-ws-candidate-copy strong { overflow: hidden; color: var(--text); font-size: var(--font-size-14); font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+.mgr-scope .mgr-ws-candidate-copy small { overflow: hidden; color: var(--text-secondary); font-size: var(--font-size-12); text-overflow: ellipsis; white-space: nowrap; }
+.mgr-scope .mgr-ws-member-list { display: flex; flex-direction: column; max-height: 260px; margin: 0; padding: 4px 0 0; overflow-y: auto; border-top: 1px solid var(--divider); list-style: none; }
+.mgr-scope .mgr-ws-member-list li { display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 0 8px; }
+.mgr-scope .mgr-ws-member-list .mgr-ws-pick-tag { flex: none; }
+
+/* 新建工作区向导略加宽；开发智能体团队步骤：搜索框与「随团队带出」说明 */
+.mgr-scope .mgr-ws-dialog.is-wizard { width: min(640px, calc(100vw - 32px)); }
+.mgr-scope .mgr-ws-asset-search { margin-bottom: 8px; }
+.mgr-scope .mgr-ws-asset-search input {
+  box-sizing: border-box; width: 100%; height: 34px; padding: 0 10px; border: 1px solid var(--border); border-radius: 8px;
+  background: var(--bg); color: var(--text); font: inherit; font-size: var(--font-size-14);
+}
+.mgr-scope .mgr-ws-asset-search input:focus-visible { outline: none; border-color: var(--border-focus); }
+.mgr-scope .mgr-ws-asset-dep { color: var(--brand); font-size: var(--font-size-12); font-style: normal; }
+.mgr-scope .mgr-ws-asset-dep.is-muted { color: var(--text-secondary); }
+.mgr-scope .mgr-ws-pick--asset.is-auto { cursor: default; }
+/* 开发智能体与团队合并步骤：两组共用一个滚动区，组标题分隔 */
+.mgr-scope .mgr-ws-asset-scroll { max-height: 420px; overflow-y: auto; }
+.mgr-scope .mgr-ws-asset-scroll .mgr-ws-asset-list { max-height: none; overflow: visible; }
+.mgr-scope .mgr-ws-asset-title { margin: 12px 0 6px; color: var(--text); font-size: var(--font-size-14); font-weight: 600; }
+.mgr-scope .mgr-ws-asset-title:first-child { margin-top: 4px; }
+/* 新建工作区 · 基准分支：弹窗内下拉统一 10px 内边距会盖住左侧分支图标，这里给图标留出位置（同 Manage 新建空间） */
+.mgr-scope .mgr-ws-dialog .mgr-repo-branch.shared-select-host > .shared-select-trigger { padding-left: 32px; }
+.mgr-scope .mgr-ws-dialog .mgr-repo-branch .mgr-repo-branch-icon { z-index: 1; }
+
+/* 新建工作区向导固定高度：三步共用同一高度，内容在弹窗内滚动，切换步骤和添加成员时窗口不再跳动 */
+.mgr-scope .mgr-ws-dialog.is-wizard .mgr-ws-dialog-body { box-sizing: border-box; height: min(520px, calc(100vh - 180px)); }
+/* 成员候选改为搜索框下的浮层，不再把已添加列表往下挤 */
+.mgr-scope .mgr-ws-member-add { position: relative; }
+.mgr-scope .mgr-ws-member-add .mgr-ws-candidates {
+  position: absolute; top: 100%; left: 0; right: 120px; z-index: 5; max-height: 240px; margin-top: 4px; padding: 4px;
+  border: 1px solid var(--border); border-radius: 8px; background: var(--bg); box-shadow: var(--menu-shadow);
+}
+.mgr-scope .mgr-ws-member-add .mgr-ws-candidates .mgr-ws-empty { padding: 8px; text-align: left; font-size: var(--font-size-12); }
+/* 团队 / 智能体空态：列表内一行紧凑提示，不留大块空白 */
+.mgr-scope .mgr-ws-asset-list .mgr-ws-empty { margin: 0; padding: 10px 12px; border-radius: 8px; background: var(--fill-1); text-align: left; font-size: var(--font-size-12); line-height: var(--line-height-12); }
+/* 成员步骤：搜索框（含候选浮层）+ 角色 + 「添加」；已添加成员行内可改角色 */
+.mgr-scope .mgr-ws-member-input { position: relative; flex: 1; min-width: 0; }
+.mgr-scope .mgr-ws-member-search .mgr-ws-member-input input { width: 100%; }
+.mgr-scope .mgr-ws-member-add .mgr-ws-member-input .mgr-ws-candidates { right: 0; }
+.mgr-scope .mgr-ws-dialog .mgr-ws-member-confirm { flex: none; height: 34px; padding: 0 16px; }
+.mgr-scope .mgr-ws-dialog .mgr-ws-member-confirm:disabled { opacity: .5; cursor: not-allowed; }
+.mgr-scope .mgr-ws-row-role { flex: none; width: 96px; }
+.mgr-scope .mgr-ws-dialog .mgr-ws-row-role > .shared-select-trigger { height: 28px; min-height: 28px; padding: 0 8px; font-size: var(--font-size-12); }
+/* 向导字段间距收紧一档，基本信息一屏放下 */
+.mgr-scope .mgr-ws-dialog.is-wizard .mgr-pe-field { margin-bottom: 12px; }
+.mgr-scope .mgr-ws-dialog.is-wizard .mgr-ws-steps { margin-bottom: 12px; }
+/* 向导内容区不整体滚动：表单撑满固定高度，人员列表、开发智能体团队列表在各自区域内滚动 */
+.mgr-scope .mgr-ws-dialog.is-wizard .mgr-ws-dialog-body { display: flex; flex-direction: column; overflow: hidden; }
+.mgr-scope .mgr-ws-dialog.is-wizard #mgrWsdForm { display: flex; flex: 1; flex-direction: column; min-height: 0; overflow-y: auto; }
+.mgr-scope .mgr-ws-dialog.is-wizard .mgr-ws-member-add,
+.mgr-scope .mgr-ws-dialog.is-wizard .mgr-ws-asset-search,
+.mgr-scope .mgr-ws-dialog.is-wizard .mgr-ws-hint--top { flex: none; }
+.mgr-scope .mgr-ws-dialog.is-wizard .mgr-ws-member-list,
+.mgr-scope .mgr-ws-dialog.is-wizard .mgr-ws-asset-scroll { flex: 1; min-height: 0; max-height: none; overflow-y: auto; }
+.mgr-scope .mgr-ws-dialog.is-wizard .mgr-ws-member-add { z-index: 2; }
+.mgr-scope .mgr-ws-dialog.is-wizard .mgr-ws-steps { flex: none; }
+.mgr-scope .mgr-ws-dialog.is-wizard .mgr-pe-field > label small { color: var(--text-secondary); }
+/* 成员候选多选：每行前置复选框，勾选后点「添加（N）」一次加入 */
+.mgr-scope .mgr-ws-candidate input[type="checkbox"] { flex: none; width: 16px; height: 16px; margin: 0; accent-color: var(--brand); }
+.mgr-scope .mgr-ws-candidate:has(input:checked) { background: var(--brand-fill); }
+.mgr-scope .mgr-ws-candidate:has(input:focus-visible) { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
