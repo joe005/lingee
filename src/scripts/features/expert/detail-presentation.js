@@ -1,12 +1,26 @@
 import { xav, xesc, phraseHtml } from './data.js';
 import { assetSourceBadge, layerOf } from './layers.js';
+import { assetPublicationStatus } from '../collab/expert-market.js';
+import { hasPersonalReviewChanges, latestPersonalReview, reviewedAsset } from './review-state.js';
 import dialogIcon from '../../../assets/figma/expert-assets/dialog.svg';
 
-export function personalReviewStatus(kind,id){
-  try{
-    const rows=JSON.parse(localStorage.getItem('lingee.platform.reviews.v1')||'[]');
-    return rows.filter(row=>row.kind===kind&&row.sourceId===id).at(-1)?.status||'';
-  }catch(_){return '';}
+const REVIEW_STATUS_LABELS={pending:'待审核',approved:'审核通过',rejected:'已驳回',unsubmitted:'未提交'};
+const CARD_STATUS_LABELS={...REVIEW_STATUS_LABELS,modified:'本地有更新',online:'已上架',offline:'已下架'};
+
+function reviewStatus(review){
+  return Object.hasOwn(REVIEW_STATUS_LABELS,review?.status)?review.status:'unsubmitted';
+}
+export function personalReviewBadge(kind,item){
+  if(layerOf(kind,item)!=='personal')return '';
+  const review=latestPersonalReview(kind,item);
+  let status=reviewStatus(review);
+  if(review&&hasPersonalReviewChanges(kind,item,review)){
+    status='modified';
+  }else if(status==='approved'){
+    const asset=reviewedAsset(review);
+    if(asset)status=assetPublicationStatus(kind,asset.id,review.version)||status;
+  }
+  return '<span class="asset-review-badge" data-review-status="'+status+'">'+CARD_STATUS_LABELS[status]+'</span>';
 }
 export function detailIdentityHtml(kind,item,face){
   const personal=layerOf(kind,item)==='personal';
@@ -20,7 +34,7 @@ export function detailIdentityHtml(kind,item,face){
    待审核时按钮显示「已提交审核」并禁用，已驳回可重新提交，审核通过后只留「取消」 */
 export function detailReviewHtml(kind,item){
   if(layerOf(kind,item)!=='personal')return '';
-  const status=personalReviewStatus(kind,item.id),pending=status==='pending',approved=status==='approved';
+  const status=reviewStatus(latestPersonalReview(kind,item)),pending=status==='pending',approved=status==='approved';
   const close=kind==='expert'?'data-x-close':'data-team-detail-close';
   const submit=approved?'':'<button type="button" class="asset-detail-foot-btn primary" '+(kind==='expert'?'data-x-submit':'data-team-detail-submit')+'="'+xesc(item.id)+'"'+(pending?' disabled':'')+'>'+(pending?'已提交审核':status==='rejected'?'重新提交审核':'提交审核')+'</button>';
   return '<div class="asset-detail-foot"><button type="button" class="asset-detail-foot-btn" '+close+'>取消</button>'+submit+'</div>';

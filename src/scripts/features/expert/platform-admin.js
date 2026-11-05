@@ -465,7 +465,13 @@ async function uninstallCloudAsset(itemKey){
   renderExpertChips();
   toast('已卸载「'+name+'」','success');
 }
-setCloudAssetProviders({catalog:cloudCatalog,upgradeBadge:cloudUpgradeBadge});
+function cloudPublicationStatus(id,reviewedVersion){
+  const item=meta[id];
+  if(!item?.activeVersion||!['online','offline'].includes(item.status))return '';
+  if(reviewedVersion&&item.activeVersion!==reviewedVersion)return 'offline';
+  return item.status;
+}
+setCloudAssetProviders({catalog:cloudCatalog,upgradeBadge:cloudUpgradeBadge,publicationStatus:cloudPublicationStatus});
 setCapabilityLocalChecker(localAssetInstallError);
 setCapabilityCatalog(project => cloudCatalog(project?.tenantId || project?.workspace));
 setPersonalAssets(() => ({experts: MY_EXPERTS, teams: TEAMS.filter(team => !team.preset && team.source !== 'tenant'), lookup: id => EX[id] || null}));

@@ -7,10 +7,10 @@ import { CV_WORKSPACES, cvCanAccessWorkspace, cvWorkspace, cvWorkspaceName, cvCu
 import { getPlatformIdentity } from '../login.js';
 import { assetOwnerKey } from './layers.js';
 import { publishScopeHtml, readPublishScope, PUBLISH_SCOPES } from './platform-admin.js';
+import { REVIEW_KEY, readAssetReviews as reviews, reviewSourceSnapshot, reviewedAsset } from './review-state.js';
 import { assetReviewDialog, assetReviewClose, canViewPlatformReview, canApprovePlatformReview, nextReviewVersion, currentPublishedVersion, reviewVersionHistory, exportReviewSnapshot, publishedExpertRef, publishReviewedBundle } from './platform-admin.js';
-export const REVIEW_KEY='lingee.platform.reviews.v1';
+export { REVIEW_KEY };
 const clone=value=>JSON.parse(JSON.stringify(value));
-function reviews(){try{const rows=JSON.parse(localStorage.getItem(REVIEW_KEY)||'[]');return Array.isArray(rows)?rows:[];}catch(_){return [];}}
 function store(rows){try{localStorage.setItem(REVIEW_KEY,JSON.stringify(rows));return true;}catch(_){return false;}}
 function definition(kind,item,tenant){
   const data=clone(item);data.id='tenant-'+tenant+'-'+item.id;data.source='tenant';data.tenantId=tenant;data.ownerId='';data.by=cvCurrentUserName();
@@ -36,6 +36,7 @@ function submitToTenant(kind,item,tenant){
   const existing=reviews().find(row=>row.kind===kind&&row.sourceId===item.id&&row.tenantId===tenant&&row.status==='pending');
   if(existing)return assetReviewDialog('已提交审核','<p>已有待审核版本，请等待管理平台审核。</p>',null,'关闭');
   const bundle=[],data=definition(kind,item,tenant);
+  const sourceSnapshot=clone(reviewSourceSnapshot(kind,item));
   if(kind==='expert'){
     if(!data.modes?.length)return assetReviewDialog('无法提交','<p>智能体至少需要一种工作模式。</p>',null,'关闭');
   }else{
@@ -56,7 +57,7 @@ function submitToTenant(kind,item,tenant){
     if(!reviewTenants().some(workspace=>workspace.id===tenant)||item.ownerId&&item.ownerId!==assetOwnerKey()){$('#assetReviewError').textContent='当前账号已无提交权限，请重新登录后重试';return;}
     const note=$('#assetReviewNote').value.trim();if(!note){$('#assetReviewError').textContent='请填写提交说明';return;}if(note.length>100){$('#assetReviewError').textContent='提交说明不能超过 100 字';return;}
     const rows=reviews();if(rows.some(row=>row.kind===kind&&row.sourceId===item.id&&row.tenantId===tenant&&row.status==='pending')){$('#assetReviewError').textContent='该内容已有待审核版本';return;}
-    rows.push({id:'review-'+Date.now(),kind,sourceId:item.id,name:item.name,tenantId:tenant,tenantName,author:cvCurrentUserName(),ownerId:assetOwnerKey(),status:'pending',note,bundle,at:new Date().toLocaleString('zh-CN',{hour12:false})});
+    rows.push({id:'review-'+Date.now(),kind,sourceId:item.id,name:item.name,tenantId:tenant,tenantName,author:cvCurrentUserName(),ownerId:assetOwnerKey(),status:'pending',note,bundle,sourceSnapshot,at:new Date().toLocaleString('zh-CN',{hour12:false})});
     if(!store(rows)){$('#assetReviewError').textContent='保存失败，请重试';return;}
     assetReviewClose();
     document.dispatchEvent(new Event('lingee:cloud-assets-changed'));   /* 卡片上的发布去向随之刷新 */
@@ -107,11 +108,12 @@ export function openAssetReview(id,onChange){
       const reason=$('#assetRejectReason').value.trim();
       if(!reason){$('#assetReviewError').textContent='请填写驳回原因';$('#assetRejectReason').focus();return;}
       request.status='rejected';request.reason=reason;request.reviewer=cvCurrentUserName();request.rejectedAt=stamp();
-      const target=request.bundle.find(entry=>entry.kind===request.kind)?.data;if(target)request.version=nextReviewVersion(request.kind,target.id);
+      const target=reviewedAsset(request);if(target)request.version=nextReviewVersion(request.kind,target.id);
       if(!store(rows)){$('#assetReviewError').textContent='保存失败，请重试';return;}
       assetReviewClose();onChange();return;
     }
     request.status='approved';request.reviewer=cvCurrentUserName();request.scope=readPublishScope();
+    const target=reviewedAsset(request);if(target)request.version=nextReviewVersion(request.kind,target.id);
     const error=publishReviewedBundle(request.bundle,request.note,{name:REVIEW_KEY,value:rows},request.scope);
     if(error){$('#assetReviewError').textContent=error;return;}assetReviewClose();onChange();
   }:null,row.status==='pending'&&canApprove?'审核通过':'关闭');
