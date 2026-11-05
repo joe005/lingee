@@ -1,14 +1,14 @@
-<!-- 空间与工作区基本设置，范围取顶部切换器。 -->
+<!-- 空间与工作区基本设置，范围取顶部切换器。导航图标：Git 账号=分支、通用=调节、仓库=代码库、成员=多人、智能体=机器人，各分类图标互不重复。 -->
 <section class="ld-settings-panel" id="ldWorkspacesPanel" aria-label="空间与工作区设置" hidden>
   <div class="cv-basic-layout">
     <nav class="cv-basic-nav" aria-label="设置分类">
       <span class="cv-basic-nav-label">基础</span>
-      <button type="button" class="cv-basic-nav-item" data-cv-basic-tab="git"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="15" r="5"/><path d="m12 11 9-9M16 6l3 3M19 3l2 2"/></svg>Git 账号</button>
+      <button type="button" class="cv-basic-nav-item" data-cv-basic-tab="git"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="5.5" r="2.5"/><circle cx="6" cy="18.5" r="2.5"/><circle cx="18" cy="8" r="2.5"/><path d="M6 8v8M18 10.5c0 4.2-5.5 3.6-10.3 6.3"/></svg>Git 账号</button>
       <span class="cv-basic-nav-label">工作区设置</span>
-      <button type="button" class="cv-basic-nav-item is-on" data-cv-basic-tab="general" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>通用</button>
-      <button type="button" class="cv-basic-nav-item" data-cv-basic-tab="repo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 9 9-9 9-9-9zM7.5 7.5l9 9M16.5 7.5l-9 9"/></svg>仓库</button>
-      <button type="button" class="cv-basic-nav-item" data-cv-basic-tab="members"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="7" r="4"/><path d="M2 21v-2a7 7 0 0 1 14 0v2M17 3a4 4 0 0 1 0 8M22 21v-2a7 7 0 0 0-4-6"/></svg>成员</button>
-      <button type="button" class="cv-basic-nav-item" data-cv-basic-tab="agents"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="7" r="4"/><path d="M2 21v-2a7 7 0 0 1 14 0v2M17 3a4 4 0 0 1 0 8M22 21v-2a7 7 0 0 0-4-6"/></svg>智能体</button>
+      <button type="button" class="cv-basic-nav-item is-on" data-cv-basic-tab="general" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/></svg>通用</button>
+      <button type="button" class="cv-basic-nav-item" data-cv-basic-tab="repo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5.5A2.5 2.5 0 0 1 7.5 3H19v14H7.5A2.5 2.5 0 0 0 5 19.5z"/><path d="M5 19.5A2.5 2.5 0 0 0 7.5 22H19v-5M9 7.5h6"/></svg>仓库</button>
+      <button type="button" class="cv-basic-nav-item" data-cv-basic-tab="members"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M3 20a6 6 0 0 1 12 0M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.2A6 6 0 0 1 21 20"/></svg>成员</button>
+      <button type="button" class="cv-basic-nav-item" data-cv-basic-tab="agents"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="8" width="16" height="12" rx="3.5"/><path d="M12 4v4M9 13.5v1M15 13.5v1M9.5 17.2h5"/><circle cx="12" cy="3.5" r="1"/></svg>智能体</button>
     </nav>
     <div class="cv-basic-main">
       <!--#include "src/views/collab/local-settings/personal-drawer.html" -->

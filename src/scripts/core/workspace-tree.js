@@ -54,9 +54,9 @@ export function wsScopeName(project, id) {
   var ws = id ? wsById(project, id) : null;
   return ws ? ws.name : project && project.name ? project.name : WS_DEFAULT_NAME;
 }
-/* 「空间 › 工作区」标签；空间根的任务属于与空间同名的工作区，只显示空间名 */
+/* 任务卡片与列表的归属标签：只显示工作区名称，不带空间层级；空间根的任务属于与空间同名的工作区，显示空间名 */
 export function wsTaskLabel(project, task) {
   if (!project) return '';
   var ws = task && task.workspaceId ? wsById(project, task.workspaceId) : null;
-  return ws ? project.name + ' › ' + ws.name : project.name;
+  return ws ? ws.name : project.name;
 }

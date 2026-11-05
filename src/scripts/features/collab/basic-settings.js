@@ -1,5 +1,6 @@
 import { renderRecruitmentSettings } from './recruitment-settings.js';
-import { ldBindingFor, ldEnvironmentId, ldDefaultPath, ldCheckDir, ldBindDir, ldPickDir } from './local-dev/core.js';
+import { ldBindingFor, ldEnvironmentId, ldDefaultPath, ldCheckDir, ldBindDir, ldPickDir, ldProjectStatus, ldMine, ldSaveMine, ldBindingHasRunningTasks } from './local-dev/core.js';
+import { ldStartSpaceInit } from './local-dev/space-dialog.js';
 import { buildRepoOwn, buildRepoList, buildRepoIdentity } from './repository-config.js';
 import { initSelectDropdowns } from '../../core/select-dropdown.js';
 import { $ } from '../../core/dom.js';
@@ -11,7 +12,7 @@ import { getSpaceScope, setSpaceScope } from '../tasks-v2/page/space-filter.js';
 import { mgrCurrentPersonId } from '../manager/data.js';
 import { personName, spaceMemberIds, wsAdminIds, wsDelete, wsDeleteBlockReason, wsLeave, wsLeaveBlockReason, wsMappableSpaces, wsMemberIds, wsOwnerId, wsProjectById, wsScopePath, wsSpaceOf } from '../manager/workspaces.js';
 import { isWsHost } from './data.js';
-import { basicAddMember, basicRepoConfig, basicEditable, basicRemoveMember, basicSaveGeneral, basicSaveRepo } from './basic-settings-data.js';
+import { basicAddMember, basicRepoConfig, basicEditable, basicRemoveMember, basicSaveGeneral, basicSaveRepo, basicSetMemberRole } from './basic-settings-data.js';
 /* 当前空间 / 工作区的基本设置，顶部切换器决定范围；只渲染当前分类。 */
 var currentTab = 'general';
 var memberPage = 1;
@@ -22,6 +23,7 @@ var memberPicked = [];   /* 添加成员：搜索结果中已勾选、待添加�
 function esc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]; }); }
 /* '' 为默认工作区（空间根） */
 function scope() { var s = getSpaceScope(), p = wsProjectById(s.project); return { p:p, ws:p ? wsById(p, s.ws) : null }; }
+var REQUIRED = ' <b class="cv-required" aria-hidden="true">*</b>';
 function field(id, label, value, disabled, multiline, max) {
   return '<div class="cv-basic-field"><label for="' + id + '">' + label + '</label>' + (multiline
     ? '<textarea id="' + id + '" rows="3" maxlength="' + max + '"' + (disabled ? ' disabled' : '') + '>' + esc(value) + '</textarea>'
@@ -48,8 +50,9 @@ function mappingNote(p, ws) {
 function general(p, ws) {
   var item = ws || p, editable = basicEditable(p, ws);
   return '<form data-cv-basic-form="general">' + head('通用', editable ? (ws ? '维护当前工作区的基本信息。' : '与开发空间同名的工作区，名称、描述和上下文与空间同步。') : '当前设置只读，请联系负责人或管理员修改。', editable) +
-    '<div class="cv-basic-card">' + field('cvBasicName', '名称', item.name, !editable, false, ws ? 30 : 60) +
-    field('cvBasicDesc', '描述', item.desc || '', !editable, true, 200) +
+    /* 名称、描述必填 */
+    '<div class="cv-basic-card">' + field('cvBasicName', '名称' + REQUIRED, item.name, !editable, false, ws ? 30 : 60) +
+    field('cvBasicDesc', '描述' + REQUIRED, item.desc || '', !editable, true, 200) +
     (ws ? '' : field('cvBasicInstruction', '上下文', p.instruction || '', !editable, true, 10000)) +
     mappingField(p, ws, editable) + '</div>' +
     (!ws ? '<p class="cv-basic-note">上下文作为空间指令，为智能体提供背景信息。</p>' : mappingNote(p, ws)) + '<p class="cv-basic-error" role="alert" hidden></p></form>' + (ws ? leaveSection(p, ws) : '');
@@ -70,6 +73,7 @@ var repoDraft = null;
 var repoEditing = -1;
 var repoEditBackup = null;
 function repo(p, ws) {
+  pruneSettingsBindings();
   const id = JSON.stringify([p.id, ws?.id || '']);
   const own = buildRepoOwn(p, ws?.id || '');
   const effective = buildRepoList(p,ws?.id || '');
@@ -93,15 +97,70 @@ function repoEditor(p,ws,editable,list,defaultKey) {
 /* 只展示当前工作区各仓库的个人本机目录，复用初始化与目录校验流程。 */
 function repoDirectory(p, ws, item) {
   const config = {repo:item.repo,baseBranch:item.baseBranch,name:item.name,spaceId:p.id,workspaceId:ws?.id || ''};
-  const binding = ldBindingFor(ldEnvironmentId(config));
-  const draft = item.localDirectory ||= {mode:binding?.mode === 'existing' ? 'existing' : 'auto',path:binding?.mode === 'existing' ? binding.path : ''};
+  const draft = item.localDirectory ||= Object.assign({}, savedDirectory(ldEnvironmentId(config)));
   const defaultPath = ldDefaultPath({...config,_repoResolved:true});
   const option = (value,title,description,extra='') => '<label class="ld-dir-card cv-repo-dir-option"><input type="radio" name="cvRepoDirectoryMode" data-cv-dir-mode="'+value+'" value="'+value+'"'+(draft.mode === value ? ' checked' : '')+'><span class="ld-dir-card-radio" aria-hidden="true"></span><span class="ld-dir-card-body"><strong>'+title+'</strong><span class="ld-dir-card-desc" title="'+esc(description)+'">'+esc(description)+'</span>'+extra+'</span></label>';
   const customInput = draft.mode === 'existing' ? '<div class="cv-repo-custom-directory"><input data-cv-dir-path aria-label="自定义工作目录" value="'+esc(draft.path)+'" placeholder="请选择或输入本机工作目录"><button type="button" class="ld-space-btn" data-cv-dir-pick>选择文件夹</button></div>' : '';
-  return '<div class="cv-repo-local-directory"><span class="cv-repo-directory-label">本机目录</span><div class="ld-dir-cards cv-repo-directory-modes" role="radiogroup" aria-label="本机目录方式">'
+  return '<div class="cv-repo-local-directory"><span class="cv-repo-directory-label">本机执行目录</span><div class="ld-dir-cards cv-repo-directory-modes" role="radiogroup" aria-label="本机执行目录方式">'
     + option('auto','默认目录',defaultPath || '填写仓库地址后自动生成默认目录')
-    + option('existing','自定义目录',draft.path || '选择本机根目录内的文件夹',customInput)+'</div></div>';
+    + option('existing','自定义目录',draft.path || '选择本机根目录内的文件夹',customInput)+'</div>'+repoInitRow(p,ws,item,config)+'</div>';
 
+}
+/* 本机执行目录初始化：沿用本地开发的初始化流程（校验目录、模拟拉取、绑定目录）。弹窗底部「保存并初始化」先保存仓库与目录，
+   再按所选默认 / 自定义目录在后台初始化，进度显示在顶部「目录初始化中」气泡里；这里只展示已保存仓库的当前状态 */
+function repoSavedAsIs(p, ws, item) {
+  if (!item || item.key.startsWith('draft:')) return false;
+  return buildRepoList(p, ws?.id || '').repositories.some(function (r) { return r.key === item.key && r.repo === item.repo && (r.baseBranch || 'main') === (item.baseBranch || 'main'); });
+}
+function repoReady(p, ws, item) {
+  if (!repoSavedAsIs(p, ws, item)) return false;
+  return !!ldProjectStatus(ldEnvironmentId({repo:item.repo,baseBranch:item.baseBranch,name:item.name,spaceId:p.id,workspaceId:ws?.id || ''})).ready;
+}
+function repoInitRow(p, ws, item, config) {
+  if (!item.repo || !repoSavedAsIs(p, ws, item)) return '';
+  const st = ldProjectStatus(ldEnvironmentId(config));
+  const tone = st.ready ? 'is-ok' : st.key === 'download' ? 'is-pending' : 'is-warn';
+  const note = st.ready ? '已初始化到所选目录，可直接执行任务。' : !st.authOk ? '请先在「基础 › Git 账号」登录后再初始化。' : '尚未初始化到本机，可点「保存并初始化」，任务执行前需要完成初始化。';
+  return '<div class="cv-repo-init" aria-live="polite"><div class="cv-repo-init-copy"><span class="cv-repo-init-state ' + tone + '">' + (st.ready ? '已就绪' : st.label || '未初始化') + '</span><p>' + esc(note) + '</p></div></div>';
+}
+/* 保存成功后打开初始化弹窗并直接开始：进度条、「停止 / 后台初始化」与完成提示沿用本地开发的初始化弹窗；已就绪则只提示 */
+function startRepoInit(p, ws, item) {
+  const config = {repo:item.repo,baseBranch:item.baseBranch,name:item.name,spaceId:p.id,workspaceId:ws?.id || ''};
+  const target = ldEnvironmentId(config);
+  if (ldProjectStatus(target).ready) { toast('仓库已保存，本机执行目录已就绪', 'success'); return; }
+  const dir = item.localDirectory || {mode:'auto',path:''};
+  ldStartSpaceInit(target, dir.mode === 'existing' ? 'existing' : 'auto', String(dir.path || '').trim());
+}
+/* 本机执行目录的选择（未初始化前）：只记下用户选的方式和路径，不写目录绑定；
+   绑定由初始化流程完成后写入，状态才会变为「已就绪」。按当前用户、仓库目标保存在本机 */
+const DIR_PREF_KEY = 'lingee-repo-dir-pref-v1';
+function dirPrefs() { try { return JSON.parse(localStorage.getItem(DIR_PREF_KEY) || '{}') || {}; } catch (_) { return {}; } }
+function dirPrefKey(target) { return (mgrCurrentPersonId() || 'guest') + '|' + target; }
+function dirPrefFor(target) { const pref = dirPrefs()[dirPrefKey(target)]; return pref && pref.mode === 'existing' && pref.path ? pref : null; }
+function saveDirPref(target, mode, path) {
+  const all = dirPrefs(), key = dirPrefKey(target);
+  if (mode === 'existing' && path) all[key] = { mode:'existing', path:path }; else delete all[key];
+  try { localStorage.setItem(DIR_PREF_KEY, JSON.stringify(all)); return true; } catch (_) { return false; }
+}
+function savedDirectory(target) {
+  const binding = ldBindingFor(target);
+  if (binding) return binding.mode === 'existing' ? {mode:'existing',path:binding.path} : {mode:'auto',path:''};
+  return dirPrefFor(target) || {mode:'auto',path:''};
+}
+/* 一次性清理：修复前在仓库弹窗点「保存」会直接写入目录绑定，导致没初始化就显示「已就绪」。
+   清掉这类绑定：没有初始化完成记录、不是演示预置仓库、也没有运行中任务使用；真正初始化过的绑定都有 initializedAt */
+function pruneSettingsBindings() {
+  const mine = ldMine();
+  if (!mine || mine.settingsBindingsPruned) return;
+  const demoRepos = new Set(Object.values(mine.demoReadyRepos || {}));
+  Object.keys(mine.repoBindings || {}).forEach(key => {
+    const binding = mine.repoBindings[key];
+    if (binding.initializedAt || demoRepos.has(binding.repo) || ldBindingHasRunningTasks(key)) return;
+    delete mine.repoBindings[key];
+    Object.keys(mine.scopeBindings || {}).forEach(scope => { if (mine.scopeBindings[scope] === key) delete mine.scopeBindings[scope]; });
+  });
+  mine.settingsBindingsPruned = true;
+  ldSaveMine(mine);
 }
 function repoNameOf(repo) { return String(repo || '').replace(/\/+$/, '').split('/').pop().replace(/\.git$/, ''); }
 function repoLocalTarget(p,ws,item) {
@@ -113,6 +172,7 @@ var REPO_ICONS = {
   repo:'<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 9 9-9 9-9-9zM7.5 7.5l9 9M16.5 7.5l-9 9"/></svg>',
   link:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>',
   branch:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="5" r="2.5"/><circle cx="6" cy="19" r="2.5"/><circle cx="18" cy="8" r="2.5"/><path d="M6 7.5v9M18 10.5c0 4-6 3-11.2 6.5"/></svg>',
+  check:'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4 10-11"/></svg>',
   folder:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>'
 };
 function repoCard(p, ws, item, index, editable, inherited, list, defaultKey, editor = false) {
@@ -124,33 +184,44 @@ function repoCard(p, ws, item, index, editable, inherited, list, defaultKey, edi
     + (defaultKey === item.key || list.length === 1 ? '<span class="cv-repo-default">主仓库</span>' : '')+'</div>'+actions+'</div>';
   if (!editor) {
     const config = {repo:item.repo,baseBranch:item.baseBranch,name:item.name,spaceId:p.id,workspaceId:ws?.id || ''};
-    const binding = ldBindingFor(ldEnvironmentId(config));
-    const bound = binding?.mode === 'existing';
-    const path = bound ? binding.path : '默认目录';
-    let host = '';
-    try { host = new URL(item.repo).host.toLowerCase(); } catch (_) { host = ''; }
-    const provider = /github/.test(host) ? 'GitHub' : /gitlab/.test(host) ? 'GitLab' : host || 'Git';
+    const target = ldEnvironmentId(config), binding = ldBindingFor(target);
+    const pref = binding ? null : dirPrefFor(target);
+    const path = binding?.path || pref?.path || '默认目录';
+    const st = ldProjectStatus(target);
+    let host = '', repoPath = '';
+    try { const url = new URL(item.repo); host = url.host.toLowerCase(); repoPath = url.pathname.replace(/^\/+|\/+$/g, '').replace(/\.git$/, ''); } catch (_) { host = ''; }
+    const provider = /github/.test(host) ? 'GitHub' : /gitlab/.test(host) ? 'GitLab' : /gitee/.test(host) ? 'Gitee' : host || 'Git';
+    const primary = defaultKey === item.key || list.length === 1;
+    /* 卡片三段：头部（仓库图标、名称、主仓库、来源与组织）→ 描述 → 只读信息（仓库地址、基准分支，纯文本不做输入框样式）→ 底部本机执行目录状态条（只显示状态，路径悬停查看，目录配置在编辑弹窗）。
+       状态条直接展示当前用户本机是否初始化：已就绪 / 未初始化 / 未登录等，未就绪时右侧给出「初始化」（普通成员也可操作） */
+    const tone = st.ready ? 'is-ready' : st.key === 'download' ? 'is-pending' : 'is-warn';
+    const stateText = st.ready ? '已就绪' : st.label || '未初始化';
+    const initAction = st.ready
+      ? ''
+      : '<button type="button" class="cv-repo-init-btn" data-cv-repo-card-init="'+index+'"' + (st.authOk ? '' : ' disabled title="请先在「基础 › Git 账号」登录"') + '>初始化</button>';
     const title = '<div class="cv-repo-title"><span class="cv-repo-icon" aria-hidden="true">' + REPO_ICONS.repo + '</span><div class="cv-repo-title-copy"><div class="cv-repo-title-line"><strong title="'+esc(item.name)+'">'+esc(item.name || '仓库')+'</strong>'
-      + (defaultKey === item.key || list.length === 1 ? '<span class="cv-repo-default">主仓库</span>' : '') + '</div><span class="cv-repo-provider">' + esc(provider) + '</span></div></div>';
+      + (primary ? '<span class="cv-repo-default">主仓库</span>' : '') + '</div><span class="cv-repo-provider">' + esc(provider) + (repoPath ? ' · ' + esc(repoPath.split('/')[0]) : '') + '</span></div></div>';
     const apps = (item.apps || []).map(app => '<span class="cv-repo-chip">' + esc(app) + '</span>').join('');
-    return '<article class="cv-repo-card cv-repo-card--rich"><div class="cv-repo-card-head">' + title + actions + '</div>'
-      + (item.desc ? '<p class="cv-repo-desc" title="'+esc(item.desc)+'">' + esc(item.desc) + '</p>' : '')
-      + '<div class="cv-repo-facts">'
-      + '<div class="cv-repo-fact"><span class="cv-repo-fact-label">' + REPO_ICONS.link + '地址</span><span class="cv-repo-fact-value" title="'+esc(item.repo)+'">' + esc(item.repo || '未填写地址') + '</span></div>'
-      + '<div class="cv-repo-fact"><span class="cv-repo-fact-label">' + REPO_ICONS.branch + '基准分支</span><span class="cv-repo-fact-value"><span class="cv-repo-chip is-brand" title="分支：'+esc(item.baseBranch || 'main')+'">' + esc(item.baseBranch || 'main') + '</span></span></div>'
-      + '<div class="cv-repo-fact"><span class="cv-repo-fact-label">' + REPO_ICONS.folder + '本机目录</span><span class="cv-repo-fact-value" title="'+esc(path)+'"><span class="cv-repo-path">' + esc(path) + '</span><span class="cv-repo-chip ' + (bound ? 'is-success' : '') + '">' + (bound ? '已关联' : '默认') + '</span></span></div>'
-      + '</div>' + (apps ? '<div class="cv-repo-apps"><span class="cv-repo-fact-label">关联应用</span>' + apps + '</div>' : '') + '</article>';
+    return '<article class="cv-repo-card cv-repo-card--rich' + (primary ? ' is-primary' : '') + '"><div class="cv-repo-card-head">' + title + actions + '</div>'
+      + '<p class="cv-repo-desc" title="'+esc(item.desc || '')+'">' + esc(item.desc || '暂无描述') + '</p>'
+      + '<dl class="cv-repo-info">'
+      + '<div><dt>仓库地址</dt><dd title="'+esc(item.repo)+'">' + esc(item.repo || '未填写') + '</dd></div>'
+      + '<div><dt>基准分支</dt><dd>' + esc(item.baseBranch || 'main') + '</dd></div>'
+      + '</dl>' + (apps ? '<div class="cv-repo-apps"><span class="cv-repo-fact-label">关联应用</span>' + apps + '</div>' : '')
+      + '<div class="cv-repo-local ' + tone + '" title="' + esc(path) + '"><span class="cv-repo-local-label">' + REPO_ICONS.folder + '本机执行目录</span>'
+      + '<span class="cv-repo-local-state" title="' + esc(st.reason || stateText) + '"><i aria-hidden="true"></i>' + esc(stateText) + '</span>'
+      + initAction + '</div></article>';
   }
   const disabled = !editable || inherited ? ' disabled' : '';
   const branch = item.baseBranch || 'main', custom = !['main','master','develop'].includes(branch);
   const body = '<div class="cv-repo-card-body cv-repo-address-branch">'
-    + '<label class="cv-repo-url-label" for="cvRepoUrl">代码仓库</label><div class="cv-basic-field"><input id="cvRepoUrl" inputmode="url" aria-label="Git 地址" data-cv-repo-field="repo" data-cv-repo-index="' + index + '" value="' + esc(item.repo) + '" maxlength="2000" placeholder="https://git.example.com/group/repo"' + disabled + '></div>'
+    + '<label class="cv-repo-url-label" for="cvRepoUrl">代码仓库 <b class="cv-required" aria-hidden="true">*</b></label><div class="cv-basic-field"><input id="cvRepoUrl" inputmode="url" aria-label="Git 地址" aria-required="true" data-cv-repo-field="repo" data-cv-repo-index="' + index + '" value="' + esc(item.repo) + '" maxlength="2000" placeholder="https://git.example.com/group/repo"' + disabled + '></div>'
     + '<div class="cv-basic-field shared-select-host"><select data-cv-repo-field="baseBranch" data-cv-repo-index="' + index + '" aria-label="基准分支"' + disabled + '>' + ['main','master','develop','__custom'].map(value => '<option value="' + value + '"' + ((custom ? '__custom' : branch) === value ? ' selected' : '') + '>' + (value === '__custom' ? '其他' : value) + '</option>').join('') + '</select>'
     + '<input data-cv-repo-field="branchCustom" data-cv-repo-index="' + index + '" value="' + esc(custom ? branch : '') + '" maxlength="200" placeholder="输入自定义分支名称" aria-label="自定义基准分支"' + (!custom || disabled ? ' hidden' : '') + '></div>'
     + '</div>'
-    + '<div class="cv-repo-meta"><div class="cv-basic-field"><label for="cvRepoName">名称</label><input id="cvRepoName" data-cv-repo-field="name" data-cv-repo-index="' + index + '" value="' + esc(item.name) + '" maxlength="60" placeholder="默认取自仓库地址" aria-label="仓库名称"' + disabled + '></div>'
+    + '<div class="cv-repo-meta"><div class="cv-basic-field"><label for="cvRepoName">名称 <b class="cv-required" aria-hidden="true">*</b></label><input id="cvRepoName" data-cv-repo-field="name" data-cv-repo-index="' + index + '" value="' + esc(item.name) + '" maxlength="60" placeholder="默认取自仓库地址" aria-label="仓库名称" aria-required="true"' + disabled + '></div>'
     + '<div class="cv-basic-field"><label for="cvRepoDesc">描述</label><textarea id="cvRepoDesc" rows="3" data-cv-repo-field="desc" data-cv-repo-index="' + index + '" maxlength="200" placeholder="说明仓库用途，例如：前端主工程、公共组件库" aria-label="仓库描述"' + disabled + '>' + esc(item.desc || '') + '</textarea></div></div>';
-  return '<article class="cv-repo-card">' + headRow + body + repoDirectory(p,ws,item) + '<div class="cv-repo-editor-actions"><button type="button" class="ld-space-btn" data-cv-repo-cancel>取消</button><button type="submit" class="ld-set-btn ld-set-btn--primary">保存</button></div></article>';
+  return '<article class="cv-repo-card">' + headRow + body + repoDirectory(p,ws,item) + '<div class="cv-repo-editor-actions"><button type="button" class="ld-space-btn" data-cv-repo-cancel>取消</button>' + (editor && !repoReady(p, ws, item) ? '<button type="submit" class="ld-space-btn" data-cv-repo-save-only>保存</button><button type="submit" class="ld-set-btn ld-set-btn--primary" data-cv-repo-save-init>保存并初始化</button>' : '<button type="submit" class="ld-set-btn ld-set-btn--primary">保存</button>') + '</div></article>';
 }
 function memberPool(p, ws) {
   var ids = ws ? wsMemberIds(p, ws) : spaceMemberIds(p);
@@ -184,7 +255,7 @@ function members(p, ws) {
     '<div class="cv-basic-card cv-member-list-scroll" role="region" aria-label="成员列表" tabindex="0"><ul class="cv-basic-members">' + pageIds.map(function (id) {
       var m = CV_MEMBERS.find(function (person) { return person.id === id; }) || { name:personName(id) };
       var role = id === owner ? '负责人' : (ws ? wsAdminIds(ws) : p.adminIds || []).includes(id) ? '管理员' : '成员';
-      return '<li><span class="cv-basic-avatar">' + esc(m.name.slice(0, 1)) + '</span><div class="cv-basic-member-name"><div class="cv-member-identity"><strong>' + esc(m.name) + '</strong><span>' + esc(m.email || '') + '</span></div><div class="cv-member-tags">' + (m.dept ? '<span>' + esc(m.dept) + '</span>' : '') + '<span>' + role + '</span></div></div>' + (editable && id !== owner ? '<details class="cv-member-more"><summary aria-label="' + esc(m.name) + '的更多操作">···</summary><button type="button" class="mgr-ws-text-btn" data-cv-basic-remove="' + esc(id) + '">移出成员</button></details>' : '') + '</li>';
+      return '<li><span class="cv-basic-avatar">' + esc(m.name.slice(0, 1)) + '</span><div class="cv-basic-member-name"><div class="cv-member-identity"><strong>' + esc(m.name) + '</strong><span>' + esc(m.email || '') + '</span></div><div class="cv-member-tags">' + (m.dept ? '<span>' + esc(m.dept) + '</span>' : '') + '<span>' + role + '</span></div></div>' + (editable && id !== owner ? '<details class="cv-member-more"><summary aria-label="' + esc(m.name) + '的更多操作">···</summary><div class="cv-member-menu" role="menu">' + (role === '管理员' ? '<button type="button" role="menuitem" data-cv-basic-role="member" data-cv-basic-role-id="' + esc(id) + '">设为成员</button>' : '<button type="button" role="menuitem" data-cv-basic-role="admin" data-cv-basic-role-id="' + esc(id) + '">设为管理员</button>') + '<button type="button" role="menuitem" class="is-danger" data-cv-basic-remove="' + esc(id) + '">移出成员</button></div></details>' : '') + '</li>';
     }).join('') + '</ul>' + (!ids.length ? '<p class="cv-basic-note">' + (fq ? '没有匹配「' + esc(memberFilter.trim()) + '」的成员' : '暂无成员') + '</p>' : '') + '</div>' + memberPager(ids.length, pages);
 }
 export function renderBasicSettings(host, tab) {
@@ -369,9 +440,13 @@ export function initBasicSettings(host) {
     var error = kind === 'general' ? basicSaveGeneral(s.p, s.ws, Object.assign({ name:$('#cvBasicName').value, desc:$('#cvBasicDesc').value, instruction:$('#cvBasicInstruction')?.value || '' }, spaceSelect && !spaceSelect.disabled ? { spaceId: spaceSelect.value } : {}))
       : kind === 'repo' ? basicSaveRepo(s.p, s.ws, repoDraft) : addPickedMembers(s);
     if (error) { var note = form.querySelector('.cv-basic-error'); note.textContent = error; note.hidden = false; return; }
-    if (directory) {
+    const saveAndInit = kind === 'repo' && !!(e.submitter && e.submitter.hasAttribute('data-cv-repo-save-init'));
+    /* 目录绑定只在初始化完成后写入：未初始化的仓库「保存」只记下目录选择，状态保持「未初始化」；
+       「保存并初始化」由初始化流程校验并绑定。已初始化的仓库改目录时沿用重新绑定 */
+    if (directory && !saveAndInit) {
       const binding = ldBindingFor(directory.target);
-      if ((!binding || binding.path !== directory.path || binding.mode !== directory.mode) && !ldBindDir(directory.target,directory.path,directory.mode)) {
+      if (!binding) saveDirPref(directory.target, directory.mode, directory.path);
+      else if ((binding.path !== directory.path || binding.mode !== directory.mode) && !ldBindDir(directory.target,directory.path,directory.mode)) {
         const note = host.querySelector('.cv-repo-dialog .cv-basic-error');
         if (note) { note.textContent = '仓库已保存，本机目录保存失败，请重试'; note.hidden = false; }
         return;
@@ -379,12 +454,23 @@ export function initBasicSettings(host) {
     }
     if (kind === 'add') memberFilter = '';
     if (kind === 'add') memberPage = Math.max(1, Math.ceil((s.ws ? wsMemberIds(s.p, s.ws) : spaceMemberIds(s.p)).length / memberPageSize));
+    const initAfterSave = saveAndInit && edited ? Object.assign({}, edited, { localDirectory: edited.localDirectory ? Object.assign({}, edited.localDirectory) : null }) : null;
     if (kind === 'repo') repoDraft = null;
     renderBasicSettings(host, currentTab);
+    if (initAfterSave) { startRepoInit(s.p, s.ws, initAfterSave); return; }
     toast(kind === 'add' ? '已添加 ' + addedCount + ' 位成员' : '设置已保存', 'success');
   });
   host.addEventListener('click', async function (e) {
 
+    const cardInit = e.target.closest('[data-cv-repo-card-init]');
+    if (cardInit && !cardInit.disabled) {
+      const context = scope(); if (!context.p) return;
+      const item = buildRepoList(context.p, context.ws?.id || '').repositories[Number(cardInit.dataset.cvRepoCardInit)];
+      if (!item) return;
+      const target = ldEnvironmentId({repo:item.repo,baseBranch:item.baseBranch,name:item.name,spaceId:context.p.id,workspaceId:context.ws?.id || ''});
+      startRepoInit(context.p, context.ws, Object.assign({}, item, { localDirectory: savedDirectory(target) }));
+      return;
+    }
     const directoryAction = e.target.closest('[data-cv-dir-pick]');
     if (directoryAction) {
       const context = scope(), item = repoDraft?.repositories[repoEditing];
@@ -464,6 +550,15 @@ export function initBasicSettings(host) {
       if (!left.ok) { toast(left.error, 'warning'); renderBasicSettings(host, currentTab); return; }
       toast('已离开工作区「' + ls.ws.name + '」', 'success');
       setSpaceScope(ls.p.id, ''); return;
+    }
+    var roleBtn = e.target.closest('[data-cv-basic-role]');
+    if (roleBtn) {
+      var rs = scope(); if (!rs.p) return;
+      var roleError = basicSetMemberRole(rs.p, rs.ws, roleBtn.dataset.cvBasicRoleId, roleBtn.dataset.cvBasicRole);
+      if (roleError) { toast(roleError, 'warning'); return; }
+      renderBasicSettings(host, currentTab);
+      toast('已将「' + personName(roleBtn.dataset.cvBasicRoleId) + '」设为' + (roleBtn.dataset.cvBasicRole === 'admin' ? '管理员' : '成员'), 'success');
+      return;
     }
     var button = e.target.closest('[data-cv-basic-remove]'); if (!button) return;
     var s = scope(), id = button.dataset.cvBasicRemove; if (!s.p) return;

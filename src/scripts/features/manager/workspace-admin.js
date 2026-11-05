@@ -122,7 +122,7 @@ function stepperHtml(step) {
 function wizardInfoHtml() {
   var p = wiz.p;
   return '<div class="mgr-pe-field"><label for="mgrWsdName">名称 <b aria-hidden="true">*</b></label><input type="text" id="mgrWsdName" maxlength="30" placeholder="如：后端服务" value="' + mgrEsc(wiz.name) + '"></div>' +
-    '<div class="mgr-pe-field"><label for="mgrWsdDesc">说明</label><textarea id="mgrWsdDesc" rows="2" maxlength="200" placeholder="这个工作区负责的范围">' + mgrEsc(wiz.desc) + '</textarea></div>' +
+    '<div class="mgr-pe-field"><label for="mgrWsdDesc">说明 <b aria-hidden="true">*</b></label><textarea id="mgrWsdDesc" rows="2" maxlength="200" placeholder="这个工作区负责的范围">' + mgrEsc(wiz.desc) + '</textarea></div>' +
     wizardRepoHtml() +
     /* 负责人与关联管理空间是两类信息，上下分开；说明收进标签旁的小字，基本信息一屏放下、默认不出现滚动条 */
     '<div class="mgr-pe-field shared-select-host"><label for="mgrWsdOwner">负责人 <b aria-hidden="true">*</b></label><select id="mgrWsdOwner">' + memberOptions(p, wiz.ownerId) + '</select></div>' +
@@ -269,6 +269,7 @@ function renderWizard() {
 function infoError() {
   var err = wsNameError(wiz.p, wiz.name, '');
   if (err) return err;
+  if (!String(wiz.desc || '').trim()) return '请填写说明';
   return wiz.ownerId ? '' : '请选择负责人';
 }
 /* 仓库必填：校验地址、分支、Git 账号与可访问性 */

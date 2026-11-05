@@ -1,4 +1,4 @@
-import { buildTaskRepoConfig } from '../../collab/repository-config.js';
+import '../../collab/repository-config.js';   /* 保留以维持模块求值顺序（详情已不展示代码仓库与目标分支） */
 import { toast } from '../../../core/toast.js';
 import { wsPathNames } from '../../../core/workspace-tree.js';
 import { DELETE_ICON } from '../../../core/delete-icon.js';
@@ -328,18 +328,13 @@ export var _showOlderActivityIds = new Set();
 var ACTIVITY_COLLAPSED_STORAGE_KEY = 'lingee_tasks_activity_collapsed';
 var ACTIVITY_PREFERENCE_STORAGE_KEY = 'lingee_tasks_activity_collapsed_preference';
 var activityCollapsedPreference = null;
-/* 任务所属工作区的完整路径（只读）；没有归属的任务不显示这一行 */
+/* 任务所属工作区（只读）：空间根下的任务属于与空间同名的工作区，显示空间名；详情不再单独展示所属空间、代码仓库与目标分支 */
 function workspacePathRow(t) {
-  var project = t.workspaceId ? tkProjectById(t.project) : null;
-  var names = project ? wsPathNames(project, t.workspaceId) : [];
+  var project = tkProjectById(t.project);
+  var names = !project ? [] : t.workspaceId ? wsPathNames(project, t.workspaceId) : project.wsHost ? [] : [project.name];
   return names.length ? '<div class="tk-prop-row"><span>所属工作区</span><span class="tk-prop-val" title="' + escapeHtml(names.join(' › ')) + '">' + escapeHtml(names.join(' › ')) + '</span></div>' : '';
 }
 
-function repositoryRow(t) {
-  var config = buildTaskRepoConfig(t, tkProjectById(t.project));
-  if (!config.repo) return '';
-  return '<div class="tk-prop-row"><span>代码仓库</span><span class="tk-prop-val" title="' + escapeHtml(config.repo) + '">' + escapeHtml(config.name || config.repo.replace(/\/+$/, '').split('/').pop().replace(/\.git$/, '')) + '</span></div><div class="tk-prop-row"><span>目标分支</span><span class="tk-prop-val">' + escapeHtml(config.baseBranch) + (t.repoSnapshot ? ' · 已固定' : '') + '</span></div>';
-}
 
 export function restoreCollapsedActivity() {
   try {
@@ -589,7 +584,7 @@ export function openDrawer(taskId) {
         propPicker('状态', t.status, statusOpts) +
         propPicker('处理人', t.assignee, peopleOpts) +
         propPicker('项目', t.project, projOpts) +
-        workspacePathRow(t) + repositoryRow(t) +
+        workspacePathRow(t) +
         (pageState.taskDetailVersion === 'latest' ? '<div class="tk-prop-row"><span>任务类型</span><span class="tk-prop-val">' + escapeHtml(taskTypeLabel(t.issueType || (t.labels?.includes('缺陷') ? '缺陷' : '需求'))) + '</span></div>' : '') +
         propPicker('优先级', t.priority, priOpts) +
         propPicker('截止日期', t.dueDate, null, true) +
@@ -619,7 +614,7 @@ export function openDrawer(taskId) {
       var row = rows.find(function (item) { return item.querySelector('span')?.textContent?.trim() === label; });
       if (row) {
         propList.append(row);
-        if (label === '项目') row.querySelector('span').textContent = '所属空间';
+        if (label === '项目') { row.remove(); return; }
         if (label === '任务类型') row.querySelector('span').textContent = '标签';
       }
     });

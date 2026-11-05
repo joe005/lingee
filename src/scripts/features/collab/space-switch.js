@@ -6,7 +6,7 @@ import { tkProjectsForCurrentUser, tkScopeProjects, tkVisibleWorkspaces } from '
 import { getSpaceScope, setSpaceScope } from '../tasks-v2/page/space-filter.js';
 import { canCreateWs, wsMappableSpaces, wsScopePath } from '../manager/workspaces.js';
 import { WS_HOST_ID, wsHost } from './data.js';
-import { ldIsDevProject } from './local-dev.js';
+import { ldIsDevProject, ldSetNavScope } from './local-dev.js';
 /* 协作开发顶部的空间 / 工作区切换（旧版顶部工作区标题的样式）：标题是当前范围，点开是列表——
    已关联的按开发空间分组（空间行只是分组，不能选中），其下为平级的与空间同名的工作区（空间根）、空间下的工作区和关联到该空间的独立工作区；
    未关联的独立工作区在分组之后平铺。选择写入任务页的 project / workspaceId 筛选条件，与任务列表是同一份状态；
@@ -141,6 +141,8 @@ function restoreDefaultScope() {
   }
 }
 export function initCollabSpaceSwitch() {
+  /* 顶部「N 个目录未就绪」只统计当前工作区关联的仓库 */
+  ldSetNavScope(getSpaceScope);
   var host = $('#cvSpaceSwitch');
   if (!host) return;
   render();

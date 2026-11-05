@@ -371,3 +371,74 @@
 #view-collab .cv-member-results > label.cv-member-option:has(input:checked) { background: var(--brand-fill); }
 #view-collab .cv-member-results > label.cv-member-option:has(input:focus-visible) { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
 #view-collab .cv-member-results > label.cv-member-option input[type="checkbox"] { flex: none; width: 16px; height: 16px; margin: 0; accent-color: var(--brand); }
+
+/* 编辑仓库 › 本机目录：初始化状态与「初始化」按钮（复用本地开发的初始化流程） */
+#view-collab .cv-repo-init { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; padding: 10px 12px; border-radius: 8px; background: var(--fill-1); }
+#view-collab .cv-repo-init-copy { display: flex; align-items: center; gap: 8px; min-width: 0; }
+#view-collab .cv-repo-init-copy p { margin: 0; color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); }
+#view-collab .cv-repo-init-state { flex: none; padding: 0 6px; border-radius: 4px; background: var(--bg); color: var(--text-secondary); font-size: var(--font-size-12); line-height: 20px; }
+#view-collab .cv-repo-init-state.is-ok { background: var(--success-bg); color: var(--success); }
+#view-collab .cv-repo-init-state.is-pending { background: var(--brand-fill); color: var(--brand); }
+#view-collab .cv-repo-init-state.is-warn { background: var(--danger-bg); color: var(--danger); }
+#view-collab .cv-repo-init .ld-space-btn { flex: none; }
+#view-collab .cv-repo-init-error { margin: 6px 0 0; color: var(--danger); font-size: var(--font-size-12); }
+/* 新增 / 编辑仓库：必填标记（代码仓库、名称） */
+#view-collab .cv-repo-dialog .cv-required,
+#view-collab .cv-basic-field .cv-required { margin-left: 2px; color: var(--danger); font-weight: 500; }
+
+/* ---------- 仓库卡片（重新设计）：头部 → 描述与分支 / 地址 → 本机执行目录状态条 ---------- */
+#view-collab .cv-repo-cards { gap: 16px; }
+#view-collab .cv-repo-cards > .cv-repo-card--rich { position: relative; gap: 14px; padding: 20px 20px 0; overflow: hidden; border-radius: 16px; box-shadow: var(--card-shadow); }
+#view-collab .cv-repo-card--rich:hover { border-color: var(--border-hover); box-shadow: var(--menu-shadow); }
+#view-collab .cv-repo-card--rich.is-primary { border-color: var(--brand-fill); }
+#view-collab .cv-repo-card--rich .cv-repo-icon { width: 40px; height: 40px; border-radius: 12px; }
+#view-collab .cv-repo-card--rich .cv-repo-title-line strong { font-size: var(--font-size-16); font-weight: 500; line-height: var(--line-height-16); }
+#view-collab .cv-repo-card--rich .cv-repo-provider { display: flex; align-items: center; gap: 6px; min-width: 0; margin-top: 4px; }
+#view-collab .cv-repo-provider-tag { flex: none; padding: 0 6px; border-radius: 4px; background: var(--fill-1); color: var(--text-secondary); font-size: var(--font-size-12); line-height: 20px; }
+#view-collab .cv-repo-slug { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); }
+#view-collab .cv-repo-card--rich .cv-repo-desc { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; min-height: calc(var(--line-height-14) * 2); white-space: normal; color: var(--text-secondary); font-size: var(--font-size-14); line-height: var(--line-height-14); }
+#view-collab .cv-repo-card--rich .cv-repo-facts { display: flex; flex-wrap: wrap; gap: 8px; padding: 0; background: none; }
+#view-collab .cv-repo-local { display: flex; align-items: center; gap: 10px; min-width: 0; margin: 2px -20px 0; padding: 12px 20px; border-top: 1px solid var(--divider); background: var(--fill-1); font-size: var(--font-size-12); line-height: var(--line-height-12); }
+#view-collab .cv-repo-local-label { display: inline-flex; flex: none; align-items: center; gap: 4px; color: var(--text-secondary); }
+#view-collab .cv-repo-local-state { display: inline-flex; flex: none; align-items: center; gap: 6px; color: var(--text); font-weight: 500; }
+#view-collab .cv-repo-local-state i { width: 8px; height: 8px; border-radius: 50%; background: var(--text-secondary); }
+#view-collab .cv-repo-local.is-ready .cv-repo-local-state i { background: var(--success); box-shadow: 0 0 0 3px var(--success-bg); }
+#view-collab .cv-repo-local.is-pending .cv-repo-local-state i { background: var(--brand); box-shadow: 0 0 0 3px var(--brand-fill); }
+#view-collab .cv-repo-local.is-warn .cv-repo-local-state i { background: var(--danger); box-shadow: 0 0 0 3px var(--danger-bg); }
+#view-collab .cv-repo-local-path { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-secondary); }
+#view-collab .cv-repo-local-ok { display: inline-flex; flex: none; color: var(--success); }
+#view-collab .cv-repo-init-btn { flex: none; height: 28px; padding: 0 12px; border: 1px solid var(--brand); border-radius: 8px; background: var(--bg); color: var(--brand); font: inherit; font-size: var(--font-size-12); font-weight: 500; cursor: pointer; }
+#view-collab .cv-repo-init-btn:hover:not(:disabled) { background: var(--brand-fill); }
+#view-collab .cv-repo-init-btn:disabled { border-color: var(--border); color: var(--text-secondary); cursor: not-allowed; }
+#view-collab .cv-repo-init-btn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+#view-collab .cv-repo-cards > .cv-repo-card--rich .cv-repo-apps { margin-top: -4px; }
+/* 新增仓库卡与仓库卡同高：网格各行等高 */
+#view-collab .cv-repo-cards { grid-auto-rows: 1fr; }
+#view-collab .cv-repo-add-card { border-radius: 16px; }
+
+/* 成员行「···」菜单：修改角色（设为管理员 / 设为成员）与移出成员 */
+#view-collab .cv-member-more > .cv-member-menu { position: absolute; top: 100%; right: 0; z-index: 20; display: flex; flex-direction: column; min-width: 120px; padding: 4px; border-radius: 8px; background: var(--bg); box-shadow: var(--menu-shadow); }
+#view-collab .cv-member-menu > button { display: flex; align-items: center; height: 32px; padding: 0 12px; border: 0; border-radius: 6px; background: none; color: var(--text); font: inherit; font-size: var(--font-size-14); text-align: left; white-space: nowrap; cursor: pointer; }
+#view-collab .cv-member-menu > button:hover { background: var(--hover); }
+#view-collab .cv-member-menu > button.is-danger { color: var(--danger); }
+#view-collab .cv-member-menu > button.is-danger:hover { background: var(--danger-bg); }
+#view-collab .cv-member-menu > button:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+
+/* 仓库卡片 v2：只读信息改为「标签 + 纯文本」两行（仓库地址在前、基准分支在后），不用描边标签，避免像可编辑输入框 */
+#view-collab .cv-repo-cards > .cv-repo-card--rich { gap: 12px; padding: 20px 20px 0; border-color: var(--border); border-radius: 12px; box-shadow: none; }
+#view-collab .cv-repo-card--rich.is-primary { border-color: var(--border); }
+#view-collab .cv-repo-card--rich:hover { border-color: var(--border-hover); box-shadow: var(--card-shadow); }
+#view-collab .cv-repo-cards > .cv-repo-add-card { border-radius: 12px; }
+#view-collab .cv-repo-card--rich .cv-repo-provider { display: block; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); }
+#view-collab .cv-repo-card--rich .cv-repo-card-actions { align-self: flex-start; opacity: 0; transition: opacity .15s; }
+#view-collab .cv-repo-card--rich:is(:hover, :focus-within) .cv-repo-card-actions { opacity: 1; }
+@media (hover: none) { #view-collab .cv-repo-card--rich .cv-repo-card-actions { opacity: 1; } }
+#view-collab .cv-repo-info { display: grid; gap: 6px; margin: 0; padding: 12px 0 0; border-top: 1px dashed var(--divider); }
+#view-collab .cv-repo-info > div { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 12px; align-items: baseline; font-size: var(--font-size-12); line-height: var(--line-height-12); }
+#view-collab .cv-repo-info dt { color: var(--text-secondary); white-space: nowrap; }
+#view-collab .cv-repo-info dd { min-width: 0; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
+#view-collab .cv-repo-card--rich .cv-repo-local { margin-top: auto; }
+#view-collab .cv-repo-card--rich .cv-repo-local-label { margin-right: 4px; }
+/* 描述按实际行数展示，不再预留两行高度；状态条不显示目录路径，状态后留白、右侧为对勾或「初始化」 */
+#view-collab .cv-repo-card--rich .cv-repo-desc { min-height: 0; }
+#view-collab .cv-repo-card--rich .cv-repo-local-state { flex: 1; }

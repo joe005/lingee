@@ -4,7 +4,7 @@ import { ldAuthFor, ldNetCheck, ldRepoInfo } from './local-dev/core.js';
 import { buildRepoList, buildRepoIdentity, buildRepoResolve, buildRepoSave, buildTaskRepoSnapshot } from './repository-config.js';
 import { CV_MEMBERS, CV_PROJECTS, cvPersistProjects } from './data.js';
 import { mgrProjects, mgrSaveProjects, mgrMemberOpenTasks, mgrProjectTasks } from '../manager/data.js';
-import { isSpaceManager, canManageWs, personName, wsAddMembers, wsRemoveMember, wsUpdateInfo } from '../manager/workspaces.js';
+import { isSpaceManager, canManageWs, personName, wsAddMembers, wsRemoveMember, wsSetAdmin, wsUpdateInfo } from '../manager/workspaces.js';
 /* 基本设置的数据操作：两类空间分别写回原存储，工作区继续使用现有校验。 */
 export function basicEditable(p, ws) { return ws ? ws.status !== 'archived' && canManageWs(p, ws) : isSpaceManager(p); }
 function save(p, patch) {
@@ -21,6 +21,8 @@ function save(p, patch) {
 }
 export function basicSaveGeneral(p, ws, fields) {
   if (!basicEditable(p, ws)) return '没有权限修改当前设置';
+  if (!String(fields.name || '').trim()) return ws ? '请填写工作区名称' : '请填写名称';
+  if (!String(fields.desc || '').trim()) return '请填写描述';
   if (ws) { var res = wsUpdateInfo(p, ws.id, fields); return res.ok ? '' : res.error; }
   var name = fields.name.trim();
   if (!name) return '请填写空间名称';
@@ -49,6 +51,8 @@ export function basicSaveRepo(p, ws, config) {
   const seen = new Set();
   for (const item of list) {
     const error = basicRepoRowError(item); if (error) return error;
+    /* 代码仓库（地址与基准分支）和名称必填；名称默认取自地址末段，手动清空后需重新填写 */
+    if (!String(item.name || '').trim()) return '请填写仓库名称';
     const key = buildRepoIdentity(item.repo);
     if (seen.has(key)) return '同一列表不能重复添加同一仓库';
     seen.add(key);
@@ -69,6 +73,17 @@ export function basicAddMember(p, ws, id, role) {
   var patch = { members: Array.from(new Set((p.members || []).concat(id))) };
   if (role === 'admin') patch.adminIds = Array.from(new Set((p.adminIds || []).concat(id)));
   return save(p, patch);
+}
+/* 修改成员角色：工作区走工作区校验；空间（同名工作区）改空间管理员，负责人不可改 */
+export function basicSetMemberRole(p, ws, id, role) {
+  if (!basicEditable(p, ws)) return '没有权限管理成员';
+  if (role !== 'admin' && role !== 'member') return '请选择有效角色';
+  if (ws) { var res = wsSetAdmin(p, ws.id, id, role === 'admin'); return res.ok ? '' : res.error; }
+  if (personName(id) === p.owner) return '负责人的角色不能修改';
+  if (!(p.members || []).includes(id)) return '该人员不是成员';
+  var admins = (p.adminIds || []).filter(function (m) { return m !== id; });
+  if (role === 'admin') admins.push(id);
+  return save(p, { adminIds: admins });
 }
 export function basicRemoveMember(p, ws, id) {
   if (!basicEditable(p, ws)) return '没有权限管理成员';

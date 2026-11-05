@@ -30,7 +30,7 @@ function tkGetPriorityObj(id) {
   return TK_PRIORITIES.find(function (x) { return x.id === id; }) || {};
 }
 
-/* 任务所属位置标签：「空间 › 工作区」，工作区路径过长只显示末级，没有归属只显示空间 */
+/* 任务所属位置标签：只显示所属工作区名称（空间根下的任务显示与空间同名的工作区） */
 function tkGetTaskSpaceLabel(task) {
   if (!task) return '';
   var p = tkProjectById(task.project);

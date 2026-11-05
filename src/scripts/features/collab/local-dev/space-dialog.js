@@ -26,6 +26,14 @@ export function ldOpenSpaceDialog(projectId, readyCallback, directoryMode) {
   render();
   ldShow('#ldSpaceOverlay');
 }
+/* 从「设置 › 仓库」的「保存并初始化」进入：按弹窗里选好的目录直接开始初始化，复用本弹窗的进度条与「停止 / 后台初始化」 */
+export function ldStartSpaceInit(projectId, mode, path) {
+  ldOpenSpaceDialog(projectId, null, mode);
+  if (!form || settings) return;
+  if (mode === 'existing') form.path = path || '';
+  render();
+  submit();
+}
 function render() {
   if (!form) return;
   var status = ldProjectStatus(form.projectId);

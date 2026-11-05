@@ -1,1 +1,1 @@
-export default {"id":"118","date":"2026-11-05","iconBg":"var(--brand-fill)","iconColor":"var(--brand)","type":"功能","module":"工作区与协作开发","author":"wuhc2023","body":"功能·工作区与协作开发：Build 工作区改为单级平铺并支持独立创建、关联 Manage 开发空间，保留与原空间同名的默认工作区，按成员与管理权限隔离任务，并调整创建向导、开发智能体入口及企业资产上架范围。"};
+export default {"id":"118","date":"2026-11-05","iconBg":"var(--brand-fill)","iconColor":"var(--brand)","type":"功能","module":"工作区与协作开发","author":"wuhc2023","body":"功能·工作区与协作开发：Build 工作区改为单级平铺并支持独立创建、关联 Manage 开发空间，保留与原空间同名的默认工作区，按成员与管理权限隔离任务，调整开发智能体入口及企业资产上架范围，并在仓库设置中区分保存与本机目录初始化、按当前工作区提示未就绪仓库。"};

@@ -298,6 +298,20 @@ function wsLeave(project, id, personId) {
   if (!commit(project, before, { members: id })) return fail('保存失败，请重试');
   return { ok: true };
 }
+/* 修改成员角色（成员 / 管理员）：负责人角色固定，只能在成员之间切换 */
+function wsSetAdmin(project, id, personId, isAdmin) {
+  var ws = wsById(project, id);
+  if (!ws) return fail('工作区不存在');
+  if (!canManageWs(project, ws)) return fail('没有权限管理该工作区的成员');
+  if (wsOwnerId(project, ws) === personId) return fail('负责人的角色不能修改');
+  if (!isWsMember(project, ws, personId)) return fail('该人员不是工作区成员');
+  var before = snapshot(project);
+  var set = wsAdminIds(ws).filter(function (p) { return p !== personId; });
+  if (isAdmin) set.push(personId);
+  ws.adminIds = set;
+  if (!commit(project, before, { members: id })) return fail('保存失败，请重试');
+  return { ok: true };
+}
 function wsSetOwner(project, id, personId) {
   var ws = wsById(project, id);
   if (!ws) return fail('工作区不存在');
@@ -370,5 +384,5 @@ function wsMoveTasks(project, tasks, targetId) {
 export {
   WS_MAX_DEPTH, WS_NAME_MAX, canCreateTaskIn, canCreateWs, isScopeManager, wsMappableSpaces, wsScopePath, wsSpaceOf, canManageWs, canOwnWs, isSpaceManager, isSpaceMember, isWsMember, personName, spaceMemberIds,
   wsAddMembers, wsAdminIds, wsArchive, wsArchivePlan, wsAvailable, wsCreate, wsDelete, wsDeleteBlockReason, wsEnabled, wsMemberIds, wsMemberOpenTasks, wsMoveTasks,
-  wsLeave, wsLeaveBlockReason, wsVisible, wsNameError, wsProjectById, wsOpenTasks, wsOwnerId, wsPlanMove, wsProgress, wsRdTasks, wsRemoveMember, wsReorder, wsRestore, wsSetOwner, wsTasksOf, wsUpdateInfo,
+  wsLeave, wsLeaveBlockReason, wsVisible, wsNameError, wsProjectById, wsOpenTasks, wsOwnerId, wsPlanMove, wsProgress, wsRdTasks, wsRemoveMember, wsReorder, wsRestore, wsSetAdmin, wsSetOwner, wsTasksOf, wsUpdateInfo,
 };

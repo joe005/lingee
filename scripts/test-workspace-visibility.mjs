@@ -58,6 +58,7 @@ assert.equal(tree.wsTaskInScope(project, wsTask, tree.WS_DEFAULT_FILTER), false,
 assert.equal(tree.wsScopeName(project, ''), '产品研发', 'the space root is a workspace named after the space');
 assert.equal(tree.wsScopeName(project, 'ws-a'), '应用开发组');
 assert.equal(tree.wsTaskLabel(project, rootTask), '产品研发', 'space-root tasks show only the space name');
+assert.equal(tree.wsTaskLabel(project, wsTask), '应用开发组', 'workspace tasks show only the workspace name, without the space');
 assert.equal(tree.wsTaskLabel({ name: '老空间', workspaces: [] }, rootTask), '老空间', 'spaces without workspaces keep the plain label');
 // 独立工作区：成员可见；关联空间的管理者可见关联的那个；未关联的只有成员和系统管理员可见
 const hostTask = (workspaceId) => ({ ...task(workspaceId), project: 'build-ws-host' });

@@ -9,3 +9,4 @@ export { ldBlockTaskForEnv, ldGateTaskStart, ldIsEnvBlocked, ldOpenSetup, ldRest
 export { ldOpenSpaceDialog as ldOpenDirModal } from './local-dev/space-dialog.js';
 export { ldStartGitInstall } from './local-dev/git-install.js';
 export { initLocalDev } from './local-dev/index.js';
+export { ldSetNavScope } from './local-dev/nav-status.js';

@@ -90,13 +90,13 @@ console.log('多仓库、工作区独立配置、主仓库、兼容迁移、任�
 const viewSource=readFileSync(new URL('../src/scripts/features/collab/basic-settings.js',import.meta.url),'utf8');
 let selectedScope={project:p.id,ws:''};
 const host={innerHTML:'',dataset:{},classList:{toggle(){}},querySelectorAll:()=>[]};
-const viewDeps={...repositories,...tree,ldBindingFor:()=>null,ldEnvironmentId:config=>'repo-env:'+JSON.stringify(config),ldDefaultPath:config=>'~/repos/'+config.name, basicEditable:()=>true, getSpaceScope:()=>selectedScope, wsProjectById:dependencies.tkProjectById,isWsHost:p=>!!p?.wsHost,wsMappableSpaces:()=>[],wsSpaceOf:p=>p,wsScopePath:(p,ws)=>p.name+' / '+(ws?ws.name:'默认工作区'),
+const viewDeps={...repositories,...tree,...core,ldBindingFor:()=>null,mgrCurrentPersonId:()=>"u1",ldEnvironmentId:config=>'repo-env:'+JSON.stringify(config),ldDefaultPath:config=>'~/repos/'+config.name, basicEditable:()=>true, getSpaceScope:()=>selectedScope, wsProjectById:dependencies.tkProjectById,ldProjectStatus:()=>({ready:false,authOk:true,key:'download',label:'未初始化'}),ldNewSpaceForm:id=>({projectId:id,mode:'auto',path:'',pulling:0,error:''}),ldRunSpaceInit:()=>false,isWsHost:p=>!!p?.wsHost,wsMappableSpaces:()=>[],wsSpaceOf:p=>p,wsScopePath:(p,ws)=>p.name+' / '+(ws?ws.name:'默认工作区'),
   $:()=>null, initSelectDropdowns:selects=>assert.equal(selects.includes(null),false)};
 const view=new Function(...Object.keys(viewDeps),viewSource.replace(/^import .*;\n/gm,'').replace(/\bexport /g,'')+'\nreturn {renderBasicSettings,repoDirectory,repoLocalTarget,setEditing:index=>{repoEditing=index;},setDraft:value=>{repoDraft=value;}};')(...Object.values(viewDeps));
 view.renderBasicSettings(host,'repo');
 assert.ok(host.innerHTML.includes('expense-service'));
 assert.ok(host.innerHTML.includes('data-cv-repo-add'));
-assert.ok(host.innerHTML.includes('cv-repo-facts')&&host.innerHTML.includes('本机目录')&&host.innerHTML.includes('默认目录'),'repository cards show address, branch and working directory facts');
+assert.ok(host.innerHTML.includes('cv-repo-info')&&host.innerHTML.includes('仓库地址')&&host.innerHTML.includes('基准分支')&&host.innerHTML.includes('本机执行目录')&&host.innerHTML.includes('默认目录'),'repository cards show address, branch and working directory facts');
 assert.ok(host.innerHTML.includes('基准分支')&&host.innerHTML.includes('cv-repo-icon'),'repository cards show the branch and a repository icon');
 assert.ok(!host.innerHTML.includes('data-ld-directory-mode'),'directory configuration stays in the editor');
 assert.ok(!host.innerHTML.includes('data-cv-repo-field="repo"'),'repository cards start in summary mode');
@@ -104,7 +104,8 @@ assert.ok(host.innerHTML.includes('data-cv-repo-edit'));
 assert.ok(!host.innerHTML.includes('type="submit"'),'summary view has no outer Save button');
 view.setEditing(0);view.renderBasicSettings(host,'repo');
 assert.ok(host.innerHTML.includes('role="dialog"'),'edit opens a dialog');
-assert.equal((host.innerHTML.match(/type="submit"/g)||[]).length,1,'only the editor has a Save button');
+assert.equal((host.innerHTML.match(/cv-repo-editor-actions/g)||[]).length,1,'only the editor has save actions');
+assert.ok([1,2].includes((host.innerHTML.match(/type="submit"/g)||[]).length),'the editor offers Save, plus Save and initialize while the directory is not ready');
 assert.ok(host.innerHTML.includes('data-cv-repo-field="repo"'),'repository fields belong to the editor');
 view.setEditing(-1);view.renderBasicSettings(host,'repo');
 assert.ok(view.repoDirectory(p,null,repositories.buildRepoList(p,'').repositories[0]).includes('data-cv-dir-mode="existing"'));
