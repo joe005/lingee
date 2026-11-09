@@ -1,5 +1,6 @@
 import { $ } from '../../core/dom.js';
 import { showView, viewChat } from '../../core/view.js';
+import { chatAppDd, selectChatApp } from '../attach-app.js';
 import { syncTogglePreviewBtn } from '../chat.js';
 import { appendAskCard } from '../expert/automatch.js';
 import { renderExpertChips } from '../expert/chips.js';
@@ -40,7 +41,11 @@ function openChatSession(sessionId) {
     session.executionPick = {kind:null,id:'',auto:false};
     clearPick();
   }
-  showView('chat');
+  showView('chat',{cosmicApp:!!session.cosmicAppName});
+  if(session.cosmicAppName){
+    selectChatApp(session.cosmicAppName);
+    chatAppDd.classList.add('disabled');
+  }
   messagesList.innerHTML = '';
   hideTaskQuestionPanel();
   closeChatDocViewer();

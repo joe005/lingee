@@ -1,0 +1,16 @@
+<!-- 切换启用环境：同一时间只能启用一个，启用另一个会禁用当前启用的环境 -->
+<div class="modal-overlay" id="envEnableConfirmModal">
+  <div class="modal-card env-disconnect-card" role="alertdialog" aria-modal="true" aria-labelledby="envEnableConfirmHeading">
+    <div class="modal-header">
+      <div class="modal-title" id="envEnableConfirmHeading">切换启用环境</div>
+      <button class="modal-close" id="envEnableConfirmClose" type="button" aria-label="关闭">×</button>
+    </div>
+    <div class="modal-body" style="padding:6px 22px 4px">
+      <p class="env-disconnect-lead">将禁用当前启用的环境 <b id="envEnableConfirmFrom">scm-dev</b>，并启用 <b id="envEnableConfirmTo">fi-uat</b>，是否确认？</p>
+    </div>
+    <div class="modal-footer" style="justify-content:flex-end;gap:8px;padding:12px 22px">
+      <button class="modal-btn cancel" id="envEnableConfirmCancel" type="button">取消</button>
+      <button class="modal-btn confirm" id="envEnableConfirmOk" type="button">确认</button>
+    </div>
+  </div>
+</div>

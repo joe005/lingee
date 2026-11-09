@@ -170,3 +170,5 @@
 .env-config-modal .env-credential-heading a:hover{text-decoration:underline}
 .env-config-modal .env-credential-heading a:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 .env-config-modal .env-field>span:first-child{min-height:24px;align-items:center}
+/* 设置页列表行右侧的「启用」开关与更多菜单对齐。 */
+#view-settings .env-item .env-enable-switch{margin-left:auto}

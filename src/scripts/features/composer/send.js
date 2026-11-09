@@ -43,8 +43,10 @@ function doSend(automatic){
     var am=autoMatch(t);
     if(am){ set_activePick(am); renderExpertChips(); autoPicked=true; }
   }
-  showView('chat');
   var linkedTask = getConversationTask();
+  var cosmicAppName = !linkedTask && currentMode==='苍穹应用' && !appChip.classList.contains('muted')
+    ? $('.chip-label',appChip).textContent.trim() : '';
+  showView('chat',{cosmicApp:!!cosmicAppName});
   messagesList.innerHTML = '';
   hideTaskQuestionPanel();
   set_activeSessionTaskId(linkedTask ? linkedTask.id : null);
@@ -53,7 +55,7 @@ function doSend(automatic){
   set_chatViewerTabs([]);
   set_chatViewerActiveKey(null);
   $('#chatTitle').textContent = linkedTask ? linkedTask.title : t.slice(0, 60);
-  var session = createChatSession($('#chatTitle').textContent, activeSessionTaskId);
+  var session = createChatSession($('#chatTitle').textContent, activeSessionTaskId, cosmicAppName);
   var exchangeIndex = addSessionExchange(t);
   renderChatTaskSide();
   renderConversationTaskReference();
@@ -81,7 +83,7 @@ function doSend(automatic){
     chatAppDd.classList.remove('disabled');
   } else {
     /* 独立演示会话沿用示例应用。 */
-    selectChatApp('采购订单管理');
+    selectChatApp(cosmicAppName || '采购订单管理');
     chatAppDd.classList.add('disabled');
   }
 }

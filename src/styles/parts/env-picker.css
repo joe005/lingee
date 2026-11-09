@@ -1,0 +1,109 @@
+/* 复用输入框标签与应用下拉的布局，环境段与左右标签等高。 */
+.composer-tag-row > .composer-tag-env { flex: 0 1 auto; min-width: 0; }
+#view-newtask .composer-tag-row:has(> .composer-tag-app:not(.hidden)),
+#view-chat.cosmic-app-session .composer-tag-row { display: flex; }
+#view-newtask .composer-tag-row:has(> .composer-tag-app.hidden) > .composer-tag-env,
+#view-chat:not(.cosmic-app-session) .composer-tag-env { display: none; }
+#view-chat.cosmic-app-session #chatAppDropdown { display: block; }
+.cosmic-app-session #chatAppDropdown .caret { display: none; }
+#view-newtask .composer-tag-row:has(> .composer-tag-app:not(.hidden)) .ctag,
+#view-chat.cosmic-app-session .composer-tag-row .ctag {
+  height: 32px;
+  box-sizing: border-box;
+  padding-block: 0;
+}
+.composer-tag-row > .composer-tag-env > .env-pick-chip {
+  height: 32px;
+  max-width: min(240px, 42vw);
+  box-sizing: border-box;
+  gap: 4px;
+  padding: 0 8px;
+  border-radius: 0;
+  background: var(--brand-fill);
+  color: var(--text);
+}
+.composer-tag-row > .composer-tag-env:not(.is-warn) > .env-pick-chip:hover,
+.composer-tag-row > .composer-tag-env:not(.is-warn).open > .env-pick-chip { background: var(--hover); }
+.composer-tag-env > .env-pick-chip:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+.composer-tag-env.open .caret { transform: rotate(180deg); }
+.env-pick-ic { width: 16px; height: 16px; flex: none; color: var(--text-secondary); }
+.composer-tag-env > .env-pick-chip::before {
+  content: "";
+  flex: none;
+  width: 1px;
+  height: 16px;
+  margin-right: 4px;
+  background: var(--border-focus);
+}
+.composer-tag-row:has(> .composer-tags.hidden) > .composer-tag-env > .env-pick-chip {
+  border-radius: 8px 0 0 8px;
+}
+.composer-tag-row:has(> .composer-tags.hidden) > .composer-tag-env > .env-pick-chip::before {
+  display: none;
+}
+.env-pick-chip .chip-label,
+.composer-tag-row .composer-tag-app .chip-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.composer-tag-row > .composer-tag-app { min-width: 0; }
+.env-pick-warn { flex: none; font-size: var(--font-size-12); font-weight: 500; }
+.env-pick-warn::before { content: "·"; margin-right: 4px; }
+.env-pick-warn:empty, .composer-tag-env.is-empty .caret { display: none; }
+.composer-tag-row > .composer-tag-env.is-warn > .env-pick-chip {
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+.composer-tag-env.is-warn .env-pick-ic { color: inherit; }
+
+.composer-tag-env .env-pick-menu {
+  min-width: min(280px, calc(100vw - 48px));
+  padding: 4px;
+  border-radius: 16px;
+}
+.env-pick-menu .app-list { padding: 0; }
+.env-pick-menu .app-item { padding: 8px 12px; border-radius: 8px; }
+.env-pick-menu .app-item-info { gap: 8px; }
+.env-pick-menu .app-item.checked { background: transparent; }
+.env-pick-menu .app-item:hover,
+.env-pick-menu .app-item:focus-visible { background: var(--hover); }
+.env-pick-menu .app-item:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+.env-pick-name-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--font-size-14);
+  color: var(--text);
+}
+.env-pick-meta { flex: none; font-size: var(--font-size-12); font-weight: 500; color: var(--warning); }
+.env-pick-meta:empty { display: none; }
+.env-pick-check { display: none; flex: none; width: 16px; height: 16px; color: var(--text); }
+.env-pick-item.checked .env-pick-check { display: block; }
+
+.env-pick-foot { flex: none; margin-top: 4px; padding-top: 4px; border-top: 1px solid var(--divider); }
+.env-pick-manage {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  font: inherit;
+  font-size: var(--font-size-14);
+  color: var(--text);
+  cursor: pointer;
+}
+.env-pick-manage:hover { background: var(--hover); }
+.env-pick-manage:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+.env-pick-manage .ic { width: 16px; height: 16px; flex: none; color: var(--text-secondary); }

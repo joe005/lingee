@@ -25,11 +25,13 @@ import { bindAddDropdown } from './plus-menu.js';
 import { initTaskMention, taskPicker } from './task-mention.js';
 import { initLocalEnvChat } from './local-env-chat.js';
 import { initGitInstallChat } from './git-install-chat.js';
+import { initEnvPicker } from '../env-picker.js';
 import { sessionHasConversation } from './session-policy.js';
 import { initPreviewRepairChat } from './preview-repair.js';
 /* 对话：initComposer / initPlusMenu 事件接线（拆自 composer.js），由 main.js 按原顺序调用 */
 
 function initComposer() {
+  initEnvPicker();
   initLocalEnvChat();
   initGitInstallChat();
   document.addEventListener('lingee:execution-pick-change',function(event){
