@@ -41,6 +41,16 @@ let personPopupTarget = '';
 let personPopupStageId = '';
 let activePlanScope = 'existing';
 const byId = id => document.getElementById(id);
+function resizeTaskDescription() {
+  const field = byId('niuDescription');
+  if (!field) return;
+  field.style.height = 'auto';
+  const style = getComputedStyle(field);
+  const borders = parseFloat(style.borderTopWidth) + parseFloat(style.borderBottomWidth);
+  const maxHeight = parseFloat(style.maxHeight);
+  const contentHeight = field.scrollHeight + borders;
+  field.style.height = `${Number.isFinite(maxHeight) ? Math.min(contentHeight, maxHeight) : contentHeight}px`;
+}
 const currentTask = () => activePlanScope === 'create'
   ? { project: byId('niuProject').value, assignee: selectedOwnerId, title: byId('niuTitle').value, desc: byId('niuDescription').value, issueType: byId('niuType').value, teamId: byId('niuTeam').value }
   : tkGetTasks().find(task => task.id === currentTaskId);
@@ -301,6 +311,7 @@ export function openNewIssueCreate(projectId) {
   byId('niuSmartPrompt').value = '';
   renderSmartProjectOptions();
   byId('niuCreateOverlay').hidden = false;
+  resizeTaskDescription();
   clearTaskInfoErrors();
   setCreateMode('manual');
   renderPlan();
@@ -315,6 +326,7 @@ export function openNewIssueCopy(taskId) {
   if (byId('niuCreateOverlay').hidden) return;
   byId('niuTitle').value = source.title || '';
   byId('niuDescription').value = source.desc || '';
+  resizeTaskDescription();
   byId('niuPriority').value = source.priority || 'medium';
   fillTeamOptions(source.teamId, source.issueType);
   if (tkPeopleInProject(source.project).some(person => person.id === source.assignee)) selectedOwnerId = source.assignee;
@@ -351,6 +363,7 @@ export function openNewIssueEdit(taskId) {
   byId('niuCreateSubmit').textContent = '保存修改';
   byId('niuCreateStageCount').textContent = String(draftStages.length);
   byId('niuCreateOverlay').hidden = false;
+  resizeTaskDescription();
   setCreateMode('manual');
   renderPlan();
   byId('niuCreateScroll').scrollTop = 0;
@@ -531,6 +544,7 @@ function initCreateSelects(selects = [byId('niuTeam'), byId('niuType'), byId('ni
 
 export function initNewIssueUI(renderCallback, detailCallback) {
   initCreateSelects();
+  byId('niuDescription').addEventListener('input', resizeTaskDescription);
   ['niuTitle','niuDescription','niuTeam','niuType'].forEach(id => {
     byId(id).addEventListener('input', refreshTaskInfoErrors);
     byId(id).addEventListener('change', refreshTaskInfoErrors);

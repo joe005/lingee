@@ -299,3 +299,15 @@
 
 #tkDrawer time,
 #tkDrawer .tk-drawer-changelog-time { font-variant-numeric:tabular-nums; }
+
+/* 新建任务弹窗随表单内容增高；视口不足时限制弹窗并滚动主体，保留上下安全间距。 */
+#niuCreateOverlay { padding-block:20px; }
+#niuCreateOverlay .niu-create { height:auto; max-height:calc(100dvh - 40px); }
+#niuCreateOverlay .niu-create-scroll { flex:0 1 auto; }
+#niuCreateOverlay .niu-create-form .niu-create-writing .niu-field textarea {
+  height:auto;
+  min-height:96px;
+  max-height:310px;
+  resize:none;
+  overflow-y:auto;
+}
