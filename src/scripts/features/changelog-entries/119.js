@@ -1,0 +1,1 @@
+export default {"id":"119","date":"2026-11-10","iconBg":"var(--brand-fill)","iconColor":"var(--brand)","type":"功能","module":"智能体团队","author":"wuhc2023","body":"功能·智能体团队：智能体团队提交改为只引用已上架且与草稿一致的成员版本，成员未就绪时列出成员与状态，可勾选后一次提交成员审核，每位成员各自生成审核单。"};

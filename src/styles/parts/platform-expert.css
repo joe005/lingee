@@ -218,3 +218,17 @@ body:has(.asset-submit-toast) #toast{max-width:min(960px,calc(100vw - 32px));bor
 #platformDialog .platform-expert-skills .x-skill-copy > span { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; font-size: var(--font-size-14); line-height: 20px; color: var(--text-secondary); }
 #platformDialog .platform-expert-skills .x-skill-empty { color: var(--text-secondary); }
 @media (max-width: 700px) { #platformDialog .platform-expert-skills .x-skill-list { grid-template-columns: minmax(0, 1fr); } }
+
+/* 提交智能体团队前，未就绪成员清单：可勾选的成员一次提交，各自生成独立审核单 */
+#platformDialog .asset-member-list{display:flex;flex-direction:column;gap:4px;margin-top:12px;max-height:240px;overflow:auto}
+#platformDialog .asset-member-check{display:flex;align-items:center;gap:8px;min-width:0;padding:8px 12px;border-radius:var(--tb-radius);background:var(--fill-1);color:var(--text);font-size:var(--font-size-14);line-height:22px;cursor:pointer}
+#platformDialog .asset-member-check.is-disabled{cursor:default}
+#platformDialog .asset-member-check>input{width:16px;height:16px;margin:0;flex:none;accent-color:var(--brand)}
+#platformDialog .asset-member-check>input:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+#platformDialog .asset-member-check>img{flex:none;border-radius:50%}
+#platformDialog .asset-member-check>span{min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+#platformDialog .asset-member-check>small{margin-left:auto;flex:none;padding:0 4px;border-radius:4px;background:var(--tag-bg);color:var(--text-secondary);font-size:var(--font-size-12);line-height:20px}
+#platformDialog .asset-member-check>small[data-member-status="rejected"]{background:var(--danger-bg);color:var(--danger)}
+#platformDialog .asset-member-check>small[data-member-status="modified"]{background:var(--brand-fill);color:var(--brand)}
+#platformDialog .asset-member-check>small:is([data-member-status="offline"],[data-member-status="invalid"]){background:var(--warning-bg);color:var(--warning)}
+#platformDialog .asset-member-check>small[data-member-status="pending"]{background:var(--review-bg);color:var(--pending)}
