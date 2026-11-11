@@ -22,7 +22,7 @@ function save(p, patch) {
 }
 export function basicSaveGeneral(p, ws, fields) {
   if (!basicEditable(p, ws)) return '没有权限修改当前设置';
-  if (!String(fields.name || '').trim()) return ws ? '请填写工作区名称' : '请填写名称';
+  if (!String(fields.name || '').trim()) return '请填写名称';
   if (!String(fields.desc || '').trim()) return '请填写描述';
   if (ws) { var res = wsUpdateInfo(p, ws.id, fields); return res.ok ? '' : res.error; }
   var name = fields.name.trim();
@@ -45,9 +45,9 @@ export function basicRepoRowError(item) {
   return ldNetCheck(info, auth)?.reason || '';
 }
 export function basicSaveRepo(p, ws, config) {
-  if (ws && !(p.workspaces || []).some(item => item.id === ws.id)) return '工作区已不存在';
+  if (ws && !(p.workspaces || []).some(item => item.id === ws.id)) return '空间已不存在';
   if (!basicEditable(p, ws)) return '没有权限修改仓库';
-  if (config.mode === 'inherit') return '工作区仓库独立配置，不支持继承';
+  if (config.mode === 'inherit') return '空间仓库独立配置，不支持继承';
   const list = config.repositories || [];
   const seen = new Set();
   for (const item of list) {

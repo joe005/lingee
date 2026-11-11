@@ -26,7 +26,7 @@ function renderNavStatus() {
 }
 function renderNavPop() {
   var pop = $('#ldNavPop');
-  pop.innerHTML = '<div class="ld-pop-head"><strong>当前工作区仓库未就绪</strong><span>初始化本机执行目录后，任务才能在本机执行</span></div>'
+  pop.innerHTML = '<div class="ld-pop-head"><strong>当前空间仓库未就绪</strong><span>初始化本机执行目录后，任务才能在本机执行</span></div>'
     + '<ul class="ld-pop-list">' + scopedAttention().map(function (project) {
       var view = ldProjectView(project);
       /* 已限定在当前工作区，名称显示仓库名（取自仓库地址），不再重复工作区路径 */

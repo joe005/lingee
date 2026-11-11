@@ -10,7 +10,7 @@ import { wsById } from '../../core/workspace-tree.js';
 import { CV_MEMBERS } from './data.js';
 import { getSpaceScope, setSpaceScope } from '../tasks-v2/page/space-filter.js';
 import { mgrCurrentPersonId } from '../manager/data.js';
-import { personName, spaceMemberIds, wsAdminIds, wsDelete, wsDeleteBlockReason, wsLeave, wsLeaveBlockReason, wsMappableSpaces, wsMemberIds, wsOwnerId, wsProjectById, wsScopePath, wsSpaceOf } from '../manager/workspaces.js';
+import { personName, spaceMemberIds, wsAdminIds, wsDelete, wsDeleteBlockReason, wsLeave, wsLeaveBlockReason, wsMemberIds, wsOwnerId, wsProjectById, wsScopePath } from '../manager/workspaces.js';
 import { isWsHost } from './data.js';
 import { basicAddMember, basicCanViewManagement, basicRepoConfig, basicEditable, basicRemoveMember, basicSaveGeneral, basicSaveRepo, basicSetMemberRole } from './basic-settings-data.js';
 /* 当前空间 / 工作区的基本设置，顶部切换器决定范围；只渲染当前分类。 */
@@ -37,25 +37,14 @@ function head(title, subtitle, save) {
   return '<div class="cv-basic-heading"><div><h2>' + title + '</h2>' + (subtitle ? '<p>' + esc(subtitle) + '</p>' : '') + '</div>'
     + (save ? '<button type="submit" class="ld-set-btn ld-set-btn--primary">保存</button>' : '') + '</div>';
 }
-/* 关联管理空间：独立工作区可选一个 Manage 开发空间或不关联；空间下的工作区固定为所在空间 */
-function mappingField(p, ws, editable) {
-  if (!isWsHost(p)) return '<div class="cv-basic-field"><span>关联管理空间</span>'
-    + '<div class="cv-general-space"><span id="cvBasicSpaceFixed">' + esc(p.name) + '</span><span class="cv-general-readonly">固定关联</span></div></div>';
-  var current = wsSpaceOf(p, ws);
-  var options = wsMappableSpaces();
-  if (current && !options.some(function (s) { return s.id === current.id; })) options = [current].concat(options);
-  return '<div class="cv-basic-field"><label for="cvBasicSpace">关联管理空间</label><div class="shared-select-host"><select id="cvBasicSpace" aria-describedby="cvBasicSpaceHint"' + (editable ? '' : ' disabled') + '>' +
-    '<option value="">不关联</option>' + options.map(function (s) { return '<option value="' + esc(s.id) + '"' + (current && current.id === s.id ? ' selected' : '') + '>' + esc(s.name) + '</option>'; }).join('') + '</select>'
-    + '<p class="cv-general-hint" id="cvBasicSpaceHint">可关联一个 Manage 开发空间。关联后，该空间的负责人和管理员可以查看本工作区的任务。</p></div></div>';
-}
 function general(p, ws) {
   var item = ws || p, editable = basicEditable(p, ws);
   return '<div class="cv-general-settings"><form data-cv-basic-form="general">' +
-    head('通用', editable ? (ws ? '' : '名称、描述和上下文与开发空间同步。') : '当前设置只读，请联系负责人或管理员修改。', editable) +
+    head('通用', editable ? '名称和描述保存后同步到 Manage 空间。' : '当前设置只读，请联系负责人或管理员修改。', editable) +
     '<div class="cv-general-fields">' + field('cvBasicName', '名称' + REQUIRED, item.name, !editable, 0, ws ? 30 : 60) +
     field('cvBasicDesc', '描述' + REQUIRED, item.desc || '', !editable, 2, 200) +
     (ws ? '' : field('cvBasicInstruction', '上下文', p.instruction || '', !editable, 3, 10000, '为空间内的智能体提供背景信息。')) +
-    mappingField(p, ws, editable) + '</div><p class="cv-basic-error" role="alert" hidden></p>' +
+    '</div><p class="cv-basic-error" role="alert" hidden></p>' +
     '</form>' + (ws ? leaveSection(p, ws) : '') + '</div>';
 }
 /* 高级选项：负责人只显示删除，普通成员只显示离开；不满足条件时按钮禁用并说明原因 */
@@ -66,8 +55,8 @@ function dangerRow(title, text, reason, attr, label) {
 function leaveSection(p, ws) {
   var me = mgrCurrentPersonId(), rows = '';
   if (!me) return '';
-  if (wsOwnerId(p, ws) === me) rows = dangerRow('删除工作区', '删除后无法恢复。工作区内没有任务时才能删除。', wsDeleteBlockReason(p, ws.id), 'data-cv-ws-delete', '删除工作区');
-  else if ((ws.memberIds || []).indexOf(me) >= 0) rows = dangerRow('离开工作区', '将自己从该工作区移除，离开后不能再在此工作区创建和处理任务。', wsLeaveBlockReason(p, ws, me), 'data-cv-ws-leave', '离开工作区');
+  if (wsOwnerId(p, ws) === me) rows = dangerRow('删除空间', '删除后无法恢复。空间内没有任务时才能删除。', wsDeleteBlockReason(p, ws.id), 'data-cv-ws-delete', '删除空间');
+  else if ((ws.memberIds || []).indexOf(me) >= 0) rows = dangerRow('离开空间', '将自己从该空间移除，离开后不能再在此空间创建和处理任务。', wsLeaveBlockReason(p, ws, me), 'data-cv-ws-leave', '离开空间');
   return rows ? '<section class="cv-basic-advanced" aria-labelledby="cvBasicAdvancedTitle"><h3 id="cvBasicAdvancedTitle">高级选项</h3>' + rows + '</section>' : '';
 }
 var repoDraft = null;
@@ -87,7 +76,7 @@ function repo(p, ws) {
   const count = effective.repositories.length;
   const toolbar = count ? '<div class="cv-repo-toolbar"><span class="cv-basic-note">' + count + ' 个仓库</span></div>' : '';
   const cards = effective.repositories.map((item, index) => repoCard(p, ws, item, index, editable, effective.repositories, effective.defaultRepo)).join('');
-  const footer = !editable && !count ? '<div class="cv-wsadmin-empty">当前工作区尚未配置仓库，请联系负责人或管理员添加。</div>' : '';
+  const footer = !editable && !count ? '<div class="cv-wsadmin-empty">当前空间尚未配置仓库，请联系负责人或管理员添加。</div>' : '';
   return '<form data-cv-basic-form="repo">' + head('仓库', '')
     + toolbar + '<div class="cv-repo-cards">' + cards + (editable ? '<button type="button" class="cv-repo-add-card" data-cv-repo-add>＋ 新增仓库</button>' : '') + '</div>' + footer
     + '<p class="cv-basic-error" role="alert" hidden></p></form>'
@@ -424,7 +413,7 @@ export function initBasicSettings(host) {
         repoDraft = null; renderBasicSettings(host,'repo'); toast('已设为主仓库','success'); return;
       }
       if (action.hasAttribute('data-cv-repo-remove')) {
-        if (!await requestDeleteConfirmation('删除当前工作区的仓库关联？远端仓库、本机目录和已启动任务保持不变。', {title:'删除仓库',confirmLabel:'删除'})) return;
+        if (!await requestDeleteConfirmation('删除当前空间的仓库关联？远端仓库、本机目录和已启动任务保持不变。', {title:'删除仓库',confirmLabel:'删除'})) return;
         const index = Number(action.dataset.cvRepoRemove);
         const item = repoDraft.repositories[index];
         const saved = buildRepoList(context.p,context.ws?.id || '');
@@ -458,19 +447,19 @@ export function initBasicSettings(host) {
       var ds = scope(); if (!ds.p || !ds.ws || del.disabled) return;
       var blocked = wsDeleteBlockReason(ds.p, ds.ws.id);
       if (blocked) { toast(blocked, 'warning'); renderBasicSettings(host, currentTab); return; }
-      if (!await requestDeleteConfirmation('删除「' + ds.ws.name + '」后无法恢复，该工作区的设置、成员和已添加的智能体配置将一并移除。', { title:'删除工作区', confirmLabel:'删除' })) return;
+      if (!await requestDeleteConfirmation('删除「' + ds.ws.name + '」后无法恢复，该空间的设置、成员和已添加的智能体配置将一并移除。', { title:'删除空间', confirmLabel:'删除' })) return;
       var removed = wsDelete(ds.p, ds.ws.id);
       if (!removed.ok) { toast(removed.error, 'warning'); renderBasicSettings(host, currentTab); return; }
-      toast('已删除工作区「' + ds.ws.name + '」', 'success');
+      toast('已删除空间「' + ds.ws.name + '」', 'success');
       setSpaceScope(ds.p.id, ''); return;
     }
     var leave = e.target.closest('[data-cv-ws-leave]');
     if (leave) {
       var ls = scope(), me = mgrCurrentPersonId(); if (!ls.p || !ls.ws || leave.disabled) return;
-      if (!await requestDeleteConfirmation('离开「' + ls.ws.name + '」后，你将不能再在该工作区创建和处理任务；需要时可请负责人重新添加。', { title:'离开工作区', confirmLabel:'离开' })) return;
+      if (!await requestDeleteConfirmation('离开「' + ls.ws.name + '」后，你将不能再在该空间创建和处理任务；需要时可请负责人重新添加。', { title:'离开空间', confirmLabel:'离开' })) return;
       var left = wsLeave(ls.p, ls.ws.id, me);
       if (!left.ok) { toast(left.error, 'warning'); renderBasicSettings(host, currentTab); return; }
-      toast('已离开工作区「' + ls.ws.name + '」', 'success');
+      toast('已离开空间「' + ls.ws.name + '」', 'success');
       setSpaceScope(ls.p.id, ''); return;
     }
     var roleBtn = e.target.closest('[data-cv-basic-role]');

@@ -16,7 +16,7 @@ export function capabilityContext() {
   return {p,ws,editable:!!p && (!scope.ws || !!ws) && basicEditable(p,ws)};
 }
 /* 已聚焦到具体范围，来源只标「工作区」，不重复范围名称。 */
-function originHtml() { return '<span class="cv-workspace-origin">工作区</span>'; }
+function originHtml() { return '<span class="cv-workspace-origin">空间</span>'; }
 /* 金蝶官方预置出厂的资产随产品自带，不属于工作区分配，不显示「工作区」标记 */
 function originFor(kind,data) { return layerOf(kind,data || {}) === 'builtin' ? '' : originHtml(); }
 /* 与「更多」里其他未安装卡片统一为右上角「+」图标按钮，按工作区固定版本安装到当前用户本机 */
@@ -57,7 +57,7 @@ export function workspaceCapabilityExtras(kind,items,keyword,layer='all') {
   if (!rows.length) return '';
   return rows.map(row => {
     const face = row.kind === 'team' ? '<span class="x-faces">'+(row.experts || []).slice(0,4).map(e => '<img src="'+xav(e.data.k)+'" alt="">').join('')+'</span>' : '<img class="x-av" src="'+xav(row.data.k)+'" alt="">';
-    return '<article class="app-card x-card" data-workspace-asset="'+xesc(row.key)+'"><div class="card-top">'+face+'<div class="card-titles"><div class="card-title-row"><span class="card-title">'+xesc(row.data.name)+'</span></div><div class="x-sub asset-card-summary">'+assetSourceBadge(row.kind,row.data)+'<span class="platform-client-badge">V'+xesc(row.version)+'</span>'+originFor(row.kind,row.data)+'<span>'+(row.kind === 'team' ? (row.data.members || []).length+' 个智能体' : (row.data.skills || []).length+' 个技能')+'</span></div></div></div><div class="card-desc">'+xesc(row.data.desc || '')+'</div>'+assetTagsHtml(row.data.tags || row.data.domains || [])+'</article>';
+    return '<article class="app-card x-card" data-workspace-asset="'+xesc(row.key)+'"><div class="card-top">'+face+'<div class="card-titles"><div class="card-title-row"><span class="card-title">'+xesc(row.data.name)+'</span></div><div class="x-sub asset-card-summary">'+assetSourceBadge(row.kind,row.data)+'<span class="platform-client-badge">V'+xesc(row.version)+'</span><span>'+(row.kind === 'team' ? (row.data.members || []).length+' 个智能体' : (row.data.skills || []).length+' 个技能')+'</span>'+originFor(row.kind,row.data)+'</div></div></div><div class="card-desc">'+xesc(row.data.desc || '')+'</div>'+assetTagsHtml(row.data.tags || row.data.domains || [])+'</article>';
   }).join('');
 }
 export function initCapabilitySettings() {

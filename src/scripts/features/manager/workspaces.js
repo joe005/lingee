@@ -3,7 +3,7 @@ import {
 } from '../../core/workspace-tree.js';
 import { CV_MEMBERS, CV_PROJECTS, cvPersistProjects, cvPersonById, isWsHost, wsHost, wsHostSave } from '../collab/data.js';
 import { tkUpdateTask } from '../tasks-v2/data.js';
-import { mgrCanManageProject, mgrCurrentPersonId, mgrIsDevTask, mgrProjectById, mgrProjects, mgrProjectTasks, mgrSaveProjects } from './data.js';
+import { mgrCanManageProject, mgrCurrentPersonId, mgrIsDevTask, mgrProjectById, mgrProjects, mgrProjectTasks, mgrSaveProjects, mgrSyncBuildSpaces } from './data.js';
 /* 管理 · 工作区数据与权限（一期，原型）：工作区随空间保存在 project.workspaces，任务归属写在任务的 workspaceId。
    工作区隔离：工作区及其任务只对工作区成员与空间负责人 / 管理员可见，空间根下的任务不受影响；成员只要求是空间成员。
    权限只在前端模拟，正式实现由 Manage 统一校验。 */
@@ -21,27 +21,24 @@ function wsProjectById(id) {
   return CV_PROJECTS.find(function (p) { return p.id === id; }) || mgrProjectById(id) || null;
 }
 
-/* ---------- 关联管理工作区（Manage 开发空间） ---------- */
-/* 可关联的是未归档的开发空间：Manage 的研发类空间，以及协作开发里建的空间（同属空间）；一个工作区最多关联一个，也可以不关联 */
-function wsMappableSpaces() {
-  return mgrProjects().filter(function (p) {
-    return p.status !== 'archived' && (p.containsRd === true || ['devtest', 'collab', 'collaboration'].indexOf(p.template) >= 0);
-  }).map(function (p) { return CV_PROJECTS.find(function (cv) { return cv.id === p.id; }) || p; })
-    .concat(CV_PROJECTS.filter(function (p) { return p.status !== 'archived' && !mgrProjectById(p.id); }));
-}
-/* 工作区所属的管理工作区：空间下的工作区就是所在空间；独立工作区看关联字段，未关联返回 null */
+/* ---------- 空间（2026-11-06：只有空间，没有工作区的概念） ----------
+   Build 新建的空间挂在内部容器上，同时在 Manage 建一个同 id 的空间（见 mgrSyncBuildSpaces）；旧空间下的子工作区各按一个空间展示。
+   不再关联已有的 Manage 空间，ws.spaceId 等旧关联字段不再使用。 */
+function wsMappableSpaces() { return []; }
 function wsSpaceOf(project, ws) {
   if (!project) return null;
-  if (!isWsHost(project)) return project;
-  var id = ws && ws.spaceId;
-  return id ? CV_PROJECTS.find(function (p) { return p.id === id; }) || mgrProjectById(id) || null : null;
+  return isWsHost(project) ? null : project;
 }
-/* 展示路径：「开发空间 / 工作区」，未关联的独立工作区只显示工作区名 */
+/* 展示名：每个范围都是一个空间，只显示自己的名称，不带上级路径 */
 function wsScopePath(project, ws) {
   if (!project) return '';
-  if (!ws) return project.name;   /* 空间根即与空间同名的工作区 */
-  var space = wsSpaceOf(project, ws);
-  return space ? space.name + ' / ' + ws.name : ws.name;
+  return ws ? ws.name : project.name;
+}
+/* Build 新建的空间同步到 Manage：名称、描述、负责人、管理员、成员；删除后 Manage 侧同步移除 */
+function wsSyncManageSpaces() {
+  return mgrSyncBuildSpaces(wsList(wsHost()).map(function (ws) {
+    return { id: ws.id, name: ws.name, desc: ws.desc || '', ownerId: ws.ownerId || '', adminIds: wsAdminIds(ws), memberIds: wsMemberIds(wsHost(), ws), status: ws.status };
+  }));
 }
 function wsEnabled(project) { return wsAvailable(project) && wsList(project).length > 0; }
 
@@ -69,12 +66,8 @@ function isWsMember(project, ws, personId) { return !!personId && wsMemberIds(pr
 
 /* 空间负责人 / 空间管理员 / 系统管理员 */
 function isSpaceManager(project) { return mgrCanManageProject(project); }
-/* 独立工作区的上级管理者：系统管理员，或关联开发空间的负责人 / 管理员 */
-function isScopeManager(project, ws) {
-  if (isSpaceManager(project)) return true;
-  var space = isWsHost(project) ? wsSpaceOf(project, ws) : null;
-  return !!space && mgrCanManageProject(space);
-}
+/* 上级管理者：旧空间的负责人 / 管理员 / 系统管理员；Build 新建的空间由自己的负责人和管理员管理（容器本身只认系统管理员） */
+function isScopeManager(project) { return isSpaceManager(project); }
 /* 工作区只有一级：负责人与管理员都只管本工作区 */
 function isWsOwner(project, ws) {
   var me = mgrCurrentPersonId();
@@ -104,6 +97,13 @@ function commit(project, before, detail) {
   var prev = { updatedAt: project.updatedAt };
   project.updatedAt = Date.now();
   var saved = isWsHost(project) ? wsHostSave() : CV_PROJECTS.includes(project) ? cvPersistProjects() : mgrSaveProjects();
+  /* Build 新建的空间：本地保存成功后调用 Manage 接口同步；失败则整体回滚，提示重试 */
+  if (saved && isWsHost(project) && !wsSyncManageSpaces()) {
+    project.workspaces = JSON.parse(before);
+    wsHostSave();
+    project.updatedAt = prev.updatedAt;
+    return false;
+  }
   if (!saved) {
     project.workspaces = JSON.parse(before);
     project.updatedAt = prev.updatedAt;
@@ -118,26 +118,20 @@ function fail(error) { return { ok: false, error: error }; }
 /* ---------- 校验 ---------- */
 function wsNameError(project, name, selfId) {
   var v = String(name || '').trim();
-  if (!v) return '请填写工作区名称';
-  if (v.length > WS_NAME_MAX) return '工作区名称不能超过 ' + WS_NAME_MAX + ' 个字';
+  if (!v) return '请填写空间名称';
+  if (v.length > WS_NAME_MAX) return '空间名称不能超过 ' + WS_NAME_MAX + ' 个字';
   var dup = wsList(project).some(function (w) { return w.id !== selfId && w.name.trim() === v; });
-  return dup ? (isWsHost(project) ? '已有同名工作区' : '空间下已有同名工作区') : '';
+  return dup ? '已有同名空间' : '';
 }
-function wsSpaceError(project, spaceId) {
-  if (!spaceId) return '';
-  if (!isWsHost(project)) return '空间下的工作区不能更改关联';
-  return wsMappableSpaces().some(function (p) { return p.id === spaceId; }) ? '' : '请选择有效的开发空间';
-}
+function wsSpaceError() { return ''; }
 
 /* ---------- 增删改 ---------- */
 function wsCreate(project, fields) {
-  if (!canCreateWs(project)) return fail('没有权限新建工作区');
+  if (!canCreateWs(project)) return fail('没有权限新建空间');
   var nameErr = wsNameError(project, fields.name, '');
   if (nameErr) return fail(nameErr);
   var ownerId = fields.ownerId || '';
   if (!ownerId || !isSpaceMember(project, ownerId)) return fail(isWsHost(project) ? '请选择负责人' : '请从空间成员中选择负责人');
-  var spaceErr = wsSpaceError(project, fields.spaceId || '');
-  if (spaceErr) return fail(spaceErr);
   var before = snapshot(project);
   var siblings = wsList(project);
   var ws = {
@@ -145,30 +139,25 @@ function wsCreate(project, fields) {
     memberIds: [ownerId], order: siblings.length ? Math.max.apply(null, siblings.map(function (w) { return w.order || 0; })) + 1 : 1,
     status: 'active', visibility: 'public', createdBy: mgrCurrentPersonId(), createdAt: Date.now(),
   };
-  if (isWsHost(project)) ws.spaceId = fields.spaceId || '';
   project.workspaces = wsList(project).concat(ws);
-  if (!commit(project, before, { created: ws.id })) return fail('保存失败，请重试');
+  if (!commit(project, before, { created: ws.id })) return fail(isWsHost(project) ? 'Manage 空间创建失败，请重试' : '保存失败，请重试');
   return { ok: true, ws: ws };
 }
 function wsUpdateInfo(project, id, fields) {
   var ws = wsById(project, id);
-  if (!ws) return fail('工作区不存在');
-  if (!canManageWs(project, ws)) return fail('没有权限修改该工作区');
+  if (!ws) return fail('空间不存在');
+  if (!canManageWs(project, ws)) return fail('没有权限修改该空间');
   var nameErr = wsNameError(project, fields.name, ws.id);
   if (nameErr) return fail(nameErr);
-  var mapping = isWsHost(project) && fields.spaceId !== undefined;
-  var spaceErr = mapping ? wsSpaceError(project, fields.spaceId) : '';
-  if (spaceErr) return fail(spaceErr);
   var before = snapshot(project);
   ws.name = String(fields.name).trim();
   ws.desc = String(fields.desc || '').trim();
-  if (mapping) ws.spaceId = fields.spaceId || '';
   if (!commit(project, before, { renamed: ws.id })) return fail('保存失败，请重试');
   return { ok: true };
 }
 function wsReorder(project, id, dir) {
   var ws = wsById(project, id);
-  if (!ws) return fail('工作区不存在');
+  if (!ws) return fail('空间不存在');
   if (!canManageWs(project, ws)) return fail('没有权限调整排序');
   var sibs = wsChildren(project, '');
   var i = sibs.findIndex(function (w) { return w.id === id; });
@@ -216,8 +205,8 @@ function wsArchivePlan(project, id) {
 }
 function wsArchive(project, id) {
   var ws = wsById(project, id);
-  if (!ws) return fail('工作区不存在');
-  if (!canManageWs(project, ws)) return fail('没有权限归档该工作区');
+  if (!ws) return fail('空间不存在');
+  if (!canManageWs(project, ws)) return fail('没有权限归档该空间');
   var plan = wsArchivePlan(project, id);
   if (plan.openCount) return fail('还有 ' + plan.openCount + ' 个未完成任务，请先完成、移走或取消');
   var before = snapshot(project);
@@ -227,8 +216,8 @@ function wsArchive(project, id) {
 }
 function wsRestore(project, id) {
   var ws = wsById(project, id);
-  if (!ws) return fail('工作区不存在');
-  if (!canManageWs(project, ws)) return fail('没有权限恢复该工作区');
+  if (!ws) return fail('空间不存在');
+  if (!canManageWs(project, ws)) return fail('没有权限恢复该空间');
   var before = snapshot(project);
   ws.status = 'active';
   if (!commit(project, before, { restored: id })) return fail('保存失败，请重试');
@@ -237,8 +226,8 @@ function wsRestore(project, id) {
 /* 只允许删除没有任务（含已完成）的工作区；有任务时改为归档 */
 function wsDeleteBlockReason(project, id) {
   var ws = wsById(project, id);
-  if (!ws) return '工作区不存在';
-  if (!canOwnWs(project, ws)) return '没有权限删除该工作区';
+  if (!ws) return '空间不存在';
+  if (!canOwnWs(project, ws)) return '没有权限删除该空间';
   var n = wsTasksOf(project, id).length;
   if (n) return '还有 ' + n + ' 个任务，请先移走；需要保留历史任务时请改为归档';
   return '';
@@ -255,8 +244,8 @@ function wsDelete(project, id) {
 /* ---------- 成员与负责人 ---------- */
 function wsAddMembers(project, id, personIds, role) {
   var ws = wsById(project, id);
-  if (!ws) return fail('工作区不存在');
-  if (!canManageWs(project, ws)) return fail('没有权限管理该工作区的成员');
+  if (!ws) return fail('空间不存在');
+  if (!canManageWs(project, ws)) return fail('没有权限管理该空间的成员');
   var bad = personIds.filter(function (p) { return !isSpaceMember(project, p); });
   if (bad.length) return fail('只能添加空间成员');
   var before = snapshot(project);
@@ -269,11 +258,11 @@ function wsAddMembers(project, id, personIds, role) {
 }
 function wsRemoveMember(project, id, personId) {
   var ws = wsById(project, id);
-  if (!ws) return fail('工作区不存在');
-  if (!canManageWs(project, ws)) return fail('没有权限管理该工作区的成员');
+  if (!ws) return fail('空间不存在');
+  if (!canManageWs(project, ws)) return fail('没有权限管理该空间的成员');
   if (wsOwnerId(project, ws) === personId) return fail('负责人不能直接移除，请先更换负责人');
   var load = wsMemberOpenTasks(project, ws, personId);
-  if (load.length) return fail(personName(personId) + ' 在该工作区仍有 ' + load.length + ' 个未完成任务，请先转交');
+  if (load.length) return fail(personName(personId) + ' 在该空间仍有 ' + load.length + ' 个未完成任务，请先转交');
   var before = snapshot(project);
   ws.memberIds = (ws.memberIds || []).filter(function (p) { return p !== personId; });
   ws.adminIds = wsAdminIds(ws).filter(function (p) { return p !== personId; });
@@ -282,12 +271,12 @@ function wsRemoveMember(project, id, personId) {
 }
 /* 成员自己离开工作区：负责人需先更换负责人，名下仍有未完成任务需先转交 */
 function wsLeaveBlockReason(project, ws, personId) {
-  if (!ws) return '工作区不存在';
-  if (ws.status === 'archived') return '已归档的工作区不能离开';
-  if ((ws.memberIds || []).indexOf(personId) < 0) return '你不是该工作区的成员';
-  if (wsOwnerId(project, ws) === personId) return '你是该工作区的负责人，请先更换负责人再离开';
+  if (!ws) return '空间不存在';
+  if (ws.status === 'archived') return '已归档的空间不能离开';
+  if ((ws.memberIds || []).indexOf(personId) < 0) return '你不是该空间的成员';
+  if (wsOwnerId(project, ws) === personId) return '你是该空间的负责人，请先更换负责人再离开';
   var load = wsMemberOpenTasks(project, ws, personId);
-  return load.length ? '你在该工作区仍有 ' + load.length + ' 个未完成任务，请先转交' : '';
+  return load.length ? '你在该空间仍有 ' + load.length + ' 个未完成任务，请先转交' : '';
 }
 function wsLeave(project, id, personId) {
   var ws = wsById(project, id), reason = wsLeaveBlockReason(project, ws, personId);
@@ -301,10 +290,10 @@ function wsLeave(project, id, personId) {
 /* 修改成员角色（成员 / 管理员）：负责人角色固定，只能在成员之间切换 */
 function wsSetAdmin(project, id, personId, isAdmin) {
   var ws = wsById(project, id);
-  if (!ws) return fail('工作区不存在');
-  if (!canManageWs(project, ws)) return fail('没有权限管理该工作区的成员');
+  if (!ws) return fail('空间不存在');
+  if (!canManageWs(project, ws)) return fail('没有权限管理该空间的成员');
   if (wsOwnerId(project, ws) === personId) return fail('负责人的角色不能修改');
-  if (!isWsMember(project, ws, personId)) return fail('该人员不是工作区成员');
+  if (!isWsMember(project, ws, personId)) return fail('该人员不是空间成员');
   var before = snapshot(project);
   var set = wsAdminIds(ws).filter(function (p) { return p !== personId; });
   if (isAdmin) set.push(personId);
@@ -314,7 +303,7 @@ function wsSetAdmin(project, id, personId, isAdmin) {
 }
 function wsSetOwner(project, id, personId) {
   var ws = wsById(project, id);
-  if (!ws) return fail('工作区不存在');
+  if (!ws) return fail('空间不存在');
   if (!canOwnWs(project, ws)) return fail('没有权限更换负责人');
   if (!isSpaceMember(project, personId)) return fail('请从空间成员中选择负责人');
   var before = snapshot(project);
@@ -382,7 +371,7 @@ function wsMoveTasks(project, tasks, targetId) {
 }
 
 export {
-  WS_MAX_DEPTH, WS_NAME_MAX, canCreateTaskIn, canCreateWs, isScopeManager, wsMappableSpaces, wsScopePath, wsSpaceOf, canManageWs, canOwnWs, isSpaceManager, isSpaceMember, isWsMember, personName, spaceMemberIds,
+  WS_MAX_DEPTH, WS_NAME_MAX, canCreateTaskIn, canCreateWs, isScopeManager, wsMappableSpaces, wsSyncManageSpaces, wsScopePath, wsSpaceOf, canManageWs, canOwnWs, isSpaceManager, isSpaceMember, isWsMember, personName, spaceMemberIds,
   wsAddMembers, wsAdminIds, wsArchive, wsArchivePlan, wsAvailable, wsCreate, wsDelete, wsDeleteBlockReason, wsEnabled, wsMemberIds, wsMemberOpenTasks, wsMoveTasks,
   wsLeave, wsLeaveBlockReason, wsVisible, wsNameError, wsProjectById, wsOpenTasks, wsOwnerId, wsPlanMove, wsProgress, wsRdTasks, wsRemoveMember, wsReorder, wsRestore, wsSetAdmin, wsSetOwner, wsTasksOf, wsUpdateInfo,
 };

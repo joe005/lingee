@@ -60,11 +60,11 @@ assert.equal(tree.wsScopeName(project, 'ws-a'), '应用开发组');
 assert.equal(tree.wsTaskLabel(project, rootTask), '产品研发', 'space-root tasks show only the space name');
 assert.equal(tree.wsTaskLabel(project, wsTask), '应用开发组', 'workspace tasks show only the workspace name, without the space');
 assert.equal(tree.wsTaskLabel({ name: '老空间', workspaces: [] }, rootTask), '老空间', 'spaces without workspaces keep the plain label');
-// 独立工作区：成员可见；关联空间的管理者可见关联的那个；未关联的只有成员和系统管理员可见
+// Build 新建的空间：只有成员和系统管理员可见，不再关联已有 Manage 空间
 const hostTask = (workspaceId) => ({ ...task(workspaceId), project: 'build-ws-host' });
 assert.equal(view('member', hostTask('ws-f')), true, 'standalone workspace members see its tasks');
 assert.equal(view('outsider', hostTask('ws-f')), false, 'non-members cannot see standalone workspace tasks');
-assert.equal(view('admin', hostTask('ws-m')), true, 'mapped space admin sees the mapped standalone workspace');
+assert.equal(view('admin', hostTask('ws-m')), false, 'spaces created in Build are no longer visible to managers of a formerly linked space');
 assert.equal(view('admin', hostTask('ws-f')), false, 'space admin cannot see an unmapped standalone workspace');
 assert.equal(view('sys', hostTask('ws-f')), true, 'system admin sees standalone workspaces');
 currentUser = 'member';
@@ -72,4 +72,4 @@ assert.equal(mod.tkProjectsForCurrentUser().some(p => p.id === host.id), false, 
 assert.equal(mod.tkScopeProjects().some(p => p.id === host.id), true, 'scope list includes the container when a workspace is visible');
 currentUser = 'outsider';
 assert.equal(mod.tkScopeProjects().some(p => p.id === host.id), false, 'scope list hides the container without visible workspaces');
-console.log('工作区可见性回归通过：默认工作区任务不受影响、工作区任务仅成员与空间管理者可见、切换器只列可见工作区与默认工作区范围、独立工作区按成员与关联空间管理者可见。');
+console.log('工作区可见性回归通过：默认工作区任务不受影响、工作区任务仅成员与空间管理者可见、切换器只列可见工作区与默认工作区范围、Build 新建的空间只对成员和系统管理员可见。');

@@ -52,9 +52,9 @@ export function ldEnsureDemoReady(mine, userId) {
     var info = ldRepoInfo(project);
     if (!info || !info.valid || ldRemoteProtocol(info.repo) !== 'https' || seeded[project.id]) return;
     var auth = mine.auths[info.host];
-    if (!auth || (auth.expiresAt && auth.expiresAt < new Date().toISOString().slice(0,10))) {
+    if (!auth) {
       mine.auths[info.host] = { platform:info.platform, username:ldGitUsername(), account:tkGetPerson(userId)?.name || '吴晓锋',
-        source:'local', sourceLabel:'演示预配置', scopes:['read_repository','write_repository'], expiresAt:'', savedAt:ldNow() };
+        source:'local', sourceLabel:'演示预配置', scopes:['read_repository','write_repository'], savedAt:ldNow() };
     }
     if (!mine.repoBindings[info.repoKey]) {
       mine.repoBindings[info.repoKey] = { repo:info.repo, repoKey:info.repoKey, path:ldDefaultPath(project), mode:'auto', protocol:'https', writable:true, branch:info.baseBranch, syncedAt:ldNow() };
@@ -191,7 +191,7 @@ export function ldAuthEmail(auth) { return auth ? auth.email || tkGetPerson(tkCu
 /* 账号下方的来源说明；界面上不出现令牌本身 */
 export function ldSourceLabel(auth) {
   if (auth.source === 'local') return '本机凭据';
-  if (auth.source === 'token') return '访问令牌' + (auth.expiresAt ? ' · ' + auth.expiresAt + ' 到期' : '');
+  if (auth.source === 'token') return '访问令牌';
   return '浏览器登录 · 自动续期';
 }
 export function ldFindLocalCred(host) { return LD_LOCAL_CREDS.find(function (cred) { return cred.host === host; }) || null; }
@@ -235,7 +235,7 @@ export function ldSaveAuthEntry(host, entry) {
 export function ldAdoptLocalCred(host) {
   var cred = ldFindLocalCred(host);
   if (!cred) return null;
-  ldSaveAuthEntry(host, { platform:cred.platform, source:'local', sourceLabel:cred.source, expiresAt:'' });
+  ldSaveAuthEntry(host, { platform:cred.platform, source:'local', sourceLabel:cred.source });
   ldRefresh();
   return cred;
 }
@@ -243,10 +243,8 @@ export function ldAdoptLocalCred(host) {
 export function ldAuthFor(host, userId) {
   var auth = ldStateOf(userId).auths[host];
   if (!auth) return null;
-  var today = new Date().toISOString().slice(0, 10), soon = new Date(Date.now() + 7 * 864e5).toISOString().slice(0, 10);
-  var expired = !!auth.expiresAt && auth.expiresAt < today;
-  /* 到期前 7 天提醒重新创建令牌，避免任务突然鉴权失败 */
-  return Object.assign({}, auth, { expired:expired, expiring:!expired && !!auth.expiresAt && auth.expiresAt <= soon });
+  /* 不按旧缓存的到期日推断状态；失效由凭据检测结果记录。 */
+  return Object.assign({}, auth, { expired:auth.expired === true });
 }
 /* 账号按仓库主机自动匹配；写权限针对具体仓库，保存账号时判断不了，拉取或绑定目录时校验并记在 binding.writable 上 */
 export var LD_STATUS_LABELS = { ready:'已就绪', download:'未初始化', login:'未登录', expired:'凭据失效', noaccess:'无权访问', offline:'无法连接', mismatch:'目录不匹配', git:'Git 不可用', invalid:'地址不规范', notfound:'仓库不存在', norepo:'未配置仓库', ssh:'SSH 仓库', unchecked:'待检测', missing:'目录丢失', unused:'可清理' };
@@ -384,8 +382,8 @@ export function ldForgetRepoBinding(repoKey) {
    设置页打开时不检测，展示上次结果；点「检测」或登录、初始化成功后更新（只更新相关平台）。
    结果按登录人保存（真实客户端存本机配置目录，只有状态，不含凭据）。 */
 var LD_PUBLIC_HOSTS = ['github.com', 'gitee.com'];
-export var LD_ACCOUNT_LABELS = { available:'可用', expiring:'即将过期', login:'未登录', expired:'凭据失效', offline:'无法连接', git:'Git 不可用' };
-/* 凭据失效按本地已知的到期日判断（正式实现以平台接口 401 为准）；失效以外，网络不通时连平台验证不了，记为无法连接 */
+export var LD_ACCOUNT_LABELS = { available:'可用', login:'未登录', expired:'凭据失效', offline:'无法连接', git:'Git 不可用' };
+/* 凭据失效以平台检测为准，不推算到期日；网络不通时记为无法连接。 */
 export function ldAccountKey(host) {
   if (ldMine().gitMissing) return 'git';
   var auth = ldAuthFor(host);

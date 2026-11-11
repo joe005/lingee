@@ -19,10 +19,12 @@
 #view-collab .cv-wsbar{display:flex;position:relative;align-self:center;width:calc(100% - 32px);max-width:1160px;box-sizing:border-box;padding:16px 0 0;border-bottom:0;background:transparent}
 #view-collab .cv-wsbar #cvWsSwitch,#view-collab .cv-wsbar #cvWsCreateForm{display:none}
 #view-collab .cv-space-switch{position:relative;flex:none;min-width:0;max-width:360px}
-/* 旧版顶部工作区标题：大号字、无边框，右侧小箭头；下拉复用 .mgr-ws-pop 样式 */
-#view-collab .cv-space-switch .mgr-ws-switch-btn{height:36px;max-width:360px;padding:0 6px 0 0;background:transparent;color:var(--text-title);font-size:var(--font-size-18);font-weight:600;line-height:var(--line-height-18)}
-#view-collab .cv-space-switch .mgr-ws-switch-btn:hover{background:transparent;color:var(--brand)}
-#view-collab .cv-space-switch .mgr-ws-switch-btn svg{color:var(--text-soft)}
+/* 顶部空间切换：白底描边按钮，右侧箭头；下拉复用 .mgr-ws-pop 样式。 */
+#view-collab .cv-space-switch .mgr-ws-switch-btn{box-sizing:border-box;height:36px;max-width:360px;gap:12px;padding:0 12px;border:1px solid var(--border-hover);border-radius:8px;background:var(--bg);color:var(--text);font-size:var(--font-size-14);font-weight:500;line-height:var(--line-height-14);transition:background .15s,border-color .15s}
+#view-collab .cv-space-switch .mgr-ws-switch-btn:hover{border-color:var(--border-focus);background:var(--fill-1)}
+#view-collab .cv-space-switch .mgr-ws-switch-btn[aria-expanded="true"]{border-color:var(--border-focus);background:var(--fill-1)}
+@media(prefers-reduced-motion:reduce){#view-collab .cv-space-switch .mgr-ws-switch-btn{transition:none}}
+#view-collab .cv-space-switch .mgr-ws-switch-btn svg{color:var(--text-secondary)}
 /* 顶部切换器取代任务工具栏里的「全部空间」按钮（同一份筛选条件） */
 #view-collab #cv-tasks-current #view-tasks #tkSpaceBtn,#view-collab #cv-tasks-current #view-tasks #tkSpacePopup{display:none}
 #view-collab .cv-wsbar .cv-ws .cv-proj-btn{padding:3px 0;background:transparent;border:0;border-radius:0;color:var(--text);font-size:var(--font-size-20);font-weight:650;gap:10px}
@@ -299,30 +301,33 @@
 #view-collab .cv-repo-address-summary { display: flex; align-items: center; gap: 8px; min-width: 0; margin-bottom: 4px; }
 #view-collab .cv-repo-address-summary p { flex: 0 1 auto; min-width: 0; margin: 0; }
 #view-collab .cv-repo-branch-summary { flex: 0 0 auto; max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 6px; border-radius: 4px; background: var(--fill-1); color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); }
-#view-collab .cv-general-settings :is(.cv-general-fields, .cv-basic-advanced) { max-width: 760px; }
-#view-collab .cv-general-settings .cv-basic-heading { margin-bottom: 16px; }
+#view-collab .cv-general-settings { width: 100%; max-width: 760px; box-sizing: border-box; }
+#view-collab .cv-general-settings .cv-basic-heading { align-items: flex-start; gap: 16px; margin-bottom: 24px; }
+#view-collab .cv-general-settings .cv-basic-heading p { margin: 8px 0 0; }
 #view-collab .cv-general-settings .cv-basic-heading > button { flex: none; }
-#view-collab .cv-general-fields { border-block: 1px solid var(--divider); }
-#view-collab .cv-general-fields .cv-basic-field { display: grid; grid-template-columns: minmax(0, 144px) minmax(0, 1fr); align-items: start; gap: 16px; padding: 12px 0; }
-#view-collab .cv-general-fields .cv-basic-field + .cv-basic-field { border-top: 1px solid var(--divider); }
+#view-collab .cv-general-fields { display: flex; flex-direction: column; gap: 24px; box-sizing: border-box; padding: 24px; border: 1px solid var(--border-hover); border-radius: 12px; background: var(--bg); }
+#view-collab .cv-general-fields .cv-basic-field { display: grid; grid-template-columns: 96px minmax(0, 1fr); align-items: start; gap: 16px; padding: 0; }
 #view-collab .cv-general-fields .cv-basic-field > :first-child { padding-top: 8px; line-height: var(--line-height-14); }
 #view-collab .cv-general-fields .cv-basic-field :is(input, .shared-select-trigger) { box-sizing: border-box; width: 100%; min-height: var(--control-h); border-radius: 8px; }
-#view-collab .cv-general-fields .cv-basic-field textarea { display: block; }
+#view-collab .cv-general-fields .cv-basic-field textarea { display: block; min-height: 96px; }
+#view-collab .cv-general-fields .cv-basic-field :is(input,textarea) { border-color: var(--border-hover); }
+#view-collab .cv-general-fields .cv-basic-field :is(input,textarea):hover:not(:disabled) { border-color: var(--border-focus); }
 #view-collab .cv-general-fields .cv-basic-field .cv-general-hint { margin: 4px 0 0; color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); }
 #view-collab .cv-general-space { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; min-width: 0; min-height: var(--control-h); color: var(--text); font-size: var(--font-size-14); overflow-wrap: anywhere; }
 #view-collab .cv-general-readonly { padding: 0 8px; border-radius: 4px; background: var(--tag-bg); color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); }
-#view-collab .cv-general-settings .cv-basic-advanced { margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--divider); }
+#view-collab .cv-general-settings .cv-basic-advanced { margin-top: 24px; padding-top: 0; border-top: 0; }
 #view-collab .cv-general-settings .cv-basic-advanced h3 { margin: 0 0 12px; color: var(--text); font-size: var(--font-size-16); font-weight: 500; line-height: var(--line-height-16); }
-#view-collab .cv-basic-danger { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 16px; border-radius: 12px; background: var(--fill-1); }
+#view-collab .cv-basic-danger { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px; border: 1px solid var(--border-hover); border-radius: 12px; background: var(--fill-1); }
 #view-collab .cv-basic-danger > div { min-width: 0; }
 #view-collab .cv-basic-danger strong { color: var(--text); font-size: var(--font-size-14); font-weight: 500; }
 #view-collab .cv-basic-danger p { margin: 4px 0 0; color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); }
-#view-collab .cv-basic-danger p.cv-basic-danger-reason { color: var(--text); }
+#view-collab .cv-basic-danger p.cv-basic-danger-reason { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--divider); color: var(--text-secondary); }
 #view-collab .cv-basic-danger-btn { flex: none; min-height: 32px; padding: 0 16px; border: 1px solid var(--danger); border-radius: 8px; background: var(--bg); color: var(--danger); font: inherit; font-size: var(--font-size-14); cursor: pointer; }
 #view-collab .cv-basic-danger-btn:hover:not(:disabled) { background: var(--danger-bg); }
 #view-collab .cv-basic-danger-btn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
-#view-collab .cv-basic-danger-btn:disabled { border-color: var(--border); color: var(--text-secondary); cursor: not-allowed; }
+#view-collab .cv-basic-danger-btn:disabled { border-color: var(--border-hover); background: var(--fill-1); color: var(--text-soft); cursor: not-allowed; }
 @media(max-width:600px) {
+  #view-collab .cv-general-fields { padding: 16px; gap: 16px; }
   #view-collab .cv-general-fields .cv-basic-field { grid-template-columns: minmax(0, 1fr); gap: 8px; }
   #view-collab .cv-general-fields .cv-basic-field > :first-child { padding-top: 0; }
   #view-collab .cv-basic-danger { flex-direction: column; align-items: stretch; }
@@ -439,3 +444,16 @@
 #view-collab .cv-repo-card--rich .cv-repo-local-state { flex: 1; }
 
 @media (max-width: 600px) { #view-collab .cv-repo-local { flex-wrap: wrap; } }
+
+/* 空间切换与页签同排，靠右展示；下拉面板向左展开，避免越出视口。 */
+#view-collab.cv-current-navigation #cvTabNav .cv-tab-capsule { margin-right: auto; }
+#view-collab.cv-current-navigation #cvTabNav :is(.ld-nav-status,.ld-job-status) { margin-left: 0; }
+#view-collab #cvTabNav .cv-wsbar {
+  flex: 0 1 auto; min-width: 0; width: auto; max-width: 40%; margin-left: 0; padding: 0;
+}
+#view-collab #cvTabNav .cv-space-switch { flex: 0 1 auto; max-width: 100%; }
+#view-collab #cvTabNav .cv-space-switch .mgr-ws-switch-btn { max-width: 100%; }
+#view-collab #cvSpaceSwitch .mgr-ws-pop { left: auto; right: 0; box-sizing: border-box; }
+@media (max-width: 960px) {
+  #view-collab #cvTabNav .cv-wsbar { max-width: 100%; margin-left: auto; }
+}

@@ -6,7 +6,7 @@ import { mgrCurrentPersonId } from './data.js';
 import {
   wsProjectById, canCreateTaskIn, canCreateWs, canManageWs, canOwnWs, spaceMemberIds, personName,
   wsAddMembers, wsAdminIds, wsVisible, wsArchive, wsArchivePlan, wsCreate, wsDelete, wsDeleteBlockReason, wsMemberIds, wsMoveTasks,
-  wsNameError, wsOwnerId, wsPlanMove, wsProgress, wsRemoveMember, wsReorder, wsRestore, wsSetOwner, wsTasksOf, wsUpdateInfo, wsMappableSpaces,
+  wsNameError, wsOwnerId, wsPlanMove, wsProgress, wsRemoveMember, wsReorder, wsRestore, wsSetOwner, wsTasksOf, wsUpdateInfo,
 } from './workspaces.js';
 import { isWsHost } from '../collab/data.js';
 import { buildRepoIdentity, buildRepoSave } from '../collab/repository-config.js';
@@ -84,7 +84,7 @@ var WIZARD_STEPS = [
   { key: 'members', label: '成员' },
   { key: 'assets', label: '开发智能体团队' },
 ];
-var wiz = null;   /* { p, step, name, desc, ownerId, spaceId, repo, members, experts, teams } */
+var wiz = null;   /* { p, step, name, desc, ownerId, repo, members, experts, teams } */
 var BRANCHES = ['main', 'master', 'develop'];
 function emptyRepo() { return { url: '', branchSel: 'main', branchCustom: '' }; }
 function repoBranch(r) { return r.branchSel === '__custom' ? r.branchCustom.trim() : r.branchSel; }
@@ -107,12 +107,6 @@ function wizardRepoHtml() {
 }
 /* 成员来源：独立工作区从全部 Build 用户中选，空间下的工作区从空间成员中选 */
 function poolLabel(p) { return isWsHost(p) ? 'Build 用户' : '空间成员'; }
-function spaceOptions(selected) {
-  return '<option value="">不关联</option>' + wsMappableSpaces().map(function (s) {
-    return '<option value="' + mgrEsc(s.id) + '"' + (s.id === selected ? ' selected' : '') + '>' + mgrEsc(s.name) + '</option>';
-  }).join('');
-}
-
 function stepperHtml(step) {
   return '<ol class="mgr-ws-steps" aria-label="新建步骤">' + WIZARD_STEPS.map(function (st, i) {
     var cls = i < step ? ' is-done' : i === step ? ' is-current' : '';
@@ -122,11 +116,11 @@ function stepperHtml(step) {
 function wizardInfoHtml() {
   var p = wiz.p;
   return '<div class="mgr-pe-field"><label for="mgrWsdName">名称 <b aria-hidden="true">*</b></label><input type="text" id="mgrWsdName" maxlength="30" placeholder="如：后端服务" value="' + mgrEsc(wiz.name) + '"></div>' +
-    '<div class="mgr-pe-field"><label for="mgrWsdDesc">说明 <b aria-hidden="true">*</b></label><textarea id="mgrWsdDesc" rows="2" maxlength="200" placeholder="这个工作区负责的范围">' + mgrEsc(wiz.desc) + '</textarea></div>' +
+    '<div class="mgr-pe-field"><label for="mgrWsdDesc">说明 <b aria-hidden="true">*</b></label><textarea id="mgrWsdDesc" rows="2" maxlength="200" placeholder="这个空间负责的范围">' + mgrEsc(wiz.desc) + '</textarea></div>' +
     wizardRepoHtml() +
-    /* 负责人与关联管理空间是两类信息，上下分开；说明收进标签旁的小字，基本信息一屏放下、默认不出现滚动条 */
+    /* 不再关联已有的 Manage 空间：创建时由 Build 调 Manage 接口新建同名空间并分配成员（2026-11-06） */
     '<div class="mgr-pe-field shared-select-host"><label for="mgrWsdOwner">负责人 <b aria-hidden="true">*</b></label><select id="mgrWsdOwner">' + memberOptions(p, wiz.ownerId) + '</select></div>' +
-    (isWsHost(p) ? '<div class="mgr-pe-field shared-select-host"><label for="mgrWsdSpace">关联管理空间<small>选填，对应 Manage 的开发空间，创建后可在「设置 › 通用」修改</small></label><select id="mgrWsdSpace">' + spaceOptions(wiz.spaceId) + '</select></div>' : '');
+    (isWsHost(p) ? '<p class="mgr-ws-hint">创建后会同步在 Manage 新建同名空间，并把成员分配进去。</p>' : '');
 }
 /* 成员：按姓名、邮箱、手机号或工号搜索添加，添加时选成员或管理员；负责人固定在列表首行 */
 var ROLE_LABEL = { member: '成员', admin: '管理员' };
@@ -204,7 +198,7 @@ function wizardAssetRows(kind) {
     var note = auto ? '<em class="mgr-ws-asset-dep">随团队「' + mgrEsc(auto.join('」「')) + '」带出</em>'
       : members.length ? '<em class="mgr-ws-asset-dep is-muted">包含 ' + members.length + ' 个开发智能体：' + mgrEsc(members.join('、')) + '</em>' : '';
     return '<label class="mgr-ws-pick mgr-ws-pick--asset' + (auto ? ' is-auto' : '') + '"><input type="checkbox" data-wiz-asset="' + kind + '" value="' + mgrEsc(r.key) + '"' + (auto || picked.indexOf(r.key) >= 0 ? ' checked' : '') + (auto ? ' disabled' : '') + '>' +
-      '<span class="mgr-ws-asset-copy"><strong>' + mgrEsc(r.data.name) + '</strong><small>V' + mgrEsc(r.version) + ' · 企业自建' + (r.scope === 'workspace' ? ' · 工作区可用' : '') + '</small>' + (r.data.desc ? '<span>' + mgrEsc(r.data.desc) + '</span>' : '') + note + '</span></label>';
+      '<span class="mgr-ws-asset-copy"><strong>' + mgrEsc(r.data.name) + '</strong><small>V' + mgrEsc(r.version) + ' · 企业自建' + (r.scope === 'workspace' ? ' · 空间可用' : '') + '</small>' + (r.data.desc ? '<span>' + mgrEsc(r.data.desc) + '</span>' : '') + note + '</span></label>';
   }).join('');
 }
 /* 开发智能体与团队合并为一步：一个搜索框同时筛两组，团队在前；勾选团队后下方智能体立即带出依赖 */
@@ -225,7 +219,6 @@ function wizardCollect() {
   if (step === 'info') {
     wiz.name = $('#mgrWsdName').value; wiz.desc = $('#mgrWsdDesc').value;
     wiz.ownerId = $('#mgrWsdOwner').value;
-    if ($('#mgrWsdSpace')) wiz.spaceId = $('#mgrWsdSpace').value;
     wiz.repo.url = $('#mgrWsdRepo').value;
     wiz.repo.branchSel = $('#mgrWsdBranch').value;
     wiz.repo.branchCustom = $('#mgrWsdBranchCustom').value;
@@ -251,14 +244,14 @@ function renderWizard() {
   /* 负责人改成已添加的人时，从成员列表去掉，避免重复 */
   wiz.members = wiz.members.filter(function (m) { return m.id !== wiz.ownerId; });
   var key = WIZARD_STEPS[wiz.step].key, last = wiz.step === WIZARD_STEPS.length - 1;
-  $('#mgrWsDialogTitle').textContent = '新建工作区';
+  $('#mgrWsDialogTitle').textContent = isWsHost(wiz.p) ? '新建空间' : '新建工作区';
   $('#mgrWsDialogBody').innerHTML = stepperHtml(wiz.step) + '<form id="mgrWsdForm" autocomplete="off" novalidate>' +
     (key === 'info' ? wizardInfoHtml() : key === 'members' ? wizardMembersHtml() : wizardAssetsHtml()) +
     '<p class="mgr-pe-error" id="mgrWsdError" hidden></p></form>';
   $('#mgrWsDialogFoot').innerHTML = '<button type="button" class="sync-modal__btn sync-modal__btn--ghost" data-mgr-wsd-close>取消</button>' +
     (wiz.step > 0 ? '<button type="button" class="sync-modal__btn sync-modal__btn--ghost" data-mgr-wsd-prev>上一步</button>' : '') +
     (last || wiz.step === 0 ? '' : '<button type="button" class="sync-modal__btn sync-modal__btn--ghost" data-mgr-wsd-skip>跳过并创建</button>') +
-    '<button type="button" class="sync-modal__btn sync-modal__btn--primary" data-mgr-wsd-ok>' + (last ? '创建工作区' : '下一步') + '</button>';
+    '<button type="button" class="sync-modal__btn sync-modal__btn--primary" data-mgr-wsd-ok>' + (last ? (isWsHost(wiz.p) ? '创建空间' : '创建工作区') : '下一步') + '</button>';
   overlay.querySelector('.mgr-ws-dialog').classList.add('is-wizard');
   overlay.style.display = 'flex';
   overlay.setAttribute('aria-hidden', 'false');
@@ -294,7 +287,7 @@ function wizardFinish() {
   wizardCollect();
   var p = wiz.p, err = infoError() || repoError();
   if (err) { if (wiz.step !== 0) { wiz.step = 0; renderWizard(); } dialogError(err); return STAY; }
-  var res = wsCreate(p, { name: wiz.name, desc: wiz.desc, ownerId: wiz.ownerId, spaceId: wiz.spaceId });
+  var res = wsCreate(p, { name: wiz.name, desc: wiz.desc, ownerId: wiz.ownerId });
   if (!res.ok) { if (wiz.step !== 0) { wiz.step = 0; renderWizard(); } dialogError(res.error); return STAY; }
   selectedId = res.ws.id;
   var warnings = [];
@@ -308,18 +301,18 @@ function wizardFinish() {
   if ((plain.length && !wsAddMembers(p, res.ws.id, plain).ok) || (admins.length && !wsAddMembers(p, res.ws.id, admins, 'admin').ok)) warnings.push('成员');
   var keys = Array.from(new Set(wiz.teams.concat(Object.keys(teamDeps()), wiz.experts)));
   if (keys.length && capabilitySave(p, res.ws.id, { keys: keys, defaultKey: keys[0] })) warnings.push('开发智能体与团队');
-  if (warnings.length) toast('已创建工作区「' + res.ws.name + '」，但' + warnings.join('、') + '未能添加，请到「设置」里重试', 'warning');
-  else toast('已创建工作区「' + res.ws.name + '」', 'success');
+  var noun = isWsHost(p) ? '空间' : '工作区';
+  if (warnings.length) toast('已创建' + noun + '「' + res.ws.name + '」，但' + warnings.join('、') + '未能添加，请到「设置」里重试', 'warning');
+  else toast(isWsHost(p) ? '已创建空间「' + res.ws.name + '」，并同步到 Manage' : '已创建工作区「' + res.ws.name + '」', 'success');
   return '';
 }
 function openCreateDialog(spaceId) {
   var p = project();
   if (!p) return;
-  if (!canCreateWs(p)) { toast(isWsHost(p) ? '请先登录再新建工作区' : '只有空间负责人或管理员可以新建工作区', 'warning'); return; }
+  if (!canCreateWs(p)) { toast(isWsHost(p) ? '请先登录再新建空间' : '只有空间负责人或管理员可以新建工作区', 'warning'); return; }
   var members = spaceMemberIds(p);
   var me = members.indexOf(mgrCurrentPersonId()) >= 0 ? mgrCurrentPersonId() : (members[0] || '');
-  /* 关联管理空间默认不关联，由用户自己选 */
-  wiz = { p: p, step: 0, name: '', desc: '', ownerId: me, spaceId: '', repo: emptyRepo(), members: [], memberQuery: '', memberPicked: [], memberRole: 'member', experts: [], teams: [], assetQuery: '' };
+  wiz = { p: p, step: 0, name: '', desc: '', ownerId: me, repo: emptyRepo(), members: [], memberQuery: '', memberPicked: [], memberRole: 'member', experts: [], teams: [], assetQuery: '' };
   dlg = {
     trigger: document.activeElement,
     onOk: function () {

@@ -34,7 +34,7 @@ function cvBuildExpertCard(e){
     +'<div class="card-top"><img class="x-av" src="'+xav(e.k)+'" alt="">'
     +'<div class="card-titles"><div class="card-title-row"><span class="card-title">'+xesc(e.name)+'</span>'
     +'</div>'
-    +'<div class="x-sub asset-card-summary">'+assetSourceBadge('expert',e)+workspaceAssetControls('expert',e)+'<span>'+(e.skills||[]).length+' 个技能</span>'+personalReviewBadge('expert',e)+(layerOf('expert',e)==='personal'?routeTagHtml(routeOf('expert',e.id)):'')+'<span class="asset-card-upgrade-anchor">'+assetUpgradeHtml('expert',e.id)+'</span></div></div></div>'
+    +'<div class="x-sub asset-card-summary">'+assetSourceBadge('expert',e)+'<span>'+(e.skills||[]).length+' 个技能</span>'+personalReviewBadge('expert',e)+(layerOf('expert',e)==='personal'?routeTagHtml(routeOf('expert',e.id)):'')+workspaceAssetControls('expert',e)+'<span class="asset-card-upgrade-anchor">'+assetUpgradeHtml('expert',e.id)+'</span></div></div></div>'
     +'<div class="card-desc" title="'+xesc(e.desc)+'">'+xesc(e.desc)+'</div>'
     +assetTagsHtml(tags)+assetModesHtml(e.modes)
     +layerActions('expert',e)+'</div>';

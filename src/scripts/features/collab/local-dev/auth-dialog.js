@@ -16,7 +16,7 @@ var LD_KD_GITLAB = 'git.kingdee.com';
 /* 获取访问令牌的步骤：先点「去平台创建」打开已预填名称和权限的令牌页，按平台显示；常显在令牌输入框下方 */
 var LD_TOKEN_GUIDE = {
   GitHub:['点上方「去平台创建」，在打开的 GitHub 页面登录', '权限已自动勾选好（repo），直接点页面底部的「Generate token」', '如果你的仓库属于公司组织，还要在新令牌旁点「Configure SSO」并授权该组织，否则代码推送不上去', '复制生成的令牌（离开页面后就看不到了），粘贴到上方输入框'],
-  GitLab:['点上方「去平台创建」，在打开的 {host} 页面登录', '名称和权限已自动填好（read_user、read_repository、write_repository），选一个到期时间后点「Create personal access token」；到期前 7 天 Lingee 会提醒', '复制生成的令牌（离开页面后就看不到了），粘贴到上方输入框'],
+  GitLab:['点上方「去平台创建」，在打开的 {host} 页面登录', '名称和权限已自动填好（read_user、read_repository、write_repository），选一个到期时间后点「Create personal access token」', '复制生成的令牌（离开页面后就看不到了），粘贴到上方输入框'],
   Gitee:['点上方「去平台创建」，在打开的 Gitee 私人令牌页登录', '点「生成新令牌」，勾选 user_info、projects 后提交', '复制生成的令牌（离开页面后就看不到了），粘贴到上方输入框'],
 };
 var LD_PLATFORM_LABELS = { KDGitLab:'金蝶 GitLab', GitHub:'GitHub', Gitee:'Gitee', GitLab:'其他 GitLab' };
@@ -117,12 +117,11 @@ function submitAuth() {
     if (run !== authRun || !ldVisible('#ldAuthOverlay')) return;
     setAuthBusy(false);
     /* 演示校验：过短视为格式错误；含 expired / bad 视为无效；含 readonly / norole / sso（GitHub）的令牌能保存，
-       推送校验（push --dry-run）时才发现问题；含 soon 的令牌 5 天后到期，用来演示到期提醒 */
+       推送校验（push --dry-run）时才发现问题 */
     if (token.length < 8) { setAuthError('令牌格式不正确'); return; }
     if (/expired|bad/i.test(token)) { setAuthError('令牌无效或已过期，请重新创建'); return; }
-    /* 到期日由平台接口返回，演示固定 90 天 */
     var pushIssue = /readonly/i.test(token) ? 'scope' : /norole/i.test(token) ? 'role' : /sso/i.test(token) && ldAuthPlatformValue() === 'GitHub' ? 'sso' : '';
-    saveAuth(host, { platform:ldAuthPlatformValue(), source:'token', pushIssue:pushIssue, expiresAt:new Date(Date.now() + (/soon/i.test(token) ? 5 : 90) * 864e5).toISOString().slice(0, 10) });
+    saveAuth(host, { platform:ldAuthPlatformValue(), source:'token', pushIssue:pushIssue });
   }, 700);
 }
 function saveAuth(host, entry) {

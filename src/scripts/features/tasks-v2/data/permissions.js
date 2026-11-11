@@ -73,9 +73,8 @@ function tkCanSeeWorkspace(project, workspaceId) {
   if (tkIsSpaceManager(project, me)) return true;
   var ws = wsById(project, workspaceId);
   if (!ws) return false;
-  if (wsHasPerson(ws, tkCurrentUserId())) return true;
-  /* 独立工作区关联了开发空间时，该空间的负责人和管理员也能查看 */
-  return isWsHost(project) && !!ws.spaceId && tkIsSpaceManager(tkAllProjects().find(function (p) { return p.id === ws.spaceId; }), me);
+  /* 2026-11-06 起不再关联已有 Manage 空间：Build 新建的空间只对自己的成员（含负责人、管理员）可见 */
+  return wsHasPerson(ws, tkCurrentUserId());
 }
 /* 当前用户可见的工作区（切换器、筛选、新建任务、默认范围共用） */
 function tkVisibleWorkspaces(project, opts) {

@@ -340,7 +340,7 @@ function fillTeamOptions(preferred, issueType) {
   const savedValue = task ? executorKeyOf(task) : '';
   const rows = options.slice();
   const chosen = [preferred,savedValue].concat(rows.filter(row => row.isDefault).map(row => row.key), rows.map(row => row.key)).find(value => value && rows.some(row => row.key === value)) || '';
-  select.innerHTML = '<option value="">'+(rows.length ? '请选择智能体团队' : '当前工作区暂无可用智能体团队')+'</option>'
+  select.innerHTML = '<option value="">'+(rows.length ? '请选择智能体团队' : '当前空间暂无可用智能体团队')+'</option>'
     + rows.map(row => '<option value="'+escapeHtml(row.key)+'">'+escapeHtml(row.data.name)+'</option>').join('');
   select.value = chosen;
   select.disabled = false;
@@ -486,7 +486,7 @@ function taskSaveMessage(project, stages) {
 }
 
 function createTask(startNow) {
-  if (!byId('niuTeam').value) { toast(capabilityOptions(tkProjectById(selectedProjectId),byId('niuWorkspace').value).some(row => !row.personal && row.kind === 'team') ? '请选择开发智能体团队' : '当前工作区尚无可用开发智能体团队，请联系管理员在「设置 → 智能体」添加','warning'); selectCreateTab('info'); byId('niuTeam').focus(); return; }
+  if (!byId('niuTeam').value) { toast(capabilityOptions(tkProjectById(selectedProjectId),byId('niuWorkspace').value).some(row => !row.personal && row.kind === 'team') ? '请选择开发智能体团队' : '当前空间尚无可用开发智能体团队，请联系管理员在「设置 → 智能体」添加','warning'); selectCreateTab('info'); byId('niuTeam').focus(); return; }
   if (!validateTaskInfo()) return;
   const title = byId('niuTitle').value.trim();
   const description = byId('niuDescription').value.trim();
@@ -500,9 +500,9 @@ function createTask(startNow) {
   if (executorError) { toast(executorError,'warning'); return; }
   const owner = selectedOwnerId;
   const scopeProject = tkProjectById(project), workspace = wsById(scopeProject, workspaceId);
-  if (workspace && (!canCreateTaskIn(scopeProject, workspace) || workspace.status === 'archived')) { toast('当前工作区不可新建或移入任务', 'warning'); return; }
-  if (workspace && [owner].concat(draftStages.filter(stage => stage.status !== 'done').map(stage => stage.assigneeId)).some(id => id && !wsMemberIds(scopeProject, workspace).includes(id))) { toast('任务负责人和阶段执行人须先加入当前工作区，请联系负责人添加成员', 'warning'); return; }
-  if (!planLocked() && !draftStages.length) { toast('暂时无法安排执行计划，请检查工作区已安装的智能体或团队', 'warning'); selectCreateTab('info'); return; }
+  if (workspace && (!canCreateTaskIn(scopeProject, workspace) || workspace.status === 'archived')) { toast('当前空间不可新建或移入任务', 'warning'); return; }
+  if (workspace && [owner].concat(draftStages.filter(stage => stage.status !== 'done').map(stage => stage.assigneeId)).some(id => id && !wsMemberIds(scopeProject, workspace).includes(id))) { toast('任务负责人和阶段执行人须先加入当前空间，请联系负责人添加成员', 'warning'); return; }
+  if (!planLocked() && !draftStages.length) { toast('暂时无法安排执行计划，请检查空间已安装的智能体或团队', 'warning'); selectCreateTab('info'); return; }
   const originalProject = editingTaskId === null ? null : tkGetTasks().find(item => item.id === editingTaskId)?.project;
   const unassignedStage = (!planLocked() || project !== originalProject) && draftStages.find(stage => !tkPeopleInProject(project).some(person => person.id === stage.assigneeId));
   if (unassignedStage) { toast('请为节点选择当前项目的执行人', 'warning'); selectCreateTab('plan'); byId('niuCreateStageList').querySelector('[data-niu-owner-stage="' + CSS.escape(unassignedStage.id) + '"]')?.focus(); return; }
@@ -572,7 +572,7 @@ function renderPlan() {
       return '<tr class="niu-stage-row" data-niu-stage="' + escapeHtml(stage.id) + '"><td class="niu-stage-index">' + String(index + 1) + '</td><td><span class="niu-stage-name">' + escapeHtml(stage.workType || stage.title || '') + '</span></td><td>' + expertCell + '</td><td class="niu-stage-review-cell">' + reviewMode + '</td><td>' + owner + '</td></tr>';
     }
     return '<div class="niu-stage" data-niu-stage="' + escapeHtml(stage.id) + '"><span class="niu-stage-index">' + String(index + 1) + '</span>' + fields + completion + '</div>';
-  }).join('') : (activePlanScope === 'create' ? '<tr><td colspan="5" class="niu-plan-empty">' + (taskTeamOf(task) ? '还没有工作阶段。' : '当前工作区尚无可用智能体或团队。') + '</td></tr>' : '<div class="niu-plan-empty">还没有工作阶段。添加阶段后可直接在分录中编辑。</div>');
+  }).join('') : (activePlanScope === 'create' ? '<tr><td colspan="5" class="niu-plan-empty">' + (taskTeamOf(task) ? '还没有工作阶段。' : '当前空间尚无可用智能体或团队。') + '</td></tr>' : '<div class="niu-plan-empty">还没有工作阶段。添加阶段后可直接在分录中编辑。</div>');
   if (activePlanScope === 'create') {
     byId('niuCreateStageCount').textContent = String(draftStages.length);
     byId('niuCreateStageList').innerHTML = stageList;
@@ -713,7 +713,7 @@ export function initNewIssueUI(renderCallback, detailCallback) {
     if (person && personPopupTarget) {
       if (planLocked()) { closePersonPopup(); return; }
       const stage = draftStages.find(item => item.id === personPopupStageId);
-      if (!scopePeople(currentTask()?.project).some(p => p.id === person.dataset.niuPerson)) { closePersonPopup(); toast('该人员已不在当前工作区，请重新选择','warning'); return; }
+      if (!scopePeople(currentTask()?.project).some(p => p.id === person.dataset.niuPerson)) { closePersonPopup(); toast('该人员已不在当前空间，请重新选择','warning'); return; }
       if (stage) { stage.assigneeId = person.dataset.niuPerson; draftConfirmed = false; }
       closePersonPopup();
       renderPlan();

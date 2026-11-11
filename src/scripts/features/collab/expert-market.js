@@ -45,7 +45,7 @@ export function cloudCardsHtml(kind,keyword){
   const workspaceRows=workspaceMoreCandidates(kind),workspaceInstalled=new Map(workspaceRows.filter(item=>item.installed).map(item=>[item.key,item]));
   /* 一期口径：金蝶官方内容面向所有租户，全部预置在客户端、已安装，不进入「更多」；「更多」只列企业自建等需要安装的内容（来源判断与卡片徽标一致） */
   const preset=item=>layerOf(kind,item.data)==='builtin';
-  /* 「工作区可用」的内容不进入个人「更多」，只有当前工作区已添加的才出现（带工作区标记） */
+  /* 「空间可用」的内容不进入个人「更多」，只有当前工作区已添加的才出现（带工作区标记） */
   const workspaceOnly=item=>item.scope==='workspace'&&!workspaceRows.some(row=>row.key===item.key);
   const rows=catalog.filter(item=>item.kind===kind&&!preset(item)&&!workspaceOnly(item)&&matches(item)).concat(workspaceRows.filter(item=>!listed.has(item.key)&&!preset(item)&&matches(item)));
   return rows.map(item=>{

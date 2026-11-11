@@ -1,7 +1,12 @@
 /* 设置 ›「Git 账号」与登录 / 添加账号弹窗（features/collab/local-dev/git-accounts-page.js、auth-dialog.js）。
    不分组，两列平铺白色账号卡片，平台靠各自图标区分；登录弹窗上下排版：平台下拉、Git 账号、访问令牌、常显获取步骤。 */
-:is(#cv-local,#ldPersonalSettings) .ld-acct-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-:is(#cv-local,#ldPersonalSettings) .ld-acct-card{display:flex;align-items:center;gap:12px;box-sizing:border-box;min-height:80px;padding:16px;border:1px solid var(--border-hover);border-radius:12px;background:var(--fill-1);box-shadow:none}
+:is(#cv-local,#ldPersonalSettings) .ld-acct-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+:is(#cv-local,#ldPersonalSettings) .ld-acct-card{box-sizing:border-box;min-width:0;border:1px solid var(--border-hover);border-radius:var(--r-card);background:var(--bg);box-shadow:var(--card-shadow)}
+:is(#cv-local,#ldPersonalSettings) .ld-acct-header{display:flex;align-items:center;gap:12px;min-width:0;padding:24px 16px}
+:is(#cv-local,#ldPersonalSettings) .ld-acct-details{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:0;padding:16px;border-top:1px solid var(--divider)}
+:is(#cv-local,#ldPersonalSettings) .ld-acct-details>div{display:flex;flex-direction:column;gap:8px;min-width:0}
+:is(#cv-local,#ldPersonalSettings) .ld-acct-details dt{font-size:var(--font-size-12);line-height:var(--line-height-12);color:var(--text-secondary)}
+:is(#cv-local,#ldPersonalSettings) .ld-acct-details dd{margin:0;overflow:hidden;font-size:var(--font-size-14);line-height:var(--line-height-14);color:var(--text);text-overflow:ellipsis;white-space:nowrap}
 :is(#cv-local,#ldPersonalSettings) .ld-acct-avatar{display:inline-grid;flex:none;place-items:center;width:40px;height:40px;border-radius:50%}
 :is(#cv-local,#ldPersonalSettings) .ld-acct-empty{display:flex;flex-direction:column;align-items:center;gap:4px;padding:48px 16px;border-radius:20px;background:var(--bg);box-shadow:var(--card-shadow);text-align:center}
 :is(#cv-local,#ldPersonalSettings) .ld-acct-empty strong{font-size:var(--font-size-16);font-weight:500;line-height:24px;color:var(--text-title)}
@@ -13,9 +18,9 @@
 :is(#cv-local,#ldPersonalSettings) .ld-acct-title .ld-state{display:inline-flex;align-items:center;height:20px;padding:0 8px;border-radius:999px;line-height:20px}
 :is(#cv-local,#ldPersonalSettings) .ld-acct-desc{overflow:hidden;font-size:var(--font-size-12);line-height:20px;color:var(--text-secondary);text-overflow:ellipsis;white-space:nowrap}
 :is(#cv-local,#ldPersonalSettings) .ld-acct-act{display:flex;flex:none;align-items:center}
-/* 「···」悬停或展开时出现；未登录的「登录」为浅色描边按钮 */
+/* 「···」常显，支持键盘聚焦；未登录的「登录」为浅色描边按钮 */
 :is(#cv-local,#ldPersonalSettings) .ld-acct-more{position:relative}
-:is(#cv-local,#ldPersonalSettings) .ld-acct-more-btn{display:inline-grid;place-items:center;width:28px;height:28px;border:0;border-radius:8px;background:var(--hover);color:var(--text-secondary);cursor:pointer;opacity:0;transition:opacity .15s,background .15s}
+:is(#cv-local,#ldPersonalSettings) .ld-acct-more-btn{display:inline-grid;place-items:center;width:28px;height:28px;border:0;border-radius:8px;background:var(--hover);color:var(--text-secondary);cursor:pointer;opacity:1;transition:background .15s}
 :is(#cv-local,#ldPersonalSettings) .ld-acct-card:hover .ld-acct-more-btn,:is(#cv-local,#ldPersonalSettings) .ld-acct-card.is-menu-open .ld-acct-more-btn,:is(#cv-local,#ldPersonalSettings) .ld-acct-more-btn:focus-visible{opacity:1}
 :is(#cv-local,#ldPersonalSettings) .ld-acct-more-btn:hover{background:var(--active)}
 :is(#cv-local,#ldPersonalSettings) .ld-acct-more-btn:focus-visible,:is(#cv-local,#ldPersonalSettings) .ld-acct-login:focus-visible,:is(#cv-local,#ldPersonalSettings) .ld-acct-menu button:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
@@ -49,6 +54,3 @@
 .ld-select-item:hover{background:var(--hover)}
 .ld-select-item:focus-visible{outline:2px solid var(--focus-ring);outline-offset:-2px}
 .ld-guide-steps{margin:0;padding:12px 16px 12px 32px;border-radius:8px;background:var(--fill-1);font-size:var(--font-size-12);line-height:20px;color:var(--text-secondary)}
-
-/* 白色设置面板内以描边与浅底区分账号卡片，保留平台原生图标。 */
-#cv-local .ld-acct-card:hover,#cv-local .ld-acct-card:focus-within { border-color:var(--border-focus); background:var(--brand-fill); }

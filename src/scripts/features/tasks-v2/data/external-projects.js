@@ -12,7 +12,8 @@ function tkSetExternalProjects(provider) {
 function tkAllProjects() {
   /* Manage 为协作开发空间补的同 id 记录不重复列出，Build 侧以协作开发的那条为准 */
   var ids = new Set(CV_PROJECTS.map(function (p) { return p.id; }));
-  return CV_PROJECTS.concat((externalProjects() || []).filter(function (p) { return !ids.has(p.id); }), [wsHost()]);
+  /* Build 新建空间在 Manage 的同步记录（buildSpaceId）也不重复列出，Build 侧以内部容器里的那条为准 */
+  return CV_PROJECTS.concat((externalProjects() || []).filter(function (p) { return !ids.has(p.id) && !p.buildSpaceId; }), [wsHost()]);
 }
 
 export { externalProjects, tkAllProjects, tkSetExternalProjects };

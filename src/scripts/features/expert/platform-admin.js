@@ -153,11 +153,11 @@ function refreshAccess(){
   renderCards();
 }
 /* 上架范围（企业自建内容）：全企业＝上架后全员可在「更多」中安装使用；
-   工作区可用＝不进入「更多」，只能由工作区管理员在「设置 › 智能体」中添加，添加后该工作区成员可用。默认全企业 */
-export const PUBLISH_SCOPES={tenant:'全企业',workspace:'工作区可用'};
+   空间可用＝不进入「更多」，只能由空间管理员在「设置 › 智能体」中添加，添加后该空间成员可用。默认全企业 */
+export const PUBLISH_SCOPES={tenant:'全企业',workspace:'空间可用'};
 export function publishScopeHtml(current='tenant'){
   const option=(value,title,desc)=>`<label class="platform-scope-option"><input type="radio" name="platformPublishScope" value="${value}"${current===value?' checked':''}><span><strong>${title}</strong><small>${desc}</small></span></label>`;
-  return `<fieldset class="platform-scope"><legend>上架范围</legend>${option('tenant','全企业','上架后企业内全员可在「更多」中安装使用')}${option('workspace','工作区可用','不进入「更多」，由工作区管理员在「设置 › 智能体」中添加后，该工作区成员可用')}</fieldset>`;
+  return `<fieldset class="platform-scope"><legend>上架范围</legend>${option('tenant','全企业','上架后企业内全员可在「更多」中安装使用')}${option('workspace','空间可用','不进入「更多」，由空间管理员在「设置 › 智能体」中添加后，该空间成员可用')}</fieldset>`;
 }
 export function readPublishScope(){return document.querySelector('input[name="platformPublishScope"]:checked')?.value==='workspace'?'workspace':'tenant';}
 export function assetReviewDialog(title,body,onConfirm,confirmText='确认',options={}){
@@ -454,7 +454,7 @@ async function uninstallCloudAsset(itemKey){
   const dependencies=uninstallDependencies(itemKey);
   if(dependencies.length){assetReviewDialog('无法卸载','<p>「'+xesc(label(itemKey))+'」正被以下智能体团队使用：'+dependencies.map(team=>'「'+xesc(team.name)+'」').join('、')+'。请先卸载这些团队或把它移出团队。</p>',null,'知道了',{style:'notice'});return;}
   const name=installedSnapshot(item.kind,item.id)?.name||label(itemKey);
-  const confirmed=await requestDeleteConfirmation('卸载「'+name+'」？个人安装将被移除；若工作区仍分配此资产，会继续在“我添加的”显示为未安装。云端版本、工作区关系、个人配置和会话历史保留。',{title:'卸载'+(item.kind==='team'?'智能体团队':'智能体'),confirmLabel:'确认卸载'});
+  const confirmed=await requestDeleteConfirmation('卸载「'+name+'」？个人安装将被移除；若空间仍分配此资产，会继续在“我添加的”显示为未安装。云端版本、空间关系、个人配置和会话历史保留。',{title:'卸载'+(item.kind==='team'?'智能体团队':'智能体'),confirmLabel:'确认卸载'});
   if(!confirmed||uninstallOwner!==localAssetStorageKey()||!installed[itemKey])return;
   if(!meta[itemKey]||!availableToClient(meta[itemKey])||uninstallDependencies(itemKey).length){toast('资产权限或团队引用已变化，请刷新列表后重试','warning');return;}
   const next={...installed};delete next[itemKey];
@@ -625,7 +625,7 @@ function workspaceInstallPlan(entry) {
   const rows=[];
   for(const required of requiredLocalPackages(entry)){
     const item=meta[required.key],target=version(required.key,required.version);
-    if(!item || item.status!=='online' || !target) throw new Error('资产或依赖版本不可安装，请联系管理员检查工作区配置');
+    if(!item || item.status!=='online' || !target) throw new Error('资产或依赖版本不可安装，请联系管理员检查空间配置');
     rows.push({key:required.key,kind:item.kind,version:required.version,old:installed[required.key] || '',data:target.data});
   }
   return rows;
@@ -636,7 +636,7 @@ export function installWorkspaceAsset(entry) {
   for(const row of plan)next[row.key] ||= row.version;
   if(!writeLocalAssetInstalls(next,plan.map(row=>({key:row.key,version:row.version})))){toast('本机安装失败，原记录保持不变，请重试','error');return;}
   installed=next;applyInstalled();
-  toast('已安装「'+(plan.find(row=>row.key===entry.key) || plan[0]).data.name+'」，可执行本工作区的任务','success');
+  toast('已安装「'+(plan.find(row=>row.key===entry.key) || plan[0]).data.name+'」，可执行本空间的任务','success');
 }
 export function installCloudAsset(id,options={}){
   const installOwner=localAssetStorageKey();

@@ -332,7 +332,7 @@ var activityCollapsedPreference = null;
 function workspacePathRow(t) {
   var project = tkProjectById(t.project);
   var names = !project ? [] : t.workspaceId ? wsPathNames(project, t.workspaceId) : project.wsHost ? [] : [project.name];
-  return names.length ? '<div class="tk-prop-row"><span>所属工作区</span><span class="tk-prop-val" title="' + escapeHtml(names.join(' › ')) + '">' + escapeHtml(names.join(' › ')) + '</span></div>' : '';
+  return names.length ? '<div class="tk-prop-row"><span>所属空间</span><span class="tk-prop-val" title="' + escapeHtml(names.join(' › ')) + '">' + escapeHtml(names.join(' › ')) + '</span></div>' : '';
 }
 
 

@@ -7,7 +7,7 @@ import { CV_WORKSPACES, cvCanAccessWorkspace, cvWorkspace, cvWorkspaceName, cvCu
 import { getPlatformIdentity } from '../login.js';
 import { assetOwnerKey } from './layers.js';
 import { publishScopeHtml, readPublishScope, PUBLISH_SCOPES } from './platform-admin.js';
-import { REVIEW_KEY, readAssetReviews as reviews, reviewSourceSnapshot, reviewedAsset } from './review-state.js';
+import { REVIEW_KEY, readAssetReviews as reviews, reviewSourceSnapshot, reviewedAsset, hasPersonalReviewChanges } from './review-state.js';
 import { assetReviewDialog, assetReviewClose, canViewPlatformReview, canApprovePlatformReview, nextReviewVersion, currentPublishedVersion, reviewVersionHistory, exportReviewSnapshot, publishedExpertRef, publishReviewedBundle } from './platform-admin.js';
 export { REVIEW_KEY };
 const clone=value=>JSON.parse(JSON.stringify(value));
@@ -17,6 +17,56 @@ function definition(kind,item,tenant){
   delete data.kn;delete data.knOff;delete data.knDocOff;delete data.knUp;
   if(kind==='expert')data.mine=false;else data.preset=true;
   return data;
+}
+const noteField=`<label class="platform-import-note-label"><span class="asset-review-label">提交说明 <em>*</em></span><textarea id="assetReviewNote" rows="3" maxlength="100" placeholder="说明用途和本次修改"></textarea><small class="asset-review-count" id="assetReviewNoteCount">0/100</small></label><div class="platform-dialog-error" id="assetReviewError"></div>`;
+function readNote(){
+  const note=$('#assetReviewNote').value.trim();
+  if(!note){$('#assetReviewError').textContent='请填写提交说明';return '';}
+  if(note.length>100){$('#assetReviewError').textContent='提交说明不能超过 100 字';return '';}
+  return note;
+}
+const bindNoteCount=()=>$('#assetReviewNote').addEventListener('input',event=>{$('#assetReviewNoteCount').textContent=event.target.value.length+'/100';});
+const reviewTime=()=>new Date().toLocaleString('zh-CN',{hour12:false});
+/* 智能体团队只引用已上架、且与当前草稿一致的成员版本；成员各自审核发布，不随团队打包。
+   ready 时返回可引用的企业版本 id，其余返回需要处理的状态 */
+const MEMBER_STATUS={unsubmitted:'未提交',rejected:'已驳回',modified:'有更新未提交',offline:'已下架',pending:'审核中',invalid:'缺少工作模式'};
+const MEMBER_SUBMITTABLE=new Set(['unsubmitted','rejected','modified','offline']);
+function personalMemberState(member,tenant){
+  const review=reviews().findLast(row=>row.kind==='expert'&&row.sourceId===member.id&&row.tenantId===tenant);
+  if(review?.status==='pending')return {status:'pending'};
+  if(!member.modes?.length)return {status:'invalid'};
+  if(!review)return {status:'unsubmitted'};
+  if(review.status!=='approved')return {status:'rejected'};
+  if(hasPersonalReviewChanges('expert',member,review))return {status:'modified'};
+  const ref=publishedExpertRef(reviewedAsset(review)?.id);
+  return ref?{status:'ready',ref:ref.id}:{status:'offline'};
+}
+function memberRow(entry){
+  const enabled=MEMBER_SUBMITTABLE.has(entry.status),name=xesc(entry.member.name);
+  return `<label class="asset-member-check${enabled?'':' is-disabled'}"><input type="checkbox" value="${xesc(entry.member.id)}"${enabled?' checked':' disabled'}><img src="${xav(entry.member.k||'eng')}" width="20" height="20" alt=""><span title="${name}">${name}</span><small data-member-status="${entry.status}">${MEMBER_STATUS[entry.status]}</small></label>`;
+}
+/* 成员未就绪时不提交团队：列出成员与状态，可勾选的成员一次提交，各自生成独立审核单 */
+function submitMembersDialog(team,blocked,tenant){
+  const tenantName=cvWorkspaceName(tenant);
+  const selectable=blocked.filter(entry=>MEMBER_SUBMITTABLE.has(entry.status));
+  const list='<div class="asset-member-list">'+blocked.map(memberRow).join('')+'</div>';
+  const intro=`<p>「${xesc(team.name)}」只能引用已上架、且与当前草稿一致的成员版本。以下 ${blocked.length} 位成员需先审核通过，再提交智能体团队。</p>`;
+  const waiting=blocked.length>selectable.length?'<p class="platform-dialog-note">审核中的成员请等待审核结果；缺少工作模式的成员请先编辑补充。</p>':'';
+  if(!selectable.length)return assetReviewDialog('成员尚未就绪',intro+list+waiting,null,'知道了',{style:'submit'});
+  assetReviewDialog('先提交成员审核',intro+list+waiting+noteField,()=>{
+    if(!reviewTenants().some(workspace=>workspace.id===tenant)){$('#assetReviewError').textContent='当前账号已无提交权限，请重新登录后重试';return;}
+    const ids=[...document.querySelectorAll('#platformDialogBody .asset-member-check [type=checkbox]:checked')].map(box=>box.value);
+    if(!ids.length){$('#assetReviewError').textContent='请至少选择一位成员';return;}
+    const note=readNote();if(!note)return;
+    const rows=reviews(),at=reviewTime(),stampId=Date.now();
+    const submitted=ids.map(id=>EX[id]).filter(member=>member&&!rows.some(row=>row.kind==='expert'&&row.sourceId===member.id&&row.tenantId===tenant&&row.status==='pending'));
+    submitted.forEach((member,index)=>rows.push({id:`review-${stampId}-${index}`,kind:'expert',sourceId:member.id,name:member.name,tenantId:tenant,tenantName,author:cvCurrentUserName(),ownerId:assetOwnerKey(),status:'pending',note,bundle:[{kind:'expert',data:definition('expert',member,tenant)}],sourceSnapshot:clone(reviewSourceSnapshot('expert',member)),at}));
+    if(!store(rows)){$('#assetReviewError').textContent='保存失败，请重试';return;}
+    assetReviewClose();
+    document.dispatchEvent(new Event('lingee:cloud-assets-changed'));
+    toast(`<span class="asset-submit-toast"><strong>已提交 ${submitted.length} 位成员审核</strong><span>成员审核通过后，再提交「${xesc(team.name)}」。</span></span>`,'success');
+  },'提交所选成员',{style:'submit'});
+  bindNoteCount();
 }
 function reviewTenants(){
   const tenant=getPlatformIdentity()?.tenantId;
@@ -41,30 +91,37 @@ function submitToTenant(kind,item,tenant){
     if(!data.modes?.length)return assetReviewDialog('无法提交','<p>智能体至少需要一种工作模式。</p>',null,'关闭');
   }else{
     data.members=[];
+    const blocked=[];
     for(const id of item.members){
       const member=EX[id];if(!member)return assetReviewDialog('无法提交',`<p>成员 ${xesc(id)} 不存在。</p>`,null,'关闭');
       if(member.source==='tenant'&&member.tenantId!==tenant)return assetReviewDialog('无法提交','<p>智能体团队包含其他企业的智能体，请调整成员后重试。</p>',null,'关闭');
       if(member.mine&&member.ownerId&&member.ownerId!==assetOwnerKey())return assetReviewDialog('无法提交','<p>智能体团队包含其他用户的个人智能体，请调整成员后重试。</p>',null,'关闭');
-      const ref=!member.mine?publishedExpertRef(id):null;
+      if(member.mine){
+        const state=personalMemberState(member,tenant);
+        if(state.ref)data.members.push(state.ref);else blocked.push({member,status:state.status});
+        continue;
+      }
+      const ref=publishedExpertRef(id);
       if(ref)data.members.push(ref.id);
       else{const expert=definition('expert',member,tenant);bundle.push({kind:'expert',data:expert});data.members.push(expert.id);}
     }
+    if(blocked.length)return submitMembersDialog(item,blocked,tenant);
     data.leadId=data.members[item.members.indexOf(item.leadId)]||data.members[0];
     delete data.memberRefs;
   }
   bundle.push({kind,data});
-  assetReviewDialog('提交审核',`<p>将「${xesc(item.name)}」提交到租户 ${xesc(tenantName)}，审核通过后可在“更多”中安装。</p>${bundle.length>1?`<p>将同时提交 ${bundle.length-1} 位个人成员智能体，审核通过后随智能体团队自动安装。</p>`:''}<label class="platform-import-note-label"><span class="asset-review-label">提交说明 <em>*</em></span><textarea id="assetReviewNote" rows="3" maxlength="100" placeholder="说明用途和本次修改"></textarea><small class="asset-review-count" id="assetReviewNoteCount">0/100</small></label><div class="platform-dialog-error" id="assetReviewError"></div><p class="platform-dialog-note">原型演示：审核和发布使用当前浏览器持久化数据。</p>`,()=>{
+  assetReviewDialog('提交审核',`<p>将「${xesc(item.name)}」提交到租户 ${xesc(tenantName)}，审核通过后可在“更多”中安装。</p>${bundle.length>1?`<p>将同时提交 ${bundle.length-1} 位成员智能体，审核通过后随智能体团队自动安装。</p>`:''}${noteField}<p class="platform-dialog-note">原型演示：审核和发布使用当前浏览器持久化数据。</p>`,()=>{
     if(!reviewTenants().some(workspace=>workspace.id===tenant)||item.ownerId&&item.ownerId!==assetOwnerKey()){$('#assetReviewError').textContent='当前账号已无提交权限，请重新登录后重试';return;}
-    const note=$('#assetReviewNote').value.trim();if(!note){$('#assetReviewError').textContent='请填写提交说明';return;}if(note.length>100){$('#assetReviewError').textContent='提交说明不能超过 100 字';return;}
+    const note=readNote();if(!note)return;
     const rows=reviews();if(rows.some(row=>row.kind===kind&&row.sourceId===item.id&&row.tenantId===tenant&&row.status==='pending')){$('#assetReviewError').textContent='该内容已有待审核版本';return;}
-    rows.push({id:'review-'+Date.now(),kind,sourceId:item.id,name:item.name,tenantId:tenant,tenantName,author:cvCurrentUserName(),ownerId:assetOwnerKey(),status:'pending',note,bundle,sourceSnapshot,at:new Date().toLocaleString('zh-CN',{hour12:false})});
+    rows.push({id:'review-'+Date.now(),kind,sourceId:item.id,name:item.name,tenantId:tenant,tenantName,author:cvCurrentUserName(),ownerId:assetOwnerKey(),status:'pending',note,bundle,sourceSnapshot,at:reviewTime()});
     if(!store(rows)){$('#assetReviewError').textContent='保存失败，请重试';return;}
     assetReviewClose();
     document.dispatchEvent(new Event('lingee:cloud-assets-changed'));   /* 卡片上的发布去向随之刷新 */
     $('#expertModal')?.classList.remove('show');$('#teamModal')?.classList.remove('show');
     toast('<span class="asset-submit-toast"><strong>提交成功！</strong><span>「'+xesc(item.name)+'」已提交到 '+xesc(tenantName)+'，待企业管理员审核。审核通过前，内容不会出现在“更多”中，个人开发版本仍可继续使用。</span></span>','success');
   },'提交',{style:'submit'});
-  $('#assetReviewNote').addEventListener('input',event=>{$('#assetReviewNoteCount').textContent=event.target.value.length+'/100';});
+  bindNoteCount();
 }
 function matchingReviews({kind='',statuses=[],tenantId='',keyword=''}={}){
   /* 已驳回只在没有更新的提交时展示；重新提交后，旧驳回只留在历史版本里 */

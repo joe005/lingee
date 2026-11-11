@@ -112,7 +112,7 @@ assert.ok(ui.workspaceInstallCandidates('expert').some(row=>row.key==='expert:on
 localInstalled=true;
 assert.ok(ui.workspaceInstallCandidates('expert').length>0&&ui.workspaceInstallCandidates('expert').every(row=>row.installed),'installed assets stay listed in More, marked installed so no install button is shown');
 assert.equal(ui.workspaceInstallOffer('expert',{id:'one'}),null,'installed assets need no install offer');
-assert.match(ui.workspaceCapabilityControls('expert',{id:'one'}),/工作区/);
+assert.match(ui.workspaceCapabilityControls('expert',{id:'one'}),/空间/);
 assert.doesNotMatch(ui.workspaceCapabilityControls('expert',{id:'one'}),/data-capability-action|uninstall|未安装|data-workspace-install/);
 assert.match(ui.workspaceCapabilityExtras('expert',[],'','all'),/data-workspace-asset="expert:one"/);
 assert.doesNotMatch(ui.workspaceCapabilityExtras('expert',[],'','all'),/data-workspace-install|未安装/);
@@ -216,7 +216,7 @@ console.log('阶段成员回归通过：工作区人员范围、岗位预选、�
 // Lazy workspace restoration must not clear the preferred workspace before entry data is ready.
 const switchSource = readFileSync(new URL('../src/scripts/features/collab/space-switch.js',import.meta.url),'utf8');
 let entryReady = false, preferenceValid = true, clearedDefaults = 0, restoredScope = null;
-const restoreDeps = {$:()=>({hasAttribute:()=>entryReady}),readDefaultScope:()=>({project:'scope-space',ws:'backend'}),validDefaultScope:()=>preferenceValid,saveDefaultScope:()=>{clearedDefaults++;},setSpaceScope:(project,ws)=>{restoredScope={project,ws};},getSpaceScope:()=>({project:'fallback',ws:''})};
+const restoreDeps = {wsSyncManageSpaces:()=>true,$:()=>({hasAttribute:()=>entryReady}),readDefaultScope:()=>({project:'scope-space',ws:'backend'}),validDefaultScope:()=>preferenceValid,saveDefaultScope:()=>{clearedDefaults++;},setSpaceScope:(project,ws)=>{restoredScope={project,ws};},getSpaceScope:()=>({project:'fallback',ws:''})};
 const restoreScope = new Function(...Object.keys(restoreDeps),switchSource.replace(/^import .*;\n/gm,'').replace(/\bexport /g,'')+'return restoreDefaultScope;')(...Object.values(restoreDeps));
 restoreScope();assert.equal(restoredScope,null);assert.equal(clearedDefaults,0,'loading data must not invalidate a persisted preference');
 entryReady=true;restoreScope();assert.deepEqual(restoredScope,{project:'scope-space',ws:'backend'});

@@ -7,13 +7,8 @@ import { ldGitInstallHtml } from './git-install.js';
 import { ldSettingsTab, ldSettingsVisible } from './settings-page.js';
 import { LD_ICONS, ldPlatformKey, ldPlatformLogo, ldStateTag } from './ui.js';
 
-/* 本地开发 · 设置 ›「Git 账号」（#ldGitPanel）：只列已登录的账号，不分组，两列平铺；平台用各自的图标区分（金蝶 GitLab / GitHub / Gitee / 其他 GitLab），
-   排序按平台固定顺序再按主机。卡片：平台标识、账号名 + 状态标签（可用显示绿色「可用」）、「主机 · 来源 · 到期日」（平台读得到到期日才显示）；悬停出现「···」。
-   菜单：重新登录、检测（只检测这一个账号）、删除；无法连接时「检测」排第一（重新登录解决不了网络问题）；
-   来源为本机凭据的账号是检测系统里原有的，Lingee 不管理它，菜单没有删除 / 移除，只有重新登录和检测；
-   令牌登录的账号，令牌写在系统 Git 凭据库里（Lingee 自己只记用户名、主机、到期日），删除只清除这一条并在确认里说明终端也会失效。
-   未登录的平台不占位，从右上角「＋ 添加」登录；空间用到但还没登录的平台，在「我的空间」里提示并从那里登录。
-   空间按仓库主机自动匹配账号，同一平台登录一次即可复用。顶部提示条：Git 未安装优先，其次令牌即将到期。 */
+/* Git 账号：两列卡片，上方展示平台图标、账号、状态与主机，下方展示 Git 账号和登录方式。
+   不获取或推算到期日；凭据失效以检测结果为准。原有重新登录、检测和删除权限保持不变。 */
 var menuHost = '';
 
 var ICONS = {
@@ -29,15 +24,9 @@ function stateKey(host, checks) {
   if (ldMine().gitMissing) return 'git';
   var key = checks.accounts?.[host];
   /* 卡片只列已登录账号：没检测过或记录为已登录，都按「可用」显示，检测后再更新 */
-  if (!key || key === 'ready' || key === 'login') key = 'available';
-  if (auth?.expiring && key === 'available') key = 'expiring';
+  if (!key || key === 'ready' || key === 'login' || key === 'expiring') key = 'available';
   if (auth?.expired) key = 'expired';
   return key;
-}
-function descOf(auth) {
-  if (auth.source === 'local') return '本机凭据';
-  if (auth.source === 'token') return '访问令牌' + (auth.expiresAt ? auth.expired ? ' · 已于 ' + auth.expiresAt + ' 过期' : ' · ' + auth.expiresAt + ' 到期' : '');
-  return '浏览器登录';
 }
 function menuItems(host, auth, key) {
   var login = { attr:'data-ld-auth-open="' + ldEsc(host) + '"', icon:ICONS.key, text:'重新登录' };
@@ -50,18 +39,20 @@ function cardHtml(host, checks) {
   var auth = ldAuthFor(host), key = stateKey(host, checks), detecting = ldIsDetectingHost(host);
   var avatar = '<span class="ld-acct-avatar">' + ldPlatformLogo(ldPlatformKey(host)) + '</span>';
   var name = ldAuthUser(auth);
-  var platform = { KDGitLab:'金蝶 GitLab', GitHub:'GitHub', Gitee:'Gitee', GitLab:'GitLab' }[ldPlatformKey(host)] || 'Git';
-  var title = platform + ' · ' + name;
+  var title = name;
+  var loginMethod = auth.source === 'local' ? '本机凭据' : auth.source === 'token' ? '访问令牌' : '浏览器登录';
   var open = menuHost === host;
   var menu = open ? '<div class="ld-acct-menu" role="menu">' + menuItems(host, auth, key).map(function (item) {
     return '<button type="button" role="menuitem"' + (item.danger ? ' class="is-danger"' : '') + ' ' + item.attr + '>' + item.icon + '<span>' + item.text + '</span></button>';
   }).join('') + '</div>' : '';
   var action = '<div class="ld-acct-more"><button type="button" class="ld-acct-more-btn" data-ld-acct-more="' + ldEsc(host) + '" aria-haspopup="menu" aria-expanded="' + open + '" aria-label="' + ldEsc(name) + ' 的更多操作">' + ICONS.more + '</button>' + menu + '</div>';
   var tag = detecting ? '<span class="ld-state is-muted" role="status">检测中…</span>' : key ? ldStateTag(key, LD_ACCOUNT_LABELS) : '';
-  return '<article class="ld-acct-card' + (open ? ' is-menu-open' : '') + '"' + (detecting ? ' aria-busy="true"' : '') + '>' + avatar
+  return '<article class="ld-acct-card' + (open ? ' is-menu-open' : '') + '"' + (detecting ? ' aria-busy="true"' : '') + '><div class="ld-acct-header">' + avatar
     + '<div class="ld-acct-main"><div class="ld-acct-title"><strong title="' + ldEsc(title) + '">' + ldEsc(title) + '</strong>' + tag + '</div>'
-    + '<span class="ld-acct-desc" title="' + ldEsc(host) + '">' + ldEsc(host + ' · ' + descOf(auth)) + '</span></div>'
-    + '<div class="ld-acct-act">' + action + '</div></article>';
+    + '<span class="ld-acct-desc" title="' + ldEsc(host) + '">' + ldEsc(host) + '</span></div>'
+    + '<div class="ld-acct-act">' + action + '</div></div>'
+    + '<dl class="ld-acct-details"><div><dt>GIT 账号</dt><dd title="' + ldEsc(name) + '">' + ldEsc(name) + '</dd></div>'
+    + '<div><dt>登录方式</dt><dd>' + loginMethod + '</dd></div></dl></article>';
 }
 function sortedHosts(auths) {
   return Object.keys(auths).sort(function (a, b) {
@@ -72,9 +63,7 @@ function render() {
   var panel = $('#ldGitPanel');
   if (!panel || !ldSettingsVisible() || ldSettingsTab() !== 'git') return;
   var mine = ldMine(), checks = mine.checks || { accounts:{} };
-  var expiringHost = Object.keys(mine.auths).find(function (host) { return ldAuthFor(host)?.expiring; });
-  var banner = mine.gitMissing ? ldGitInstallHtml('settings')
-    : expiringHost ? '<div class="ld-git-banner" role="alert"><span class="ld-git-banner-text">' + ldEsc(expiringHost) + ' 的访问令牌将于 ' + ldEsc(ldAuthFor(expiringHost).expiresAt) + ' 到期，到期后拉取和推送会失败，请重新创建令牌并登录。</span><span class="ld-git-banner-links"><button type="button" class="ld-git-link" data-ld-auth-open="' + ldEsc(expiringHost) + '">重新登录</button></span></div>' : '';
+  var banner = mine.gitMissing ? ldGitInstallHtml('settings') : '';
   var hosts = sortedHosts(mine.auths);
   var body = hosts.length ? '<div class="ld-acct-grid">' + hosts.map(function (host) { return cardHtml(host, checks); }).join('') + '</div>'
     : '<div class="ld-acct-empty"><strong>还没有登录 Git 账号</strong><span>登录金蝶 GitLab、GitHub、Gitee 或其他 GitLab 的账号，空间初始化时会自动复用。</span>'

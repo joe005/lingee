@@ -54,7 +54,7 @@ function renderExpertGrid(){
         +'<div class="card-top">'+facesHtml(t.members,4,true)
         +'<div class="card-titles"><div class="card-title-row"><span class="card-title">'+xesc(t.name)+'</span>'
         +'</div>'
-        +'<div class="x-sub asset-card-summary">'+assetSourceBadge('team',t)+workspaceAssetControls('team',t)+'<span>'+t.members.length+' 个智能体</span>'+personalReviewBadge('team',t)+'<span class="asset-card-upgrade-anchor">'+assetUpgradeHtml('team',t.id)+'</span></div></div></div>'
+        +'<div class="x-sub asset-card-summary">'+assetSourceBadge('team',t)+'<span>'+t.members.length+' 个智能体</span>'+personalReviewBadge('team',t)+workspaceAssetControls('team',t)+'<span class="asset-card-upgrade-anchor">'+assetUpgradeHtml('team',t.id)+'</span></div></div></div>'
         +'<div class="card-desc">'+xesc(t.desc)+'</div>'
         +assetTagsHtml(teamDomains(t))+assetModesHtml(teamWorkModes(t))+layerActions('team',t)+'</div>';
     }

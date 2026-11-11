@@ -245,6 +245,25 @@ function mgrAddProject(project) {
   if (!mgrSaveProjects()) { PROJECTS.pop(); return false; }
   return true;
 }
+/* Build 新建的空间（2026-11-06）：Build 调 Manage 的建空间接口，空间主数据（名称、描述、负责人、成员）存在 Manage，
+   Build 同步存一份并保留仓库、开发智能体等研发配置。原型用一条 Manage 空间记录模拟接口，buildSpaceId 指回 Build 侧那条；
+   rows 为 Build 侧当前的全部空间，不在 rows 里的旧同步记录视为已删除。返回 false 表示接口失败，调用方回滚 */
+function mgrSyncBuildSpaces(rows) {
+  var before = PROJECTS.slice();
+  var keep = {};
+  (rows || []).forEach(function (row) {
+    keep[row.id] = true;
+    var p = mgrProjectById(row.id);
+    if (!p) { p = { id: row.id, space: 'manage', containsRd: true, template: 'collab', status: 'in_progress', projectExperts: [], custom: true, buildSpaceId: row.id, createdAt: nowStamp() }; PROJECTS.push(p); }
+    if (!p.buildSpaceId) return;
+    p.name = row.name; p.desc = row.desc || ''; p.goal = row.desc || '';
+    p.owner = mgrPersonName(row.ownerId) || ''; p.adminIds = (row.adminIds || []).slice(); p.members = (row.memberIds || []).slice();
+    p.status = row.status === 'archived' ? 'archived' : 'in_progress';
+  });
+  PROJECTS = PROJECTS.filter(function (p) { return !p.buildSpaceId || keep[p.id]; });
+  if (!mgrSaveProjects()) { PROJECTS = before; return false; }
+  return true;
+}
 /* 管理权限（维护成员、删除项目）：项目负责人或系统管理员 */
 function mgrCanManageProject(project) {
   if (!project) return false;
@@ -833,7 +852,7 @@ export function initManagerData() {
 
 export {
   TASK_STATUSES, mgrAddIssue, mgrAiContribution, mgrDecideIssue, mgrAddProject, mgrCanManageProject, mgrCanDeleteTask, mgrCreateTask, mgrDeleteProject, mgrDeleteTask, mgrCurrentPersonId, mgrExpert, mgrExpertList,
-  MEMBER_ROLES, mgrHasSessionPerm, mgrMemberOpenTasks, mgrMemberRole, mgrMemberRoleLabel, mgrPersonName, mgrProjectPeople,
+  MEMBER_ROLES, mgrSyncBuildSpaces, mgrHasSessionPerm, mgrMemberOpenTasks, mgrMemberRole, mgrMemberRoleLabel, mgrPersonName, mgrProjectPeople,
   mgrAddProjectMembers, mgrInviteProjectMembers, mgrMyInvites, mgrPendingInviteIds, mgrRespondInvite, mgrSetMemberLevel, mgrSetProjectExperts, mgrRenameError, mgrRenameProject, mgrSetProjectMembers, mgrSetProjectPages, mgrSetProjectRepo, mgrSetProjectText, mgrProjectById, mgrProjectIssues, mgrProjectKnowledge, mgrProjectMembers, mgrProjectPages,
   mgrCreateDevTask, mgrIsDevTask, mgrProjectProgress, mgrSpaceTeamId, mgrProjectTasks, mgrProjects, mgrRelatedTask, mgrSaveProjects, mgrSaveTasks, mgrSetSessionPerm,
   mgrTaskById, mgrTaskKey, mgrTasks,

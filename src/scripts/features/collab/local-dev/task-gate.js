@@ -51,7 +51,6 @@ export function ldGateTaskStart(task, options) {
   var handlerId = tkCurrentStageHandlerId(task) || me;
   var check = ldPreflight(environmentId, handlerId), status = check.status;
   if (check.initialized) {
-    if (status.auth?.expiring && handlerId === me) toast(ldEsc(status.info.host) + ' 的访问令牌将于 ' + ldEsc(status.auth.expiresAt) + ' 到期，到期后任务会鉴权失败，请到「设置」重新登录', 'warning');
     return true;
   }
   if (options?.automatic || handlerId !== me) {
