@@ -1,0 +1,27 @@
+/* 第三方集成 › 禅道：只影响当前设置分类。 */
+#view-collab .cv-zentao-settings { min-width: 0; }
+#view-collab .cv-zentao-note { margin: 0 0 16px; padding: 12px 16px; border: 1px solid var(--border); border-radius: 8px; background: var(--fill-1); color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); }
+#view-collab .cv-zentao-list { display: grid; gap: 12px; }
+#view-collab .cv-zentao-row { display: flex; align-items: center; gap: 12px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); }
+#view-collab .cv-zentao-logo { display: grid; place-items: center; flex: none; width: 36px; height: 36px; border-radius: 8px; background: var(--brand-fill); color: var(--brand); font-size: var(--font-size-16); font-weight: 600; }
+#view-collab .cv-zentao-info { display: grid; flex: 1; gap: 4px; min-width: 0; }
+#view-collab .cv-zentao-info strong { font-size: var(--font-size-14); font-weight: 500; }
+#view-collab .cv-zentao-info :is(span,small) { overflow-wrap: anywhere; color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); }
+#view-collab .cv-zentao-status { flex: none; color: var(--text-secondary); font-size: var(--font-size-12); }
+#view-collab :is(.cv-zentao-actions,.cv-zentao-form-actions) { display: flex; align-items: center; gap: 8px; }
+#view-collab .cv-zentao-empty { padding: 24px 16px; border: 1px dashed var(--border-hover); border-radius: 12px; color: var(--text-secondary); font-size: var(--font-size-14); text-align: center; }
+#view-collab .cv-zentao-form { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 16px; margin-bottom: 16px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); }
+#view-collab .cv-zentao-form h3 { grid-column: 1/-1; margin: 0; font-size: var(--font-size-16); font-weight: 500; }
+#view-collab .cv-zentao-form label { display: block; min-width: 0; font-size: var(--font-size-14); line-height: var(--line-height-14); }
+#view-collab .cv-zentao-form .cv-required { color: var(--danger); }
+#view-collab .cv-zentao-form input { box-sizing: border-box; width: 100%; height: var(--control-h); margin-top: 8px; padding: 0 12px; border: 1px solid var(--border-hover); border-radius: 8px; background: var(--bg); color: var(--text); font: inherit; }
+#view-collab .cv-zentao-form input:hover { border-color: var(--border-focus); }
+#view-collab .cv-zentao-form input:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+#view-collab .cv-zentao-form-note { margin: 0; color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); }
+#view-collab .cv-zentao-form > :is(p,.cv-zentao-form-actions) { grid-column: 1/-1; }
+#view-collab .cv-zentao-form-actions { justify-content: flex-end; }
+@media(max-width:760px) {
+  #view-collab .cv-zentao-form { grid-template-columns: minmax(0,1fr); }
+  #view-collab .cv-zentao-row { flex-wrap: wrap; }
+  #view-collab .cv-zentao-actions { margin-left: auto; }
+}

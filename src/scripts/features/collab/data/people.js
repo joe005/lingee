@@ -4,7 +4,7 @@ import { cvPersistProjects } from './project-store.js';
 
 /* 人员基础资料（全局主数据，独立维护）：项目/团队通过 id（pid）引用，不在人员身上挂项目 */
 var CV_MEMBERS = [
-  {id:'p01',name:'张工',email:'zhang***@kingdee.com',dept:'研发部',workspaceRole:'system_admin',roles:[{tag:'member-tag--dev',text:'开发'},{tag:'member-tag--arch',text:'架构'}],status:'available',source:'直接成员',isMe:true},
+  {id:'p01',name:'张工',email:'zhang***@kingdee.com',dept:'研发部',workspaceRole:'member',roles:[{tag:'member-tag--dev',text:'开发'},{tag:'member-tag--arch',text:'架构'}],status:'available',source:'直接成员',isMe:true},
   {id:'p02',name:'李工',email:'li***@kingdee.com',dept:'研发部',roles:[{tag:'member-tag--dev',text:'开发'}],status:'available',source:'直接成员'},
   {id:'p03',name:'王工',email:'wang***@kingdee.com',dept:'研发部',roles:[{tag:'member-tag--dev',text:'开发'},{tag:'member-tag--arch',text:'架构'}],status:'busy',source:'直接成员'},
   {id:'p04',name:'赵琳',email:'zha***@kingdee.com',dept:'产品部',workspaceRole:'project_manager',roles:[{tag:'member-tag--pm',text:'需求'},{tag:'member-tag--pm',text:'产品'}],status:'available',source:'继承自 灵基AIOS'},
@@ -25,8 +25,8 @@ var CV_MEMBERS = [
   {id:'p19',name:'杨帆',email:'yang***@kingdee.com',dept:'运维部',roles:[{tag:'member-tag--ops',text:'运维'}],status:'available',source:'直接成员'},
   {id:'p20',name:'唐辉',email:'tang***@kingdee.com',dept:'运维部',roles:[{tag:'member-tag--ops',text:'运维'}],status:'available',source:'继承自 灵基AIOS'},
   {id:'p21',name:'梁平',email:'liang***@kingdee.com',dept:'产品部',roles:[{tag:'member-tag--pm',text:'产品'},{tag:'member-tag--owner',text:'所有者'}],status:'available',source:'直接成员'},
-  {id:'p22',name:'吴宏超',email:'',dept:'产品部',workspaceRole:'system_admin',roles:[],status:'available',source:'演示人员'},
-  {id:'p23',name:'吴晓锋',email:'6686612@qq.com',dept:'产品部',workspaceRole:'system_admin',roles:[{tag:'member-tag--pm',text:'产品'},{tag:'member-tag--owner',text:'所有者'}],status:'available',source:'直接成员'},
+  {id:'p22',name:'吴宏超',email:'',dept:'产品部',workspaceRole:'member',roles:[],status:'available',source:'演示人员'},
+  {id:'p23',name:'吴晓锋',email:'6686612@qq.com',dept:'产品部',workspaceRole:'member',roles:[{tag:'member-tag--pm',text:'产品'},{tag:'member-tag--owner',text:'所有者'}],status:'available',source:'直接成员'},
   {id:'p24',name:'需求',email:'',dept:'产品部',roles:[{tag:'member-tag--pm',text:'需求'}],status:'available',source:'直接成员'},
   {id:'p25',name:'架构',email:'',dept:'架构部',roles:[{tag:'member-tag--arch',text:'架构'}],status:'available',source:'直接成员'},
   {id:'p26',name:'开发',email:'',dept:'研发部',roles:[{tag:'member-tag--dev',text:'开发'}],status:'available',source:'直接成员'},
@@ -109,7 +109,8 @@ function cvPeopleInWorkspace(){
 }
 function cvWorkspaceRole(person){
   var workspace=cvWorkspaceById(cvWorkspace);
-  return workspace?.roles?.[person?.id]||person?.workspaceRole||'member';
+  var role = workspace?.roles?.[person?.id] || 'member';
+  return role === 'system_admin' ? 'admin' : role; /* 仅兼容旧空间内的管理员记录，不继承个人全局角色。 */
 }
 function cvCanAccessWorkspace(id,name){
   var workspace=cvWorkspaceById(id);
@@ -134,7 +135,7 @@ function cvAddPersonToWorkspace(person,role){
 }
 function cvCreateWorkspace(name,desc,creator){
   if(!name||!creator?.id)return null;
-  var workspace={id:'ws-'+Date.now(),name:name,desc:desc||'',creatorName:creator.name,peopleIds:[creator.id],roles:{[creator.id]:'system_admin'}};
+  var workspace={id:'ws-'+Date.now(),name:name,desc:desc||'',creatorName:creator.name,peopleIds:[creator.id],roles:{[creator.id]:'admin'}};
   CV_WORKSPACES.push(workspace);
   if(cvPersistWorkspaces())return workspace;
   CV_WORKSPACES.pop();
@@ -176,7 +177,7 @@ function cvRestorePersons(){
   try{
     var raw=localStorage.getItem(CV_PERSON_STORE_KEY); if(!raw) return;
     var arr=JSON.parse(raw);
-    if(Array.isArray(arr)&&arr.length){ CV_MEMBERS.length=0; arr.forEach(function(m){if(!m.workspaceRole&&m.id==='p01')m.workspaceRole='system_admin';if(!m.workspaceRole&&m.id==='p04')m.workspaceRole='project_manager';CV_MEMBERS.push(m);}); }
+    if(Array.isArray(arr)&&arr.length){ CV_MEMBERS.length=0; arr.forEach(function(m){if(m.workspaceRole==='system_admin')m.workspaceRole='member';if(!m.workspaceRole&&m.id==='p04')m.workspaceRole='project_manager';CV_MEMBERS.push(m);}); }
     cvMergeDuplicateCurrentUser();
   }catch(e){}
 }
@@ -196,7 +197,7 @@ function cvMergeDuplicateCurrentUser(){
   var linked=matches.find(function(person){return person.email==='wuhc2023@gmail.com'&&person.userId;})||matches.find(function(person){return person.userId;});
   if(!primary.userId&&linked)primary.userId=linked.userId;
   primary.id='p22';
-  primary.workspaceRole='system_admin';
+  primary.workspaceRole='member';
   primary.linkedUserIds=Array.from(aliases).filter(function(id){return id!=='p22'&&id!==primary.userId;});
   CV_MEMBERS.splice(0,CV_MEMBERS.length,...CV_MEMBERS.filter(function(person){return person===primary||person.name!=='吴宏超';}));
   var projectsChanged=false;

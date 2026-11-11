@@ -264,12 +264,12 @@ function mgrSyncBuildSpaces(rows) {
   if (!mgrSaveProjects()) { PROJECTS = before; return false; }
   return true;
 }
-/* 管理权限（维护成员、删除项目）：项目负责人或系统管理员 */
+/* 管理权限（维护成员、删除项目）：空间负责人或空间管理员 */
 function mgrCanManageProject(project) {
   if (!project) return false;
   var name = cvCurrentUserName();
   var me = CV_MEMBERS.find(function (m) { return m.name === name && m.status !== 'disabled'; });
-  return !!me && (project.owner === me.name || me.workspaceRole === 'system_admin' || (project.adminIds || []).includes(me.id));
+  return !!me && (project.owner === me.name || (project.adminIds || []).includes(me.id));
 }
 
 /* ---------- 项目成员 ----------

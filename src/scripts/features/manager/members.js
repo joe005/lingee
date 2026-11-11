@@ -151,7 +151,7 @@ function setJob(personId, role) {
 /* ---------- 移除（二次确认，立即生效） ---------- */
 function removalError(p, personId) {
   var person = cvPersonById(personId);
-  if (!mgrCanManageProject(p)) return '只有空间负责人、空间管理员或系统管理员可以移除成员';
+  if (!mgrCanManageProject(p)) return '只有空间负责人或空间管理员可以移除成员';
   if (isOwner(p, person)) return '请先更换空间负责人，再移除该成员';
   var open = mgrMemberOpenTasks(p, personId);
   if (open.length) return (person ? person.name : '该成员') + ' 还有 ' + open.length + ' 个未完成任务，请先完成或转交后再移除';

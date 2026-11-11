@@ -235,7 +235,7 @@ Lingee 是面向企业工作与 AI 开发协作的工作台：人和智能体在
 | 下拉选择 | 现行页面普通单选字段 | `initSelectDropdowns` / `initPageSelectDropdowns`、`.niu-select-trigger` / `.niu-person-popup` | `core/select-dropdown.js`、`parts/tasks/10-unified-controls.css`、`parts/tasks/figma-task-detail-create.css`；通用触发器在 `parts/shared-select.css`，项目分支触发器在 `parts/manager/11-detail-target.css` | 复用原生 select 数据与 change 事件；统一箭头、选中标记和键盘操作 |
 | Toast 提示 | 全站 | `.toast` | `parts/ctxmenu.css` | — |
 | 设置页卡片与分段页签 | 协作开发「设置」 | `.ld-settings-tabs` / `.ld-settings-tab`、`.ld-space-card`、`.ld-git-card`、`.ld-space-btn` | `parts/collab/local-dev/settings-page.css` | 页签按目标规格；卡片圆角 12px、`--card-shadow`；行内按钮高 28px，主操作为 `--brand` 描边 |
-| Git 账号卡片 | 协作开发「设置 › Git 账号」 | `.ld-acct-card`、`.ld-acct-header`、`.ld-acct-details` | `parts/collab/local-dev/git-accounts.css` | 采用两列白卡、`--r-card` 圆角与 `--card-shadow`，白色面板内补 `1px solid var(--border-hover)` 描边；上方账号、状态和主机，下方账号与登录方式；更多操作常显 |
+| Git 账号卡片 | 协作开发「设置 › Git 账号」 | `.ld-acct-card`、`.ld-acct-header`、`.ld-acct-details` | `parts/collab/local-dev/git-accounts.css` | 采用两列白卡、12px 圆角与 `1px solid var(--border)` 描边，无阴影；上方账号、状态和主机，下方账号与登录方式；更多操作常显 |
 | 空间与工作区基本设置 | 协作开发「设置」 | `.cv-basic-layout` / `.cv-basic-nav-item` / `.cv-basic-card` | `parts/collab/workspace-settings.css` | 左侧通用、仓库、成员分类，右侧表单；复用 `.ld-set-btn`，卡片用 `--r-card` |
 | 本地开发弹窗表单 | 初始化空间、准备执行环境 | `.ld-form-field`、`.ld-select`、`.ld-dir-card`、`.ld-info-banner` | `parts/collab/local-dev/space-dialog.css` | 标签在上；只读字段 `--fill-1` 底；目录单选卡片选中为 `--brand` 边框 |
 | 表格 | 协作空间设置与项目 | `.cfg-table-*` / `.cv-proj-*` | `parts/collab/15-shared-tables.css` | 作用域限定在 `#view-collab` |
@@ -316,7 +316,7 @@ Lingee 是面向企业工作与 AI 开发协作的工作台：人和智能体在
 
 协作开发当前任务看板参考 `284:73937`：分栏 24px 圆角、10px 内边距，栏间距 16px，卡片 20px 圆角、16px 内边距，标题 16px / 500，描述 14px / 22px，底部阶段头像 24px，操作按钮 28px 高、8px 圆角。以上为该页面设计稿规格例外，状态分组按待我处理、执行中、已完成排列，待开始并入待我处理，拖拽契约保持；样式位于 `parts/tasks/figma-task-board.css`。
 
-协作开发的任务、智能体、智能体团队和设置共用顶部文字导航：52px 高、18px / 500、12px 页签间距、最大宽 1160px，选中态为标题色；隐藏重复的协作开发标题，设置入口保持右侧图标，在设置页面隐藏该入口。共享规则归属 `parts/collab/11-shared-navigation.css`。侧栏「技能·智能体·连接器」菜单的四页签导航（`.asset-hub-nav`，`styles/pages/asset-hub.css`）沿用同一文字导航样式，挂在技能页、协作开发容器与连接器页顶部。
+协作开发的任务、智能体、智能体团队和设置共用顶部药丸式分段导航：底槽 40px 高、4px 内边距与间距、选项 32px 高、14px / 500 文字、左右 16px 内边距，胶囊圆角、选中项白底与轻阴影；设置为第四个页签。导航最大宽 1160px，隐藏重复的协作开发标题。共享规则归属 `parts/collab/11-shared-navigation.css`。侧栏「技能·智能体·连接器」菜单的四页签导航（`.asset-hub-nav`，`styles/pages/asset-hub.css`）保留文字导航样式，挂在技能页、协作开发容器与连接器页顶部。
 
 ### 侧栏 Figma 样板
 
@@ -354,4 +354,6 @@ Lingee 是面向企业工作与 AI 开发协作的工作台：人和智能体在
 
 知识库子页面按用户提供的真实页面截图采用品牌色描边页签、带描边提示条和 24px 圆角描边白卡，作为该页面对通用分段底槽与无边框卡片的局部例外；操作按钮带前置图标，文件夹筛选与搜索框左右排列，均为 36px 高，空态保留表头。规则仅限 `14-space.css` 中的 `.mgr-knowledge-page`。
 
-协作开发的空间切换器位于顶部导航右侧，与左侧纯文字页签同排（无底槽、选中背景及阴影）；切换按钮为白底、浅灰描边（`--border-hover`）、8px 圆角、36px 高、14px / 500 文字，左右各 12px 内边距，右侧下拉箭头；下拉面板右对齐展开，窄窗口允许换行。布局归属 `parts/collab/workspace-settings.css`。
+协作开发的空间切换器位于页签上方左侧，沿用旧版空间标题：36px 高、18px / 600 文字、无底色与描边，空间名称旁放下拉箭头；下方为药丸式分段页签，下拉面板左对齐展开。布局归属 `parts/collab/workspace-settings.css`。
+
+协作开发设置页列表容器参考人员表格边框：浅灰细描边（`--border`）、12px 圆角，无浮起阴影；沿用原有左右布局、表单结构和内容间距。

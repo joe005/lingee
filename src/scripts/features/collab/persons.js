@@ -71,7 +71,7 @@ async function cvDeletePerson(pid){
   var workspace=cvWorkspaceById(cvWorkspace)||CV_WORKSPACES.find(function(w){return (w.peopleIds||[]).includes(pid);});
   if(!workspace?.peopleIds?.includes(pid))return;
   var inScope=function(project){return !cvWorkspace||project.workspace===cvWorkspace;};
-  if(cvWorkspaceRole(p)==='system_admin'&&cvPeopleInWorkspace().filter(function(row){return cvWorkspaceRole(row)==='system_admin';}).length<=1){toast('需保留至少一名管理员','warning');return;}
+  if(cvWorkspaceRole(p)==='admin'&&cvPeopleInWorkspace().filter(function(row){return cvWorkspaceRole(row)==='admin';}).length<=1){toast('需保留至少一名管理员','warning');return;}
   if(CV_PROJECTS.some(function(project){return inScope(project)&&project.owner===p.name;})){toast('该人员仍是项目负责人，请先移交项目','warning');return;}
   if(CV_TASKS.some(function(task){return task.kind!=='epic'&&CV_PROJECTS.some(function(project){return project.id===task.project&&inScope(project);})&&!['已完成','已取消'].includes(task.status)&&(task.assignee===p.name||(task.stagePlan||[]).some(function(stage){return stage.assignee===p.name;}));})){toast('该人员有待处理任务，请先完成或转交','warning');return;}
   if(CV_PROJECTS.some(function(project){return inScope(project)&&(project.members||[]).length===1&&project.members[0]===pid;})){
@@ -99,15 +99,15 @@ async function cvDeletePerson(pid){
 function cvSetWorkspaceRole(pid,role){
   var person=cvPersonById(pid);
   var workspace=cvWorkspaceById(cvWorkspace)||CV_WORKSPACES.find(function(w){return (w.peopleIds||[]).includes(pid);});
-  if(!person||!workspace?.peopleIds?.includes(pid)||!['member','system_admin'].includes(role))return;
+  if(!person||!workspace?.peopleIds?.includes(pid)||!['member','admin'].includes(role))return;
   var previousRole=cvWorkspaceRole(person);
   if(previousRole===role)return;
-  if(previousRole==='system_admin'&&role!=='system_admin'&&cvPeopleInWorkspace().filter(function(row){return cvWorkspaceRole(row)==='system_admin';}).length<=1){toast('需保留至少一名管理员','warning');cvRenderPermTable();return;}
+  if(previousRole==='admin'&&role!=='admin'&&cvPeopleInWorkspace().filter(function(row){return cvWorkspaceRole(row)==='admin';}).length<=1){toast('需保留至少一名管理员','warning');cvRenderPermTable();return;}
   workspace.roles=workspace.roles||{};
   workspace.roles[pid]=role;
   if(!cvPersistWorkspaces()){workspace.roles[pid]=previousRole;toast('工作区角色保存失败','error');cvRenderPermTable();return;}
   cvRenderPermTable();cvRenderProjectList();
-  var labels={member:'成员',system_admin:'管理员'};
+  var labels={member:'成员',admin:'管理员'};
   recordConfigAudit('person','修改「'+person.name+'」的工作区角色：'+(labels[previousRole]||'成员')+' → '+labels[role]);
   toast('已设置 '+person.name+' 的工作区角色');
 }
@@ -131,7 +131,7 @@ function cvRenderPermTable(){
       return '<div class="cfg-table-row cv-perm-row">'
         +'<span class="cfg-t-name">'+cvPersonAvHtml(p,'ps-av')+'<span class="cv-proj-desc-wrap"><b>'+xesc(p.name)+(cvIsMe(p)?'<span class="ps-me">我</span>':'')+'</b><em class="cv-proj-desc">ID '+xesc(p.userId||p.id)+'</em></span></span>'
         +'<span class="cv-perm-meta">'+xesc(p.phone||'—')+'</span><span class="cv-perm-meta">'+xesc(p.email||'—')+'</span>'
-        +'<span><select class="cv-perm-role" data-ps-workspace-role="'+xesc(p.id)+'" aria-label="'+xesc(p.name)+'的工作区角色">'+[['member','成员'],['system_admin','管理员']].map(function(option){return '<option value="'+option[0]+'"'+(cvWorkspaceRole(p)===option[0]?' selected':'')+'>'+option[1]+'</option>';}).join('')+'</select></span>'
+        +'<span><select class="cv-perm-role" data-ps-workspace-role="'+xesc(p.id)+'" aria-label="'+xesc(p.name)+'的工作区角色">'+[['member','成员'],['admin','管理员']].map(function(option){return '<option value="'+option[0]+'"'+(cvWorkspaceRole(p)===option[0]?' selected':'')+'>'+option[1]+'</option>';}).join('')+'</select></span>'
         +'<span class="cv-perm-acts">'
         +(cvIsMe(p)?'':'<button type="button" class="act-btn act-btn--danger" data-ps-del="'+xesc(p.id)+'">移除</button>')+'</span>'
         +'</div>';

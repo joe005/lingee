@@ -1,7 +1,7 @@
 /* 设置 ›「Git 账号」与登录 / 添加账号弹窗（features/collab/local-dev/git-accounts-page.js、auth-dialog.js）。
    不分组，两列平铺白色账号卡片，平台靠各自图标区分；登录弹窗上下排版：平台下拉、Git 账号、访问令牌、常显获取步骤。 */
 :is(#cv-local,#ldPersonalSettings) .ld-acct-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
-:is(#cv-local,#ldPersonalSettings) .ld-acct-card{box-sizing:border-box;min-width:0;border:1px solid var(--border-hover);border-radius:var(--r-card);background:var(--bg);box-shadow:var(--card-shadow)}
+:is(#cv-local,#ldPersonalSettings) .ld-acct-card{box-sizing:border-box;min-width:0;border:1px solid var(--border);border-radius:12px;background:var(--bg);box-shadow:none}
 :is(#cv-local,#ldPersonalSettings) .ld-acct-header{display:flex;align-items:center;gap:12px;min-width:0;padding:24px 16px}
 :is(#cv-local,#ldPersonalSettings) .ld-acct-details{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:0;padding:16px;border-top:1px solid var(--divider)}
 :is(#cv-local,#ldPersonalSettings) .ld-acct-details>div{display:flex;flex-direction:column;gap:8px;min-width:0}

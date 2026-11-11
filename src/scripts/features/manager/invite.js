@@ -51,7 +51,7 @@ function openInvite(id, from, draftOptions) {
   if (!draft) {
     var p = mgrProjectById(id);
     if (!p) return;
-    if (!mgrCanManageProject(p)) { toast('只有空间负责人、空间管理员或系统管理员可以邀请成员', 'warning'); return; }
+    if (!mgrCanManageProject(p)) { toast('只有空间负责人或空间管理员可以邀请成员', 'warning'); return; }
   }
   projectId = draft ? null : id;
   trigger = from || null;

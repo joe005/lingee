@@ -155,7 +155,7 @@ function render() {
   $('#mgrSetBody').innerHTML = '<section class="mgr-set-card">' + goalCard(p, canEdit) + '</section>' +
     '<section class="mgr-set-card">' + blocksCard(p, canEdit) + '</section>' +
     '<section class="mgr-set-card">' + instructionCard(p, canEdit) + '</section>' +
-    (canEdit ? '' : '<p class="mgr-set-note">只有空间负责人、空间管理员或系统管理员可以修改空间设置。</p>');
+    (canEdit ? '' : '<p class="mgr-set-note">只有空间负责人或空间管理员可以修改空间设置。</p>');
   var input = $('#mgrSetInput');
   if (input) { input.focus(); input.setSelectionRange(input.value.length, input.value.length); }
 }

@@ -316,7 +316,7 @@ export function initManagerSpacePages() {
     var decide = t.closest('[data-mgr-issue-decide]');
     if (decide) {
       var approve = decide.getAttribute('data-approve') === '1';
-      if (!mgrCanManageProject(p)) { toast('仅空间负责人、空间管理员或系统管理员可决策', 'warning'); return; }
+      if (!mgrCanManageProject(p)) { toast('仅空间负责人或空间管理员可决策', 'warning'); return; }
       if (mgrDecideIssue(decide.getAttribute('data-mgr-issue-decide'), approve)) toast(approve ? '已批准，相关任务恢复执行' : '已驳回，决策已留痕', approve ? 'success' : 'info');
       return;
     }
@@ -333,7 +333,7 @@ export function initManagerSpacePages() {
     var jt = t.closest('[data-mgr-job-tab]');
     if (jt) { jobTab = jt.getAttribute('data-mgr-job-tab'); render(); return; }
     if (t.closest('[data-mgr-job-new]')) {
-      if (!mgrCanManageProject(p)) { toast('只有空间负责人、空间管理员或系统管理员可以添加定时任务', 'warning'); return; }
+      if (!mgrCanManageProject(p)) { toast('只有空间负责人或空间管理员可以添加定时任务', 'warning'); return; }
       draft = { name: '', prompt: '', kind: 'once', date: '', time: '', folder: '默认文件夹' };
       subKind = 'schedule-new';
       render('mgrJobName');

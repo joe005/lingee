@@ -1,5 +1,29 @@
   <!-- ===================== 协作开发 ===================== -->
   <div class="view hidden cv-current-navigation" id="view-collab">
+    <div class="cv-wsbar">
+      <!-- 空间切换：位于页签上方左侧，选中后限定任务列表范围（features/collab/space-switch.js）；原 #cvWsSwitch 保留不显示 -->
+      <div class="cv-space-switch" id="cvSpaceSwitch"></div>
+      <div class="cv-proj cv-ws" id="cvWsSwitch">
+        <button type="button" class="cv-proj-btn" id="cvWsBtn" aria-haspopup="true" aria-expanded="false">
+          <span id="cvWsLabel">灵基Build</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="cv-proj-menu cv-ws-menu" id="cvWsMenu">
+          <div class="cv-ws-menu-search"><input id="cvWsSearch" type="search" placeholder="搜索工作区..." autocomplete="off" aria-label="搜索工作区"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></div>
+          <div class="cv-ws-menu-caption">工作区 <span id="cvWsCount">0</span></div>
+          <div class="cv-ws-menu-options" id="cvWsOptions"></div>
+          <div class="cv-ws-menu-footer"><button type="button" id="cvWsCreateToggle" aria-controls="cvWsCreateForm" aria-expanded="false"><span aria-hidden="true" class="cv-ws-menu-plus">+</span>创建工作区</button></div>
+        </div>
+      </div>
+      <form class="cv-ws-create-form hidden" id="cvWsCreateForm">
+        <strong>新增工作区</strong>
+        <label for="cvWsCreateName">名称 <span aria-hidden="true">*</span></label>
+        <input id="cvWsCreateName" name="workspaceName" type="text" maxlength="60" placeholder="输入工作区名称" required>
+        <label for="cvWsCreateDesc">描述</label>
+        <textarea id="cvWsCreateDesc" name="workspaceDesc" rows="3" maxlength="500" placeholder="简要说明这个工作区的用途"></textarea>
+        <div class="cv-ws-create-actions"><button type="button" data-ws-create-cancel>取消</button><button type="submit">创建并切换</button></div>
+      </form>
+    </div>
     <section class="cv-workspace-onboarding hidden" id="cvWorkspaceOnboarding" aria-labelledby="cvWorkspaceOnboardingTitle">
       <div class="cv-workspace-onboarding-card">
         <div class="cv-workspace-onboarding-icon" aria-hidden="true"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M12 11v6m-3-3h6"/></svg></div>
@@ -26,30 +50,6 @@
       </div>
       <button type="button" class="ld-nav-status" id="ldNavStatus" aria-haspopup="dialog" aria-expanded="false" aria-controls="ldNavPop" hidden><span class="ld-nav-dot" aria-hidden="true"></span><span class="ld-nav-text">本地环境</span></button>
       <button type="button" class="ld-job-status" id="ldJobStatus" aria-haspopup="true" aria-expanded="false" aria-controls="ldJobBubble" hidden><span class="ld-spin" aria-hidden="true"></span><span class="ld-job-text">空间初始化中</span></button>
-      <div class="cv-wsbar">
-        <!-- 空间切换：位于顶部导航右侧，选中后限定任务列表范围（features/collab/space-switch.js）；原 #cvWsSwitch 保留不显示 -->
-        <div class="cv-space-switch" id="cvSpaceSwitch"></div>
-        <div class="cv-proj cv-ws" id="cvWsSwitch">
-          <button type="button" class="cv-proj-btn" id="cvWsBtn" aria-haspopup="true" aria-expanded="false">
-            <span id="cvWsLabel">灵基Build</span>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-          </button>
-          <div class="cv-proj-menu cv-ws-menu" id="cvWsMenu">
-            <div class="cv-ws-menu-search"><input id="cvWsSearch" type="search" placeholder="搜索工作区..." autocomplete="off" aria-label="搜索工作区"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></div>
-            <div class="cv-ws-menu-caption">工作区 <span id="cvWsCount">0</span></div>
-            <div class="cv-ws-menu-options" id="cvWsOptions"></div>
-            <div class="cv-ws-menu-footer"><button type="button" id="cvWsCreateToggle" aria-controls="cvWsCreateForm" aria-expanded="false"><span aria-hidden="true" class="cv-ws-menu-plus">+</span>创建工作区</button></div>
-          </div>
-        </div>
-        <form class="cv-ws-create-form hidden" id="cvWsCreateForm">
-          <strong>新增工作区</strong>
-          <label for="cvWsCreateName">名称 <span aria-hidden="true">*</span></label>
-          <input id="cvWsCreateName" name="workspaceName" type="text" maxlength="60" placeholder="输入工作区名称" required>
-          <label for="cvWsCreateDesc">描述</label>
-          <textarea id="cvWsCreateDesc" name="workspaceDesc" rows="3" maxlength="500" placeholder="简要说明这个工作区的用途"></textarea>
-          <div class="cv-ws-create-actions"><button type="button" data-ws-create-cancel>取消</button><button type="submit">创建并切换</button></div>
-        </form>
-      </div>
     </div>
     <!--#include "src/views/collab/loading.html" -->
     <div class="cv-subnav hidden" id="cvSubNav"></div>

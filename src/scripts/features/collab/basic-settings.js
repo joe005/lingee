@@ -1,3 +1,4 @@
+import { renderZentaoSettings } from './zentao-settings.js';
 import { renderRecruitmentSettings } from './recruitment-settings.js';
 import { ldBindingFor, ldEnvironmentId, ldProjectStatus, ldMine, ldSaveMine, ldBindingHasRunningTasks } from './local-dev/core.js';
 import { ldOpenSpaceDialog } from './local-dev/space-dialog.js';
@@ -215,6 +216,7 @@ export function renderBasicSettings(host, tab) {
   var nextScope = s.p ? s.p.id + ':' + (s.ws ? s.ws.id : '') : '';
   if (nextScope !== memberScope) { memberScope = nextScope; memberPage = 1; memberFilter = ''; memberPicked = []; }
   if (!s.p) { host.innerHTML = '<div class="cv-wsadmin-empty">请先在页面顶部选择一个空间，再查看设置。</div>'; return; }
+  if (tab === 'zentao') { renderZentaoSettings(host, s.p, s.ws); return; }
   var path = wsScopePath(s.p, s.ws);
   host.innerHTML = '<p class="cv-basic-scope" title="' + esc(path) + '">' + esc(path) + '</p>' + (tab === 'repo' ? repo(s.p, s.ws) : tab === 'members' ? members(s.p, s.ws) : general(s.p, s.ws));
   if (tab === 'general') {

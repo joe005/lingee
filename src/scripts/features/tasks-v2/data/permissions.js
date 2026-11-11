@@ -1,4 +1,4 @@
-import { CV_MEMBERS, cvWorkspaceRole, isWsHost, wsHost } from '../../collab/data.js';
+import { CV_MEMBERS, isWsHost, wsHost } from '../../collab/data.js';
 import { tkAllProjects } from './external-projects.js';
 import { tkCurrentStageHandlerId, tkCurrentUserId } from './people.js';
 import { wsById, wsFlatTree, wsHasPerson } from '../../../core/workspace-tree.js';
@@ -61,10 +61,10 @@ function tkParticipatesCurrentUser(task) {
     || (task.comments || []).some(function (c) { return c && (c.authorId === me || c.assignee === me); })
     || (task.statusHistory || []).some(function (entry) { return entry && entry.authorId === me; });
 }
-/* 空间负责人、空间管理员与系统管理员可看到空间内全部工作区 */
+/* 空间负责人、空间管理员可看到空间内全部工作区 */
 function tkIsSpaceManager(project, me) {
   if (!project || !me) return false;
-  return cvWorkspaceRole(me) === 'system_admin' || project.owner === me.name || (project.adminIds || []).includes(me.id);
+  return project.owner === me.name || (project.adminIds || []).includes(me.id);
 }
 /* 工作区隔离：工作区里的任务只对该工作区成员与空间管理者可见；默认工作区（空间根）的任务沿用原规则 */
 function tkCanSeeWorkspace(project, workspaceId) {
@@ -86,13 +86,17 @@ function tkCanViewTask(task) {
   if (!project) return false;
   if (!tkCanSeeWorkspace(project, task.workspaceId)) return false;
   var me = CV_MEMBERS.find(function (person) { return person.id === tkCurrentUserId(); });
-  return cvWorkspaceRole(me) === 'system_admin' || tkParticipatesCurrentUser(task);
+  var ws = task.workspaceId ? wsById(project, task.workspaceId) : null;
+  return tkIsSpaceManager(project, me) || (!!ws && !!me && (ws.ownerId === me.id || (ws.adminIds || []).includes(me.id))) || tkParticipatesCurrentUser(task);
 }
 /* 工作区管理员拥有所属项目数据的查看权限；任务页默认仅显示自己参与的任务，
    通过筛选「负责人」的「全部」选项查看所有人，普通成员不显示该选项。 */
-function tkIsProjectOwner() {
+function tkIsProjectOwner(projectId, workspaceId) {
   var me = CV_MEMBERS.find(function (person) { return person.id === tkCurrentUserId(); });
-  return !!me && cvWorkspaceRole(me) === 'system_admin';
+  var project = tkScopeProjects().find(function (row) { return row.id === projectId; });
+  if (!project || !me) return false;
+  var ws = workspaceId ? wsById(project, workspaceId) : null;
+  return workspaceId ? !!ws && (ws.ownerId === me.id || (ws.adminIds || []).includes(me.id)) : tkIsSpaceManager(project, me);
 }
 function tkProjectsForCurrentUser() {
   var userId = tkCurrentUserId();

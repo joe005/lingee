@@ -51,9 +51,9 @@ function spaceMemberIds(project) { return (project.members || []).filter(functio
 function isSpaceMember(project, personId) { return (project.members || []).indexOf(personId) >= 0; }
 function personName(id) { var p = cvPersonById(id); return p ? p.name : '已移除'; }
 
-/* 负责人离开空间后回落到空间负责人 */
+/* 工作区负责人以本工作区的明确配置为准，不从上级空间继承。 */
 function wsOwnerId(project, ws) {
-  return ws.ownerId && isSpaceMember(project, ws.ownerId) ? ws.ownerId : spaceOwnerId(project);
+  return ws.ownerId && isSpaceMember(project, ws.ownerId) ? ws.ownerId : '';
 }
 /* 成员只算仍在空间里的人，空间移除成员后自动不再是工作区成员 */
 function wsMemberIds(project, ws) {
@@ -64,9 +64,9 @@ function wsMemberIds(project, ws) {
 }
 function isWsMember(project, ws, personId) { return !!personId && wsMemberIds(project, ws).indexOf(personId) >= 0; }
 
-/* 空间负责人 / 空间管理员 / 系统管理员 */
+/* 当前空间负责人 / 空间管理员 */
 function isSpaceManager(project) { return mgrCanManageProject(project); }
-/* 上级管理者：旧空间的负责人 / 管理员 / 系统管理员；Build 新建的空间由自己的负责人和管理员管理（容器本身只认系统管理员） */
+/* 上级管理者：旧空间的负责人 / 管理员；Build 新建的空间由自己的负责人和管理员管理（内部容器不授予管理权限） */
 function isScopeManager(project) { return isSpaceManager(project); }
 /* 工作区只有一级：负责人与管理员都只管本工作区 */
 function isWsOwner(project, ws) {
@@ -79,8 +79,8 @@ function isWsAdmin(project, ws) {
   return !!me && isSpaceMember(project, me) && wsAdminIds(ws).indexOf(me) >= 0;
 }
 /* 管理本工作区：改名、排序、归档、成员、设置；删除与更换负责人不含工作区管理员 */
-function canManageWs(project, ws) { return !!ws && (isScopeManager(project, ws) || isWsOwner(project, ws) || isWsAdmin(project, ws)); }
-function canOwnWs(project, ws) { return !!ws && (isScopeManager(project, ws) || isWsOwner(project, ws)); }
+function canManageWs(project, ws) { return !!ws && (isWsOwner(project, ws) || isWsAdmin(project, ws)); }
+function canOwnWs(project, ws) { return !!ws && isWsOwner(project, ws); }
 /* 新建工作区：独立工作区所有 Build 用户都能建；空间下的旧工作区仍只由空间负责人 / 管理员新建 */
 function canCreateWs(project) { return isWsHost(project) ? !!mgrCurrentPersonId() : isSpaceManager(project); }
 /* 工作区隔离：只有工作区成员（含负责人、管理员）与上级管理者能看到该工作区及其任务 */

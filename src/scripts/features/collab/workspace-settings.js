@@ -29,6 +29,7 @@ function mount() {
   if (personal) basic.innerHTML = '';
   $('#ldPersonalSettings').hidden = !personal;
   $('#cvWorkspaceSettingsLabel').hidden = !management;
+  $('#cvIntegrationSettingsLabel').hidden = !management;
   document.querySelectorAll('[data-cv-basic-tab]').forEach(function (button) {
     var tab = button.dataset.cvBasicTab;
     button.hidden = !management && tab !== 'git' && tab !== 'repo';

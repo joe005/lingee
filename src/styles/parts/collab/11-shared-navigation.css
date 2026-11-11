@@ -71,23 +71,23 @@
 
 /* 首屏直接使用现行导航，不等待下方页面片段解析或 active 状态建立。 */
 #view-collab.cv-current-navigation #cvPageTitle { display:none; }
-/* 顶部：左侧纯文字页签、右侧空间切换；选中态通过文字颜色区分。 */
+/* 顶部空间标题下方为药丸式分段页签，选中项使用白底。 */
 #view-collab.cv-current-navigation #cvTabNav {
   position:relative; align-self:center; width:calc(100% - 32px); max-width:1160px;
   height:auto; min-height:52px; margin:0; padding:8px 0; gap:12px; box-sizing:border-box;
   border:0; border-radius:0; background:transparent; overflow:visible;
 }
 #view-collab.cv-current-navigation #cvTabNav .cv-tab-capsule {
-  display:flex; align-items:center; gap:12px; max-width:100%; padding:0; overflow-x:auto;
-  border-radius:0; background:transparent;
+  display:flex; align-items:center; gap:4px; max-width:100%; padding:4px; overflow-x:auto;
+  border-radius:999px; background:var(--segment-track);
 }
 #view-collab.cv-current-navigation #cvTabNav .tab-nav-item {
-  height:36px; padding:0; border:0; border-radius:0; background:transparent;
-  color:var(--text-secondary); font-size:var(--font-size-18); line-height:var(--line-height-18); font-weight:500; box-shadow:none; white-space:nowrap;
+  height:32px; padding:0 16px; border:0; border-radius:999px; background:transparent;
+  color:var(--text-secondary); font-size:var(--font-size-14); line-height:var(--line-height-14); font-weight:500; box-shadow:none; white-space:nowrap;
   transition:color .15s, background-color .15s;
 }
 #view-collab.cv-current-navigation #cvTabNav .tab-nav-item svg { display:none; }
-#view-collab.cv-current-navigation #cvTabNav .tab-nav-item--active { background:transparent; color:var(--text-title); font-weight:500; box-shadow:none; }
+#view-collab.cv-current-navigation #cvTabNav .tab-nav-item--active { background:var(--bg); color:var(--text-title); font-weight:500; box-shadow:var(--pill-shadow); }
 #view-collab.cv-current-navigation #cvTabNav [data-cvview="config"] {
   margin-left:auto; margin-right:0; width:36px; height:36px; font-size:0;
   background:url('../../../assets/figma/task-list/settings.svg') center / 16px 16px no-repeat;

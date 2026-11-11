@@ -277,7 +277,7 @@ export function ldProjectStatus(projectId, userId) {
       : key === 'noaccess' ? (ldPushIssueText(binding.pushIssue ? { pushIssue:binding.pushIssue, username:ldAuthUser(auth) } : auth, info.platform) || ldAuthUser(auth) + ' 没有该仓库的推送权限') : '' };
 
 }
-/* 谁来改地址：Manage 空间由能管理空间的人（负责人、空间管理员、系统管理员，与 Manage 一致）在「空间设置 › 代码仓库」修改；
+/* 谁来改地址：Manage 空间由能管理空间的人（负责人、空间管理员，与 Manage 一致）在「空间设置 › 代码仓库」修改；
    协作开发自己的空间由负责人在空间设置中修改 */
 export function ldRepoFixHint() { return '请到 Build「设置 › 工作区设置 › 仓库」修改，或联系该范围负责人'; }
 /* 连通性：真实客户端用 git ls-remote 检查。连不上主机为「无法连接」；登录后仍拿不到仓库为「仓库不存在」（平台不区分不存在与无权访问）。

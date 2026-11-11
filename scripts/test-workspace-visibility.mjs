@@ -43,7 +43,7 @@ assert.equal(view('outsider', task('ws-a')), false, 'non-members cannot see work
 assert.equal(view('member', task('ws-b')), false, 'members of one workspace cannot see another');
 assert.equal(view('owner', task('ws-b')), true, 'space owner sees every workspace');
 assert.equal(view('admin', task('ws-b')), true, 'space admin sees every workspace');
-assert.equal(view('sys', task('ws-b')), true, 'system admin sees every workspace');
+assert.equal(view('sys', task('ws-b')), false, 'legacy global role does not grant workspace visibility');
 
 currentUser = 'member';
 assert.deepEqual(mod.tkVisibleWorkspaces(project).map(r => r.ws.id), ['ws-a'], 'switcher lists only member workspaces');
@@ -60,16 +60,25 @@ assert.equal(tree.wsScopeName(project, 'ws-a'), '应用开发组');
 assert.equal(tree.wsTaskLabel(project, rootTask), '产品研发', 'space-root tasks show only the space name');
 assert.equal(tree.wsTaskLabel(project, wsTask), '应用开发组', 'workspace tasks show only the workspace name, without the space');
 assert.equal(tree.wsTaskLabel({ name: '老空间', workspaces: [] }, rootTask), '老空间', 'spaces without workspaces keep the plain label');
-// Build 新建的空间：只有成员和系统管理员可见，不再关联已有 Manage 空间
+// Build 新建的空间：只有空间成员可见，不再关联已有 Manage 空间
 const hostTask = (workspaceId) => ({ ...task(workspaceId), project: 'build-ws-host' });
 assert.equal(view('member', hostTask('ws-f')), true, 'standalone workspace members see its tasks');
 assert.equal(view('outsider', hostTask('ws-f')), false, 'non-members cannot see standalone workspace tasks');
 assert.equal(view('admin', hostTask('ws-m')), false, 'spaces created in Build are no longer visible to managers of a formerly linked space');
 assert.equal(view('admin', hostTask('ws-f')), false, 'space admin cannot see an unmapped standalone workspace');
-assert.equal(view('sys', hostTask('ws-f')), true, 'system admin sees standalone workspaces');
+assert.equal(view('sys', hostTask('ws-f')), false, 'legacy system role must not expose unrelated spaces');
 currentUser = 'member';
 assert.equal(mod.tkProjectsForCurrentUser().some(p => p.id === host.id), false, 'the container is never listed as a space');
 assert.equal(mod.tkScopeProjects().some(p => p.id === host.id), true, 'scope list includes the container when a workspace is visible');
 currentUser = 'outsider';
 assert.equal(mod.tkScopeProjects().some(p => p.id === host.id), false, 'scope list hides the container without visible workspaces');
-console.log('工作区可见性回归通过：默认工作区任务不受影响、工作区任务仅成员与空间管理者可见、切换器只列可见工作区与默认工作区范围、Build 新建的空间只对成员和系统管理员可见。');
+console.log('工作区可见性回归通过：默认工作区任务不受影响、工作区任务仅成员与空间管理者可见、切换器只列可见工作区与默认工作区范围、Build 新建的空间只对成员可见。');
+
+currentUser = 'sys';
+assert.equal(mod.tkIsProjectOwner('space', 'ws-a'), false, 'legacy global role does not grant current-workspace management');
+currentUser = 'admin';
+assert.equal(mod.tkIsProjectOwner('space', ''), true, 'space administrator manages the space root');
+assert.equal(mod.tkIsProjectOwner('space', 'ws-a'), false, 'parent administrator does not manage a different workspace');
+currentUser = 'wsadmin';
+assert.equal(mod.tkIsProjectOwner('space', 'ws-a'), true, 'workspace administrator manages only the assigned workspace');
+assert.equal(mod.tkIsProjectOwner('space', 'ws-b'), false, 'workspace administrator has no rights in another workspace');

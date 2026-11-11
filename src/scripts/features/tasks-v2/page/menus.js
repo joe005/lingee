@@ -7,7 +7,7 @@ import { closeDisplayChoiceMenu, closeFieldSettings, positionPopover, render } f
 import { pageState } from './page-state.js';
 import { els, state } from './state.js';
 import { escapeHtml, statusSvg } from './utils.js';
-import { updateSpaceButton } from './space-filter.js';
+import { getSpaceScope, updateSpaceButton } from './space-filter.js';
 import { captureBoardPositions, animateBoardMove } from './board-motion.js';
 /* 任务页 · 筛选菜单、视图管理、弹出菜单、拖拽（拆分自 tasks-v2/index.js，逻辑未改） */
 /* ---------- 筛选菜单 ---------- */
@@ -33,7 +33,8 @@ export function filterOptionsFor(section) {
   ].map(function (o) { return { value:o[0], label:o[1], count:tasks.filter(function (t) { return t.status === o[0]; }).length }; });
   if (section === 'issueType') return [['需求','需求'],['缺陷','缺陷']].map(function (o) { return { value:o[0], label:o[1], count:tasks.filter(function (t) { return t.issueType === o[0]; }).length }; });
   if (section === 'priority') return TK_PRIORITIES.map(function (p) { return { value:p.id, label:p.name, count:tasks.filter(function (t) { return t.priority === p.id; }).length }; });
-  if (section === 'assignee') return (tkIsProjectOwner() ? [{ value:'all', label:'全部', count:tasks.length }] : []).concat(TK_PEOPLE.map(function (p) { return { value:p.id, label:p.name, count:tasks.filter(function (t) { return t.assignee === p.id; }).length }; }));
+  var scope = getSpaceScope();
+  if (section === 'assignee') return (tkIsProjectOwner(scope.project, scope.ws) ? [{ value:'all', label:'全部', count:tasks.length }] : []).concat(TK_PEOPLE.map(function (p) { return { value:p.id, label:p.name, count:tasks.filter(function (t) { return t.assignee === p.id; }).length }; }));
   if (section === 'creator') return TK_PEOPLE.map(function (p) { return { value:p.id, label:p.name, count:tasks.filter(function (t) { return t.createdBy === p.id; }).length }; });
   if (section === 'project') return tkProjectsForCurrentUser().map(function (p) { return { value:p.id, label:p.name, count:tasks.filter(function (t) { return t.project === p.id; }).length }; });
   return [];

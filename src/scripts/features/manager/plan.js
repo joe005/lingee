@@ -126,7 +126,7 @@ function filteredTasks(project) {
   return list;
 }
 
-/* 删除入口：未开始的任务，且当前用户是空间负责人 / 系统管理员或任务创建人 */
+/* 删除入口：未开始的任务，且当前用户是空间负责人 / 空间管理员或任务创建人 */
 function canDeleteTaskHere(task) {
   var project = mgrProjectById(task.project);
   if (!project || !mgrCanDeleteTask(task)) return false;

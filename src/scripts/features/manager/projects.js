@@ -333,7 +333,7 @@ function initProjectNewModal() {
 }
 
 /* ---------- 删除空间 ----------
-   仅负责人（或系统管理员）可删；不校验空间下已有任务，删除时任务一并清理。 */
+   仅负责人（或空间管理员）可删；不校验空间下已有任务，删除时任务一并清理。 */
 var pendingDelete = null;
 
 function toggleMoreMenu(open) {
@@ -345,7 +345,7 @@ function toggleMoreMenu(open) {
   btn.setAttribute('aria-expanded', String(show));
 }
 function deleteBlockReason(p) {
-  if (!mgrCanManageProject(p)) return '只有空间负责人或系统管理员可以删除空间';
+  if (!mgrCanManageProject(p)) return '只有空间负责人或空间管理员可以删除空间';
   return '';
 }
 function requestDelete(trigger) {
@@ -384,7 +384,7 @@ var renameTrigger = null;
 function requestRename(trigger) {
   var p = mgrProjectById(openProjectId);
   if (!p) return;
-  if (!mgrCanManageProject(p)) { toast('只有空间负责人或系统管理员可以重命名空间', 'warning'); return; }
+  if (!mgrCanManageProject(p)) { toast('只有空间负责人或空间管理员可以重命名空间', 'warning'); return; }
   renameTrigger = trigger || null;
   var input = $('#mgrProjRenameInput');
   input.value = p.name;
@@ -448,7 +448,7 @@ function syncRepoCustom() {
 function openRepoSettings(trigger) {
   var p = mgrProjectById(openProjectId);
   if (!p) return;
-  if (!mgrCanManageProject(p)) { toast('只有空间负责人或系统管理员可以修改空间设置', 'warning'); return; }
+  if (!mgrCanManageProject(p)) { toast('只有空间负责人或空间管理员可以修改空间设置', 'warning'); return; }
   repoTrigger = trigger || null;
   $('#mgrRepoUrl').value = p.repo || '';
   var base = p.baseBranch || 'main';

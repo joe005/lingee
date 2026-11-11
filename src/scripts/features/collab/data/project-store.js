@@ -104,7 +104,7 @@ function cvEnsureProjectRoleDemoData(){
   if(!person){
     var personId='p22';
     if(CV_MEMBERS.some(function(row){return row.id===personId;}))personId='p-demo-wuhc';
-    person={id:personId,name:'吴宏超',email:'',dept:'产品部',workspaceRole:'system_admin',roles:[],status:'available',source:'演示人员'};
+    person={id:personId,name:'吴宏超',email:'',dept:'产品部',workspaceRole:'member',roles:[],status:'available',source:'演示人员'};
     CV_MEMBERS.push(person);cvPersistPersons();
   }
   var changed=false;

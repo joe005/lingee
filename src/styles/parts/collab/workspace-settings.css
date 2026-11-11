@@ -19,10 +19,10 @@
 #view-collab .cv-wsbar{display:flex;position:relative;align-self:center;width:calc(100% - 32px);max-width:1160px;box-sizing:border-box;padding:16px 0 0;border-bottom:0;background:transparent}
 #view-collab .cv-wsbar #cvWsSwitch,#view-collab .cv-wsbar #cvWsCreateForm{display:none}
 #view-collab .cv-space-switch{position:relative;flex:none;min-width:0;max-width:360px}
-/* 顶部空间切换：白底描边按钮，右侧箭头；下拉复用 .mgr-ws-pop 样式。 */
-#view-collab .cv-space-switch .mgr-ws-switch-btn{box-sizing:border-box;height:36px;max-width:360px;gap:12px;padding:0 12px;border:1px solid var(--border-hover);border-radius:8px;background:var(--bg);color:var(--text);font-size:var(--font-size-14);font-weight:500;line-height:var(--line-height-14);transition:background .15s,border-color .15s}
-#view-collab .cv-space-switch .mgr-ws-switch-btn:hover{border-color:var(--border-focus);background:var(--fill-1)}
-#view-collab .cv-space-switch .mgr-ws-switch-btn[aria-expanded="true"]{border-color:var(--border-focus);background:var(--fill-1)}
+/* 顶部空间切换沿用旧版标题：无底色描边，空间名加下拉箭头。 */
+#view-collab .cv-space-switch .mgr-ws-switch-btn{box-sizing:border-box;height:36px;max-width:360px;gap:8px;padding:0;border:0;border-radius:0;background:transparent;color:var(--text-title);font-size:var(--font-size-18);font-weight:600;line-height:var(--line-height-18);transition:color .15s}
+#view-collab .cv-space-switch .mgr-ws-switch-btn:hover{background:transparent;color:var(--brand)}
+#view-collab .cv-space-switch .mgr-ws-switch-btn[aria-expanded="true"]{background:transparent;color:var(--brand)}
 @media(prefers-reduced-motion:reduce){#view-collab .cv-space-switch .mgr-ws-switch-btn{transition:none}}
 #view-collab .cv-space-switch .mgr-ws-switch-btn svg{color:var(--text-secondary)}
 /* 顶部切换器取代任务工具栏里的「全部空间」按钮（同一份筛选条件） */
@@ -173,7 +173,7 @@
 #view-collab .cv-basic-heading { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-bottom: 24px; }
 #view-collab .cv-basic-heading h2 { margin: 0; color: var(--text-title); font-size: var(--font-size-18); font-weight: 500; line-height: var(--line-height-18); }
 #view-collab .cv-basic-heading p, #view-collab .cv-basic-note { margin: 8px 0; color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); }
-#view-collab .cv-basic-card { padding: 8px 24px; border: 1px solid var(--border); border-radius: var(--r-card); }
+#view-collab .cv-basic-card { padding: 8px 24px; border: 1px solid var(--border); border-radius: 12px; }
 #view-collab .cv-basic-field { display: flex; flex-direction: column; gap: 8px; padding: 16px 0; }
 #view-collab .cv-basic-field label, #view-collab .cv-basic-field > span { color: var(--text); font-size: var(--font-size-14); font-weight: 500; }
 #view-collab .cv-basic-field p { margin: 0; color: var(--text-secondary); font-size: var(--font-size-14); }
@@ -336,7 +336,7 @@
 #view-collab .cv-member-size-host { display: inline-block; width: 72px; }
 #view-collab .cv-member-size-host > .shared-select-trigger { height: 28px; min-height: 28px; padding: 0 8px; border-radius: 6px; font-size: var(--font-size-12); }
 #view-collab .cv-repo-cards > .cv-repo-card--rich { display: flex; flex-direction: column; gap: 12px; padding: 16px; transition: border-color .15s, box-shadow .15s; }
-#view-collab .cv-repo-card--rich:hover { border-color: var(--border-hover); box-shadow: var(--menu-shadow); }
+#view-collab .cv-repo-card--rich:hover { border-color: var(--border-hover); box-shadow: none; }
 #view-collab .cv-repo-card--rich .cv-repo-title { gap: 12px; flex: 1; }
 #view-collab .cv-repo-icon { display: grid; place-items: center; flex: none; width: 36px; height: 36px; border-radius: 10px; background: var(--brand-fill); color: var(--brand); }
 #view-collab .cv-repo-title-copy { min-width: 0; }
@@ -388,8 +388,8 @@
 
 /* ---------- 仓库卡片（重新设计）：头部 → 描述与分支 / 地址 → 本机执行目录状态条 ---------- */
 #view-collab .cv-repo-cards { gap: 16px; }
-#view-collab .cv-repo-cards > .cv-repo-card--rich { position: relative; gap: 14px; padding: 20px 20px 0; overflow: hidden; border-radius: 16px; box-shadow: var(--card-shadow); }
-#view-collab .cv-repo-card--rich:hover { border-color: var(--border-hover); box-shadow: var(--menu-shadow); }
+#view-collab .cv-repo-cards > .cv-repo-card--rich { position: relative; gap: 14px; padding: 20px 20px 0; overflow: hidden; border-radius: 12px; box-shadow: none; }
+#view-collab .cv-repo-card--rich:hover { border-color: var(--border-hover); box-shadow: none; }
 #view-collab .cv-repo-card--rich.is-primary { border-color: var(--brand-fill); }
 #view-collab .cv-repo-card--rich .cv-repo-icon { width: 40px; height: 40px; border-radius: 12px; }
 #view-collab .cv-repo-card--rich .cv-repo-title-line strong { font-size: var(--font-size-16); font-weight: 500; line-height: var(--line-height-16); }
@@ -445,15 +445,9 @@
 
 @media (max-width: 600px) { #view-collab .cv-repo-local { flex-wrap: wrap; } }
 
-/* 空间切换与页签同排，靠右展示；下拉面板向左展开，避免越出视口。 */
+/* 空间切换恢复在页签上方左侧，下拉向右展开。 */
 #view-collab.cv-current-navigation #cvTabNav .cv-tab-capsule { margin-right: auto; }
 #view-collab.cv-current-navigation #cvTabNav :is(.ld-nav-status,.ld-job-status) { margin-left: 0; }
-#view-collab #cvTabNav .cv-wsbar {
-  flex: 0 1 auto; min-width: 0; width: auto; max-width: 40%; margin-left: 0; padding: 0;
-}
-#view-collab #cvTabNav .cv-space-switch { flex: 0 1 auto; max-width: 100%; }
-#view-collab #cvTabNav .cv-space-switch .mgr-ws-switch-btn { max-width: 100%; }
-#view-collab #cvSpaceSwitch .mgr-ws-pop { left: auto; right: 0; box-sizing: border-box; }
-@media (max-width: 960px) {
-  #view-collab #cvTabNav .cv-wsbar { max-width: 100%; margin-left: auto; }
-}
+#view-collab #cvSpaceSwitch { max-width: 100%; }
+#view-collab #cvSpaceSwitch .mgr-ws-switch-btn { max-width: min(360px,100%); }
+#view-collab #cvSpaceSwitch .mgr-ws-pop { left: 0; right: auto; box-sizing: border-box; }
