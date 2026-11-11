@@ -424,6 +424,7 @@ var envAuthorizeModal=$('#envAuthorizeModal');
 var envAuthorizeTimer=null;
 var envAuthorizeTarget=null;   /* 已有环境行，重新授权时用 */
 var envAuthorizeName='';
+var envAuthorizeFromPicker=false;
 var envAuthorizeDc='';         /* 授权页面选定并回传的数据中心 */
 /* 授权申请的 API 清单。来自苍穹的「API 授权清单」，是全局稳定的接口标识，
    授权页面按这份逐条列出让用户确认，回调后原样回填到配置里 */
@@ -458,7 +459,8 @@ function setAuthorizeState(state){
   if(alt) alt.textContent=state==='failed'?'重新授权':'没有跳转？重新打开';
 }
 
-function startAuthorize(item,name){
+function startAuthorize(item,name,fromPicker){
+  envAuthorizeFromPicker=!!fromPicker;
   envAuthorizeTarget=item||null;
   envAuthorizeName=name||'新环境';
   if(!envAuthorizeModal) return;
@@ -576,13 +578,16 @@ function finishAuthorize(granted){
   }else{
     addAuthEnvRow(envAuthorizeName,envAuthorizeDc,granted);
   }
+  var pickerId=granted&&envAuthorizeFromPicker&&envOptionIds.get(envAuthorizeTarget);
   closeAuthorize();
   closeEnvModal();
   toast(granted?('已连接：'+envAuthorizeName):('已保存：'+envAuthorizeName+'（未授权）'));
+  if(pickerId) document.dispatchEvent(new CustomEvent('lingee:env-authorized',{detail:{id:pickerId}}));
 }
 var consentAllow=$('#consentAllow');
 var consentDeny=$('#consentDeny');
 function closeAuthorize(){
+  envAuthorizeFromPicker=false;
   if(envAuthorizeTimer){ clearTimeout(envAuthorizeTimer); envAuthorizeTimer=null; }
   closeConsent();
   if(envAuthorizeModal) envAuthorizeModal.classList.remove('show');
@@ -812,7 +817,7 @@ var envTestTimer=null;
 function addAuthEnvRow(name,dataCenterId,granted){
   var list=$('#view-settings .env-list');
   if(!list) return;
-  var isDef=($('#envDefault')&&$('#envDefault').checked)||!list.querySelector('.env-tag.def');
+  var isDef=granted&&($('#envDefault').checked||!enabledEnvItem());
   if(isDef) $$('.env-tag.def',list).forEach(function(t){t.remove()});
   var url=($('#envUrl').value||'').trim()||'https://example.com/ierp';
   var item=document.createElement('div');
@@ -852,13 +857,13 @@ function envPendingState(item){
   return state==='expired'||state==='revoked'||state==='none'?state:'';
 }
 /* ---------- 启用：同一时间只能启用一个环境，列表行右侧用开关切换 ---------- */
-function findEnvItem(name){
-  return $$('#view-settings .env-list .env-item').filter(function(it){
-    return it.querySelector('.env-name').textContent.trim()===name;
-  })[0]||null;
+var envOptionIds=new WeakMap();
+var nextEnvOptionId=0;
+function findEnvItem(id){
+  return $$('#view-settings .env-list .env-item').find(function(item){ return envOptionIds.get(item)===id; });
 }
 function enabledEnvItem(){
-  return $$('#view-settings .env-list .env-item').filter(function(it){ return !!it.querySelector('.env-tag.def'); })[0]||null;
+  return $('#view-settings .env-list .env-tag.def')?.closest('.env-item');
 }
 function setItemEnabled(item,on){
   var tag=item.querySelector('.env-tag.def');
@@ -902,11 +907,12 @@ function syncEnableSwitches(){
 
 export function getEnvOptions(){
   return $$('#view-settings .env-list .env-item').map(function(item){
+    if(!envOptionIds.has(item)) envOptionIds.set(item,String(++nextEnvOptionId));
     return {
+      id:envOptionIds.get(item),
       name:item.querySelector('.env-name').textContent.trim(),
       url:item.querySelector('.env-url').textContent.trim(),
       enabled:!!item.querySelector('.env-tag.def'),
-      source:item.dataset.envSource==='cloud'?'cloud':'local',
       pending:envPendingState(item)
     };
   });
@@ -973,7 +979,7 @@ export function initEnvAuth() {
   if(envAuthorizeAlt) envAuthorizeAlt.addEventListener('click',function(){
     /* 演示：等待态点一次进入唤起失败，失败态点一次重新等待 */
     if($('#envAuthorizeFailed')&&!$('#envAuthorizeFailed').classList.contains('hidden')){
-      startAuthorize(envAuthorizeTarget,envAuthorizeName);
+      startAuthorize(envAuthorizeTarget,envAuthorizeName,envAuthorizeFromPicker);
     }else{
       if(envAuthorizeTimer){ clearTimeout(envAuthorizeTimer); envAuthorizeTimer=null; }
       setAuthorizeState('failed');
@@ -1053,20 +1059,17 @@ export function initEnvDisconnect() {
     startAuthorize(envEditItem,$('#envName').value||'');
   });
   if(envAdd) envAdd.addEventListener('click',function(){ openEnvModal('create'); });
-  /* 输入框里的环境选择器通过事件发起新增与重新授权，不直接碰设置页 DOM */
-  /* 从输入框发起新增：「启用该环境」默认勾选（用户是为了用它才新增） */
   document.addEventListener('lingee:env-create',function(){
     openEnvModal('create');
-    var enableBox=$('#envDefault'); if(enableBox) enableBox.checked=true;
+    $('#envDefault').checked=true;
   });
   document.addEventListener('lingee:env-reauth',function(e){
-    var name=e.detail&&e.detail.name;
-    var target=findEnvItem(name);
-    if(target) startAuthorize(target,name);
+    var target=findEnvItem(e.detail.id);
+    if(target&&envPendingState(target)) startAuthorize(target,target.querySelector('.env-name').textContent.trim(),true);
   });
   document.addEventListener('lingee:env-enable',function(e){
-    var target=findEnvItem(e.detail&&e.detail.name);
-    if(target&&!envPendingState(target)) enableEnvItem(target);
+    var target=findEnvItem(e.detail.id);
+    if(target&&!envPendingState(target)&&!target.querySelector('.env-tag.def')) enableEnvItem(target);
   });
   ['#envModalClose','#envModalCancel'].forEach(function(sel){
     var b=$(sel); if(b) b.addEventListener('click',closeEnvModal);
@@ -1074,6 +1077,7 @@ export function initEnvDisconnect() {
   if(envModal) envModal.addEventListener('click',function(e){ if(e.target===envModal) closeEnvModal(); });
   document.addEventListener('keydown',function(e){
     if(e.key!=='Escape') return;
+    if(envAuthorizeModal&&envAuthorizeModal.classList.contains('show')){ closeAuthorize(); return; }
     /* 二次确认浮在配置弹窗之上，Escape 先关它 */
     if(envAuthConfirmModal&&envAuthConfirmModal.classList.contains('show')){ closeAuthConfirm(); return; }
     if(envModal&&envModal.classList.contains('show')) closeEnvModal();
@@ -1096,19 +1100,13 @@ export function initEnvDisconnect() {
   if(envConfigForm){
     envConfigForm.addEventListener('submit',function(e){
       e.preventDefault();
+      var isDef=$('#envDefault').checked;
+      if(envEditItem&&isDef&&!envEditItem.querySelector('.env-tag.def')&&envPendingState(envEditItem)){
+        toast('请先完成授权，再启用该环境');
+        return;
+      }
       if(envMode==='view'&&envEditItem){
-        var viewList=$('#view-settings .env-list');
-        var viewIsDefault=$('#envDefault').checked;
-        if(viewIsDefault){
-          $$('.env-tag.def',viewList).forEach(function(t){t.remove()});
-          var viewHead=envEditItem.querySelector('.env-head');
-          var viewTag=document.createElement('span');
-          viewTag.className='env-tag def'; viewTag.textContent='启用';
-          viewHead.insertBefore(viewTag,viewHead.querySelector('.env-tag'));
-        }else{
-          var viewOldDefault=envEditItem.querySelector('.env-tag.def');
-          if(viewOldDefault) viewOldDefault.remove();
-        }
+        setItemEnabled(envEditItem,isDef);
         closeEnvModal();
         toast('已更新启用设置');
         return;
@@ -1128,7 +1126,6 @@ export function initEnvDisconnect() {
       var name=($('#envName').value||'').trim();
       var url=($('#envUrl').value||'').trim();
       var type=envProduct==='XK'?'AI 套件':'AI 星瀚';
-      var isDef=$('#envDefault').checked;
       var list=$('#view-settings .env-list');
       if(envMode==='edit'&&envEditItem){
         envEditItem.querySelector('.env-name').textContent=name;
@@ -1151,23 +1148,14 @@ export function initEnvDisconnect() {
         }
         syncAuthTag(envEditItem);
         syncConnTag(envEditItem);
-        if(isDef){
-          $$('.env-tag.def',list).forEach(function(t){t.remove()});
-          var editHead=envEditItem.querySelector('.env-head');
-          var editTag=document.createElement('span');
-          editTag.className='env-tag def'; editTag.textContent='启用';
-          editHead.insertBefore(editTag,editHead.querySelector('.env-tag'));
-        }else{
-          var oldDefault=envEditItem.querySelector('.env-tag.def');
-          if(oldDefault) oldDefault.remove();
-        }
+        setItemEnabled(envEditItem,isDef);
         closeEnvModal();
         toast(!wasNormalAuth&&envNormalAuthEnabled
           ?'已更新环境并切换为普通 AccessToken 认证：'+name
           :'已更新环境：'+name);
         return;
       }
-      if(!isDef&&!list.querySelector('.env-tag.def')) isDef=true;
+      if(!enabledEnvItem()) isDef=true;
       if(isDef) $$('.env-tag.def',list).forEach(function(t){t.remove()});
       var item=document.createElement('div');
       item.className='env-item';

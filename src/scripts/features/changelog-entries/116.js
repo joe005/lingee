@@ -1,1 +1,1 @@
-export default {"id":"116","date":"2026-11-03","iconBg":"var(--brand-fill)","iconColor":"var(--brand)","type":"功能","module":"工作区与协作开发","author":"wuhc2023","body":"功能·工作区与协作开发：新增空间与工作区管理及隔离的智能体团队安装，完善任务归属、多仓库主仓库与本机目录配置，并统一 ERP 环境授权和启用交互。"};
+export default {"id":"116","date":"2026-11-04","iconBg":"var(--brand-fill)","iconColor":"var(--brand)","type":"功能","module":"企业资产","author":"wuhc2023","body":"功能·企业资产：企业资产面向全员开放原型管理操作，补齐智能体技能与团队成员详情、历史版本操作人，并统一卡片布局和菜单图标。"};

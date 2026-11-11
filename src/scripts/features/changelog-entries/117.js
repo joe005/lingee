@@ -1,1 +1,1 @@
-export default {"id":"117","date":"2026-11-04","iconBg":"var(--brand-fill)","iconColor":"var(--brand)","type":"功能","module":"工作区与协作开发","author":"wuhc2023","body":"功能·工作区与协作开发：完善工作区资产分配、本机安装及版本隔离，开放企业资产原型管理操作，补齐技能、团队成员与历史操作人详情，新增向导式新建工作区、仓库名称与描述、工作区管理员及离开或删除工作区，并统一卡片和菜单展示。"};
+export default {"id":"117","date":"2026-11-09","iconBg":"var(--brand-fill)","iconColor":"var(--brand)","type":"功能","module":"苍穹应用开发","author":"wuhc2023","body":"功能·苍穹应用开发：苍穹应用会话新增 ERP 环境选择器和管理入口，支持确认切换环境，设置页可用开关启用或停用环境。"};

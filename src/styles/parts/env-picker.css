@@ -1,94 +1,109 @@
-/* ERP 环境选择器：输入框标签行的「环境」芯片 + 「＋」菜单 → 连接器里的「金蝶 ERP」分组。
-   芯片沿用标签行的 32px 高与 8px 圆角；列表项复用 .app-item，这里只补环境名、标签与右侧说明。 */
-
-/* ---------- 标签行芯片（随苍穹应用模式显示） ----------
-   技能标签 | 环境 | 关联应用 连成同一个胶囊（先选环境，再选环境下的应用），段间用清晰的竖线分隔；
-   环境段是「图标 + 名称 + 箭头」，下拉是带勾选的简洁列表。圆角由两端决定，
-   技能标签与关联应用段的基础样式在 expert.css，这里只管环境段与分隔线、等高。 */
-.composer-tag-env { flex: none; min-width: 0; }
-.composer-tag-row:has(> .composer-tag-app.hidden) > .composer-tag-env { display: none; }
-/* 三段等高：expert.css 的技能标签是 5px 内边距（约 28px 高），统一为 32px */
-.composer-tag-row:has(> .composer-tag-app:not(.hidden)) .ctag { height: 32px; box-sizing: border-box; padding-top: 0; padding-bottom: 0; }
-.composer-tag-env > .chip.env-pick-chip {
-  height: 32px; box-sizing: border-box; padding: 0 10px; gap: 6px; max-width: 260px;
-  border-radius: 0; background: var(--brand-fill); color: var(--text);
+/* 复用输入框标签与应用下拉的布局，环境段与左右标签等高。 */
+.composer-tag-row > .composer-tag-env { flex: 0 1 auto; min-width: 0; }
+#view-newtask .composer-tag-row:has(> .composer-tag-app:not(.hidden)),
+#view-chat.cosmic-app-session .composer-tag-row { display: flex; }
+#view-newtask .composer-tag-row:has(> .composer-tag-app.hidden) > .composer-tag-env,
+#view-chat:not(.cosmic-app-session) .composer-tag-env { display: none; }
+#view-chat.cosmic-app-session #chatAppDropdown { display: block; }
+.cosmic-app-session #chatAppDropdown .caret { display: none; }
+#view-newtask .composer-tag-row:has(> .composer-tag-app:not(.hidden)) .ctag,
+#view-chat.cosmic-app-session .composer-tag-row .ctag {
+  height: 32px;
+  box-sizing: border-box;
+  padding-block: 0;
 }
-.composer-tag-env > .chip.env-pick-chip:hover { background: var(--brand-fill); }
-.composer-tag-env.open > .chip.env-pick-chip { background: var(--hover); }
-.composer-tag-env > .chip.env-pick-chip:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+.composer-tag-row > .composer-tag-env > .env-pick-chip {
+  height: 32px;
+  max-width: min(240px, 42vw);
+  box-sizing: border-box;
+  gap: 4px;
+  padding: 0 8px;
+  border-radius: 0;
+  background: var(--brand-fill);
+  color: var(--text);
+}
+.composer-tag-row > .composer-tag-env:not(.is-warn) > .env-pick-chip:hover,
+.composer-tag-row > .composer-tag-env:not(.is-warn).open > .env-pick-chip { background: var(--hover); }
+.composer-tag-env > .env-pick-chip:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
 .composer-tag-env.open .caret { transform: rotate(180deg); }
 .env-pick-ic { width: 16px; height: 16px; flex: none; color: var(--text-secondary); }
-/* 分隔线：环境段左侧、关联应用段左侧各一条，同色同高 */
-.composer-tag-env > .chip.env-pick-chip::before,
-.composer-tag-row .composer-tag-app > .chip::before { content: ""; flex: none; width: 1px; height: 16px; margin-right: 4px; background: var(--text-soft); }
-/* 没有技能标签时环境段排在最前：左侧圆角，不画分隔线；关联应用段仍接在环境之后 */
-.composer-tag-row:has(> .composer-tags.hidden) .composer-tag-env > .chip.env-pick-chip { border-radius: 8px 0 0 8px; }
-.composer-tag-row:has(> .composer-tags.hidden) .composer-tag-env > .chip.env-pick-chip::before { display: none; }
-.composer-tag-row:has(> .composer-tag-env):has(> .composer-tags.hidden) .composer-tag-app > .chip { border-radius: 0 8px 8px 0; }
-.composer-tag-row:has(> .composer-tag-env):has(> .composer-tags.hidden) .composer-tag-app > .chip::before { display: block; }
-.env-pick-chip .chip-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; font-weight: 500; }
-.env-pick-warn { flex: none; font-size: var(--font-size-12); font-weight: 400; }
-.env-pick-warn::before { content: "·"; margin-right: 6px; }
-.env-pick-warn:empty { display: none; }
-/* 没有环境或当前环境需要授权：浅橙底 + 文字说明，不只靠颜色 */
-.composer-tag-env.is-warn > .chip.env-pick-chip { background: var(--warning-bg); color: var(--warning); }
-.composer-tag-env.is-warn .env-pick-ic { color: inherit; }
-.composer-tag-env.is-empty .caret { display: none; }
-/* 空状态点击直接新增，不展开菜单 */
-.dropdown.composer-tag-env.is-empty.open > .menu.env-pick-menu { display: none; }
-
-/* ---------- 列表项（芯片菜单与连接器分组共用） ---------- */
-.env-pick-name { flex: 0 1 auto; max-width: 60%; min-width: 0; display: flex; align-items: center; gap: 6px; }
-.env-pick-name-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--font-size-14); color: var(--text); }
-.env-pick-item.checked .env-pick-name-text { color: var(--brand); font-weight: 500; }
-.env-pick-tag {
-  flex: none; height: 20px; padding: 0 6px; border-radius: 4px; box-sizing: border-box;
-  background: var(--tag-bg); color: var(--text-secondary); font-size: var(--font-size-12); line-height: 20px;
+.composer-tag-env > .env-pick-chip::before {
+  content: "";
+  flex: none;
+  width: 1px;
+  height: 16px;
+  margin-right: 4px;
+  background: var(--border-focus);
 }
-.env-pick-meta { flex: 1 1 0; min-width: 0; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--font-size-12); color: var(--text-secondary); }
-.env-pick-meta.warn { flex: none; color: var(--warning); }
-.env-pick-check { display: none; flex: none; width: 16px; height: 16px; color: var(--text); }
+.composer-tag-row:has(> .composer-tags.hidden) > .composer-tag-env > .env-pick-chip {
+  border-radius: 8px 0 0 8px;
+}
+.composer-tag-row:has(> .composer-tags.hidden) > .composer-tag-env > .env-pick-chip::before {
+  display: none;
+}
+.env-pick-chip .chip-label,
+.composer-tag-row .composer-tag-app .chip-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.composer-tag-row > .composer-tag-app { min-width: 0; }
+.env-pick-warn { flex: none; font-size: var(--font-size-12); font-weight: 500; }
+.env-pick-warn::before { content: "·"; margin-right: 4px; }
+.env-pick-warn:empty, .composer-tag-env.is-empty .caret { display: none; }
+.composer-tag-row > .composer-tag-env.is-warn > .env-pick-chip {
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+.composer-tag-env.is-warn .env-pick-ic { color: inherit; }
 
-/* ---------- 芯片下拉：只有列表，选中项右侧打勾，不改底色（同参考的连接器选择器） ---------- */
-.env-pick-menu { min-width: 280px; padding: 6px; border-radius: 16px; }
+.composer-tag-env .env-pick-menu {
+  min-width: min(280px, calc(100vw - 48px));
+  padding: 4px;
+  border-radius: 16px;
+}
 .env-pick-menu .app-list { padding: 0; }
-.env-pick-menu .app-item { padding: 8px 12px; border-radius: 10px; }
+.env-pick-menu .app-item { padding: 8px 12px; border-radius: 8px; }
+.env-pick-menu .app-item-info { gap: 8px; }
 .env-pick-menu .app-item.checked { background: transparent; }
-.env-pick-menu .app-item.checked:hover,
-.env-pick-menu .app-item.checked.focused { background: var(--hover); }
-.env-pick-menu .env-pick-name { flex: 1; max-width: none; }
-.env-pick-menu .env-pick-item.checked .env-pick-name-text { color: var(--text); font-weight: 400; }
-.env-pick-menu .env-pick-tag.cloud,
-.env-pick-menu .env-pick-meta:not(.warn) { display: none; }
-.env-pick-menu .env-pick-item.checked .env-pick-check { display: block; }
-/* 底部固定「管理环境」：快捷进入设置页的环境配置列表 */
+.env-pick-menu .app-item:hover,
+.env-pick-menu .app-item:focus-visible { background: var(--hover); }
+.env-pick-menu .app-item:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+.env-pick-name-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--font-size-14);
+  color: var(--text);
+}
+.env-pick-meta { flex: none; font-size: var(--font-size-12); font-weight: 500; color: var(--warning); }
+.env-pick-meta:empty { display: none; }
+.env-pick-check { display: none; flex: none; width: 16px; height: 16px; color: var(--text); }
+.env-pick-item.checked .env-pick-check { display: block; }
+
 .env-pick-foot { flex: none; margin-top: 4px; padding-top: 4px; border-top: 1px solid var(--divider); }
-.env-pick-manage { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 10px; font-size: var(--font-size-14); color: var(--text); cursor: pointer; }
+.env-pick-manage {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  font: inherit;
+  font-size: var(--font-size-14);
+  color: var(--text);
+  cursor: pointer;
+}
 .env-pick-manage:hover { background: var(--hover); }
 .env-pick-manage:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
 .env-pick-manage .ic { width: 16px; height: 16px; flex: none; color: var(--text-secondary); }
-
-/* ---------- 「＋」菜单 → 连接器 → 「金蝶 ERP」分组：标题行 + 可展开的环境实例 ----------
-   连接器二级菜单整体：搜索与底部「管理连接器」固定，中间列表滚动（见 composer.css 的 .connector-list）。 */
-.connector-item.env-pick-group { display: block; padding: 0; }
-.connector-item.env-pick-group:hover { background: transparent; }
-.env-pick-group-head { display: flex; align-items: center; gap: 10px; padding: 8px 12px; cursor: pointer; }
-.env-pick-group-head:hover { background: var(--hover); }
-.env-pick-group-head:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
-.env-pick-group-head .connector-name { flex: 1; min-width: 0; }
-.env-pick-entry-state { max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--font-size-12); color: var(--text-secondary); }
-.env-pick-entry-state:empty { display: none; }
-.env-pick-group.is-warn .env-pick-entry-state { color: var(--warning); }
-.env-pick-chev { flex: none; color: var(--text-soft); transition: transform .15s; }
-.env-pick-group:not(.expanded) .env-pick-chev { transform: rotate(-90deg); }
-/* 没有环境：只显示「连接」，同其他未连接的连接器 */
-.env-pick-connect { display: none; flex: none; padding: 2px 0; border: none; background: transparent; color: var(--brand); font-size: var(--font-size-14); line-height: var(--line-height-14); cursor: pointer; }
-.env-pick-connect:hover { color: var(--brand-hover); }
-.env-pick-connect:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
-.env-pick-group.is-empty .env-pick-connect { display: inline-block; }
-.env-pick-group.is-empty .env-pick-chev,
-.env-pick-group.is-empty .env-pick-entry-state { display: none; }
-.env-pick-group.is-empty .env-pick-group-head { cursor: default; }
-.env-pick-group-body { display: none; padding: 0 8px 6px; }
-.env-pick-group.expanded:not(.is-empty) .env-pick-group-body { display: block; }
-.env-pick-group .env-pick-list { max-height: 200px; overflow-y: auto; }

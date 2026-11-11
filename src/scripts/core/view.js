@@ -56,7 +56,8 @@ function setUrlState(path){
      存进 localStorage 的仍是应用内路径，换部署路径后旧记录依然可用 */
   try{history.replaceState(null,'',withBase(path));localStorage.setItem('lingeeUrlState',path)}catch(e){}
 }
-function showView(which){
+function showView(which,{cosmicApp=false}={}){
+  viewChat.classList.toggle('cosmic-app-session',which==='chat'&&cosmicApp);
   /* 兼容仍调用 tasks 的旧入口：任务统一留在协作开发容器内。 */
   var openCollabTasks=which==='tasks';
   if(openCollabTasks) which='collab';

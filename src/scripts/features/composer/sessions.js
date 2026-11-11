@@ -185,11 +185,12 @@ function renderChatSessions() {
       + '<div class="chat-project-sessions">' + sessionsHtml + '</div></div>';
   }).join('');
 }
-function createChatSession(title, taskId) {
+function createChatSession(title, taskId, cosmicAppName = '') {
   var task = tkGetTasks().find(function (row) { return row.id === taskId; });
   var projectId = task?.project || '';
   var teamId = task?.teamId || (activePick.kind === 'team' ? activePick.id : '');
   var session = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7), title: title, taskId: taskId, stageId: task?.executionStageId || '', projectId: projectId, teamId: teamId, ownerId: tkCurrentUserId(), executionPick: {...activePick}, exchanges: [] };
+  if (cosmicAppName) session.cosmicAppName = cosmicAppName;
   if (projectId) collapsedChatProjects.delete(projectId);
   chatSessions.unshift(session);
   var regularCount = 0;

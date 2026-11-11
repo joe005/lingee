@@ -1,0 +1,1 @@
+export default {"id":"122","date":"2026-11-11","iconBg":"var(--brand-fill)","iconColor":"var(--brand)","type":"功能","module":"空间与协作开发","author":"wuhc2023","body":"功能·空间与协作开发：统一 Build 与 Manage 空间及成员同步，移除工作区关联配置，完善开发智能体团队成员独立审核，并优化空间切换、Git 账号和通用设置界面。"};

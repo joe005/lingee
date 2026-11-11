@@ -46,6 +46,16 @@ let personPopupTarget = '';
 let personPopupStageId = '';
 let activePlanScope = 'existing';
 const byId = id => document.getElementById(id);
+function resizeTaskDescription() {
+  const field = byId('niuDescription');
+  if (!field) return;
+  field.style.height = 'auto';
+  const style = getComputedStyle(field);
+  const borders = parseFloat(style.borderTopWidth) + parseFloat(style.borderBottomWidth);
+  const maxHeight = parseFloat(style.maxHeight);
+  const contentHeight = field.scrollHeight + borders;
+  field.style.height = `${Number.isFinite(maxHeight) ? Math.min(contentHeight, maxHeight) : contentHeight}px`;
+}
 const currentTask = () => activePlanScope === 'create'
   ? { project: byId('niuProject').value, assignee: selectedOwnerId, title: byId('niuTitle').value, desc: byId('niuDescription').value, issueType: byId('niuType').value, workspaceId: byId('niuWorkspace').value, executorSnapshot:editingTaskId === null ? null : tkGetTasks().find(t => t.id === editingTaskId)?.executorSnapshot, ...executorFields(byId('niuTeam').value) }
   : tkGetTasks().find(task => task.id === currentTaskId);
@@ -381,6 +391,7 @@ export function openNewIssueCreate(projectId) {
   byId('niuSmartPrompt').value = '';
   renderSmartProjectOptions();
   byId('niuCreateOverlay').hidden = false;
+  resizeTaskDescription();
   clearTaskInfoErrors();
   setCreateMode('manual');
   renderPlan();
@@ -395,6 +406,7 @@ export function openNewIssueCopy(taskId) {
   if (byId('niuCreateOverlay').hidden) return;
   byId('niuTitle').value = source.title || '';
   byId('niuDescription').value = source.desc || '';
+  resizeTaskDescription();
   byId('niuPriority').value = source.priority || 'medium';
   if (tkPeopleInProject(source.project).some(person => person.id === source.assignee)) selectedOwnerId = source.assignee;
   renderWorkspaceOptions(source.workspaceId || '');
@@ -435,6 +447,7 @@ export function openNewIssueEdit(taskId) {
   byId('niuCreateSubmit').textContent = '保存修改';
   byId('niuCreateStageCount').textContent = String(draftStages.length);
   byId('niuCreateOverlay').hidden = false;
+  resizeTaskDescription();
   setCreateMode('manual');
   renderPlan();
   byId('niuCreateScroll').scrollTop = 0;
@@ -634,6 +647,7 @@ export function initNewIssueUI(renderCallback, detailCallback) {
   document.addEventListener('lingee:capabilities-changed', () => { if (!byId('niuCreateOverlay').hidden && !planLocked()) { fillTeamOptions('',byId('niuType').value); setDefaultStageOwner(selectedProjectId); draftStages = defaultPlanStages(selectedProjectId); draftConfirmed = false; byId('niuCreateStageCount').textContent = String(draftStages.length); renderPlan(); } });
   byId('niuRepository').addEventListener('change', renderSelectedRepository);
   document.addEventListener('lingee:build-repositories-changed', () => { if (!byId('niuCreateOverlay').hidden) renderWorkspaceRepoHint(undefined, true); });
+  byId('niuDescription').addEventListener('input', resizeTaskDescription);
   ['niuTitle','niuDescription','niuTeam','niuType'].forEach(id => {
     byId(id).addEventListener('input', refreshTaskInfoErrors);
     byId(id).addEventListener('change', refreshTaskInfoErrors);
