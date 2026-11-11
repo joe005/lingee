@@ -32,13 +32,18 @@ export function initEnvPicker() {
       const reason = enabled?.pending ? authorization[enabled.pending][0] : '';
       root.classList.toggle('is-empty', !options.length);
       root.classList.toggle('is-warn', !enabled || !!reason);
-      $('.chip-label', chip).textContent = label;
-      $('.env-pick-warn', chip).textContent = reason;
-      chip.setAttribute('aria-label', 'ERP 环境：' + label + (reason ? '，' + reason : ''));
-      if (options.length) chip.setAttribute('aria-haspopup', 'listbox');
-      else {
-        chip.removeAttribute('aria-haspopup');
-        root.classList.remove('open');
+      if (chip) {
+        $('.chip-label', chip).textContent = label;
+        $('.env-pick-warn', chip).textContent = reason;
+        chip.setAttribute('aria-label', 'ERP 环境：' + label + (reason ? '，' + reason : ''));
+        if (options.length) chip.setAttribute('aria-haspopup', 'listbox');
+        else {
+          chip.removeAttribute('aria-haspopup');
+          root.classList.remove('open');
+        }
+      } else {
+        $('[data-env-state]', root).textContent = enabled?.name || (options.length ? '未启用' : '');
+        $('[data-env-toggle]', root).setAttribute('aria-expanded', String(root.classList.contains('expanded') && !!options.length));
       }
 
       const list = $('.env-pick-list', root);
@@ -58,7 +63,7 @@ export function initEnvPicker() {
       }));
       if (focusedId) {
         const option = $('.env-pick-item[data-env-id="' + focusedId + '"]', list);
-        (option || chip).focus();
+        (option || chip || $('[data-env-toggle]', root)).focus();
       }
     });
   }
@@ -92,6 +97,8 @@ export function initEnvPicker() {
   roots.forEach(root => {
     const chip = $('[data-chip]', root);
     const list = $('.env-pick-list', root);
+    const toggle = $('[data-env-toggle]', root);
+    const trigger = chip || toggle;
     function focusOption(step) {
       const items = $$('.env-pick-item', list);
       const current = items.indexOf(document.activeElement);
@@ -100,40 +107,64 @@ export function initEnvPicker() {
     }
     function selectOption(item) {
       closeAll(null);
-      chip.focus();
-      pickerTrigger = chip;
+      trigger.focus();
+      pickerTrigger = trigger;
       choose(item.dataset.envId);
     }
 
-    chip.addEventListener('click', () => {
-      const open = root.classList.contains('open');
-      closeAll(null);
-      if (!options.length) emit('create');
-      else if (!open) root.classList.add('open');
-    });
-    new MutationObserver(() => {
-      chip.setAttribute('aria-expanded', String(root.classList.contains('open')));
-    }).observe(root, { attributes: true, attributeFilter: ['class'] });
+    if (chip) {
+      chip.addEventListener('click', () => {
+        const open = root.classList.contains('open');
+        closeAll(null);
+        if (!options.length) emit('create');
+        else if (!open) root.classList.add('open');
+      });
+      new MutationObserver(() => {
+        chip.setAttribute('aria-expanded', String(root.classList.contains('open')));
+      }).observe(root, { attributes: true, attributeFilter: ['class'] });
+    } else {
+      function toggleGroup() {
+        if (!options.length) return;
+        root.classList.toggle('expanded');
+        toggle.setAttribute('aria-expanded', String(root.classList.contains('expanded')));
+      }
+      toggle.addEventListener('click', event => {
+        event.stopPropagation();
+        if (!event.target.closest('[data-env-act]')) toggleGroup();
+      });
+      toggle.addEventListener('keydown', event => {
+        if (event.target === toggle && ['Enter', ' '].includes(event.key)) {
+          event.preventDefault();
+          toggleGroup();
+        }
+      });
+      $('[data-env-act="create"]', root).addEventListener('click', event => {
+        event.stopPropagation();
+        closeAll(null);
+        emit('create');
+      });
+    }
     list.addEventListener('click', event => {
+      event.stopPropagation();
       const item = event.target.closest('.env-pick-item');
       if (item) selectOption(item);
     });
     root.addEventListener('keydown', event => {
-      const open = root.classList.contains('open');
+      const open = root.classList.contains(chip ? 'open' : 'expanded');
       if (event.key === 'Escape' && open) {
         event.stopPropagation();
         closeAll(null);
-        chip.focus();
+        trigger.focus();
       } else if (options.length && (event.key === 'ArrowDown' || event.key === 'ArrowUp')) {
         event.preventDefault();
-        if (!open) chip.click();
+        if (!open) trigger.click();
         focusOption(event.key === 'ArrowDown' ? 1 : -1);
       } else if (open && event.key === 'Enter' && event.target.matches('.env-pick-item')) {
         event.preventDefault();
         selectOption(event.target);
       }
     });
-    $('.env-pick-manage', root).addEventListener('click', () => {
+    $('.env-pick-manage', root)?.addEventListener('click', () => {
       showView('settings');
       $$('.nav-item').forEach(item => item.classList.remove('active'));
     });

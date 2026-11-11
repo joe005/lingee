@@ -107,3 +107,25 @@
 .env-pick-manage:hover { background: var(--hover); }
 .env-pick-manage:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
 .env-pick-manage .ic { width: 16px; height: 16px; flex: none; color: var(--text-secondary); }
+
+/* 连接器菜单里的 ERP 分组与输入框下拉共用环境列表。 */
+.connector-item.env-pick-group { display: block; padding: 0; }
+.connector-item.env-pick-group:hover { background: transparent; }
+.env-pick-group-head { display: flex; align-items: center; gap: 8px; padding: 8px 12px; cursor: pointer; }
+.env-pick-group-head:hover { background: var(--hover); }
+.env-pick-group-head:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+.env-pick-group-head .connector-name { flex: 1; min-width: 0; }
+.env-pick-entry-state { max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--font-size-12); color: var(--text-secondary); }
+.env-pick-entry-state:empty { display: none; }
+.env-pick-group.is-warn .env-pick-entry-state { color: var(--warning); }
+.env-pick-chev { flex: none; color: var(--text-secondary); }
+.env-pick-group:not(.expanded) .env-pick-chev { transform: rotate(-90deg); }
+.env-pick-connect { display: none; padding: 4px 8px; border: 1px solid var(--border-hover); border-radius: 6px; background: var(--bg); color: var(--text); font: inherit; cursor: pointer; }
+.env-pick-connect:hover { background: var(--hover); }
+.env-pick-connect:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.env-pick-group.is-empty .env-pick-connect { display: inline-flex; }
+.env-pick-group.is-empty :is(.env-pick-chev,.env-pick-entry-state) { display: none; }
+.env-pick-group.is-empty .env-pick-group-head { cursor: default; }
+.env-pick-group-body { display: none; padding: 0 8px 8px; }
+.env-pick-group.expanded:not(.is-empty) .env-pick-group-body { display: block; }
+.env-pick-group .env-pick-list { max-height: 200px; overflow-y: auto; }
