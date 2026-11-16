@@ -77,12 +77,13 @@ function memberOptions(p, selected) {
   }).join('');
 }
 
-/* ---------- 新建工作区（向导：基本信息 → 成员 → 智能体 → 智能体团队） ---------- */
+/* ---------- 新建工作区（向导：基本信息 → 成员） ---------- */
 var STAY = { stay: true };
+/* 开发智能体与团队不是必选项，暂从流程中去掉（2026-11-16）；选择逻辑保留，
+   恢复时在下面加回 { key: 'assets', label: '开发智能体团队' } 即可 */
 var WIZARD_STEPS = [
   { key: 'info', label: '基本信息' },
   { key: 'members', label: '成员' },
-  { key: 'assets', label: '开发智能体团队' },
 ];
 var wiz = null;   /* { p, step, name, desc, ownerId, repo, members, experts, teams } */
 var BRANCHES = ['main', 'master', 'develop'];
