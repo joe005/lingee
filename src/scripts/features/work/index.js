@@ -82,7 +82,8 @@ function ddOptions(kind) {
       WORK_CHAT_AGENTS.map(function (name) { return { id: 'wc:' + name, name: name, desc: '已发布智能体' }; }),
       EXPERTS.filter(function (e) { return e.listed !== false && !UNLISTED_EXPERT_IDS.has(e.id); }).slice(0, 12).map(function (e) { return { id: e.id, name: e.name, desc: e.role || '智能体' }; }));
   }
-  if (kind === 'model') return MODEL_TIERS.map(function (t) { return { id: t.id, name: t.label, desc: t.desc }; });
+  /* 【工作】模块保留「自动」；智能体模型级别本期只有快速 / 专家 / 极致 */
+  if (kind === 'model') return [{ id: 'auto', name: '自动', desc: '自动匹配，平衡性能与成本' }].concat(MODEL_TIERS.map(function (t) { return { id: t.id, name: t.label, desc: t.desc + ' · ' + t.rate }; }));
   return [{ id: '', name: '不分组', desc: '' }].concat(GROUPS.map(function (g) { return { id: g, name: g, desc: '' }; }));
 }
 function ddLabel(kind) {

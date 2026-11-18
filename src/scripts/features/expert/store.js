@@ -42,7 +42,7 @@ function loadTeams(){
       tags:Array.isArray(e.tags)?e.tags:[],
       skills:Array.isArray(e.skills)?e.skills.filter(function(id){return typeof id==='string'}):[],
       modes:e.modes.filter(function(m){return WORK_MODES.indexOf(m)>=0}),
-      tier:MODEL_TIERS.some(function(t){return t.id===e.tier})?e.tier:'auto',
+      tier:MODEL_TIERS.some(function(t){return t.id===e.tier})?e.tier:'expert',
       comp:Array.isArray(e.comp)?e.comp:[],
       cmds:(Array.isArray(e.cmds)?e.cmds:[]).filter(function(c){return Array.isArray(c)&&c[0]}),
       /* 知识：只认平台上还存在的目录，绑定失效就自然掉了 */
@@ -77,7 +77,7 @@ function saveTeams(){
       }),
       experts:MY_EXPERTS.map(function(e){
         return {id:e.id,ownerId:e.ownerId||'',k:e.k,name:e.name,desc:e.desc,tags:e.tags,skills:e.skills||[],
-                modes:e.modes,comp:e.comp,cmds:e.cmds,tier:e.tier||'auto',
+                modes:e.modes,comp:e.comp,cmds:e.cmds,tier:e.tier||'expert',
                 kn:e.kn||[],knOff:e.knOff||[],knUp:e.knUp||[]};
       })
     }));

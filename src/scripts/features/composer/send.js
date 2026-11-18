@@ -4,7 +4,7 @@ import { input, showView } from '../../core/view.js';
 import { appChip, appDd, chatAppDd, selectChatApp } from '../attach-app.js';
 import { appendAskCard, appendAutoNote, autoMatch } from '../expert/automatch.js';
 import { renderExpertChips } from '../expert/chips.js';
-import { pendingInputs } from '../expert/data.js';
+import { MODEL_TIERS, pendingInputs } from '../expert/data.js';
 import { pickValid, set_activePick } from '../expert/store.js';
 import { tkGetTasks } from '../tasks-v2/data.js';
 import { appendAssistantMessage, appendUserMessage, messagesList, refreshSend, resolveChatTeam } from './messages.js';
@@ -130,11 +130,20 @@ function chatDoSend(){
   var assetEditing=chatSessions.find(function(row){return row.id===activeSessionId&&row.assetEdit;});
   if(assetEditing){
     var edit=assetEditing.assetEdit;
+    /* 模型级别只在对话里改：快速 / 专家 / 极致，改完需在右侧保存 */
+    var tierAsk=edit.kind==='expert'&&/模型(?:级别|等级|档位)?|档位/.test(t)&&/(快速|专家|极致|自动|深度)/.exec(t);
+    if(tierAsk){
+      var tierHit=MODEL_TIERS.find(function(row){return row.label===tierAsk[1];});
+      if(tierHit)document.dispatchEvent(new CustomEvent('lingee:asset-edit-tier',{detail:{id:edit.id,tier:tierHit.id}}));
+      assetEditing.exchanges.push({prompt:t,response:tierHit?'已把模型级别改为「'+tierHit.label+'」，请在右侧保存后生效。':'模型级别可选快速、专家、极致，暂不支持「'+tierAsk[1]+'」。'});
+      saveChatSessions();
+      chatInput.innerHTML='';renderAssetEditChat(assetEditing);chatInput.focus();return;
+    }
     var field=/^(?:把|将)?(?:智能体|智能体团队|数字员工|智能体团队|智能体)?(?:的)?(名称|名字|简介|说明|描述)(?:改为|改成|修改为|设为|设置为|：|:|是)\s*[「“]?(.+?)[」”]?\s*$/.exec(t);
     var target=field&&(field[1]==='名称'||field[1]==='名字'?(edit.kind==='team'?'teamName':'xeName'):(edit.kind==='team'?'teamDesc':'xeDesc'));
     var inputEl=target&&document.getElementById(target);
     if(inputEl){inputEl.value=field[2].replace(/^[「“]|[」”]$/g,'').trim();inputEl.dispatchEvent(new Event('input',{bubbles:true}));}
-    var response=inputEl?'已在右侧更新'+(field[1]==='名称'||field[1]==='名字'?'名称':'说明')+'，请确认并保存。':'你可以在右侧修改完整配置；对话支持“名称改为…”或“说明改为…”。';
+    var response=inputEl?'已在右侧更新'+(field[1]==='名称'||field[1]==='名字'?'名称':'说明')+'，请确认并保存。':'你可以在右侧修改完整配置；对话支持“名称改为…”“说明改为…”'+(edit.kind==='expert'?'或“模型级别改为专家”。':'。');
     assetEditing.exchanges.push({prompt:t,response:response});
     saveChatSessions();
     chatInput.innerHTML='';renderAssetEditChat(assetEditing);chatInput.focus();return;

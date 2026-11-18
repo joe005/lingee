@@ -4,7 +4,7 @@ import { $, $$ } from '../../core/dom.js';
 import { requestDeleteConfirmation } from '../../core/delete-confirm.js';
 import { toast } from '../../core/toast.js';
 import { renderExpertChips } from './chips.js';
-import { AV_KEYS, EX, MODEL_TIERS, MY_EXPERTS, WORK_MODES, rebuildExperts, set_MY_EXPERTS, skillCatalog, skillInfo, xav, xesc } from './data.js';
+import { AV_KEYS, EX, MODEL_TIERS, MY_EXPERTS, normalizeTier, WORK_MODES, rebuildExperts, set_MY_EXPERTS, skillCatalog, skillInfo, xav, xesc } from './data.js';
 import { renderKnPane, resetKnPane } from './knowledge.js';
 import { expertModal, renderExpertGrid } from './library.js';
 import { TEAMS, activePick, clearPick, saveTeams } from './store.js';
@@ -61,7 +61,7 @@ function populateExpertEditor(id){
   if(!e||!e.mine||layerOf('expert',e)!=='personal') return;
   xeEditingId=id;
   xeDraft = {k:e.k,name:e.name,desc:e.desc,tags:e.tags.slice(),skills:(e.skills||[]).slice(),modes:e.modes.slice(),mine:true,
-       tier:e.tier||'auto',
+       tier:normalizeTier(e.tier),
        comp:e.comp.slice(),cmds:e.cmds.length?e.cmds.map(function(c){return c.slice()}):[['','']],
        kn:(e.kn||[]).slice(),knOff:(e.knOff||[]).slice(),knDocOff:(e.knDocOff||[]).slice(),
        knUp:(e.knUp||[]).map(function(f){return {n:f.n,t:f.t,up:f.up,by:f.by}})};
@@ -84,9 +84,6 @@ function renderExpertEditor(){
   }).join('');
   $('#xeModes').innerHTML=WORK_MODES.map(function(m){
     return '<button type="button" class="x-mode-opt'+(d.modes.indexOf(m)>=0?' on':'')+'" data-xe-mode="'+m+'">'+m+'</button>';
-  }).join('');
-  $('#xeTiers').innerHTML=MODEL_TIERS.map(function(t){
-    return '<button type="button" class="x-mode-opt x-tier-opt'+(d.tier===t.id?' on':'')+'" data-xe-tier="'+t.id+'" title="'+xesc(t.desc)+'">'+t.label+'</button>';
   }).join('');
 
   renderSkillEditor(d);
@@ -129,6 +126,11 @@ export function initExpertEditor() {
   document.addEventListener('lingee:asset-edit-session',function(ev){
     if(ev.detail.kind==='expert')populateExpertEditor(ev.detail.id);
   });
+  /* 模型级别不在编辑面板里展示，只能通过编辑对话修改（如「模型级别改为极致」），保存后生效 */
+  document.addEventListener('lingee:asset-edit-tier',function(ev){
+    if(!xeDraft||ev.detail.id!==xeEditingId)return;
+    xeDraft.tier=normalizeTier(ev.detail.tier); setXeBadge(true);
+  });
   if($('#xeTabs')) $('#xeTabs').addEventListener('click',function(e){
     var b=e.target.closest('.modal-tab'); if(b) setXeTab(b.getAttribute('data-xtab'));
   });
@@ -157,7 +159,7 @@ export function initExpertEditor() {
     });
     ['input','change','click'].forEach(function(type){
       expertEditModal.addEventListener(type,function(ev){
-        if(type==='click'&&!ev.target.closest('[data-xe-av],[data-xe-mode],[data-xe-tier],[data-xe-skill-remove],[data-xe-rmcmd],#xeAddCmd'))return;
+        if(type==='click'&&!ev.target.closest('[data-xe-av],[data-xe-mode],[data-xe-skill-remove],[data-xe-rmcmd],#xeAddCmd'))return;
         if(type!=='click'&&!ev.target.closest('input,textarea,select'))return;
         if(ev.target.id==='xeSkillSearch')return;
         setXeBadge(true);
@@ -173,8 +175,6 @@ export function initExpertEditor() {
         if(i<0) xeDraft.modes.push(v); else xeDraft.modes.splice(i,1);
         renderExpertEditor(); return;
       }
-      var t=ev.target.closest('[data-xe-tier]');
-      if(t){ xeDraft.tier=t.getAttribute('data-xe-tier'); renderExpertEditor(); return; }
       var s=ev.target.closest('[data-xe-skill-remove]');
       if(s){xeDraft.skills=xeDraft.skills.filter(function(id){return id!==s.dataset.xeSkillRemove;});renderSkillEditor(xeDraft);$('#xeAddSkill').focus();return;}
       var r=ev.target.closest('[data-xe-rmcmd]');
@@ -203,7 +203,7 @@ export function initExpertEditor() {
       var index=MY_EXPERTS.findIndex(function(item){return item.id===xeEditingId;});
       if(index<0) return;
       var rec={id:xeEditingId,mine:true,ownerId:MY_EXPERTS[index].ownerId||'',k:d.k,name:d.name,role:'',by:'我创建的',
-               desc:d.desc,tags:d.tags,skills:(d.skills||[]).slice(),modes:d.modes.slice(),tier:d.tier||'auto',comp:d.comp,cmds:cmds,
+               desc:d.desc,tags:d.tags,skills:(d.skills||[]).slice(),modes:d.modes.slice(),tier:normalizeTier(d.tier),comp:d.comp,cmds:cmds,
                kn:(d.kn||[]).slice(),knOff:(d.knOff||[]).slice(),knDocOff:(d.knDocOff||[]).slice(),knUp:(d.knUp||[]).slice()
               };
       var previous=MY_EXPERTS[index];MY_EXPERTS[index]=rec;

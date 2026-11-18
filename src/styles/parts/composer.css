@@ -183,3 +183,8 @@
   .mention-chip{display:inline-flex;align-items:center;padding:1px 7px;border-radius:4px;background:var(--brand-fill);color:var(--brand);font-size:var(--font-size-12);font-weight:500;cursor:pointer}
   .mention-chip:hover{background:var(--brand);color:#fff}
 
+
+  /* 开发对话模型选择器：档位与具体模型右侧的消耗系数（US-2026-082499） */
+  .dropdown[data-dd="model"] .menu{min-width:220px}
+  .dropdown[data-dd="model"] .menu-right{display:flex;align-items:center;gap:8px;flex:none}
+  .dropdown[data-dd="model"] .menu-rate{color:var(--text-secondary);font-size:var(--font-size-12);font-variant-numeric:tabular-nums}

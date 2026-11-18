@@ -1,6 +1,8 @@
 import { $, $$ } from '../core/dom.js';
 import { DELETE_ICON } from '../core/delete-icon.js';
 import { toast } from '../core/toast.js';
+import { initSelectDropdowns } from '../core/select-dropdown.js';
+import { tierInfo } from './expert/data.js';
 import { syncTogglePreviewBtn } from './chat.js';
 import { agentCardByName, agentCardStatus, openAgentSubmit } from './agent-submit.js';
 /* 智能体开发：会话右侧的智能体配置面板
@@ -301,6 +303,12 @@ export function initAgentConfig() {
       next.focus();
     });
   });
+  /* 模型策略：默认模型等级为快速 / 专家 / 极致，默认专家（US-2026-082499）；本期不做「允许切换模型」 */
+  var tierSel = $('#agentConfigModelTier', panel);
+  if (tierSel) {
+    initSelectDropdowns([tierSel]);
+    tierSel.addEventListener('change', function () { $('#agentConfigModelDesc', panel).textContent = tierInfo(tierSel.value).desc; });
+  }
   $$('.agent-config-switch', panel).forEach(function (sw) {
     sw.addEventListener('click', function () {
       sw.setAttribute('aria-checked', sw.getAttribute('aria-checked') === 'true' ? 'false' : 'true');

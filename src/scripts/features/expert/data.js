@@ -232,14 +232,17 @@ function teamStageScenario(issue){
 }
 function stageById(id){ for(var i=0;i<STAGES.length;i++){ if(STAGES[i].id===id) return STAGES[i]; } return null; }
 
-/* 模型级别：智能体运行时用哪个推理档位 */
+/* 模型级别：智能体运行时用哪个推理档位。
+   档位、说明和消耗系数与【工作】模块对话的模型选择器一致；「自动」后续再加，本期不做。
+   未设置或旧数据里的 auto / deep 一律按默认档位「专家」处理。 */
 var MODEL_TIERS=[
-  {id:'auto',  label:'自动', desc:'按任务复杂度自动选择'},
-  {id:'fast',  label:'快速', desc:'响应最快，适合简单明确的任务'},
-  {id:'expert',label:'专家', desc:'更强推理，适合复杂任务'},
-  {id:'deep',  label:'深度', desc:'深度思考，适合高难度任务'}
+  {id:'fast',  label:'快速', rate:'0.3x', desc:'快速响应，适合轻量任务'},
+  {id:'expert',label:'专家', rate:'0.9x', desc:'专业分析，精准决策'},
+  {id:'ultra', label:'极致', rate:'1.2x', desc:'海量检索，从容应对复杂场景'}
 ];
-function tierInfo(id){ for(var i=0;i<MODEL_TIERS.length;i++) if(MODEL_TIERS[i].id===id) return MODEL_TIERS[i]; return MODEL_TIERS[0]; }
+var DEFAULT_MODEL_TIER='expert';
+function normalizeTier(id){ return MODEL_TIERS.some(function(t){return t.id===id;})?id:DEFAULT_MODEL_TIER; }
+function tierInfo(id){ id=normalizeTier(id); for(var i=0;i<MODEL_TIERS.length;i++) if(MODEL_TIERS[i].id===id) return MODEL_TIERS[i]; return MODEL_TIERS[1]; }
 
 /* ---------- 能力项字典 ----------
    定义文件里能力项是机器标识（architecture.system-design · principal），
@@ -394,4 +397,4 @@ export function initExpertData() {
 /* MY_EXPERTS 由其它模块写回；import 绑定只读，所以走这个 setter */
 export function set_MY_EXPERTS(v){ MY_EXPERTS=v; return v; }
 
-export { teamFeatureStages, AV_KEYS, EX, EXPERTS, MODEL_TIERS, MY_EXPERTS, PRESET_TEAMS, STAGE_COMP, STAGE_EXPERT_MAX, STAGE_MODES, STAGES, TEAM_STAGE_SCENARIOS, WORK_MODES, askFor, compChip, parseComp, pendingInputs, phraseHtml, rebuildExperts, setBuiltinExperts, skillCatalog, skillInfo, stageById, stageExperts, teamStageScenario, tierInfo, xav, xesc };
+export { teamFeatureStages, AV_KEYS, EX, EXPERTS, MODEL_TIERS, MY_EXPERTS, PRESET_TEAMS, STAGE_COMP, STAGE_EXPERT_MAX, STAGE_MODES, STAGES, TEAM_STAGE_SCENARIOS, WORK_MODES, DEFAULT_MODEL_TIER, askFor, compChip, parseComp, pendingInputs, phraseHtml, rebuildExperts, setBuiltinExperts, skillCatalog, skillInfo, stageById, stageExperts, teamStageScenario, tierInfo, normalizeTier, xav, xesc };

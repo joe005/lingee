@@ -27,10 +27,10 @@ function facesHtml(ids,n,compact=false){
     return '<img src="'+xav(EX[i]?.k)+'" alt="">'; }).join('')
     +(showCount?'<span class="asset-faces-count">+'+(ids.length-limit+1)+'</span>':'')+'</span>';
 }
-/* 模型级别：智能体运行时用的推理档位，未设置时为「自动」 */
-function tierHtml(tier){
-  var t=tierInfo(tier);
-  return '<section class="x-sec"><div class="x-sec-t">模型级别</div><div class="x-chips"><span class="ptag ptag-tier" title="'+xesc(t.desc)+'">'+xesc(t.label)+'</span><span class="x-tier-desc">'+xesc(t.desc)+'</span></div></section>';
+/* 模型级别：智能体运行时用的推理档位，未设置时为「专家」 */
+function tierHtml(e){
+  var t=tierInfo(e&&e.tier);
+  return '<section class="x-sec"><div class="x-sec-t">模型级别</div><div class="x-chips"><span class="ptag ptag-tier">'+xesc(t.label)+'</span></div></section>';
 }
 function renderExpertGrid(){
   if (expertGrid && renderWorkspaceCapabilities(expertGrid)) return;
@@ -100,7 +100,7 @@ function openExpertModal(id){
   var overview=detailIdentityHtml('expert',e)
     +'<div class="x-sec x-desc">'+xesc(e.desc)+'</div>'
     +(tags.length?'<section class="x-sec"><div class="x-sec-t">标签</div><div class="x-chips">'+tags.map(tag=>'<span class="ptag">'+xesc(tag)+'</span>').join('')+'</div></section>':'')
-    +tierHtml(e.tier)
+    +tierHtml(e)
     +detailCommandsHtml('expert',e);
 
   var skills=e.skills||[];

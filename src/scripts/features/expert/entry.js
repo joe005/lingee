@@ -6,6 +6,7 @@ import { initExpertKnowledge } from './knowledge.js';
 import { initTeamModal } from './team-modal.js';
 import { initExpertChips } from './chips.js';
 import { initAssetCardActions } from './card-actions.js';
+import { initComposerModelTier } from './model-tier-picker.js';
 /* 智能体与智能体团队：本区域的初始化入口。
    顺序 == 原 main.js 里这几行的顺序；本区域新增模块在这里接线，不用改 main.js。 */
 
@@ -18,4 +19,5 @@ export function initExpertArea() {
   initTeamModal();                /* 5034 */
   initExpertChips();              /* 5261 */
   initAssetCardActions();
+  initComposerModelTier();
 }

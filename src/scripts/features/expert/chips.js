@@ -9,6 +9,7 @@ import { closeAll } from '../dropdown.js';
 import { EX, EXPERTS, xav, xesc } from './data.js';
 import { forcedBuilder, set_forcedBuilder } from './editor.js';
 import { facesHtml, renderExpertGrid } from './library.js';
+import { syncComposerModelTier } from './model-tier-picker.js';
 import { TEAMS, activePick, clearPick, loadTeams, pickName, pickValid, saveTeams, set_activePick, teamById } from './store.js';
 /* 输入框上的已选专家标签
    拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
@@ -102,6 +103,7 @@ function renderExpertChips(){
       }
     }
     if(locked){restoreComposerSubmenu(dd);dd.classList.remove('open');}
+    if(pfx!=='tkForm') syncComposerModelTier(pfx,expert);
   });
 }
 function renderExpertPicker(pfx,kw){
