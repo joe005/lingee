@@ -35,6 +35,13 @@ export function isLocalAssetInstalled(entry,userId) {
   const state=readState(userId);
   return requiredLocalPackages(entry).every(row=>state.packages[row.key]?.includes(row.version));
 }
+/* 「去安装」按钮：data-asset-locate 由 collab/space-assets.js 统一处理，这里只拼 HTML，不引入协作模块以免改变模块求值顺序 */
+function assetLocateButton(key) {
+  return '<button type="button" class="asset-locate-link" data-asset-locate="'+String(key).replace(/[&<>"']/g,ch=>'&#'+ch.charCodeAt(0)+';')+'">去安装</button>';
+}
+/* 返回给 toast 的提示带「去安装」按钮（HTML），点击后定位到协作开发「更多」里的对应卡片（collab/space-assets.js） */
 export function localAssetInstallError(entry,userId) {
-  return isLocalAssetInstalled(entry,userId) ? '' : '当前处理人尚未在本机安装该智能体团队及所需版本，请到协作开发「开发智能体团队」页签安装当前空间的版本后再执行';
+  if(isLocalAssetInstalled(entry,userId))return '';
+  const team=String(entry?.key || '').startsWith('team:');
+  return '当前处理人尚未在本机安装该'+(team?'智能体团队':'智能体')+'及空间所需版本，安装后再执行。'+assetLocateButton(entry?.key || '');
 }

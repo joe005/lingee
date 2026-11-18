@@ -23,6 +23,6 @@ export function initCollabArea() {
   initCollabSpaceSwitch();        /* 顶部空间 / 工作区切换，与任务筛选同一份条件 */
   initCapabilitySettings();
   initRecruitmentSettings();
-  initSpaceAssets();               /* 开发智能体 / 团队页签按空间显示，覆盖上面注册的空渲染 */
+  initSpaceAssets();               /* 开发智能体 / 团队页签：任务「去安装」定位到「更多」里的卡片 */
   initCollab();                   /* 6445 */
 }

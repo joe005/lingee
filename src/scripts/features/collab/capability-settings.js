@@ -1,11 +1,11 @@
 import { isLocalAssetInstalled } from '../expert/local-install-state.js';
 import { setWorkspaceCapabilityRenderer, setWorkspaceAssetControls, setWorkspaceMoreInstall, setWorkspaceAssetVisibility, assetTagsHtml } from './expert-market.js';
 import '../../../styles/parts/collab/capability-settings.css';
-import { getSettingsScope } from './space-switch.js';
-import { tkScopeProjects } from '../tasks-v2/data.js';
+import { getSettingsScope, visibleSpaceItems } from './space-switch.js';
+import { tkScopeProjects, tkGetTasks, tkCurrentStageHandlerId, tkCurrentUserId, tkCanViewTask, tkProjectById } from '../tasks-v2/data.js';
 import { wsById } from '../../core/workspace-tree.js';
 import { basicEditable } from './basic-settings-data.js';
-import { capabilityList, capabilityMigrate } from './capability-config.js';
+import { capabilityList, capabilityMigrate, capabilityOptions, capabilityTaskEntry } from './capability-config.js';
 import { assetSourceBadge, layerOf, layerVisible } from '../expert/layers.js';
 import { xav, xesc } from '../expert/data.js';
 
@@ -16,45 +16,77 @@ export function capabilityContext(scope = getSettingsScope()) {
   const ws = p && scope.ws ? wsById(p,scope.ws) : null;
   return {p,ws,editable:!!p && (!scope.ws || !!ws) && basicEditable(p,ws)};
 }
-/* 已聚焦到具体范围，来源只标「工作区」，不重复范围名称。 */
+/* 来源只标「空间」，不重复空间名称。 */
 function originHtml() { return '<span class="cv-workspace-origin">空间</span>'; }
 /* 金蝶官方预置出厂的资产随产品自带，不属于工作区分配，不显示「工作区」标记 */
 function originFor(kind,data) { return layerOf(kind,data || {}) === 'builtin' ? '' : originHtml(); }
-/* 与「更多」里其他未安装卡片统一为右上角「+」图标按钮，按工作区固定版本安装到当前用户本机 */
-function installButton(row,p,ws) {
+/* 与「更多」里其他未安装卡片统一为右上角「+」图标按钮，按空间固定版本安装到当前用户本机 */
+function installButton(row,p,wsId) {
   const name = xesc(row.data?.name || '');
-  return '<button type="button" class="expert-install-plus" data-workspace-install="'+xesc(row.key)+'" data-space="'+xesc(p.id)+'" data-workspace="'+xesc(ws?.id || '')+'" aria-label="安装'+name+'" title="安装到本机"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg></button>';
+  return '<button type="button" class="expert-install-plus" data-workspace-install="'+xesc(row.key)+'" data-space="'+xesc(p.id)+'" data-workspace="'+xesc(wsId || '')+'" aria-label="安装'+name+'" title="安装到本机"><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg></button>';
 }
-/* 「我添加的」只呈现已在本机安装的资产及其工作区来源；添加、移除归属设置页面，本机安装在「更多」。 */
+const TASK_NEED = '<span class="asset-task-need" title="你负责的待开始任务要用它，安装后才能执行">任务需要</span>';
+/* 开发智能体 / 团队页签不做空间隔离（2026-11-18）：汇总我能看到的各空间在设置里添加且可用的条目。
+   同一条目在不同空间固定的版本可能不同，这里按空间逐条保留，判断安装时每个空间的版本分别看。 */
+function spaceRows(kind) {
+  const rows = [];
+  visibleSpaceItems().forEach(([p,wsId]) => capabilityOptions(p,wsId || '').forEach(row => {
+    if (!row.personal && (!kind || row.kind === kind)) rows.push({row,p,wsId:wsId || ''});
+  }));
+  return rows;
+}
+/* 我负责的待开始任务要用、本机还没装对应版本的智能体 / 团队：在「更多」里标「任务需要」并排在前面，按任务所属空间的版本安装 */
+export function taskNeededAssets() {
+  const me = tkCurrentUserId(), need = new Map();
+  if (!me) return need;
+  tkGetTasks().forEach(task => {
+    if (!['planned','backlog'].includes(task.status) || tkCurrentStageHandlerId(task) !== me || !tkCanViewTask(task)) return;
+    if (!task.teamId && !task.expertId) return;
+    const p = tkProjectById(task.project), row = p && capabilityTaskEntry(task,p);
+    if (!row || row.personal || isLocalAssetInstalled(row) || need.has(row.key)) return;
+    need.set(row.key,{row,p,wsId:task.workspaceId || ''});
+  });
+  return need;
+}
+/* 某条目还缺哪个空间的版本：任务需要的优先，其次是第一个未装的空间版本；都装了返回 null */
+function pendingFor(key) {
+  return taskNeededAssets().get(key) || spaceRows(key.split(':')[0]).find(r => r.row.key === key && !isLocalAssetInstalled(r.row)) || null;
+}
+/* 「我添加的」只呈现已在本机安装的资产及其空间来源；添加、移除归属设置页面，本机安装在「更多」。 */
 export function workspaceCapabilityControls(kind,item) {
-  const {p,ws} = capabilityContext();
-  const row = p && capabilityList(p,ws?.id).entries.find(row => row.key === kind+':'+item.id);
-  return row && isLocalAssetInstalled(row) ? originFor(kind,item) : '';
+  const key = kind+':'+item.id;
+  return spaceRows(kind).some(r => r.row.key === key && isLocalAssetInstalled(r.row)) ? originFor(kind,item) : '';
 }
-/* 工作区已添加、本机尚未安装工作区版本的资产：在「更多」里带工作区标记，按工作区固定版本安装。 */
+/* 空间已添加、本机尚未安装空间版本的资产：在「更多」里带空间标记，按空间固定版本安装。 */
 export function workspaceInstallOffer(kind,item) {
-  const {p,ws} = capabilityContext();
-  const row = p && capabilityList(p,ws?.id).entries.find(row => row.key === kind+':'+item.id);
-  return row && !isLocalAssetInstalled(row) ? {tag:originFor(kind,item),button:installButton(row,p,ws),version:row.version} : null;
+  const pending = pendingFor(kind+':'+item.id);
+  if (!pending) return null;
+  const need = taskNeededAssets().has(pending.row.key);
+  return {tag:originFor(kind,item)+(need ? TASK_NEED : ''),button:installButton(pending.row,pending.p,pending.wsId),version:pending.row.version,need};
 }
-/* 工作区已添加的资产，不依赖个人云端目录：设置里可添加的内容在「更多」里同样可见；
-   本机未安装的可安装，已安装的保留在列表里（installed 标记，不显示安装按钮），都带工作区标记 */
+/* 空间已添加的资产，不依赖个人云端目录：设置里添加的内容在「更多」里同样可见，同一条目只出一张卡。
+   还缺某个空间版本的算未安装（带安装按钮），各空间版本都装了的算已安装 */
 export function workspaceInstallCandidates(kind) {
-  const {p,ws} = capabilityContext();
-  if (!p) return [];
-  return capabilityList(p,ws?.id).entries.filter(row => row.kind === kind).map(row => ({key:row.key,kind:row.kind,data:row.data,version:row.version,installed:isLocalAssetInstalled(row) ? 'local' : '',tag:originFor(row.kind,row.data)}));
+  const seen = new Map();
+  spaceRows(kind).forEach(r => { if (!seen.has(r.row.key)) seen.set(r.row.key,r); });
+  return [...seen.values()].map(({row}) => {
+    const pending = pendingFor(row.key), use = pending?.row || row;
+    return {key:row.key,kind:row.kind,data:use.data,version:use.version,installed:pending ? '' : 'local',tag:originFor(row.kind,row.data)};
+  });
 }
 export function workspaceCapabilityVisible() { return true; }
 export function workspaceCatalogRows() { return null; }
 export function renderWorkspaceCapabilities() { return false; }
 export function workspaceCapabilityExtras(kind,items,keyword,layer='all') {
-  const {p,ws} = capabilityContext();
-  if (!p) return '';
   const known = new Set(items.filter(item => layerVisible(kind,item)).map(item => kind+':'+item.id));
   const kw = keyword.trim().toLocaleLowerCase();
-  const rows = capabilityList(p,ws?.id).entries.filter(row => row.kind === kind && !known.has(row.key) && isLocalAssetInstalled(row)
-    && (layer === 'all' || layer === (row.data.tenantId ? 'shared' : 'builtin'))
-    && (!kw || [row.data.name,row.data.desc,...(row.data.tags || row.data.domains || [])].join(' ').toLocaleLowerCase().includes(kw)));
+  const seen = new Set(), rows = [];
+  spaceRows(kind).forEach(({row}) => {
+    if (seen.has(row.key) || known.has(row.key) || !isLocalAssetInstalled(row)) return;
+    if (layer !== 'all' && layer !== (row.data.tenantId ? 'shared' : 'builtin')) return;
+    if (kw && ![row.data.name,row.data.desc,...(row.data.tags || row.data.domains || [])].join(' ').toLocaleLowerCase().includes(kw)) return;
+    seen.add(row.key); rows.push(row);
+  });
   if (!rows.length) return '';
   return rows.map(row => {
     const face = row.kind === 'team' ? '<span class="x-faces">'+(row.experts || []).slice(0,4).map(e => '<img src="'+xav(e.data.k)+'" alt="">').join('')+'</span>' : '<img class="x-av" src="'+xav(row.data.k)+'" alt="">';
