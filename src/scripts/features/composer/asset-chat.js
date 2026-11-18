@@ -119,7 +119,7 @@ function renderAssetEditChat(session){
   var edit=session.assetEdit;
   messagesList.innerHTML='';
   hideTaskQuestionPanel();
-  appendAssetCreateAgent('<p>正在编辑「'+xesc(edit.name)+'」。右侧是当前信息，可直接修改并保存；也可以告诉我需要调整的名称或说明'+(edit.kind==='expert'?'；模型级别（快速 / 专家 / 极致）请在对话里告诉我，例如「模型级别改为极致」':'')+'。</p>',true);
+  appendAssetCreateAgent('<p>正在编辑「'+xesc(edit.name)+'」。右侧是当前信息，可直接修改并保存；也可以告诉我需要调整的名称或说明'+(edit.kind==='expert'?'；模型级别（快速 / 深度 / 专家）请在对话里告诉我，例如「模型级别改为深度」':'')+'。</p>',true);
   (session.exchanges||[]).forEach(function(exchange){
     appendUserMessage(exchange.prompt);
     appendAssetCreateAgent('<p>'+xesc(exchange.response||'请在右侧确认修改后保存。')+'</p>',true);

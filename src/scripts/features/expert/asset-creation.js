@@ -111,7 +111,7 @@ export function commitAssetDraft(draft,scope){
   const id='my-'+draft.kind+'-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
   const ownerId=assetOwnerKey();
   const item=draft.kind==='expert'
-    ? {id,mine:true,ownerId,k:'eng',name,role:'',by:'我创建的',desc,tags:[],skills:[],modes:draft.modes.slice(),tier:'expert',comp:[],cmds:[],kn:[],knOff:[],knUp:[]}
+    ? {id,mine:true,ownerId,k:'eng',name,role:'',by:'我创建的',desc,tags:[],skills:[],modes:draft.modes.slice(),tier:'',comp:[],cmds:[],kn:[],knOff:[],knUp:[]}
     : {id,preset:false,ownerId,name,by:'我创建的',desc,domains:[],leadId:draft.members[0],members:draft.members.slice(),cmds:[]};
 
   if(draft.kind==='expert'){MY_EXPERTS.push(item);rebuildExperts();}

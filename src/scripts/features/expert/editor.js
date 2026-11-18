@@ -126,7 +126,7 @@ export function initExpertEditor() {
   document.addEventListener('lingee:asset-edit-session',function(ev){
     if(ev.detail.kind==='expert')populateExpertEditor(ev.detail.id);
   });
-  /* 模型级别不在编辑面板里展示，只能通过编辑对话修改（如「模型级别改为极致」），保存后生效 */
+  /* 模型级别不在编辑面板里展示，只能通过编辑对话修改（如「模型级别改为深度」），保存后生效 */
   document.addEventListener('lingee:asset-edit-tier',function(ev){
     if(!xeDraft||ev.detail.id!==xeEditingId)return;
     xeDraft.tier=normalizeTier(ev.detail.tier); setXeBadge(true);

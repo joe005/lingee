@@ -303,7 +303,7 @@ export function initAgentConfig() {
       next.focus();
     });
   });
-  /* 模型策略：默认模型等级为快速 / 专家 / 极致，默认专家（US-2026-082499）；本期不做「允许切换模型」 */
+  /* 模型策略：默认模型等级可选不设置 / 快速 / 深度 / 专家，默认不设置（US-2026-082499）；本期不做「允许切换模型」 */
   var tierSel = $('#agentConfigModelTier', panel);
   if (tierSel) {
     initSelectDropdowns([tierSel]);

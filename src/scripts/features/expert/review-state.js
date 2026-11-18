@@ -17,7 +17,7 @@ export function reviewSourceSnapshot(kind,item){
   const common={name:item.name,desc:item.desc||'',cmds:item.cmds||[]};
   if(kind==='expert')return {
     ...common,k:item.k||'eng',tags:item.tags||[],skills:item.skills||[],
-    modes:item.modes||[],tier:item.tier||'expert',comp:item.comp||[]
+    modes:item.modes||[],tier:item.tier||'',comp:item.comp||[]
   };
   const members=item.members||[];
   const stages=Object.entries(item.stageMembers||{})

@@ -130,12 +130,13 @@ function chatDoSend(){
   var assetEditing=chatSessions.find(function(row){return row.id===activeSessionId&&row.assetEdit;});
   if(assetEditing){
     var edit=assetEditing.assetEdit;
-    /* 模型级别只在对话里改：快速 / 专家 / 极致，改完需在右侧保存 */
-    var tierAsk=edit.kind==='expert'&&/模型(?:级别|等级|档位)?|档位/.test(t)&&/(快速|专家|极致|自动|深度)/.exec(t);
+    /* 模型级别只在对话里改：快速 / 深度 / 专家，改完需在右侧保存 */
+    var tierAsk=edit.kind==='expert'&&/模型(?:级别|等级|档位)?|档位/.test(t)&&/(快速|深度|专家|极致|自动|不设置|清除|取消)/.exec(t);
     if(tierAsk){
-      var tierHit=MODEL_TIERS.find(function(row){return row.label===tierAsk[1];});
+      var tierClear=/不设置|清除|取消/.test(tierAsk[1]);
+      var tierHit=tierClear?{id:'',label:'不设置'}:MODEL_TIERS.find(function(row){return row.label===tierAsk[1];});
       if(tierHit)document.dispatchEvent(new CustomEvent('lingee:asset-edit-tier',{detail:{id:edit.id,tier:tierHit.id}}));
-      assetEditing.exchanges.push({prompt:t,response:tierHit?'已把模型级别改为「'+tierHit.label+'」，请在右侧保存后生效。':'模型级别可选快速、专家、极致，暂不支持「'+tierAsk[1]+'」。'});
+      assetEditing.exchanges.push({prompt:t,response:tierClear?'已把模型级别改为不设置，对话将沿用使用者上一次会话的选择，请在右侧保存后生效。':tierHit?'已把模型级别改为「'+tierHit.label+'」，请在右侧保存后生效。':'模型级别可选快速、深度、专家或不设置，暂不支持「'+tierAsk[1]+'」。'});
       saveChatSessions();
       chatInput.innerHTML='';renderAssetEditChat(assetEditing);chatInput.focus();return;
     }
@@ -143,7 +144,7 @@ function chatDoSend(){
     var target=field&&(field[1]==='名称'||field[1]==='名字'?(edit.kind==='team'?'teamName':'xeName'):(edit.kind==='team'?'teamDesc':'xeDesc'));
     var inputEl=target&&document.getElementById(target);
     if(inputEl){inputEl.value=field[2].replace(/^[「“]|[」”]$/g,'').trim();inputEl.dispatchEvent(new Event('input',{bubbles:true}));}
-    var response=inputEl?'已在右侧更新'+(field[1]==='名称'||field[1]==='名字'?'名称':'说明')+'，请确认并保存。':'你可以在右侧修改完整配置；对话支持“名称改为…”“说明改为…”'+(edit.kind==='expert'?'或“模型级别改为专家”。':'。');
+    var response=inputEl?'已在右侧更新'+(field[1]==='名称'||field[1]==='名字'?'名称':'说明')+'，请确认并保存。':'你可以在右侧修改完整配置；对话支持“名称改为…”“说明改为…”'+(edit.kind==='expert'?'或“模型级别改为深度”。':'。');
     assetEditing.exchanges.push({prompt:t,response:response});
     saveChatSessions();
     chatInput.innerHTML='';renderAssetEditChat(assetEditing);chatInput.focus();return;

@@ -233,16 +233,17 @@ function teamStageScenario(issue){
 function stageById(id){ for(var i=0;i<STAGES.length;i++){ if(STAGES[i].id===id) return STAGES[i]; } return null; }
 
 /* 模型级别：智能体运行时用哪个推理档位。
-   档位、说明和消耗系数与【工作】模块对话的模型选择器一致；「自动」后续再加，本期不做。
-   未设置或旧数据里的 auto / deep 一律按默认档位「专家」处理。 */
+   本期沿用 Lingee Build 开发对话现有的三档（快速 / 深度 / 专家），不显示消耗系数，不做「自动」。
+   默认不设置（空串）：不设置时对话沿用使用者上一次会话的选择；无法识别的旧值（如 auto）也按不设置处理。 */
 var MODEL_TIERS=[
-  {id:'fast',  label:'快速', rate:'0.3x', desc:'快速响应，适合轻量任务'},
-  {id:'expert',label:'专家', rate:'0.9x', desc:'专业分析，精准决策'},
-  {id:'ultra', label:'极致', rate:'1.2x', desc:'海量检索，从容应对复杂场景'}
+  {id:'fast',  label:'快速', desc:'快速响应，适合轻量任务'},
+  {id:'deep',  label:'深度', desc:'深度思考，适合较复杂的任务'},
+  {id:'expert',label:'专家', desc:'更强推理，适合高难度任务'}
 ];
-var DEFAULT_MODEL_TIER='expert';
+var DEFAULT_MODEL_TIER='';
+var TIER_UNSET={id:'',label:'未设置',desc:'沿用使用者上一次会话的选择'};
 function normalizeTier(id){ return MODEL_TIERS.some(function(t){return t.id===id;})?id:DEFAULT_MODEL_TIER; }
-function tierInfo(id){ id=normalizeTier(id); for(var i=0;i<MODEL_TIERS.length;i++) if(MODEL_TIERS[i].id===id) return MODEL_TIERS[i]; return MODEL_TIERS[1]; }
+function tierInfo(id){ id=normalizeTier(id); for(var i=0;i<MODEL_TIERS.length;i++) if(MODEL_TIERS[i].id===id) return MODEL_TIERS[i]; return TIER_UNSET; }
 
 /* ---------- 能力项字典 ----------
    定义文件里能力项是机器标识（architecture.system-design · principal），

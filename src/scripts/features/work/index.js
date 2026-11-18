@@ -1,7 +1,7 @@
 import { $, $$ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
 import { setUrlState, showView } from '../../core/view.js';
-import { EXPERTS, MODEL_TIERS } from '../expert/data.js';
+import { EXPERTS } from '../expert/data.js';
 import { UNLISTED_EXPERT_IDS } from '../expert/builtin-catalog.js';
 import { setChannel } from '../sidebar.js';
 import { WORK_CHAT_AGENTS, openWorkChat } from './chat.js';
@@ -27,6 +27,12 @@ var DEMO_MENUS = { schedule: '定时任务', agents: '智能体', skills: '技�
 
 var modeId = 'office';
 var picks = { agent: '', model: 'auto', group: '' };
+var WORK_MODEL_TIERS = [
+  { id: 'auto', name: '自动', desc: '自动匹配，平衡性能与成本' },
+  { id: 'fast', name: '快速', desc: '快速响应，适合轻量任务' },
+  { id: 'expert', name: '专家', desc: '专业分析，精准决策' },
+  { id: 'ultra', name: '极致', desc: '海量检索，从容应对复杂场景' }
+];
 var histTab = 'history';
 var histQuery = '';
 var histItems = HISTORY.slice();
@@ -82,8 +88,8 @@ function ddOptions(kind) {
       WORK_CHAT_AGENTS.map(function (name) { return { id: 'wc:' + name, name: name, desc: '已发布智能体' }; }),
       EXPERTS.filter(function (e) { return e.listed !== false && !UNLISTED_EXPERT_IDS.has(e.id); }).slice(0, 12).map(function (e) { return { id: e.id, name: e.name, desc: e.role || '智能体' }; }));
   }
-  /* 【工作】模块保留「自动」；智能体模型级别本期只有快速 / 专家 / 极致 */
-  if (kind === 'model') return [{ id: 'auto', name: '自动', desc: '自动匹配，平衡性能与成本' }].concat(MODEL_TIERS.map(function (t) { return { id: t.id, name: t.label, desc: t.desc + ' · ' + t.rate }; }));
+  /* 【工作】模块自有档位（含「自动」），与 Build 开发智能体的模型级别（快速 / 深度 / 专家）分开维护 */
+  if (kind === 'model') return WORK_MODEL_TIERS;
   return [{ id: '', name: '不分组', desc: '' }].concat(GROUPS.map(function (g) { return { id: g, name: g, desc: '' }; }));
 }
 function ddLabel(kind) {

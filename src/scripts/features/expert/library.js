@@ -27,7 +27,7 @@ function facesHtml(ids,n,compact=false){
     return '<img src="'+xav(EX[i]?.k)+'" alt="">'; }).join('')
     +(showCount?'<span class="asset-faces-count">+'+(ids.length-limit+1)+'</span>':'')+'</span>';
 }
-/* 模型级别：智能体运行时用的推理档位，未设置时为「专家」 */
+/* 模型级别：智能体运行时用的推理档位，默认不设置，显示「未设置」 */
 function tierHtml(e){
   var t=tierInfo(e&&e.tier);
   return '<section class="x-sec"><div class="x-sec-t">模型级别</div><div class="x-chips"><span class="ptag ptag-tier">'+xesc(t.label)+'</span></div></section>';
