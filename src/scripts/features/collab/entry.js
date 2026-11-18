@@ -8,6 +8,7 @@ import { initCollabSpaceSwitch } from './space-switch.js';
 import { initCollabWorkspaceSettings } from './workspace-settings.js';
 import { initCollab } from './index.js';
 import { initCapabilitySettings } from './capability-settings.js';
+import { initSpaceAssets } from './space-assets.js';
 /* 协作开发：本区域的初始化入口。
    顺序 == 原 main.js 里这几行的顺序；本区域新增模块在这里接线，不用改 main.js。 */
 
@@ -22,5 +23,6 @@ export function initCollabArea() {
   initCollabSpaceSwitch();        /* 顶部空间 / 工作区切换，与任务筛选同一份条件 */
   initCapabilitySettings();
   initRecruitmentSettings();
+  initSpaceAssets();               /* 开发智能体 / 团队页签按空间显示，覆盖上面注册的空渲染 */
   initCollab();                   /* 6445 */
 }

@@ -9,7 +9,7 @@ import { toast } from '../../core/toast.js';
 import { requestDeleteConfirmation } from '../../core/delete-confirm.js';
 import { wsById } from '../../core/workspace-tree.js';
 import { CV_MEMBERS } from './data.js';
-import { getSpaceScope, setSpaceScope } from '../tasks-v2/page/space-filter.js';
+import { getSettingsScope, setSettingsScope } from './space-switch.js';
 import { mgrCurrentPersonId } from '../manager/data.js';
 import { personName, spaceMemberIds, wsAdminIds, wsDelete, wsDeleteBlockReason, wsLeave, wsLeaveBlockReason, wsMemberIds, wsOwnerId, wsProjectById, wsScopePath } from '../manager/workspaces.js';
 import { isWsHost } from './data.js';
@@ -23,7 +23,7 @@ var memberFilter = '';
 var memberPicked = [];   /* 添加成员：搜索结果中已勾选、待添加的人员（可多选，换搜索词保留） */   /* 成员列表搜索词：按姓名、邮箱、手机号、工号或部门筛选当前成员 */
 function esc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]; }); }
 /* '' 为默认工作区（空间根） */
-function scope() { var s = getSpaceScope(), p = wsProjectById(s.project); return { p:p, ws:p ? wsById(p, s.ws) : null }; }
+function scope() { var s = getSettingsScope(), p = wsProjectById(s.project); return { p:p, ws:p ? wsById(p, s.ws) : null }; }
 export function canViewWorkspaceSettings() { var s = scope(); return basicCanViewManagement(s.p, s.ws); }
 var REQUIRED = ' <b class="cv-required" aria-hidden="true">*</b>';
 function field(id, label, value, disabled, rows, max, hint = '') {
@@ -60,6 +60,16 @@ function leaveSection(p, ws) {
   else if ((ws.memberIds || []).indexOf(me) >= 0) rows = dangerRow('离开空间', '将自己从该空间移除，离开后不能再在此空间创建和处理任务。', wsLeaveBlockReason(p, ws, me), 'data-cv-ws-leave', '离开空间');
   return rows ? '<section class="cv-basic-advanced" aria-labelledby="cvBasicAdvancedTitle"><h3 id="cvBasicAdvancedTitle">高级选项</h3>' + rows + '</section>' : '';
 }
+const PLUS_ICON = '<svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg>';
+const MORE_ICON = '<svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><circle cx="5" cy="10" r="1.4"/><circle cx="10" cy="10" r="1.4"/><circle cx="15" cy="10" r="1.4"/></svg>';
+function closeRepoMenus(root, except) {
+  root.querySelectorAll('.cv-repo-more').forEach(function (box) {
+    if (box === except) return;
+    box.querySelector('.cv-repo-menu').hidden = true;
+    box.querySelector('[data-cv-repo-more]').setAttribute('aria-expanded', 'false');
+    box.closest('.cv-repo-card')?.classList.remove('is-menu-open');
+  });
+}
 var repoDraft = null;
 var repoEditing = -1;
 var repoEditBackup = null;
@@ -75,11 +85,12 @@ function repo(p, ws) {
     repoEditBackup = null;
   }
   const count = effective.repositories.length;
-  const toolbar = count ? '<div class="cv-repo-toolbar"><span class="cv-basic-note">' + count + ' 个仓库</span></div>' : '';
   const cards = effective.repositories.map((item, index) => repoCard(p, ws, item, index, editable, effective.repositories, effective.defaultRepo)).join('');
-  const footer = !editable && !count ? '<div class="cv-wsadmin-empty">当前空间尚未配置仓库，请联系负责人或管理员添加。</div>' : '';
-  return '<form data-cv-basic-form="repo">' + head('仓库', '')
-    + toolbar + '<div class="cv-repo-cards">' + cards + (editable ? '<button type="button" class="cv-repo-add-card" data-cv-repo-add>＋ 新增仓库</button>' : '') + '</div>' + footer
+  const footer = !count ? '<div class="cv-wsadmin-empty">' + (editable ? '当前空间还没有仓库，点击右上角「新增仓库」添加。' : '当前空间尚未配置仓库，请联系负责人或管理员添加。') + '</div>' : '';
+  /* 页头与 Git 账号页一致：左侧标题，右侧主按钮「＋ 新增仓库」；不再在网格末尾放新增卡片和数量（2026-11-18） */
+  const add = editable ? '<button type="button" class="ld-set-btn ld-set-btn--primary cv-repo-add-btn" data-cv-repo-add>' + PLUS_ICON + '新增仓库</button>' : '';
+  return '<form data-cv-basic-form="repo"><div class="cv-basic-heading"><div><h2>仓库</h2></div>' + add + '</div>'
+    + (count ? '<div class="cv-repo-cards">' + cards + '</div>' : '') + footer
     + '<p class="cv-basic-error" role="alert" hidden></p></form>'
     + (editable ? repoEditor(p, ws, editable, repoDraft.repositories, repoDraft.defaultRepo) : '');
 }
@@ -134,10 +145,11 @@ function repoDirectoryStatus(p, ws, item) {
     + (unavailable ? ' disabled title="' + esc(st.reason) + '"' : '') + '>' + (st.ready ? '修改本机目录' : '初始化') + '</button></div>';
 }
 function repoCard(p, ws, item, index, editable, list, defaultKey, editor = false) {
-  const actions = editable && !editor ? '<div class="cv-repo-card-actions">'
-    + '<button type="button" data-cv-repo-edit="'+index+'">编辑</button>'
-    + (defaultKey !== item.key && list.length > 1 ? '<button type="button" data-cv-repo-default="'+index+'">设为主仓库</button>' : '')
-    + '<button type="button" class="is-danger" data-cv-repo-remove="'+index+'">删除</button></div>' : '';
+  /* 卡片操作收进右上角「···」菜单，与 Git 账号卡片一致 */
+  const actions = editable && !editor ? '<div class="cv-repo-more"><button type="button" class="cv-repo-more-btn" data-cv-repo-more aria-haspopup="menu" aria-expanded="false" aria-label="'+esc(item.name || '仓库')+' 的更多操作">' + MORE_ICON + '</button>'
+    + '<div class="cv-repo-menu" role="menu" hidden><button type="button" role="menuitem" data-cv-repo-edit="'+index+'">编辑</button>'
+    + (defaultKey !== item.key && list.length > 1 ? '<button type="button" role="menuitem" data-cv-repo-default="'+index+'">设为主仓库</button>' : '')
+    + '<button type="button" role="menuitem" class="is-danger" data-cv-repo-remove="'+index+'">删除</button></div></div>' : '';
   const headRow = '<div class="cv-repo-card-head"><div class="cv-repo-title"><strong title="'+esc(item.name)+'">'+esc(item.name || '仓库')+'</strong>'
     + (defaultKey === item.key || list.length === 1 ? '<span class="cv-repo-default">主仓库</span>' : '')+'</div>'+actions+'</div>';
   if (!editor) {
@@ -215,7 +227,7 @@ export function renderBasicSettings(host, tab) {
   host.classList.toggle('is-member-list', tab === 'members');
   var nextScope = s.p ? s.p.id + ':' + (s.ws ? s.ws.id : '') : '';
   if (nextScope !== memberScope) { memberScope = nextScope; memberPage = 1; memberFilter = ''; memberPicked = []; }
-  if (!s.p) { host.innerHTML = '<div class="cv-wsadmin-empty">请先在页面顶部选择一个空间，再查看设置。</div>'; return; }
+  if (!s.p) { host.innerHTML = '<div class="cv-wsadmin-empty">暂无可用空间，可在上方切换器新建空间后再设置。</div>'; return; }
   if (tab === 'zentao') { renderZentaoSettings(host, s.p, s.ws); return; }
   var path = wsScopePath(s.p, s.ws);
   host.innerHTML = '<p class="cv-basic-scope" title="' + esc(path) + '">' + esc(path) + '</p>' + (tab === 'repo' ? repo(s.p, s.ws) : tab === 'members' ? members(s.p, s.ws) : general(s.p, s.ws));
@@ -237,7 +249,11 @@ export function initBasicSettings(host) {
     repoEditBackup = null;
     memberScope = '';
   });
+  /* 仓库卡片「···」菜单：点外部或按 Esc 关闭 */
+  document.addEventListener('click', function (event) { if (!host.contains(event.target)) closeRepoMenus(host); });
   host.addEventListener('keydown', function (event) {
+    const openMenu = event.key === 'Escape' && event.target.closest('.cv-repo-more');
+    if (openMenu && !openMenu.querySelector('.cv-repo-menu').hidden) { event.preventDefault(); event.stopPropagation(); closeRepoMenus(host); openMenu.querySelector('[data-cv-repo-more]').focus(); return; }
     const dialog = event.target.closest('.cv-repo-dialog');
     if (!dialog) return;
     if (document.querySelector('.ld-overlay[aria-hidden="false"]')) return;
@@ -382,6 +398,16 @@ export function initBasicSettings(host) {
     toast(kind === 'add' ? '已添加 ' + addedCount + ' 位成员' : '设置已保存', 'success');
   });
   host.addEventListener('click', async function (e) {
+    const more = e.target.closest('[data-cv-repo-more]');
+    if (more) {
+      const box = more.closest('.cv-repo-more'), menu = box.querySelector('.cv-repo-menu'), open = menu.hidden;
+      closeRepoMenus(host, box);
+      menu.hidden = !open; more.setAttribute('aria-expanded', String(open));
+      box.closest('.cv-repo-card')?.classList.toggle('is-menu-open', open);
+      if (open) menu.querySelector('button')?.focus();
+      return;
+    }
+    if (!e.target.closest('.cv-repo-menu')) closeRepoMenus(host);
 
     const localDirectory = e.target.closest('[data-cv-repo-local-dir]');
     if (localDirectory && !localDirectory.disabled) {
@@ -453,7 +479,7 @@ export function initBasicSettings(host) {
       var removed = wsDelete(ds.p, ds.ws.id);
       if (!removed.ok) { toast(removed.error, 'warning'); renderBasicSettings(host, currentTab); return; }
       toast('已删除空间「' + ds.ws.name + '」', 'success');
-      setSpaceScope(ds.p.id, ''); return;
+      setSettingsScope('', ''); return;
     }
     var leave = e.target.closest('[data-cv-ws-leave]');
     if (leave) {
@@ -462,7 +488,7 @@ export function initBasicSettings(host) {
       var left = wsLeave(ls.p, ls.ws.id, me);
       if (!left.ok) { toast(left.error, 'warning'); renderBasicSettings(host, currentTab); return; }
       toast('已离开空间「' + ls.ws.name + '」', 'success');
-      setSpaceScope(ls.p.id, ''); return;
+      setSettingsScope('', ''); return;
     }
     var roleBtn = e.target.closest('[data-cv-basic-role]');
     if (roleBtn) {

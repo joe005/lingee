@@ -36,5 +36,5 @@ export function isLocalAssetInstalled(entry,userId) {
   return requiredLocalPackages(entry).every(row=>state.packages[row.key]?.includes(row.version));
 }
 export function localAssetInstallError(entry,userId) {
-  return isLocalAssetInstalled(entry,userId) ? '' : '当前处理人尚未在本机安装该智能体团队及所需版本，请到“更多智能体团队”安装工作区版本后再执行';
+  return isLocalAssetInstalled(entry,userId) ? '' : '当前处理人尚未在本机安装该智能体团队及所需版本，请到协作开发「开发智能体团队」页签安装当前空间的版本后再执行';
 }

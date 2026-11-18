@@ -51,6 +51,7 @@
 .tk-toolbar-new-menu.hidden{display:none}
 .tk-toolbar-new-item{display:flex;align-items:center;gap:8px;width:100%;height:34px;padding:0 10px;border:0;border-radius:5px;background:transparent;color:var(--text);font:inherit;font-size:var(--font-size-14);text-align:left;cursor:pointer;white-space:nowrap}
 .tk-toolbar-new-item:hover{background:var(--hover)}
+.tk-toolbar-new-item[hidden]{display:none}
 
 /* 搜索框 */
 .tk-search-wrap{display:flex;align-items:center;gap:6px;background:var(--fill-1);border:1px solid var(--border);border-radius:6px;padding:5px 10px;transition:border-color .15s}

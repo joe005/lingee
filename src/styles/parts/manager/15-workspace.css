@@ -303,3 +303,16 @@
 .mgr-scope .mgr-ws-candidate input[type="checkbox"] { flex: none; width: 16px; height: 16px; margin: 0; accent-color: var(--brand); }
 .mgr-scope .mgr-ws-candidate:has(input:checked) { background: var(--brand-fill); }
 .mgr-scope .mgr-ws-candidate:has(input:focus-visible) { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+/* 新建空间向导布局（2026-11-18）：步骤条居中、步骤间短连线、下方分隔；名称与负责人并排 */
+.mgr-scope .mgr-ws-dialog.is-wizard .mgr-ws-steps {
+  justify-content: center; gap: 12px; margin: 0 0 20px; padding: 4px 0 16px; border-bottom: 1px solid var(--divider);
+}
+.mgr-scope .mgr-ws-dialog.is-wizard .mgr-ws-step { flex: none; gap: 8px; font-size: var(--font-size-14); line-height: var(--line-height-14); }
+.mgr-scope .mgr-ws-dialog.is-wizard .mgr-ws-step:not(:last-child)::after { flex: none; width: 64px; min-width: 0; margin-left: 4px; }
+.mgr-scope .mgr-ws-dialog.is-wizard .mgr-ws-step.is-done::after { background: var(--brand); }
+.mgr-scope .mgr-ws-dialog.is-wizard .mgr-ws-step-dot { width: 24px; height: 24px; }
+.mgr-scope .mgr-ws-dialog.is-wizard .mgr-ws-wiz-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+.mgr-scope .mgr-ws-dialog.is-wizard .mgr-ws-wiz-row > .mgr-pe-field { min-width: 0; }
+@media (max-width: 600px) {
+  .mgr-scope .mgr-ws-dialog.is-wizard .mgr-ws-wiz-row { grid-template-columns: minmax(0, 1fr); gap: 0; }
+}

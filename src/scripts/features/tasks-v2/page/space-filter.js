@@ -49,9 +49,35 @@ function setWsFilter(project, wsId) {
   var value = wsFilterValue(project, wsId);
   if (value) state.filters.push({ field:'workspaceId', op:'eq', value:value });
 }
+/* 「全部空间」只用于任务页：不加空间条件，跨空间列出我能看到的任务。
+   开发智能体、团队、设置等按空间隔离的页面仍读 getSpaceScope()，此时返回最近一次选中的具体空间。 */
+var allSpaces = false;
+var lastScope = { project: '', ws: '' };
+export function isAllSpaces() { return allSpaces; }
+export function setAllSpaces() {
+  if (!allSpaces) lastScope = getSpaceScope();
+  allSpaces = true;
+  state.filters = state.filters.filter(function (f) { return f.field !== 'project' && f.field !== 'workspaceId'; });
+  closePopup();
+  updateFilterButton();
+  render();
+}
+function concreteLastScope() {
+  var available = tkScopeProjects().filter(ldIsDevProject);
+  var project = available.find(function (p) { return p.id === lastScope.project; });
+  if (project) return { project: project.id, ws: wsFilterValue(project, lastScope.ws) === WS_DEFAULT_FILTER ? '' : wsFilterValue(project, lastScope.ws) };
+  var preferred = readDefaultScope();
+  project = available.find(function (p) { return p.id === preferred?.project; }) || available[0];
+  if (!project) return { project: '', ws: '' };
+  var ws = wsFilterValue(project, preferred?.project === project.id ? preferred.ws : '');
+  return { project: project.id, ws: ws === WS_DEFAULT_FILTER ? '' : ws };
+}
 function ensureSpaceScope() {
   var available = tkScopeProjects().filter(ldIsDevProject);
   var picked = selectedSpaces();
+  /* 在「筛选」里重新选了空间，即退出全部空间 */
+  if (allSpaces && !picked.length) return;
+  allSpaces = false;
   var current = picked.length === 1 ? available.find(function (p) { return p.id === picked[0]; }) : null;
   if (current) {
     var ws = selectedWorkspace();
@@ -68,12 +94,16 @@ function ensureSpaceScope() {
 }
 export function getSpaceScope() {
   ensureSpaceScope();
+  if (allSpaces) return concreteLastScope();
   var picked = selectedSpaces(), ws = selectedWorkspace();
   var project = picked.length === 1 ? picked[0] : '';
-  return { project: project, ws: !project || ws === WS_DEFAULT_FILTER ? '' : ws };
+  var scope = { project: project, ws: !project || ws === WS_DEFAULT_FILTER ? '' : ws };
+  if (project) lastScope = scope;
+  return scope;
 }
 /* wsId：'' 默认工作区或工作区 ID */
 export function setSpaceScope(projectId, wsId) {
+  allSpaces = false;
   state.filters = state.filters.filter(function (f) { return f.field !== 'project' && f.field !== 'workspaceId'; });
   if (projectId) {
     state.filters.push({ field:'project', op:'eq', value:projectId });
@@ -93,7 +123,7 @@ export function updateSpaceButton() {
   var scopeWs = getSpaceScope().ws;
   var name = !pickedProject ? '' : isWsHost(pickedProject) ? wsScopeName(pickedProject, scopeWs)
     : (pickedProject.name || '空间') + (tkVisibleWorkspaces(pickedProject).length || scopeWs ? ' › ' + wsScopeName(pickedProject, scopeWs) : '');
-  label.textContent = !picked.length ? '暂无可用空间' : picked.length === 1 ? name : picked.length + ' 个空间';
+  label.textContent = allSpaces ? '全部空间' : !picked.length ? '暂无可用空间' : picked.length === 1 ? name : picked.length + ' 个空间';
   btn.title = label.textContent;
   btn.classList.toggle('has-filters', picked.length > 0);
   var popup=document.getElementById('tkSpacePopup');
@@ -118,9 +148,13 @@ function workspaceRows(projectId) {
 function renderOptions() {
   var q = document.getElementById('tkSpaceSearch').value.trim().toLocaleLowerCase();
   var picked = selectedSpaces();
-  var rows = spaceOptions().filter(function (row) { return !q || row.name.toLocaleLowerCase().includes(q); });
-  document.getElementById('tkSpaceOptions').innerHTML = (rows.length ? rows.map(function (row) {
-    var on = picked.length === 1 && picked[0] === row.id;
+  var options = spaceOptions();
+  var rows = options.filter(function (row) { return !q || row.name.toLocaleLowerCase().includes(q); });
+  /* 列表顶部「全部空间」：跨空间列出任务，数量为各空间之和 */
+  var total = options.reduce(function (sum, row) { return sum + row.count; }, 0);
+  var allRow = !q && rows.length ? '<button type="button" role="option" aria-selected="' + allSpaces + '" data-tk-all><span class="tk-space-option-label"><span class="tk-space-option-name">全部空间</span><small>（' + total + '）</small></span><b>' + (allSpaces ? CHECK : '') + '</b></button>' : '';
+  document.getElementById('tkSpaceOptions').innerHTML = allRow + (rows.length ? rows.map(function (row) {
+    var on = !allSpaces && picked.length === 1 && picked[0] === row.id;
     return '<button type="button" role="option" aria-selected="' + on + '" data-tk-space="' + escapeHtml(row.id) + '"><span class="tk-space-option-label" title="' + escapeHtml(row.name) + '"><span class="tk-space-option-name">' + escapeHtml(row.name) + '</span><small>（' + row.count + '）</small></span><b>' + (on && !workspaceRows(row.id) ? CHECK : '') + '</b></button>' + (on ? workspaceRows(row.id) : '');
   }).join('') : '<p>没有匹配的空间</p>');
 }
@@ -169,6 +203,7 @@ export function initSpaceFilter() {
   });
   document.getElementById('tkSpaceSearch').addEventListener('input', renderOptions);
   document.getElementById('tkSpaceOptions').addEventListener('click', function (e) {
+    if (e.target.closest('[data-tk-all]')) { setAllSpaces(); return; }
     var wsOption = e.target.closest('[data-tk-ws]');
     if (wsOption) { pickWorkspace(wsOption.getAttribute('data-tk-ws')); return; }
     var option = e.target.closest('[data-tk-space]');

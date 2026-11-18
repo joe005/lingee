@@ -1,7 +1,7 @@
 import { isLocalAssetInstalled } from '../expert/local-install-state.js';
 import { setWorkspaceCapabilityRenderer, setWorkspaceAssetControls, setWorkspaceMoreInstall, setWorkspaceAssetVisibility, assetTagsHtml } from './expert-market.js';
 import '../../../styles/parts/collab/capability-settings.css';
-import { getSpaceScope } from '../tasks-v2/page/space-filter.js';
+import { getSettingsScope } from './space-switch.js';
 import { tkScopeProjects } from '../tasks-v2/data.js';
 import { wsById } from '../../core/workspace-tree.js';
 import { basicEditable } from './basic-settings-data.js';
@@ -9,9 +9,10 @@ import { capabilityList, capabilityMigrate } from './capability-config.js';
 import { assetSourceBadge, layerOf, layerVisible } from '../expert/layers.js';
 import { xav, xesc } from '../expert/data.js';
 
-export function capabilityContext() {
-  /* 范围含 Build 独立工作区容器，否则独立工作区的智能体设置和「更多」里的工作区资产都取不到 */
-  const scope = getSpaceScope(), p = tkScopeProjects().find(p => p.id === scope.project);
+export function capabilityContext(scope = getSettingsScope()) {
+  /* 范围含 Build 独立工作区容器，否则独立工作区的智能体设置和「更多」里的工作区资产都取不到；
+     默认取设置页的空间，开发智能体 / 团队页签传入自己筛选的空间 */
+  const p = tkScopeProjects().find(p => p.id === scope.project);
   const ws = p && scope.ws ? wsById(p,scope.ws) : null;
   return {p,ws,editable:!!p && (!scope.ws || !!ws) && basicEditable(p,ws)};
 }
@@ -64,9 +65,11 @@ export function initCapabilitySettings() {
   document.addEventListener('click',event => {
     const button=event.target.closest('[data-workspace-install]');if(!button)return;
     event.preventDefault();event.stopPropagation();
-    const {p,ws}=capabilityContext();
-    if(!p || p.id!==button.dataset.space || (ws?.id || '')!==button.dataset.workspace)return;
-    const row=capabilityList(p,ws?.id).entries.find(row=>row.key===button.dataset.workspaceInstall);
+    /* 按按钮所属空间安装：「全部空间」分组里的卡片不一定属于顶部当前空间 */
+    const p=tkScopeProjects().find(x=>x.id===button.dataset.space);
+    const wsId=button.dataset.workspace || '';
+    if(!p || wsId && !wsById(p,wsId))return;
+    const row=capabilityList(p,wsId).entries.find(row=>row.key===button.dataset.workspaceInstall);
     if(row)document.dispatchEvent(new CustomEvent('lingee:install-workspace-asset',{detail:{entry:row}}));
   },true);
   setWorkspaceCapabilityRenderer(renderWorkspaceCapabilities);
@@ -78,7 +81,7 @@ export function initCapabilitySettings() {
     if (p) capabilityMigrate(p);
     document.dispatchEvent(new Event('lingee:cloud-assets-changed'));
   }
-  document.addEventListener('lingee:tk-space-changed',refresh);
+  document.addEventListener('lingee:settings-space-changed',refresh);
   document.addEventListener('lingee:capabilities-changed',refresh);
   refresh();
 }

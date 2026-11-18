@@ -1,22 +1,9 @@
 /* 工作区设置 · 添加与移除。共享资产配置不混入个人添加入口。 */
-#view-collab .cv-recruit-tabs { display: inline-flex; gap: 4px; padding: 4px; margin-bottom: 16px; border-radius: var(--asset-pill-radius); background: var(--segment-track); }
+#view-collab .cv-recruit-tabs { display: inline-flex; gap: 4px; padding: 4px; margin: 0; border-radius: var(--asset-pill-radius); background: var(--segment-track); }
 #view-collab .cv-recruit-tabs button { min-height: 32px; padding: 4px 16px; border: 0; border-radius: var(--asset-pill-radius); background: none; color: var(--text-secondary); font: inherit; font-size: var(--font-size-14); cursor: pointer; }
 #view-collab .cv-recruit-tabs button:hover { background: var(--hover); color: var(--text); }
 #view-collab .cv-recruit-tabs button.is-on { background: var(--bg); color: var(--text); box-shadow: var(--pill-shadow); }
 #view-collab .cv-recruit-tabs button:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
-#view-collab .cv-recruit-list.apps-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 0; }
-#view-collab .cv-recruit-list .x-av { width: 40px; height: 40px; border-radius: 50%; object-fit: contain; }
-#view-collab .cv-recruit-list .x-faces { display: grid; grid-template-columns: repeat(2, 20px); gap: 4px; padding: 0; flex: none; align-content: center; }
-#view-collab .cv-recruit-list .x-faces img { display: block; width: 20px; height: 20px; margin: 0; border: 0; border-radius: 50%; object-fit: contain; }
-@media (max-width: 760px) { #view-collab .cv-recruit-list.apps-grid { grid-template-columns: minmax(0, 1fr); } }
-#view-collab .cv-recruit-list .cv-recruit-empty { grid-column: 1 / -1; }
-#view-collab .cv-recruit-list .x-card { position: relative; }
-#view-collab .cv-recruit-list .cv-recruit-remove { position: absolute; top: 16px; right: 16px; display: grid; place-items: center; width: 24px; height: 24px; padding: 0; border: 0; border-radius: 6px; background: none; color: var(--text-secondary); cursor: pointer; opacity: 0; pointer-events: none; }
-#view-collab .cv-recruit-list .cv-recruit-remove:hover { background: var(--hover); color: var(--danger); }
-#view-collab .cv-recruit-list .cv-recruit-remove:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
-#view-collab .cv-recruit-list .x-card:hover .cv-recruit-remove,
-#view-collab .cv-recruit-list .x-card:focus-within .cv-recruit-remove { opacity: 1; pointer-events: auto; }
-@media (hover: none) { #view-collab .cv-recruit-list .cv-recruit-remove { opacity: 1; pointer-events: auto; } }
 .cv-recruit-empty { padding: 20px 0; color: var(--text-secondary); font-size: var(--font-size-14); }
 #cvRecruitOverlay { position: fixed; inset: 0; z-index: 270; display: flex; align-items: center; justify-content: center; padding: 16px; background: var(--overlay); }
 #cvRecruitOverlay[hidden] { display: none; }
@@ -43,3 +30,27 @@
 #cvRecruitOverlay footer button:disabled { opacity: .5; cursor: default; }
 #cvRecruitOverlay :is(button,input):focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 #cvRecruitOverlay .cv-basic-error { margin: 0; color: var(--danger); font-size: var(--font-size-12); }
+
+/* 设置 ›「智能体/智能体团队」列表（2026-11-18）：页头为类型药丸 + 添加按钮，下方单个描边列表，行内字标、名称、描述、移除 */
+#view-collab .cv-recruit-head { align-items: center; }
+#view-collab .cv-recruit-add { display: inline-flex; align-items: center; gap: 4px; flex: none; }
+#view-collab .cv-recruit-rows { margin: 0; padding: 0; list-style: none; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); overflow: hidden; }
+#view-collab .cv-recruit-row { display: flex; align-items: center; gap: 16px; min-height: 64px; padding: 16px 24px; }
+#view-collab .cv-recruit-row + .cv-recruit-row { border-top: 1px solid var(--divider); }
+#view-collab .cv-recruit-glyph {
+  display: grid; place-items: center; flex: none; box-sizing: border-box; width: 40px; height: 40px;
+  border: 1px solid var(--border); border-radius: 10px; background: var(--bg); font-size: var(--font-size-16); font-weight: 600; line-height: 1;
+}
+#view-collab .cv-recruit-glyph.is-blue { color: var(--dot-blue); }
+#view-collab .cv-recruit-glyph.is-green { color: var(--dot-green); }
+#view-collab .cv-recruit-glyph.is-orange { color: var(--dot-orange); }
+#view-collab .cv-recruit-glyph.is-purple { color: var(--dot-purple); }
+#view-collab .cv-recruit-glyph.is-teal { color: var(--dot-teal); }
+#view-collab .cv-recruit-glyph.is-rose { color: var(--dot-rose); }
+#view-collab .cv-recruit-copy { display: flex; flex: 1; flex-direction: column; gap: 4px; min-width: 0; }
+#view-collab .cv-recruit-copy strong { overflow: hidden; color: var(--text-title); font-size: var(--font-size-14); font-weight: 500; line-height: var(--line-height-14); text-overflow: ellipsis; white-space: nowrap; }
+#view-collab .cv-recruit-copy span { overflow: hidden; color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); text-overflow: ellipsis; white-space: nowrap; }
+#view-collab .cv-recruit-rows .cv-recruit-remove { display: grid; place-items: center; flex: none; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 8px; background: none; color: var(--text-secondary); cursor: pointer; }
+#view-collab .cv-recruit-rows .cv-recruit-remove:hover { background: var(--danger-bg); color: var(--danger); }
+#view-collab .cv-recruit-rows .cv-recruit-remove:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+@media (max-width: 600px) { #view-collab .cv-recruit-row { padding: 12px 16px; gap: 12px; } }

@@ -97,14 +97,14 @@ function repoConfig(r, wsId) {
 /* Git 地址与基准分支同一行，沿用 Manage 新建空间的 .mgr-repo-row；选「其他」时在行内追加分支输入 */
 function wizardRepoHtml() {
   var r = wiz.repo, custom = r.branchSel === '__custom';
-  return '<div class="mgr-pe-field"><label for="mgrWsdRepo">Git 地址 <b aria-hidden="true">*</b><small>任务默认使用该仓库，创建后可在「设置 › 仓库」增加</small></label><div class="mgr-repo-row">' +
+  return '<div class="mgr-pe-field"><label for="mgrWsdRepo">Git 地址 <b aria-hidden="true">*</b></label><div class="mgr-repo-row">' +
     '<input type="text" id="mgrWsdRepo" inputmode="url" maxlength="2000" placeholder="https://github.com/org/repo" autocomplete="off" value="' + mgrEsc(r.url) + '">' +
     '<div class="mgr-repo-branch shared-select-host"><svg class="mgr-repo-branch-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="8" r="2"/><path d="M6 7v10"/><path d="M18 10c0 4-6 3-12 7"/></svg>' +
     '<select id="mgrWsdBranch" aria-label="基准分支">' + BRANCHES.concat('__custom').map(function (v) {
       return '<option value="' + v + '"' + (r.branchSel === v ? ' selected' : '') + '>' + (v === '__custom' ? '其他' : v) + '</option>';
     }).join('') + '</select></div>' +
     '<input type="text" id="mgrWsdBranchCustom" class="mgr-repo-branch-custom" maxlength="200" placeholder="分支名，如 release/2026" aria-label="自定义基准分支" autocomplete="off" value="' + mgrEsc(r.branchCustom) + '"' + (custom ? '' : ' hidden') + '>' +
-    '</div></div>';
+    '</div><p class="mgr-ws-hint">任务默认使用该仓库，创建后可在「设置 › 仓库」增加</p></div>';
 }
 /* 成员来源：独立工作区从全部 Build 用户中选，空间下的工作区从空间成员中选 */
 function poolLabel(p) { return isWsHost(p) ? 'Build 用户' : '空间成员'; }
@@ -116,12 +116,12 @@ function stepperHtml(step) {
 }
 function wizardInfoHtml() {
   var p = wiz.p;
-  return '<div class="mgr-pe-field"><label for="mgrWsdName">名称 <b aria-hidden="true">*</b></label><input type="text" id="mgrWsdName" maxlength="30" placeholder="如：后端服务" value="' + mgrEsc(wiz.name) + '"></div>' +
-    '<div class="mgr-pe-field"><label for="mgrWsdDesc">说明 <b aria-hidden="true">*</b></label><textarea id="mgrWsdDesc" rows="2" maxlength="200" placeholder="这个空间负责的范围">' + mgrEsc(wiz.desc) + '</textarea></div>' +
-    wizardRepoHtml() +
+  /* 名称与负责人同一行，说明、仓库各占整行（2026-11-18 调整布局） */
+  return '<div class="mgr-ws-wiz-row"><div class="mgr-pe-field"><label for="mgrWsdName">名称 <b aria-hidden="true">*</b></label><input type="text" id="mgrWsdName" maxlength="30" placeholder="如：后端服务" value="' + mgrEsc(wiz.name) + '"></div>' +
     /* 不再关联已有的 Manage 空间：创建时由 Build 调 Manage 接口新建同名空间并分配成员（2026-11-06） */
-    '<div class="mgr-pe-field shared-select-host"><label for="mgrWsdOwner">负责人 <b aria-hidden="true">*</b></label><select id="mgrWsdOwner">' + memberOptions(p, wiz.ownerId) + '</select></div>' +
-    (isWsHost(p) ? '<p class="mgr-ws-hint">创建后会同步在 Manage 新建同名空间，并把成员分配进去。</p>' : '');
+    '<div class="mgr-pe-field shared-select-host"><label for="mgrWsdOwner">负责人 <b aria-hidden="true">*</b></label><select id="mgrWsdOwner">' + memberOptions(p, wiz.ownerId) + '</select></div></div>' +
+    '<div class="mgr-pe-field"><label for="mgrWsdDesc">说明 <b aria-hidden="true">*</b></label><textarea id="mgrWsdDesc" rows="3" maxlength="200" placeholder="这个空间负责的范围">' + mgrEsc(wiz.desc) + '</textarea></div>' +
+    wizardRepoHtml();
 }
 /* 成员：按姓名、邮箱、手机号或工号搜索添加，添加时选成员或管理员；负责人固定在列表首行 */
 var ROLE_LABEL = { member: '成员', admin: '管理员' };

@@ -1,0 +1,13 @@
+/* 协作开发 · 开发智能体 / 开发智能体团队页签的空间视图（features/collab/space-assets.js）。
+   页签不做空间隔离：隐藏「我的 / 更多」与来源筛选，换成安装状态筛选；搜索框右侧保留「新建」。
+   侧栏「技能·智能体·连接器」复用同一面板（asset-hub-mode）时仍显示原有个人视图。 */
+#view-collab:not(.asset-hub-mode) .cv-panel[data-space-assets] [data-asset-primary],
+#view-collab:not(.asset-hub-mode) .cv-panel[data-space-assets] .asset-secondary-row { display: none; }
+#view-collab.asset-hub-mode .cv-space-asset-filter,
+#view-collab .cv-panel:not([data-space-assets]) .cv-space-asset-filter { display: none; }
+
+#view-collab .cv-space-asset-state {
+  display: inline-flex; align-items: center; padding: 0 6px; border-radius: 4px;
+  background: var(--fill-1); color: var(--text-secondary); font-size: var(--font-size-12); line-height: 20px;
+}
+#view-collab .cv-space-asset-state.is-installed { background: var(--success-bg); color: var(--success); }

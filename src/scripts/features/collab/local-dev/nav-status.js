@@ -3,7 +3,8 @@ import { ldAttentionProjects, ldEsc, ldProjectView, ldRepoInfo } from './core.js
 import { ldProjectAction } from './ui.js';
 
 /* 本地开发 · 协作开发顶部「N 个目录未就绪」提醒与浮层（#ldNavStatus / #ldNavPop）。
-   只统计顶部当前工作区关联的仓库：有未就绪的仓库时橙色提示，点开列出这些仓库及各自操作；都已就绪时不显示。
+   统计任务页当前空间关联的仓库；任务页选「全部空间」时范围为空，统计我能看到的所有空间（同一仓库目录只算一次），
+   浮层里每个仓库注明所属空间。有未就绪的仓库时橙色提示，点开列出这些仓库及各自操作；都已就绪时不显示。
    当前范围由协作开发在初始化时注入（ldSetNavScope），本模块不反向依赖任务页。 */
 var navScope = function () { return null; };
 export function ldSetNavScope(provider) { if (typeof provider === 'function') navScope = provider; }
@@ -26,12 +27,16 @@ function renderNavStatus() {
 }
 function renderNavPop() {
   var pop = $('#ldNavPop');
-  pop.innerHTML = '<div class="ld-pop-head"><strong>当前空间仓库未就绪</strong><span>初始化本机执行目录后，任务才能在本机执行</span></div>'
+  var scope = navScope(), allSpaces = !scope || !scope.project;
+  pop.innerHTML = '<div class="ld-pop-head"><strong>' + (allSpaces ? '仓库目录未就绪' : '当前空间仓库未就绪') + '</strong><span>初始化本机执行目录后，任务才能在本机执行</span></div>'
     + '<ul class="ld-pop-list">' + scopedAttention().map(function (project) {
       var view = ldProjectView(project);
+      /* 全部空间时注明仓库所属空间（同一仓库被多个空间使用时都列出） */
+      var spaces = allSpaces ? Array.from(new Set((project.usages || []).map(function (u) { return u.name; }).filter(Boolean))).join('、') : '';
+      var detail = (spaces ? spaces + ' · ' : '') + view.reason;
       /* 已限定在当前工作区，名称显示仓库名（取自仓库地址），不再重复工作区路径 */
       var repoName = (ldRepoInfo(project) || {}).name || String(project.repo || '').replace(/\/+$/, '').split('/').pop().replace(/\.git$/, '') || project.name;
-      return '<li><span class="ld-pop-name"><strong title="' + ldEsc(project.repo || repoName) + '">' + ldEsc(repoName) + '</strong><small title="' + ldEsc(view.reason) + '">' + ldEsc(view.reason) + '</small></span>'
+      return '<li><span class="ld-pop-name"><strong title="' + ldEsc(project.repo || repoName) + '">' + ldEsc(repoName) + '</strong><small title="' + ldEsc(detail) + '">' + ldEsc(detail) + '</small></span>'
         + '<span class="ld-pop-actions">' + ldProjectAction(project, view, 'ld-btn') + '</span></li>';
     }).join('') + '</ul>'
     + '<button type="button" class="ld-link ld-pop-more" data-ld-open-settings>在「设置」中查看全部</button>';
