@@ -121,6 +121,8 @@ td.niu-plan-empty{color:var(--text-secondary)}
 .tk-space-search>svg{position:absolute;right:12px;top:6px;color:var(--text-soft);pointer-events:none}
 .tk-space-search input:focus,.tk-space-search input:focus-visible{border-color:var(--border-hover);outline:none;box-shadow:none}
 #tkSpaceOptions{flex:1;min-height:0;overflow-y:auto}
+/* 底部「＋ 新建空间」固定可见，列表单独滚动；样式沿用新建任务的所属空间下拉 */
+.tk-space-popup .niu-project-new{flex:none}
 .tk-space-popup button{width:100%;min-height:36px;display:flex;align-items:center;padding:8px;border:0;background:transparent;text-align:left;cursor:pointer}
 .tk-space-popup button[aria-selected=true]{background:transparent}
 .tk-space-popup button:hover{background:var(--hover)}

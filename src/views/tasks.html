@@ -36,7 +36,7 @@
         <button type="button" class="tk-filter-btn tk-space-btn" id="tkSpaceBtn" aria-haspopup="listbox" aria-expanded="false" aria-controls="tkSpacePopup">
           <span id="tkSpaceLabel">选择空间</span>
         </button>
-        <div class="niu-person-popup tk-space-popup" id="tkSpacePopup" role="listbox" aria-label="选择空间" hidden><div class="tk-space-search"><input type="search" id="tkSpaceSearch" placeholder="搜索空间" aria-label="搜索空间" autocomplete="off"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg></div><div id="tkSpaceOptions"></div></div>
+        <div class="niu-person-popup tk-space-popup" id="tkSpacePopup" role="listbox" aria-label="选择空间" hidden><div class="tk-space-search"><input type="search" id="tkSpaceSearch" placeholder="搜索空间" aria-label="搜索空间" autocomplete="off"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></svg></div><div id="tkSpaceOptions"></div><button type="button" class="niu-project-new" id="tkSpaceCreate" hidden><span>＋ 新建空间</span></button></div>
         <div class="tk-search-wrap">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
           <input type="search" id="tkSearch" name="task-filter-query" placeholder="搜索任务" aria-label="搜索任务或编号" autocomplete="off" data-1p-ignore data-lpignore="true" readonly>
@@ -179,6 +179,8 @@
       <div class="tk-empty hidden" id="tkEmpty">
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:.3"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
         <p>暂无数据</p>
+        <!-- 有新建空间权限时显示，与「新建 ▾ › 新建空间」打开同一个弹窗（page/space-filter.js） -->
+        <button type="button" class="tk-empty-create" id="tkEmptySpaceCreate" hidden><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>新建空间</span></button>
       </div>
 
       <!-- 侧滑详情的透明点击层 -->

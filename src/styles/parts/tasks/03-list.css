@@ -89,3 +89,9 @@ body.tk-col-resizing{user-select:none;cursor:col-resize}
 .tk-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--text-secondary)}
 .tk-empty.hidden{display:none}
 .tk-empty p{font-size:var(--font-size-14);margin:0}
+/* 空态「新建空间」：主按钮规格（36px、圆角 10px、品牌底白字） */
+.tk-empty .tk-empty-create{display:inline-flex;align-items:center;gap:4px;height:var(--control-h);margin-top:4px;padding:0 16px;border:0;border-radius:10px;background:var(--brand);color:#fff;font:inherit;font-size:var(--font-size-14);line-height:var(--line-height-14);cursor:pointer}
+.tk-empty .tk-empty-create[hidden]{display:none}
+.tk-empty .tk-empty-create:hover{background:var(--create-hover)}
+.tk-empty .tk-empty-create:active{background:var(--create-active)}
+.tk-empty .tk-empty-create:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}

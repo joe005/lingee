@@ -11,10 +11,14 @@ import { pageState } from './page-state.js';
 import { applyListFieldSettings, latestListFieldVisibility, renderBoard, renderFilterChips, renderList, renderViewBar } from './render.js';
 import { LIST_FIELDS, drawerCanView, els, persistViewState, state } from './state.js';
 import { closeDrawer, openDrawer } from './subtasks.js';
+import { canCreateSpaceHere } from './space-filter.js';
 /* 任务页 · 空状态、布局切换、批量栏、全选、项目内列表模式、显示设置选项（拆分自 tasks-v2/index.js，逻辑未改） */
 /* ---------- 渲染：空状态 / 布局切换 / 批量栏 / 全选 ---------- */
 export function showEmpty() {
   els.tkEmpty.querySelector('p').textContent = state.search.trim() ? '未找到匹配任务' : '暂无数据';
+  /* 列表为空时引导新建空间；搜索无结果和项目任务清单里不显示 */
+  var create = document.getElementById('tkEmptySpaceCreate');
+  if (create) create.hidden = !!state.search.trim() || pageState.projectListMode || !canCreateSpaceHere();
   els.tkBoard.classList.add('hidden'); els.tkList.classList.add('hidden'); els.tkEmpty.classList.remove('hidden');
 }
 export function showBoardOrList() {

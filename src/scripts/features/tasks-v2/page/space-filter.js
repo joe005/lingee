@@ -2,7 +2,8 @@ import { readDefaultScope } from '../../collab/default-scope.js';
 import { ldIsDevProject } from '../../collab/local-dev.js';
 import { WS_DEFAULT_FILTER, wsScopeName } from '../../../core/workspace-tree.js';
 import { tkScopeProjects, tkVisibleWorkspaces } from '../data.js';
-import { isWsHost } from '../../collab/data.js';
+import { WS_HOST_ID, isWsHost, wsHost } from '../../collab/data.js';
+import { canCreateWs } from '../../manager/workspaces.js';
 import { filterListStatus, getFilteredTasks } from './filters.js';
 import { render } from './layout.js';
 import { updateFilterButton } from './menus.js';
@@ -156,7 +157,7 @@ function renderOptions() {
   document.getElementById('tkSpaceOptions').innerHTML = allRow + (rows.length ? rows.map(function (row) {
     var on = !allSpaces && picked.length === 1 && picked[0] === row.id;
     return '<button type="button" role="option" aria-selected="' + on + '" data-tk-space="' + escapeHtml(row.id) + '"><span class="tk-space-option-label" title="' + escapeHtml(row.name) + '"><span class="tk-space-option-name">' + escapeHtml(row.name) + '</span><small>（' + row.count + '）</small></span><b>' + (on && !workspaceRows(row.id) ? CHECK : '') + '</b></button>' + (on ? workspaceRows(row.id) : '');
-  }).join('') : '<p>没有匹配的空间</p>');
+  }).join('') : '<p>' + (options.length ? '没有匹配的空间' : '还没有空间，点下方「新建空间」创建') + '</p>');
 }
 
 function closePopup() {
@@ -167,6 +168,8 @@ function closePopup() {
 function openPopup() {
   var popup = document.getElementById('tkSpacePopup'), btn = document.getElementById('tkSpaceBtn');
   document.getElementById('tkSpaceSearch').value = '';
+  /* 底部「新建空间」：有新建权限时显示，与工具栏「新建 ▾ › 新建空间」打开同一个弹窗 */
+  document.getElementById('tkSpaceCreate').hidden = !canCreateSpaceHere();
   renderOptions();
   popup.hidden = false;
   btn.setAttribute('aria-expanded', 'true');
@@ -193,15 +196,37 @@ function pickWorkspace(id) {
   render();
 }
 
+/* 本页的「新建空间」入口（空间筛选底部、列表空态）：有新建权限且在协作开发里才显示 */
+var creatingSpace = false;
+export function canCreateSpaceHere() {
+  var view = document.getElementById('view-collab');
+  return !!view && view.contains(document.getElementById('tkSpaceBtn')) && canCreateWs(wsHost());
+}
+function openSpaceCreate() {
+  closePopup();
+  creatingSpace = true;
+  document.dispatchEvent(new CustomEvent('lingee:mgr-ws-create', { detail: { project: WS_HOST_ID } }));
+}
+
 export function initSpaceFilter() {
   var btn = document.getElementById('tkSpaceBtn');
   if (!btn) return;
   if (!btn.querySelector('.tk-space-caret')) btn.insertAdjacentHTML('beforeend', CARET);
   updateSpaceButton();
   btn.addEventListener('click', function () {
+    creatingSpace = false;
     if (document.getElementById('tkSpacePopup').hidden) openPopup(); else closePopup();
   });
   document.getElementById('tkSpaceSearch').addEventListener('input', renderOptions);
+  document.getElementById('tkSpaceCreate').addEventListener('click', openSpaceCreate);
+  document.getElementById('tkEmptySpaceCreate')?.addEventListener('click', openSpaceCreate);
+  /* 从这里新建的空间建好后直接切到它 */
+  document.addEventListener('lingee:mgr-projects-changed', function (e) {
+    var d = e.detail || {};
+    if (!creatingSpace || d.workspaces !== WS_HOST_ID || !d.created) return;
+    creatingSpace = false;
+    setSpaceScope(WS_HOST_ID, d.created);
+  });
   document.getElementById('tkSpaceOptions').addEventListener('click', function (e) {
     if (e.target.closest('[data-tk-all]')) { setAllSpaces(); return; }
     var wsOption = e.target.closest('[data-tk-ws]');
