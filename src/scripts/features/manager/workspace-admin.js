@@ -117,7 +117,7 @@ function stepperHtml(step) {
 function wizardInfoHtml() {
   var p = wiz.p;
   /* 名称与负责人同一行，说明、仓库各占整行（2026-11-18 调整布局） */
-  return '<div class="mgr-ws-wiz-row"><div class="mgr-pe-field"><label for="mgrWsdName">名称 <b aria-hidden="true">*</b></label><input type="text" id="mgrWsdName" maxlength="30" placeholder="如：后端服务" value="' + mgrEsc(wiz.name) + '"></div>' +
+  return '<div class="mgr-ws-wiz-row"><div class="mgr-pe-field"><label for="mgrWsdName">名称 <b aria-hidden="true">*</b></label><input type="text" id="mgrWsdName" maxlength="30" placeholder="如：费用报销系统" value="' + mgrEsc(wiz.name) + '"></div>' +
     /* 不再关联已有的 Manage 空间：创建时由 Build 调 Manage 接口新建同名空间并分配成员（2026-11-06） */
     '<div class="mgr-pe-field shared-select-host"><label for="mgrWsdOwner">负责人 <b aria-hidden="true">*</b></label><select id="mgrWsdOwner">' + memberOptions(p, wiz.ownerId) + '</select></div></div>' +
     '<div class="mgr-pe-field"><label for="mgrWsdDesc">说明 <b aria-hidden="true">*</b></label><textarea id="mgrWsdDesc" rows="3" maxlength="200" placeholder="这个空间负责的范围">' + mgrEsc(wiz.desc) + '</textarea></div>' +

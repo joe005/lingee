@@ -458,9 +458,9 @@
 /* 设置卡片顶部的空间切换器：横跨导航与内容两列，下方分隔线；内容区不再重复显示空间名 */
 #view-collab .cv-basic-layout:has(> .cv-basic-space-bar) { grid-template-rows: auto minmax(0, 1fr); }
 #view-collab .cv-basic-space-bar { grid-column: 1 / -1; display: flex; align-items: center; min-width: 0; padding-bottom: 16px; border-bottom: 1px solid var(--divider); }
-/* 切换按钮：浅灰底卡片，左侧空间图标，右侧名称 + 箭头，下方「我创建的 / 我加入的」 */
+/* 切换按钮：默认无背景色（悬停、展开时才出浅灰底），左侧空间图标，右侧名称 + 箭头，下方「我创建的 / 我加入的」 */
 #view-collab .cv-basic-space-bar .cv-space-switch .mgr-ws-switch-btn.cv-space-switch-card {
-  height: auto; gap: 12px; padding: 8px 16px 8px 8px; border-radius: 12px; background: var(--fill-1);
+  height: auto; gap: 12px; padding: 8px 16px 8px 8px; border-radius: 12px; background: transparent;
   color: var(--text-title); font-size: var(--font-size-16); line-height: var(--line-height-16); text-align: left;
 }
 #view-collab .cv-basic-space-bar .cv-space-switch .mgr-ws-switch-btn.cv-space-switch-card:hover,
