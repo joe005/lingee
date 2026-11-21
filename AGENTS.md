@@ -50,6 +50,10 @@ Consult the wiki when working on features, debugging, or onboarding to a new are
 skill 入口未出现在可用列表时，直接读取上述文件执行；验证仍遵守本文件的
 「开发后验证方式」，不得因设计任务自动启动浏览器。
 
+### 界面文案
+
+标题、控件只写名称，不加标签、副标题和补充说明；交互规则写进 `docs/`，不写在界面上。
+
 ### 项目级设计规范
 
 新增或修改原型界面前，必须先读取根目录的 [DESIGN.md](DESIGN.md)，并将其作为
