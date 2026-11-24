@@ -1,4 +1,5 @@
 import '../../collab/repository-config.js';   /* 保留以维持模块求值顺序（详情已不展示代码仓库与目标分支） */
+import { buildTaskRepos } from '../../collab/repository-config.js';
 import { toast } from '../../../core/toast.js';
 import { wsPathNames } from '../../../core/workspace-tree.js';
 import { DELETE_ICON } from '../../../core/delete-icon.js';
@@ -177,7 +178,7 @@ function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml,
       var detailId = 'tkStageDetail' + index;
       var hasDetail = latestLayout && stageArtifacts.length > 0;
       if (!latestLayout) return '<li class="tk-feed-stage is-' + state + (isCurrent ? ' is-current' : '') + '" aria-label="' + escapeHtml(stage.name + '，处理人' + assignee + '，' + label) + '"' + (isCurrent ? ' aria-current="step"' : '') + '><span class="tk-feed-stage-mark" aria-hidden="true"></span><span class="tk-feed-stage-name">' + escapeHtml(stage.name) + '</span><span class="tk-feed-stage-assignee" title="处理人：' + escapeHtml(assignee) + '">处理人 <b>' + escapeHtml(assignee) + '</b></span><span class="tk-feed-stage-state">' + label + '</span>' + (isCurrent ? '<span class="tk-feed-stage-current-tag">当前</span>' : '') + '</li>';
-      var detailHtml = hasDetail ? '<div class="tk-feed-stage-detail" id="' + detailId + '"><div class="tk-artifacts-list">' + stageArtifacts.map(renderTaskArtifact).join('') + '</div></div>' : '';
+      var detailHtml = hasDetail ? '<div class="tk-feed-stage-detail" id="' + detailId + '">' + renderStageArtifactGroups(task, stageArtifacts) + '</div>' : '';
       return '<tbody><tr class="tk-feed-stage-row is-' + state + (isCurrent ? ' is-current' : '') + '"' + (isCurrent ? ' aria-current="step"' : '') + '>'
         + '<td class="tk-stage-cell-mark"><span class="tk-feed-stage-mark" aria-hidden="true"></span></td>'
         + '<th scope="row" class="tk-feed-stage-main" colspan="5"><div class="tk-feed-stage-meta"><span class="tk-feed-stage-expert-content">'
@@ -186,7 +187,7 @@ function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml,
           + '</span>'
           + '<span class="tk-feed-stage-state">' + label + '</span>'
           + '<span class="tk-feed-stage-reviewer">' + (plan?.requiresConfirmation === false ? '自动流转' : '评审人：' + escapeHtml(assignee)) + '</span></div>'
-        + '<div class="tk-feed-stage-line"><span class="tk-feed-stage-name">' + escapeHtml(stage.name) + '</span></div>' + detailHtml + '</th>'
+        + '<div class="tk-feed-stage-line"><span class="tk-feed-stage-name">' + escapeHtml(stage.name) + '</span></div>' + renderStageRepoHandoff(task, stage, isCurrent) + detailHtml + '</th>'
         + '</tr>'
         + '</tbody>';
     }).join('') + (latestLayout ? '</table></div>' : '</ol>')
@@ -329,6 +330,37 @@ var ACTIVITY_COLLAPSED_STORAGE_KEY = 'lingee_tasks_activity_collapsed';
 var ACTIVITY_PREFERENCE_STORAGE_KEY = 'lingee_tasks_activity_collapsed_preference';
 var activityCollapsedPreference = null;
 /* 任务所属工作区（只读）：空间根下的任务属于与空间同名的工作区，显示空间名；详情不再单独展示所属空间、代码仓库与目标分支 */
+/* 多仓任务：概览列出所选仓库、默认仓库与各仓的任务分支；单仓任务不展示（沿用快照参与执行） */
+var REPO_HANDOFF_LABELS = { committed:'已提交', unchanged:'未改动', failed:'待补齐' };
+function taskReposRow(t) {
+  var repos = buildTaskRepos(t, tkProjectById(t.project));
+  if (repos.length < 2) return '';
+  var started = !!t.reposSnapshot?.length, branch = 'kteam/' + t.project + '/' + String(t.code || t.id);
+  return '<div class="tk-prop-row tk-prop-row--repos"><span>代码仓库</span><ul class="tk-prop-val tk-task-repos">' + repos.map(function (repo) {
+    var detail = started ? branch + ' → ' + repo.baseBranch : repo.baseBranch;
+    return '<li class="tk-task-repo"><span class="tk-task-repo-name"><strong title="' + escapeHtml(repo.repo) + '">' + escapeHtml(repo.name) + '</strong>'
+      + (repo.isDefault ? '<span class="tk-task-repo-tag">默认</span>' : '') + '</span><small title="' + escapeHtml(detail) + '">' + escapeHtml(detail) + '</small></li>';
+  }).join('') + '</ul></div>';
+}
+/* 阶段卡片里按仓库显示本阶段的交接结果；有待补齐的仓库时，当前待评审阶段提供「重试提交」，只重试失败项 */
+function renderStageRepoHandoff(task, stage, isCurrent) {
+  var repos = task.reposSnapshot || [], handoff = task.repoHandoffs?.[stage.id];
+  if (repos.length < 2 || !handoff) return '';
+  var failed = repos.some(function (repo) { return handoff.repos?.[repo.repoKey]?.state === 'failed'; });
+  return '<div class="tk-stage-repos"><ul>' + repos.map(function (repo) {
+    var row = handoff.repos?.[repo.repoKey] || {}, handoffState = row.state || 'unchanged';
+    var text = REPO_HANDOFF_LABELS[handoffState] + (row.commit && handoffState !== 'failed' ? ' · ' + row.commit : '');
+    return '<li class="is-' + handoffState + '" title="' + escapeHtml(row.reason || repo.repo) + '"><span>' + escapeHtml(repo.name) + '</span><em>' + escapeHtml(text) + '</em></li>';
+  }).join('') + '</ul>' + (failed && isCurrent && task.status === 'in_review' ? '<button type="button" class="tk-stage-repos-retry" data-action="repo-handoff-retry">重试提交</button>' : '') + '</div>';
+}
+function renderStageArtifactGroups(task, stageArtifacts) {
+  var repos = task.reposSnapshot || [];
+  if (repos.length < 2) return '<div class="tk-artifacts-list">' + stageArtifacts.map(renderTaskArtifact).join('') + '</div>';
+  return repos.map(function (repo) {
+    var rows = stageArtifacts.filter(function (artifact) { return (artifact.repoKey || (repos.find(function (r) { return r.isDefault; }) || repos[0]).repoKey) === repo.repoKey; });
+    return rows.length ? '<div class="tk-artifact-repo-group"><p class="tk-artifact-repo-name">' + escapeHtml(repo.name) + '</p><div class="tk-artifacts-list">' + rows.map(renderTaskArtifact).join('') + '</div></div>' : '';
+  }).join('');
+}
 function workspacePathRow(t) {
   var project = tkProjectById(t.project);
   var names = !project ? [] : t.workspaceId ? wsPathNames(project, t.workspaceId) : project.wsHost ? [] : [project.name];
@@ -585,6 +617,7 @@ export function openDrawer(taskId) {
         propPicker('处理人', t.assignee, peopleOpts) +
         propPicker('项目', t.project, projOpts) +
         workspacePathRow(t) +
+        taskReposRow(t) +
         (pageState.taskDetailVersion === 'latest' ? '<div class="tk-prop-row"><span>任务类型</span><span class="tk-prop-val">' + escapeHtml(taskTypeLabel(t.issueType || (t.labels?.includes('缺陷') ? '缺陷' : '需求'))) + '</span></div>' : '') +
         propPicker('优先级', t.priority, priOpts) +
         propPicker('截止日期', t.dueDate, null, true) +

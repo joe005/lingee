@@ -350,13 +350,20 @@ function renderListReviewPreview() {
   var task = tkGetTasks().find(function (row) { return row.id === pageState.listReviewPreviewTaskId; });
   if (!task || (!pageState.listReviewPreviewReadOnly && task.status !== 'in_review')) { closeListReviewPreview(false); return; }
   var artifacts = listReviewArtifacts(task);
+  /* 多仓任务：产物按仓库分组，文档类和未标注仓库的产物归默认仓库，组顺序同任务的仓库顺序 */
+  var repos = task.reposSnapshot?.length > 1 ? task.reposSnapshot : [];
+  var fallbackRepo = repos.find(function (repo) { return repo.isDefault; }) || repos[0];
+  var repoOf = function (artifact) { return artifact.repoKey || fallbackRepo?.repoKey || ''; };
+  if (repos.length) artifacts = repos.flatMap(function (repo) { return artifacts.filter(function (artifact) { return repoOf(artifact) === repo.repoKey; }); });
   var active = artifacts.find(function (artifact) { return artifact.id === pageState.listReviewPreviewArtifactId; }) || artifacts[0];
   pageState.listReviewPreviewArtifactId = active?.id || null;
   els.tkListReviewTitle.textContent = task.title;
   els.tkListReviewCount.textContent = artifacts.length;
-  els.tkListReviewTabs.innerHTML = artifacts.map(function (artifact) {
+  els.tkListReviewTabs.innerHTML = artifacts.map(function (artifact, index) {
+    var group = repos.length && (index === 0 || repoOf(artifacts[index - 1]) !== repoOf(artifact))
+      ? '<p class="tk-list-review-repo" role="presentation">' + escapeHtml(repos.find(function (repo) { return repo.repoKey === repoOf(artifact); })?.name || '') + '</p>' : '';
     var selected = artifact.id === pageState.listReviewPreviewArtifactId;
-    return '<button type="button" class="tk-list-review-tab' + (selected ? ' is-active' : '') + '" role="tab" aria-selected="' + selected + '" data-list-review-artifact="' + escapeHtml(artifact.id) + '"><img src="' + artifactIcon(artifact) + '" alt=""><span>' + escapeHtml(artifact.fileName || artifact.docTitle || artifact.type) + '</span><small>' + escapeHtml(artifactFormatLabel(artifact)) + '</small></button>';
+    return group + '<button type="button" class="tk-list-review-tab' + (selected ? ' is-active' : '') + '" role="tab" aria-selected="' + selected + '" data-list-review-artifact="' + escapeHtml(artifact.id) + '"><img src="' + artifactIcon(artifact) + '" alt=""><span>' + escapeHtml(artifact.fileName || artifact.docTitle || artifact.type) + '</span><small>' + escapeHtml(artifactFormatLabel(artifact)) + '</small></button>';
   }).join('');
   els.tkListReviewBody.innerHTML = active ? renderReviewArtifactPreview(active) : '<div class="tk-list-review-empty">当前阶段暂无可预览产物</div>';
   var canReview = !pageState.listReviewPreviewReadOnly && task.status === 'in_review' && tkCurrentStageHandlerId(task) === tkCurrentUserId();

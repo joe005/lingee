@@ -309,3 +309,58 @@
   resize:none;
   overflow-y:auto;
 }
+
+/* 代码仓库多选（new-issue-ui.js renderRepoPicker）：主仓库置顶并标记，「仅主仓」「使用全部」快捷选择 */
+#niuCreateOverlay .niu-repos-field { position: relative; min-width: 0; grid-column: 1 / -1; }
+/* 任务信息属性区：所属空间 + 优先级；代码仓库整行 */
+#niuCreateOverlay .niu-create-properties > .niu-field:has(#niuProjectTrigger) { order: 1; }
+#niuCreateOverlay .niu-create-properties > .niu-field:has(#niuWorkspace) { order: 1; }
+#niuCreateOverlay .niu-create-properties > .niu-field:has(#niuPriority) { order: 2; }
+#niuCreateOverlay .niu-create-card .niu-create-properties > .niu-repos-field { order: 3; }
+#niuCreateOverlay .niu-repos-trigger #niuReposName { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#niuCreateOverlay .niu-repos-trigger.is-placeholder #niuReposName { color: var(--text-secondary); }
+#niuCreateOverlay .niu-repos-trigger:disabled { cursor: default; }
+#niuCreateOverlay .niu-repos-popup { max-height: 280px; overscroll-behavior: contain; }
+#niuCreateOverlay .niu-repos-list { margin: 0; padding: 0; list-style: none; }
+#niuCreateOverlay .niu-repos-option { display: flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 8px; border-radius: 8px; font-size: var(--font-size-14); color: var(--text); cursor: pointer; }
+#niuCreateOverlay .niu-repos-option:hover { background: var(--hover); }
+#niuCreateOverlay .niu-repos-popup .niu-repos-option input[type=checkbox] { flex: none; box-sizing: border-box; width: 16px; height: 16px; min-height: 0; margin: 0; padding: 0; accent-color: var(--brand); }
+#niuCreateOverlay .niu-repos-popup .niu-repos-option input[type=checkbox]:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+#niuCreateOverlay .niu-repos-option-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#niuCreateOverlay .niu-repos-option small { flex: none; color: var(--text-secondary); font-size: var(--font-size-12); }
+#niuCreateOverlay .niu-repos-tag { flex: none; padding: 0 6px; border-radius: 4px; background: var(--brand-fill); color: var(--brand); font-size: var(--font-size-12); line-height: 20px; }
+#niuCreateOverlay .niu-repos-trigger:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+/* 多仓任务（subtasks.js taskReposRow / renderStageRepoHandoff）：概览里的仓库列表、阶段卡片里的分仓交接结果与按仓库分组的产物 */
+.tk-drawer .tk-prop-row--repos { align-items: flex-start; }
+.tk-drawer .tk-task-repos { display: flex; flex-direction: column; gap: 4px; min-width: 0; margin: 0; padding: 0; list-style: none; }
+.tk-drawer .tk-task-repo { display: flex; flex-direction: column; min-width: 0; }
+.tk-drawer .tk-task-repo-name { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.tk-drawer .tk-task-repo-name strong { overflow: hidden; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+.tk-drawer .tk-task-repo-tag { flex: none; padding: 0 6px; border-radius: 4px; background: var(--tag-bg); color: var(--text-secondary); font-size: var(--font-size-12); line-height: 20px; }
+.tk-drawer .tk-task-repo small { overflow: hidden; color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); text-overflow: ellipsis; white-space: nowrap; }
+.tk-drawer .tk-stage-repos { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; }
+.tk-drawer .tk-stage-repos ul { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.tk-drawer .tk-stage-repos li { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 8px; border-radius: 4px; background: var(--tag-bg); font-size: var(--font-size-12); line-height: var(--line-height-12); color: var(--text); }
+.tk-drawer .tk-stage-repos li em { font-style: normal; font-weight: 500; color: var(--text-secondary); }
+.tk-drawer .tk-stage-repos li.is-committed em { color: var(--success); }
+.tk-drawer .tk-stage-repos li.is-failed { background: var(--danger-bg); }
+.tk-drawer .tk-stage-repos li.is-failed em { color: var(--danger); }
+.tk-drawer .tk-stage-repos-retry { height: 24px; padding: 0 10px; border: 1px solid var(--brand); border-radius: 6px; background: var(--bg); color: var(--brand); font: inherit; font-size: var(--font-size-12); font-weight: 500; cursor: pointer; }
+.tk-drawer .tk-stage-repos-retry:hover { background: var(--brand-fill); }
+.tk-drawer .tk-stage-repos-retry:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.tk-drawer .tk-artifact-repo-group + .tk-artifact-repo-group { margin-top: 12px; }
+.tk-drawer .tk-artifact-repo-name { margin: 0 0 4px; color: var(--text-secondary); font-size: var(--font-size-12); font-weight: 500; line-height: var(--line-height-12); }
+/* 产物预览左侧按仓库分组的组名（detail-panel.js renderListReviewPreview） */
+.tk-list-review-repo { margin: 8px 8px 4px; color: var(--text-secondary); font-size: var(--font-size-12); font-weight: 500; line-height: var(--line-height-12); }
+.tk-list-review-repo:first-child { margin-top: 0; }
+
+/* 新建任务两步向导（new-issue-ui.js setWizardStep）：第一步任务信息，第二步开发阶段 */
+#niuCreateOverlay #niuInfoPane.is-plan-step :is(.niu-create-writing, #niuTaskProperties, #niuRepoHint) { display: none; }
+#niuCreateOverlay #niuInfoPane:not(.is-plan-step) :is(#niuExecutionProperties, #niuCreatePlanPane) { display: none; }
+#niuCreateOverlay #niuDescription { min-height: 120px; }
+/* 只选一个仓库时同行展示起点分支 */
+#niuCreateOverlay .niu-repos-line { display: flex; align-items: center; gap: 8px; width: 100%; min-width: 0; }
+#niuCreateOverlay .niu-repos-line > .niu-repos-trigger { flex: 1; min-width: 0; }
+#niuCreateOverlay .niu-repo-branch-inline:empty { display: none; }
+#niuCreateOverlay .niu-repo-branch-inline { flex: none; max-width: 40%; overflow: hidden; color: var(--text-secondary); font-size: var(--font-size-14); text-overflow: ellipsis; white-space: nowrap; }

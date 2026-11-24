@@ -67,6 +67,13 @@ export function initCollabWorkspaceSettings() {
   window.addEventListener('load', syncAdminTab);
   var view = $('#view-collab');
   if (view) new MutationObserver(syncAdminTab).observe(view, { attributes: true, attributeFilter: ['class'] });
+  /* 每次进入设置默认聚焦「通用」：离开设置时把分类复位；「目录未就绪」等入口在打开前指定分类，不受影响 */
+  var localPanel = $('#cv-local'), wasActive = !!localPanel?.classList.contains('active');
+  if (localPanel) new MutationObserver(function () {
+    var active = localPanel.classList.contains('active');
+    if (wasActive && !active) currentTab = 'general';
+    wasActive = active;
+  }).observe(localPanel, { attributes: true, attributeFilter: ['class'] });
   document.addEventListener('lingee:ld-settings-shown', function (e) {
     if (e.detail && e.detail.tab === 'workspaces') mount();
   });

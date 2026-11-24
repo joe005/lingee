@@ -1,9 +1,10 @@
 import { requestDeleteConfirmation } from '../../../core/delete-confirm.js';
 import { ldOpenPersonalSettings } from './settings-page.js';
 import { toast } from '../../../core/toast.js';
-import { ldRepoInfo, ldScopeBindingKey, ldEnvironmentId, ldAssignScopeDirectory, ldRefresh, ldTargetProject, ldForgetRepoBinding, ldAdoptLocalCred, ldDetect, ldFindLocalCred, ldProjectStatus } from './core.js';
+import { ldRepoInfo, ldScopeBindingKey, ldEnvironmentId, ldAssignScopeDirectory, ldRefresh, ldTargetProject, ldForgetRepoBinding, ldAdoptLocalCred, ldDetect, ldFindLocalCred, ldProjectStatus, ldSpaceDir, ldDetectHost } from './core.js';
 import { ldOpenAuth } from './auth-dialog.js';
 import { ldOpenSpaceDialog } from './space-dialog.js';
+import { ldOpenSpaceDirDialog } from './space-dir-dialog.js';
 
 /* 本地开发 · 跨界面共用的按钮动作：设置页卡片、导航浮层里同名的 data-ld-* 按钮统一在这里分发。
    登录（data-ld-auth-open）由 auth-dialog.js、安装 Git（data-ld-git-install）由 git-install.js 各自处理。 */
@@ -12,6 +13,14 @@ import { ldOpenSpaceDialog } from './space-dialog.js';
 export function ldQuickSetup(projectId, directoryMode) {
   var status = ldProjectStatus(projectId);
   if (!status.info || status.ready && !directoryMode || status.invalid) return;
+  /* 一个空间一个本机目录：空间目录还没初始化时先初始化空间目录；已初始化时只补账号 */
+  var target = ldTargetProject(projectId);
+  if (target?.spaceId && !ldSpaceDir(target.spaceId, target.workspaceId || '')) { ldOpenSpaceDirDialog(target.spaceId, target.workspaceId || ''); return; }
+  if (target?.spaceId && !directoryMode) {
+    if (!status.authOk) ldOpenAuth(status.info.host, function () { ldDetectHost(status.info.host); });
+    else ldDetectHost(status.info.host);
+    return;
+  }
   if (!status.authOk) {
     var cred = ldFindLocalCred(status.info.host) ? ldAdoptLocalCred(status.info.host) : null;
     if (!cred) { ldOpenAuth(status.info.host, function () { ldOpenSpaceDialog(projectId,null,directoryMode); }); return; }

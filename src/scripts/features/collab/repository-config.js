@@ -73,7 +73,11 @@ export function buildRepoSave(p, wsId, fields) {
 }
 export function buildTaskRepoConfig(task, project) {
   if (!task.repoSnapshot && Object.hasOwn(task, 'repositoryKey') && !task.repositoryKey) return {repo:'',baseBranch:'main'};
-  return task.repoSnapshot || (project ? buildRepoResolve(project, task.workspaceId || '', task.repositoryKey || '') : {repo:'',baseBranch:'main'});
+  if (task.repoSnapshot) return task.repoSnapshot;
+  const config = project ? buildRepoResolve(project, task.workspaceId || '', task.repositoryKey || '') : {repo:'',baseBranch:'main'};
+  /* 兼容历史任务保存的起点分支。 */
+  const branch = config.repo ? task.repoBranches?.[buildRepoIdentity(config.repo)] : '';
+  return branch ? {...config, baseBranch:branch} : config;
 }
 export function buildTaskNeedsRepo(task, project) {
   return !!task.repoSnapshot || !!task.repositoryKey || !!(project && buildRepoList(project, task.workspaceId || '').repositories.length)
@@ -100,4 +104,44 @@ export function buildTaskRepoSelectionError(task, project) {
   if (task.repoSnapshot) return '';
   if (!project || !buildRepoList(project, task.workspaceId || '').repositories.length) return '当前范围尚未配置仓库，请到「设置 › 工作区设置 › 仓库」添加';
   return !buildTaskRepoConfig(task, project).repo ? '请编辑任务并选择代码仓库；原仓库可能已被移除' : '';
+}
+
+/* ---------- 多仓任务 ----------
+   任务可选多个仓库（task.repositoryKeys）：主仓库置顶，默认仓库 = 选中了主仓库就是主仓库，否则按列表顺序取第一个。
+   默认仓库是会话打开的仓库，也是需求、设计文档的落点；task.repositoryKey 始终等于默认仓库，单仓逻辑沿用它。
+   首次执行时把所选仓库固定为 task.reposSnapshot，之后只读。 */
+export function buildDefaultRepoKey(keys, list) {
+  const rows = list?.repositories || [];
+  if (keys.includes(list?.defaultRepo)) return list.defaultRepo;
+  return rows.find(r => keys.includes(r.key))?.key || keys[0] || '';
+}
+export function buildOrderedRepos(list) {
+  const rows = (list?.repositories || []).slice();
+  const primary = rows.findIndex(r => r.key === list.defaultRepo);
+  if (primary > 0) rows.unshift(rows.splice(primary, 1)[0]);
+  return rows;
+}
+export function buildTaskRepoKeys(task, project) {
+  if (Array.isArray(task.reposSnapshot) && task.reposSnapshot.length) return task.reposSnapshot.map(r => r.repoKey);
+  const list = project ? buildRepoList(project, task.workspaceId || '') : {repositories:[], defaultRepo:''};
+  if (Array.isArray(task.repositoryKeys)) return task.repositoryKeys.filter(key => list.repositories.some(r => r.key === key));
+  const single = task.repoSnapshot ? buildRepoIdentity(task.repoSnapshot.repo) : task.repositoryKey || buildRepoIdentity(buildTaskRepoConfig(task, project).repo);
+  return single ? [single] : [];
+}
+export function buildTaskRepos(task, project) {
+  if (Array.isArray(task.reposSnapshot) && task.reposSnapshot.length) return task.reposSnapshot.map(r => ({...r, key:r.repoKey}));
+  const list = project ? buildRepoList(project, task.workspaceId || '') : {repositories:[], defaultRepo:''};
+  const keys = buildTaskRepoKeys(task, project), defaultKey = buildDefaultRepoKey(keys, list);
+  const rows = buildOrderedRepos(list).filter(r => keys.includes(r.key));
+  if (!rows.length && task.repoSnapshot) return [{key:task.repoSnapshot.repoKey, repoKey:task.repoSnapshot.repoKey, name:task.repoSnapshot.repoKey.split('/').pop(), repo:task.repoSnapshot.repo, baseBranch:task.repoSnapshot.baseBranch, primary:true, isDefault:true}];
+  return rows.map(r => ({...r, baseBranch:task.repoBranches?.[r.key] || r.baseBranch, repoKey:r.key, primary:r.key === list.defaultRepo, isDefault:r.key === defaultKey}));
+}
+export function buildTaskIsMultiRepo(task, project) { return buildTaskRepos(task, project).length > 1; }
+export function buildTaskReposSnapshot(task, project) {
+  if (Array.isArray(task.reposSnapshot) && task.reposSnapshot.length) return task.reposSnapshot;
+  const rows = buildTaskRepos(task, project);
+  if (rows.length < 2) return null;
+  /* 原型模拟各仓锁定的起始提交：按仓库标识生成稳定的短哈希 */
+  const hash = text => Array.from(text).reduce((sum, ch) => (sum * 31 + ch.charCodeAt(0)) >>> 0, 7).toString(16).padStart(7, '0').slice(0, 7);
+  return rows.map(r => ({repoKey:r.key, name:r.name, repo:r.repo, baseBranch:r.baseBranch, primary:!!r.primary, isDefault:!!r.isDefault, startCommit:hash(r.key + (task.id || ''))}));
 }

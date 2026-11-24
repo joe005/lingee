@@ -1,0 +1,1 @@
+export default {"id":"125","date":"2026-11-24","iconBg":"var(--brand-fill)","iconColor":"var(--brand)","type":"功能","module":"协作开发","author":"wuhc2023","body":"功能·协作开发：协作开发支持任务选择多个代码仓库、按空间准备本机目录、按仓库提交与查看阶段产物，并调整新建任务向导和官方开发智能体可用范围。"};

@@ -1,6 +1,6 @@
 import { capabilityTaskError, capabilityTaskSnapshot, capabilityLocalInstallError } from '../collab/capability-config.js';
-import { buildTaskRepoSelectionError, buildTaskNeedsRepo, buildTaskRepoSnapshot } from '../collab/repository-config.js';
-import { ldPreflight, ldTaskEnvironmentId, ldRememberTaskDirectory } from '../collab/local-dev/core.js';
+import { buildTaskRepoSelectionError, buildTaskNeedsRepo, buildTaskRepoSnapshot, buildTaskReposSnapshot, buildTaskRepos } from '../collab/repository-config.js';
+import { ldPreflight, ldTaskEnvironmentId, ldRememberTaskDirectory, ldTaskReposCheck } from '../collab/local-dev/core.js';
 import { taskCodeDeliveryApprovalError, taskCodeDeliveryContext, taskCodeTestArtifacts } from './code-delivery-context.js';
 import { builtinDeliveryStages, deliveryStagesFor } from '../expert/delivery-stages.js';
 import { EX, STAGES } from '../expert/data.js';
@@ -80,15 +80,20 @@ export function startTaskStage(task, options) {
     || stages[0];
   if (!stage) return {ok:false};
   var repoSnapshot = buildTaskRepoSnapshot(task, tkProjectById(task.project));
+  var reposSnapshot = buildTaskReposSnapshot(task, tkProjectById(task.project));
   if (buildTaskNeedsRepo(task, tkProjectById(task.project))) {
     var selectionError = buildTaskRepoSelectionError(task, tkProjectById(task.project));
     if (selectionError) return {ok:false,message:selectionError};
+    if (reposSnapshot) {
+      var reposCheck = ldTaskReposCheck(task, currentHandlerId || tkCurrentUserId());
+      if (!reposCheck.ready) return {ok:false, message:reposCheck.reason};
+    }
     var env = ldPreflight(ldTaskEnvironmentId(task,currentHandlerId || tkCurrentUserId()), currentHandlerId || tkCurrentUserId());
     if (!env.initialized) return {ok:false, message:env.status.reason || '请先准备本机环境'};
     if (!ldRememberTaskDirectory(task, repoSnapshot, currentHandlerId || tkCurrentUserId())) return {ok:false, message:'任务目录记录保存失败，请重试'};
   }
   var assigneeId = currentHandlerId || tkCurrentUserId() || task.assignee;
-  tkUpdateTask(task.id, { executorSnapshot:executorSnapshot, ...(repoSnapshot ? {repoSnapshot:repoSnapshot} : {}), status:'in_progress', assignee:assigneeId, executionStageId:stage.id, executionPlan:stagePlan(task,stage.id,'running'),
+  tkUpdateTask(task.id, { executorSnapshot:executorSnapshot, ...(repoSnapshot ? {repoSnapshot:repoSnapshot} : {}), ...(reposSnapshot ? {reposSnapshot:reposSnapshot} : {}), status:'in_progress', assignee:assigneeId, executionStageId:stage.id, executionPlan:stagePlan(task,stage.id,'running'),
     ...(options?.fromSave ? {createdAndStarted:true} : {}),
     planStatus:task.executionPlan?.length ? 'confirmed' : task.planStatus,
     statusHistory:(task.statusHistory || []).concat({from:task.status,to:'in_progress',authorId:tkCurrentUserId(),stageId:stage.id,time:flowTimestamp(),creationStart:!!options?.fromSave,message:'开始执行「' + stage.name + '」'})});
@@ -127,6 +132,7 @@ export function submitTaskStage(task) {
     const template = tkGetTaskArtifacts(task).find(artifact => artifact.stageId === stage.id && /测试报告/.test([artifact.type,artifact.docTitle,artifact.fileName].join(' ')));
     if (template) artifacts = artifacts.concat({...template,id:'test-'+deliveryContext.last.id,stageId:stage.id,deliveryId:deliveryContext.last.id,mergeCommit:deliveryContext.last.mergeCommit,status:'待评审',date:flowTimestamp()});
   }
+  artifacts = taskRepoStageArtifacts(task, stage, artifacts);
   const agentName = taskStageAgentName(task, stage.id);
   const time = flowTimestamp();
   tkUpdateTask(task.id, {status:'in_review', executionStageId:stage.id, executionPlan:stagePlan(task,stage.id,'review'), executionArtifacts:artifacts,
@@ -191,6 +197,73 @@ function flowTimestamp() {
     + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
 }
 
+
+/* ---------- 多仓任务：分仓提交与交接 ----------
+   文档类阶段（需求、设计、规划、原型）只写默认仓库的 docs/wi-<任务编号>/，其他仓库沿用输入提交；
+   代码类阶段可以改多个仓库，改过的仓库各自提交并推送任务分支，没改的沿用输入提交。
+   审核通过时按仓库提交，各仓都成功才流转；某仓失败时保留已成功的结果，只重试失败项。
+   原型演示：三个及以上仓库的代码阶段，第二个仓库未改动，最后一个仓库首次推送失败。 */
+function taskShortHash(text) {
+  return Array.from(String(text)).reduce(function (sum, ch) { return (sum * 33 + ch.charCodeAt(0)) >>> 0; }, 5381).toString(16).padStart(7, '0').slice(0, 7);
+}
+export function taskIsDocStage(stage) { return /需求|设计|规划|原型/.test(stage?.name || ''); }
+export function taskStageChangedRepos(task, stage) {
+  var repos = task.reposSnapshot || [];
+  if (taskIsDocStage(stage)) return repos.filter(function (repo) { return repo.isDefault; });
+  return repos.filter(function (repo, index) { return !(repos.length >= 3 && index === 1); });
+}
+function taskRepoStageArtifacts(task, stage, artifacts) {
+  var repos = task.reposSnapshot || [];
+  if (repos.length < 2) return artifacts;
+  var fallback = repos.find(function (repo) { return repo.isDefault; }) || repos[0];
+  var tagged = artifacts.map(function (artifact) { return artifact.stageId === stage.id && !artifact.repoKey ? {...artifact, repoKey:fallback.repoKey} : artifact; });
+  if (taskIsDocStage(stage)) return tagged;
+  var branch = 'kteam/' + task.project + '/' + String(task.code || task.id);
+  taskStageChangedRepos(task, stage).forEach(function (repo) {
+    var id = 'code-' + stage.id + '-' + repo.repoKey;
+    if (tagged.some(function (artifact) { return artifact.id === id; })) return;
+    tagged.push({id:id, stageId:stage.id, repoKey:repo.repoKey, type:'代码改动', docTitle:repo.name + ' 代码改动', status:'待评审', date:flowTimestamp(), author:'执行 Agent',
+      summary:'任务分支 ' + branch + ' 相对 ' + repo.baseBranch + ' 的本阶段改动',
+      sections:[{heading:'仓库',blocks:[{p:repo.repo}]},{heading:'任务分支',blocks:[{p:branch + ' → ' + repo.baseBranch}]},
+        {heading:'改动说明',blocks:[{p:'本阶段在该仓库的代码改动，审核通过后提交并推送任务分支。'}]}]});
+  });
+  return tagged;
+}
+function taskRepoHandoff(task, stage) {
+  var repos = task.reposSnapshot || [];
+  var previous = task.repoHandoffs?.[stage.id] || {};
+  var changed = taskStageChangedRepos(task, stage).map(function (repo) { return repo.repoKey; });
+  var result = {retried:!!previous.retried, repos:{}};
+  repos.forEach(function (repo, index) {
+    var before = previous.repos?.[repo.repoKey];
+    if (before?.state === 'committed') { result.repos[repo.repoKey] = before; return; }
+    if (!changed.includes(repo.repoKey)) { result.repos[repo.repoKey] = {state:'unchanged', commit:taskRepoLastCommit(task, repo, stage.id)}; return; }
+    var demoFail = !taskIsDocStage(stage) && repos.length >= 3 && index === repos.length - 1 && !previous.retried;
+    result.repos[repo.repoKey] = demoFail ? {state:'failed', reason:'推送任务分支失败：连接 ' + String(repo.repo || '').replace(/^https?:\/\//, '').split('/')[0] + ' 超时'}
+      : {state:'committed', commit:taskShortHash(repo.repoKey + stage.id + (task.id || ''))};
+  });
+  return result;
+}
+/* 未改动的仓库沿用最近一次可接续的提交：此前阶段的交接提交，没有则为锁定的起始提交 */
+function taskRepoLastCommit(task, repo, stageId) {
+  var commit = repo.startCommit || '';
+  taskExecutionStages(task).some(function (stage) {
+    if (stage.id === stageId) return true;
+    var row = task.repoHandoffs?.[stage.id]?.repos?.[repo.repoKey];
+    if (row?.commit) commit = row.commit;
+    return false;
+  });
+  return commit;
+}
+export function taskRetryRepoHandoff(task) {
+  if (task?.status !== 'in_review' || !task.reposSnapshot) return {ok:false};
+  var stageId = task.executionStageId, current = task.repoHandoffs?.[stageId];
+  if (!current) return {ok:false};
+  var handoffs = {...task.repoHandoffs, [stageId]:{...current, retried:true}};
+  tkUpdateTask(task.id, {repoHandoffs:handoffs});
+  return reviewTaskStage(tkGetTasks().find(function (row) { return row.id === task.id; }), true);
+}
+
 export function reviewTaskStage(task, approved, options) {
   if (task?.status !== 'in_review') return {ok:false};
   var stages = taskExecutionStages(task);
@@ -202,12 +275,21 @@ export function reviewTaskStage(task, approved, options) {
     const deliveryError = taskCodeDeliveryApprovalError(task);
     if (deliveryError) return {ok:false, message:deliveryError};
   }
+  var repoHandoff = approved && task.reposSnapshot?.length > 1 ? taskRepoHandoff(task, stage) : null;
+  if (repoHandoff) {
+    var failed = task.reposSnapshot.filter(function (repo) { return repoHandoff.repos[repo.repoKey]?.state === 'failed'; });
+    if (failed.length) {
+      tkUpdateTask(task.id, {repoHandoffs:{...(task.repoHandoffs || {}), [stage.id]:repoHandoff}});
+      return {ok:false, message:failed.map(function (repo) { return '「' + repo.name + '」'; }).join('、') + '提交失败，已提交的仓库保留；在任务详情点「重试提交」补齐后流转'};
+    }
+  }
   var plan = stagePlan(task, stage.id, approved ? 'done' : 'running');
   var nextAssignee = approved && next ? task.flowAssignee || next.assigneeId || (!task.executionPlan?.length ? task.assignee : '') : '';
   if (approved && next && !nextAssignee) return {ok:false, message:'请先指定下一阶段处理人'};
   if (approved && next && plan) plan = plan.map(function (row) { return row.id === next.id ? {...row,assigneeId:nextAssignee,status:'pending'} : row; });
   var patch = {status:approved ? next ? 'backlog' : 'done' : 'in_progress',
     executionStageId:approved && next ? next.id : stage.id, executionPlan:plan};
+  if (repoHandoff) patch.repoHandoffs = {...(task.repoHandoffs || {}), [stage.id]:repoHandoff};
   if (approved) {
     /* 通过即流转：上一处理人与审核人记入历史处理人（「已办」据此识别），并追加与手动流转一致的动态记录。 */
     var reviewerId = tkCurrentUserId();

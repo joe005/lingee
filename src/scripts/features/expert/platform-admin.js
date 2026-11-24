@@ -560,9 +560,21 @@ function doInstall(){
     installed=next;applyInstalled();showUpdate('success');
   },500);
 }
+/* 每个登录人在本机第一次使用时，默认装好平台初始的官方智能体与团队（1.0.0，之后可升级）；
+   之后完全按本人的安装、卸载记录，卸载光了也不会再自动装回。未登录时不装。 */
+function ensureDefaultInstalls(){
+  try{
+    const storageKey=localAssetStorageKey(),flag=storageKey+'.defaults';
+    if(storageKey.endsWith(encodeURIComponent('account:guest'))||localStorage.getItem(flag))return;
+    if(Object.keys(installed).length){localStorage.setItem(flag,'1');return;}
+    const next={};
+    for(const kind of ['expert','team'])for(const item of originals[kind]){const id=key(kind,item.id);if(meta[id]?.editor==='平台初始数据'&&meta[id].status==='online'&&!retiredSeed(meta[id]))next[id]=meta[id].activeVersion||'1.0.0';}
+    if(Object.keys(next).length&&write(INSTALL_KEY,next)){installed=next;localStorage.setItem(flag,'1');}
+  }catch(_){}
+}
 export function initPlatformAdmin(){
-  seed();applyInstalled();
-  document.addEventListener('lingee:auth-changed',()=>{installed=read(INSTALL_KEY,{});applyInstalled();});
+  seed();ensureDefaultInstalls();applyInstalled();
+  document.addEventListener('lingee:auth-changed',()=>{installed=read(INSTALL_KEY,{});ensureDefaultInstalls();applyInstalled();});
   document.addEventListener('lingee:install-workspace-asset',event=>{if(event.detail?.entry)installWorkspaceAsset(event.detail.entry);});
   $$('[data-asset-update-settings]').forEach(button=>button.addEventListener('click',showUpdateSettings));
   $$('[data-platform-nav]').forEach(button=>button.addEventListener('click',()=>{assetReviewClose();refreshAccess();}));
@@ -601,12 +613,12 @@ export function initPlatformAdmin(){
 /* 广场通过此接口读取平台已上架版本，安装与个人定义的存储独立。 */
 export function cloudCatalog(tenantId){
   return Object.entries(meta)
-    .filter(([id,item])=>item.status==='online'&&active(id)&&(tenantId ? !item.tenantId || item.tenantId===tenantId : availableToClient(item)))
+    .filter(([id,item])=>!retiredSeed(item)&&item.status==='online'&&active(id)&&(tenantId ? !item.tenantId || item.tenantId===tenantId : availableToClient(item)))
     .sort(([aId,a],[bId,b])=>{
       const aTime=Date.parse(a.modified)||0,bTime=Date.parse(b.modified)||0;
       return bTime-aTime||String(bId).localeCompare(String(aId));
     })
-    .map(([id,item])=>({key:id,kind:item.kind,data:clone(active(id).data),version:active(id).version,note:active(id).note,modified:item.modified||'',installed:installed[id]||'',scope:item.tenantId&&item.scope==='workspace'?'workspace':'tenant'}));
+    .map(([id,item])=>({key:id,kind:item.kind,data:clone(active(id).data),version:active(id).version,note:active(id).note,modified:item.modified||'',installed:installed[id]||'',scope:item.scope==='workspace'?'workspace':'tenant',sharedOfficial:!item.tenantId&&item.scope!=='workspace'}));
 }
 function cloudInstallRows(id,reinstall=false){
   const rows=new Map();

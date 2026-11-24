@@ -63,10 +63,10 @@ export function renderRecruitmentSettings(target) {
   const rows = all.filter(row => row.kind === kind);
   const count = key => all.filter(row => row.kind === key).length;
   const tabs = '<div class="cv-recruit-tabs" role="group" aria-label="类型">'+['expert','team'].map(key=>'<button type="button" data-recruit-tab="'+key+'" aria-pressed="'+(key===kind)+'"'+(key===kind?' class="is-on"':'')+'>'+KIND_LABEL[key]+' '+count(key)+'</button>').join('')+'</div>';
-  const add = editable ? '<button type="button" class="ld-set-btn ld-set-btn--primary cv-recruit-add" data-recruit-open><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg>添加'+KIND_LABEL[kind]+'</button>' : '';
+  const add = editable ? '<button type="button" class="ld-set-btn ld-set-btn--primary cv-settings-action cv-recruit-add" data-recruit-open><svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg>添加</button>' : '';
   host.innerHTML='<p class="cv-basic-scope">'+xesc(ws ? ws.name : p.name)+'</p><div class="cv-basic-heading cv-recruit-head">'+tabs+add+'</div>'
     +(rows.length ? '<ul class="cv-recruit-rows">'+rows.map(row=>recruitRow(row,editable,scopeId(p,ws))).join('')+'</ul>'
-      : '<div class="cv-recruit-empty">暂无已添加的'+KIND_LABEL[kind]+(editable?'，点击右上角「添加'+KIND_LABEL[kind]+'」选择。':'，请联系空间创建者或管理员添加。')+'</div>');
+      : '<div class="cv-recruit-empty">暂无已添加的'+KIND_LABEL[kind]+(editable?'，点击右上角「添加」选择。':'，请联系空间创建者或管理员添加。')+'</div>');
 }
 function closeDialog() {
   dialog = null; byId('cvRecruitOverlay').hidden = true;

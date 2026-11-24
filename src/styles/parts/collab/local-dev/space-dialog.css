@@ -82,3 +82,23 @@
 .ld-prog-meta{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px 16px;margin:0;font-size:var(--font-size-12);line-height:20px}
 .ld-prog-meta dt{color:var(--text-secondary)}
 .ld-prog-meta dd{margin:0;overflow:hidden;color:var(--text);text-overflow:ellipsis;white-space:nowrap}
+/* 空间本机目录弹窗（space-dir-dialog.js）与准备执行环境里的多仓检查清单 */
+.ld-spacedir-input{width:100%;margin-top:8px}
+.ld-spacedir-input:focus-visible{border-color:var(--border-focus)}
+.ld-form-error{margin:8px 0 0;font-size:var(--font-size-12);line-height:18px;color:var(--danger)}
+.ld-repo-checks{display:flex;flex-direction:column;margin:0;padding:0;list-style:none;border:1px solid var(--border);border-radius:12px}
+.ld-repo-check{display:flex;align-items:center;gap:12px;min-height:44px;padding:8px 12px;border-top:1px solid var(--divider)}
+.ld-repo-check:first-child{border-top:0}
+.ld-repo-check-name{display:flex;flex:1;align-items:center;gap:8px;min-width:0;font-size:var(--font-size-14);line-height:22px;color:var(--text)}
+.ld-repo-check-name strong{overflow:hidden;font-weight:500;text-overflow:ellipsis;white-space:nowrap}
+.ld-repo-check-tag{flex:none;padding:0 6px;border-radius:4px;background:var(--tag-bg);font-size:var(--font-size-12);line-height:20px;color:var(--text-secondary)}
+.ld-repo-check-state{display:inline-flex;flex:none;align-items:center;gap:6px;font-size:var(--font-size-12);font-weight:500;line-height:18px}
+.ld-repo-check-state i{width:6px;height:6px;border-radius:50%;background:currentColor}
+.ld-repo-check-state.is-ok{color:var(--success)}
+.ld-repo-check-state.is-pending{color:var(--pending)}
+.ld-repo-check-state.is-warn{color:var(--warning)}
+.ld-repo-check-state.is-danger{color:var(--danger)}
+.ld-repo-check-state.is-muted{color:var(--text-secondary)}
+.ld-repo-check-action{flex:none;height:28px;padding:0 10px;border:1px solid var(--border);border-radius:6px;background:var(--bg);font:inherit;font-size:var(--font-size-12);color:var(--text);cursor:pointer}
+.ld-repo-check-action:hover{background:var(--hover)}
+.ld-repo-check-action:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}

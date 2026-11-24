@@ -7,6 +7,18 @@ export function localAssetStorageKey(userId) { return PREFIX+encodeURIComponent(
 function readState(userId) {
   try {
     const value=JSON.parse(localStorage.getItem(localAssetStorageKey(userId)) || 'null');
+    const empty=!value || !value.installed || !Object.keys(value.installed).length;
+    /* 页面在登录前加载时，平台种子把默认安装写到了「未登录」名下；第一个登录且本机还没有安装记录的人接管这份记录，
+       否则登录后「我的」为空。只接管一次，后来登录的人不复制。 */
+    const me0=owner(userId),guestKey=PREFIX+encodeURIComponent('account:guest'),guestClaim=localStorage.getItem(guestKey+'.owner');
+    if(empty && !userId && me0!=='account:guest' && (!guestClaim || guestClaim===me0)){
+      const guest=JSON.parse(localStorage.getItem(guestKey) || 'null');
+      if(guest && guest.installed && guest.packages && Object.keys(guest.installed).length){
+        localStorage.setItem(guestKey+'.owner',me0);
+        localStorage.setItem(localAssetStorageKey(),JSON.stringify(guest));
+        return guest;
+      }
+    }
     if(value && value.installed && value.packages)return value;
     // 旧版共用记录只迁移给首次接管它的已登录用户，不能复制给后来登录的人。
     const me=owner(userId),claim=localStorage.getItem(LEGACY+'.owner');

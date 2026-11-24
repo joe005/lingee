@@ -4,7 +4,7 @@ import { toast } from '../../../core/toast.js';
 import { openTaskStatusConversation } from '../../composer.js';
 import { TK_STATUSES, tkCurrentUserId, tkGetTaskArtifacts, tkGetTasks, tkPeopleInProject, tkUpdateTask } from '../data.js';
 import { openNewIssueCopy, openNewIssueEdit } from '../new-issue-ui.js';
-import { submitTaskStage, taskStageHandoffPatch } from '../task-execution.js';
+import { submitTaskStage, taskStageHandoffPatch, taskRetryRepoHandoff } from '../task-execution.js';
 import { tkGetMySessions } from '../task-sessions.js';
 import { applyDrawerWidth, closeTaskLabelPicker, openDocPreview, openListReviewPreview, openTaskLabelPicker, propPickerOptions, renderTaskLabelChoices, setDrawerWidth, updateTaskLabels } from './detail-panel.js';
 import { openTaskModal } from './form-modal.js';
@@ -188,6 +188,15 @@ export function bindDetailEvents() {
         var artItem = artList.find(function (a) { return a.id === artifactId; });
         if (artItem) openDocPreview(artItem);
       }
+      return;
+    }
+    if (e.target.closest('[data-action="repo-handoff-retry"]')) {
+      var handoffTask = tkGetTasks().find(function (row) { return row.id === state.drawerTaskId; });
+      var retried = taskRetryRepoHandoff(handoffTask);
+      if (!retried.ok) { toast(retried.message || '任务状态已变化，请刷新后重试', 'warning'); render(); openDrawer(state.drawerTaskId); return; }
+      render(); openDrawer(handoffTask.id);
+      toast(retried.done ? '各仓库已提交，任务已完成' : '各仓库已提交，已流转到' + retried.next.name, 'success');
+      document.dispatchEvent(new CustomEvent('lingee:task-stage-completed', {detail:{taskId:handoffTask.id}}));
       return;
     }
     if (e.target.closest('[data-action="blocked-retry"]')) {

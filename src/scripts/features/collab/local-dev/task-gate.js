@@ -1,7 +1,7 @@
-import { buildTaskRepoSelectionError, buildTaskNeedsRepo } from '../repository-config.js';
+import { buildTaskRepoSelectionError, buildTaskNeedsRepo, buildTaskIsMultiRepo } from '../repository-config.js';
 import { toast } from '../../../core/toast.js';
 import { tkCurrentStageHandlerId, tkCurrentUserId, tkGetPerson, tkProjectById, tkUpdateTask } from '../../tasks-v2/data.js';
-import { ldTargetProject, ldTaskEnvironmentId, ldEsc, ldNow, ldPreflight, ldProjectStatus, ldRepoInfo } from './core.js';
+import { ldTargetProject, ldTaskEnvironmentId, ldEsc, ldNow, ldPreflight, ldProjectStatus, ldRepoInfo, ldTaskReposCheck } from './core.js';
 import { ldOpenPrepDialog } from './prep-dialog.js';
 
 /* 本地开发 · 任务启动前的执行前检查。
@@ -49,6 +49,18 @@ export function ldGateTaskStart(task, options) {
   var environmentId = ldTaskEnvironmentId(task,tkCurrentStageHandlerId(task) || tkCurrentUserId());
   var me = tkCurrentUserId();
   var handlerId = tkCurrentStageHandlerId(task) || me;
+  /* 多仓任务：先看空间本机目录，再逐个检查本次选中的仓库；没选的仓库不检查 */
+  if (buildTaskIsMultiRepo(task, tkProjectById(task.project))) {
+    var multi = ldTaskReposCheck(task, handlerId);
+    if (multi.ready) return true;
+    if (options?.automatic || handlerId !== me) {
+      ldBlockTaskForEnv(task, handlerId === me ? multi.reason : (tkGetPerson(handlerId)?.name || '处理人') + ' 的电脑上' + multi.reason);
+      toast('「' + ldEsc(task.title) + '」未启动：本地环境未就绪', 'warning');
+      return false;
+    }
+    ldOpenPrepDialog(environmentId, task, options?.onReady);
+    return false;
+  }
   var check = ldPreflight(environmentId, handlerId), status = check.status;
   if (check.initialized) {
     return true;

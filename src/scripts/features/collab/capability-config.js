@@ -40,9 +40,24 @@ export function capabilityOwn(p, ws = '') {
   const all = read(); materializeLegacy(p,all);
   return all[keyOf(p,ws)] || {mode:'independent',entries:[],defaultKey:''};
 }
+/* 金蝶官方智能体与团队默认对所有空间共享（2026-11-24）：不用在空间设置里添加，跟随当前上架版本；
+   空间自己添加的企业自建资产照常按添加时的版本固定。官方条目只在读取时合并，不写入空间清单。 */
+function officialEntries(catalog) {
+  return catalog.filter(row => row.sharedOfficial).map(row => {
+    const experts = row.kind === 'team' ? (row.data.members || []).map(id => catalog.find(r => r.kind === 'expert' && r.data.id === id)) : [row];
+    if (experts.some(r => !r)) return null;
+    return {...clone(row), official:true, experts:experts.map(r => ({id:r.data.id,version:r.version,data:clone(r.data)}))};
+  }).filter(Boolean);
+}
 export function capabilityList(p, ws = '') {
   if (!p || ws && !(p.workspaces || []).some(w => w.id === ws)) return {entries:[],defaultKey:'',source:null};
-  return {...clone(capabilityOwn(p,ws)),source:{id:ws,name:(p.workspaces || []).find(w => w.id === ws)?.name || p.name}};
+  const own = clone(capabilityOwn(p,ws));
+  const official = officialEntries(capabilityCatalog(p));
+  const sharedKeys = new Set(official.map(row => row.key));
+  const entries = (own.entries || []).filter(row => !sharedKeys.has(row.key)).concat(official);
+  /* 空间没指定默认执行方时，默认用第一个官方团队 */
+  const defaultKey = own.defaultKey || official.find(row => row.kind === 'team')?.key || '';
+  return {...own, entries, defaultKey, source:{id:ws,name:(p.workspaces || []).find(w => w.id === ws)?.name || p.name}};
 }
 export function capabilitySave(p, ws, config) {
   if (!p || ws && !(p.workspaces || []).some(w => w.id === ws && w.status !== 'archived')) return '当前工作区不可配置';
@@ -51,8 +66,11 @@ export function capabilitySave(p, ws, config) {
   materializeLegacy(p,all);
   {
     const catalog = capabilityCatalog(p), entries = [];
-    const existing = config.preserveVersions ? capabilityList(p,ws).entries : [];
+    const sharedKeys = new Set(officialEntries(catalog).map(row => row.key));
+    const existing = config.preserveVersions ? capabilityList(p,ws).entries.filter(row => !row.official) : [];
     for (const key of [...new Set(config.keys || [])]) {
+      /* 官方条目默认共享，不写入空间清单 */
+      if (sharedKeys.has(key)) continue;
       const pinned = existing.find(r => r.key === key);
       if (pinned) { entries.push(clone(pinned)); continue; }
       const row = catalog.find(r => r.key === key);
@@ -61,7 +79,7 @@ export function capabilitySave(p, ws, config) {
       if (experts.some(r => !r)) return '团队存在未上架或无权使用的成员，不能安装';
       entries.push({...clone(row), experts:experts.map(r => ({id:r.data.id,version:r.version,data:clone(r.data)}))});
     }
-    if (entries.length && !entries.some(r => r.key === config.defaultKey)) return '请从已安装的智能体或团队中指定默认执行方';
+    if (entries.length && config.defaultKey && !entries.some(r => r.key === config.defaultKey) && !sharedKeys.has(config.defaultKey)) return '请从已安装的智能体或团队中指定默认执行方';
     all[keyOf(p,ws)] = {mode:'independent',entries,defaultKey:entries.length ? config.defaultKey : ''};
   }
   try { localStorage.setItem(CAPABILITY_KEY, JSON.stringify(all)); } catch (_) { return '保存失败，原配置已保留，请重试'; }

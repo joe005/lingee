@@ -81,8 +81,13 @@ function rowsHtml() {
     return '<div role="treeitem" aria-level="1" aria-selected="' + on + '"><div class="mgr-ws-pop-row' + (on ? ' is-on' : '') + '" style="--ws-depth:0"><span class="mgr-ws-pop-toggle-gap"></span>' +
       '<button type="button" class="mgr-ws-pop-pick" data-cvss-pick="' + esc(p.id) + '" data-cvss-ws="' + esc(id) + '" title="' + esc(name) + '">' + spaceIcon(p, id, name, 'sm') + '<span class="mgr-ws-pop-name">' + esc(name) + '</span>' + (isDefault ? '<small class="cv-space-default-label">默认</small>' : '') + (on ? '<b>' + CHECK + '</b>' : '') + '</button>' + defaultAction + '</div></div>';
   }
-  var rows = visibleSpaceItems().filter(function (it) { return !q || it[2].toLocaleLowerCase().includes(q); })
-    .map(function (it) { return scopeNode(it[0], it[1], it[2]); }).join('');
+  /* 按「我创建的」「我加入的」分组，组名后是空间数量（搜索时为匹配数量），没有空间的组不显示，两组之间加分隔线 */
+  var matched = visibleSpaceItems().filter(function (it) { return !q || it[2].toLocaleLowerCase().includes(q); });
+  var rows = ['我创建的', '我加入的'].map(function (label) {
+    var items = matched.filter(function (it) { return (relationLabel(it[0], it[1]) || '我加入的') === label; });
+    return items.length ? '<div class="cv-space-group" role="group" aria-label="' + label + '"><div class="cv-space-group-head" aria-hidden="true"><strong>' + label + '</strong><span>' + items.length + '</span></div>'
+      + items.map(function (it) { return scopeNode(it[0], it[1], it[2]); }).join('') + '</div>' : '';
+  }).join('');
   return rows || '<p class="mgr-ws-pop-empty">' + (q ? '没有匹配的空间' : '暂无可用空间') + '</p>';
 }
 function footHtml() {

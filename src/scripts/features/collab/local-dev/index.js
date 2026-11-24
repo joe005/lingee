@@ -10,6 +10,7 @@ import { initPrepDialog } from './prep-dialog.js';
 import { initRepoNewDialog } from './repo-new-dialog.js';
 import { initSettingsPage } from './settings-page.js';
 import { initSpaceDialog } from './space-dialog.js';
+import { initSpaceDirDialog } from './space-dir-dialog.js';
 import { initSpacesPage } from './spaces-page.js';
 
 /* 本地开发 · 初始化入口：各界面模块各自绑定事件，彼此只通过导出的打开函数和 lingee:local-dev-changed 事件协作。
@@ -19,6 +20,7 @@ export function initLocalDev() {
   initAuthDialog();
   initSpaceDialog();
   initPrepDialog();
+  initSpaceDirDialog();
   initRepoNewDialog();
   initGitInstall();
   initNavStatus();

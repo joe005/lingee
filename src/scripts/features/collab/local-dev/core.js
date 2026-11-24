@@ -1,4 +1,4 @@
-import { buildRepoList, buildTaskRepoConfig, buildRepoIdentity, buildRepoResolve } from '../repository-config.js';
+import { buildRepoList, buildTaskRepoConfig, buildRepoIdentity, buildRepoResolve, buildTaskRepos } from '../repository-config.js';
 import { wsFlatTree, wsPathNames } from '../../../core/workspace-tree.js';
 import { gitRepoProblem } from '../../../core/git-url.js';
 import { tkCurrentUserId, tkGetTasks, tkGetPerson, tkProjectById, tkProjectsForCurrentUser, tkScopeProjects, tkVisibleWorkspaces } from '../../tasks-v2/data.js';
@@ -17,7 +17,7 @@ export function ldReadAll() {
 /* 某个人上报的本机状态；不传时为当前登录人 */
 export function ldStateOf(userId) {
   var row = ldReadAll()[userId || tkCurrentUserId() || 'guest'] || {};
-  var mine = Object.assign({}, row, { auths: row.auths || {}, bindings: row.bindings || {}, repoBindings: row.repoBindings || {}, scopeBindings:row.scopeBindings || {}, knownHosts: row.knownHosts || [], checks: row.checks || null, gitMissing: !!row.gitMissing, netDown: !!row.netDown });
+  var mine = Object.assign({}, row, { auths: row.auths || {}, bindings: row.bindings || {}, repoBindings: row.repoBindings || {}, scopeBindings:row.scopeBindings || {}, spaceDirs:row.spaceDirs || {}, knownHosts: row.knownHosts || [], checks: row.checks || null, gitMissing: !!row.gitMissing, netDown: !!row.netDown });
   /* 旧空间绑定按旧仓库迁入，保留路径；不会把旧目录误绑到新覆盖的仓库。 */
   if (!mine.repoBindingsMigrated) {
     Object.keys(mine.bindings).forEach(function (id) {
@@ -98,7 +98,70 @@ export function ldBindingKey(target, userId) {
   return project.bindingKey || (project.spaceId && ldStateOf(userId).scopeBindings[ldScopeBindingKey(project)]) || ldRemoteKey(project.repo);
 }
 export function ldBindingFor(target, userId) {
-  return ldStateOf(userId).repoBindings[ldBindingKey(target,userId)] || null;
+  var mine = ldStateOf(userId), saved = mine.repoBindings[ldBindingKey(target,userId)];
+  if (saved) return saved;
+  /* 一个空间一个本机目录：空间目录初始化后，各仓库的缓存与任务工作树都在它下面，不再逐个仓库选目录 */
+  var project = ldTargetProject(target);
+  var dir = project?.spaceId ? mine.spaceDirs[ldSpaceDirKey(project.spaceId, project.workspaceId)] : null;
+  if (!dir || !project.repo) return null;
+  var repoKey = ldRemoteKey(project.repo);
+  return { repo:project.repo, repoKey:repoKey, path:ldSpaceRepoCachePath(dir.path, repoKey), mode:dir.mode, protocol:'https', writable:true, branch:project.baseBranch || 'main', derived:true, initializedAt:dir.initializedAt };
+}
+
+/* ---------- 空间本机目录 ----------
+   每台设备为每个空间绑定一个可自定义的目录，默认 <本机根目录>/<空间名>；
+   各仓库的缓存在 .lingee-multi-repo/cache/<仓库标识>，任务工作树在 .lingee-multi-repo/tasks/<任务>/repos/<仓库标识>。
+   旧数据里按仓库绑定过目录的继续沿用（兼容读取），不迁移、不移动文件。 */
+export function ldSpaceDirKey(spaceId, wsId) { return JSON.stringify([spaceId || '', wsId || '']); }
+export function ldSpaceRepoCachePath(dirPath, repoKey) { return dirPath + '/.lingee-multi-repo/cache/' + String(repoKey).replace(/[^\w.-]+/g, '-'); }
+export function ldDefaultSpaceDir(name) { return LD_WORKSPACE_ROOT + '/' + (String(name || '空间').trim().replace(/[\\/:*?"<>|\s]+/g, '-') || '空间'); }
+export function ldSpaceDir(spaceId, wsId, userId) {
+  var mine = ldStateOf(userId), saved = mine.spaceDirs[ldSpaceDirKey(spaceId, wsId)];
+  if (saved) return Object.assign({ legacy:false }, saved);
+  /* 兼容：此前按仓库初始化过的空间，取该空间任一已绑定仓库的目录作为空间目录展示 */
+  var project = tkProjectById(spaceId);
+  var legacy = project ? buildRepoList(project, wsId || '').repositories.map(function (r) {
+    return mine.repoBindings[ldBindingKey(ldEnvironmentId({ repo:r.repo, baseBranch:r.baseBranch, name:r.name, spaceId:spaceId, workspaceId:wsId || '' }), userId)];
+  }).find(Boolean) : null;
+  return legacy ? { path:legacy.path, mode:legacy.mode, initializedAt:legacy.initializedAt || legacy.syncedAt, legacy:true } : null;
+}
+export function ldSpaceDirChangeError(spaceId, wsId) {
+  return tkGetTasks().some(function (task) { return task.repoSnapshot && task.project === spaceId && (task.workspaceId || '') === (wsId || '') && !['done', 'cancelled'].includes(task.status); })
+    ? '该空间还有进行中的任务，请完成后再更改本机目录' : '';
+}
+export function ldCheckSpaceDir(spaceId, wsId, path) {
+  var current = ldSpaceDir(spaceId, wsId);
+  if (current && current.path !== path) { var busy = ldSpaceDirChangeError(spaceId, wsId); if (busy) return busy; }
+  if (!ldInsideWorkspace(path) || /outside/i.test(path)) return '本机目录必须在本机根目录（' + LD_WORKSPACE_ROOT + '）内';
+  var mine = ldMine(), key = ldSpaceDirKey(spaceId, wsId);
+  if (Object.keys(mine.spaceDirs).some(function (other) { return other !== key && mine.spaceDirs[other].path === path; })) return '该目录已被其他空间使用，请选择其他目录';
+  if (/conflict/i.test(path)) return '目录里已有同名文件，未覆盖；请移走或改名后重试';
+  return '';
+}
+export function ldBindSpaceDir(spaceId, wsId, path, mode) {
+  var error = ldCheckSpaceDir(spaceId, wsId, path);
+  if (error) return error;
+  var mine = ldMine();
+  mine.spaceDirs[ldSpaceDirKey(spaceId, wsId)] = { path:path, mode:mode, initializedAt:ldNow() };
+  if (!ldSaveMine(mine)) return '保存失败，请重试';
+  /* 初始化时一并检测空间现有的仓库；之后新增的仓库显示「待检测」 */
+  ldRecordChecks();
+  ldRefresh(); return '';
+}
+/* 任务所选仓库的本机就绪情况：只检查本次选中的仓库，没选的仓库缺权限也不影响启动 */
+export function ldTaskRepoRows(task, userId) {
+  var project = tkProjectById(task.project);
+  return buildTaskRepos(task, project).map(function (repo) {
+    var target = ldEnvironmentId({ repo:repo.repo, baseBranch:repo.baseBranch, name:repo.name, spaceId:task.project, workspaceId:task.workspaceId || '' });
+    return { repo:repo, target:target, status:ldProjectStatus(target, userId) };
+  });
+}
+export function ldTaskReposCheck(task, userId) {
+  var rows = ldTaskRepoRows(task, userId);
+  var dir = ldSpaceDir(task.project, task.workspaceId || '', userId);
+  var blocked = rows.find(function (row) { return !row.status.ready; });
+  return { rows:rows, dir:dir, ready:!!dir && !blocked,
+    reason:!dir ? '尚未在本机初始化该空间的本机目录' : blocked ? '「' + blocked.repo.name + '」' + (blocked.status.label || '未就绪') + (blocked.status.reason ? '：' + blocked.status.reason : '') : '' };
 }
 export function ldTaskEnvironmentId(task, userId) {
   var p = tkProjectById(task.project), mine = ldStateOf(userId);
@@ -523,7 +586,7 @@ export function ldRemoveAuth(host) {
 export function ldRememberTaskDirectory(task, snapshot, userId) {
   if (!snapshot) return true;
   if (userId !== tkCurrentUserId()) return true;
-  var mine = ldMine(), bindingKey = ldBindingKey(ldTaskEnvironmentId(task,userId),userId), binding = mine.repoBindings[bindingKey];
+  var mine = ldMine(), bindingKey = ldBindingKey(ldTaskEnvironmentId(task,userId),userId), binding = mine.repoBindings[bindingKey] || ldBindingFor(ldTaskEnvironmentId(task,userId),userId);
   if (!binding) return false;
   mine.taskDirectories = mine.taskDirectories || {};
   if (mine.taskDirectories[task.id]) return true;
