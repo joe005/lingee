@@ -14,6 +14,7 @@ import { taskTypeLabel } from '../list-template.js';
 import { getDemoPreRun, getDemoStageRun } from '../run-feedback.js';
 import { taskExecutionStages, taskStageAgentName } from '../task-execution.js';
 import { tkGetMySessions, tkTaskSessionTitle } from '../task-sessions.js';
+import { downloadTaskAttachment, taskAttachmentRows } from '../task-attachments.js';
 import { closeDocPreview, closeTaskLabelPicker, propPicker, renderDocPreviewPanel, renderTaskArtifact, renderTaskLabelTrigger, syncDrawerClickaway } from './detail-panel.js';
 import { closeMentionPanel } from './mention.js';
 import { pageState } from './page-state.js';
@@ -601,7 +602,7 @@ export function openDrawer(taskId) {
             '<input type="file" id="tkAttachInput" multiple style="display:none">' +
             '<svg class="tk-attach-btn-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>' +
           '</div>' +
-          '<div class="tk-attach-list" id="tkAttachList"></div>' +
+          '<div class="tk-attach-list" id="tkAttachList">' + taskAttachmentRows(t.attachments || []) + '</div>' +
         '</div>' +
         '<div class="tk-drawer-comments"><div class="tk-drawer-comments-head"><div class="tk-drawer-comments-title">执行计划</div></div>' +
           renderTaskComments(t) +
@@ -669,12 +670,18 @@ export function openDrawer(taskId) {
     var fi = els.tkDrawerBody.querySelector('#tkAttachInput');
     var al = els.tkDrawerBody.querySelector('#tkAttachList');
     if (!dz || !fi || !al) return;
+    al.addEventListener('click', function(event) {
+      const button = event.target.closest('[data-task-attachment-download]');
+      const attachment = (t.attachments || []).find(item => item.id === button?.dataset.taskAttachmentDownload);
+      if (attachment) void downloadTaskAttachment(attachment);
+    });
     function renderFiles(files) {
       Array.prototype.forEach.call(files, function(f) {
         var item = document.createElement('div');
         item.className = 'tk-attach-item';
         var sz = f.size < 1024 ? f.size + 'B' : f.size < 1048576 ? (f.size/1024).toFixed(1)+'KB' : (f.size/1048576).toFixed(1)+'MB';
         item.innerHTML = '<span class="tk-attach-item-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span><span class="tk-attach-item-name">' + escapeHtml(f.name) + '</span>' + (sz ? '<span class="tk-attach-item-size">' + sz + '</span>' : '') + '<button class="tk-attach-item-btn" data-tooltip="预览" aria-label="预览"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></button><button class="tk-attach-item-btn" data-tooltip="下载" aria-label="下载"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button><button class="tk-attach-item-btn tk-attach-item-remove" data-attach-remove data-tooltip="删除" aria-label="删除">' + DELETE_ICON + '</button>';
+        item.querySelector('[aria-label="下载"]').addEventListener('click', () => downloadTaskAttachment({file:f, name:f.name}));
         al.appendChild(item);
       });
     }

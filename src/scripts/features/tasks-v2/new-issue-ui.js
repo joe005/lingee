@@ -16,6 +16,7 @@ import { EX, TEAM_STAGE_SCENARIOS } from '../expert/data.js';
 import { toast } from '../../core/toast.js';
 import { startTaskCreationChat } from '../composer.js';
 import { ldIsDevProject } from '../collab/local-dev.js';
+import { downloadTaskAttachment, saveTaskAttachments, taskAttachmentRows } from './task-attachments.js';
 
 let renderTasks = () => {};
 let refreshTaskDetail = () => {};
@@ -24,14 +25,16 @@ let editingTaskId = null;
 let copiedTaskFields = null;
 let initialPlanSnapshot = '[]';
 let initialCreateSnapshot = '';
+let draftAttachments = [];
+let savingAttachments = false;
 function createSnapshot() {
   return JSON.stringify({
     fields: ['niuTitle','niuDescription','niuProject','niuWorkspace','niuRepository','niuTeam','niuType','niuPriority','niuSmartProject','niuSmartPrompt'].map(id => byId(id)?.value || ''),
-    owner: selectedOwnerId, stages: draftStages,
+    owner: selectedOwnerId, stages: draftStages, attachments: draftAttachments.map(item => item.id),
   });
 }
 function requestCloseOverlays() {
-  if (!byId('tkConfirmOverlay').hidden) return;
+  if (savingAttachments || !byId('tkConfirmOverlay').hidden) return;
   if (!byId('niuCreateOverlay').hidden && !editingTaskId && createSnapshot() !== initialCreateSnapshot) {
     showTaskConfirm('关闭后，未保存的内容将丢失。', closeOverlays, '放弃更改？', '放弃更改', 'danger', '继续编辑');
     return;
@@ -46,6 +49,10 @@ let personPopupTarget = '';
 let personPopupStageId = '';
 let activePlanScope = 'existing';
 const byId = id => document.getElementById(id);
+function setDraftAttachments(attachments = []) {
+  draftAttachments = attachments;
+  byId('niuAttachmentList').innerHTML = taskAttachmentRows(attachments, true);
+}
 function resizeTaskDescription() {
   const field = byId('niuDescription');
   if (!field) return;
@@ -86,6 +93,7 @@ function closeOverlays() {
   closeRepoPopup();
   byId('niuCreateOverlay').hidden = true;
   byId('niuPlanOverlay').hidden = true;
+  setDraftAttachments();
 }
 
 function closePersonPopup() {
@@ -163,7 +171,7 @@ function renderWorkspaceRepoHint(preferred, preserveInvalid = false) {
   else { selectedRepoKeys = list.repositories.length === 1 ? [list.repositories[0].key] : []; renderRepoPicker(); }
 }
 /* 代码仓库下拉：单仓自动选中；多仓默认选中主仓库，主仓库置顶并标记，可逐个勾选，保存时至少选一个。
-   只选一个仓库时同行展示只读起点分支，新任务沿用仓库的基准分支。
+   新任务沿用仓库的基准分支。
    默认仓库（会话打开、文档落点）= 选中了主仓库就是主仓库，否则按列表顺序取第一个；写回隐藏的 #niuRepository，单仓逻辑沿用它。
    首次执行后仓库范围固定，编辑时只读。 */
 let selectedRepoKeys = [];
@@ -181,20 +189,27 @@ function setRepoKeys(keys) {
 }
 function renderRepoPicker() {
   const field = byId('niuReposField'), list = currentRepoList(), task = editingTask();
-  const snapshot = task?.reposSnapshot || [];
+  const snapshot = task?.reposSnapshot?.length ? task.reposSnapshot : task?.repoSnapshot ? [task.repoSnapshot] : [];
   const rows = snapshot.length ? snapshot : buildOrderedRepos(list);
   field.hidden = !selectedProjectId || !rows.length;
-  if (field.hidden) { closeRepoPopup(); renderSelectedRepository(); return; }
+  if (field.hidden) { closeRepoPopup(); return; }
   const locked = reposLocked(task);
   const selected = snapshot.length || rows.length === 1 ? rows : rows.filter(r => selectedRepoKeys.includes(r.key));
-  const names = selected.map(r => r.name || (r.repoKey || r.key).split('/').pop());
+  const labels = selected.map(r => {
+    const key = r.repoKey || r.key;
+    const name = r.name || list.repositories.find(repo => repo.key === key)?.name || key.split('/').pop();
+    const branch = snapshot.length ? r.baseBranch : task?.repoBranches?.[key] || r.baseBranch;
+    return { name, branch, address: r.repo || key };
+  });
   const trigger = byId('niuReposTrigger');
-  byId('niuReposName').textContent = names.length ? names.join('、') : '请选择代码仓库';
-  trigger.classList.toggle('is-placeholder', !names.length);
+  byId('niuReposName').innerHTML = labels.length ? labels.map(({name, branch}) =>
+    escapeHtml(name) + (branch ? ' <span class="niu-repos-branch-tag">' + escapeHtml(branch) + '</span>' : '')
+  ).join('; ') : '请选择代码仓库';
+  trigger.classList.toggle('is-placeholder', !labels.length);
   trigger.disabled = locked;
-  trigger.title = selected.map(r => r.repo || r.repoKey || r.key).join('、');
+  trigger.title = labels.map(({address, branch}) => branch ? address + ' (' + branch + ')' : address).join('; ');
+  trigger.setAttribute('aria-label', labels.length ? '代码仓库：' + labels.map(({name, branch}) => branch ? name + '，分支 ' + branch : name).join('; ') : '选择代码仓库');
   if (locked) closeRepoPopup();
-  renderSelectedRepository();
   if (!byId('niuReposPopup').hidden) {
     renderRepoPopup();
     positionRepoPopup();
@@ -209,7 +224,7 @@ function renderRepoPopup() {
 }
 function positionRepoPopup() {
   const popup = byId('niuReposPopup');
-  const rect = byId('niuReposTrigger').parentElement.getBoundingClientRect();
+  const rect = byId('niuReposTrigger').getBoundingClientRect();
   const width = Math.min(rect.width, window.innerWidth - 16);
   popup.style.width = width + 'px';
   popup.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - width - 8)) + 'px';
@@ -224,7 +239,7 @@ function positionRepoPopup() {
 }
 function openRepoPopup() {
   const trigger = byId('niuReposTrigger');
-  if (trigger.disabled) return;
+  if (byId('niuReposField').hidden || trigger.disabled) return;
   closeProjectPopup();
   renderRepoPopup();
   byId('niuReposPopup').hidden = false;
@@ -238,17 +253,6 @@ function closeRepoPopup(restoreFocus) {
   popup.hidden = true;
   byId('niuReposTrigger').setAttribute('aria-expanded', 'false');
   if (restoreFocus) byId('niuReposTrigger').focus();
-}
-function renderSelectedRepository() {
-  const p = tkProjectById(selectedProjectId), task = editingTask();
-  const list = p ? buildRepoList(p, byId('niuWorkspace').value) : {repositories:[], defaultRepo:''};
-  const snapshot = task?.reposSnapshot?.length ? task.reposSnapshot : task?.repoSnapshot ? [task.repoSnapshot] : null;
-  const rows = snapshot || buildOrderedRepos(list).filter(r => selectedRepoKeys.includes(r.key));
-  const inline = byId('niuRepoBranchInline');
-  const repo = rows.length === 1 ? rows[0] : null;
-  const branch = repo ? (snapshot ? repo.baseBranch : task?.repoBranches?.[repo.key] || repo.baseBranch) : '';
-  inline.textContent = branch;
-  inline.title = branch;
 }
 
 function selectProject(projectId) {
@@ -530,6 +534,7 @@ export function openNewIssueEdit(taskId) {
   activePlanScope = 'create';
   currentTaskId = task.id;
   editingTaskId = task.id;
+  setDraftAttachments(task.attachments || []);
   draftStages = (task.executionPlan || []).map(stage => ({ ...stage }));
   initialPlanSnapshot = JSON.stringify(draftStages);
   draftConfirmed = task.planStatus === 'confirmed';
@@ -602,7 +607,8 @@ function taskSaveMessage(project, stages) {
     : '保存成功';
 }
 
-function createTask(startNow) {
+async function createTask(startNow) {
+  if (savingAttachments) return;
   if (!validateTaskStep('info') || !validateTaskStep('plan')) return;
   const title = byId('niuTitle').value.trim();
   const description = byId('niuDescription').value.trim();
@@ -626,12 +632,27 @@ function createTask(startNow) {
   const originalProject = editingTaskId === null ? null : tkGetTasks().find(item => item.id === editingTaskId)?.project;
   const unassignedStage = (!planLocked() || project !== originalProject) && draftStages.find(stage => !tkPeopleInProject(project).some(person => person.id === stage.assigneeId));
   if (unassignedStage) { toast('请为节点选择当前项目的执行人', 'warning'); selectCreateTab('plan'); byId('niuCreateStageList').querySelector('[data-niu-owner-stage="' + CSS.escape(unassignedStage.id) + '"]')?.focus(); return; }
-  if (editingTaskId !== null) {
-    const task = tkGetTasks().find(item => item.id === editingTaskId);
-    if (!task) { toast('未找到任务', 'warning'); closeOverlays(); return; }
+  const task = editingTask();
+  if (editingTaskId !== null && !task) { toast('未找到任务', 'warning'); closeOverlays(); return; }
+  if (task) {
     const moveError = buildTaskMoveError(task, tkProjectById(task.project), tkProjectById(project), workspaceId, repositoryKey);
     if (moveError) { toast(moveError, 'warning'); return; }
-    const patch = { repositoryKey, ...(repositoryKeys ? {repositoryKeys} : {}), workspaceId, title, desc: description, issueType,
+  }
+  let attachments;
+  const saveButtons = ['niuWizardBack', 'niuCreateSubmit', 'niuCreateStart'].map(byId);
+  savingAttachments = true;
+  saveButtons.forEach(button => { button.disabled = true; });
+  try {
+    attachments = await saveTaskAttachments(draftAttachments);
+  } catch (_) {
+    toast('附件保存失败，请重试', 'warning');
+    return;
+  } finally {
+    savingAttachments = false;
+    saveButtons.forEach(button => { button.disabled = false; });
+  }
+  if (task) {
+    const patch = { repositoryKey, ...(repositoryKeys ? {repositoryKeys} : {}), workspaceId, title, desc: description, issueType, attachments,
       priority: byId('niuPriority').value, assignee: owner, project, teamId, expertId };
     if (!planLocked() && JSON.stringify(draftStages) !== initialPlanSnapshot) {
       patch.executionPlan = draftStages.map(stage => ({ ...stage }));
@@ -645,7 +666,7 @@ function createTask(startNow) {
     return;
   }
   const created = tkAddTask({
-    repositoryKey, ...(repositoryKeys ? {repositoryKeys} : {}), workspaceId, title, desc: description, issueType,
+    repositoryKey, ...(repositoryKeys ? {repositoryKeys} : {}), workspaceId, title, desc: description, issueType, attachments,
     status: 'backlog', priority: byId('niuPriority').value, dueDate: copiedTaskFields?.dueDate || '',
     assignee: owner, createdBy: tkCurrentUserId(), project, teamId, expertId, labels: copiedTaskFields?.labels || [], module: copiedTaskFields?.module || '',
     executionPlan: draftStages.map(stage => ({ ...stage })),
@@ -747,12 +768,34 @@ function initCreateSelects(selects = [byId('niuTeam'), byId('niuType'), byId('ni
 
 export function initNewIssueUI(renderCallback, detailCallback) {
   initCreateSelects();
+  const attachmentInput = byId('niuAttachmentInput');
+  attachmentInput.addEventListener('change', () => {
+    const files = Array.from(attachmentInput.files, file => ({
+      id: Array.from(crypto.getRandomValues(new Uint8Array(16)), byte => byte.toString(16).padStart(2, '0')).join(''),
+      name: file.name,
+      size: file.size,
+      file,
+    }));
+    setDraftAttachments(draftAttachments.concat(files));
+    attachmentInput.value = '';
+  });
+  byId('niuAttachmentList').addEventListener('click', event => {
+    const download = event.target.closest('[data-task-attachment-download]');
+    if (download) {
+      const attachment = draftAttachments.find(item => item.id === download.dataset.taskAttachmentDownload);
+      if (attachment) void downloadTaskAttachment(attachment);
+      return;
+    }
+    const button = event.target.closest('[data-task-attachment-remove]');
+    if (!button) return;
+    setDraftAttachments(draftAttachments.filter(item => item.id !== button.dataset.taskAttachmentRemove));
+    attachmentInput.focus();
+  });
   byId('niuWorkspace').addEventListener('change', () => {
     renderWorkspaceRepoHint();
     if (!planLocked()) { fillTeamOptions('',byId('niuType').value); setDefaultStageOwner(selectedProjectId); draftStages = defaultPlanStages(selectedProjectId); draftConfirmed = false; byId('niuCreateStageCount').textContent = String(draftStages.length); renderPlan(); }
   });
   document.addEventListener('lingee:capabilities-changed', () => { if (!byId('niuCreateOverlay').hidden && !planLocked()) { fillTeamOptions('',byId('niuType').value); setDefaultStageOwner(selectedProjectId); draftStages = defaultPlanStages(selectedProjectId); draftConfirmed = false; byId('niuCreateStageCount').textContent = String(draftStages.length); renderPlan(); } });
-  byId('niuRepository').addEventListener('change', renderSelectedRepository);
   byId('niuReposTrigger').addEventListener('click', () => { if (byId('niuReposPopup').hidden) openRepoPopup(); else closeRepoPopup(); });
   byId('niuReposPopup').addEventListener('change', event => {
     const box = event.target.closest('[data-niu-repo-key]');
@@ -863,11 +906,6 @@ export function initNewIssueUI(renderCallback, detailCallback) {
     const owner = event.target.closest('[data-niu-owner-stage]');
     if (owner) { openPersonPopup('stage', owner.dataset.niuOwnerStage); return; }
     if (event.target.closest('[data-niu-close]')) requestCloseOverlays();
-    if (event.target.closest('[data-niu-project-new]')) {
-      closeProjectPopup();
-      document.dispatchEvent(new CustomEvent('lingee:repo-project-new', { detail: { onCreated: projectId => selectProject(projectId) } }));
-      return;
-    }
     const projectOption = event.target.closest('[data-niu-project]');
     if (projectOption) { selectProject(projectOption.dataset.niuProject); return; }
     const plan = event.target.closest('[data-niu-plan]');

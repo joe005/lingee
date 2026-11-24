@@ -36,7 +36,6 @@
 #niuProjectPopup:not([hidden]){display:flex;flex-direction:column;overflow:hidden}
 #niuProjectPopup>input{flex:none}
 #niuProjectOptions{flex:1;min-height:0;overflow-y:auto}
-#niuProjectPopup .niu-project-new{flex:none}
 .niu-person-popup .niu-project-new{margin-top:4px;border-top:1px solid var(--divider);border-radius:0 0 8px 8px;color:var(--brand)}
 .niu-person-popup .niu-project-new:hover{background:var(--brand-fill);color:var(--brand)}
 .niu-person-popup button b,.niu-person-popup button svg{flex:none;margin-left:auto;color:var(--brand)}

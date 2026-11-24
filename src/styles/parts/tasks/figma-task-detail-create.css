@@ -5,13 +5,10 @@
 #niuCreateOverlay .niu-create-mode button{display:flex;align-items:center;gap:4px;font-size:var(--font-size-14);font-weight:400;line-height:var(--line-height-14);}
 #niuCreateOverlay [data-niu-close].niu-icon-button{width:36px;height:36px;background: url('../../../assets/figma/task-dialog/close.svg') center/20px no-repeat}
 #niuCreateOverlay [data-niu-close].niu-icon-button svg{visibility:hidden}
-#niuCreateOverlay .niu-wizard-progress{padding:24px 20px 20px;border:0}
-#niuCreateOverlay .niu-wizard-progress ol{position:relative;max-width:460px;margin:auto;justify-content:space-between;gap:0}
-#niuCreateOverlay .niu-wizard-progress ol::before{content:'';position:absolute;top:0;left:68px;right:68px;height:32px;background:url('../../../assets/figma/task-dialog/steps.svg') center/100% 32px no-repeat}
-#niuCreateOverlay .niu-wizard-progress li{position:relative;display:flex;flex-direction:column;gap:8px;min-width:68px;color:var(--text-secondary)}
-#niuCreateOverlay .niu-wizard-progress li+li::before{display:none}
-#niuCreateOverlay .niu-wizard-progress li span{box-sizing:border-box;width:32px;height:32px;border:1px solid var(--border);background:var(--bg);font-size:var(--font-size-14);font-weight:500}
-#niuCreateOverlay .niu-wizard-progress li[aria-current=step] span{border-color:var(--brand);background:var(--bg);color:var(--brand)}
+#niuCreateOverlay .niu-wizard-progress{padding:12px 20px;border:0}
+#niuCreateOverlay .niu-wizard-progress li{gap:8px;color:var(--text-secondary);font-size:var(--font-size-14);line-height:var(--line-height-14)}
+#niuCreateOverlay .niu-wizard-progress li span{box-sizing:border-box;flex:none;width:28px;height:28px;font-size:var(--font-size-12);line-height:var(--line-height-12);font-weight:500}
+#niuCreateOverlay .niu-wizard-progress li[aria-current=step] span{border-color:var(--brand);background:var(--brand);color:var(--bg)}
 #niuCreateOverlay .niu-wizard-progress li[data-complete] span{border-color:var(--text-secondary);font-size:0;background:var(--bg) url('../../../assets/figma/task-dialog/check.svg') center/16px no-repeat}
 #niuCreateOverlay .niu-create-section{padding:12px 20px 20px}
 #niuCreateOverlay .niu-create-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;height:auto}
@@ -72,7 +69,8 @@
 #tkDrawer.tk-drawer--latest .tk-feed-stage-table colgroup{display:none}
 #tkDrawer.tk-drawer--latest .tk-feed-stage-table-wrap{overflow:visible}
 
-#niuCreateOverlay .niu-wizard-progress li[aria-current=step] strong{color:var(--brand)}
+#niuCreateOverlay .niu-wizard-progress li strong{font-weight:400}
+#niuCreateOverlay .niu-wizard-progress li[aria-current=step] strong{color:var(--brand);font-weight:500}
 #niuCreateOverlay .niu-wizard-progress li[data-complete] strong{color:var(--text)}
 #niuCreateOverlay .niu-create-stage-table .niu-stage-owner>.niu-select-caret{margin-left:auto;flex:none}
 #niuCreateOverlay .niu-create-stage-table .niu-stage-remove{display:inline-grid;place-items:center;width:28px;height:28px;margin:0;padding:0;color:var(--text-secondary)}
@@ -317,7 +315,8 @@
 #niuCreateOverlay .niu-create-properties > .niu-field:has(#niuWorkspace) { order: 1; }
 #niuCreateOverlay .niu-create-properties > .niu-field:has(#niuPriority) { order: 2; }
 #niuCreateOverlay .niu-create-card .niu-create-properties > .niu-repos-field { order: 3; }
-#niuCreateOverlay .niu-repos-trigger #niuReposName { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#niuCreateOverlay .niu-repos-trigger #niuReposName { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#niuCreateOverlay .niu-repos-trigger .niu-repos-branch-tag { display: inline-block; max-width: 40%; overflow: hidden; padding: 0 6px; border-radius: 4px; background: var(--tag-bg); color: var(--text-secondary); font-size: var(--font-size-12); line-height: 20px; text-overflow: ellipsis; vertical-align: middle; }
 #niuCreateOverlay .niu-repos-trigger.is-placeholder #niuReposName { color: var(--text-secondary); }
 #niuCreateOverlay .niu-repos-trigger:disabled { cursor: default; }
 #niuCreateOverlay .niu-repos-popup { max-height: 280px; overscroll-behavior: contain; }
@@ -358,9 +357,12 @@
 /* 新建任务两步向导（new-issue-ui.js setWizardStep）：第一步任务信息，第二步开发阶段 */
 #niuCreateOverlay #niuInfoPane.is-plan-step :is(.niu-create-writing, #niuTaskProperties, #niuRepoHint) { display: none; }
 #niuCreateOverlay #niuInfoPane:not(.is-plan-step) :is(#niuExecutionProperties, #niuCreatePlanPane) { display: none; }
-#niuCreateOverlay #niuDescription { min-height: 120px; }
-/* 只选一个仓库时同行展示起点分支 */
-#niuCreateOverlay .niu-repos-line { display: flex; align-items: center; gap: 8px; width: 100%; min-width: 0; }
-#niuCreateOverlay .niu-repos-line > .niu-repos-trigger { flex: 1; min-width: 0; }
-#niuCreateOverlay .niu-repo-branch-inline:empty { display: none; }
-#niuCreateOverlay .niu-repo-branch-inline { flex: none; max-width: 40%; overflow: hidden; color: var(--text-secondary); font-size: var(--font-size-14); text-overflow: ellipsis; white-space: nowrap; }
+#niuCreateOverlay #niuInfoPane:not(.is-plan-step) { gap: 12px; }
+#niuCreateOverlay #niuInfoPane:not(.is-plan-step) .niu-create-card { padding: 0; border: 0; background: transparent; }
+#niuCreateOverlay #niuDescription { min-height: 168px; }
+#niuCreateOverlay .niu-attachment-picker { position: relative; display: inline-flex; align-items: center; }
+#niuCreateOverlay .niu-attachment-picker input[type=file] { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+#niuCreateOverlay .niu-attachment-picker:focus-within { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+#niuCreateOverlay #niuAttachmentList:empty { display: none; }
+#niuCreateOverlay #niuAttachmentList .tk-attach-item-btn,
+#niuCreateOverlay #niuAttachmentList .tk-attach-item-size { color: var(--text-secondary); }

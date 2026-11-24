@@ -7,7 +7,7 @@ import { tkCurrentUserId, tkGetPerson, tkProjectById } from '../../tasks-v2/data
 import { ldAdoptLocalCred, ldAuthFor, ldAuthUser, ldEsc, ldFindLocalCred, ldHide, ldPushIssueText, ldRefresh, ldRemoteKey, ldRepoInfo, ldShow, ldVisible } from './core.js';
 import { ldOpenAuth } from './auth-dialog.js';
 
-/* 本地开发 · 新建空间弹窗（#ldRepoOverlay）。设置页入口暂时隐藏，新建任务的空间下拉通过 lingee:repo-project-new 打开。 */
+/* 本地开发 · 旧版新建空间弹窗（#ldRepoOverlay）。 */
 var repoCheck = null;
 var repoCheckTimer = 0;
 var repoOnCreated = null;
@@ -207,6 +207,4 @@ export function initRepoNewDialog() {
     if (e.key === 'Enter' && e.target instanceof HTMLElement && e.target.id === 'ldRepoUrl') { e.preventDefault(); scheduleRepoCheck(0); return; }
     if (e.key === 'Escape' && ldVisible('#ldRepoOverlay') && !ldVisible('#ldAuthOverlay')) { e.stopPropagation(); closeRepoModal(); }
   }, true);
-  /* 其他页面（新建任务的空间下拉）打开「新建空间」，detail.onCreated 收到空间 ID */
-  document.addEventListener('lingee:repo-project-new', function (e) { ldOpenRepoNew(e.detail?.onCreated || null); });
 }
