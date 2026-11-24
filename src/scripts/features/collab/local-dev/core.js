@@ -148,6 +148,23 @@ export function ldBindSpaceDir(spaceId, wsId, path, mode) {
   ldRecordChecks();
   ldRefresh(); return '';
 }
+/* 仓库的 Git 权限（只看账号、访问与推送权限，和本机目录无关；本机目录在空间一级初始化）：
+   账号未登录或凭据失效实时判断；无法连接、仓库不存在、无权访问取上次检测结果；从没检测过为「待检测」。 */
+export function ldRepoPermission(target, userId) {
+  var st = ldProjectStatus(target, userId);
+  var checks = ldStateOf(userId).checks || {}, projects = checks.projects || {}, bindingKey = ldBindingKey(target, userId);
+  var last = projects[bindingKey], checked = Object.prototype.hasOwnProperty.call(projects, bindingKey);
+  var key = st.invalid || st.ssh || st.key === 'git' || st.key === 'norepo' ? st.key
+    : !st.auth ? 'login' : !st.authOk ? 'expired'
+    : ['offline', 'notfound', 'noaccess'].includes(last) ? last
+    : st.binding && st.writeOk === false ? 'noaccess'
+    : checked ? 'ready' : 'unchecked';
+  var reason = ['invalid', 'ssh', 'git', 'norepo', 'login', 'expired'].includes(key) ? st.reason
+    : key === 'offline' || key === 'notfound' ? (checks.reasons || {})[bindingKey] || ''
+    : key === 'noaccess' ? (st.auth ? ldAuthUser(st.auth) + ' 没有该仓库的推送权限' : '没有该仓库的推送权限')
+    : key === 'unchecked' ? '还没检测过，点「检测」检查访问与推送权限' : '';
+  return { st:st, key:key, ready:key === 'ready', label:LD_STATUS_LABELS[key] || '未就绪', reason:reason };
+}
 /* 任务所选仓库的本机就绪情况：只检查本次选中的仓库，没选的仓库缺权限也不影响启动 */
 export function ldTaskRepoRows(task, userId) {
   var project = tkProjectById(task.project);

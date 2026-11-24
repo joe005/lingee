@@ -1,7 +1,7 @@
 import { $ } from '../../../core/dom.js';
 import { toast } from '../../../core/toast.js';
 import { ldJobOf } from './init-jobs.js';
-import { ldEsc, ldHide, ldMine, ldProjectStatus, ldShow, ldVisible, ldTaskReposCheck, ldStatusTone, ldDetectHost, ldIsDetectingHost } from './core.js';
+import { ldEsc, ldHide, ldMine, ldProjectStatus, ldShow, ldVisible, ldTaskReposCheck, ldStatusTone, ldDetectHost, ldIsDetectingHost, ldRepoPermission } from './core.js';
 import { buildTaskIsMultiRepo } from '../repository-config.js';
 import { tkCurrentUserId, tkGetTasks, tkProjectById } from '../../tasks-v2/data.js';
 import { ldOpenSpaceDirDialog } from './space-dir-dialog.js';
@@ -37,15 +37,16 @@ function renderMulti(task) {
   var check = ldTaskReposCheck(task, tkCurrentUserId());
   var dir = check.dir;
   var rows = check.rows.map(function (row) {
-    var st = row.status, host = st.info?.host || '', detecting = !!host && ldIsDetectingHost(host);
-    var key = !dir ? 'download' : st.key;
-    var label = detecting ? '检测中…' : !dir ? '未初始化' : st.ready ? '已就绪' : st.label || '未就绪';
-    var action = !dir || st.ready || st.invalid || st.ssh || detecting ? ''
-      : ['login', 'expired'].includes(st.key) ? '<button type="button" class="ld-repo-check-action" data-ld-prep-auth="' + ldEsc(host) + '">登录</button>'
+    /* 仓库行只显示 Git 权限（账号、访问与推送），本机目录在上面一行按空间初始化 */
+    var perm = ldRepoPermission(row.target, tkCurrentUserId()), st = perm.st, host = st.info?.host || '', detecting = !!host && ldIsDetectingHost(host);
+    var key = perm.key;
+    var label = detecting ? '检测中…' : perm.label;
+    var action = perm.ready || st.invalid || st.ssh || detecting ? ''
+      : ['login', 'expired'].includes(key) ? '<button type="button" class="ld-repo-check-action" data-ld-prep-auth="' + ldEsc(host) + '">登录</button>'
       : '<button type="button" class="ld-repo-check-action" data-ld-prep-detect="' + ldEsc(host) + '">检测</button>';
     return '<li class="ld-repo-check"><span class="ld-repo-check-name"><strong title="' + ldEsc(row.repo.repo) + '">' + ldEsc(row.repo.name) + '</strong>'
       + (row.repo.isDefault ? '<span class="ld-repo-check-tag">默认</span>' : '') + '</span>'
-      + '<span class="ld-repo-check-state ' + (st.ready && dir ? 'is-ok' : ldStatusTone(key)) + '" title="' + ldEsc(dir ? st.reason || label : label) + '"><i aria-hidden="true"></i>' + ldEsc(label) + '</span>' + action + '</li>';
+      + '<span class="ld-repo-check-state ' + (perm.ready ? 'is-ok' : key === 'unchecked' ? 'is-pending' : ldStatusTone(key)) + '" title="' + ldEsc(perm.reason || label) + '"><i aria-hidden="true"></i>' + ldEsc(label) + '</span>' + action + '</li>';
   }).join('');
   $('#ldPrepBody').innerHTML = (ldMine().gitMissing ? ldGitInstallHtml('prep', form.projectId) : '')
     + '<div class="ld-form-field"><span class="ld-form-label">本机目录</span><div class="ld-repo-checks"><div class="ld-repo-check"><span class="ld-repo-check-name"><strong title="' + ldEsc(dir?.path || '') + '">' + ldEsc(dir?.path || '未初始化') + '</strong></span>'

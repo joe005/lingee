@@ -1,6 +1,6 @@
 import { renderZentaoSettings } from './zentao-settings.js';
 import { renderRecruitmentSettings } from './recruitment-settings.js';
-import { ldEnvironmentId, ldProjectStatus, ldProjectView, ldBindingKey, LD_STATUS_LABELS, ldMine, ldSaveMine, ldBindingHasRunningTasks, ldSpaceDir, ldSpaceDirChangeError, ldDetectHost, ldIsDetectingHost } from './local-dev/core.js';
+import { ldEnvironmentId, ldProjectStatus, ldRepoPermission, ldMine, ldSaveMine, ldBindingHasRunningTasks, ldSpaceDir, ldSpaceDirChangeError, ldDetectHost, ldIsDetectingHost } from './local-dev/core.js';
 import { ldOpenSpaceDirDialog } from './local-dev/space-dir-dialog.js';
 import { ldOpenAuth } from './local-dev/auth-dialog.js';
 import { buildRepoOwn, buildRepoList, buildRepoIdentity } from './repository-config.js';
@@ -135,30 +135,20 @@ function spaceDirectoryStatus(p, ws) {
     + '<button type="button" class="cv-repo-init-btn" data-cv-space-dir' + (busy ? ' disabled title="' + esc(busy) + '"' : '') + '>' + (dir ? '修改' : '初始化') + '</button></div>';
 }
 function repoTarget(p, ws, item) { return ldEnvironmentId({repo:item.repo,baseBranch:item.baseBranch,name:item.name,spaceId:p.id,workspaceId:ws?.id || ''}); }
-/* Git 权限：本机账号与推送权限实时读本机记录；「无法连接」「仓库不存在」取上次检测结果，下次检测前一直显示 */
-function repoPermission(p, ws, item) {
-  const target = repoTarget(p, ws, item), st = ldProjectStatus(target);
-  const dir = ldSpaceDir(p.id, ws?.id || '');
-  const view = ldProjectView({id:target});
-  const net = ['offline', 'notfound'].includes(view.key) ? view : null;
-  /* 本机目录初始化后新增的仓库还没检测过，显示「待检测」，点「检测」后才显示结果 */
-  const checked = Object.hasOwn(ldMine().checks?.projects || {}, ldBindingKey(target));
-  const key = !dir ? 'download' : !st.ready ? st.key : net ? net.key : checked ? 'ready' : 'unchecked';
-  return { st, dir, key, ready:key === 'ready', label:key === 'download' ? '未初始化' : LD_STATUS_LABELS[key] || '未就绪',
-    reason:!dir ? '先初始化本机目录' : !st.ready ? st.reason : net ? net.reason : '' };
-}
+/* Git 权限只看账号、访问与推送权限，和本机目录无关（本机目录在上方按空间初始化），没有「未初始化」 */
+function repoPermission(p, ws, item) { return ldRepoPermission(repoTarget(p, ws, item)); }
 function repoDirectoryStatus(p, ws, item) {
-  const perm = repoPermission(p, ws, item), st = perm.st, dir = perm.dir;
+  const perm = repoPermission(p, ws, item), st = perm.st;
   const host = st.info?.host || '';
   const detecting = !!host && ldIsDetectingHost(host);
-  const tone = !dir || perm.key === 'unchecked' ? 'is-pending' : perm.ready ? 'is-ready' : 'is-warn';
+  const tone = perm.key === 'unchecked' ? 'is-pending' : perm.ready ? 'is-ready' : 'is-warn';
   const stateText = detecting ? '检测中…' : perm.label;
   const reason = perm.reason || stateText;
-  const disabled = !dir || st.invalid || st.ssh || detecting;
+  const disabled = st.invalid || st.ssh || detecting;
   return '<div class="cv-repo-local ' + tone + '"><span class="cv-repo-local-label">' + REPO_ICONS.key + 'Git 权限</span>'
     + '<span class="cv-repo-local-state" title="' + esc(reason) + '"><i aria-hidden="true"></i>' + esc(stateText) + '</span>'
     + '<button type="button" class="cv-repo-init-btn" data-cv-repo-check="' + esc(item.key) + '"'
-    + (disabled ? ' disabled title="' + esc(!dir ? '先初始化本机目录' : st.reason || '') + '"' : '') + '>检测</button></div>';
+    + (disabled ? ' disabled title="' + esc(st.reason || '') + '"' : '') + '>检测</button></div>';
 }
 function repoCard(p, ws, item, index, editable, list, defaultKey, editor = false) {
   /* 卡片操作收进右上角「···」菜单，与 Git 账号卡片一致 */
