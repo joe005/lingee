@@ -199,7 +199,7 @@ function wizardAssetRows(kind) {
     var note = auto ? '<em class="mgr-ws-asset-dep">随团队「' + mgrEsc(auto.join('」「')) + '」带出</em>'
       : members.length ? '<em class="mgr-ws-asset-dep is-muted">包含 ' + members.length + ' 个开发智能体：' + mgrEsc(members.join('、')) + '</em>' : '';
     return '<label class="mgr-ws-pick mgr-ws-pick--asset' + (auto ? ' is-auto' : '') + '"><input type="checkbox" data-wiz-asset="' + kind + '" value="' + mgrEsc(r.key) + '"' + (auto || picked.indexOf(r.key) >= 0 ? ' checked' : '') + (auto ? ' disabled' : '') + '>' +
-      '<span class="mgr-ws-asset-copy"><strong>' + mgrEsc(r.data.name) + '</strong><small>V' + mgrEsc(r.version) + ' · 企业自建' + (r.scope === 'workspace' ? ' · 空间可用' : '') + '</small>' + (r.data.desc ? '<span>' + mgrEsc(r.data.desc) + '</span>' : '') + note + '</span></label>';
+      '<span class="mgr-ws-asset-copy"><strong>' + mgrEsc(r.data.name) + '</strong><small>V' + mgrEsc(r.version) + ' · 企业自建' + (r.scope === 'workspace' ? ' · 空间可见' : '') + '</small>' + (r.data.desc ? '<span>' + mgrEsc(r.data.desc) + '</span>' : '') + note + '</span></label>';
   }).join('');
 }
 /* 开发智能体与团队合并为一步：一个搜索框同时筛两组，团队在前；勾选团队后下方智能体立即带出依赖 */

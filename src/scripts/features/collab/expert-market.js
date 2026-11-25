@@ -49,7 +49,7 @@ export function cloudCardsHtml(kind,keyword){
   /* 金蝶官方内容默认预置安装；只有本机没装（如被卸载）的才进入「更多」，不对外列出的官方智能体不出现 */
   const preset=item=>layerOf(kind,item.data)==='builtin';
   const hiddenPreset=item=>preset(item)&&(!!item.installed||item.data.listed===false||kind==='expert'&&UNLISTED_EXPERT_IDS.has(item.data.id));
-  /* 「空间可用」的内容不进入个人「更多」，只有我能看到的空间已添加的才出现（带空间标记） */
+  /* 「空间可见」的内容不进入个人「更多」，只有我能看到的空间已添加的才出现（带空间标记） */
   const workspaceOnly=item=>item.scope==='workspace'&&!workspaceRows.some(row=>row.key===item.key);
   const rows=catalog.filter(item=>item.kind===kind&&!hiddenPreset(item)&&!workspaceOnly(item)&&matches(item)).concat(workspaceRows.filter(item=>!listed.has(item.key)&&matches(item)))
     .map(item=>{

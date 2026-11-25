@@ -17,6 +17,7 @@ import { cvRenderExperts } from '../collab/experts.js';
 import { renderExpertGrid } from './library.js';
 import { bumpVersion, compareVersions, normalizeVersion } from './versioning.js';
 import { setCloudAssetProviders } from '../collab/expert-market.js';
+import { normalizeVisibility, visibilityLabel, visibilityFieldHtml, readVisibilityField, visibilityError, visibilityCovers, sameVisibility } from './visibility.js';
 
 /* 同一浏览器内模拟平台发布和客户端安装；ZIP 本体不会写入 localStorage。 */
 const META_KEY='lingee.platform.meta.v1';
@@ -152,20 +153,44 @@ function refreshAccess(){
   $('#platformImport').classList.toggle('hidden',!canImport());
   renderCards();
 }
-/* 上架范围（企业自建内容）：全企业＝上架后全员可在「更多」中安装使用；
-   空间可用＝不进入「更多」，只能由空间管理员在「设置 › 智能体」中添加，添加后该空间成员可用。默认全企业 */
-export const PUBLISH_SCOPES={tenant:'全企业',workspace:'空间可用'};
-export function publishScopeHtml(current='tenant'){
-  const option=(value,title,desc)=>`<label class="platform-scope-option"><input type="radio" name="platformPublishScope" value="${value}"${current===value?' checked':''}><span><strong>${title}</strong><small>${desc}</small></span></label>`;
-  return `<fieldset class="platform-scope"><legend>上架范围</legend>${option('tenant','全企业','上架后企业内全员可在「更多」中安装使用')}${option('workspace','空间可用','不进入「更多」，由空间管理员在「设置 › 智能体」中添加后，该空间成员可用')}</fieldset>`;
+/* 可见范围（企业自建内容）见 visibility.js：全员可见经租户管理员审核后全员可在「更多」中安装；
+   空间可见提交后自动审核通过，不指定空间，任一空间的管理员在「设置 › 智能体」中添加后，该空间成员才能看到并使用。 */
+const visibilityOf=item=>normalizeVisibility({scope:item?.scope});
+/* 全员可见的团队只能引用全员可见的成员；返回不满足的成员名称（pendingIds 为随团队一起发布的成员） */
+export function teamVisibilityGaps(memberIds,visibility,pendingIds=[]){
+  return (memberIds||[]).filter(memberId=>!pendingIds.includes(memberId)).map(memberId=>key('expert',memberId)).filter(expertId=>meta[expertId]&&!visibilityCovers(visibilityOf(meta[expertId]),visibility)).map(label);
 }
-export function readPublishScope(){return document.querySelector('input[name="platformPublishScope"]:checked')?.value==='workspace'?'workspace':'tenant';}
+/* 成员改为空间可见时，引用它的已上架全员可见团队名称 */
+export function reviewedExpertVisibilityGaps(expertDataId,visibility){return meta[key('expert',expertDataId)]?expertVisibilityGaps(key('expert',expertDataId),visibility):[];}
+function expertVisibilityGaps(expertId,visibility){
+  const memberId=meta[expertId]?.id;
+  return Object.entries(meta).filter(([teamId,t])=>!retiredSeed(t)&&t.kind==='team'&&t.status==='online'&&active(teamId)?.data?.members?.includes(memberId)&&!visibilityCovers(visibility,visibilityOf(t))).map(([teamId])=>label(teamId));
+}
+/* 智能体管理中的内容都按企业自建管理可见范围（2026-11-25）：平台初始数据也显示并可修改，默认全员可见；
+   改为空间可见后不再默认对所有空间共享，只有空间在「设置 › 智能体」中添加后才能使用 */
+const canEditVisibility=m=>!!m?.activeVersion&&!retiredSeed(m)&&canManage(m);
+function editVisibility(id){
+  const m=meta[id];if(!canEditVisibility(m))return;
+  assetReviewDialog(`可见范围设置（${label(id)}）`,visibilityFieldHtml(visibilityOf(m)),()=>{
+    if(!canEditVisibility(m))return;
+    const body=$('#platformDialogBody'),value=readVisibilityField(body);
+    const gaps=m.kind==='team'?teamVisibilityGaps(active(id)?.data?.members,value):expertVisibilityGaps(id,value);
+    if(gaps.length)return visibilityError(body,m.kind==='team'?`以下成员为空间可见，请先改为全员可见：${gaps.join('、')}`:`以下全员可见的团队引用了它：${gaps.join('、')}，请先调整团队`);
+    if(sameVisibility(value,visibilityOf(m))){assetReviewClose();return;}
+    const old=clone(m);m.scope=value.scope;delete m.spaces;m.modified=now();
+    if(!persist()){meta[id]=old;return visibilityError(body,'保存失败，请重试');}
+    assetReviewClose();renderCards();document.dispatchEvent(new Event('lingee:capabilities-changed'));toast('可见范围已保存','success');
+  },'保存');
+}
 export function assetReviewDialog(title,body,onConfirm,confirmText='确认',options={}){
-  $('#assetRejectButton')?.remove();
+  $('#assetRejectButton')?.remove();$('#platformDialog .platform-dialog-actions > .platform-dialog-links')?.remove();
   $('#platformDialog').dataset.assetDialog=options.style||'';
   $('#platformDialogTitle').textContent=title;$('#platformDialogBody').innerHTML=body;
   $('#platformDialogConfirm').textContent=confirmText;$('#platformDialogConfirm').disabled=false;
   $('#platformDialogCancel').classList.toggle('hidden',!onConfirm);
+  /* 详情里的「查看历史版本 / 导出 ZIP」等链接放到底部操作栏左侧 */
+  const links=$('#platformDialogBody > .platform-dialog-links, #platformDialogBody > section > .platform-dialog-links');
+  if(links)$('#platformDialog .platform-dialog-actions').prepend(links);
   dialogConfirm=onConfirm;$('#platformDialog').classList.remove('hidden');
   (onConfirm?$('#platformDialogCancel'):$('#platformDialogConfirm')).focus({preventScroll:true});
   $('#platformDialogBody').scrollTop=0;
@@ -203,7 +228,7 @@ function renderCards(){
     const face=team?`<span class="platform-faces">${(d.members||[]).slice(0,4).map(memberId=>{const expert=latest(key('expert',memberId))?.data;return expert?`<img src="${xav(expert.k)}" alt="">`:'';}).join('')}</span>`:`<img class="x-av" src="${xav(d.k)}" alt="">`;
     const source=xesc(m.tenantId?cvWorkspaceName(m.tenantId):'原厂'),tags=(team?d.domains:d.tags)||[],updated=String(row.at||'').replace(/:\d{2}$/,'');
     const status=visibleStatus(m);
-    return `<button type="button" class="app-card x-card platform-card" data-platform-card="${xesc(id)}"><div class="card-top">${face}<div class="card-titles"><div class="card-title-row"><span class="card-title">${xesc(d.name)}</span></div><div class="x-sub">${team?(d.members||[]).length+' 个智能体':(d.skills||[]).length+' 个技能'}</div></div><span class="platform-card-version">V${row.version}${m.pendingVersion&&m.reviewSubmitted?' 待审核':''}</span></div><div class="card-desc">${xesc(d.desc||'暂无简介')}</div><div class="card-tags">${tags.slice(0,3).map(value=>`<span class="ptag">${xesc(value)}</span>`).join('')}</div><div class="platform-card-meta"><span class="platform-card-status ${status}">${status==='draft'?'草稿':status==='review'?'待审核':status==='offline'?'已下架':'已上架'}</span><time title="${xesc(row.at)}">${xesc(updated)}</time></div></button>`;
+    return `<button type="button" class="app-card x-card platform-card" data-platform-card="${xesc(id)}"><div class="card-top">${face}<div class="card-titles"><div class="card-title-row"><span class="card-title">${xesc(d.name)}</span></div><div class="x-sub">${team?(d.members||[]).length+' 个智能体':(d.skills||[]).length+' 个技能'}</div></div><span class="platform-card-version">V${row.version}${m.pendingVersion&&m.reviewSubmitted?' 待审核':''}</span></div><div class="card-desc">${xesc(d.desc||'暂无简介')}</div><div class="card-tags">${tags.slice(0,3).map(value=>`<span class="ptag">${xesc(value)}</span>`).join('')}</div><div class="platform-card-meta"><span class="platform-card-status ${status}">${status==='draft'?'草稿':status==='review'?'待审核':status==='offline'?'已下架':'已上架'}</span>${m.activeVersion?`<span class="platform-card-scope">${xesc(visibilityLabel(visibilityOf(m)))}</span>`:''}<time title="${xesc(row.at)}">${xesc(updated)}</time></div></button>`;
   }).join('');
   const reviewStatuses=statusTab==='all'?['pending','rejected']:statusTab==='review'?['pending']:statusTab==='draft'?['rejected']:[];
   const reviewCards=reviewStatuses.length?renderAssetReviewCards(kw,{kind:tab,statuses:reviewStatuses,tenantId}):'';
@@ -216,7 +241,7 @@ function showCard(id){
   const status=visibleStatus(m);
   const canSubmit=canManage(m)&&!!m.pendingVersion;
   const manageActions=canManage(m)&&!m.pendingVersion&&m.activeVersion?`<button type="button" class="platform-link" data-platform-toggle="${xesc(id)}">${m.status==='offline'?'重新上架':'下架'}</button>`:'';
-  assetReviewDialog(`${team?'智能体团队':platformExpertName()}详情`,`<div class="platform-detail-headline"><strong>${xesc(d.name)}</strong><span>V${row.version}</span></div><dl class="platform-info-list"><dt>状态</dt><dd>${status==='draft'?'草稿':status==='review'?'待审核':status==='offline'?'已下架':'已上架'}</dd><dt>当前上架</dt><dd>${m.activeVersion?'V'+xesc(m.activeVersion):'暂无'}</dd><dt>最新版本</dt><dd>V${xesc(row.version)}</dd><dt>编码</dt><dd>${xesc(d.id)}</dd><dt>简介</dt><dd>${xesc(d.desc||'暂无')}</dd><dt>更新说明</dt><dd>${xesc(row.note)}</dd><dt>更新时间</dt><dd>${xesc(row.at)}</dd>${team?platformTeamFields(d,resolveMember):`<dt>技能数</dt><dd>${(d.skills||[]).length}</dd>`}</dl>${team?platformTeamMembers(d,resolveMember):platformExpertSkills(d)}<button type="button" class="platform-link" data-platform-history="${xesc(id)}">查看历史版本</button> <button type="button" class="platform-link" data-platform-export="${xesc(id)}" data-platform-version="${row.version}">导出 ZIP</button> ${manageActions}`,canSubmit?()=>publishPending(id):null,canSubmit?(m.reviewSubmitted?'审核通过':'提交审核'):'关闭');
+  assetReviewDialog(`${team?'智能体团队':platformExpertName()}详情`,`<div class="platform-detail-headline"><strong>${xesc(d.name)}</strong><span>V${row.version}</span></div><dl class="platform-info-list"><dt>状态</dt><dd>${status==='draft'?'草稿':status==='review'?'待审核':status==='offline'?'已下架':'已上架'}</dd><dt>当前上架</dt><dd>${m.activeVersion?'V'+xesc(m.activeVersion):'暂无'}</dd>${m.activeVersion?`<dt>可见范围</dt><dd><span>${xesc(visibilityLabel(visibilityOf(m)))}</span>${canEditVisibility(m)?` <button type="button" class="platform-link" data-platform-visibility="${xesc(id)}">修改</button>`:''}</dd>`:''}<dt>最新版本</dt><dd>V${xesc(row.version)}</dd><dt>编码</dt><dd>${xesc(d.id)}</dd><dt>简介</dt><dd>${xesc(d.desc||'暂无')}</dd><dt>更新说明</dt><dd>${xesc(row.note)}</dd><dt>更新时间</dt><dd>${xesc(row.at)}</dd>${team?platformTeamFields(d,resolveMember):`<dt>技能数</dt><dd>${(d.skills||[]).length}</dd>`}</dl>${team?platformTeamMembers(d,resolveMember):platformExpertSkills(d)}<div class="platform-dialog-links"><button type="button" class="platform-link" data-platform-history="${xesc(id)}">查看历史版本</button> <button type="button" class="platform-link" data-platform-export="${xesc(id)}" data-platform-version="${row.version}">导出 ZIP</button> ${manageActions}</div>`,canSubmit?()=>publishPending(id):null,canSubmit?(m.reviewSubmitted?'审核通过':'提交审核'):'关闭');
 }
 function chooseDraftAvatar(id){
   const m=meta[id],row=version(id,m?.pendingVersion);
@@ -278,10 +303,12 @@ function publishPending(id){
     },'确认提交');
   }
   if(m.kind==='team')for(const memberId of row.data.members||[]){const expertId=key('expert',memberId);if(meta[expertId]?.status!=='online'||!active(expertId))return assetReviewDialog('无法上架',`<p>引用的成员 ${xesc(memberId)} 尚未上架。</p>`,null,'知道了');}
-  assetReviewDialog(`审核 V${row.version}`,`<p>将「${xesc(row.data.name)}」V${row.version} 上架。客户端卡片会自动提示可升级到这个版本。</p><p class="platform-dialog-note">更新说明：${xesc(row.note)}</p>${m.tenantId?publishScopeHtml(m.scope||'tenant'):''}`,()=>{
+  assetReviewDialog(`审核 V${row.version}`,`<p>将「${xesc(row.data.name)}」V${row.version} 上架。客户端卡片会自动提示可升级到这个版本。</p><p class="platform-dialog-note">更新说明：${xesc(row.note)}</p>${visibilityFieldHtml(visibilityOf(m))}`,()=>{
     if(!canManage(m))return;
-    const scope=m.tenantId?readPublishScope():'tenant';
-    const old=clone(m);m.activeVersion=row.version;m.pendingVersion='';m.reviewSubmitted=false;m.status='online';m.modified=now();if(m.tenantId)m.scope=scope;
+    const visibility=readVisibilityField($('#platformDialogBody'));
+    const gaps=m.kind==='team'?teamVisibilityGaps(row.data.members,visibility):expertVisibilityGaps(id,visibility);
+    if(gaps.length)return visibilityError($('#platformDialogBody'),m.kind==='team'?`以下成员为空间可见，请先改为全员可见：${gaps.join('、')}`:`以下全员可见的团队引用了它：${gaps.join('、')}`);
+    const old=clone(m);m.activeVersion=row.version;m.pendingVersion='';m.reviewSubmitted=false;m.status='online';m.modified=now();m.scope=visibility.scope;delete m.spaces;
     if(!persist()){meta[id]=old;return assetReviewDialog('上架失败','<p>浏览器存储不可用，请重试。</p>',null,'关闭');}
     assetReviewClose();renderCards();
   },'审核通过并上架');
@@ -473,6 +500,7 @@ function cloudPublicationStatus(id,reviewedVersion){
 }
 setCloudAssetProviders({catalog:cloudCatalog,upgradeBadge:cloudUpgradeBadge,publicationStatus:cloudPublicationStatus});
 setCapabilityLocalChecker(localAssetInstallError);
+/* 空间可见的资产不指定空间，企业内各空间的「设置 › 智能体」添加目录都能看到 */
 setCapabilityCatalog(project => cloudCatalog(project?.tenantId || project?.workspace));
 setPersonalAssets(() => ({experts: MY_EXPERTS, teams: TEAMS.filter(team => !team.preset && team.source !== 'tenant'), lookup: id => EX[id] || null}));
 const UPDATE_SETTINGS_KEY='lingee.asset-update-settings.v1';
@@ -589,7 +617,7 @@ export function initPlatformAdmin(){
   $('#platformDialog').addEventListener('click',event=>{if(event.target===$('#platformDialog'))assetReviewClose();});
   document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!$('#platformDialog').classList.contains('hidden')){event.preventDefault();assetReviewClose();}});
   $('#platformDialogConfirm').addEventListener('click',()=>{if(dialogConfirm)dialogConfirm();else assetReviewClose();});
-  $('#platformDialogBody').addEventListener('click',event=>{const avatar=event.target.closest('[data-platform-avatar]'),option=event.target.closest('[data-platform-avatar-key]');if(avatar){chooseDraftAvatar(avatar.dataset.platformAvatar);return;}if(option){$('#platformDialogBody').querySelectorAll('[data-platform-avatar-key]').forEach(button=>{button.classList.toggle('on',button===option);button.setAttribute('aria-pressed',String(button===option));});return;}const history=event.target.closest('[data-platform-history]'),toggle=event.target.closest('[data-platform-toggle]'),publish=event.target.closest('[data-platform-publish]'),download=event.target.closest('[data-platform-export]');if(history)showHistory(history.dataset.platformHistory);if(toggle)toggleStatus(toggle.dataset.platformToggle);if(publish)publishPending(publish.dataset.platformPublish);if(download)exportVersion(download.dataset.platformExport,download.dataset.platformVersion);});
+  $('#platformDialog').addEventListener('click',event=>{const avatar=event.target.closest('[data-platform-avatar]'),option=event.target.closest('[data-platform-avatar-key]');if(avatar){chooseDraftAvatar(avatar.dataset.platformAvatar);return;}if(option){$('#platformDialogBody').querySelectorAll('[data-platform-avatar-key]').forEach(button=>{button.classList.toggle('on',button===option);button.setAttribute('aria-pressed',String(button===option));});return;}const visibilityButton=event.target.closest('[data-platform-visibility]');if(visibilityButton){editVisibility(visibilityButton.dataset.platformVisibility);return;}const history=event.target.closest('[data-platform-history]'),toggle=event.target.closest('[data-platform-toggle]'),publish=event.target.closest('[data-platform-publish]'),download=event.target.closest('[data-platform-export]');if(history)showHistory(history.dataset.platformHistory);if(toggle)toggleStatus(toggle.dataset.platformToggle);if(publish)publishPending(publish.dataset.platformPublish);if(download)exportVersion(download.dataset.platformExport,download.dataset.platformVersion);});
   document.addEventListener('click',event=>{
     const uninstall=event.target.closest('#view-collab [data-cloud-uninstall]');
     if(uninstall){event.stopPropagation();uninstallCloudAsset(uninstall.dataset.cloudUninstall);return;}
@@ -618,7 +646,7 @@ export function cloudCatalog(tenantId){
       const aTime=Date.parse(a.modified)||0,bTime=Date.parse(b.modified)||0;
       return bTime-aTime||String(bId).localeCompare(String(aId));
     })
-    .map(([id,item])=>({key:id,kind:item.kind,data:clone(active(id).data),version:active(id).version,note:active(id).note,modified:item.modified||'',installed:installed[id]||'',scope:item.scope==='workspace'?'workspace':'tenant',sharedOfficial:!item.tenantId&&item.scope!=='workspace'}));
+    .map(([id,item])=>({key:id,kind:item.kind,data:clone(active(id).data),version:active(id).version,note:active(id).note,modified:item.modified||'',installed:installed[id]||'',scope:item.scope==='workspace'?'workspace':'tenant',publisherId:item.publisherId||'',publisherName:item.publisherName||'',sharedOfficial:!item.tenantId&&item.scope!=='workspace'}));
 }
 function cloudInstallRows(id,reinstall=false){
   const rows=new Map();
@@ -691,16 +719,18 @@ export function publishedExpertRef(id){
   const itemKey=key('expert',id),item=meta[itemKey];
   return item?.status==='online'&&active(itemKey)&&availableToClient(item)?{id}:null;
 }
-export function publishReviewedBundle(bundle,note,reviewEntry,scope='tenant'){
+/* options.auto：空间可见的提交自动审核通过，不需要审核权限；options.publisher：提交人，空间可见内容按提交人所在空间进入添加目录 */
+export function publishReviewedBundle(bundle,note,reviewEntry,visibility,options={}){
+  const scope=normalizeVisibility(visibility),publisher=options.publisher||{};
   const requestTenant=reviewEntry?.value?.find(row=>row.status==='approved'&&row.bundle===bundle)?.tenantId||bundle[0]?.data.tenantId;
-  if(!canApprovePlatformReview({tenantId:requestTenant})||bundle.some(item=>item.data.tenantId!==requestTenant))return '当前账号没有审核权限';
+  if(!options.auto&&!canApprovePlatformReview({tenantId:requestTenant})||bundle.some(item=>item.data.tenantId!==requestTenant))return '当前账号没有审核权限';
   const oldMeta=clone(meta),oldVersions=clone(versions),numbers={};
   for(const item of bundle){const id=key(item.kind,item.data.id);numbers[id]=bumpVersion(latest(id)?.version);}
   for(const item of bundle){
     const data=clone(item.data),id=key(item.kind,data.id),number=numbers[id];
     if(item.kind==='team')for(const memberId of data.members||[]){const expertId=key('expert',memberId);if(!numbers[expertId]&&!(meta[expertId]?.status==='online'&&active(expertId))){meta=oldMeta;versions=oldVersions;return '引用的成员尚未发布，无法发布智能体团队';}}
     delete data.memberRefs;
-    meta[id]={kind:item.kind,id:data.id,source:'tenant',tenantId:data.tenantId,status:'online',activeVersion:number,pendingVersion:'',modified:now(),editor:'平台管理员',scope:scope==='workspace'?'workspace':'tenant'};
+    meta[id]={kind:item.kind,id:data.id,source:'tenant',tenantId:data.tenantId,status:'online',activeVersion:number,pendingVersion:'',modified:now(),editor:options.auto?'自动审核':'平台管理员',scope:scope.scope,publisherId:publisher.id||'',publisherName:publisher.name||''};
     (versions[id]||(versions[id]=[])).push({version:number,data,note,at:now(),author:data.by,operator:cvCurrentUserName()});
   }
   if(!persist([reviewEntry])){meta=oldMeta;versions=oldVersions;return '保存失败，发布内容保持原样，请重试';}

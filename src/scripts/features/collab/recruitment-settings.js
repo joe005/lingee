@@ -15,9 +15,9 @@ const ICON_TRASH = '<svg width="14" height="14" viewBox="0 0 20 20" fill="none" 
 export function setRecruitKind(value) { if (value === 'expert' || value === 'team') kind = value; }
 function scopeId(p,ws) { return JSON.stringify([p.id,ws?.id || '']); }
 function sameScope(expected) { const context = capabilityContext(); return context.p && scopeId(context.p,context.ws) === expected ? context : null; }
-/* 工作区只能添加企业自建、且不是面向工作板块发布的资产；金蝶官方与工作板块去向的不在此列。 */
+/* 工作区只能添加企业自建、且不是面向工作板块发布的资产；平台初始数据改为空间可见后也可添加（默认全员可见、对所有空间共享，不用添加）。 */
 const WORK_ROUTES = ['work','work-pending','work-personal'];
-function recruitable(row) { return !!row.data.tenantId && !WORK_ROUTES.includes(routeOf(row.kind,row.data.id)); }
+function recruitable(row) { return (!!row.data.tenantId || row.scope === 'workspace') && !WORK_ROUTES.includes(routeOf(row.kind,row.data.id)); }
 /* 空间内工作区可添加的资产目录（新建工作区向导与添加弹窗共用） */
 export function recruitCatalog(p,assetKind,keyword='') {
   const kw = keyword.trim().toLocaleLowerCase();
@@ -79,7 +79,7 @@ function renderOptions() {
   const context = sameScope(dialog.scope);
   if (!context?.editable) { closeDialog(); return; }
   const rows = recruitmentOptions(context.p,context.ws,dialog.kind,byId('cvRecruitSearch').value).filter(row => !row.recruited);
-  byId('cvRecruitOptions').innerHTML=rows.length ? rows.map(row=>'<label class="cv-recruit-option"><input type="checkbox" data-recruit-key="'+xesc(row.key)+'"'+(dialog.selected.has(row.key)?' checked':'')+'><span><strong>'+xesc(row.data.name)+'</strong><small>V'+xesc(row.version)+' · '+(row.data.tenantId?'企业自建':'金蝶官方')+(row.scope==='workspace'?' · 空间可用':'')+'</small><span>'+xesc(row.data.desc || '')+'</span></span></label>').join('') : '<div class="cv-recruit-empty">'+(byId('cvRecruitSearch').value.trim() ? '没有匹配的可添加资产' : '暂无可添加的企业自建资产')+'</div>';
+  byId('cvRecruitOptions').innerHTML=rows.length ? rows.map(row=>'<label class="cv-recruit-option"><input type="checkbox" data-recruit-key="'+xesc(row.key)+'"'+(dialog.selected.has(row.key)?' checked':'')+'><span><strong>'+xesc(row.data.name)+'</strong><small>V'+xesc(row.version)+' · '+(row.data.tenantId?'企业自建':'金蝶官方')+(row.scope==='workspace'?' · 空间可见':'')+'</small><span>'+xesc(row.data.desc || '')+'</span></span></label>').join('') : '<div class="cv-recruit-empty">'+(byId('cvRecruitSearch').value.trim() ? '没有匹配的可添加资产' : '暂无可添加的企业自建资产')+'</div>';
   byId('cvRecruitConfirm').textContent='添加'+(dialog.selected.size?'（'+dialog.selected.size+'）':'');
   byId('cvRecruitConfirm').disabled=!dialog.selected.size;
 }

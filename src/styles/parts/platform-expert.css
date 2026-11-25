@@ -219,16 +219,15 @@ body:has(.asset-submit-toast) #toast{max-width:min(960px,calc(100vw - 32px));bor
 #platformDialog .platform-expert-skills .x-skill-empty { color: var(--text-secondary); }
 @media (max-width: 700px) { #platformDialog .platform-expert-skills .x-skill-list { grid-template-columns: minmax(0, 1fr); } }
 
-/* 审核上架：上架范围（全企业 / 工作区可用）单选 */
-.platform-scope { margin: 16px 0 0; padding: 0; border: 0; }
-.platform-scope legend { margin-bottom: 8px; padding: 0; color: var(--text); font-size: var(--font-size-14); font-weight: 500; }
-.platform-scope-option { display: flex; align-items: flex-start; gap: 8px; margin-top: 8px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; }
-.platform-scope-option:has(input:checked) { border-color: var(--brand); background: var(--brand-fill); }
-.platform-scope-option:has(input:focus-visible) { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
-.platform-scope-option input { flex: none; margin: 3px 0 0; accent-color: var(--brand); }
-.platform-scope-option span { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.platform-scope-option strong { color: var(--text); font-size: var(--font-size-14); font-weight: 500; }
-.platform-scope-option small { color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); }
+/* 可见范围：提交时建议、审核时确认、上架后修改，共用一套字段（visibility.js） */
+#platformDialog .asset-visibility{min-width:0;margin:16px 0 0;padding:0;border:0}
+#platformDialog .asset-visibility legend{margin-bottom:8px;padding:0;color:var(--text);font-size:var(--font-size-14);font-weight:500;line-height:22px}
+#platformDialog .asset-visibility-radios{display:flex;flex-wrap:wrap;gap:24px}
+#platformDialog .asset-visibility-radio{display:flex;align-items:center;gap:8px;min-width:0;color:var(--text);font-size:var(--font-size-14);line-height:22px;cursor:pointer}
+#platformDialog .asset-visibility input[type=radio]{flex:none;width:16px;height:16px;margin:0;padding:0;border:0;accent-color:var(--brand)}
+#platformDialog .asset-visibility input[type=radio]:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+#platformDialog .asset-visibility [data-visibility-error]:not(:empty){margin-top:6px}
+.platform-view .platform-card-meta .platform-card-scope{flex:none;margin-right:auto;padding:0 6px;border-radius:4px;background:var(--tag-bg);color:var(--text-secondary);font-size:var(--font-size-12);line-height:20px;white-space:nowrap}
 
 /* 提交智能体团队前，未就绪成员清单：可勾选的成员一次提交，各自生成独立审核单 */
 #platformDialog .asset-member-list{display:flex;flex-direction:column;gap:4px;margin-top:12px;max-height:240px;overflow:auto}
@@ -243,3 +242,12 @@ body:has(.asset-submit-toast) #toast{max-width:min(960px,calc(100vw - 32px));bor
 #platformDialog .asset-member-check>small[data-member-status="modified"]{background:var(--brand-fill);color:var(--brand)}
 #platformDialog .asset-member-check>small:is([data-member-status="offline"],[data-member-status="invalid"]){background:var(--warning-bg);color:var(--warning)}
 #platformDialog .asset-member-check>small[data-member-status="pending"]{background:var(--review-bg);color:var(--pending)}
+
+/* 详情的「查看历史版本 / 导出 ZIP / 下架」放在底部操作栏左侧 */
+#platformDialog .platform-dialog-actions > .platform-dialog-links{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-right:auto;min-width:0}
+/* 信息列表里的行内链接（如可见范围「修改」）不撑高行，与左侧标签对齐 */
+#platformDialog .platform-info-list dd .platform-link{margin-left:8px;padding:0;line-height:inherit;vertical-align:baseline}
+/* 团队审核详情：同时提交的成员排在团队之后，用分隔线和小标题隔开 */
+#platformDialog .platform-review-members-title{margin:24px 0 0;padding-top:16px;border-top:1px solid var(--divider);color:var(--text);font-size:var(--font-size-16);font-weight:600;line-height:24px}
+#platformDialog .platform-review-definition--member{margin-top:16px}
+#platformDialog .platform-review-definition--member + .platform-review-definition--member{padding-top:16px;border-top:1px solid var(--divider)}
