@@ -1,6 +1,6 @@
 import { renderZentaoSettings } from './zentao-settings.js';
 import { renderRecruitmentSettings } from './recruitment-settings.js';
-import { ldEnvironmentId, ldProjectStatus, ldRepoPermission, ldMine, ldSaveMine, ldBindingHasRunningTasks, ldSpaceDir, ldSpaceDirChangeError, ldDetectHost, ldIsDetectingHost } from './local-dev/core.js';
+import { ldEnvironmentId, ldProjectStatus, ldRepoPermission, ldMine, ldSaveMine, ldBindingHasRunningTasks, ldSpaceDir, ldSpaceDirChangeError, ldDetectRepo, ldIsDetectingRepo } from './local-dev/core.js';
 import { ldOpenSpaceDirDialog } from './local-dev/space-dir-dialog.js';
 import { ldOpenAuth } from './local-dev/auth-dialog.js';
 import { buildRepoOwn, buildRepoList, buildRepoIdentity } from './repository-config.js';
@@ -143,8 +143,7 @@ function repoTarget(p, ws, item) { return ldEnvironmentId({repo:item.repo,baseBr
 function repoPermission(p, ws, item) { return ldRepoPermission(repoTarget(p, ws, item)); }
 function repoDirectoryStatus(p, ws, item) {
   const perm = repoPermission(p, ws, item), st = perm.st;
-  const host = st.info?.host || '';
-  const detecting = !!host && ldIsDetectingHost(host);
+  const detecting = ldIsDetectingRepo(repoTarget(p, ws, item));
   const tone = perm.key === 'unchecked' ? 'is-pending' : perm.ready ? 'is-ready' : 'is-warn';
   const stateText = detecting ? '检测中…' : perm.label;
   const reason = perm.reason || stateText;
@@ -443,8 +442,8 @@ export function initBasicSettings(host) {
       const target = repoTarget(p, ws, item), st = ldProjectStatus(target);
       if (!st.info) return;
       /* 没有可用账号时先登录或更换账号（检测里包含选择 Git 账号），登录成功后自动检测 */
-      if (['login', 'expired'].includes(st.key)) { ldOpenAuth(st.info.host, () => ldDetectHost(st.info.host)); return; }
-      ldDetectHost(st.info.host, () => {
+      if (['login', 'expired'].includes(st.key)) { ldOpenAuth(st.info.host, () => ldDetectRepo(target)); return; }
+      ldDetectRepo(target, () => {
         const after = repoPermission(p, ws, item);
         toast('「' + item.name + '」' + (after.ready ? '检测通过' : after.label + (after.reason ? '：' + after.reason : '')), after.ready ? 'success' : 'warning');
       });

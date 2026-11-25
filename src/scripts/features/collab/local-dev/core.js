@@ -511,6 +511,35 @@ export function ldDetectHost(host, done) {
     if (done) done();
   }, 900);
 }
+/* 仓库卡片的「检测」（与客户端一致）：只检测这一个仓库，卡片上显示「检测中…」，同平台的其他仓库不受影响；
+   结果只写这个仓库的访问与推送权限，同时刷新它所在平台的账号状态 */
+var detectingRepos = new Set();
+function repoDetectKey(target) { return ldBindingKey(target) || String(target); }
+export function ldIsDetectingRepo(target) { return detectingRepos.has(repoDetectKey(target)); }
+export function ldDetectRepo(target, done) {
+  var key = repoDetectKey(target);
+  if (detecting || detectingRepos.has(key)) return;
+  detectingRepos.add(key);
+  ldRefresh();
+  setTimeout(function () {
+    detectingRepos.delete(key);
+    var info = ldRepoInfo(target), status = ldProjectStatus(target);
+    var mine = ldMine(), checks = mine.checks || { projects:{}, accounts:{} };
+    checks.projects = checks.projects || {};
+    checks.accounts = checks.accounts || {};
+    checks.reasons = checks.reasons || {};
+    var net = !info || status.invalid || status.key === 'git' ? null : ldNetCheck(info, status.auth);
+    checks.projects[key] = net ? net.key : status.key;
+    checks.reasons[key] = net ? net.reason : '';
+    if (info) checks.accounts[info.host] = ldAccountKey(info.host);
+    var d = new Date();
+    checks.checkedAt = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    mine.checks = checks;
+    ldSaveMine(mine);
+    ldRefresh();
+    if (done) done();
+  }, 900);
+}
 export function ldDetect() {
   if (detecting) return;
   detecting = true;
