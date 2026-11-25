@@ -361,7 +361,8 @@
 #niuCreateOverlay #niuInfoPane.is-plan-step :is(.niu-create-writing, #niuTaskProperties, #niuRepoHint) { display: none; }
 #niuCreateOverlay #niuInfoPane:not(.is-plan-step) :is(#niuExecutionProperties, #niuCreatePlanPane) { display: none; }
 #niuCreateOverlay #niuInfoPane:not(.is-plan-step) { gap: 12px; }
-#niuCreateOverlay #niuInfoPane:not(.is-plan-step) .niu-create-card { padding: 0; border: 0; background: transparent; }
+/* 两步都不套卡片框（2026-11-25）：第二步团队/类型与开发阶段表直接排在弹窗里，与第一步对齐 */
+#niuCreateOverlay #niuInfoPane .niu-create-card { padding: 0; border: 0; background: transparent; }
 #niuCreateOverlay #niuDescription { min-height: 168px; }
 #niuCreateOverlay .niu-attachment-picker { position: relative; display: inline-flex; align-items: center; }
 #niuCreateOverlay .niu-attachment-picker input[type=file] { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }

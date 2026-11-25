@@ -15,7 +15,8 @@ export function ldGitInstallHtml(where, projectId) {
   var link = function (data, text) { return '<button type="button" class="ld-git-link" ' + data + '>' + text + '</button>'; };
   var view = link('data-ld-git-install-view', '查看对话');
   var text, actions;
-  if (state.status === 'running') { text = '正在新对话中安装 Git，完成后会自动检测。'; actions = view; }
+  /* 安装中（UE 2026-11-25）：蓝底转圈，不提供取消 */
+  if (state.status === 'running') { text = '正在安装 Git，请稍等。'; actions = view; }
   else if (state.status === 'waiting') { text = '安装需要你在对话中确认（如输入管理员密码、同意系统安装弹窗）。'; actions = view; }
   else if (state.status === 'failed') {
     text = 'Git 安装未完成：' + ldEsc(state.reason || '安装过程被中断') + '。可在对话中继续，或手动下载安装后点「检测」。';
@@ -44,7 +45,7 @@ function onProgress(detail) {
     ldSetGitMissing(false);
     ldRecordChecks();
     ldRefresh();
-    toast('Git 安装完成' + (detail.version ? '（' + ldEsc(detail.version) + '）' : ''), 'success');
+    toast('Git 安装成功。', 'success');
     return;
   }
   /* 对话被关闭或中止：回到未安装，可重新发起 */

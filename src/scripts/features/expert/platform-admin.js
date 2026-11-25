@@ -588,7 +588,7 @@ function doInstall(){
     installed=next;applyInstalled();showUpdate('success');
   },500);
 }
-/* 每个登录人在本机第一次使用时，默认装好平台初始的官方智能体与团队（1.0.0，之后可升级）；
+/* 每个登录人在本机第一次使用时，默认装好平台初始的官方智能体与团队（当前上架版本）；
    之后完全按本人的安装、卸载记录，卸载光了也不会再自动装回。未登录时不装。 */
 function ensureDefaultInstalls(){
   try{

@@ -1,13 +1,15 @@
-<!-- 左侧分类平铺展示，不再分「个人设置」「空间设置」两组；「第三方集成 › 禅道」暂时下线，由 workspace-settings.js 隐藏。空间与工作区基本设置，范围取卡片顶部的空间切换器（只影响设置，与任务等页签的筛选互不影响）。导航图标：Git 账号=分支、通用=调节、仓库=代码库、成员=多人、智能体=机器人，各分类图标互不重复。 -->
+<!-- 左侧分类平铺展示，顺序为基本信息、Git 账号、仓库、成员、智能体/智能体团队（UE 2026-11-25）；「第三方集成 › 禅道」下线，由 workspace-settings.js 隐藏。
+     本机没装 Git 时，提示条在设置卡片上方（cvSettingsGitBanner），各分类都能看到。空间范围取左栏顶部的空间切换器（只影响设置）。 -->
 <section class="ld-settings-panel" id="ldWorkspacesPanel" aria-label="空间设置" hidden>
+  <div id="cvSettingsGitBanner" hidden></div>
   <div class="cv-basic-layout">
     <div class="cv-basic-space-bar"><div class="cv-space-switch" id="cvSpaceSwitch"></div></div>
     <nav class="cv-basic-nav" aria-label="设置分类">
-      <button type="button" class="cv-basic-nav-item" data-cv-basic-tab="general" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/></svg>通用</button>
-      <button type="button" class="cv-basic-nav-item" data-cv-basic-tab="repo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5.5A2.5 2.5 0 0 1 7.5 3H19v14H7.5A2.5 2.5 0 0 0 5 19.5z"/><path d="M5 19.5A2.5 2.5 0 0 0 7.5 22H19v-5M9 7.5h6"/></svg>仓库</button>
+      <button type="button" class="cv-basic-nav-item" data-cv-basic-tab="general"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3.5" width="14" height="17" rx="2.5"/><path d="M9 8.5h6M9 12h6M9 15.5h4"/></svg>基本信息</button>
       <button type="button" class="cv-basic-nav-item" data-cv-basic-tab="git"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="5.5" r="2.5"/><circle cx="6" cy="18.5" r="2.5"/><circle cx="18" cy="8" r="2.5"/><path d="M6 8v8M18 10.5c0 4.2-5.5 3.6-10.3 6.3"/></svg>Git 账号</button>
+      <button type="button" class="cv-basic-nav-item" data-cv-basic-tab="repo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5.5A2.5 2.5 0 0 1 7.5 3H19v14H7.5A2.5 2.5 0 0 0 5 19.5z"/><path d="M5 19.5A2.5 2.5 0 0 0 7.5 22H19v-5M9 7.5h6"/></svg>仓库<i class="cv-basic-nav-dot" data-cv-repo-dot hidden aria-label="有仓库未初始化"></i></button>
       <button type="button" class="cv-basic-nav-item" data-cv-basic-tab="members" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M3 20a6 6 0 0 1 12 0M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.2A6 6 0 0 1 21 20"/></svg>成员</button>
-      <button type="button" class="cv-basic-nav-item" data-cv-basic-tab="agents" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="8" width="16" height="12" rx="3.5"/><path d="M12 4v4M9 13.5v1M15 13.5v1M9.5 17.2h5"/><circle cx="12" cy="3.5" r="1"/></svg>智能体</button>
+      <button type="button" class="cv-basic-nav-item" data-cv-basic-tab="agents" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="8" width="16" height="12" rx="3.5"/><path d="M12 4v4M9 13.5v1M15 13.5v1M9.5 17.2h5"/><circle cx="12" cy="3.5" r="1"/></svg>智能体/智能体团队</button>
       <span class="cv-basic-nav-label" id="cvIntegrationSettingsLabel" hidden>第三方集成</span>
       <button type="button" class="cv-basic-nav-item" data-cv-basic-tab="zentao" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 13 4-4M8 16l-1 1a4 4 0 0 1-6-6l4-4a4 4 0 0 1 6 0M16 8l1-1a4 4 0 0 1 6 6l-4 4a4 4 0 0 1-6 0"/></svg>禅道</button>
     </nav>

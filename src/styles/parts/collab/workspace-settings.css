@@ -525,3 +525,78 @@
 #view-collab #cvTabNav .cv-settings-back:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 #view-collab:has(#cv-local.active) #cvTabNav .cv-settings-back { display: inline-flex; }
 #view-collab:has(#cv-local.active) #cvTabNav :is(.cv-tab-capsule, .cv-settings-gear) { display: none; }
+
+/* 设置页按 UE 对齐（2026-11-25）：卡片上方的 Git 提示条、未初始化红点、基本信息、成员卡片 */
+#view-collab #cvSettingsGitBanner[hidden] { display: none; }
+#view-collab .cv-basic-nav-dot { flex: none; width: 6px; height: 6px; margin-left: auto; border-radius: 50%; background: var(--danger); }
+#view-collab .cv-basic-nav-dot[hidden] { display: none; }
+#view-collab #cvSpaceSwitch.is-repo-pending .cv-space-switch-card .cv-space-icon { position: relative; }
+#view-collab #cvSpaceSwitch.is-repo-pending .cv-space-switch-card .cv-space-icon::after { content: ""; position: absolute; top: -3px; right: -3px; width: 8px; height: 8px; border-radius: 50%; background: var(--danger); box-shadow: 0 0 0 2px var(--bg); }
+
+/* 基本信息：标签在上、输入框通栏，不再套外框；右上角「重置」「保存」，有改动才可用 */
+#view-collab .cv-general-actions { display: flex; flex: none; gap: 8px; }
+#view-collab .cv-general-actions .cv-settings-action { display: inline-flex; align-items: center; justify-content: center; }
+#view-collab .cv-general-actions .cv-settings-action:disabled { opacity: .5; cursor: default; }
+#view-collab .cv-general-fields { gap: 16px; padding: 0; border: 0; background: none; }
+#view-collab .cv-general-fields .cv-basic-field { display: flex; flex-direction: column; align-items: stretch; gap: 8px; }
+#view-collab .cv-general-fields .cv-basic-field > :first-child { padding-top: 0; }
+#view-collab .cv-general-textarea { position: relative; width: 100%; }
+#view-collab .cv-general-textarea textarea { box-sizing: border-box; width: 100%; padding-bottom: 28px; resize: vertical; }
+#view-collab .cv-general-count { position: absolute; right: 12px; bottom: 8px; color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); pointer-events: none; }
+#view-collab .cv-general-fields .cv-basic-field.is-readonly > span { color: var(--text-secondary); font-size: var(--font-size-14); font-weight: 400; }
+#view-collab .cv-general-value { margin: 0; color: var(--text); font-size: var(--font-size-14); line-height: var(--line-height-14); white-space: pre-wrap; overflow-wrap: anywhere; }
+#view-collab .cv-general-empty { color: var(--text-secondary); }
+
+/* 成员：每人一张卡片，头像按姓名取色，行尾删除 */
+#view-collab .cv-member-tools { display: flex; align-items: center; gap: 12px; }
+#view-collab .cv-member-tools .cv-member-filter { flex: 0 1 220px; }
+#view-collab .cv-member-cards { display: flex; flex-direction: column; gap: 12px; }
+#view-collab .cv-member-cards > li { min-height: 0; gap: 16px; padding: 16px 20px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); }
+#view-collab .cv-member-cards > li + li { border-top: 1px solid var(--border); }
+#view-collab .cv-member-cards .cv-basic-avatar { width: 40px; height: 40px; font-size: var(--font-size-16); }
+#view-collab .cv-member-identity > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#view-collab .cv-member-remove { display: grid; place-items: center; flex: none; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 8px; background: none; color: var(--text-secondary); cursor: pointer; }
+#view-collab .cv-member-remove:hover { background: var(--danger-bg); color: var(--danger); }
+#view-collab .cv-member-remove:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+#view-collab #cvBasicSettingsHost.is-member-list > .cv-member-list-scroll { padding-bottom: 4px; }
+:is(#view-collab, #cvMemberAddOverlay) :is(.cv-basic-avatar, .cv-pick-avatar).is-blue { background: color-mix(in srgb, var(--dot-blue) 12%, var(--bg)); color: var(--dot-blue); }
+:is(#view-collab, #cvMemberAddOverlay) :is(.cv-basic-avatar, .cv-pick-avatar).is-orange { background: color-mix(in srgb, var(--dot-orange) 12%, var(--bg)); color: var(--dot-orange); }
+:is(#view-collab, #cvMemberAddOverlay) :is(.cv-basic-avatar, .cv-pick-avatar).is-green { background: color-mix(in srgb, var(--dot-green) 12%, var(--bg)); color: var(--dot-green); }
+:is(#view-collab, #cvMemberAddOverlay) :is(.cv-basic-avatar, .cv-pick-avatar).is-purple { background: color-mix(in srgb, var(--dot-purple) 12%, var(--bg)); color: var(--dot-purple); }
+:is(#view-collab, #cvMemberAddOverlay) :is(.cv-basic-avatar, .cv-pick-avatar).is-teal { background: color-mix(in srgb, var(--dot-teal) 12%, var(--bg)); color: var(--dot-teal); }
+:is(#view-collab, #cvMemberAddOverlay) :is(.cv-basic-avatar, .cv-pick-avatar).is-rose { background: color-mix(in srgb, var(--dot-rose) 12%, var(--bg)); color: var(--dot-rose); }
+@media (max-width: 600px) { #view-collab .cv-member-tools { flex-wrap: wrap; } #view-collab .cv-member-tools .cv-member-filter { flex-basis: 100%; } #view-collab .cv-member-cards > li { padding: 12px 16px; } }
+
+/* 空间下拉：我创建的空间行尾「···」→「删除」（UE 2026-11-25） */
+#view-collab #cvSpaceSwitch .mgr-ws-pop-row { position: relative; }
+#view-collab #cvSpaceSwitch .cv-space-more { position: relative; display: inline-flex; flex: none; }
+#view-collab #cvSpaceSwitch .mgr-ws-icon-btn.is-open { opacity: 1; pointer-events: auto; background: var(--hover); color: var(--text); }
+#view-collab #cvSpaceSwitch .cv-space-menu { position: absolute; top: calc(100% + 4px); right: 0; z-index: 6; min-width: 96px; padding: 4px; border-radius: 12px; background: var(--bg); box-shadow: var(--menu-shadow); }
+#view-collab #cvSpaceSwitch .cv-space-menu button { display: flex; align-items: center; gap: 8px; width: 100%; height: 32px; padding: 0 12px; border: 0; border-radius: 8px; background: none; color: var(--text); font: inherit; font-size: var(--font-size-14); cursor: pointer; white-space: nowrap; }
+#view-collab #cvSpaceSwitch .cv-space-menu button.is-danger { color: var(--danger); }
+#view-collab #cvSpaceSwitch .cv-space-menu button:hover { background: var(--danger-bg); }
+#view-collab #cvSpaceSwitch .cv-space-menu button:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; }
+#view-collab #cvSpaceSwitch .mgr-ws-pop-list:has(.is-menu-open) { overflow: visible; }
+
+/* 成员行尾「编辑」：铅笔图标展开角色与移出菜单（与客户端一致） */
+#view-collab .cv-member-cards .cv-member-more summary.cv-member-remove { display: grid; list-style: none; }
+#view-collab .cv-member-cards .cv-member-more summary.cv-member-remove:hover, #view-collab .cv-member-cards .cv-member-more[open] summary.cv-member-remove { background: var(--hover); color: var(--text); }
+#view-collab .cv-member-cards .cv-member-more { position: relative; }
+#view-collab .cv-member-cards .cv-member-menu { min-width: 144px; }
+#view-collab .cv-member-menu > button { justify-content: space-between; gap: 12px; }
+#view-collab .cv-member-menu > button:disabled { color: var(--text); cursor: default; background: none; }
+#view-collab .cv-member-menu-divider { height: 1px; margin: 4px 8px; background: var(--divider); }
+#view-collab #cvBasicSettingsHost.is-member-list > .cv-member-list-scroll:has(.cv-member-more[open]) { overflow: visible; }
+
+/* 成员列表以客户端为准（2026-11-25）：一个描边容器，行间分隔线；右侧灰底角色标签 + 编辑 */
+#view-collab .cv-member-cards { display: block; padding: 0 24px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); }
+#view-collab .cv-member-cards > li { gap: 16px; padding: 20px 0; border: 0; border-radius: 0; background: none; }
+#view-collab .cv-member-cards > li + li { border-top: 1px solid var(--divider); }
+#view-collab .cv-member-cards .cv-basic-avatar { width: 44px; height: 44px; font-size: var(--font-size-16); }
+#view-collab .cv-member-role { flex: none; padding: 2px 12px; border-radius: 999px; background: var(--hover); color: var(--text); font-size: var(--font-size-14); line-height: var(--line-height-14); }
+#view-collab .cv-member-edit-gap { flex: none; width: 32px; }
+@media (max-width: 600px) { #view-collab .cv-member-cards { padding: 0 16px; } #view-collab .cv-member-cards > li { padding: 16px 0; } }
+#view-collab .cv-member-cards > li > .cv-member-remove + .cv-member-remove, #view-collab .cv-member-cards .cv-member-more + .cv-member-remove { margin-left: -12px; }
+#view-collab .cv-member-cards .cv-member-identity { flex-wrap: nowrap; min-width: 0; }
+#view-collab .cv-member-cards .cv-member-identity strong { flex: none; color: var(--text-title); font-size: var(--font-size-16); line-height: var(--line-height-16); }
+#view-collab .cv-member-cards .cv-member-tags { margin-top: 6px; }

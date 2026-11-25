@@ -1,9 +1,9 @@
 import {
   WS_MAX_DEPTH, WS_NAME_MAX, wsById, wsChildren, wsList,
 } from '../../core/workspace-tree.js';
-import { CV_MEMBERS, CV_PROJECTS, cvPersistProjects, cvPersonById, isWsHost, wsHost, wsHostSave } from '../collab/data.js';
+import { CV_MEMBERS, CV_PROJECTS, cvDeleteProjectRecord, cvPersistProjects, cvPersonById, isWsHost, wsHost, wsHostSave } from '../collab/data.js';
 import { tkUpdateTask } from '../tasks-v2/data.js';
-import { mgrCanManageProject, mgrCurrentPersonId, mgrIsDevTask, mgrProjectById, mgrProjects, mgrProjectTasks, mgrSaveProjects, mgrSyncBuildSpaces } from './data.js';
+import { mgrCanManageProject, mgrCurrentPersonId, mgrDeleteProject, mgrIsDevTask, mgrProjectById, mgrProjects, mgrProjectTasks, mgrSaveProjects, mgrSyncBuildSpaces } from './data.js';
 /* 管理 · 工作区数据与权限（一期，原型）：工作区随空间保存在 project.workspaces，任务归属写在任务的 workspaceId。
    工作区隔离：工作区及其任务只对工作区成员与空间负责人 / 管理员可见，空间根下的任务不受影响；成员只要求是空间成员。
    权限只在前端模拟，正式实现由 Manage 统一校验。 */
@@ -241,6 +241,23 @@ function wsDelete(project, id) {
   return { ok: true };
 }
 
+/* 删除顶层空间（设置页空间下拉，UE 2026-11-25）：负责人或管理员可删，空间里还有任务时不删 */
+function spaceDeleteBlockReason(project) {
+  if (!project) return '空间不存在';
+  if (!mgrCanManageProject(project)) return '没有权限删除该空间';
+  var n = wsRdTasks(project).length;
+  if (n) return '还有 ' + n + ' 个任务，请先移走或删除任务后再删除空间';
+  return '';
+}
+function spaceDelete(project) {
+  var reason = spaceDeleteBlockReason(project);
+  if (reason) return fail(reason);
+  var ok = CV_PROJECTS.some(function (p) { return p.id === project.id; }) ? cvDeleteProjectRecord(project.id) : mgrDeleteProject(project.id);
+  if (!ok) return fail('删除失败，请重试');
+  document.dispatchEvent(new CustomEvent('lingee:mgr-projects-changed', { detail: { deleted: project.id } }));
+  return { ok: true };
+}
+
 /* ---------- 成员与负责人 ---------- */
 function wsAddMembers(project, id, personIds, role) {
   var ws = wsById(project, id);
@@ -372,6 +389,6 @@ function wsMoveTasks(project, tasks, targetId) {
 
 export {
   WS_MAX_DEPTH, WS_NAME_MAX, canCreateTaskIn, canCreateWs, isScopeManager, wsMappableSpaces, wsSyncManageSpaces, wsScopePath, wsSpaceOf, canManageWs, canOwnWs, isSpaceManager, isSpaceMember, isWsMember, personName, spaceMemberIds,
-  wsAddMembers, wsAdminIds, wsArchive, wsArchivePlan, wsAvailable, wsCreate, wsDelete, wsDeleteBlockReason, wsEnabled, wsMemberIds, wsMemberOpenTasks, wsMoveTasks,
+  spaceDelete, spaceDeleteBlockReason, wsAddMembers, wsAdminIds, wsArchive, wsArchivePlan, wsAvailable, wsCreate, wsDelete, wsDeleteBlockReason, wsEnabled, wsMemberIds, wsMemberOpenTasks, wsMoveTasks,
   wsLeave, wsLeaveBlockReason, wsVisible, wsNameError, wsProjectById, wsOpenTasks, wsOwnerId, wsPlanMove, wsProgress, wsRdTasks, wsRemoveMember, wsReorder, wsRestore, wsSetAdmin, wsSetOwner, wsTasksOf, wsUpdateInfo,
 };

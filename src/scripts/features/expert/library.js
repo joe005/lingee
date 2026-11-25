@@ -128,6 +128,12 @@ function openExpertModal(id){
 
 export function initExpertLibrary() {
   document.addEventListener('lingee:asset-card-delete',event=>{if(event.detail?.kind==='expert')deleteMyExpert(event.detail.id);});
+  /* 设置 ›「智能体/智能体团队」点卡片看详情（collab/recruitment-settings.js 发出） */
+  document.addEventListener('lingee:open-asset-detail',event=>{
+    const d=event.detail||{};
+    if(d.kind==='team'){ if(TEAMS.some(t=>t.id===d.id)) openTeamModal(d.id); return; }
+    if(EX[d.id]) openExpertModal(d.id);
+  });
   expertModal?.addEventListener('keydown',function(event){
     const tab=event.target.closest('#xdTabs [role="tab"]');if(!tab)return;
     const tabs=Array.from(document.querySelectorAll('#xdTabs [role="tab"]'));

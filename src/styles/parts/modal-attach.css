@@ -46,3 +46,11 @@
 .app-delete-confirm-actions [data-delete-confirm]:hover{background:var(--danger);filter:brightness(.92)}
 .app-delete-confirm-actions button:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 
+
+/* 删除确认 · 警示样式（设置页成员、智能体、团队、空间删除，UE 2026-11-25） */
+.app-delete-confirm-card.is-warning{display:grid;grid-template-columns:20px minmax(0,1fr);column-gap:8px;border:0;border-radius:16px}
+.app-delete-confirm-card.is-warning .app-delete-confirm-icon{display:grid;place-items:center;width:18px;height:18px;margin-top:2px;border-radius:50%;background:var(--dot-orange);color:var(--bg);font-size:var(--font-size-12);font-weight:700;line-height:1}
+.app-delete-confirm-card.is-warning h3{margin:0 0 8px}
+.app-delete-confirm-card.is-warning p{grid-column:2}
+.app-delete-confirm-card.is-warning .app-delete-confirm-actions{grid-column:1 / -1;margin-top:20px}
+.app-delete-confirm-card.is-warning [data-delete-cancel]{border-color:transparent}

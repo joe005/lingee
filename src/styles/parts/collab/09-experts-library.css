@@ -217,3 +217,63 @@
 /* 个人开发菜单复用动作定义中的图标，避免仅文字项与查看项错位。 */
 #view-collab :is(#cv-experts,#cv-teams) .asset-card-menu [data-asset-menu-act] { gap: 8px; }
 #view-collab :is(#cv-experts,#cv-teams) .asset-card-menu [data-asset-menu-act] > svg { flex: none; width: 16px; height: 16px; color: var(--text-secondary); }
+
+#view-collab .expert-assets-toolbar .asset-import-btn {
+  display:inline-flex;align-items:center;gap:4px;flex:none;height:32px;padding:0 12px;
+  border:1px solid var(--brand);border-radius:8px;background:transparent;color:var(--brand);
+  font:inherit;font-size:var(--font-size-14);white-space:nowrap;cursor:pointer;
+}
+#view-collab [data-asset-browse-mode="more"] .asset-import-btn {display:none}
+#view-collab .expert-assets-toolbar .asset-import-btn:hover {background:var(--brand-fill)}
+#view-collab .expert-assets-toolbar .asset-import-btn:focus-visible {
+  border-color:transparent;outline:2px solid var(--focus-ring);outline-offset:-2px;
+}
+
+#assetImportDialog:not([open]) {display:none}
+#assetImportDialog {margin:auto;padding:0;border:0;border-radius:var(--r-modal)}
+#assetImportDialog::backdrop {background:var(--overlay)}
+#assetImportDialog .sync-modal__header {padding:20px 20px 0}
+#assetImportDialog .sync-modal__body {padding:20px}
+#assetImportDialog .asset-import-drop {
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+  box-sizing:border-box;min-height:140px;padding:16px;border:2px dotted var(--border-focus);
+  border-radius:var(--r-xl);background:var(--fill-1);color:var(--brand);text-align:center;
+  font-size:var(--font-size-14);
+}
+#assetImportDialog .asset-import-drop.is-dragging {border-color:var(--brand);background:var(--brand-fill)}
+#assetImportDialog .asset-import-sources:not([hidden]) {display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:4px}
+#assetImportDialog .asset-import-sources button {
+  padding:0;border:0;background:transparent;color:inherit;font:inherit;text-decoration:underline;cursor:pointer;
+}
+#assetImportDialog .asset-import-sources button:hover {color:var(--brand-hover)}
+#assetImportDialog .asset-import-drop.has-selection {
+  flex-direction:row;gap:12px;min-height:116px;padding:20px;
+  background:var(--brand-fill);border-color:var(--border-focus);text-align:left;
+}
+#assetImportDialog .asset-import-drop.has-selection.is-dragging {border-color:var(--brand)}
+#assetImportDialog .has-selection .asset-import-icon {
+  flex:none;box-sizing:content-box;padding:8px;border-radius:12px;background:var(--bg);
+}
+#assetImportDialog .asset-import-selection:not([hidden]) {
+  flex:1;min-width:0;display:flex;align-items:center;justify-content:space-between;gap:8px;
+}
+#assetImportDialog .asset-import-info {display:grid;gap:4px;min-width:0;overflow-wrap:anywhere}
+#assetImportDialog #assetImportSource {color:var(--text-title);font-weight:500}
+#assetImportDialog #assetImportType {color:var(--text-secondary);font-size:var(--font-size-12)}
+#assetImportDialog .asset-import-selection .sync-modal__close {flex:none}
+#assetImportDialog .asset-import-requirements-title {
+  margin:0 0 12px;color:var(--text-title);font-size:var(--font-size-16);font-weight:600;
+}
+#assetImportDialog .asset-import-requirements {
+  display:grid;gap:8px;margin:0 0 16px;padding-inline-start:20px;
+  color:var(--text-secondary);font-size:var(--font-size-14);
+}
+#assetImportDialog :is(.sync-modal__btn,.sync-modal__close,.asset-import-sources button):focus-visible {
+  outline:2px solid var(--focus-ring);outline-offset:2px;
+}
+#assetImportDialog #assetImportError {margin:8px 0 0;color:var(--danger);font-size:var(--font-size-14)}
+#assetImportDialog #assetImportError:empty {margin:0}
+#assetImportDialog .sync-modal__footer {padding:0 20px 20px;border:0;background:transparent}
+#assetImportDialog .sync-modal__btn--ghost {border-color:transparent;background:transparent;color:var(--text)}
+#assetImportDialog .sync-modal__btn--ghost:hover {background:var(--hover)}
+#assetImportDialog .sync-modal__btn:disabled {opacity:.5;cursor:default}

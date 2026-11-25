@@ -1,10 +1,11 @@
 import { toast } from '../../core/toast.js';
+import { requestDeleteConfirmation } from '../../core/delete-confirm.js';
 import { readDefaultScope, saveDefaultScope, validDefaultScope } from './default-scope.js';
 import { $ } from '../../core/dom.js';
 import { wsScopeName } from '../../core/workspace-tree.js';
 import { tkProjectsForCurrentUser, tkVisibleWorkspaces } from '../tasks-v2/data.js';
 import { getSpaceScope, isAllSpaces, setAllSpaces } from '../tasks-v2/page/space-filter.js';
-import { canCreateWs, wsOwnerId, wsScopePath, wsSyncManageSpaces } from '../manager/workspaces.js';
+import { canCreateWs, spaceDelete, spaceDeleteBlockReason, wsDelete, wsDeleteBlockReason, wsOwnerId, wsScopePath, wsSyncManageSpaces } from '../manager/workspaces.js';
 import { mgrCurrentPersonId, mgrPersonName } from '../manager/data.js';
 import { WS_HOST_ID, wsHost } from './data.js';
 import { ldIsDevProject, ldSetNavScope } from './local-dev.js';
@@ -17,9 +18,12 @@ import { ldIsDevProject, ldSetNavScope } from './local-dev.js';
 var CARET = '<svg class="mgr-ws-caret" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
 var PLUS = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
 var STAR = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9z"/></svg>';
+var MORE = '<svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><circle cx="5" cy="10" r="1.4"/><circle cx="10" cy="10" r="1.4"/><circle cx="15" cy="10" r="1.4"/></svg>';
+var TRASH = '<svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 5.5h13M8 5.5V4h4v1.5M5.5 5.5l.7 10a1 1 0 0 0 1 .9h5.6a1 1 0 0 0 1-.9l.7-10M8.5 9v4.5M11.5 9v4.5"/></svg>';
 var CHECK = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4 10-11"/></svg>';
 
 var popOpen = false;
+var menuFor = '';   /* 下拉里展开了「···」菜单的空间（project:ws） */
 var manageSynced = false;
 var tasksDefaulted = false;
 var query = '';
@@ -78,8 +82,12 @@ function rowsHtml() {
     var on = scope.project === p.id && scope.ws === id;
     var isDefault = !!preferred && preferred.project === p.id && preferred.ws === id;
     var defaultAction = '<button type="button" class="mgr-ws-icon-btn' + (isDefault ? ' is-default' : '') + '" data-cvss-default="' + esc(p.id) + '" data-cvss-default-ws="' + esc(id) + '" aria-pressed="' + isDefault + '" title="' + (isDefault ? '取消默认' : '设为默认') + '" aria-label="' + (isDefault ? '取消默认：' : '设为默认：') + esc(name) + '">' + STAR + '</button>';
-    return '<div role="treeitem" aria-level="1" aria-selected="' + on + '"><div class="mgr-ws-pop-row' + (on ? ' is-on' : '') + '" style="--ws-depth:0"><span class="mgr-ws-pop-toggle-gap"></span>' +
-      '<button type="button" class="mgr-ws-pop-pick" data-cvss-pick="' + esc(p.id) + '" data-cvss-ws="' + esc(id) + '" title="' + esc(name) + '">' + spaceIcon(p, id, name, 'sm') + '<span class="mgr-ws-pop-name">' + esc(name) + '</span>' + (isDefault ? '<small class="cv-space-default-label">默认</small>' : '') + (on ? '<b>' + CHECK + '</b>' : '') + '</button>' + defaultAction + '</div></div>';
+    /* 我创建的空间行尾有「···」，菜单里是「删除」（UE 2026-11-25）；空间下还有任务时删除给出原因 */
+    var key = p.id + ':' + id, menuOpen = menuFor === key;
+    var more = relationLabel(p, id) === '我创建的' ? '<span class="cv-space-more"><button type="button" class="mgr-ws-icon-btn' + (menuOpen ? ' is-open' : '') + '" data-cvss-more="' + esc(key) + '" aria-haspopup="menu" aria-expanded="' + menuOpen + '" aria-label="' + esc(name) + ' 的更多操作" title="更多">' + MORE + '</button>'
+      + (menuOpen ? '<span class="cv-space-menu" role="menu"><button type="button" role="menuitem" class="is-danger" data-cvss-delete="' + esc(p.id) + '" data-cvss-delete-ws="' + esc(id) + '">' + TRASH + '删除</button></span>' : '') + '</span>' : '';
+    return '<div role="treeitem" aria-level="1" aria-selected="' + on + '"><div class="mgr-ws-pop-row' + (on ? ' is-on' : '') + (menuOpen ? ' is-menu-open' : '') + '" style="--ws-depth:0"><span class="mgr-ws-pop-toggle-gap"></span>' +
+      '<button type="button" class="mgr-ws-pop-pick" data-cvss-pick="' + esc(p.id) + '" data-cvss-ws="' + esc(id) + '" title="' + esc(name) + '">' + spaceIcon(p, id, name, 'sm') + '<span class="mgr-ws-pop-name">' + esc(name) + '</span>' + (isDefault ? '<small class="cv-space-default-label">默认</small>' : '') + (on ? '<b>' + CHECK + '</b>' : '') + '</button>' + defaultAction + more + '</div></div>';
   }
   /* 按「我创建的」「我加入的」分组，组名后是空间数量（搜索时为匹配数量），没有空间的组不显示，两组之间加分隔线 */
   var matched = visibleSpaceItems().filter(function (it) { return !q || it[2].toLocaleLowerCase().includes(q); });
@@ -116,11 +124,27 @@ function syncNewSpaceItem() {
 }
 function setPop(on) {
   popOpen = on;
+  menuFor = '';
   if (!on) query = '';
   render();
   if (on) { var input = $('#cvSpaceSearch'); if (input) input.focus(); }
 }
 
+/* 下拉里删除我创建的空间：和「基本信息 › 删除空间」同一套规则（负责人才能删、还有任务时不能删），删的是当前空间时切到默认空间 */
+async function deleteSpace(projectId, wsId) {
+  var item = findItem({ project: projectId, ws: wsId });
+  if (!item) return;
+  var p = item[0], name = item[2];
+  setPop(false);
+  var blocked = wsId ? wsDeleteBlockReason(p, wsId) : spaceDeleteBlockReason(p);
+  if (blocked) { toast(blocked, 'warning'); return; }
+  if (!await requestDeleteConfirmation('删除「' + name + '」后无法恢复，该空间的设置、成员和已添加的智能体配置将一并移除。', { title: '删除空间', confirmLabel: '删除', tone: 'warning' })) return;
+  var current = getSettingsScope();
+  var removed = wsId ? wsDelete(p, wsId) : spaceDelete(p);
+  if (!removed.ok) { toast(removed.error, 'warning'); return; }
+  toast('已删除空间「' + name + '」', 'success');
+  if (current.project === projectId && current.ws === wsId) setSettingsScope('', ''); else render();
+}
 function restoreDefaults() {
   /* 空间随协作数据延迟恢复，恢复完成前不能把默认项误判为已删除。 */
   if (!$('#view-collab')?.hasAttribute('data-entry-ready')) return;
@@ -141,6 +165,15 @@ export function initCollabSpaceSwitch() {
   host.addEventListener('click', function (e) {
     var t = e.target;
     if (t.closest('#cvSpaceBtn')) { setPop(!popOpen); return; }
+    var moreButton = t.closest('[data-cvss-more]');
+    if (moreButton) {
+      menuFor = menuFor === moreButton.dataset.cvssMore ? '' : moreButton.dataset.cvssMore;
+      var list = $('#cvSpaceList'); if (list) list.innerHTML = rowsHtml();
+      host.querySelector('[data-cvss-delete]')?.focus(); return;
+    }
+    var deleteButton = t.closest('[data-cvss-delete]');
+    if (deleteButton) { deleteSpace(deleteButton.dataset.cvssDelete, deleteButton.dataset.cvssDeleteWs); return; }
+    if (menuFor && !t.closest('.cv-space-menu')) { menuFor = ''; var rows = $('#cvSpaceList'); if (rows) rows.innerHTML = rowsHtml(); }
     var defaultButton = t.closest('[data-cvss-default]');
     if (defaultButton) {
       var targetScope = { project: defaultButton.dataset.cvssDefault, ws: defaultButton.dataset.cvssDefaultWs || '' };

@@ -5,31 +5,33 @@
 #view-collab .cv-recruit-tabs button.is-on { background: var(--bg); color: var(--text); box-shadow: var(--pill-shadow); }
 #view-collab .cv-recruit-tabs button:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 .cv-recruit-empty { padding: 20px 0; color: var(--text-secondary); font-size: var(--font-size-14); }
-#cvRecruitOverlay { position: fixed; inset: 0; z-index: 270; display: flex; align-items: center; justify-content: center; padding: 16px; background: var(--overlay); }
-#cvRecruitOverlay[hidden] { display: none; }
-#cvRecruitOverlay .cv-recruit-dialog { box-sizing: border-box; display: flex; flex-direction: column; gap: 16px; width: min(640px, 100%); max-height: calc(100dvh - 32px); padding: 20px; border-radius: 24px; background: var(--bg); }
-#cvRecruitOverlay header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-#cvRecruitOverlay h3 { margin: 0; color: var(--text); font-size: var(--font-size-20); font-weight: 500; }
-#cvRecruitOverlay header p { margin: 4px 0 0; color: var(--text-secondary); font-size: var(--font-size-12); }
-#cvRecruitOverlay .cv-recruit-close { display: grid; place-items: center; flex: none; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 8px; background: none; color: var(--text-secondary); font: inherit; cursor: pointer; }
-#cvRecruitOverlay .cv-recruit-close:hover { background: var(--hover); }
-#cvRecruitOverlay input[type="search"] { box-sizing: border-box; flex: none; width: 100%; height: 36px; padding: 0 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); font: inherit; font-size: var(--font-size-14); }
-#cvRecruitOverlay .cv-recruit-options { min-height: 0; max-height: 360px; overflow-y: auto; display: grid; gap: 8px; }
-#cvRecruitOverlay .cv-recruit-option { display: flex; align-items: flex-start; gap: 12px; padding: 12px; border: 1px solid var(--border); border-radius: 12px; cursor: pointer; }
-#cvRecruitOverlay .cv-recruit-option:hover { border-color: var(--border-hover); }
-#cvRecruitOverlay .cv-recruit-option:has(input:checked) { border-color: var(--brand); }
-#cvRecruitOverlay .cv-recruit-option:has(input:disabled) { cursor: default; background: var(--fill-1); }
-#cvRecruitOverlay input[type="checkbox"] { flex: none; width: 16px; height: 16px; margin: 4px 0 0; accent-color: var(--brand); }
-#cvRecruitOverlay .cv-recruit-option > span { min-width: 0; display: grid; gap: 4px; }
-#cvRecruitOverlay .cv-recruit-option strong { color: var(--text); font-size: var(--font-size-14); font-weight: 500; }
-#cvRecruitOverlay .cv-recruit-option :is(small,span > span) { color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); overflow-wrap: anywhere; }
-#cvRecruitOverlay footer { display: flex; flex: none; justify-content: flex-end; gap: 8px; padding-top: 16px; border-top: 1px solid var(--divider); }
-#cvRecruitOverlay footer button { min-height: 36px; padding: 0 16px; border-radius: 8px; font: inherit; font-size: var(--font-size-14); cursor: pointer; }
-#cvRecruitOverlay footer .ld-space-btn { border: 1px solid var(--border); background: var(--bg); color: var(--text); }
-#cvRecruitOverlay footer .ld-space-btn:hover { background: var(--hover); }
-#cvRecruitOverlay footer button:disabled { opacity: .5; cursor: default; }
-#cvRecruitOverlay :is(button,input):focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
-#cvRecruitOverlay .cv-basic-error { margin: 0; color: var(--danger); font-size: var(--font-size-12); }
+:is(#cvRecruitOverlay, #cvMemberAddOverlay) { position: fixed; inset: 0; z-index: 270; display: flex; align-items: center; justify-content: center; padding: 16px; background: var(--overlay); }
+:is(#cvRecruitOverlay, #cvMemberAddOverlay)[hidden] { display: none; }
+:is(#cvRecruitOverlay, #cvMemberAddOverlay) .cv-recruit-dialog { box-sizing: border-box; display: flex; flex-direction: column; gap: 16px; width: min(640px, 100%); max-height: calc(100dvh - 32px); padding: 20px; border-radius: 24px; background: var(--bg); }
+:is(#cvRecruitOverlay, #cvMemberAddOverlay) header { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+:is(#cvRecruitOverlay, #cvMemberAddOverlay) h3 { margin: 0; color: var(--text); font-size: var(--font-size-20); font-weight: 500; }
+:is(#cvRecruitOverlay, #cvMemberAddOverlay) header p { margin: 4px 0 0; color: var(--text-secondary); font-size: var(--font-size-12); }
+:is(#cvRecruitOverlay, #cvMemberAddOverlay) .cv-recruit-close { display: grid; place-items: center; flex: none; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 8px; background: none; color: var(--text-secondary); font: inherit; cursor: pointer; }
+:is(#cvRecruitOverlay, #cvMemberAddOverlay) .cv-recruit-close:hover { background: var(--hover); }
+:is(#cvRecruitOverlay, #cvMemberAddOverlay) .cv-recruit-search { display: flex; flex: none; align-items: center; gap: 8px; height: 36px; padding: 0 12px; border: 1px solid var(--border); border-radius: 999px; color: var(--text-secondary); }
+:is(#cvRecruitOverlay, #cvMemberAddOverlay) .cv-recruit-search:focus-within { border-color: var(--border-focus); }
+:is(#cvRecruitOverlay, #cvMemberAddOverlay) input[type="search"] { flex: 1; min-width: 0; padding: 0; border: 0; outline: none; background: none; color: var(--text); font: inherit; font-size: var(--font-size-14); }
+:is(#cvRecruitOverlay, #cvMemberAddOverlay) .cv-recruit-options { min-height: 0; max-height: 360px; overflow-y: auto; display: grid; gap: 8px; }
+:is(#cvRecruitOverlay, #cvMemberAddOverlay) .cv-recruit-option { display: flex; align-items: flex-start; gap: 12px; padding: 12px; border: 1px solid var(--border); border-radius: 12px; cursor: pointer; }
+:is(#cvRecruitOverlay, #cvMemberAddOverlay) .cv-recruit-option:hover { border-color: var(--border-hover); }
+:is(#cvRecruitOverlay, #cvMemberAddOverlay) .cv-recruit-option:has(input:checked) { border-color: var(--brand); }
+:is(#cvRecruitOverlay, #cvMemberAddOverlay) .cv-recruit-option:has(input:disabled) { cursor: default; background: var(--fill-1); }
+:is(#cvRecruitOverlay, #cvMemberAddOverlay) input[type="checkbox"] { flex: none; width: 16px; height: 16px; margin: 4px 0 0; accent-color: var(--brand); }
+:is(#cvRecruitOverlay, #cvMemberAddOverlay) .cv-recruit-option > span:not(.cv-pick-avatar, .cv-recruit-faces) { flex: 1; min-width: 0; display: grid; gap: 4px; }
+:is(#cvRecruitOverlay, #cvMemberAddOverlay) .cv-recruit-option strong { color: var(--text); font-size: var(--font-size-14); font-weight: 500; }
+:is(#cvRecruitOverlay, #cvMemberAddOverlay) .cv-recruit-option small { color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); overflow-wrap: anywhere; }
+:is(#cvRecruitOverlay, #cvMemberAddOverlay) footer { display: flex; flex: none; justify-content: flex-end; gap: 8px; padding-top: 16px; border-top: 1px solid var(--divider); }
+:is(#cvRecruitOverlay, #cvMemberAddOverlay) footer button { min-height: 36px; padding: 0 16px; border-radius: 8px; font: inherit; font-size: var(--font-size-14); cursor: pointer; }
+:is(#cvRecruitOverlay, #cvMemberAddOverlay) footer .ld-space-btn { border: 1px solid var(--border); background: var(--bg); color: var(--text); }
+:is(#cvRecruitOverlay, #cvMemberAddOverlay) footer .ld-space-btn:hover { background: var(--hover); }
+:is(#cvRecruitOverlay, #cvMemberAddOverlay) footer button:disabled { opacity: .5; cursor: default; }
+:is(#cvRecruitOverlay, #cvMemberAddOverlay) :is(button,input):focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+:is(#cvRecruitOverlay, #cvMemberAddOverlay) .cv-basic-error { margin: 0; color: var(--danger); font-size: var(--font-size-12); }
 
 /* 设置 ›「智能体/智能体团队」列表（2026-11-18）：页头为类型药丸 + 添加按钮，下方单个描边列表，行内字标、名称、描述、移除 */
 #view-collab .cv-recruit-head { align-items: center; }
@@ -50,7 +52,37 @@
 #view-collab .cv-recruit-copy { display: flex; flex: 1; flex-direction: column; gap: 4px; min-width: 0; }
 #view-collab .cv-recruit-copy strong { overflow: hidden; color: var(--text-title); font-size: var(--font-size-14); font-weight: 500; line-height: var(--line-height-14); text-overflow: ellipsis; white-space: nowrap; }
 #view-collab .cv-recruit-copy span { overflow: hidden; color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); text-overflow: ellipsis; white-space: nowrap; }
-#view-collab .cv-recruit-rows .cv-recruit-remove { display: grid; place-items: center; flex: none; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 8px; background: none; color: var(--text-secondary); cursor: pointer; }
+#view-collab .cv-recruit-rows .cv-recruit-remove { display: grid; place-items: center; flex: none; width: 32px; height: 32px; padding: 0; border: 0; border-radius: 8px; background: none; color: var(--text-secondary); cursor: pointer; }
 #view-collab .cv-recruit-rows .cv-recruit-remove:hover { background: var(--danger-bg); color: var(--danger); }
 #view-collab .cv-recruit-rows .cv-recruit-remove:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 @media (max-width: 600px) { #view-collab .cv-recruit-row { padding: 12px 16px; gap: 12px; } }
+
+/* 添加弹窗（UE 2026-11-25）：选项带头像与标签，底部左侧显示已选数量；添加成员弹窗共用这套样式 */
+:is(#cvRecruitOverlay, #cvMemberAddOverlay) .cv-recruit-option { align-items: center; }
+:is(#cvRecruitOverlay, #cvMemberAddOverlay) .cv-recruit-option input[type="checkbox"] { margin: 0; }
+:is(#cvRecruitOverlay, #cvMemberAddOverlay) .cv-recruit-option-desc { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:is(#cvRecruitOverlay, #cvMemberAddOverlay) .cv-recruit-picked { margin-right: auto; align-self: center; color: var(--text-secondary); font-size: var(--font-size-12); }
+#cvMemberAddOverlay .cv-pick-avatar { display: grid; place-items: center; flex: none; width: 36px; height: 36px; border-radius: 50%; font-size: var(--font-size-14); }
+:is(#view-collab, #cvRecruitOverlay) .cv-recruit-avatar { flex: none; width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: var(--fill-1); }
+:is(#view-collab, #cvRecruitOverlay) .cv-recruit-faces { position: relative; display: grid; grid-template-columns: repeat(2, 20px); grid-auto-rows: 20px; flex: none; width: 40px; height: 40px; }
+:is(#view-collab, #cvRecruitOverlay) .cv-recruit-faces > * { width: 20px; height: 20px; border-radius: 50%; box-shadow: 0 0 0 1px var(--bg); object-fit: cover; }
+:is(#view-collab, #cvRecruitOverlay) .cv-recruit-faces > span { display: grid; place-items: center; background: var(--fill-1); color: var(--text-secondary); font-size: var(--font-size-12); line-height: 1; }
+:is(#view-collab, #cvRecruitOverlay) .cv-recruit-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+:is(#view-collab, #cvRecruitOverlay) .cv-recruit-tags > span { padding: 0 6px; border-radius: 4px; background: var(--fill-1); color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); }
+
+/* 设置 ›「智能体/智能体团队」列表（UE 2026-11-25）：每项一张卡片，点卡片看详情，行尾删除 */
+#view-collab .cv-recruit-rows { display: flex; flex-direction: column; gap: 12px; border: 0; border-radius: 0; background: none; overflow: visible; }
+#view-collab .cv-recruit-row { gap: 12px; padding: 0 16px 0 0; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); }
+#view-collab .cv-recruit-row + .cv-recruit-row { border-top: 1px solid var(--border); }
+#view-collab .cv-recruit-row:hover { border-color: var(--border-hover); }
+#view-collab .cv-recruit-open { display: flex; flex: 1; align-items: flex-start; gap: 12px; min-width: 0; padding: 16px 0 16px 20px; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+#view-collab .cv-recruit-open:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: -2px; border-radius: 12px; }
+#view-collab .cv-recruit-copy { gap: 6px; }
+#view-collab .cv-recruit-name { display: flex; align-items: center; gap: 6px; min-width: 0; }
+#view-collab .cv-recruit-copy .cv-recruit-desc { font-size: var(--font-size-14); line-height: var(--line-height-14); }
+#view-collab .cv-recruit-badge { flex: none; padding: 0 4px; border: 1px solid var(--border); border-radius: 4px; color: var(--text-secondary); font-size: var(--font-size-12); line-height: var(--line-height-12); }
+#view-collab .cv-recruit-rows .cv-recruit-remove { align-self: flex-start; margin-top: 16px; }
+@media (max-width: 600px) { #view-collab .cv-recruit-open { padding: 12px 0 12px 16px; } }
+/* 弹窗搜索框：焦点只体现在外层胶囊描边上，里面的输入框不再单独出现聚焦框 */
+:is(#cvRecruitOverlay, #cvMemberAddOverlay) .cv-recruit-search input[type="search"]:is(:focus, :focus-visible) { outline: none; box-shadow: none; }
+:is(#cvRecruitOverlay, #cvMemberAddOverlay) .cv-recruit-search:focus-within { border-color: var(--brand); box-shadow: 0 0 0 2px var(--brand-fill); }

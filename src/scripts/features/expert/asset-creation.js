@@ -106,6 +106,15 @@ export function commitAssetDraft(draft,scope){
   if(!name)return {ok:false,message:'请填写名称后再提交'};
   if(!desc)return {ok:false,message:'请填写职责或用途'};
   if(scope!=='personal')return {ok:false,message:'请先保存为个人，再到编辑页提交审核'};
+  const result=savePersonalAsset(draft);
+  if(!result.ok)return result;
+  draft.status='done';draft.scope=scope;draft.createdId=result.item.id;
+  return result;
+}
+
+export function savePersonalAsset(draft){
+  const name=String(draft.name||'').trim(),desc=String(draft.desc||'').trim();
+  if(!name)return {ok:false,message:'请填写名称'};
   if(draft.kind==='expert'&&!draft.modes.length)return {ok:false,message:'请至少选择一项可承担的工作'};
   if(draft.kind==='team'&&(!draft.members.length||draft.members.some(id=>!EX[id]||!layerVisible('expert',EX[id]))))return {ok:false,message:'请至少选择一位当前可用的智能体'};
   const id='my-'+draft.kind+'-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
@@ -119,9 +128,8 @@ export function commitAssetDraft(draft,scope){
   if(!saveTeams()){
     if(draft.kind==='expert'){MY_EXPERTS.pop();rebuildExperts();}
     else TEAMS.pop();
-    return {ok:false,message:'保存失败，草稿仍在当前会话中，请重试'};
+    return {ok:false,message:'保存失败，请重试'};
   }
 
-  draft.status='done';draft.scope=scope;draft.createdId=id;
   return {ok:true,item};
 }

@@ -1,10 +1,20 @@
-<!-- 工作区设置 · 添加智能体与智能体团队 -->
+<!-- 设置 · 添加智能体与智能体团队 -->
 <div class="cv-recruit-overlay" id="cvRecruitOverlay" hidden>
   <section class="cv-recruit-dialog" role="dialog" aria-modal="true" aria-labelledby="cvRecruitHeading">
-    <header><div><h3 id="cvRecruitHeading">添加智能体</h3><p id="cvRecruitScope"></p></div><button type="button" class="cv-recruit-close" data-recruit-close aria-label="关闭">×</button></header>
-    <input type="search" id="cvRecruitSearch" placeholder="搜索名称或描述" aria-label="搜索可添加资产" autocomplete="off">
+    <header><h3 id="cvRecruitHeading">添加智能体</h3><button type="button" class="cv-recruit-close" data-recruit-close aria-label="关闭">×</button></header>
+    <label class="cv-recruit-search"><input type="search" id="cvRecruitSearch" placeholder="搜索名称或描述" aria-label="搜索可添加的智能体" autocomplete="off"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="m15 15 6 6"/></svg></label>
     <div class="cv-recruit-options" id="cvRecruitOptions"></div>
     <p class="cv-basic-error" id="cvRecruitError" role="alert" hidden></p>
-    <footer><button type="button" class="ld-space-btn" data-recruit-close>取消</button><button type="button" class="ld-set-btn ld-set-btn--primary" id="cvRecruitConfirm" disabled>添加</button></footer>
+    <footer><span class="cv-recruit-picked" id="cvRecruitCount">已选 0 个</span><button type="button" class="ld-space-btn" data-recruit-close>取消</button><button type="button" class="ld-set-btn ld-set-btn--primary" id="cvRecruitConfirm" disabled>添加</button></footer>
+  </section>
+</div>
+<!-- 设置 · 成员 · 添加成员 -->
+<div class="cv-recruit-overlay" id="cvMemberAddOverlay" hidden>
+  <section class="cv-recruit-dialog" role="dialog" aria-modal="true" aria-labelledby="cvMemberAddHeading">
+    <header><h3 id="cvMemberAddHeading">添加成员</h3><button type="button" class="cv-recruit-close" data-member-add-close aria-label="关闭">×</button></header>
+    <label class="cv-recruit-search"><input type="search" id="cvMemberAddSearch" placeholder="搜索姓名、邮箱或部门" aria-label="搜索要添加的成员" autocomplete="off"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="10" cy="10" r="7"/><path d="m15 15 6 6"/></svg></label>
+    <div class="cv-recruit-options" id="cvMemberAddOptions"></div>
+    <p class="cv-basic-error" id="cvMemberAddError" role="alert" hidden></p>
+    <footer><span class="cv-recruit-picked" id="cvMemberAddCount">已选 0 人</span><button type="button" class="ld-space-btn" data-member-add-close>取消</button><button type="button" class="ld-set-btn ld-set-btn--primary" id="cvMemberAddConfirm" disabled>添加</button></footer>
   </section>
 </div>

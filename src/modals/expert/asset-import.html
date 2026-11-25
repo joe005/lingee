@@ -1,0 +1,44 @@
+<div class="cv-scope">
+  <dialog class="sync-modal" id="assetImportDialog" aria-labelledby="assetImportTitle">
+    <div class="sync-modal__header">
+      <div class="sync-modal__title" id="assetImportTitle"></div>
+      <button type="button" class="sync-modal__close" id="assetImportClose" aria-label="关闭">×</button>
+    </div>
+    <div class="sync-modal__body">
+      <form id="assetImportForm">
+        <div class="sync-modal__field">
+          <div class="asset-import-drop" id="assetImportDrop" aria-describedby="assetImportError">
+            <svg class="asset-import-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9V6a2 2 0 0 1 2-2h4l2 2h7a2 2 0 0 1 2 2v3m-9 8H5a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h13m-1 8v6m-3-3h6"/></svg>
+            <div class="asset-import-sources" id="assetImportSources">
+              <span>拖拽 ZIP 至此，或点击</span>
+              <button type="button" id="assetImportChooseFolder">选择文件夹</button>
+              <span aria-hidden="true">/</span>
+              <button type="button" id="assetImportChooseZip">选择文件</button>
+            </div>
+            <div class="asset-import-selection" id="assetImportSelection" hidden>
+              <div class="asset-import-info" role="status">
+                <strong id="assetImportSource"></strong>
+                <span id="assetImportType"></span>
+              </div>
+              <button type="button" class="sync-modal__close" id="assetImportRemove" aria-label="移除所选文件">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+              </button>
+            </div>
+          </div>
+          <p id="assetImportError" role="alert"></p>
+          <input id="assetImportFile" type="file" accept=".zip,application/zip" hidden>
+          <input id="assetImportFolder" type="file" webkitdirectory hidden>
+        </div>
+        <h3 class="asset-import-requirements-title">导入要求</h3>
+        <ul class="asset-import-requirements">
+          <li>选择配置根目录或 .zip 文件</li>
+          <li>每次导入一个资产</li>
+        </ul>
+      </form>
+    </div>
+    <div class="sync-modal__footer">
+      <button type="button" class="sync-modal__btn sync-modal__btn--ghost" id="assetImportCancel">取消</button>
+      <button type="submit" class="sync-modal__btn sync-modal__btn--primary" form="assetImportForm" id="assetImportConfirm" disabled>导入</button>
+    </div>
+  </dialog>
+</div>

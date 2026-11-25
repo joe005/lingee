@@ -3,7 +3,6 @@ import { requestDeleteConfirmation } from '../../../core/delete-confirm.js';
 import { DELETE_ICON } from '../../../core/delete-icon.js';
 import { toast } from '../../../core/toast.js';
 import { LD_ACCOUNT_LABELS, ldAccountKey, ldAuthFor, ldAuthUser, ldDetectHost, ldEsc, ldIsDetectingHost, ldMine, ldRefresh, ldRemoveAuth } from './core.js';
-import { ldGitInstallHtml } from './git-install.js';
 import { ldSettingsTab, ldSettingsVisible } from './settings-page.js';
 import { LD_ICONS, ldPlatformKey, ldPlatformLogo, ldStateTag } from './ui.js';
 
@@ -63,12 +62,12 @@ function render() {
   var panel = $('#ldGitPanel');
   if (!panel || !ldSettingsVisible() || ldSettingsTab() !== 'git') return;
   var mine = ldMine(), checks = mine.checks || { accounts:{} };
-  var banner = mine.gitMissing ? ldGitInstallHtml('settings') : '';
+  /* Git 未安装提示条改由 workspace-settings.js 放在设置卡片上方，这里不再重复显示 */
   var hosts = sortedHosts(mine.auths);
   var body = hosts.length ? '<div class="ld-acct-grid">' + hosts.map(function (host) { return cardHtml(host, checks); }).join('') + '</div>'
     : '<div class="ld-acct-empty"><strong>还没有登录 Git 账号</strong><span>登录金蝶 GitLab、GitHub、Gitee 或其他 GitLab 的账号，空间初始化时会自动复用。</span>'
       + '<button type="button" class="ld-set-btn ld-set-btn--primary" data-ld-auth-add>' + LD_ICONS.plus + '添加账号</button></div>';
-  panel.innerHTML = banner + body;
+  panel.innerHTML = body;
 }
 
 /* 检测完成后在同一处反馈结果：可用给成功，其余按状态名提示 */
