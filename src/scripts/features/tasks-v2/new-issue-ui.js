@@ -17,6 +17,8 @@ import { toast } from '../../core/toast.js';
 import { startTaskCreationChat } from '../composer.js';
 import { ldIsDevProject } from '../collab/local-dev.js';
 import { downloadTaskAttachment, saveTaskAttachments, taskAttachmentRows } from './task-attachments.js';
+import { taskExecutionStages, taskStageAgentName } from './task-execution.js';
+import { tkAppendTaskEditRecord, tkCanEditTask, tkTaskEditBlockedReason, tkTaskEditChanges, tkTaskEditPhase, tkTaskFieldEditable } from './task-edit-rules.js';
 
 let renderTasks = () => {};
 let refreshTaskDetail = () => {};
@@ -26,6 +28,8 @@ let copiedTaskFields = null;
 let initialPlanSnapshot = '[]';
 let initialCreateSnapshot = '';
 let draftAttachments = [];
+/* 进行中任务编辑时，原有附件只能保留不能删除（US-2026-104059） */
+let lockedAttachmentIds = new Set();
 let savingAttachments = false;
 function createSnapshot() {
   return JSON.stringify({
@@ -35,7 +39,7 @@ function createSnapshot() {
 }
 function requestCloseOverlays() {
   if (savingAttachments || !byId('tkConfirmOverlay').hidden) return;
-  if (!byId('niuCreateOverlay').hidden && !editingTaskId && createSnapshot() !== initialCreateSnapshot) {
+  if (!byId('niuCreateOverlay').hidden && createSnapshot() !== initialCreateSnapshot) {
     showTaskConfirm('关闭后，未保存的内容将丢失。', closeOverlays, '放弃更改？', '放弃更改', 'danger', '继续编辑');
     return;
   }
@@ -51,7 +55,7 @@ let activePlanScope = 'existing';
 const byId = id => document.getElementById(id);
 function setDraftAttachments(attachments = []) {
   draftAttachments = attachments;
-  byId('niuAttachmentList').innerHTML = taskAttachmentRows(attachments, true);
+  byId('niuAttachmentList').innerHTML = attachments.map(item => taskAttachmentRows([item], !lockedAttachmentIds.has(item.id))).join('');
 }
 function resizeTaskDescription() {
   const field = byId('niuDescription');
@@ -93,7 +97,9 @@ function closeOverlays() {
   closeRepoPopup();
   byId('niuCreateOverlay').hidden = true;
   byId('niuPlanOverlay').hidden = true;
+  lockedAttachmentIds = new Set();
   setDraftAttachments();
+  setEditLocks(false);
 }
 
 function closePersonPopup() {
@@ -114,7 +120,25 @@ function renderProjectOptions() {
   byId('niuProjectOptions').innerHTML = projects.length ? projects.map(project => '<button type="button" role="option" aria-selected="' + (project.id === selectedProjectId) + '" data-niu-project="' + escapeHtml(project.id) + '"><span>' + escapeHtml(project.name) + '</span><b>' + (project.id === selectedProjectId ? '✓' : '') + '</b></button>').join('') : '<p>没有匹配的空间</p>';
 }
 
+/* 编辑已有任务按字段锁定时机置灰：归属类（空间、工作区、仓库、类型）启动后只读；
+   内容类（描述、优先级、附件）在任务结束后只读；执行类由 planLocked() 控制 */
+const ownershipLocked = () => { const task = editingTask(); return !!task && !tkTaskFieldEditable(task, 'ownership'); };
+function setEditLocks(editing) {
+  const task = editing ? editingTask() : null;
+  const contentLocked = !!task && !tkTaskFieldEditable(task, 'content');
+  const ownLocked = !!task && ownershipLocked();
+  byId('niuProjectTrigger').disabled = ownLocked;
+  byId('niuWorkspace').disabled = ownLocked || !tkProjectById(selectedProjectId);
+  if (ownLocked) { byId('niuReposTrigger').disabled = true; byId('niuType').disabled = true; }
+  byId('niuDescription').readOnly = contentLocked;
+  byId('niuDescription').setAttribute('aria-readonly', String(contentLocked));
+  byId('niuPriority').disabled = contentLocked;
+  byId('niuAttachmentInput').disabled = contentLocked;
+  byId('niuAttachmentInput').closest('.niu-attachment-picker').hidden = contentLocked;
+  initCreateSelects([byId('niuWorkspace'), byId('niuType'), byId('niuPriority')]);
+}
 function openProjectPopup() {
+  if (ownershipLocked()) return;
   byId('niuProjectSearch').value = '';
   renderProjectOptions();
   const popup = byId('niuProjectPopup');
@@ -147,7 +171,7 @@ function renderWorkspaceOptions(selected = '') {
   byId('niuWorkspace').disabled = !p;
   /* 空间下有其他工作区时，新建任务直接选工作区（默认工作区与其他工作区平级）；编辑和没有工作区的空间仍显示所属空间 */
   /* 独立工作区的任务没有所属空间，编辑时也显示所属工作区 */
-  const showWorkspace = !!p && (host || editingTaskId === null && rows.length > 0);
+  const showWorkspace = !!p && (host || !ownershipLocked() && rows.length > 0);
   byId('niuWorkspace').closest('.niu-field').hidden = !showWorkspace;
   byId('niuProjectTrigger').closest('.niu-field').hidden = showWorkspace;
   renderWorkspaceRepoHint();
@@ -530,10 +554,13 @@ export function openNewIssueEdit(taskId) {
   if (!task) { toast('未找到任务', 'warning'); return; }
   const projects = tkScopeProjects();
   if (!projects.some(project => project.id === task.project)) { toast('未加入该项目，无法编辑任务', 'warning'); return; }
+  if (!tkCanEditTask(task)) { toast(tkTaskEditBlockedReason(task), 'warning'); return; }
   closeOverlays();
   activePlanScope = 'create';
   currentTaskId = task.id;
   editingTaskId = task.id;
+  /* 启动后原有附件只能保留：进行中可新增，结束后不能新增 */
+  lockedAttachmentIds = new Set(tkTaskEditPhase(task) === 'unstarted' ? [] : (task.attachments || []).map(item => item.id));
   setDraftAttachments(task.attachments || []);
   draftStages = (task.executionPlan || []).map(stage => ({ ...stage }));
   initialPlanSnapshot = JSON.stringify(draftStages);
@@ -550,6 +577,15 @@ export function openNewIssueEdit(taskId) {
   byId('niuPriority').value = task.priority || 'medium';
   fillTeamOptions(executorKeyOf(task), task.issueType);
   if (!planLocked() && executorKeyOf(task) !== byId('niuTeam').value) { draftStages = defaultPlanStages(selectedProjectId); draftConfirmed = false; }
+  /* 预制任务没有保存执行计划时，详情按团队现算阶段：已启动的按同一口径只读展示，未启动的按团队生成默认计划 */
+  if (!draftStages.length) {
+    draftStages = planLocked() ? taskExecutionStages(task).map(stage => ({
+      id: stage.id, workType: stage.name, title: stage.name, description: stage.desc || '', expertIds: stage.expertIds || [],
+      agentName: taskStageAgentName(task, stage.id), assigneeId: stage.assigneeId || task.assignee,
+      status: 'pending', requiresConfirmation: stage.requiresConfirmation !== false,
+    })) : defaultPlanStages(selectedProjectId);
+    initialPlanSnapshot = JSON.stringify(draftStages);
+  }
   selectedOwnerId = task.assignee || '';
   byId('niuCreateSubmit').textContent = '保存修改';
   byId('niuCreateStageCount').textContent = String(draftStages.length);
@@ -557,7 +593,10 @@ export function openNewIssueEdit(taskId) {
   resizeTaskDescription();
   setCreateMode('manual');
   renderPlan();
+  renderRepoPicker();
+  setEditLocks(true);
   byId('niuCreateScroll').scrollTop = 0;
+  initialCreateSnapshot = createSnapshot();
 }
 
 function selectCreateTab(tab) {
@@ -610,31 +649,35 @@ function taskSaveMessage(project, stages) {
 async function createTask(startNow) {
   if (savingAttachments) return;
   if (!validateTaskStep('info') || !validateTaskStep('plan')) return;
+  /* 编辑已有任务：归属类锁定后不再校验仓库与空间；执行类锁定后不再校验团队和处理人 */
+  const editTarget = editingTask();
+  const ownLocked = !!editTarget && ownershipLocked();
+  const skipPlanChecks = !!editTarget && !tkTaskFieldEditable(editTarget, 'execution');
   const title = byId('niuTitle').value.trim();
   const description = byId('niuDescription').value.trim();
   const project = byId('niuProject').value;
   const workspaceId = byId('niuWorkspace').value;
   const repoList = buildRepoList(tkProjectById(project), workspaceId);
   const multiRepo = repoList.repositories.length > 1 && !reposLocked(editingTask());
-  if (multiRepo && !selectedRepoKeys.length) { toast('请选择代码仓库', 'warning'); selectCreateTab('info'); openRepoPopup(); return; }
+  if (!ownLocked && multiRepo && !selectedRepoKeys.length) { toast('请选择代码仓库', 'warning'); selectCreateTab('info'); openRepoPopup(); return; }
   const repositoryKeys = multiRepo ? selectedRepoKeys.slice() : undefined;
   const repositoryKey = multiRepo ? buildDefaultRepoKey(repositoryKeys, repoList) : byId('niuRepository').value;
-  if (repositoryKey && !tkGetTasks().find(item => item.id === editingTaskId)?.repoSnapshot && !repoList.repositories.some(r => r.key === repositoryKey)) { toast('所选仓库关联已移除，请重新选择', 'warning'); selectCreateTab('info'); return; }
+  if (!ownLocked && repositoryKey && !tkGetTasks().find(item => item.id === editingTaskId)?.repoSnapshot && !repoList.repositories.some(r => r.key === repositoryKey)) { toast('所选仓库关联已移除，请重新选择', 'warning'); selectCreateTab('info'); return; }
   const issueType = byId('niuType').value;
   const {teamId,expertId} = executorFields(byId('niuTeam').value);
   const executorError = capabilityTaskError({project,workspaceId,teamId,expertId,executorSnapshot:planLocked() ? tkGetTasks().find(t => t.id === editingTaskId)?.executorSnapshot : null},tkProjectById(project));
-  if (executorError) { toast(executorError,'warning'); return; }
+  if (executorError && !skipPlanChecks) { toast(executorError,'warning'); return; }
   const owner = selectedOwnerId;
   const scopeProject = tkProjectById(project), workspace = wsById(scopeProject, workspaceId);
-  if (workspace && (!canCreateTaskIn(scopeProject, workspace) || workspace.status === 'archived')) { toast('当前空间不可新建或移入任务', 'warning'); return; }
-  if (workspace && [owner].concat(draftStages.filter(stage => stage.status !== 'done').map(stage => stage.assigneeId)).some(id => id && !wsMemberIds(scopeProject, workspace).includes(id))) { toast('任务负责人和阶段执行人须先加入当前空间，请联系负责人添加成员', 'warning'); return; }
+  if (!ownLocked && workspace && (!canCreateTaskIn(scopeProject, workspace) || workspace.status === 'archived')) { toast('当前空间不可新建或移入任务', 'warning'); return; }
+  if (!skipPlanChecks && workspace && [owner].concat(draftStages.filter(stage => stage.status !== 'done').map(stage => stage.assigneeId)).some(id => id && !wsMemberIds(scopeProject, workspace).includes(id))) { toast('任务负责人和阶段执行人须先加入当前空间，请联系负责人添加成员', 'warning'); return; }
   if (!planLocked() && !draftStages.length) { toast('暂时无法安排执行计划，请检查空间已安装的智能体或团队', 'warning'); return; }
   const originalProject = editingTaskId === null ? null : tkGetTasks().find(item => item.id === editingTaskId)?.project;
   const unassignedStage = (!planLocked() || project !== originalProject) && draftStages.find(stage => !tkPeopleInProject(project).some(person => person.id === stage.assigneeId));
   if (unassignedStage) { toast('请为节点选择当前项目的执行人', 'warning'); selectCreateTab('plan'); byId('niuCreateStageList').querySelector('[data-niu-owner-stage="' + CSS.escape(unassignedStage.id) + '"]')?.focus(); return; }
   const task = editingTask();
   if (editingTaskId !== null && !task) { toast('未找到任务', 'warning'); closeOverlays(); return; }
-  if (task) {
+  if (task && !ownLocked) {
     const moveError = buildTaskMoveError(task, tkProjectById(task.project), tkProjectById(project), workspaceId, repositoryKey);
     if (moveError) { toast(moveError, 'warning'); return; }
   }
@@ -652,13 +695,27 @@ async function createTask(startNow) {
     saveButtons.forEach(button => { button.disabled = false; });
   }
   if (task) {
-    const patch = { repositoryKey, ...(repositoryKeys ? {repositoryKeys} : {}), workspaceId, title, desc: description, issueType, attachments,
-      priority: byId('niuPriority').value, assignee: owner, project, teamId, expertId };
-    if (!planLocked() && JSON.stringify(draftStages) !== initialPlanSnapshot) {
+    /* 按锁定时机只保存还能改的字段 */
+    if (!tkCanEditTask(task)) { toast(tkTaskEditBlockedReason(task), 'warning'); closeOverlays(); return; }
+    const patch = { title };
+    if (tkTaskFieldEditable(task, 'content')) Object.assign(patch, { desc: description, attachments, priority: byId('niuPriority').value });
+    const executionEditable = tkTaskFieldEditable(task, 'execution');
+    if (executionEditable) Object.assign(patch, { assignee: owner, teamId, expertId });
+    if (!ownLocked) Object.assign(patch, { project, workspaceId, repositoryKey, ...(repositoryKeys ? {repositoryKeys} : {}), issueType });
+    if (executionEditable && JSON.stringify(draftStages) !== initialPlanSnapshot) {
       patch.executionPlan = draftStages.map(stage => ({ ...stage }));
       patch.planStatus = 'draft';
     }
+    const labels = row => {
+      const space = tkProjectById(row.project);
+      return { teamName: taskTeamOf(row)?.name || '', projectName: projectName(row.project),
+        workspaceName: row.workspaceId && space ? wsPathNames(space, row.workspaceId).join(' / ') : projectName(row.project) };
+    };
+    const after = { ...task, ...patch };
+    const changes = tkTaskEditChanges({ ...task, ...labels(task) }, { ...after, ...labels(after) });
+    if (!changes.length) { closeOverlays(); return; }
     tkUpdateTask(task.id, patch);
+    tkAppendTaskEditRecord(tkGetTasks().find(item => item.id === task.id), changes, 'ui');
     renderTasks();
     refreshTaskDetail(task.id);
     closeOverlays();
@@ -709,6 +766,7 @@ function renderPlan() {
       const experts = (stage.expertIds?.length ? stage.expertIds : (stageOptions.find(row => row.name === stage.workType)?.expertIds || [])).filter(id => definitions[id]);
       const expertCell = '<div class="niu-stage-experts">' + (experts.length
         ? experts.map(id => '<span class="niu-stage-expert" title="由智能体执行">✦ ' + escapeHtml(definitions[id].name) + '</span>').join('')
+        : stage.agentName ? '<span class="niu-stage-expert" title="由智能体执行">✦ ' + escapeHtml(stage.agentName) + '</span>'
         : '<span class="niu-stage-expert niu-stage-expert--empty">未匹配智能体</span>') + '</div>';
       return '<tr class="niu-stage-row" data-niu-stage="' + escapeHtml(stage.id) + '"><td class="niu-stage-index">' + String(index + 1) + '</td><td><span class="niu-stage-name">' + escapeHtml(stage.workType || stage.title || '') + '</span></td><td>' + expertCell + '</td><td class="niu-stage-review-cell">' + reviewMode + '</td><td>' + owner + '</td></tr>';
     }
@@ -787,7 +845,7 @@ export function initNewIssueUI(renderCallback, detailCallback) {
       return;
     }
     const button = event.target.closest('[data-task-attachment-remove]');
-    if (!button) return;
+    if (!button || lockedAttachmentIds.has(button.dataset.taskAttachmentRemove)) return;
     setDraftAttachments(draftAttachments.filter(item => item.id !== button.dataset.taskAttachmentRemove));
     attachmentInput.focus();
   });
@@ -834,7 +892,11 @@ export function initNewIssueUI(renderCallback, detailCallback) {
   byId('niuSmartSubmit').addEventListener('click', submitSmartCreate);
   byId('niuSmartProject').addEventListener('change', event => selectProject(event.target.value));
   byId('niuTeam').addEventListener('change', () => {
-    syncFlowOptions('需求');
+    /* 已启动任务的类型锁定；未启动编辑换团队时保留当前所选类型 */
+    const editing = editingTask();
+    syncFlowOptions(editing ? byId('niuType').value || editing.issueType : '需求');
+    if (editing && ownershipLocked()) byId('niuType').disabled = true;
+    initCreateSelects([byId('niuType')]);
     if (activePlanScope !== 'create' || planLocked()) return;
     draftStages = defaultPlanStages(selectedProjectId);
     draftConfirmed = false;

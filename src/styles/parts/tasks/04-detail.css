@@ -591,3 +591,15 @@ body.tk-drawer-resizing{user-select:none;cursor:col-resize}
 .tk-drawer-foot>div{flex:1}
 .tk-drawer-foot label{display:block;font-size:var(--font-size-12);color:var(--text-secondary);margin-bottom:4px}
 .tk-drawer-foot select{width:100%;border:1px solid var(--border);border-radius:5px;padding:5px 8px;font-size:var(--font-size-14);outline:none;background:var(--bg)}
+/* 任务修改记录（US-2026-104059） */
+.tk-feed-edit-detail{margin:-4px 0 0 20px;font-size:var(--font-size-12);color:var(--text-secondary)}
+.tk-feed-edit-detail>summary{cursor:pointer;color:var(--brand);width:max-content}
+.tk-feed-edit-detail>summary:focus-visible,.tk-feed-edit-desc>summary:focus-visible{outline:2px solid var(--border-focus);outline-offset:2px;border-radius:4px}
+.tk-feed-edit-source{display:block;margin-top:6px}
+.tk-feed-edit-detail ul{margin:6px 0 0;padding-left:16px;display:flex;flex-direction:column;gap:4px;color:var(--text);overflow-wrap:anywhere}
+.tk-feed-edit-desc>summary{cursor:pointer}
+.tk-feed-edit-compare{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+.tk-feed-edit-compare>div{padding:8px;border:1px solid var(--border);border-radius:8px;background:var(--fill-1);min-width:0}
+.tk-feed-edit-compare span{display:block;margin-bottom:4px;color:var(--text-secondary)}
+.tk-feed-edit-compare p{margin:0;max-height:160px;overflow:auto;white-space:pre-wrap;color:var(--text)}
+@media (max-width:640px){.tk-feed-edit-compare{grid-template-columns:1fr}}

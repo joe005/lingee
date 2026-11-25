@@ -9,6 +9,7 @@ import { set_activePick } from '../../expert/store.js';
 import { showTaskConfirm, showTaskStageConfirm } from '../confirm.js';
 import { TK_DELETE_BLOCKED_REASON, TK_STATUSES, tkCanDeleteTask, tkCanStartTask, tkCurrentStageHandlerId, tkCurrentUserId, tkDeleteTask, tkGetPerson, tkGetTasks, tkProjectById, tkUpdateTask } from '../data.js';
 import { openNewIssueCopy, openNewIssueEdit } from '../new-issue-ui.js';
+import { tkCanEditTask, tkTaskEditBlockedReason } from '../task-edit-rules.js';
 import { transferTargets } from '../stage-transfer.js';
 import { reviewTaskStage, scheduleTaskStageStartedNotice, startTaskStage } from '../task-execution.js';
 import { TASK_SESSION_STATUS, tkAddTaskSession, tkGetMySessions, tkLatestStageSession, tkTaskSessionOpeningMessage, tkTaskSessionTitle } from '../task-sessions.js';
@@ -172,9 +173,7 @@ export function showCardMenu(taskId, anchorEl, detailOnly) {
   if (sameMenuOpen) return;
   anchorEl.setAttribute('aria-expanded', 'true');
   var task = tkGetTasks().find(function (row) { return row.id === Number(taskId); });
-  var editable = task && ['backlog','planned'].includes(task.status)
-    && ['backlog','planned'].includes(task.initialStatus || task.status)
-    && !(task.statusHistory || []).some(function (change) { return !['backlog','planned'].includes(change.from) || !['backlog','planned'].includes(change.to); });
+  var editable = tkCanEditTask(task);
   var menu = document.createElement('div');
   menu.className = 'tk-card-menu' + (detailOnly ? ' tk-drawer-more-menu' : '') + ' show';
   var itemSvg = {
@@ -324,7 +323,7 @@ export function handleTaskCardPrimaryAction(taskId, action, trigger) {
   if (!task) return;
   if (['start','review','retry','reply'].includes(action) && tkCurrentStageHandlerId(task) !== tkCurrentUserId()) { toast('仅当前阶段处理人可操作', 'warning'); return; }
   if (action === 'edit') {
-    if (!['backlog','planned'].includes(task.status)) { toast('任务已开始，无法编辑', 'warning'); return; }
+    if (!tkCanEditTask(task)) { toast(tkTaskEditBlockedReason(task), 'warning'); return; }
     openNewIssueEdit(task.id);
     return;
   }

@@ -298,11 +298,45 @@ function taskStatusActivityEvents(task, activity) {
       text:'将' + stageLabel + '转交给 ' + tkGetPerson(change.toId).name + (change.reason ? '：' + change.reason : ''),
     } });
   });
+  /* 任务修改记录（US-2026-104059）：一次保存一条，展开看原值和新值 */
+  (task.editRecords || []).forEach(function (record) {
+    transitions.push({ type:'edit', time:record.createdAt, sortTime:record.createdAt, entry:{
+      author:tkGetPerson(record.authorId).name, record:record,
+    } });
+  });
   return transitions;
+}
+
+var EDIT_ICON = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="color:var(--text-muted);flex:none" aria-hidden="true"><path d="m16 3 5 5M4 20l4-1 13-13a2.8 2.8 0 0 0-4-4L4 15l-1 6Z"/></svg>';
+function editChangeHtml(change) {
+  if (change.field === 'attachments') {
+    return (change.added || []).map(function (name) { return '<li>新增附件 ' + escapeHtml(name) + '</li>'; }).join('')
+      + (change.removed || []).map(function (name) { return '<li>删除附件 ' + escapeHtml(name) + '</li>'; }).join('');
+  }
+  if (change.field === 'desc') {
+    return '<li><details class="tk-feed-edit-desc"><summary>任务描述已修改，查看修改前后</summary>'
+      + '<div class="tk-feed-edit-compare"><div><span>修改前</span><p>' + escapeHtml(change.from || '（空）') + '</p></div>'
+      + '<div><span>修改后</span><p>' + escapeHtml(change.to || '（空）') + '</p></div></div></details></li>';
+  }
+  return '<li>' + escapeHtml(change.label) + '：' + escapeHtml(change.from || '（空）') + ' → ' + escapeHtml(change.to || '（空）') + '</li>';
+}
+function renderEditActivityRow(event) {
+  var record = event.entry.record;
+  var message = taskActivityMessage(event);
+  var source = record.source === 'chat'
+    ? '<span class="tk-feed-edit-source">通过灵基会话' + (record.sessionTitle ? '「' + escapeHtml(record.sessionTitle) + '」' : '') + '</span>' : '';
+  return '<div class="tk-feed-activity-row tk-feed-activity-row--edit"><span class="tk-feed-activity-lead">' + EDIT_ICON + '</span>'
+    + '<strong>' + escapeHtml(event.entry.author) + '</strong><span class="tk-feed-activity-message" title="' + escapeHtml(message) + '">' + escapeHtml(message) + '</span>'
+    + '<time>' + escapeHtml(activityDisplayTime(event.time)) + '</time></div>'
+    + '<details class="tk-feed-edit-detail"><summary>查看修改内容</summary>' + source
+    + '<ul>' + record.changes.map(editChangeHtml).join('') + '</ul></details>';
 }
 
 function taskActivityMessage(event) {
   var entry = event.entry;
+  if (event.type === 'edit') {
+    return '修改了任务：' + Array.from(new Set(entry.record.changes.map(function (change) { return change.label; }))).join('、');
+  }
   if (event.type === 'status' && entry.message) return entry.message;
   if (event.type === 'status') return '状态从 ' + tkGetStatusName(entry.from) + ' 改为 ' + tkGetStatusName(entry.to);
   if (event.type === 'delivery') {
@@ -409,6 +443,7 @@ function renderTaskSystemFeedGroup(events, isLatest, taskId) {
     + (hiddenOlder > 0 ? '<button type="button" class="tk-feed-activity-toggle tk-feed-activity-more" data-activity-older="' + id + '"><svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m6 3 5 5-5 5"/></svg><span>显示更多旧动态（' + hiddenOlder + ' 条）</span></button>' : '')
     + '<div class="tk-feed-activity-rows">'
     + visible.map(function (event) {
+      if (event.type === 'edit') return renderEditActivityRow(event);
       var entry = event.entry;
       var author = event.type === 'delivery' || event.type === 'status' ? entry.author : entry.author || tkGetPerson(entry.authorId).name;
       var message = taskActivityMessage(event);

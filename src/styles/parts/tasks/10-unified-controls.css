@@ -174,3 +174,10 @@ td.niu-plan-empty{color:var(--text-secondary)}
 #cv-tasks-current #view-tasks .tk-display-btn{display:none}
 #cv-tasks-current #view-tasks.tk-list-mode:not(.tk-project-list-mode) .tk-tools-left{flex:1 1 auto;margin-left:0}
 #cv-tasks-current #view-tasks.tk-list-mode:not(.tk-project-list-mode) .tk-tools-left .tk-search-wrap{margin-left:auto}
+/* 编辑任务：已锁定的字段统一灰底、次要文字、禁止光标，不用半透明，保证原值可读（US-2026-104059） */
+#niuCreateOverlay .niu-field :is(.niu-person-trigger,.niu-select-trigger):disabled{opacity:1;border-color:var(--border);background:var(--fill-1);color:var(--text-secondary);cursor:not-allowed}
+/* 只读描述要压过弹窗输入框的 hover / focus 规则（含 :not(:disabled):focus），用 id 提高优先级；可选中复制，不显示蓝色焦点框 */
+#niuCreateOverlay #niuDescription[readonly],
+#niuCreateOverlay #niuDescription[readonly]:is(:hover,:focus,:focus-visible){border-color:var(--border);background:var(--fill-1);color:var(--text-secondary);box-shadow:none;outline:none;cursor:not-allowed}
+#niuCreateOverlay .niu-field :is(.niu-person-trigger,.niu-select-trigger):disabled :is(span,svg){color:var(--text-secondary)}
+#niuCreateOverlay .niu-create-stage-table .niu-stage-owner:disabled{opacity:1;color:var(--text-secondary)}
