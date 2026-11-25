@@ -1,4 +1,3 @@
-import { initChatStageLayout } from './features/chat-stage-layout.js';
 import { initPageSelectDropdowns } from './core/select-dropdown.js';
 import billTemplate from '../artifacts/purchase-order.html?raw';
 import tokensCss from '../styles/tokens.css?raw';
@@ -91,7 +90,6 @@ initAnalytics();                  /* 用户行为分析看板 */
 initPlatformAdmin();              /* 平台智能体管理原型与本地更新 */
 initManager();                    /* 管理板块：项目列表与项目详情 */
 initWork();                       /* 工作板块：新任务首屏与历史对话 */
-initChatStageLayout();
 initPageSelectDropdowns();         /* 现行页面普通单选字段统一组件 */
 initAgentDemo();                  /* 智能体开发演示：对话创建、沙箱测试、提交与 Work 使用 */
 initPages();                      /* 新页面：src/scripts/pages/*.js 自动接线，不用改本文件 */

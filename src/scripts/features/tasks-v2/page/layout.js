@@ -84,6 +84,8 @@ export function render() {
 
 /* 项目详情复用视图、筛选与布局控制器，离开后恢复任务页布局。 */
 export function tkSetProjectListMode(active, projectId) {
+  var heading = document.querySelector('#view-tasks .tk-header h2');
+  if (heading) heading.textContent = active ? '项目任务' : '任务';
   if (active === pageState.projectListMode && (!active || pageState.projectListProjectId === projectId)) return;
   if (active) {
     if (!pageState.projectListMode) {

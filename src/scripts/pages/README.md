@@ -31,3 +31,8 @@
 - 样式选择器以 `#view-<名称>` 开头，与其他页面互不影响，也不依赖 `app.css` 的引入顺序
 - 和其他页面交互只用数据模块导出的函数和 `lingee:*` 自定义事件，不直接改别的页面的 DOM
 - 打开协作开发的某个页签：`showView('collab')` 后发 `lingee:collab-nav` 事件，`detail.tab` 填页签名
+- 带模式打开新会话：发 `lingee:newtask-open`，`detail.mode` 填模式名（如「苍穹应用」），由新会话页切视图和模式
+- 在对话页右侧开关面板：发 `lingee:chat-side-panel`，`detail.panel` 填面板名、`detail.open` 填开关，由对话页改自己的类名
+- 从首页卡片开始新会话：核心视图发 `lingee:new-session`，需要清空选择的模块监听它
+- 离开协作开发的项目任务：核心视图发 `lingee:project-tasks-leave`，由项目详情收回任务视图
+- 任务视图挂进项目详情、判断是否嵌入：用 `core/view.js` 的 `setTasksInProject`、`isTasksEmbedded`；任务页标题随 `tkSetProjectListMode` 切换，不在外部改

@@ -1,4 +1,5 @@
 import { billTemplateWithTokens } from '../../core/bill-template.js';
+import cosmicCardIcon from '../../../assets/render-card-icons/cosmic-dev.png';
 import { $ } from '../../core/dom.js';
 import { input } from '../../core/view.js';
 import { syncTogglePreviewBtn } from '../chat.js';
@@ -93,10 +94,15 @@ function setComposerTaskReference(taskId) {
 }
 function scrollChatBottom(){ chatMessages.scrollTop=chatMessages.scrollHeight; }
 
-function appendUserMessage(text){
+/* chips：{skill, app}，苍穹应用会话在气泡开头显示技能与关联应用胶囊（与客户端一致） */
+function appendUserMessage(text, chips){
   var msg=document.createElement('div');
   msg.className='message user';
-  msg.innerHTML='<div class="message-content"><p>'+escapeHtml(text)+'</p></div>';
+  var chipHtml=chips?.skill
+    ? '<span class="message-user-chips"><span class="message-user-skill"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 8-4 4 4 4"/><path d="m15 8 4 4-4 4"/></svg>'+escapeHtml(chips.skill)+'</span>'
+      +(chips.app?'<span class="message-user-app">'+escapeHtml(chips.app)+'</span>':'')+'</span>'
+    : '';
+  msg.innerHTML='<div class="message-content"><p>'+chipHtml+escapeHtml(text)+'</p></div>';
   messagesList.appendChild(msg);
   scrollChatBottom();
 }
@@ -140,10 +146,19 @@ function createFinalResult(withHeader){
 
 function createArtifactCard(options){
   var card=document.createElement('div');
-  card.className='artifact-card';
-  card.innerHTML='<div class="artifact-preview"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></div>'
-    +'<div class="artifact-info"><div class="artifact-title">'+escapeHtml(options?.title || '采购订单')+'</div></div>'
-    +'<div class="artifact-action"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg></div>';
+  /* variant 'app'：苍穹应用产物卡片，对齐客户端（代码文件图标、标题 + 说明、右侧箭头） */
+  var isApp=options?.variant==='app';
+  card.className='artifact-card'+(isApp?' artifact-card--app':'');
+  var previewIcon=isApp
+    ? '<img src="'+cosmicCardIcon+'" alt="" draggable="false">'
+    : '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>';
+  var actionIcon=isApp
+    ? '<path d="M5 12h14"/><path d="m13 6 6 6-6 6"/>'
+    : '<path d="M7 17L17 7"/><path d="M7 7h10v10"/>';
+  card.innerHTML='<div class="artifact-preview">'+previewIcon+'</div>'
+    +'<div class="artifact-info"><div class="artifact-title">'+escapeHtml(options?.title || '采购订单')+'</div>'
+    +(options?.desc?'<div class="artifact-desc">'+escapeHtml(options.desc)+'</div>':'')+'</div>'
+    +'<div class="artifact-action"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+actionIcon+'</svg></div>';
   function openPreview(){
     if (options?.onOpen) { options.onOpen(); return; }
     var view=document.getElementById('view-chat');

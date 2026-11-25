@@ -5,13 +5,42 @@ import { appendTaskArtifact, createArtifactCard, createFinalResult, escapeHtml, 
 import { activeResponseRun, activeSessionId, chatSessions, renderChatSessions, saveChatSessions } from './sessions.js';
 import { switchPreviewTab } from './preview.js';
 import { appendTurnFooter } from './turn-footer.js';
+import { appendTurnProcess } from './turn-process.js';
 /* 对话：Markdown 渲染、流式输出、模拟 AI 回复（拆自 composer.js） */
 
-var mockReplies=[
-  '已完成采购订单管理应用的开发，以下是实现方案：\n\n## 功能模块\n\n**1. 采购订单创建**\n- 支持选择供应商、采购员、币别、付款条件\n- 明细行可添加物料编码、名称、规格、数量、单价\n- 自动计算含税金额、折扣金额、总金额\n\n**2. 审批流程**\n- 草稿 → 提交 → 部门主管审核 → 财务复核 → 总经理审批（金额>10万触发）\n- 审批意见可追溯，支持驳回退回至草稿\n\n**3. 变更与关闭**\n- 已审核订单支持变更，记录变更前后差异\n- 支持手工关闭和自动关闭（到货完成后自动关闭）\n\n## 技术要点\n- 基于苍穹平台 DynamicObject 实现单据模型，主表 + 明细表关联\n- 使用 QFilter 构建多维度查询（供应商、日期范围、单据状态）\n- 审批流集成 ProcessPlugin，支持节点回退和会签\n\n如需调整字段或流程配置，随时告诉我。',
-  '采购订单管理应用开发完成，核心交付内容如下：\n\n**已完成模块：**\n1. 采购订单单据模型（含 32 个字段，覆盖供应商、采购组织、明细行等）\n2. 列表页与详情页（支持批量审核、按状态筛选、模糊搜索）\n3. 审批流程（三级审核：部门主管 → 财务 → 总经理）\n4. 报表导出（PDF / Excel，支持自定义模板）\n\n**关键实现：**\n- 明细行金额自动计算：含税金额 = 数量 × 含税单价，折扣金额自动倒算\n- 供应商联动带出付款条件、币别、默认税率\n- 采购订单与入库单上下游联动，支持部分到货和分批入库\n\n**性能指标：**\n- 列表查询响应 < 200ms（万级数据量）\n- 审批提交 < 500ms\n\n可以直接发布到测试环境验证，或需要我调整某些细节？',
-  '基于采购订单管理需求，已完成应用搭建，以下是关键设计：\n\n## 数据模型\n- **采购订单主表**：单据编号、供应商、采购组织、币别、付款条件、交货日期、采购员\n- **采购订单明细**：物料编码、物料名称、规格型号、采购数量、单位、含税单价、金额、税率\n\n## 页面布局\n- 列表页：按单据状态（草稿 → 已提交 → 已审核 → 已关闭）分类筛选\n- 详情页：头信息 + 明细行 + 审批记录三段式布局\n- 支持从采购申请单下推生成采购订单，自动带出明细行\n\n## 业务规则\n1. 同一供应商同月采购金额超 50 万，自动触发总经理审批\n2. 含税金额 = 数量 × 含税单价，折扣金额 = 不含税金额 × 折扣率\n3. 到货数量不可超过采购数量，超量时拦截并提示\n4. 已关闭订单不允许生成入库单\n\n需要我针对哪个模块进一步展开说明？'
+/* 苍穹应用开发会话的演示脚本，按客户端真实会话的节奏编排：先过程（叙述 + 工具汇总），再给收尾汇总和产物卡片 */
+var COSMIC_PROCESS=[
+  {tools:[{kind:'skill',text:'cosmic-app-builder'}]},
+  {say:'我先确认宿主应用和已有单据，读取采购订单相关的建模约定。',tools:[
+    {kind:'search',text:'采购订单 单据模型'},
+    {kind:'shell',text:'探测并绑定 Python 命令'},
+    {kind:'tool',name:'memory_search',text:' 采购订单 字段 基线确认'}]},
+  {say:'上下文绑定完成（应用 kdtest_scm_po_ext，归属已验证）。接下来查询编译器契约并加载命中的专题参考。',tools:[
+    {kind:'search',text:'compiler contract BILL_FORM'},
+    {kind:'think',text:'需求只给出主表和明细字段，审批流沿用平台默认的单据审核即可。'},
+    {kind:'search',text:'分录字段类型目录'},
+    {kind:'shell',text:'初始化苍穹应用上下文绑定'}]},
+  {say:'需求已明确：新建「采购订单」单据，主表 + 明细分录。先确认价格、数量、金额字段的类型。',tools:[
+    {kind:'shell',text:'查询字段类型目录（PriceField / QtyField / AmountField）'},
+    {kind:'shell',text:'解析基础资料目标：供应商、物料、币别'}]},
+  {say:'字段类型已确认。现在编写 authoring 输入文件。',tools:[
+    {kind:'edit',text:'authoring/kdtest_scm_purorder.yaml'}]},
+  {say:'执行编译器生成批次工件。',tools:[
+    {kind:'shell',text:'编译单据模型并生成批次'}]},
+  {say:'编译成功（实体 kdtest_scm_purorder，24 个业务字段）。执行 runBatch 创建到线上并验证。',tools:[
+    {kind:'shell',text:'runBatch 创建单据与布局'},
+    {kind:'think',text:'布局写入完成，还需要回读确认必填和分区。'},
+    {kind:'shell',text:'回读线上表单状态'}]},
+  {say:'布局写入验证通过。补上金额联动插件，并跑一遍质量门禁。',tools:[
+    {kind:'edit',text:'app/kdtest_scm_po_ext/src/main/java/kdtest/scm/formplugin/PurOrderBillPlugin.java'},
+    {kind:'shell',text:'DCS 全模块扫描'},
+    {kind:'tool',name:'register_plugin',text:' PurOrderBillPlugin → kdtest_scm_purorder'}]}
 ];
+var COSMIC_REPLY='开发收尾完成。汇总如下：\n\n## 本轮完成\n\n**1. 采购订单单据（主表 + 明细分录）**\n- `kdtest_scm_purorder`（BILL_FORM），24 个业务字段：供应商、采购组织、采购员、币别、付款条件、交货日期等\n- 明细分录 `kdtest_po_entry`：物料编码、规格型号、数量、单价、税率、含税金额\n\n**2. Java 插件 ×1（`app/kdtest_scm_po_ext/src/main/java/kdtest/scm/formplugin/`）**\n- `PurOrderBillPlugin`：数量或单价变化时重算含税金额、税额与表头总金额；供应商变化时带出付款条件和币别\n\n**3. 质量门禁**\n- DCS 全模块扫描：`findingCount=0`\n- 插件注册：1/1 成功并回读验证（`verifiedHere=true`）\n\n## 需你知悉的决策与边界\n- 审批流沿用平台默认的单据审核，未单独配置多级审批\n- 汇率默认取「基础汇率」，币别为人民币时固定为 `1.0000`\n- 与入库单的上下游联查不在本轮范围\n\n如需运行态验收（新增单据、金额计算、审核流转），告诉我即可继续。';
+/* 历史回复的耗时：与过程区标题、回复尾一致 */
+/* 正文逐字输出：每 30ms 出 3 个字 */
+var COSMIC_STREAM_PACE={chunkSize:3,interval:30};
+var COSMIC_HISTORY_MS=14*60000+22000;
 
 /* simple markdown → HTML renderer */
 function renderMarkdown(text){
@@ -46,6 +75,16 @@ function renderMarkdown(text){
 
 /* 任务会话结果较长，流式节奏需比普通会话慢，避免整段内容一闪而过 */
 var TASK_STREAM_PACE={chunkSize:8,interval:80};
+/* 流式输出时边出字边排版：未闭合的粗体、行内代码临时补齐，避免露出 Markdown 原始符号 */
+function renderPartialMarkdown(text){
+  var bold=(text.match(/\*\*/g)||[]).length;
+  if(bold%2) text+='**';
+  else if(/\*$/.test(text)) text=text.slice(0,-1);
+  var ticks=(text.match(/`/g)||[]).length;
+  if(ticks%2) text+='`';
+  text=text.replace(/(^|\n)(#{1,3}|-|\d+\.)$/,'$1');
+  return renderMarkdown(text);
+}
 function streamText(targetEl,text,onDone,pace){
   var idx=0;
   var chunkSize=pace&&pace.chunkSize?Math.max(1,pace.chunkSize):0;
@@ -53,29 +92,28 @@ function streamText(targetEl,text,onDone,pace){
   var cursor=document.createElement('span');
   cursor.className='cursor-blink';
   cursor.textContent='▌';
-  targetEl.appendChild(cursor);
-  targetEl.style.whiteSpace='pre-wrap';
-  targetEl.style.wordBreak='break-word';
   var timer=null,done=false;
+  function paint(){
+    targetEl.innerHTML=renderPartialMarkdown(text.slice(0,idx));
+    var last=targetEl.lastElementChild;
+    while(last&&last.lastElementChild&&/^(UL|OL|LI)$/.test(last.tagName)) last=last.lastElementChild;
+    (last||targetEl).appendChild(cursor);
+  }
   function finish(){
     if(done) return;
     done=true;
     clearTimeout(timer);
     cursor.remove();
     targetEl.innerHTML=renderMarkdown(text);
-    targetEl.style.whiteSpace='';
-    targetEl.style.wordBreak='';
     if(onDone) onDone();
   }
   function typeNext(){
     if(done) return;
     if(!targetEl.isConnected){done=true;return;}
     if(idx<text.length){
-      var chunk=chunkSize
-        ? text.slice(idx,idx+chunkSize)
-        : text.slice(idx,idx+Math.max(2,Math.ceil(text.length/16)));
-      cursor.insertAdjacentText('beforebegin',chunk);
-      idx+=chunk.length;
+      var step=chunkSize||Math.max(2,Math.ceil(text.length/16));
+      idx=Math.min(text.length,idx+step);
+      paint();
       scrollChatBottom();
       timer=setTimeout(typeNext,interval);
     }else{
@@ -147,6 +185,8 @@ function simulateAIResponse(responseEl,instant,task,prompt,onDone){
   timeline.className='work-steps';
   if(task)appendTaskReadingSummary(responseEl,task);
   responseEl.appendChild(timeline);
+  /* 非任务会话先走处理过程，过程结束后再输出正文 */
+  var process=null;
   var completed=false;
   var cancelStream=null;
   var watchdog=null;
@@ -156,7 +196,7 @@ function simulateAIResponse(responseEl,instant,task,prompt,onDone){
     var identity=responseEl.parentElement && responseEl.parentElement.querySelector('.chat-agent-identity strong');
     appendTurnFooter(responseEl,{
       text:text,
-      durationMs:instant ? Math.max(3000,text.length*40) : Date.now()-startedAt,
+      durationMs:instant ? (task ? Math.max(3000,text.length*40) : COSMIC_HISTORY_MS) : Date.now()-startedAt,
       agentName:identity ? identity.textContent : '',
       onRegenerate:task ? null : function(){
         responseEl.replaceChildren();
@@ -184,11 +224,12 @@ function simulateAIResponse(responseEl,instant,task,prompt,onDone){
   function showCompletedResult(){
     if(completed || run !== activeResponseRun || !responseEl.isConnected)return;
     if(cancelStream)cancelStream();
+    if(process)process.finish();
     timeline.replaceChildren();
-    var result=createFinalResult(!task);
+    var result=createFinalResult(false);
     timeline.appendChild(result);
-    var artifact=task ? null : createArtifactCard();
-    var finalText=task ? taskResultText : mockReplies[Math.floor(Math.random()*mockReplies.length)];
+    var artifact=task ? null : createCosmicArtifactCard();
+    var finalText=task ? taskResultText : COSMIC_REPLY;
     result.querySelector('.markdown-content').innerHTML=renderMarkdown(finalText);
     if(task)appendTaskArtifact(result,task,true);else { result.appendChild(artifact); artifact._openPreview(); }
     appendFooter(finalText);
@@ -197,30 +238,34 @@ function simulateAIResponse(responseEl,instant,task,prompt,onDone){
   }
 
   if(instant){
+    if(!task)process=appendTurnProcess(responseEl,COSMIC_PROCESS,{instant:true,durationMs:COSMIC_HISTORY_MS,before:timeline});
     showCompletedResult();
     return;
   }
-
-  watchdog=setTimeout(showCompletedResult,8000);
+  watchdog=setTimeout(showCompletedResult,task ? 8000 : 90000);
 
   function beginStream(){
     if (run !== activeResponseRun || !responseEl.isConnected) return;
     if (completed) return;
-    var result=createFinalResult(!task);
+    var result=createFinalResult(false);
     timeline.appendChild(result);
     var mc=result.querySelector('.markdown-content');
-    var text=task ? taskResultText : mockReplies[Math.floor(Math.random()*mockReplies.length)];
+    var text=task ? taskResultText : COSMIC_REPLY;
     cancelStream=streamText(mc,text,function(){
       if (completed || run !== activeResponseRun || !responseEl.isConnected) return;
       if (task) appendTaskArtifact(result,task,true);
-      else { var completedArtifact=createArtifactCard(); result.appendChild(completedArtifact); completedArtifact._openPreview(); }
+      else { var completedArtifact=createCosmicArtifactCard(); result.appendChild(completedArtifact); completedArtifact._openPreview(); }
       appendFooter(text);
       scrollChatBottom();
       finishRun();
-    }, task ? TASK_STREAM_PACE : null);
+    }, task ? TASK_STREAM_PACE : COSMIC_STREAM_PACE);
   }
   if (task) setTimeout(beginStream, 500);
-  else beginStream();
+  else process=appendTurnProcess(responseEl,COSMIC_PROCESS,{before:timeline,onDone:beginStream});
+}
+/* 苍穹应用产物卡片：与客户端一致，标题 + 「查看实体、插件、页面等配置结果」，点击打开右侧预览 */
+function createCosmicArtifactCard(){
+  return createArtifactCard({title:'采购订单',desc:'查看实体、插件、页面等配置结果',variant:'app'});
 }
 
 export { appendTaskReadingSummary, renderMarkdown, simulateAIResponse };

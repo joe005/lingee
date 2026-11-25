@@ -3,7 +3,6 @@ import { DELETE_ICON } from '../core/delete-icon.js';
 import { toast } from '../core/toast.js';
 import { initSelectDropdowns } from '../core/select-dropdown.js';
 import { tierInfo } from './expert/data.js';
-import { syncTogglePreviewBtn } from './chat.js';
 import { agentCardByName, agentCardStatus, openAgentSubmit } from './agent-submit.js';
 /* 智能体开发：会话右侧的智能体配置面板
    对齐 Lingee Build 智能体开发会话：左侧是 agent-builder 的交付摘要，右侧是配置（基础信息 / 角色设定 / 技能配置 / 知识），
@@ -274,9 +273,7 @@ export function openAgentConfig(name, opts) {
   if (!panel) return;
   unmountAgentConfig();
   prepare(name, opts);
-  var view = $('#view-chat');
-  view.classList.add('preview-open', 'agent-config-open');
-  syncTogglePreviewBtn();
+  document.dispatchEvent(new CustomEvent('lingee:chat-side-panel', { detail: { panel: 'agent-config', open: true } }));
 }
 
 /* 状态在面板外变化时（如审核通过）刷新状态标签和提交按钮 */
@@ -286,7 +283,7 @@ export function closeAgentConfig() {
   if (!panel || panel.hidden || panel.parentNode !== home) return;
   closeTestMenu(false);
   panel.hidden = true;
-  $('#view-chat').classList.remove('agent-config-open');
+  document.dispatchEvent(new CustomEvent('lingee:chat-side-panel', { detail: { panel: 'agent-config', open: false } }));
 }
 
 export function initAgentConfig() {

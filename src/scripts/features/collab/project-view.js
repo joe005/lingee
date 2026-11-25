@@ -10,7 +10,7 @@ import { tbSave } from './tb-core.js';
 import { renderTaskBoard, tbOpenTask, tbShowBoard } from './task-board.js';
 import { cvMayEditProject, cvRenderProjMenu, cvRenderProjectSettings, cvSetProject, cvUpdateCounts } from './projects.js';
 import { cvSwitchView } from './view.js';
-import { setTasksEmbedded, showView } from '../../core/view.js';
+import { setTasksEmbedded, setTasksInProject, showView } from '../../core/view.js';
 import { tkOpenProjectTaskCreate, tkSetProjectListMode } from '../tasks-v2/index.js';
 import { tkCanViewTask, tkGetPerson, tkGetTaskArtifacts, tkGetTasks, tkPruneOrphanTasks } from '../tasks-v2/data.js';
 import { createDeliveryActivity } from './delivery-activity.js';
@@ -219,21 +219,15 @@ function cvRenderProjectArtifacts(projectId){
 }
 /* 恢复历史项目任务挂载方式：使用同一任务页面及其已绑定的全部列表事件。 */
 function cvMountProjectTaskBoard(){
-  var board=$('#view-tasks'),main=$('#cv-proj-detail .pj-project-tasks-host');
-  if(!board||!main)return;
+  var main=$('#cv-proj-detail .pj-project-tasks-host');
+  if(!main)return;
   cvProjectTaskBoardEmbedded=true;
-  setTasksEmbedded(true,main);
-  board.classList.add('pj-embedded-task-view');
-  var heading=board.querySelector('.tk-header h2');if(heading)heading.textContent='项目任务';
+  setTasksInProject(true,main);
   tkSetProjectListMode(true,cvProjCur);
 }
 function cvRestoreProjectTaskBoard(){
   if(!cvProjectTaskBoardEmbedded)return;
-  var board=$('#view-tasks');
-  if(board){
-    board.classList.remove('pj-embedded-task-view');
-    var heading=board.querySelector('.tk-header h2');if(heading)heading.textContent='任务';
-  }
+  setTasksInProject(false);
   setTasksEmbedded(true);
   cvProjectTaskBoardEmbedded=false;
   tkSetProjectListMode(false);
@@ -669,7 +663,6 @@ function cvLeaveProjectTasks(){
   if(!cvProjectTaskReturnId)return;
   cvProjectTaskReturnId='';
   $('#tkProjectContext')?.classList.add('hidden');
-  var heading=$('#view-tasks .tk-header h2');if(heading)heading.textContent='任务';
   tkSetProjectListMode(false);
 }
 function cvOpenProjectTasks(projectId){
@@ -681,7 +674,6 @@ function cvOpenProjectTasks(projectId){
   var context=$('#tkProjectContext'),name=$('#tkProjectContextName');
   if(name)name.textContent=project.name;
   context?.classList.remove('hidden');
-  var heading=$('#view-tasks .tk-header h2');if(heading)heading.textContent='项目任务';
   tkSetProjectListMode(true,project.id);
 }
 function cvNewProjectTask(){
@@ -949,6 +941,7 @@ function cvConfirmProjectMemberRemoval(){
 
 export function initCollabProjectView(){
   window.cvLeaveProjectTasks=cvLeaveProjectTasks;
+  document.addEventListener('lingee:project-tasks-leave',cvLeaveProjectTasks);
   window.cvRestoreProjectTaskBoard=cvRestoreProjectTaskBoard;
   document.addEventListener('lingee:tasks-changed',cvRenderProjectList);
   cvRenderProjectFilters();

@@ -4,7 +4,8 @@ import { ldProjectAction } from './ui.js';
 
 /* 本地开发 · 协作开发顶部「N 个目录未就绪」提醒与浮层（#ldNavStatus / #ldNavPop）。
    统计任务页当前空间关联的仓库；任务页选「全部空间」时范围为空，统计我能看到的所有空间（同一仓库目录只算一次），
-   浮层里每个仓库注明所属空间。有未就绪的仓库时橙色提示，点开列出这些仓库及各自操作；都已就绪时不显示。
+   浮层里每个仓库注明所属空间。有未就绪的仓库时橙色提示，点开列出这些仓库及各自操作；
+   都已就绪时与客户端一致显示绿色「空间已就绪」，点击打开设置（data-ld-open-settings 由 actions.js 统一处理）。
    当前范围由协作开发在初始化时注入（ldSetNavScope），本模块不反向依赖任务页。 */
 var navScope = function () { return null; };
 export function ldSetNavScope(provider) { if (typeof provider === 'function') navScope = provider; }
@@ -20,8 +21,18 @@ function renderNavStatus() {
   var btn = $('#ldNavStatus');
   if (!btn) return;
   var pending = scopedAttention().length;
-  btn.hidden = !pending;
-  if (!pending) { toggleNavPop(false); return; }
+  btn.hidden = false;
+  btn.classList.toggle('is-ready', !pending);
+  if (!pending) {
+    toggleNavPop(false);
+    btn.dataset.ldOpenSettings = '';
+    btn.removeAttribute('aria-haspopup');
+    btn.querySelector('.ld-nav-text').textContent = '空间已就绪';
+    btn.setAttribute('aria-label', '空间已就绪，打开设置');
+    return;
+  }
+  btn.removeAttribute('data-ld-open-settings');
+  btn.setAttribute('aria-haspopup', 'dialog');
   btn.querySelector('.ld-nav-text').textContent = pending + ' 个目录未就绪';
   btn.setAttribute('aria-label', '本地开发环境：' + pending + ' 个目录未就绪');
 }
@@ -47,7 +58,7 @@ export function toggleNavPop(open) {
   if (open) {
     /* 打开前先按最新数据重算，数字和列表保持一致 */
     renderNavStatus();
-    if (btn.hidden) return;
+    if (btn.hidden || btn.classList.contains('is-ready')) return;
     renderNavPop();
     pop.hidden = false;
     var rect = btn.getBoundingClientRect();
@@ -62,7 +73,7 @@ export function initNavStatus() {
   document.addEventListener('click', function (e) {
     var t = e.target;
     if (!(t instanceof Element)) return;
-    if (t.closest('#ldNavStatus')) { toggleNavPop($('#ldNavPop').hidden); return; }
+    if (t.closest('#ldNavStatus')) { if (!t.closest('#ldNavStatus').classList.contains('is-ready')) toggleNavPop($('#ldNavPop').hidden); return; }
     /* 浮层里点了任何操作或点到外面都收起 */
     if ($('#ldNavPop') && !$('#ldNavPop').hidden && (!t.closest('#ldNavPop') || t.closest('button'))) toggleNavPop(false);
   });

@@ -10,6 +10,10 @@ import { toast } from '../../core/toast.js';
 import { requestDeleteConfirmation } from '../../core/delete-confirm.js';
 import { wsById } from '../../core/workspace-tree.js';
 import { CV_MEMBERS } from './data.js';
+import githubIcon from '../../../assets/git-platform/github.svg';
+import giteeIcon from '../../../assets/git-platform/gitee.svg';
+import gitlabIcon from '../../../assets/git-platform/gitlab.svg';
+import genericIcon from '../../../assets/git-platform/generic.svg';
 import { getSettingsScope, setSettingsScope } from './space-switch.js';
 import { mgrCurrentPersonId } from '../manager/data.js';
 import { personName, spaceMemberIds, wsAdminIds, wsDelete, wsDeleteBlockReason, wsLeave, wsLeaveBlockReason, wsMemberIds, wsOwnerId, wsProjectById, wsScopePath } from '../manager/workspaces.js';
@@ -160,7 +164,7 @@ function repoCard(p, ws, item, index, editable, list, defaultKey, editor = false
     + (defaultKey === item.key || list.length === 1 ? '<span class="cv-repo-default">主仓库</span>' : '')+'</div>'+actions+'</div>';
   if (!editor) {
     const primary = defaultKey === item.key || list.length === 1;
-    const title = '<div class="cv-repo-title"><span class="cv-repo-icon" aria-hidden="true">' + REPO_ICONS.repo + '</span><div class="cv-repo-title-copy"><div class="cv-repo-title-line"><strong title="'+esc(item.name)+'">'+esc(item.name || '仓库')+'</strong>'
+    const title = '<div class="cv-repo-title">' + repoPlatformIcon(item.repo) + '<div class="cv-repo-title-copy"><div class="cv-repo-title-line"><strong title="'+esc(item.name)+'">'+esc(item.name || '仓库')+'</strong>'
       + (primary ? '<span class="cv-repo-default">主仓库</span>' : '') + '</div>'
       + repoProvider(item.repo) + '</div></div>';
     const apps = (item.apps || []).map(app => '<span class="cv-repo-chip">' + esc(app) + '</span>').join('');
@@ -182,6 +186,15 @@ function repoCard(p, ws, item, index, editable, list, defaultKey, editor = false
     + '<div class="cv-repo-meta"><div class="cv-basic-field"><label for="cvRepoName">名称 <b class="cv-required" aria-hidden="true">*</b></label><input id="cvRepoName" data-cv-repo-field="name" data-cv-repo-index="' + index + '" value="' + esc(item.name) + '" maxlength="60" placeholder="默认取自仓库地址" aria-label="仓库名称" aria-required="true"' + disabled + '></div>'
     + '<div class="cv-basic-field"><label for="cvRepoDesc">描述 <b class="cv-required" aria-hidden="true">*</b></label><textarea id="cvRepoDesc" rows="3" data-cv-repo-field="desc" data-cv-repo-index="' + index + '" maxlength="200" placeholder="说明仓库用途，例如：前端主工程、公共组件库" aria-label="仓库描述" aria-required="true"' + disabled + '>' + esc(item.desc || '') + '</textarea></div></div>';
   return '<article class="cv-repo-card">' + headRow + body + '<div class="cv-repo-editor-actions"><button type="button" class="ld-space-btn" data-cv-repo-cancel>取消</button><button type="submit" class="ld-set-btn ld-set-btn--primary">保存</button></div></article>';
+}
+/* 仓库卡片图标与客户端一致，按仓库主机显示平台图标：github.com、gitee.com、git.kingdee.com 用品牌图标，
+   其他主机（自建 GitLab 等）和取不到主机时用通用图标 */
+const PLATFORM_ICONS = { 'github.com': ['github', githubIcon], 'gitee.com': ['gitee', giteeIcon], 'git.kingdee.com': ['gitlab', gitlabIcon] };
+function repoPlatformIcon(repo) {
+  let host = '';
+  try { host = new URL(repo).host.toLowerCase(); } catch (_) { host = ''; }
+  const [platform, src] = PLATFORM_ICONS[host] || ['generic', genericIcon];
+  return '<img class="cv-repo-platform-icon" data-platform="' + platform + '" src="' + src + '" width="40" height="40" alt="" aria-hidden="true">';
 }
 function repoProvider(repo) {
   let host = '', repoPath = '';

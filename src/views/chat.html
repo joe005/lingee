@@ -198,6 +198,18 @@
                 </div>
               </div>
             </div>
+            <!-- 权限范围：与客户端一致（仅可查看 / 工作区内修改 / 完全访问），原型只记录选择 -->
+            <div class="dropdown sandbox-dd" data-dd="sandbox">
+              <div class="chip" data-chip>
+                <svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg><span class="chip-label">工作区内修改</span>
+                <svg class="caret" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 7.5 5 5 5-5"/></svg>
+              </div>
+              <div class="menu sandbox-menu">
+                <div class="menu-item sandbox-item" data-val="仅可查看"><span class="left"><svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg><span class="sandbox-text"><span>仅可查看</span><small>适合阅读、分析和审查</small></span></span><span class="menu-right"><svg class="ic ic-sm menu-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></div>
+                <div class="menu-item sandbox-item checked" data-val="工作区内修改"><span class="left"><svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg><span class="sandbox-text"><span>工作区内修改</span><small>可修改当前工作区</small></span></span><span class="menu-right"><svg class="ic ic-sm menu-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></div>
+                <div class="menu-item sandbox-item" data-val="完全访问"><span class="left"><svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 8v5"/><path d="M12 16h.01"/></svg><span class="sandbox-text"><span>完全访问</span><small>沿用宿主环境权限</small></span></span><span class="menu-right"><svg class="ic ic-sm menu-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></div>
+              </div>
+            </div>
 
             <!-- model -->
 
@@ -227,22 +239,23 @@
             <div class="connector-badges" id="chatConnectorBadges"></div>
 
             <div class="spacer"></div>
+            <!-- 模型：与客户端一致，列出可用模型和点数倍率，默认 Qwen3.8-Max -->
             <div class="dropdown" data-dd="model">
               <div class="chip" data-chip>
-                <span class="chip-label">专家</span>
+                <svg class="ic ic-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 3-5 5 2 9 7 5 7-5 2-9-5-5H8Z"/><path d="m8 10 4 4 4-4"/></svg><span class="chip-label">Qwen3.8-Max</span>
                 <svg class="caret" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m5 7.5 5 5 5-5"/></svg>
               </div>
-              <div class="menu">
-                <div class="menu-item" data-val="快速" data-model-tier="fast"><span class="left">快速</span><span class="menu-right"><svg class="ic ic-sm menu-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></div>
-                <div class="menu-item" data-val="深度" data-model-tier="deep"><span class="left">深度</span><span class="menu-right"><svg class="ic ic-sm menu-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></div>
-                <div class="menu-item checked" data-val="专家" data-model-tier="expert"><span class="left">专家</span><span class="menu-right"><svg class="ic ic-sm menu-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></div>
-                <div class="menu-sep" role="separator"></div>
-                <div class="menu-item" data-val="Kimi-K3.1-Pro" data-model-name="Kimi-K3.1-Pro"><span class="left">Kimi-K3.1-Pro</span><span class="menu-right"><svg class="ic ic-sm menu-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></div>
-                <div class="menu-item" data-val="Kimi-K3" data-model-name="Kimi-K3"><span class="left">Kimi-K3</span><span class="menu-right"><svg class="ic ic-sm menu-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></div>
-                <div class="menu-item" data-val="GLM-5.3" data-model-name="GLM-5.3"><span class="left">GLM-5.3</span><span class="menu-right"><svg class="ic ic-sm menu-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></div>
-                <div class="menu-item" data-val="GLM-5.2" data-model-name="GLM-5.2"><span class="left">GLM-5.2</span><span class="menu-right"><svg class="ic ic-sm menu-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></div>
-                <div class="menu-item" data-val="Qwen3.8-Max" data-model-name="Qwen3.8-Max"><span class="left">Qwen3.8-Max</span><span class="menu-right"><svg class="ic ic-sm menu-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></div>
-                <div class="menu-item" data-val="Qwen3.8-Flash" data-model-name="Qwen3.8-Flash"><span class="left">Qwen3.8-Flash</span><span class="menu-right"><svg class="ic ic-sm menu-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></div>
+              <div class="menu model-menu">
+                <div class="menu-item" data-val="GLM-5.3" data-model-name="GLM-5.3"><span class="left">GLM-5.3</span><span class="menu-right"><span class="model-rate">1.2x</span><svg class="ic ic-sm menu-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></div>
+                <div class="menu-item" data-val="GLM-5.3-Flash" data-model-name="GLM-5.3-Flash"><span class="left">GLM-5.3-Flash</span><span class="menu-right"><span class="model-rate">0.2x</span><svg class="ic ic-sm menu-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></div>
+                <div class="menu-item" data-val="GLM-5.2" data-model-name="GLM-5.2"><span class="left">GLM-5.2</span><span class="menu-right"><span class="model-rate">1.2x</span><svg class="ic ic-sm menu-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></div>
+                <div class="menu-item" data-val="Qwen4-Max" data-model-name="Qwen4-Max"><span class="left">Qwen4-Max</span><span class="menu-right"><span class="model-rate">1.4x</span><svg class="ic ic-sm menu-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></div>
+                <div class="menu-item checked" data-val="Qwen3.8-Max" data-model-name="Qwen3.8-Max"><span class="left">Qwen3.8-Max</span><span class="menu-right"><span class="model-rate">1.6x</span><svg class="ic ic-sm menu-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></div>
+                <div class="menu-item" data-val="Qwen3.8-Flash" data-model-name="Qwen3.8-Flash"><span class="left">Qwen3.8-Flash</span><span class="menu-right"><span class="model-rate">0.1x</span><svg class="ic ic-sm menu-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></div>
+                <div class="menu-item" data-val="Step-5-Preview" data-model-name="Step-5-Preview"><span class="left">Step-5-Preview</span><span class="menu-right"><span class="model-rate">0.8x</span><svg class="ic ic-sm menu-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></div>
+                <div class="menu-item" data-val="Hy4" data-model-name="Hy4"><span class="left">Hy4</span><span class="menu-right"><span class="model-rate">0.5x</span><svg class="ic ic-sm menu-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></div>
+                <div class="menu-item" data-val="DeepSeek-V4.1-Flash" data-model-name="DeepSeek-V4.1-Flash"><span class="left">DeepSeek-V4.1-Flash</span><span class="menu-right"><span class="model-rate">0.3x</span><svg class="ic ic-sm menu-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></div>
+                <div class="menu-item" data-val="DeepSeek-V4-Pro" data-model-name="DeepSeek-V4-Pro"><span class="left">DeepSeek-V4-Pro</span><span class="menu-right"><span class="model-rate">1.0x</span><svg class="ic ic-sm menu-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span></div>
               </div>
             </div>
             <button class="round-btn enhance-btn" id="chatEnhanceBtn" data-tooltip="提示词增强" aria-label="chat-enhance">
@@ -277,6 +290,10 @@
             </div>
           </div>
         </div>
+      </div>
+      <div class="chat-stage-done" id="chatStageDone" role="status" hidden>
+        <span class="chat-stage-done-icon" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m4.5 10 3.5 3.5 7.5-8"/></svg></span>
+        <span id="chatStageDoneText"></span>
       </div>
       <div class="history-overlay" id="historyOverlay"></div>
       <div class="history-panel" id="historyPanel">

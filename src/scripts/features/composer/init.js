@@ -142,7 +142,6 @@ function initComposer() {
   });
   document.getElementById('chatStageConfirmBtn').addEventListener('click', confirmChatStage);
   document.getElementById('chatCurrentStageToggle').addEventListener('click', function () {
-    if (document.getElementById('chatCurrentStage').classList.contains('is-horizontal')) return;
     var details = document.getElementById('chatCurrentStageDetails');
     details.hidden = !details.hidden;
     this.setAttribute('aria-expanded', String(!details.hidden));

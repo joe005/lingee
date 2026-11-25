@@ -397,9 +397,7 @@ export function initExpertChips() {
     n.addEventListener('click',function(){ if(n.textContent.trim()==='新会话') resetPickForNewSession(); });
   });
   if(brandEl) brandEl.addEventListener('click',resetPickForNewSession);
-  $$('#view-home .home-card').forEach(function(c){
-    c.addEventListener('click',function(){ if(c.getAttribute('data-view')==='newtask') resetPickForNewSession(); });
-  });
+  document.addEventListener('lingee:new-session',resetPickForNewSession);
   document.addEventListener('keydown',function(e){
     if((e.metaKey||e.ctrlKey) && !e.shiftKey && (e.key||'').toLowerCase()==='n') resetPickForNewSession();
   });

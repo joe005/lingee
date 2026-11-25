@@ -1,7 +1,8 @@
 /* 复用输入框标签与应用下拉的布局，环境段与左右标签等高。 */
 .composer-tag-row > .composer-tag-env { flex: 0 1 auto; min-width: 0; }
-#view-newtask .composer-tag-row:has(> .composer-tag-app:not(.hidden)),
-#view-chat.cosmic-app-session .composer-tag-row { display: flex; }
+#view-newtask .composer-tag-row:has(> .composer-tag-app:not(.hidden)) { display: flex; }
+/* 会话中的追问输入框与客户端一致，不再显示技能、环境、应用标签行；技能与应用显示在用户消息气泡开头 */
+#view-chat.cosmic-app-session .composer-tag-row { display: none; }
 #view-newtask .composer-tag-row:has(> .composer-tag-app.hidden) > .composer-tag-env,
 #view-chat:not(.cosmic-app-session) .composer-tag-env { display: none; }
 #view-chat.cosmic-app-session #chatAppDropdown { display: block; }

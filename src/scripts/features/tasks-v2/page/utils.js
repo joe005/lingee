@@ -1,6 +1,6 @@
 import { taskCodeDeliveryContext } from '../code-delivery-context.js';
 import { toast } from '../../../core/toast.js';
-import { input, setNavActive, showView } from '../../../core/view.js';
+import { input, isTasksEmbedded, setNavActive, showView } from '../../../core/view.js';
 import { cvSwitchView } from '../../collab/view.js';
 import { ldGateTaskStart, ldIsEnvBlocked, ldTaskEnvironmentId, ldOpenSetup, ldProjectStatus, ldRestoreEnvBlocked } from '../../collab/local-dev.js';
 import { continueBlockedTaskConversation, openTaskExceptionHistory, openTaskSessionHistory, openTaskStatusConversation, sendComposerText, setComposerTaskReference } from '../../composer.js';
@@ -96,7 +96,7 @@ export function startTaskExecution(taskId, options) {
   }
   openTaskConversationWithTask(taskId, 'start', true);
   toast(options?.fromSave ? '保存成功' : options?.automatic
-    ? escapeHtml(options.previousStageName || '当前阶段') + '已完成，开始「' + escapeHtml(started.stage?.name || '下一阶段') + '」'
+    ? '已自动开始「' + escapeHtml(started.stage?.name || '下一阶段') + '」'
     : '已进入' + (started.stage?.name || '当前节点') + '，会话已发起并运行中', 'success', options?.automatic ? 3000 : undefined);
 }
 export function startTaskExecutionFromSession(taskId) {
@@ -119,7 +119,7 @@ export function handleTaskHeaderAction() {
 }
 function returnToTaskDetail(task) {
   var taskView = document.getElementById('view-tasks');
-  var wasEmbedded = taskView?.classList.contains('pj-embedded-task-view') || !!taskView?.closest('#view-collab');
+  var wasEmbedded = !!taskView && (taskView.classList.contains('pj-embedded-task-view') || isTasksEmbedded());
   return function () {
     if (wasEmbedded) {
       showView('collab');
@@ -155,7 +155,7 @@ export function openBoardTaskSession(task) {
 }
 function openBlockedTaskSession(task) {
   var taskView = document.getElementById('view-tasks');
-  var wasEmbedded = taskView?.classList.contains('pj-embedded-task-view') || !!taskView?.closest('#view-collab');
+  var wasEmbedded = !!taskView && (taskView.classList.contains('pj-embedded-task-view') || isTasksEmbedded());
   closeDrawer();
   openTaskExceptionHistory(task, function () {
     if (wasEmbedded) {

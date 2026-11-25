@@ -397,6 +397,7 @@
 #view-collab .cv-repo-card--rich:hover { border-color: var(--border-hover); box-shadow: none; }
 #view-collab .cv-repo-card--rich.is-primary { border-color: var(--brand-fill); }
 #view-collab .cv-repo-card--rich .cv-repo-icon { width: 40px; height: 40px; border-radius: 12px; }
+#view-collab .cv-repo-platform-icon { flex: none; display: block; width: 40px; height: 40px; }
 #view-collab .cv-repo-card--rich .cv-repo-title-line strong { font-size: var(--font-size-16); font-weight: 500; line-height: var(--line-height-16); }
 #view-collab .cv-repo-card--rich .cv-repo-provider { display: flex; align-items: center; gap: 6px; min-width: 0; margin-top: 4px; }
 #view-collab .cv-repo-provider-tag { flex: none; padding: 0 6px; border-radius: 4px; background: var(--fill-1); color: var(--text-secondary); font-size: var(--font-size-12); line-height: 20px; }
@@ -509,3 +510,18 @@
 #view-collab .cv-repo-menu .is-danger { color: var(--danger); }
 #view-collab .cv-repo-menu .is-danger:hover { background: var(--danger-bg); }
 #view-collab .cv-repo-cards > .cv-repo-card--rich.is-menu-open { overflow: visible; z-index: 2; }
+
+/* 设置页左栏与客户端一致（2026-11-25）：空间切换放在左栏顶部，下面是分类菜单；右侧内容占满整列高度 */
+@media(min-width:601px){
+  #view-collab .cv-basic-layout:has(> .cv-basic-space-bar) { grid-template-columns: 208px minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); row-gap: 8px; }
+  #view-collab .cv-basic-layout:has(> .cv-basic-space-bar) > .cv-basic-space-bar { grid-column: 1; grid-row: 1; padding: 0 16px 8px 0; border-bottom: 0; border-right: 1px solid var(--divider); align-self: stretch; }
+  #view-collab .cv-basic-layout:has(> .cv-basic-space-bar) > .cv-basic-nav { grid-column: 1; grid-row: 2; }
+  #view-collab .cv-basic-layout:has(> .cv-basic-space-bar) > .cv-basic-main { grid-column: 2; grid-row: 1 / -1; }
+  #view-collab .cv-basic-space-bar .cv-space-switch { width: 100%; min-width: 0; }
+}
+/* 设置页顶部「‹ 设置」（2026-11-25 与客户端对齐）：进入设置时替换页签与齿轮 */
+#view-collab #cvTabNav .cv-settings-back { display: none; align-items: center; gap: 4px; height: 36px; padding: 0 8px 0 4px; border: 0; border-radius: 8px; background: transparent; font: inherit; font-size: var(--font-size-18); font-weight: 600; color: var(--text-title); cursor: pointer; }
+#view-collab #cvTabNav .cv-settings-back:hover { background: var(--hover); }
+#view-collab #cvTabNav .cv-settings-back:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+#view-collab:has(#cv-local.active) #cvTabNav .cv-settings-back { display: inline-flex; }
+#view-collab:has(#cv-local.active) #cvTabNav :is(.cv-tab-capsule, .cv-settings-gear) { display: none; }

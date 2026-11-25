@@ -32,3 +32,21 @@
 #view-newtask [data-open-home-expert]:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 @media(max-width:760px){#view-newtask .main-center{padding:96px 16px 32px}#view-newtask .greeting{font-size:var(--font-size-32)}#view-newtask .mode-bar{justify-content:center}}
 @media(max-width:600px){#view-newtask .main-center{padding-top:48px}#view-newtask .composer{padding:12px}#view-newtask .composer-bar{gap:4px}#view-newtask .greeting{font-size:var(--font-size-32)}}
+/* 苍穹应用模式与客户端一致：技能、环境、应用标签和输入文字在同一行，文字换行后从标签下方左侧接着排 */
+#view-newtask .composer-tag-row:has(> .composer-tag-app:not(.hidden)){float:left;height:32px;margin:0 8px 0 0;padding:0}
+#view-newtask .composer:has(> .composer-tag-row > .composer-tag-app:not(.hidden)) .composer-input{min-height:80px;max-height:none;overflow:visible;line-height:32px}
+#view-newtask .composer:has(> .composer-tag-row > .composer-tag-app:not(.hidden)) .composer-bar{clear:both}
+/* 场景模板（与客户端一致）：标题行 + 三列白卡，卡片 90px 高，点选填入提示词 */
+#view-newtask .nt-templates{width:100%;max-width:720px;margin:32px 0 0}
+#view-newtask .nt-templates-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;font-size:var(--font-size-14);line-height:22px;color:var(--text)}
+#view-newtask .nt-templates-refresh{display:inline-flex;align-items:center;gap:4px;padding:0;border:0;background:transparent;font:inherit;color:var(--text-secondary);cursor:pointer}
+#view-newtask .nt-templates-refresh:hover{color:var(--text)}
+#view-newtask .nt-templates-refresh .ic{width:14px;height:14px}
+#view-newtask .nt-templates-refresh:focus-visible,#view-newtask .nt-template-card:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+#view-newtask .nt-template-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+#view-newtask .nt-template-card{display:flex;flex-direction:column;align-items:flex-start;gap:6px;box-sizing:border-box;height:90px;padding:12px;overflow:hidden;border:0;border-radius:12px;background:var(--bg);font:inherit;text-align:left;cursor:pointer;transition:box-shadow .15s}
+#view-newtask .nt-template-card:hover{box-shadow:var(--card-shadow)}
+#view-newtask .nt-template-type{display:inline-flex;align-items:center;gap:4px;font-size:var(--font-size-14);font-weight:700;line-height:22px;color:var(--text-title)}
+#view-newtask .nt-template-type .ic{width:18px;height:18px;color:var(--brand)}
+#view-newtask .nt-template-title{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;font-size:var(--font-size-12);line-height:18px;color:var(--text-muted)}
+@media(max-width:600px){#view-newtask .nt-template-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}

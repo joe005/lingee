@@ -1,4 +1,3 @@
-import { $ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
 /* 对话：回复尾操作栏（复制回复、重新生成、分叉到新会话、分享）与本轮元信息（智能体 · 模型 · 耗时、共消耗），
    对齐真实版会话的回复尾；分叉与分享在原型中只给出结果提示 */
@@ -21,9 +20,9 @@ function formatDuration(ms) {
   return Math.floor(seconds / 60) + 'm ' + (seconds % 60) + 's';
 }
 
+/* 客户端回复尾写执行模式「专家」，不写模型名 */
 function currentModelLabel() {
-  var label = $('#chatComposerWrap [data-dd="model"] .chip-label');
-  return label ? label.textContent.trim() : '快速';
+  return '专家';
 }
 
 function copyText(text) {

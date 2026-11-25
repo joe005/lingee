@@ -169,3 +169,8 @@ td.niu-plan-empty{color:var(--text-secondary)}
 .tk-stage-return button:focus-visible,.tk-stage-return-trigger:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 .tk-stage-return .tk-stage-return-error{margin:12px 0 0;font-size:var(--font-size-14);line-height:var(--line-height-14);color:var(--danger)}
 .tk-stage-return .tk-stage-return-required{margin-left:4px;color:var(--danger)}
+
+/* 协作开发任务页工具栏与客户端一致（2026-11-25）：不显示「显示设置」；列表视图下状态页签、空间筛选在左，搜索靠右紧挨视图切换 */
+#cv-tasks-current #view-tasks .tk-display-btn{display:none}
+#cv-tasks-current #view-tasks.tk-list-mode:not(.tk-project-list-mode) .tk-tools-left{flex:1 1 auto;margin-left:0}
+#cv-tasks-current #view-tasks.tk-list-mode:not(.tk-project-list-mode) .tk-tools-left .tk-search-wrap{margin-left:auto}

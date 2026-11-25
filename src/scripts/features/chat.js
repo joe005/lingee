@@ -80,6 +80,14 @@ function popPreviewUrl(){
 }
 
 export function initPreview() {
+  /* 其他模块要在对话页右侧开关面板时发 lingee:chat-side-panel（detail.panel / detail.open），由这里改对话页 */
+  document.addEventListener('lingee:chat-side-panel', function (event) {
+    var detail = event.detail || {}, view = $('#view-chat');
+    if (!view || !detail.panel) return;
+    if (detail.open) view.classList.add('preview-open', detail.panel + '-open');
+    else view.classList.remove(detail.panel + '-open');
+    syncTogglePreviewBtn();
+  });
   previewBackBtn=$('#previewBack');
   if(previewBackBtn) previewBackBtn.addEventListener('click',popPreviewUrl);
   if(previewEditBtn){

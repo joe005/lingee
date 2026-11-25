@@ -219,32 +219,10 @@ function finishSessionExchange(sessionId, index) {
   renderChatSessions();
   if (sessionId === activeSessionId) renderChatTaskSide();
 }
-function appendChatStageEndMarker(marker) {
-  var line = document.createElement('div');
-  line.className = 'chat-stage-end';
-  line.dataset.stageId = marker.stageId;
-  line.setAttribute('role', 'status');
-  var icon = document.createElement('span');
-  icon.className = 'chat-stage-end-icon';
-  icon.setAttribute('aria-hidden', 'true');
-  icon.innerHTML = '<svg viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" fill="currentColor"/><path d="M10.951 4.249C11.283 4.581 11.283 5.119 10.951 5.451L5.951 10.451C5.619 10.783 5.081 10.783 4.749 10.451L2.749 8.451C2.417 8.119 2.417 7.581 2.749 7.249C3.081 6.917 3.619 6.917 3.951 7.249L5.35 8.648L9.749 4.249C10.081 3.917 10.619 3.917 10.951 4.249Z" fill="white"/></svg>';
-  var label = document.createElement('span');
-  label.textContent = '「' + marker.stageName + '」已完成';
-  line.appendChild(icon);
-  line.appendChild(label);
-  var responses = messagesList.querySelectorAll('.message.assistant .assistant-response');
-  (responses[responses.length - 1] || messagesList).appendChild(line);
-}
-function renderChatStageEndMarkers(session, exchangeIndex, afterQuestion) {
-  (session.stageEndMarkers || []).forEach(function (marker) {
-    if (marker.afterExchangeIndex === exchangeIndex && !!marker.afterQuestion === !!afterQuestion) appendChatStageEndMarker(marker);
-  });
-}
-
 /* 以下变量由同目录其他模块写入；import 绑定只读，所以走 setter */
 function set_activeSessionTaskId(v){ activeSessionTaskId=v; return v; }
 function set_activeResponseRun(v){ activeResponseRun=v; return v; }
 function set_activeSessionId(v){ activeSessionId=v; return v; }
 function set_conversationTaskId(v){ conversationTaskId=v; return v; }
 
-export { activeResponseRun, activeSessionId, activeSessionTaskId, addSessionExchange, appendChatStageEndMarker, chatSessions, collapsedChatProjects, conversationTaskId, createChatSession, expandedChatProjects, finishSessionExchange, isMyChatSession, rememberActiveChatSession, renderChatSessions, renderChatStageEndMarkers, restoreChatSession, restoringChatSession, saveChatSessions, seedCosmicDemoSessions, set_activeResponseRun, set_activeSessionId, set_activeSessionTaskId, set_conversationTaskId, taskConversationNeedsReply, taskConversationQuestion };
+export { activeResponseRun, activeSessionId, activeSessionTaskId, addSessionExchange, chatSessions, collapsedChatProjects, conversationTaskId, createChatSession, expandedChatProjects, finishSessionExchange, isMyChatSession, rememberActiveChatSession, renderChatSessions, restoreChatSession, restoringChatSession, saveChatSessions, seedCosmicDemoSessions, set_activeResponseRun, set_activeSessionId, set_activeSessionTaskId, set_conversationTaskId, taskConversationNeedsReply, taskConversationQuestion };

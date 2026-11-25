@@ -127,7 +127,7 @@ export function initHoverDropdowns() {
       }
     }).observe(dd,{attributes:true,attributeFilter:['class']});
   });
-  ['model','workspace','tenant'].forEach(function(key){
+  ['model','sandbox','workspace','tenant'].forEach(function(key){
     $$('.dropdown[data-dd="'+key+'"]').forEach(function(dd){
       initGenericKbd(dd);
       $$('.menu-item',dd).forEach(function(item){

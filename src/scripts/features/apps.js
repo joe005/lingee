@@ -11,6 +11,7 @@ import surveyAppHtml from '../../artifacts/survey-app.html?raw';
 import equipmentBillHtml from '../../artifacts/equipment-repair-bill.html?raw';
 import tokensCss from '../../styles/tokens.css?raw';
 import helpdeskAppHtml from '../../artifacts/helpdesk-app.html?raw';
+import { initAppCardMenus, openAppDetail } from './app-detail.js';
 /* 应用开发：卡片、搜索、新建下拉、新建应用弹窗、右键菜单
    拆分自 src/scripts/main.js，逻辑逐行保留；副作用集中在下方 init* 函数里，
    由 main.js 按拆分前的原始顺序调用。 */
@@ -244,6 +245,7 @@ function setPreviewBrowserMode(on){
 
 export function initApps() {
   /* ---------- 我的应用 (apps view) ---------- */
+  initAppCardMenus();
   $('.btn-new:not(.apps-new-btn)') && $('.btn-new:not(.apps-new-btn)').addEventListener('click',function(){});
   $$('#view-apps .apps-refresh,#view-agents .apps-refresh,#view-skills .apps-refresh').forEach(function(b){
     b.addEventListener('click',function(){ toast('已刷新'); });
@@ -255,6 +257,8 @@ export function initApps() {
     c.addEventListener('click',function(e){
       if(e.target.closest('.card-more')){ e.stopPropagation(); toast('更多操作'); return; }
       if(c.hasAttribute('data-agent')) return; /* 演示智能体由 agent-demo.js 打开 */
+      /* 应用开发的卡片与客户端一致：弹出应用详情，不再进入演示会话（2026-11-25） */
+      if(c.closest('#view-apps')){ openAppDetail(c); return; }
       var name=$('.card-title',c).textContent.trim();
       resetChatForStandalone();
       closeAgentConfig();

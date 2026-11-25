@@ -371,3 +371,11 @@
 .ld-repo-readonly-branch svg{flex:none;color:var(--text-secondary)}
 .ld-repo-readonly-branch code{min-width:0;white-space:normal;overflow-wrap:anywhere}
 @media(max-width:600px){.ld-repo-readonly{flex-wrap:wrap}.ld-repo-readonly-url,.ld-repo-readonly-branch{flex-basis:100%}}
+/* 顶部状态与设置齿轮合成一个胶囊（对齐客户端「● 空间已就绪 ⚙」）；已就绪为绿色 */
+#view-collab #cvTabNav .ld-nav-status.is-ready{background:var(--success-bg);color:var(--success)}
+#view-collab #cvTabNav .ld-nav-status.is-ready .ld-nav-dot{background:var(--success)}
+#view-collab #cvTabNav .ld-nav-status.is-ready:hover{background:var(--success-bg);filter:brightness(.97)}
+#view-collab.cv-current-navigation #cvTabNav .ld-nav-status:not([hidden]){padding-right:4px;border-radius:999px 0 0 999px}
+#view-collab.cv-current-navigation #cvTabNav .ld-nav-status:not([hidden]) ~ .tab-nav-item.cv-settings-gear{width:32px;height:var(--control-h-sm);margin-left:-12px;border:0;border-radius:0 999px 999px 0;background:var(--warning-bg);color:var(--warning)}
+#view-collab.cv-current-navigation #cvTabNav .ld-nav-status.is-ready:not([hidden]) ~ .tab-nav-item.cv-settings-gear{background:var(--success-bg);color:var(--success)}
+#view-collab.cv-current-navigation #cvTabNav .ld-nav-status:not([hidden]) ~ .tab-nav-item.cv-settings-gear svg{width:14px;height:14px}

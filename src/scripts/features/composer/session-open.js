@@ -9,7 +9,7 @@ import { hideAssetEditorPanel } from '../expert/editor-panel.js';
 import { clearPick, set_activePick } from '../expert/store.js';
 import { tkGetTasks } from '../tasks-v2/data.js';
 import { appendAssistantMessage, appendUserMessage, createChatResultArtifactCard, createFinalResult, demoExchangeText, escapeHtml, messagesList, resolveChatTeam, scrollChatBottom, setComposerTaskReference, taskStageArtifact } from './messages.js';
-import { activeResponseRun, activeSessionId, activeSessionTaskId, chatSessions, finishSessionExchange, isMyChatSession, rememberActiveChatSession, renderChatSessions, renderChatStageEndMarkers, saveChatSessions, set_activeResponseRun, set_activeSessionId, set_activeSessionTaskId } from './sessions.js';
+import { activeResponseRun, activeSessionId, activeSessionTaskId, chatSessions, finishSessionExchange, isMyChatSession, rememberActiveChatSession, renderChatSessions, saveChatSessions, set_activeResponseRun, set_activeSessionId, set_activeSessionTaskId } from './sessions.js';
 import { hideTaskQuestionPanel, renderTaskCreateChat, setTaskCreateChipLabel } from './task-create-chat.js';
 import { renderAssetCreateChat, renderAssetEditChat } from './asset-chat.js';
 import { renderChatTaskSide, renderTaskQuestion } from './task-conversation.js';
@@ -35,7 +35,7 @@ function openChatSession(sessionId) {
   rememberActiveChatSession(session.id);
   set_activeSessionTaskId(session.taskId == null ? null : Number(session.taskId));
   document.getElementById('chatCurrentStageToggle').setAttribute('aria-expanded', 'false');
-  document.getElementById('chatCurrentStageDetails').hidden = !document.getElementById('chatCurrentStage').classList.contains('is-horizontal');
+  document.getElementById('chatCurrentStageDetails').hidden = true;
   if (session.previewRepair) {
     session.teamId = '';
     session.executionPick = {kind:null,id:'',auto:false};
@@ -115,7 +115,6 @@ function openChatSession(sessionId) {
         var artifact = taskStageArtifact(task);
         if (artifact) result.appendChild(createChatResultArtifactCard(task, artifact));
       }
-      renderChatStageEndMarkers(session, index, false);
     });
     if (session.demoQuestion) {
       renderTaskQuestion(session, task);
@@ -134,15 +133,13 @@ function openChatSession(sessionId) {
       var previewArtifact = taskStageArtifact(task);
       if (previewArtifact) openChatDocViewer(task, previewArtifact);
     }
-    if (session.demoQuestion) renderChatStageEndMarkers(session, session.exchanges.length - 1, true);
-    else if (!session.exchanges.length) renderChatStageEndMarkers(session, -1, false);
     renderChatSessions();
     refreshChatStageConfirm();
     scrollChatBottom();
     return;
   }
   session.exchanges.forEach(function (exchange, index) {
-    appendUserMessage(exchange.prompt);
+    appendUserMessage(exchange.prompt, session.cosmicAppName ? {skill:'cosmic-app-builder', app:session.cosmicAppName} : null);
     if (exchange.waiting) { appendAskCard(pendingInputs(exchange.prompt)); return; }
     var response = appendAssistantMessage(resolveChatTeam(session, task));
     if (exchange.failure) {
@@ -156,7 +153,6 @@ function openChatSession(sessionId) {
       return;
     }
     simulateAIResponse(response, !!exchange.done, task, exchange.prompt, function () { finishSessionExchange(session.id, index); });
-    renderChatStageEndMarkers(session, index, false);
   });
   if (session.demoState === 'running' && task?.status === 'in_review' && session.exchanges.some(function (exchange) { return exchange.done; })) {
     var readyArtifact = taskStageArtifact(task);
@@ -164,8 +160,6 @@ function openChatSession(sessionId) {
   }
   if (session.demoQuestion) renderTaskQuestion(session, task);
   else document.getElementById('chatTaskQuestionPanel')?.remove();
-  if (session.demoQuestion) renderChatStageEndMarkers(session, session.exchanges.length - 1, true);
-  else if (!session.exchanges.length) renderChatStageEndMarkers(session, -1, false);
   renderChatSessions();
   scrollChatBottom();
 }

@@ -74,6 +74,13 @@ export function initCollabWorkspaceSettings() {
     if (wasActive && !active) currentTab = 'general';
     wasActive = active;
   }).observe(localPanel, { attributes: true, attributeFilter: ['class'] });
+  /* 顶部「‹ 设置」：记住进入设置前的页签，点击返回该页签 */
+  var lastTab = 'tasks';
+  document.addEventListener('click', function (e) {
+    var tab = e.target.closest('#cvTabNav [data-cvview]');
+    if (tab && tab.dataset.cvview !== 'local') lastTab = tab.dataset.cvview;
+    if (e.target.closest('#cvSettingsBack') && typeof window.cvSwitchView === 'function') window.cvSwitchView(lastTab);
+  });
   document.addEventListener('lingee:ld-settings-shown', function (e) {
     if (e.detail && e.detail.tab === 'workspaces') mount();
   });

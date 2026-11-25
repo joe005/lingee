@@ -163,7 +163,7 @@ function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml,
   return '<section class="tk-feed-stage-overview tk-exec-card is-' + currentState + '" aria-label="执行概览">'
     + '<div class="tk-exec-card-head tk-agent-report-head">' + (pageState.taskDetailVersion === 'latest' ? renderTaskTeamAvatarGroup(team) : '<span class="tk-exec-card-mark tk-agent-report-mark" aria-hidden="true">✦</span>') + '<div class="tk-exec-card-identity tk-agent-report-heading"><strong>' + escapeHtml(team?.name || '任务智能体团队') + '</strong>'
      + (pageState.taskDetailVersion === 'v1' ? '<span>当前阶段 · ' + escapeHtml(currentDetail) + '</span>' : '') + '</div></div>'
-     + '<div class="tk-feed-stage-overview-head"><strong>执行计划</strong></div>'
+     + (pageState.taskDetailVersion === 'latest' ? '' : '<div class="tk-feed-stage-overview-head"><strong>执行计划</strong></div>')
     + (latestLayout ? '<div class="tk-feed-stage-table-wrap"><table class="tk-feed-stage-table"><caption class="sr-only">执行计划</caption><colgroup><col class="tk-stage-col-mark"><col class="tk-stage-col-name"><col class="tk-stage-col-expert"><col class="tk-stage-col-assignee"><col class="tk-stage-col-state"><col class="tk-stage-col-actions"></colgroup><thead class="sr-only"><tr><th>标记</th><th>阶段</th><th>执行智能体</th><th>处理人</th><th>状态</th><th>操作</th></tr></thead>' : '<ol class="tk-feed-stage-list">') + plannedStages.map(function (stage, index) {
       var entry = byId.get(stage.id);
       var state = entry?.state || 'pending';
@@ -583,7 +583,7 @@ export function openDrawer(taskId) {
   var peopleOpts = tkPeopleInProject(t.project).map(function (p) { return { value: p.id, label: p.name }; });
   var projOpts = tkProjectsForCurrentUser().map(function (p) { return { value: p.id, label: p.name }; });
   els.tkDrawerTitle.textContent = t.title;
-  els.tkDrawerCode.textContent = '#' + t.code;
+  els.tkDrawerCode.textContent = t.code;
   els.tkDrawer.classList.toggle('tk-drawer--latest', pageState.taskDetailVersion === 'latest');
   els.tkDrawer.setAttribute('data-detail-version', pageState.taskDetailVersion);
   els.tkDrawerTitle.title = '双击编辑标题';
@@ -641,15 +641,15 @@ export function openDrawer(taskId) {
     var overviewHeading = document.createElement('h4');
     overviewHeading.className = 'tk-figma-overview-heading';
     overviewHeading.textContent = '任务概览';
-    mainInner.querySelector('.tk-drawer-comments-title').textContent = '动态';
+    /* 分区名称与客户端一致：任务概览 / 执行阶段 / 操作记录（2026-11-25） */
+    mainInner.querySelector('.tk-drawer-comments-title').textContent = '执行阶段';
     var propList = sidebar.querySelector('#tkDrawerPropList');
     var rows = Array.from(propList.querySelectorAll('.tk-prop-row'));
-    ['项目', '状态', '优先级', '任务类型'].forEach(function (label) {
+    ['项目', '状态', '任务类型', '优先级'].forEach(function (label) {
       var row = rows.find(function (item) { return item.querySelector('span')?.textContent?.trim() === label; });
       if (row) {
         propList.append(row);
         if (label === '项目') { row.remove(); return; }
-        if (label === '任务类型') row.querySelector('span').textContent = '标签';
       }
     });
     sidebar.prepend(overviewHeading);

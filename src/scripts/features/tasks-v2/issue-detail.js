@@ -518,7 +518,7 @@ function openDrawer(taskId) {
   var projOpts = tkProjectsForCurrentUser().map(function (p) { return { value: p.id, label: p.name }; });
   var moduleOpts = Array.from(new Set(tkGetTasks().filter(function (task) { return task.project === t.project && task.module; }).map(function (task) { return task.module; }))).sort().map(function (name) { return { value:name, label:name }; });
   els.tkDrawerTitle.textContent = t.title;
-  els.tkDrawerCode.textContent = '#' + t.code;
+  els.tkDrawerCode.textContent = t.code;
   els.tkDrawerBody.innerHTML =
     '<div class="tk-drawer-main"><div class="tk-drawer-main-inner">' +
       '<div class="tk-drawer-tabs">' +

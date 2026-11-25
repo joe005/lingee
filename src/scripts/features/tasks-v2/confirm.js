@@ -38,10 +38,13 @@ export function showTaskStageConfirm(task, action) {
   if (index < 0) return;
   const next = stages[index + 1];
   const assigneeId = next && (task.flowAssignee || next.assigneeId || (!task.executionPlan?.length ? task.assignee : ''));
-  const assigneeName = assigneeId ? tkPeopleInProject(task.project).find(person => person.id === assigneeId)?.name || tkGetPerson(assigneeId).name : '未指定';
-  const message = next ? '通过后进入「' + next.name + '」，处理人：' + assigneeName + '。' : '通过后任务完成。';
+  /* 文案与客户端一致：下一阶段写评审人（即该阶段处理人），最后阶段写全部阶段完成 */
+  const nextPlan = next && task.executionPlan?.find(row => row.id === next.id);
+  const reviewerId = nextPlan?.reviewerId || assigneeId;
+  const reviewerName = reviewerId ? tkPeopleInProject(task.project).find(person => person.id === reviewerId)?.name || tkGetPerson(reviewerId).name : '';
+  const message = !next ? '通过后本任务的全部阶段完成。' : reviewerName ? '通过后进入「' + next.name + '」，评审人：' + reviewerName + '。' : '通过后进入「' + next.name + '」。';
   const codeContext = taskCodeDeliveryContext(task);
-  const mergeHint = codeContext?.isDevelopment ? '系统会先检查并合并代码，合并成功后才完成审核和流转；失败则保留在本阶段。' : codeContext?.isTesting && codeContext.last ? '本轮测试报告将自动关联审核记录，请确认实际环境的验证结果。' : '';
+  const mergeHint = codeContext?.isDevelopment ? '系统会先检查并合并代码，合并成功后才完成审核和流转；失败则保留在本阶段。' : '';
   showTaskConfirm(message + mergeHint, action, '确认产物', '确认', 'primary');
 }
 

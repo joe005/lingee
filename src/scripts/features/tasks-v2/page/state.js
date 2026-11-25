@@ -25,7 +25,7 @@ export var LIST_STATUS_TABS = [
   { id:'done', name:'已完成', match:function (task) { return task.status === 'done' || tkIsMyStageDone(task); } },
 ];
 export var state = {
-  layout: 'list', viewMode: 'slide', scope: 'all', groupBy: 'status', sortBy: 'updatedAt', sortDir: 'desc',
+  layout: 'board', viewMode: 'slide', scope: 'all', groupBy: 'status', sortBy: 'updatedAt', sortDir: 'desc',
   search: '', filters: [], selectedIds: new Set(), activeViewId: 'all',
   listStatusTab: 'needs',
   showSubtasks: true,

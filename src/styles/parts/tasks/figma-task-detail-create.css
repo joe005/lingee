@@ -120,6 +120,9 @@
 #tkDrawer.tk-drawer--latest .tk-detail-edit:hover { background:var(--hover); }
 #tkDrawer.tk-drawer--latest .tk-drawer-foot.is-start-action #tkDrawerChat { width:auto; min-width:68px; }
 #tkDrawer.tk-drawer--latest .tk-drawer-foot button:focus-visible { outline:2px solid var(--focus-ring); outline-offset:2px; }
+/* 退回、转交与客户端一致：品牌色描边按钮，和主按钮「AI 执行」并排 */
+#tkDrawer.tk-drawer--latest .tk-drawer-foot .tk-stage-return-trigger { border:1px solid var(--brand); background:var(--bg); color:var(--brand); }
+#tkDrawer.tk-drawer--latest .tk-drawer-foot .tk-stage-return-trigger:hover { background:var(--brand-fill); }
 #tkDrawer.tk-drawer--latest .tk-feed-stage-meta .tk-feed-stage-expert-content img { width:24px; height:24px; border-radius:50%; object-fit:cover; }
 
 /* 阶段仅展示信息；产物使用一层文件列表，操作集中在详情底部。 */

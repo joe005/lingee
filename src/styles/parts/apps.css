@@ -39,7 +39,7 @@
   .apps-new-item:hover{background:var(--hover)}
   .apps-search{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--border);
     border-radius:10px;padding:7px 12px;width:220px;color:var(--text-soft)}
-  .apps-toolbar{display:flex;align-items:center;justify-content:space-between;margin:0 0 20px;position:relative;z-index:1}
+  .apps-toolbar{display:flex;align-items:center;justify-content:space-between;margin:0 0 20px;position:relative;z-index:2}
   .tabs{display:flex;gap:2px}
   .tab{padding:8px 16px;border-radius:10px;color:#595959;font-size:var(--font-size-14);cursor:pointer;font-weight:500}
   .tab:hover{background:#f0f0f0}

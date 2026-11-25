@@ -221,7 +221,7 @@ function renderChatTaskSide() {
       stagePanel.dataset.taskId = String(task.id);
       stagePanel.dataset.sessionId = String(activeSessionId);
       document.getElementById('chatCurrentStageToggle').setAttribute('aria-expanded', 'false');
-      document.getElementById('chatCurrentStageDetails').hidden = !document.getElementById('chatCurrentStage').classList.contains('is-horizontal');
+      document.getElementById('chatCurrentStageDetails').hidden = true;
     }
     var stage = stages[stageIndex];
     var people = tkPeopleInProject(task.project);
@@ -232,26 +232,45 @@ function renderChatTaskSide() {
       var state = task.status === 'done' ? 'done' : planStage?.status || (index < stageIndex ? 'done' : 'pending');
       if (session?.stageEndMarkers?.some(function (marker) { return marker.stageId === row.id; })) state = 'done';
       if (!['done', 'running', 'review', 'blocked', 'pending'].includes(state)) state = 'pending';
-      if (row.id === task.executionStageId && state !== 'done' && task.status === 'blocked') state = 'blocked';
+      if (task.status === 'cancelled' && state !== 'done') state = 'cancelled';
+      else if (row.id === task.executionStageId && state !== 'done' && task.status === 'blocked') state = 'blocked';
       else if (row.id === task.executionStageId && state !== 'done' && task.status === 'in_review') state = 'review';
       else if (row.id === task.executionStageId && task.status === 'in_progress' && state === 'pending') state = 'running';
-      var label = row.id === task.executionStageId && state === 'running' && taskConversationNeedsReply(task, true) ? '待回答' : state === 'done' ? '已完成' : state === 'running' ? '执行中' : state === 'review' ? '待评审' : state === 'blocked' ? '已阻塞' : index === stageIndex && task.status === 'backlog' ? '待开始' : '未开始';
-      var handlerId = row.id === task.executionStageId ? tkCurrentStageHandlerId(task) || row.assigneeId : row.assigneeId || (!task.executionPlan?.length ? task.assignee : '');
+      var label = row.id === task.executionStageId && state === 'running' && taskConversationNeedsReply(task, true) ? '待回复' : state === 'done' ? '已完成' : state === 'running' ? '进行中' : state === 'review' ? '待评审' : state === 'blocked' ? '已阻塞' : state === 'cancelled' ? '已取消' : index === stageIndex && task.status === 'backlog' ? '待开始' : '未开始';
+      /* 评审人取阶段指定的评审人，没有指定时取阶段处理人（与客户端一致） */
+      var handlerId = planStage?.reviewerId || (row.id === task.executionStageId ? tkCurrentStageHandlerId(task) || row.assigneeId : row.assigneeId || (!task.executionPlan?.length ? task.assignee : ''));
       var handlerName = people.find(function (person) { return person.id === handlerId; })?.name || '待分配';
       var indexContent = state === 'done' ? '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4.5 10 3.5 3.5 7.5-8"/></svg>' : index + 1;
       var autoPass = planStage?.requiresConfirmation === false;
       var auditBadge = autoPass ? '<span class="chat-stage-audit-mode" data-audit-mode="auto" data-tooltip="本阶段自动评审，无需人工确认">自动评审</span>' : '';
       var reviewerText = '评审人 ' + escapeHtml(handlerName);
-      var horizontalStages = stagePanel.classList.contains('is-horizontal');
       var isNextStage = row.id === task.executionStageId && task.status !== 'done' && state !== 'done';
-      return '<li class="chat-current-stage-row is-' + state + (isNextStage ? ' is-current' : '') + '"' + (isNextStage ? ' aria-current="step"' : '') + '><span class="chat-current-stage-index" aria-label="第' + (index + 1) + '阶段' + (state === 'done' ? '已完成' : '') + '">' + indexContent + '</span><span class="chat-current-stage-row-main"><strong>' + escapeHtml(row.name || '未命名阶段') + (horizontalStages ? '' : auditBadge) + '</strong>' + (horizontalStages ? auditBadge : '') + '<small>' + reviewerText + '</small></span><span class="chat-current-stage-status">' + label + '</span></li>';
+      return '<li class="chat-current-stage-row is-' + (state === 'cancelled' ? 'pending' : state) + (isNextStage ? ' is-current' : '') + '"' + (isNextStage ? ' aria-current="step"' : '') + '><span class="chat-current-stage-index" aria-label="第' + (index + 1) + '阶段' + (state === 'done' ? '已完成' : '') + '">' + indexContent + '</span><span class="chat-current-stage-row-main"><strong>' + escapeHtml(row.name || '未命名阶段') + auditBadge + '</strong><small>' + reviewerText + '</small></span><span class="chat-current-stage-status">' + label + '</span></li>';
     }).join('');
   } else { stagePanel.removeAttribute('data-task-id'); stagePanel.removeAttribute('data-session-id'); }
   /* 任务会话不提供历史版本入口，应用开发的 workspace 会话保留。 */
   document.getElementById('historyBtn')?.classList.toggle('hidden', !!task || viewChat.classList.contains('task-exception-open'));
   refreshChatStageConfirm();
-  /* 创建会话生成任务后仍可继续对话；执行会话按任务状态控制输入区。 */
-  document.getElementById('chatComposerWrap')?.classList.toggle('hidden', !!task && !session?.taskCreate && !['in_progress', 'in_review', 'blocked'].includes(task.status));
+  /* 创建会话生成任务后仍可继续对话；执行会话按任务状态控制输入区。
+     本会话的阶段已完成时，输入框换成「「阶段」已完成」页脚（与客户端一致，下一阶段在新会话执行）。 */
+  var doneStageName = task && !session?.taskCreate ? chatSessionDoneStageName(task, stages, session) : '';
+  var doneFooter = document.getElementById('chatStageDone');
+  if (doneFooter) {
+    doneFooter.hidden = !doneStageName;
+    document.getElementById('chatStageDoneText').textContent = doneStageName ? '「' + doneStageName + '」已完成' : '';
+  }
+  document.getElementById('chatComposerWrap')?.classList.toggle('hidden', !!doneStageName || (!!task && !session?.taskCreate && !['in_progress', 'in_review', 'blocked'].includes(task.status)));
+}
+/* 本会话绑定的阶段已完成时返回阶段名：会话里确认过的阶段，或执行计划中已完成的会话阶段。 */
+function chatSessionDoneStageName(task, stages, session) {
+  if (!session) return '';
+  var marker = (session.stageEndMarkers || []).at(-1);
+  var stageId = marker?.stageId || session.stageId || (task.status === 'done' ? stages.at(-1)?.id : '');
+  if (!stageId) return '';
+  /* 阶段被退回重做时计划状态不再是已完成，恢复输入框 */
+  var planDone = task.status === 'done' || (!task.executionPlan?.length && !!marker) || task.executionPlan?.find(function (row) { return row.id === stageId; })?.status === 'done';
+  if (!planDone) return '';
+  return marker?.stageName || stages.find(function (stage) { return stage.id === stageId; })?.name || '本阶段';
 }
 
 export { answerTaskQuestion, continueBlockedTaskConversation, getConversationTask, openTaskQuestionConversation, openTaskStatusConversation, renderChatTaskSide, renderConversationTaskReference, renderTaskQuestion, syncTaskCreateProjectPicker };

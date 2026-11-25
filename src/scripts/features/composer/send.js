@@ -61,7 +61,7 @@ function doSend(automatic){
   renderConversationTaskReference();
   var empty=$('#chatEmpty');
   if(empty) empty.remove();
-  appendUserMessage(t);
+  appendUserMessage(t, cosmicAppName ? {skill:'cosmic-app-builder', app:cosmicAppName} : null);
   if(autoPicked) appendAutoNote();
   input.innerHTML=''; refreshSend();
   var pend=linkedTask ? [] : pendingInputs(t);
@@ -164,7 +164,7 @@ function chatDoSend(){
   renderChatTaskSide();
   var empty=$('#chatEmpty');
   if(empty) empty.remove();
-  appendUserMessage(t);
+  appendUserMessage(t, session.cosmicAppName ? {skill:'cosmic-app-builder', app:session.cosmicAppName} : null);
   chatInput.innerHTML=''; refreshChatSend();
   var task = tkGetTasks().find(function (row) { return row.id === activeSessionTaskId; });
   var responseEl=appendAssistantMessage(resolveChatTeam(session, task));

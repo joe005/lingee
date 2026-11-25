@@ -1,17 +1,27 @@
 import { toast } from '../../core/toast.js';
 import { viewChat } from '../../core/view.js';
-import { tkGetTasks } from '../tasks-v2/data.js';
+import { tkCurrentStageHandlerId, tkCurrentUserId, tkGetPerson, tkGetTasks, tkProjectById } from '../tasks-v2/data.js';
+import { ldMine, ldStartGitInstall } from '../collab/local-dev.js';
 import { taskCodeDeliveryContext } from '../tasks-v2/code-delivery-context.js';
 import { reviewTaskStage, taskExecutionStages } from '../tasks-v2/task-execution.js';
-import { showTaskStageConfirm } from '../tasks-v2/confirm.js';
+import { showTaskConfirm, showTaskStageConfirm } from '../tasks-v2/confirm.js';
 import { scrollChatBottom } from './messages.js';
-import { activeResponseRun, activeSessionId, activeSessionTaskId, appendChatStageEndMarker, chatSessions, rememberActiveChatSession, renderChatSessions, saveChatSessions, set_activeResponseRun, set_activeSessionId, set_activeSessionTaskId } from './sessions.js';
+import { activeResponseRun, activeSessionId, activeSessionTaskId, chatSessions, rememberActiveChatSession, renderChatSessions, saveChatSessions, set_activeResponseRun, set_activeSessionId, set_activeSessionTaskId } from './sessions.js';
 import { renderChatTaskSide } from './task-conversation.js';
 import { chatViewerActiveKey, chatViewerTabs, closeChatDocViewer, set_chatViewerActiveKey, set_chatViewerTabs } from './doc-viewer.js';
 /* 任务对话：会话内「确认」按钮——确认产物、流转下一阶段（拆自 composer.js） */
 
 /* ---------- 任务会话「确认」按钮：执行结束确认产物、流转下一阶段 ---------- */
-/* 只在本轮回复结束、任务进入待评审后显示；点击与任务详情「通过审核」同一条流转链路。 */
+/* 只在本轮回复结束、任务进入待评审后显示，且只给本阶段评审人和空间负责人看（与客户端一致）；
+   点击与任务详情「通过审核」同一条流转链路。 */
+function canReviewChatStage(task) {
+  var me = tkCurrentUserId();
+  if (!me || !task) return false;
+  var planStage = task.executionPlan?.find(function (row) { return row.id === task.executionStageId; });
+  if ((planStage?.reviewerId || tkCurrentStageHandlerId(task)) === me) return true;
+  var owner = tkProjectById(task.project)?.owner;
+  return !!owner && owner === tkGetPerson(me)?.name;
+}
 function chatStageConfirmInfo() {
   if (viewChat.classList.contains('task-exception-open')) return null;
   var task = tkGetTasks().find(function (row) { return row.id === activeSessionTaskId; });
@@ -21,7 +31,7 @@ function chatStageConfirmInfo() {
   if (index < 0 && task.executionPlan?.length) index = stages.findIndex(function (stage) { return task.executionPlan.find(function (row) { return row.id === stage.id; })?.status !== 'done'; });
   if (index < 0) return null;
   var visible = ['in_progress', 'in_review'].includes(task.status);
-  if (!visible) return null;
+  if (!visible || !canReviewChatStage(task)) return null;
   var session = chatSessions.find(function (row) { return row.id === activeSessionId; });
   if (session?.stageId && session.stageId !== task.executionStageId) return null;
   if (session?.stageEndMarkers?.some(function (marker) { return marker.stageId === task.executionStageId; })) return null;
@@ -31,9 +41,8 @@ function chatStageConfirmInfo() {
   var ready = task.status === 'in_review' && (session?.demoQuestion?.continuationDone || !!lastExchange && lastExchange.done && !lastExchange.waiting);
   return { task: task, ready: ready, nextStage: stages[index + 1] || null };
 }
-function chatStageConfirmTooltip(task, nextStage) {
-  if (!nextStage) return '确认产物，完成任务';
-  return '确认产物，进入「' + (nextStage.name || '下一阶段') + '」';
+function chatStageConfirmTooltip(stageName) {
+  return '确认「' + (stageName || '本阶段') + '」产物并进入下一阶段';
 }
 function refreshChatStageConfirm() {
   var btn = document.getElementById('chatStageConfirmBtn');
@@ -45,13 +54,14 @@ function refreshChatStageConfirm() {
   var label = document.getElementById('chatStageConfirmLabel');
   var title = document.getElementById('chatStageGuideTitle');
   var guide = document.getElementById('chatStageGuideText');
-  var isLast = !info.nextStage;
   var currentStage = taskExecutionStages(info.task).find(function (stage) { return stage.id === info.task.executionStageId; });
-  if (title) title.textContent = '「' + (currentStage?.name || '当前阶段') + '」已完成，请确认产物。';
-  if (guide) guide.textContent = isLast ? '确认后任务完成。' : '确认后流转至「' + (info.nextStage?.name || '下一阶段') + '」。';
-  if (label) label.textContent = isLast ? '完成' : '确认';
-  btn.setAttribute('aria-label', chatStageConfirmTooltip(info.task, info.nextStage));
-  btn.setAttribute('data-tooltip', chatStageConfirmTooltip(info.task, info.nextStage));
+  var stageName = currentStage?.name || '本阶段';
+  /* 最后一个阶段不显示流转说明，按钮仍为「确认」 */
+  if (title) title.textContent = '「' + stageName + '」已完成，请确认产物。';
+  if (guide) guide.textContent = info.nextStage ? '确认后流转至「' + (info.nextStage.name || '下一阶段') + '」。' : '';
+  if (label) label.textContent = '确认';
+  btn.setAttribute('aria-label', chatStageConfirmTooltip(stageName));
+  btn.setAttribute('data-tooltip', '确认产物');
 }
 /* 会话里记下阶段结束分隔线 */
 function markChatStageEnd(stage, done) {
@@ -68,15 +78,31 @@ function markChatStageEnd(stage, done) {
     };
     session.stageEndMarkers.push(marker);
     saveChatSessions();
-    appendChatStageEndMarker(marker);
     renderChatTaskSide();
     scrollChatBottom();
   }
   renderChatSessions();
 }
+/* 开发阶段通过评审要把产物提交并推送到仓库：本阶段执行人是自己且本机没有 Git 时先引导安装 */
+function chatStageNeedsGit(task) {
+  if (!taskCodeDeliveryContext(task)?.isDevelopment) return false;
+  var owner = tkCurrentStageHandlerId(task);
+  return (!owner || owner === tkCurrentUserId()) && !!ldMine().gitMissing;
+}
 function confirmChatStage() {
+  /* 点击时重新核对一次，可能已在任务详情或他人处处理 */
   var info = chatStageConfirmInfo();
-  if (!info?.ready) return;
+  if (!info?.ready) {
+    toast('该阶段已在别处处理过', 'warning');
+    refreshChatStageConfirm();
+    return;
+  }
+  if (chatStageNeedsGit(info.task)) {
+    showTaskConfirm('本机没有安装 Git。通过评审需要把阶段产物提交并推送到仓库，请先安装 Git 后再确认。', function () {
+      ldStartGitInstall(info.task.project);
+    }, '需要安装 Git', '安装 Git', 'primary');
+    return;
+  }
   showTaskStageConfirm(info.task, function () {
     var currentInfo = chatStageConfirmInfo();
     if (!currentInfo?.ready || currentInfo.task.id !== info.task.id) return;
@@ -99,7 +125,7 @@ function confirmChatStage() {
     }
     markChatStageEnd(reviewed.stage, reviewed.done);
     /* 流转后任务状态已变，lingee:task-updated 会触发 renderChatTaskSide 收起按钮 */
-    toast(reviewed.done ? '任务完成' : '流转成功', 'success');
+    toast('流转成功', 'success');
   });
 }
 function clearChatTaskSide() {

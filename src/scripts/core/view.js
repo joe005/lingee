@@ -51,6 +51,14 @@ function setTasksEmbedded(embedded, container){
     tasksStandaloneParent.insertBefore(viewTasks,tasksStandaloneNext);
   }
 }
+/* 任务视图挂进项目详情（container）或退出项目详情；外部只调这两个函数，不直接改任务视图的 DOM */
+function setTasksInProject(on, container){
+  if(on) setTasksEmbedded(true, container);
+  viewTasks.classList.toggle('pj-embedded-task-view', !!on);
+}
+function isTasksEmbedded(){
+  return viewTasks.parentNode!==tasksStandaloneParent;
+}
 function setUrlState(path){
   /* path 是应用内路径（/collab、/design?token=…）；写进地址栏要带上部署前缀，
      存进 localStorage 的仍是应用内路径，换部署路径后旧记录依然可用 */
@@ -62,7 +70,7 @@ function showView(which,{cosmicApp=false}={}){
   var openCollabTasks=which==='tasks';
   if(openCollabTasks) which='collab';
   if(which!=='chat')document.dispatchEvent(new Event('lingee:chat-leave'));
-  if(which!=='collab'&&which!=='tasks'&&window.cvLeaveProjectTasks)window.cvLeaveProjectTasks();
+  if(which!=='collab'&&which!=='tasks')document.dispatchEvent(new Event('lingee:project-tasks-leave'));
   if(which==='newtask') document.dispatchEvent(new Event('lingee:new-conversation'));
   allViews.forEach(function(v){
     /* 任务视图可嵌在协作开发的项目详情里，此时随协作开发一起显示 */
@@ -119,7 +127,7 @@ export function initSidebarNav() {
         document.dispatchEvent(new CustomEvent('lingee:collab-nav'));
         document.dispatchEvent(new CustomEvent('lingee:collab-menu-open'));
       }else if(name==='任务'){
-        if(window.cvLeaveProjectTasks)window.cvLeaveProjectTasks();
+        document.dispatchEvent(new Event('lingee:project-tasks-leave'));
         showView('tasks');
       }else if(n.dataset.platformNav){
         viewPlatform.dataset.platformMode=n.dataset.platformNav;
@@ -172,6 +180,7 @@ export function initHomeCards() {
       e.preventDefault();
       if(view==='newtask'){
         showView('newtask');
+        document.dispatchEvent(new Event('lingee:new-session'));
         if(mode){
           setNavActive(mode);
           applyMode(mode,false);
@@ -200,4 +209,4 @@ export function initHomeCards() {
   }
 }
 
-export { applyMode, brandEl, input, modeItems, navItems, setNavActive, setNavActiveByView, setTasksEmbedded, setUrlState, showView, viewChat, viewDesign, viewTasks };
+export { applyMode, brandEl, input, isTasksEmbedded, modeItems, navItems, setNavActive, setNavActiveByView, setTasksEmbedded, setTasksInProject, setUrlState, showView, viewChat, viewDesign, viewTasks };
