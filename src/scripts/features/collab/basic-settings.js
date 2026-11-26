@@ -3,7 +3,7 @@ import { renderRecruitmentSettings } from './recruitment-settings.js';
 import { ldEnvironmentId, ldProjectStatus, ldRepoPermission, ldMine, ldSaveMine, ldBindingHasRunningTasks, ldSpaceDir, ldSpaceDirChangeError, ldDetectRepo, ldIsDetectingRepo } from './local-dev/core.js';
 import { ldOpenSpaceDirDialog } from './local-dev/space-dir-dialog.js';
 import { ldOpenAuth } from './local-dev/auth-dialog.js';
-import { buildRepoOwn, buildRepoList, buildRepoIdentity } from './repository-config.js';
+import { buildRepoOwn, buildRepoList, buildRepoIdentity, buildTaskRepoKeys } from './repository-config.js';
 import { initSelectDropdowns } from '../../core/select-dropdown.js';
 import { $ } from '../../core/dom.js';
 import { toast } from '../../core/toast.js';
@@ -16,7 +16,7 @@ import gitlabIcon from '../../../assets/git-platform/gitlab.svg';
 import genericIcon from '../../../assets/git-platform/generic.svg';
 import { getSettingsScope, setSettingsScope } from './space-switch.js';
 import { mgrCurrentPersonId } from '../manager/data.js';
-import { personName, spaceMemberIds, wsAdminIds, wsDelete, wsDeleteBlockReason, wsLeave, wsLeaveBlockReason, wsMemberIds, wsOwnerId, wsProjectById, wsScopePath } from '../manager/workspaces.js';
+import { personName, spaceMemberIds, wsAdminIds, wsDelete, wsDeleteBlockReason, wsLeave, wsLeaveBlockReason, wsMemberIds, wsOwnerId, wsProjectById, wsScopePath, wsTasksOf } from '../manager/workspaces.js';
 import { isWsHost } from './data.js';
 import { basicAddMember, basicCanViewManagement, basicRepoConfig, basicEditable, basicRemoveMember, basicSaveGeneral, basicSaveRepo, basicSetMemberRole } from './basic-settings-data.js';
 import { initMemberAddDialog, openMemberAddDialog } from './member-add-dialog.js';
@@ -161,12 +161,28 @@ function repoDirectoryStatus(p, ws, item) {
     + '<button type="button" class="cv-repo-init-btn" data-cv-repo-check="' + esc(item.key) + '"'
     + (disabled ? ' disabled title="' + esc(st.reason || '') + '"' : '') + '>检测</button></div>';
 }
+/* 在途任务：已开工、还没完成或取消的任务（待规划、待开始不算）。key 为空时统计整个空间 */
+const REPO_IDLE_STATUSES = ['backlog', 'todo', 'pending', 'planned', 'ready', 'done', 'cancelled'];
+function repoInFlightTasks(p, wsId, key = '') {
+  return wsTasksOf(p, wsId).filter(t => !REPO_IDLE_STATUSES.includes(t.status) && (!key || buildTaskRepoKeys(t, p).includes(key)));
+}
+/* 主仓库改地址等同于换仓库：有在途任务时不允许保存；只改基准分支不影响在途任务 */
+function repoPrimaryRepointError(p, ws) {
+  if (repoEditing < 0 || !repoDraft) return '';
+  const saved = buildRepoList(p, ws?.id || '');
+  const before = saved.repositories[repoEditing], after = repoDraft.repositories[repoEditing];
+  if (!before || !after || before.key !== saved.defaultRepo) return '';
+  if (buildRepoIdentity(before.repo) === buildRepoIdentity(after.repo)) return '';
+  const busy = repoInFlightTasks(p, ws?.id || '').length;
+  return busy ? '当前空间有 ' + busy + ' 个执行中或待推进的任务，请等任务完成或取消后再修改主仓库地址' : '';
+}
 function repoCard(p, ws, item, index, editable, list, defaultKey, editor = false) {
   /* 卡片操作收进右上角「···」菜单，与 Git 账号卡片一致 */
   const actions = editable && !editor ? '<div class="cv-repo-more"><button type="button" class="cv-repo-more-btn" data-cv-repo-more aria-haspopup="menu" aria-expanded="false" aria-label="'+esc(item.name || '仓库')+' 的更多操作">' + MORE_ICON + '</button>'
     + '<div class="cv-repo-menu" role="menu" hidden><button type="button" role="menuitem" data-cv-repo-edit="'+index+'">编辑</button>'
     + (defaultKey !== item.key && list.length > 1 ? '<button type="button" role="menuitem" data-cv-repo-default="'+index+'">设为主仓库</button>' : '')
-    + '<button type="button" role="menuitem" class="is-danger" data-cv-repo-remove="'+index+'">删除</button></div></div>' : '';
+    + (defaultKey !== item.key && list.length > 1 ? '<button type="button" role="menuitem" class="is-danger" data-cv-repo-remove="'+index+'">删除</button>' : '')
+    + '</div></div>' : '';
   const headRow = '<div class="cv-repo-card-head"><div class="cv-repo-title"><strong title="'+esc(item.name)+'">'+esc(item.name || '仓库')+'</strong>'
     + (defaultKey === item.key || list.length === 1 ? '<span class="cv-repo-default">主仓库</span>' : '')+'</div>'+actions+'</div>';
   if (!editor) {
@@ -398,7 +414,7 @@ export function initBasicSettings(host) {
     var kind = form.dataset.cvBasicForm;
     var spaceSelect = $('#cvBasicSpace');
     var error = kind === 'general' ? basicSaveGeneral(s.p, s.ws, Object.assign({ name:$('#cvBasicName').value, desc:$('#cvBasicDesc').value, instruction:$('#cvBasicInstruction')?.value || '' }, spaceSelect && !spaceSelect.disabled ? { spaceId: spaceSelect.value } : {}))
-      : kind === 'repo' ? (repoEditing >= 0 && !String(repoDraft?.repositories?.[repoEditing]?.desc || '').trim() ? '请填写仓库描述' : basicSaveRepo(s.p, s.ws, repoDraft)) : '';
+      : kind === 'repo' ? (repoEditing >= 0 && !String(repoDraft?.repositories?.[repoEditing]?.desc || '').trim() ? '请填写仓库描述' : repoPrimaryRepointError(s.p, s.ws) || basicSaveRepo(s.p, s.ws, repoDraft)) : '';
     if (error) { var note = form.querySelector('.cv-basic-error'); note.textContent = error; note.hidden = false; return; }
     if (kind === 'repo') repoDraft = null;
     renderBasicSettings(host, currentTab);
@@ -454,11 +470,16 @@ export function initBasicSettings(host) {
         const key = repoDraft.repositories[Number(action.dataset.cvRepoDefault)]?.key;
         const saved = buildRepoList(context.p,context.ws?.id || '');
         if (!saved.repositories.some(row => row.key === key)) { toast('请先保存新增仓库，再设为主仓库','warning'); return; }
+        const busy = repoInFlightTasks(context.p, context.ws?.id || '').length;
+        if (busy) { toast('当前空间有 ' + busy + ' 个执行中或待推进的任务，请等任务完成或取消后再切换主仓库','warning'); return; }
         const error = basicSaveRepo(context.p,context.ws,{repositories:saved.repositories,defaultRepo:key});
         if (error) { toast(error,'warning'); return; }
         repoDraft = null; renderBasicSettings(host,'repo'); toast('已设为主仓库','success'); return;
       }
       if (action.hasAttribute('data-cv-repo-remove')) {
+        const target = repoDraft.repositories[Number(action.dataset.cvRepoRemove)];
+        const using = target ? repoInFlightTasks(context.p, context.ws?.id || '', target.key).length : 0;
+        if (using) { toast('有 ' + using + ' 个执行中或待推进的任务在使用该仓库，请等任务完成或取消后再删除','warning'); return; }
         if (!await requestDeleteConfirmation('删除当前空间的仓库关联？远端仓库、本机目录和已启动任务保持不变。', {title:'删除仓库',confirmLabel:'删除'})) return;
         const index = Number(action.dataset.cvRepoRemove);
         const item = repoDraft.repositories[index];
