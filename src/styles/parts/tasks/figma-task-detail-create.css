@@ -313,6 +313,12 @@
 
 /* 代码仓库多选（new-issue-ui.js renderRepoPicker）：主仓库置顶并标记，「仅主仓」「使用全部」快捷选择 */
 #niuCreateOverlay .niu-repos-field { position: relative; min-width: 0; grid-column: 1 / -1; }
+#niuCreateOverlay .niu-repos-empty { display: flex; align-items: center; justify-content: space-between; gap: 8px; box-sizing: border-box; height: 40px; padding: 0 12px; border: 1px solid var(--border); border-radius: 12px; background: var(--bg); color: var(--text-secondary); font-size: var(--font-size-14); }
+#niuCreateOverlay .niu-repos-empty[hidden], #niuCreateOverlay .niu-repos-trigger[hidden] { display: none; }
+#niuCreateOverlay .niu-repos-empty > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#niuCreateOverlay .niu-repos-empty > button { flex: none; padding: 0; border: 0; background: none; color: var(--brand); font: inherit; cursor: pointer; }
+#niuCreateOverlay .niu-repos-empty > button:hover { color: var(--brand-hover); }
+#niuCreateOverlay .niu-repos-empty > button:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 /* 任务信息属性区：所属空间 + 优先级；代码仓库整行 */
 #niuCreateOverlay .niu-create-properties > .niu-field:has(#niuProjectTrigger) { order: 1; }
 #niuCreateOverlay .niu-create-properties > .niu-field:has(#niuWorkspace) { order: 1; }

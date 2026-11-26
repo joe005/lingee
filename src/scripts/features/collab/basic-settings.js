@@ -161,6 +161,12 @@ function repoDirectoryStatus(p, ws, item) {
     + '<button type="button" class="cv-repo-init-btn" data-cv-repo-check="' + esc(item.key) + '"'
     + (disabled ? ' disabled title="' + esc(st.reason || '') + '"' : '') + '>检测</button></div>';
 }
+/* 未通过时的原因红字：放在地址、基准分支下方，状态条上方（与 Build 实现一致）；超长省略，悬停看全文 */
+function repoReasonLine(p, ws, item) {
+  const perm = repoPermission(p, ws, item);
+  if (perm.ready || perm.key === 'unchecked' || !perm.reason || ldIsDetectingRepo(repoTarget(p, ws, item))) return '';
+  return '<p class="cv-repo-reason" title="' + esc(perm.reason) + '">' + esc(perm.reason) + '</p>';
+}
 /* 在途任务：已开工、还没完成或取消的任务（待规划、待开始不算）。key 为空时统计整个空间 */
 const REPO_IDLE_STATUSES = ['backlog', 'todo', 'pending', 'planned', 'ready', 'done', 'cancelled'];
 function repoInFlightTasks(p, wsId, key = '') {
@@ -197,7 +203,7 @@ function repoCard(p, ws, item, index, editable, list, defaultKey, editor = false
       + '<div><dt>仓库地址</dt><dd title="'+esc(item.repo)+'">' + esc(item.repo || '未填写') + '</dd></div>'
       + '<div><dt>基准分支</dt><dd>' + esc(item.baseBranch || 'main') + '</dd></div>'
       + '</dl>' + (apps ? '<div class="cv-repo-apps"><span class="cv-repo-fact-label">关联应用</span>' + apps + '</div>' : '')
-      + repoDirectoryStatus(p, ws, item) + '</article>';
+      + repoReasonLine(p, ws, item) + repoDirectoryStatus(p, ws, item) + '</article>';
   }
   const disabled = !editable ? ' disabled' : '';
   const branch = item.baseBranch || 'main', custom = !['main','master','develop'].includes(branch);

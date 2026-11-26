@@ -189,7 +189,8 @@ function renderWorkspaceRepoHint(preferred, preserveInvalid = false) {
   if (!frozen && selected && !options.some(r => r.key === selected)) select.innerHTML += '<option value="' + escapeHtml(selected) + '">仓库关联已移除，请重新选择</option>';
   select.value = selected;
   select.disabled = !p || !!frozen;
-  byId('niuRepoHint').hidden = !p || !!list.repositories.length;
+  /* 没有仓库时不再出一行说明，代码仓库字段直接换成提示 +「去设置仓库」（renderRepoPicker） */
+  byId('niuRepoHint').hidden = true;
   /* 默认选中主仓库；切换空间后原选择不在新列表里时，也回到主仓库 */
   if (list.repositories.length > 1 && !frozen) setRepoKeys(selectedRepoKeys.some(key => list.repositories.some(r => r.key === key)) ? selectedRepoKeys : [list.defaultRepo || list.repositories[0].key]);
   else { selectedRepoKeys = list.repositories.length === 1 ? [list.repositories[0].key] : []; renderRepoPicker(); }
@@ -215,8 +216,13 @@ function renderRepoPicker() {
   const field = byId('niuReposField'), list = currentRepoList(), task = editingTask();
   const snapshot = task?.reposSnapshot?.length ? task.reposSnapshot : task?.repoSnapshot ? [task.repoSnapshot] : [];
   const rows = snapshot.length ? snapshot : buildOrderedRepos(list);
-  field.hidden = !selectedProjectId || !rows.length;
+  field.hidden = !selectedProjectId;
   if (field.hidden) { closeRepoPopup(); return; }
+  /* 空间一个仓库都没有：不出空下拉，字段里直接引导去「设置 › 仓库」 */
+  const empty = !rows.length;
+  byId('niuReposTrigger').hidden = empty;
+  byId('niuReposEmpty').hidden = !empty;
+  if (empty) { closeRepoPopup(); return; }
   const locked = reposLocked(task);
   const selected = snapshot.length || rows.length === 1 ? rows : rows.filter(r => selectedRepoKeys.includes(r.key));
   const labels = selected.map(r => {
@@ -855,6 +861,12 @@ export function initNewIssueUI(renderCallback, detailCallback) {
   });
   document.addEventListener('lingee:capabilities-changed', () => { if (!byId('niuCreateOverlay').hidden && !planLocked()) { fillTeamOptions('',byId('niuType').value); setDefaultStageOwner(selectedProjectId); draftStages = defaultPlanStages(selectedProjectId); draftConfirmed = false; byId('niuCreateStageCount').textContent = String(draftStages.length); renderPlan(); } });
   byId('niuReposTrigger').addEventListener('click', () => { if (byId('niuReposPopup').hidden) openRepoPopup(); else closeRepoPopup(); });
+  /* 去设置仓库：关弹窗，打开协作开发「设置 › 仓库」 */
+  byId('niuReposGoSettings').addEventListener('click', () => {
+    closeOverlays();
+    document.dispatchEvent(new CustomEvent('lingee:collab-nav', { detail: { tab: 'local' } }));
+    requestAnimationFrame(() => document.querySelector('[data-cv-basic-tab="repo"]')?.click());
+  });
   byId('niuReposPopup').addEventListener('change', event => {
     const box = event.target.closest('[data-niu-repo-key]');
     if (!box) return;

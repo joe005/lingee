@@ -600,3 +600,6 @@
 #view-collab .cv-member-cards .cv-member-identity { flex-wrap: nowrap; min-width: 0; }
 #view-collab .cv-member-cards .cv-member-identity strong { flex: none; color: var(--text-title); font-size: var(--font-size-16); line-height: var(--line-height-16); }
 #view-collab .cv-member-cards .cv-member-tags { margin-top: 6px; }
+
+/* 仓库卡片：未通过原因，位于地址/基准分支下方、Git 权限状态条上方 */
+.cv-repo-card .cv-repo-reason { margin: 0; overflow: hidden; color: var(--danger); font-size: var(--font-size-12); line-height: var(--line-height-12); text-overflow: ellipsis; white-space: nowrap; }
