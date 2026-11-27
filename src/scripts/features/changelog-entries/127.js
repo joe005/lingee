@@ -1,0 +1,1 @@
+export default {"id": "127", "date": "2026-11-27", "iconBg": "var(--brand-fill)", "iconColor": "var(--brand)", "type": "功能", "module": "协作开发", "author": "wuhc2023", "body": "功能·协作开发：协作开发支持按提交评审任务分支、核对冲突和受保护分支的合并结果，并在共享测试环境按合入版本验收。"};

@@ -46,7 +46,8 @@ export function initStageReturn() {
     select.replaceChildren(new Option('请选择节点', ''));
     select.options[0].disabled = true;
     stages.forEach(stage => select.add(new Option(stage.title || stage.workType, stage.id)));
-    select.selectedIndex = 0;
+    select.value = stages.some(stage => stage.id === button.dataset.returnTo) ? button.dataset.returnTo : '';
+    select.dispatchEvent(new Event('change'));
     reason.value = ''; counter.textContent = '0/' + reason.maxLength; error.hidden = true;
     dialog.showModal(); select.focus();
   });

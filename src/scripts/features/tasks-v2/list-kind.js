@@ -1,3 +1,4 @@
+import { taskCodeDeliveryContext } from './code-delivery-context.js';
 import { tkIsMyStageDone, tkCanStartTask, tkCurrentStageHandlerId, tkCurrentUserId, tkGetPerson, tkGetStatusName } from './data.js';
 import { taskExecutionStages } from './task-execution.js';
 import { taskConversationNeedsReply, taskConversationQuestion } from '../composer.js';
@@ -27,6 +28,9 @@ export function taskListKind(task) {
   if (status === 'done') return { kind:'done', badge:'已完成', hint:'全部阶段已交付', action:'artifacts', label:'查看产物', needsMe:false };
   if (status === 'backlog' && mine && tkCanStartTask(task)) {
     return { kind:'start', badge:'待开始', hint:'轮到你开始执行' + quoted, action:'start', label:'交给AI执行', primary:true, needsMe:true };
+  }
+  if (status === 'in_review' && task.pendingMerge && taskCodeDeliveryContext(task)?.pending) {
+    return {kind:'review',badge:'待仓库合并',hint:'开发评审已通过，等待仓库合入指定提交',action:mine ? 'review' : 'detail',label:mine ? '查看合并' : '查看任务',primary:mine,needsMe:mine};
   }
   if (status === 'in_review' && mine) {
     return { kind:'review', badge:'待评审', hint:'智能体团队已提交' + quoted + '产物，等待你确认', action:'review', label:'评审产物', primary:true, needsMe:true };

@@ -1,5 +1,5 @@
 import { taskCodeDeliveryContext } from './code-delivery-context.js';
-import { tkGetPerson, tkPeopleInProject } from './data.js';
+import { tkCurrentStageHandlerId, tkCurrentUserId, tkGetPerson, tkGetTasks, tkPeopleInProject } from './data.js';
 import { taskExecutionStages } from './task-execution.js';
 
 let confirmAction = null;
@@ -44,8 +44,31 @@ export function showTaskStageConfirm(task, action) {
   const reviewerName = reviewerId ? tkPeopleInProject(task.project).find(person => person.id === reviewerId)?.name || tkGetPerson(reviewerId).name : '';
   const message = !next ? '通过后本任务的全部阶段完成。' : reviewerName ? '通过后进入「' + next.name + '」，评审人：' + reviewerName + '。' : '通过后进入「' + next.name + '」。';
   const codeContext = taskCodeDeliveryContext(task);
-  const mergeHint = codeContext?.isDevelopment ? '系统会先检查并合并代码，合并成功后才完成审核和流转；失败则保留在本阶段。' : '';
-  showTaskConfirm(message + mergeHint, action, '确认产物', '确认', 'primary');
+  if (codeContext?.isDevelopment || (codeContext?.isTesting && codeContext.last && !task.deliversAgent)) {
+    const dev = codeContext.isDevelopment;
+    const verify = () => {
+      const current = tkGetTasks().find(row => row.id === task.id);
+      const info = taskCodeDeliveryContext(current);
+      if (current?.status !== 'in_review' || tkCurrentStageHandlerId(current) !== tkCurrentUserId()
+        || !info || info.reviewKey !== codeContext.reviewKey || current.executionStageId !== stages[index].id
+        || info.last?.id !== codeContext.last?.id) {
+        showTaskConfirm('任务版本或处理人已变化，请重新查看本轮产物。', null, '评审已更新', '知道了', 'primary');
+        return;
+      }
+      action({verifiedDeliveryId:dev ? undefined : info.last.id});
+    };
+    if (!dev && task.branchMergeDemoKey && task.demoDeployedDelivery !== codeContext.last.id) {
+      showTaskConfirm('共享环境尚未包含 ' + codeContext.last.mergeCommit + '。部署后再回来验收。', () => document.dispatchEvent(new CustomEvent('lingee:open-test-environment',{detail:{taskId:task.id}})), '等待测试环境更新', '打开环境', 'primary', '稍后验收'); return;
+    }
+    if (dev && codeContext.pending) { verify(); return; }
+    if (dev) {
+      showTaskConfirm('将提交 ' + codeContext.sourceCommit + ' 合入 ' + (codeContext.target || '目标分支') + '，合入成功后' + (next ? '转交「' + next.name + '」。' : '完成开发。'), verify, '确认开发产物', '通过验收', 'primary');
+    } else {
+      showTaskConfirm('请确认已在包含 ' + codeContext.last.target + ' · ' + codeContext.last.mergeCommit + ' 的共享环境完成验证。环境尚未更新时请稍后验收。', verify, '共享环境验收', '已验证，验收通过', 'primary', '稍后验收');
+    }
+    return;
+  }
+  showTaskConfirm(message, action, '确认产物', '确认', 'primary');
 }
 
 export function initTaskConfirm() {

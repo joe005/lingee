@@ -135,7 +135,8 @@ export function submitTaskStage(task) {
   artifacts = taskRepoStageArtifacts(task, stage, artifacts);
   const agentName = taskStageAgentName(task, stage.id);
   const time = flowTimestamp();
-  tkUpdateTask(task.id, {status:'in_review', executionStageId:stage.id, executionPlan:stagePlan(task,stage.id,'review'), executionArtifacts:artifacts,
+  const submission = deliveryContext?.isDevelopment ? {developmentCommit:Math.random().toString(16).slice(2, 9), pendingMerge:null} : {};
+  tkUpdateTask(task.id, {...submission, status:'in_review', executionStageId:stage.id, executionPlan:stagePlan(task,stage.id,'review'), executionArtifacts:artifacts,
     statusHistory:(task.statusHistory || []).concat({from:'in_progress',to:'in_review',author:agentName,actorKind:'agent',stageId:stage.id,time,message:'「' + stage.name + '」执行完成，提交评审'}),
     comments:task.comments || []});
   if (task.executionPlan?.find(function (row) { return row.id === stage.id; })?.requiresConfirmation === false) {
@@ -272,7 +273,7 @@ export function reviewTaskStage(task, approved, options) {
   if (index < 0) return {ok:false};
   var stage = stages[index], next = stages[index + 1];
   if (approved) {
-    const deliveryError = taskCodeDeliveryApprovalError(task);
+    const deliveryError = taskCodeDeliveryApprovalError(task, options);
     if (deliveryError) return {ok:false, message:deliveryError};
   }
   var repoHandoff = approved && task.reposSnapshot?.length > 1 ? taskRepoHandoff(task, stage) : null;
@@ -327,6 +328,11 @@ export function reviewTaskStage(task, approved, options) {
     patch.statusHistory = (task.statusHistory || []).concat({from:task.status,to:patch.status,authorId:tkCurrentUserId(),actorKind:'person',stageId:stage.id,time:flowTimestamp(),message:'「' + stage.name + '」' + (approved ? '评审通过' + (next ? '，流转至「' + next.name + '」' : '，任务已完成') : '评审未通过，继续执行')});
     // 阶段审核与流转合并为一条操作记录。
     if (patch.comments) patch.comments = task.comments || [];
+  }
+  if (!approved) patch.pendingMerge = null;
+  const merged = taskCodeDeliveryContext(task);
+  if (approved && merged?.isDevelopment && merged.last) {
+    patch.statusHistory.at(-1).message += '，已合入 ' + merged.last.target + ' · ' + merged.last.mergeCommit;
   }
   tkUpdateTask(task.id, patch);
   /* 交付智能体的任务：「提交上架」阶段通过后，智能体开发里的对应智能体同步为已提交 */

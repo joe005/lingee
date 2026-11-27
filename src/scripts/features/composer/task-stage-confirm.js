@@ -103,7 +103,7 @@ function confirmChatStage() {
     }, '需要安装 Git', '安装 Git', 'primary');
     return;
   }
-  showTaskStageConfirm(info.task, function () {
+  showTaskStageConfirm(info.task, function (evidence) {
     var currentInfo = chatStageConfirmInfo();
     if (!currentInfo?.ready || currentInfo.task.id !== info.task.id) return;
     /* 开发阶段与任务详情「通过审核」一致：先模拟检查并合并本轮分支，合并成功才流转（提示由合并流程给出） */
@@ -118,7 +118,7 @@ function confirmChatStage() {
       document.dispatchEvent(new CustomEvent('lingee:code-delivery-approve', { detail: { taskId: taskId } }));
       return;
     }
-    var reviewed = reviewTaskStage(currentInfo.task, true);
+    var reviewed = reviewTaskStage(currentInfo.task, true, evidence);
     if (!reviewed.ok) {
       toast(reviewed.message || '任务状态已变化，请刷新后重试', 'warning');
       return;

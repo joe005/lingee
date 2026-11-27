@@ -216,13 +216,13 @@ export function showCardMenu(taskId, anchorEl, detailOnly) {
 }
 export function confirmTaskStageApproval(task, reopenDrawer, onApproved) {
   if (!task || task.status !== 'in_review') return;
-  showTaskStageConfirm(task, function () {
+  showTaskStageConfirm(task, function (evidence) {
     var currentTask = tkGetTasks().find(function (row) { return row.id === task.id; });
     if (taskCodeDeliveryContext(currentTask)?.isDevelopment) {
       document.dispatchEvent(new CustomEvent('lingee:code-delivery-approve',{detail:{taskId:task.id}}));
       return;
     }
-    var reviewed = reviewTaskStage(currentTask, true);
+    var reviewed = reviewTaskStage(currentTask, true, evidence);
     if (!reviewed.ok) { toast(reviewed.message || '任务状态已变化，请刷新后重试', 'warning'); return; }
     render();
     if (reopenDrawer) openDrawer(task.id);

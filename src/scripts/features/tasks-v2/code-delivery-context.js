@@ -14,17 +14,25 @@ export function taskCodeDeliveryContext(task) {
   if (!dev || !test) return null;
   const records = task.codeDeliveries || [];
   const last = records.at(-1);
-  return { project, dev, test, target:project.baseBranch || '',
+  const round = (task.stageReturns || []).length;
+  const sourceCommit = task.developmentCommit || ('demo-' + task.code + '-' + (round + 1));
+  const reviewKey = JSON.stringify([project.repo, project.baseBranch, task.gitBranch, dev.id, sourceCommit, round]);
+  const pending = task.pendingMerge?.key === reviewKey ? task.pendingMerge : null;
+  return { project, dev, test, round, reviewKey, pending, sourceCommit, target:project.baseBranch || '',
     branch:task.gitBranch || 'feature/' + String(task.code || task.id).toLowerCase(),
     isDevelopment:task.executionStageId === dev.id, isTesting:task.executionStageId === test.id,
     records, last, reports:task.testDeliveryReports || [] };
 }
 
-export function taskCodeDeliveryApprovalError(task) {
+export function taskCodeDeliveryApprovalError(task, options) {
   const context = taskCodeDeliveryContext(task);
   if (!context) return '';
-  if (context.isDevelopment && (!context.last || context.last.developmentRound !== (task.stageReturns || []).length)) return '开发审核通过后需完成本轮分支合并，成功后才流转下一阶段。';
+  if (context.isDevelopment && (!context.last || context.last.developmentRound !== context.round || (context.last.reviewKey && context.last.reviewKey !== context.reviewKey))) return '开发审核通过后需完成本轮分支合并，成功后才流转下一阶段。';
   if (context.isTesting && context.last && !taskCodeTestArtifacts(task).length) return '当前阶段缺少关联本轮提测的测试报告，请先生成本轮阶段产物再审核。';
+  if (context.isTesting && context.last && task.branchMergeDemoKey && task.demoDeployedDelivery !== context.last.id)
+    return '共享环境尚未部署本轮版本，请打开环境核对后再验收。';
+  if (context.isTesting && context.last && !task.deliversAgent && options?.verifiedDeliveryId !== context.last.id)
+    return '请在包含本次合入版本的共享测试环境完成验收。';
   return '';
 }
 

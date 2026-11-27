@@ -3,11 +3,18 @@ import { toast } from '../../core/toast.js';
 import { tkCanViewTask, tkCurrentStageHandlerId, tkCurrentUserId, tkGetPerson, tkGetTasks, tkUpdateTask } from './data.js';
 import { taskCodeDeliveryContext } from './code-delivery-context.js';
 import { reviewTaskStage } from './task-execution.js';
+import { escapeHtml } from './ui-utils.js';
 
-function cdEscape(value) { return String(value ?? '').replace(/[&<>"']/g,char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[char]); }
-function cdButton(label,action,primary,disabled) { return '<button type="button" class="' + (primary ? 'tk-btn-primary' : 'tk-btn-ghost') + '" data-cd-action="' + action + '"' + (disabled ? ' disabled' : '') + '>' + label + '</button>'; }
-// 仅演示链接可指定异常情形，不增加产品配置或独立提交入口。
-const initialScenario = new URLSearchParams(location.search).get('mergeScenario');
+function button(label, action, primary = false) {
+  return '<button type="button" class="' + (primary ? 'tk-btn-primary' : 'tk-btn-ghost') + '" data-cd-action="' + action + '">' + label + '</button>';
+}
+function grid(fields) {
+  return '<div class="tk-cd-grid">' + fields.map(([label,value]) => '<div><span>' + label + '</span><code>' + escapeHtml(value) + '</code></div>').join('') + '</div>';
+}
+const conflictFiles = [
+  ['src/filters/status.ts', 'return byStatus(items, status);', 'return visibleTo(user, items);', 'return byStatus(visibleTo(user, items), status);'],
+  ['tests/status.test.ts', 'expect(filtered).toMatchStatus(status);', 'expect(filtered).toBeVisibleTo(user);', 'expect(filtered).toMatchStatus(status);\nexpect(filtered).toBeVisibleTo(user);'],
+];
 
 export function initTaskCodeDelivery() {
   const dialog = document.getElementById('tkCodeDeliveryDialog');
@@ -15,69 +22,135 @@ export function initTaskCodeDelivery() {
   document.body.appendChild(dialog);
   const body = dialog.querySelector('#tkCodeDeliveryBody');
   const foot = dialog.querySelector('#tkCodeDeliveryFoot');
-  let taskId = null, snapshot = null, opener = null, busy = false, resolved = false;
-  let scenario = 'normal';
-  function activeTask() { return tkGetTasks().find(task => task.id === taskId); }
-  function allowed(task) { return task && tkCanViewTask(task) && tkCurrentStageHandlerId(task) === tkCurrentUserId() && task.status === 'in_review'; }
-  function signature(task,info) { return [task.executionStageId,task.status,task.updatedAt,info.project.repo,info.target,info.dev.assigneeId,info.test.assigneeId,(task.stageReturns || []).length,info.records.length].join('|'); }
-  function close() { if(busy)return; dialog.close(); if(opener?.isConnected)opener.focus({preventScroll:true}); }
-  function show(title,content,actions) {
-    dialog.querySelector('#tkCodeDeliveryTitle').textContent=title;
-    dialog.querySelector('#tkCodeDeliveryMeta').textContent=(activeTask()?.code || '')+' · 原型模拟，不执行真实 Git 或流水线';
-    body.innerHTML=content; foot.innerHTML=actions;
-    dialog.querySelector('.tk-cd-close').disabled=busy;
-    if(!dialog.open){opener=document.activeElement;dialog.showModal();}
+  let taskId, reviewKey, opener, timer;
+  const activeTask = () => tkGetTasks().find(task => task.id === taskId);
+  function show(title, content, actions) {
+    dialog.querySelector('#tkCodeDeliveryTitle').textContent = title;
+    dialog.querySelector('#tkCodeDeliveryMeta').textContent = activeTask().code + ' · 模拟体验';
+    body.innerHTML = content;
+    foot.innerHTML = actions;
+    if (!dialog.open) { opener = document.activeElement; dialog.showModal(); }
   }
-  function mergeAfterApproval() {
-    const task=activeTask(),info=taskCodeDeliveryContext(task);
-    if(!allowed(task)||!info?.isDevelopment){close();toast('任务状态或审核权限已变化','warning');return;}
-    snapshot=signature(task,info);
-    const blocked=!info.target || !info.test.assigneeId || scenario==='protected';
-    if(blocked){
-      const reason=!info.target ? '任务尚未确定目标分支，请先完善 Build 仓库配置。' : !info.test.assigneeId ? '请先在已有执行计划中指定测试处理人。' : '目标分支受保护，请按团队约定在代码平台处理合并权限或审批。';
-      show('暂未通过审核','<div class="tk-cd-callout warning">'+reason+'任务保留在开发待审核阶段。</div>',cdButton('返回审核','close'));
-      return;
-    }
-    if(scenario==='conflict'&&!resolved){
-      show('合并存在冲突','<div class="tk-cd-callout warning">开发审核尚未完成。请开发负责人解决冲突并自测，再重试合并。</div>'
-        +'<div class="tk-cd-grid"><div><span>任务分支</span><code>'+cdEscape(info.branch)+'</code></div><div><span>目标分支</span><code>'+cdEscape(info.target)+'</code></div></div>'
-        +'<p class="tk-cd-note">模拟冲突文件：src/pages/orders/list.tsx</p>'
-        +'<label class="tk-cd-check"><input type="checkbox" id="tkCdResolved">已检查冲突解决结果并完成受影响功能自测</label><p id="tkCdError" class="tk-cd-error" role="alert"></p>',cdButton('返回审核','close')+cdButton('重新检查并合并','retry',true));
-      return;
-    }
-    const next=task.executionPlan[task.executionPlan.findIndex(stage=>stage.id===info.dev.id)+1];
-    if(next && !next.assigneeId && !task.flowAssignee){
-      show('暂未通过审核','<div class="tk-cd-callout warning">请先在现有执行计划中指定下一阶段处理人，任务仍保留在开发待审核阶段。</div>',cdButton('返回审核','close'));return;
-    }
-    busy=true;
-    show('正在完成开发审核','<p class="tk-cd-note">正在模拟检查并合并到任务快照中的目标分支，成功后自动流转。</p>',cdButton('正在合并…','none',true,true));
-    setTimeout(()=>{
-      const latest=activeTask(),context=taskCodeDeliveryContext(latest);
-      if(!allowed(latest)||!context||signature(latest,context)!==snapshot){busy=false;close();toast('任务或空间配置已变化，请重新审核','warning');return;}
-      const round=context.records.length+1;
-      const record={id:latest.code+'-R'+round,round,target:context.target,branch:context.branch,repo:context.project.repo,
-        developer:tkGetPerson(context.dev.assigneeId).name,tester:tkGetPerson(context.test.assigneeId).name,
-        mergeCommit:'demo-'+latest.code.toLowerCase()+'-r'+round,timestamp:new Date().toLocaleString('zh-CN',{timeZone:'Asia/Kuala_Lumpur'}),developmentRound:(latest.stageReturns||[]).length,simulated:true};
-      tkUpdateTask(latest.id,{codeDeliveries:context.records.concat(record)});
-      const result=reviewTaskStage(activeTask(),true);
-      busy=false;close();
-      document.dispatchEvent(new CustomEvent('lingee:task-stage-completed',{detail:{taskId}}));
-      toast(result.ok ? '开发审核通过，模拟合并成功，已流转下一阶段' : '合并记录已保留，审核流转未完成：'+(result.message||'请检查执行计划'),result.ok?'success':'warning');
-    },500);
+  function close() {
+    clearTimeout(timer);
+    dialog.close();
+    if (opener?.isConnected) opener.focus({preventScroll:true});
   }
-  document.addEventListener('lingee:code-delivery-approve',event=>{
-    if(busy||dialog.open)return;
-    taskId=Number(event.detail.taskId);resolved=false;
-    scenario=activeTask()?.branchMergeDemoKey && ['conflict','protected'].includes(initialScenario) ? initialScenario : 'normal';
-    mergeAfterApproval();
+  function currentReview() {
+    const task = activeTask();
+    const info = taskCodeDeliveryContext(task);
+    if (!info?.isDevelopment || info.reviewKey !== reviewKey || task.status !== 'in_review'
+      || !tkCanViewTask(task) || tkCurrentStageHandlerId(task) !== tkCurrentUserId()) {
+      close(); toast('任务版本或处理人已变化，请重新查看开发产物', 'warning'); return null;
+    }
+    return info;
+  }
+  function finish(resolved = false) {
+    const info = currentReview();
+    if (!info) return;
+    const task = activeTask();
+    if (info.last?.reviewKey !== reviewKey) {
+      const round = info.records.length + 1;
+      const record = {id:task.code + '-R' + round, round, reviewKey, target:info.target, branch:info.branch, repo:info.project.repo,
+        sourceCommit:info.sourceCommit, mergeCommit:'demo-merge-' + task.code + '-' + round,
+        selfTest:task.developmentSelfTest, conflictReviewed:resolved, simulated:true, developmentRound:info.round,
+        developer:tkGetPerson(info.dev.assigneeId).name, tester:tkGetPerson(info.test.assigneeId).name, timestamp:new Date().toISOString()};
+      tkUpdateTask(task.id,{pendingMerge:null, codeDeliveries:[...info.records,record]});
+    }
+    const result = reviewTaskStage(activeTask(),true);
+    close();
+    if (result.ok) document.dispatchEvent(new CustomEvent('lingee:task-stage-completed',{detail:{taskId}}));
+    toast(result.ok ? '已合入 ' + info.target + '，开发阶段已通过' : '合并结果已保留。' + (result.message || '请重试阶段流转'), result.ok ? 'success' : 'warning');
+  }
+  function waitForRepo(info, message = '') {
+    show('评审已通过，待仓库合并', grid([['任务分支',info.branch],['目标分支',info.target],['已评审提交',info.sourceCommit]])
+      + '<p class="tk-cd-note" role="status">' + (message || '请由有权限的成员在代码平台合入此提交，再检查结果。') + '</p>',
+      button('打开代码仓库','repository') + button('检查合并结果','verify',true));
+  }
+  function start() {
+    const info = currentReview();
+    if (!info) return;
+    const task = activeTask();
+    const next = task.executionPlan[task.executionPlan.findIndex(row => row.id === info.dev.id) + 1];
+    if (!info.target || !info.test.assigneeId || (next && !next.assigneeId && !task.flowAssignee)) {
+      show('暂时无法合并','<p>请先配置目标分支和后续阶段处理人。</p>',button('返回评审','close')); return;
+    }
+    if (info.last?.reviewKey === reviewKey) { finish(); return; }
+    if (info.pending?.platformMerged) { finish(); return; }
+    if (info.pending || task.branchMergeScenario === 'protected') {
+      if (!info.pending) tkUpdateTask(taskId,{pendingMerge:{key:reviewKey,platformMerged:false}});
+      waitForRepo(info); return;
+    }
+    const conflict = ['conflict','unresolved'].includes(task.branchMergeScenario);
+    show(conflict ? 'AI 正在处理冲突' : '正在合并到 ' + info.target,
+      grid([['交付提交',info.sourceCommit],['目标分支',info.target]]),'');
+    timer = setTimeout(() => {
+      if (!currentReview()) return;
+      if (!conflict || (task.stageReturns || []).length) { finish(); return; }
+      if (task.branchMergeScenario === 'unresolved') {
+        show('冲突需要手工处理','<p>以下文件仍有冲突。请在任务分支修复并提交，再次发起评审。</p><code>src/filters/status.ts</code>',
+          button('返回开发评审','close') + button('模拟手工修复并提交','manual-fix',true)); return;
+      }
+      const diff = conflictFiles.map(([file, work, target, result], i) => '<details class="tk-cd-diff"' + (i === 0 ? ' open' : '') + '><summary>' + file + '</summary>'
+        + [['任务分支',work],['目标分支',target],['AI 处理结果',result]].map(([label,code]) => '<p class="tk-cd-note">' + label + '</p><pre><code>' + escapeHtml(code) + '</code></pre>').join('') + '</details>').join('');
+      show('核对冲突处理结果',diff + '<label class="tk-cd-check"><input id="tkCdResolved" type="checkbox">已核对差异并验证受影响用例</label><p class="tk-cd-error" role="alert"></p>',
+        button('放弃本次处理','discard') + button('确认并合并','resolve',true));
+    },450);
+  }
+  function showEnvironment() {
+    const task = activeTask(), record = task?.codeDeliveries?.at(-1);
+    if (!record || !task.branchMergeDemoKey || !tkCanViewTask(task)) return;
+    const deployed = task.demoDeployedDelivery === record.id;
+    show('共享测试环境',grid([['待验版本',record.target + ' · ' + record.mergeCommit],['当前环境版本',deployed ? record.mergeCommit : '上一部署版本']])
+      + '<p class="tk-cd-note">' + (deployed ? '环境已包含本轮提交，可返回任务核对测试结果。' : '待验版本尚未部署。') + '</p>',
+      button('返回任务','close') + (deployed ? '' : button('模拟部署本轮版本','deploy',true)));
+  }
+  document.addEventListener('lingee:code-delivery-approve', event => {
+    if (dialog.open) return;
+    taskId = Number(event.detail.taskId);
+    reviewKey = taskCodeDeliveryContext(activeTask())?.reviewKey;
+    start();
   });
-  dialog.addEventListener('cancel',event=>{event.preventDefault();close();});
-  dialog.addEventListener('click',event=>{
-    const button=event.target.closest('[data-cd-action]');if(!button||button.disabled)return;
-    if(button.dataset.cdAction==='close')close();
-    if(button.dataset.cdAction==='retry'){
-      if(!body.querySelector('#tkCdResolved')?.checked){body.querySelector('#tkCdError').textContent='请先确认冲突解决结果和自测。';return;}
-      resolved=true;mergeAfterApproval();
+  document.addEventListener('lingee:open-test-environment', event => {
+    if (!dialog.open) { taskId = event.detail.taskId; showEnvironment(); }
+  });
+  document.addEventListener('click', event => {
+    const link = event.target.closest('[data-cd-environment]');
+    if (!link || dialog.open) return;
+    taskId = Number(link.dataset.cdEnvironment);
+    showEnvironment();
+  });
+  dialog.addEventListener('cancel', event => { event.preventDefault(); close(); });
+  dialog.addEventListener('click', event => {
+    const action = event.target.closest('[data-cd-action]')?.dataset.cdAction;
+    if (!action) return;
+    if (action === 'close' || action === 'discard') { close(); return; }
+    if (action === 'deploy') {
+      const task = activeTask();
+      if (task?.branchMergeDemoKey && tkCanViewTask(task)) tkUpdateTask(taskId,{demoDeployedDelivery:task.codeDeliveries.at(-1).id});
+      showEnvironment(); return;
+    }
+    const info = currentReview();
+    if (!info) return;
+    if (action === 'resolve') {
+      if (!body.querySelector('#tkCdResolved')?.checked) { body.querySelector('[role="alert"]').textContent = '请先核对差异并验证受影响用例。'; return; }
+      finish(true); return;
+    }
+    if (action === 'manual-fix' && activeTask().branchMergeScenario === 'unresolved') {
+      tkUpdateTask(taskId,{developmentCommit:info.sourceCommit + '-fix',developmentSelfTest:null,pendingMerge:null,branchMergeScenario:'normal'});
+      close(); toast('手工修复已提交，请重新评审并核对自测结果', 'success'); return;
+    }
+    if (!info.pending) return;
+    if (action === 'repository') {
+      show('代码仓库（模拟）',grid([['源分支',info.branch],['目标分支',info.target],['提交',info.sourceCommit]]),
+        button('返回任务','back') + (info.pending.platformMerged ? '' : button('模拟维护者合入','platform-merge',true)));
+    } else if (action === 'platform-merge') {
+      tkUpdateTask(taskId,{pendingMerge:{...info.pending,platformMerged:true}});
+      waitForRepo(info,'代码平台已合入。请检查合并结果。');
+    } else if (action === 'back') waitForRepo(info);
+    else if (action === 'verify') {
+      if (info.pending.platformMerged) finish();
+      else waitForRepo(info,'目标分支尚未包含此提交，请先在代码仓库完成合并。');
     }
   });
 }

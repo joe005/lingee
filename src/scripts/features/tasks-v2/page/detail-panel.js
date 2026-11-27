@@ -1,3 +1,4 @@
+import { codeReviewSummary } from '../code-review-summary.js';
 import { taskCodeDeliveryContext } from '../code-delivery-context.js';
 import { openTaskStatusConversation } from '../../composer.js';
 import { toast } from '../../../core/toast.js';
@@ -375,8 +376,24 @@ function renderListReviewPreview() {
     ? '测试通过后直接提交「' + task.deliversAgent + '」上架审核，管理员审核通过后正式生效。'
     : '请核对产物内容。需要调整时可返回任务会话继续修改。';
   const codeContext = taskCodeDeliveryContext(task);
-  if (canReview && codeContext?.isDevelopment) els.tkListReviewHint.textContent = '先核对开发产物；通过验收后自动检查并合并代码，成功才流转。';
-  if (canReview && codeContext?.isTesting && codeContext.last) els.tkListReviewHint.textContent = '请核对本轮测试报告与实际环境验证结果；通过验收后自动关联本轮提测。';
+  const summary = document.getElementById('tkReviewDeliverySummary');
+  summary.innerHTML = pageState.listReviewPreviewReadOnly ? '' : codeReviewSummary(task, task.executionStageId);
+  summary.dataset.version = codeContext?.reviewKey || '';
+  delete els.tkListReviewRevise.dataset.taskStageReturn;
+  delete els.tkListReviewRevise.dataset.returnTo;
+  els.tkListReviewRevise.textContent = '继续修改';
+  if (canReview && codeContext?.isDevelopment) {
+    els.tkListReviewApprove.textContent = codeContext.pending ? '检查合并结果' : '通过验收';
+    els.tkListReviewHint.textContent = codeContext.pending ? '代码平台合入后，回来检查结果。' : '请核对开发产物与本次交付提交。';
+    els.tkListReviewRevise.hidden = !!codeContext.pending;
+  }
+  if (canReview && codeContext?.isTesting && codeContext.last && !agentSubmit) {
+    els.tkListReviewHint.textContent = '共享环境验证通过后完成验收。';
+    els.tkListReviewApprove.textContent = '验收通过';
+    els.tkListReviewRevise.textContent = '退回开发';
+    els.tkListReviewRevise.dataset.taskStageReturn = task.id;
+    els.tkListReviewRevise.dataset.returnTo = codeContext.dev.id;
+  }
   els.tkListReviewBody.scrollTop = 0;
 }
 export function openListReviewPreview(taskId, trigger, options = {}) {
@@ -391,6 +408,9 @@ export function openListReviewPreview(taskId, trigger, options = {}) {
   els.tkListReviewClose.focus({ preventScroll:true });
 }
 export function initListReviewPreviewEvents() {
+  document.addEventListener('lingee:task-updated', event => {
+    if (pageState.listReviewPreviewTaskId === event.detail.task.id && (Object.hasOwn(event.detail.patch,'pendingMerge') || event.detail.patch.status)) renderListReviewPreview();
+  });
   document.addEventListener('lingee:task-stage-completed', function (event) {
     if (pageState.listReviewPreviewTaskId === event.detail.taskId) renderListReviewPreview();
   });
@@ -418,6 +438,7 @@ export function initListReviewPreviewEvents() {
   els.tkListReviewRevise.addEventListener('click', function () {
     var task = tkGetTasks().find(function (row) { return row.id === pageState.listReviewPreviewTaskId; });
     if (pageState.listReviewPreviewReadOnly || !task || tkCurrentStageHandlerId(task) !== tkCurrentUserId()) return;
+    if (els.tkListReviewRevise.dataset.taskStageReturn) return;
     var reviewed = reviewTaskStage(task, false);
     if (!reviewed.ok) { toast('任务状态已变化，请刷新后重试', 'warning'); closeListReviewPreview(false); return; }
     closeListReviewPreview(false);
@@ -428,6 +449,9 @@ export function initListReviewPreviewEvents() {
   els.tkListReviewApprove.addEventListener('click', function () {
     var task = tkGetTasks().find(function (row) { return row.id === pageState.listReviewPreviewTaskId; });
     if (pageState.listReviewPreviewReadOnly || !task || tkCurrentStageHandlerId(task) !== tkCurrentUserId()) return;
+    if (taskCodeDeliveryContext(task)?.isDevelopment && document.getElementById('tkReviewDeliverySummary').dataset.version !== taskCodeDeliveryContext(task).reviewKey) {
+      renderListReviewPreview(); toast('交付提交已更新，请查看新版本后验收', 'warning'); return;
+    }
     if (isAgentSubmitStep(task)) {
       /* 测试通过 + 提交上架合为一步：复用智能体开发的「提交上架审核」确认 */
       var card = agentCardByName(task.deliversAgent);
@@ -438,7 +462,7 @@ export function initListReviewPreviewEvents() {
     confirmTaskStageApproval(task, false, function () { closeListReviewPreview(false); });
   });
   document.addEventListener('keydown', function (event) {
-    if (els.tkListReviewOverlay.hidden || event.defaultPrevented) return;
+    if (els.tkListReviewOverlay.hidden || event.defaultPrevented || document.querySelector('dialog[open]') || !document.getElementById('tkConfirmOverlay').hidden) return;
     if (document.getElementById('agentSubmitOverlay')?.hidden === false) return;
     if (event.key === 'Escape') { event.preventDefault(); closeListReviewPreview(true); return; }
     if (event.key !== 'Tab') return;

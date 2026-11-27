@@ -27,3 +27,16 @@
 #tkCodeDeliveryDialog button:focus-visible,#tkCodeDeliveryDialog textarea:focus-visible,#tkCodeDeliveryDialog input:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
 #tkCodeDeliveryDialog button:disabled{opacity:.5;cursor:not-allowed}
 @media(max-width:600px){#tkCodeDeliveryDialog .tk-cd-grid{grid-template-columns:1fr}#tkCodeDeliveryDialog .tk-cd-head,#tkCodeDeliveryDialog .tk-cd-body,#tkCodeDeliveryDialog .tk-cd-foot{padding:16px}}
+
+.tk-cd-summary {background:var(--fill-1);border-radius:8px;padding:12px 16px;text-align:left;font-weight:400}
+#tkReviewDeliverySummary:not(:empty) {padding:8px 16px;max-height:35vh;overflow:auto}
+.tk-cd-summary dl {display:grid;grid-template-columns:repeat(auto-fit,minmax(112px,1fr));gap:8px 16px;margin:0}
+.tk-cd-summary dt,.tk-cd-summary dd,.tk-cd-summary p,.tk-cd-summary summary {font-size:var(--font-size-12);line-height:18px;margin:0;overflow-wrap:anywhere}
+.tk-cd-summary dt {color:var(--text-secondary)}
+.tk-cd-summary dd {color:var(--text);font-weight:500}
+.tk-cd-summary details,.tk-cd-summary .tk-cd-state,.tk-cd-summary .tk-cd-link {margin-top:8px}
+.tk-cd-summary summary,.tk-cd-summary .tk-cd-link {color:var(--brand);cursor:pointer}
+.tk-cd-summary .tk-cd-link {border:0;background:none;align-self:center;text-align:left;padding:0;font:inherit}
+#tkCodeDeliveryDialog .tk-cd-diff {background:var(--fill-1);border-radius:8px;padding:12px}
+#tkCodeDeliveryDialog .tk-cd-diff summary {cursor:pointer;font-weight:500}
+#tkCodeDeliveryDialog .tk-cd-diff pre {white-space:pre-wrap;overflow-wrap:anywhere;margin:4px 0 12px}

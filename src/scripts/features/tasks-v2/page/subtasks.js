@@ -1,3 +1,4 @@
+import { codeReviewSummary } from '../code-review-summary.js';
 import '../../collab/repository-config.js';   /* 保留以维持模块求值顺序（详情已不展示代码仓库与目标分支） */
 import { buildTaskRepos } from '../../collab/repository-config.js';
 import { toast } from '../../../core/toast.js';
@@ -188,7 +189,7 @@ function renderTaskDeliveryOverview(task, activity, artifacts, stageHistoryHtml,
           + '</span>'
           + '<span class="tk-feed-stage-state">' + label + '</span>'
           + '<span class="tk-feed-stage-reviewer">' + (plan?.requiresConfirmation === false ? '自动流转' : '评审人：' + escapeHtml(assignee)) + '</span></div>'
-        + '<div class="tk-feed-stage-line"><span class="tk-feed-stage-name">' + escapeHtml(stage.name) + '</span></div>' + renderStageRepoHandoff(task, stage, isCurrent) + detailHtml + '</th>'
+        + '<div class="tk-feed-stage-line"><span class="tk-feed-stage-name">' + escapeHtml(stage.name) + '</span></div>' + renderStageRepoHandoff(task, stage, isCurrent) + (isCurrent || plan?.status === 'done' ? codeReviewSummary(task, stage.id) : '') + detailHtml + '</th>'
         + '</tr>'
         + '</tbody>';
     }).join('') + (latestLayout ? '</table></div>' : '</ol>')
